@@ -40,7 +40,7 @@ public class JdbcSupportLoader {
 	private static final Logger log = LoggerFactory.getLogger( JdbcSupportLoader.class );
 
 	/**
-	 * The public factory method for obtaining the appropriate (accoring to given JDBC {@link java.sql.Connection})
+	 * The public factory method for obtaining the appropriate (according to given JDBC {@link java.sql.Connection})
 	 * {@link JdbcSupport}.
 	 *
 	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
@@ -61,7 +61,7 @@ public class JdbcSupportLoader {
 	 * but also whether the actual {@link Connection} instance implements them (i.e. can be called without simply
 	 * throwing an exception).
 	 *
-	 * @param jdbcConnection The connection whcih can be used in level-of-support testing.
+	 * @param jdbcConnection The connection which can be used in level-of-support testing.
 	 *
 	 * @return True if the connection can be used to create LOBs; false otherwise.
 	 */

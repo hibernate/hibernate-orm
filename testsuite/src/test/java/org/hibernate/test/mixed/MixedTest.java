@@ -1,9 +1,30 @@
-//$Id: MixedTest.java 15736 2008-12-27 00:49:42Z gbadner $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.mixed;
 
 import junit.framework.Test;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -39,13 +60,13 @@ public class MixedTest extends FunctionalTestCase {
 
 		Document d = new Document();
 		d.setName( "Hibernate in Action" );
-		d.setContent( Hibernate.createBlob( "blah blah blah".getBytes() ) );
+		d.setContent( s.getLobHelper().createBlob( "blah blah blah".getBytes() ) );
 		d.setParent( f );
 		Long did = (Long) s.save( d );
 
 		SecureDocument d2 = new SecureDocument();
 		d2.setName( "Secret" );
-		d2.setContent( Hibernate.createBlob( "wxyz wxyz".getBytes() ) );
+		d2.setContent( s.getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
 		// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint 
 		// column (0 <= val < 128)
 		d2.setPermissionBits( (byte) 127 );

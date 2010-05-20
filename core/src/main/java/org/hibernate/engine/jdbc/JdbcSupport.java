@@ -46,7 +46,7 @@ public interface JdbcSupport {
 	public LobCreator getLobCreator();
 
 	/**
-	 * Create an instance of a {@link LobCreator} appropriate for the current envionment, mainly meant to account for
+	 * Create an instance of a {@link LobCreator} appropriate for the current environment, mainly meant to account for
 	 * variance between JDBC 4 (<= JDK 1.6) and JDBC3 (>= JDK 1.5).
 	 *
 	 * @param lobCreationContext The context in which the LOB is being created

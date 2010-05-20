@@ -1,3 +1,26 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.dialect.functional.cache;
 
 import java.sql.Statement;
@@ -510,8 +533,8 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		Session s = openSession();
 		s.beginTransaction();
 		Blobber b = new Blobber();
-		b.setBlob( Hibernate.createBlob( "foo/bar/baz".getBytes() ) );
-		b.setClob( Hibernate.createClob("foo/bar/baz") );
+		b.setBlob( s.getLobHelper().createBlob( "foo/bar/baz".getBytes() ) );
+		b.setClob( s.getLobHelper().createClob("foo/bar/baz") );
 		s.save(b);
 		//s.refresh(b);
 		//assertTrue( b.getClob() instanceof ClobImpl );
@@ -542,7 +565,7 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		s = openSession();
 		s.beginTransaction();
 		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
-		b.setClob( Hibernate.createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
+		b.setClob( s.getLobHelper().createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
 		s.flush();
 		s.getTransaction().commit();
 		s.close();

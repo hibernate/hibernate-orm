@@ -1,4 +1,26 @@
-//$Id: SQLFunctionsTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 
 import java.util.ArrayList;
@@ -13,7 +35,6 @@ import junit.framework.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
@@ -519,8 +540,8 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		Session s = openSession();
 		Blobber b = new Blobber();
-		b.setBlob( Hibernate.createBlob( "foo/bar/baz".getBytes() ) );
-		b.setClob( Hibernate.createClob("foo/bar/baz") );
+		b.setBlob( s.getLobHelper().createBlob( "foo/bar/baz".getBytes() ) );
+		b.setClob( s.getLobHelper().createClob("foo/bar/baz") );
 		s.save(b);
 		//s.refresh(b);
 		//assertTrue( b.getClob() instanceof ClobImpl );
@@ -556,7 +577,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		s = openSession();
 		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
-		b.setClob( Hibernate.createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
+		b.setClob( s.getLobHelper().createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
 		s.flush();
 		s.connection().commit();
 		s.close();

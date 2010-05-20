@@ -75,7 +75,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		LobHolder entity = new LobHolder();
-		entity.setBlobLocator( Hibernate.createBlob( original ) );
+		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
 		s.save( entity );
 		s.getTransaction().commit();
 		s.close();
@@ -117,7 +117,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		assertNotNull( entity.getBlobLocator() );
 		assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
-		entity.setBlobLocator( Hibernate.createBlob( changed ) );
+		entity.setBlobLocator( s.getLobHelper().createBlob( changed ) );
 		s.getTransaction().commit();
 		s.close();
 

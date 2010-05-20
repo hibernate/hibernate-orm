@@ -3,7 +3,6 @@ package org.hibernate.test.interfaceproxy;
 
 import junit.framework.Test;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.junit.functional.FunctionalTestCase;
@@ -41,11 +40,11 @@ public class InterfaceProxyTest extends FunctionalTestCase {
 		Transaction t = s.beginTransaction();
 		Document d = new DocumentImpl();
 		d.setName("Hibernate in Action");
-		d.setContent( Hibernate.createBlob( "blah blah blah".getBytes(), s ) );
+		d.setContent( s.getLobHelper().createBlob( "blah blah blah".getBytes() ) );
 		Long did = (Long) s.save(d);
 		SecureDocument d2 = new SecureDocumentImpl();
 		d2.setName("Secret");
-		d2.setContent( Hibernate.createBlob( "wxyz wxyz".getBytes(), s ) );
+		d2.setContent( s.getLobHelper().createBlob( "wxyz wxyz".getBytes() ) );
 		// SybaseASE15Dialect only allows 7-bits in a byte to be inserted into a tinyint 
 		// column (0 <= val < 128)		
 		d2.setPermissionBits( (byte) 127 );

@@ -79,17 +79,7 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 
 		List allAssociations = new ArrayList();
 		allAssociations.addAll(associations);
-		allAssociations.add( new OuterJoinableAssociation( 
-				oneToManyPersister.getCollectionType(),
-				null, 
-				null, 
-				alias, 
-				JoinFragment.LEFT_OUTER_JOIN, 
-				null,
-				getFactory(), 
-				CollectionHelper.EMPTY_MAP 
-			) );
-		
+		allAssociations.add( OuterJoinableAssociation.createRoot( oneToManyPersister.getCollectionType(), alias, getFactory() ) );
 		initPersisters(allAssociations, LockMode.NONE);
 		initStatementString(elementPersister, alias, batchSize, subquery);
 	}

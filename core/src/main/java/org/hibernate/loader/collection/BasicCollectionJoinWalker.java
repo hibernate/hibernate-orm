@@ -27,8 +27,6 @@ package org.hibernate.loader.collection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
@@ -38,12 +36,12 @@ import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.OuterJoinableAssociation;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
 import org.hibernate.type.AssociationType;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -73,18 +71,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 
 		List allAssociations = new ArrayList();
 		allAssociations.addAll(associations);
-		allAssociations.add(
-				new OuterJoinableAssociation(
-						collectionPersister.getCollectionType(),
-						null,
-						null,
-						alias,
-						JoinFragment.LEFT_OUTER_JOIN,
-						null,
-						getFactory(),
-						CollectionHelper.EMPTY_MAP
-				)
-		);
+		allAssociations.add( OuterJoinableAssociation.createRoot( collectionPersister.getCollectionType(), alias, getFactory() ) );
 		initPersisters(allAssociations, LockMode.NONE);
 		initStatementString(alias, batchSize, subquery);
 	}
@@ -155,7 +142,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 
 	protected int getJoinType(
 			OuterJoinLoadable persister,
-			String path,
+			PropertyPath path,
 			int propertyNumber,
 			AssociationType associationType,
 			FetchMode metadataFetchMode,
@@ -177,7 +164,7 @@ public class BasicCollectionJoinWalker extends CollectionJoinWalker {
 				currentDepth
 		);
 		//we can use an inner join for the many-to-many
-		if ( joinType==JoinFragment.LEFT_OUTER_JOIN && "".equals(path) ) {
+		if ( joinType==JoinFragment.LEFT_OUTER_JOIN && path.isRoot() ) {
 			joinType=JoinFragment.INNER_JOIN;
 		}
 		return joinType;

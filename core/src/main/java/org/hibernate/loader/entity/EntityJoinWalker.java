@@ -24,18 +24,27 @@
  */
 package org.hibernate.loader.entity;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.AbstractEntityJoinWalker;
+import org.hibernate.loader.OuterJoinableAssociation;
+import org.hibernate.loader.PropertyPath;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
 
 /**
  * A walker for loaders that fetch entities
@@ -46,13 +55,14 @@ import org.hibernate.type.AssociationType;
 public class EntityJoinWalker extends AbstractEntityJoinWalker {
 	
 	private final LockOptions lockOptions = new LockOptions();
+	private final int[][] compositeKeyManyToOneTargetIndices;
 
 	public EntityJoinWalker(
 			OuterJoinLoadable persister, 
 			String[] uniqueKey, 
 			int batchSize, 
 			LockMode lockMode,
-			SessionFactoryImplementor factory, 
+			final SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, factory, loadQueryInfluencers );
 
@@ -62,7 +72,9 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
-		initAll( whereCondition.toString(), "", lockOptions);
+		AssociationInitCallbackImpl callback = new AssociationInitCallbackImpl( factory );
+		initAll( whereCondition.toString(), "", lockOptions, callback );
+		this.compositeKeyManyToOneTargetIndices = callback.resolve();
 	}
 
 	public EntityJoinWalker(
@@ -79,12 +91,14 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 				//include the discriminator and class-level where, but not filters
 				.append( persister.filterFragment( getAlias(), Collections.EMPTY_MAP ) );
 
-		initAll( whereCondition.toString(), "", lockOptions);
+		AssociationInitCallbackImpl callback = new AssociationInitCallbackImpl( factory );
+		initAll( whereCondition.toString(), "", lockOptions, callback );
+		this.compositeKeyManyToOneTargetIndices = callback.resolve();
 	}
 
 	protected int getJoinType(
 			OuterJoinLoadable persister,
-			String path,
+			PropertyPath path,
 			int propertyNumber,
 			AssociationType associationType,
 			FetchMode metadataFetchMode,
@@ -116,5 +130,132 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 	public String getComment() {
 		return "load " + getPersister().getEntityName();
 	}
-	
+
+	public int[][] getCompositeKeyManyToOneTargetIndices() {
+		return compositeKeyManyToOneTargetIndices;
+	}
+
+	private static class AssociationInitCallbackImpl implements AssociationInitCallback {
+		private final SessionFactoryImplementor factory;
+		private final HashMap<String,OuterJoinableAssociation> associationsByAlias
+				= new HashMap<String, OuterJoinableAssociation>();
+		private final HashMap<String,Integer> positionsByAlias = new HashMap<String, Integer>();
+		private final ArrayList<String> aliasesForAssociationsWithCompositesIds
+				= new ArrayList<String>();
+
+		public AssociationInitCallbackImpl(SessionFactoryImplementor factory) {
+			this.factory = factory;
+		}
+
+		public void associationProcessed(OuterJoinableAssociation oja, int position) {
+			associationsByAlias.put( oja.getRhsAlias(), oja );
+			positionsByAlias.put( oja.getRhsAlias(), position );
+			EntityPersister entityPersister = null;
+			if ( oja.getJoinableType().isCollectionType() ) {
+				entityPersister = ( ( QueryableCollection) oja.getJoinable() ).getElementPersister();
+			}
+			else if ( oja.getJoinableType().isEntityType() ) {
+				entityPersister = ( EntityPersister ) oja.getJoinable();
+			}
+			if ( entityPersister != null
+					&& entityPersister.getIdentifierType().isComponentType()
+					&& ! entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded()
+					&& hasAssociation( (ComponentType) entityPersister.getIdentifierType() ) ) {
+				aliasesForAssociationsWithCompositesIds.add( oja.getRhsAlias() );
+			}
+		}
+
+		private boolean hasAssociation(ComponentType componentType) {
+			int i = 0;
+			for ( Type subType : componentType.getSubtypes() ) {
+				if ( subType.isEntityType() ) {
+					return true;
+				}
+				else if ( subType.isComponentType() && hasAssociation( ( (ComponentType) subType ) ) ) {
+					return true;
+				}
+				i++;
+			}
+			return false;
+		}
+
+		public int[][] resolve() {
+			int[][] compositeKeyManyToOneTargetIndices = null;
+			for ( final String aliasWithCompositeId : aliasesForAssociationsWithCompositesIds ) {
+				final OuterJoinableAssociation joinWithCompositeId = associationsByAlias.get( aliasWithCompositeId );
+				final ArrayList<Integer> keyManyToOneTargetIndices = new ArrayList<Integer>();
+				// for each association with a composite id containing key-many-to-one(s), find the bidirectional side of
+				// each key-many-to-one (if exists) to see if it is eager as well.  If so, we need to track the indices
+				EntityPersister entityPersister = null;
+				if ( joinWithCompositeId.getJoinableType().isCollectionType() ) {
+					entityPersister = ( ( QueryableCollection) joinWithCompositeId.getJoinable() ).getElementPersister();
+				}
+				else if ( joinWithCompositeId.getJoinableType().isEntityType() ) {
+					entityPersister = ( EntityPersister ) joinWithCompositeId.getJoinable();
+				}
+
+				findKeyManyToOneTargetIndices(
+						keyManyToOneTargetIndices,
+						joinWithCompositeId,
+						(ComponentType) entityPersister.getIdentifierType()
+				);
+
+				if ( ! keyManyToOneTargetIndices.isEmpty() ) {
+					if ( compositeKeyManyToOneTargetIndices == null ) {
+						compositeKeyManyToOneTargetIndices = new int[ associationsByAlias.size() ][];
+					}
+					int position = positionsByAlias.get( aliasWithCompositeId );
+					compositeKeyManyToOneTargetIndices[position] = new int[ keyManyToOneTargetIndices.size() ];
+					int i = 0;
+					for ( int index : keyManyToOneTargetIndices ) {
+						compositeKeyManyToOneTargetIndices[position][i] = index;
+						i++;
+					}
+				}
+			}
+			return compositeKeyManyToOneTargetIndices;
+		}
+
+		private void findKeyManyToOneTargetIndices(
+				ArrayList<Integer> keyManyToOneTargetIndices,
+				OuterJoinableAssociation joinWithCompositeId,
+				ComponentType componentType) {
+			for ( Type subType : componentType.getSubtypes() ) {
+				if ( subType.isEntityType() ) {
+					Integer index = locateKeyManyToOneTargetIndex( joinWithCompositeId, (EntityType) subType );
+					if ( index != null ) {
+						keyManyToOneTargetIndices.add( index );
+					}
+				}
+				else if ( subType.isComponentType() ) {
+					findKeyManyToOneTargetIndices(
+							keyManyToOneTargetIndices,
+							joinWithCompositeId,
+							(ComponentType) subType
+					);
+				}
+			}
+		}
+
+		private Integer locateKeyManyToOneTargetIndex(OuterJoinableAssociation joinWithCompositeId, EntityType keyManyToOneType) {
+			// the lhs (if one) is a likely candidate
+			if ( joinWithCompositeId.getLhsAlias() != null ) {
+				final OuterJoinableAssociation lhs = associationsByAlias.get( joinWithCompositeId.getLhsAlias() );
+				if ( keyManyToOneType.getAssociatedEntityName( factory ).equals( lhs.getJoinableType().getAssociatedEntityName( factory ) ) ) {
+					return positionsByAlias.get( lhs.getRhsAlias() );
+				}
+			}
+			// otherwise, seek out OuterJoinableAssociation which are RHS of given OuterJoinableAssociation
+			// (joinWithCompositeId)
+			for ( OuterJoinableAssociation oja : associationsByAlias.values() ) {
+				if ( oja.getLhsAlias() != null && oja.getLhsAlias().equals( joinWithCompositeId.getRhsAlias() ) ) {
+					if ( keyManyToOneType.equals( oja.getJoinableType() ) ) {
+						return positionsByAlias.get( oja.getLhsAlias() );
+					}
+				}
+			}
+			return null;
+		}
+	}
+
 }

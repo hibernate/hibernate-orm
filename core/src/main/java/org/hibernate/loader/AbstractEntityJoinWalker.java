@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Iterator;
 
 import org.hibernate.FetchMode;
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.CascadeStyle;
@@ -42,7 +41,6 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
 import org.hibernate.type.AssociationType;
-import org.hibernate.util.CollectionHelper;
 
 /**
  * Abstract walker for walkers which begin at an entity (criteria
@@ -76,23 +74,20 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 			final String whereString,
 			final String orderByString,
 			final LockOptions lockOptions) throws MappingException {
+		initAll( whereString, orderByString, lockOptions, AssociationInitCallback.NO_CALLBACK );
+	}
+
+	protected final void initAll(
+			final String whereString,
+			final String orderByString,
+			final LockOptions lockOptions,
+			final AssociationInitCallback callback) throws MappingException {
 		walkEntityTree( persister, getAlias() );
 		List allAssociations = new ArrayList();
-		allAssociations.addAll(associations);
-		allAssociations.add(
-				new OuterJoinableAssociation(
-						persister.getEntityType(),
-						null,
-						null,
-						alias,
-						JoinFragment.LEFT_OUTER_JOIN,
-						null,
-						getFactory(),
-						CollectionHelper.EMPTY_MAP
-				)
-		);
-		initPersisters(allAssociations, lockOptions);
-		initStatementString( whereString, orderByString, lockOptions);
+		allAssociations.addAll( associations );
+		allAssociations.add( OuterJoinableAssociation.createRoot( persister.getEntityType(), alias, getFactory() ) );
+		initPersisters( allAssociations, lockOptions, callback );
+		initStatementString( whereString, orderByString, lockOptions );
 	}
 
 	protected final void initProjection(
@@ -162,17 +157,18 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 		return isJoinedFetchEnabledInMapping( config, type );
 	}
 
-	protected final boolean isJoinFetchEnabledByProfile(OuterJoinLoadable persister, String path, int propertyNumber) {
+	protected final boolean isJoinFetchEnabledByProfile(OuterJoinLoadable persister, PropertyPath path, int propertyNumber) {
 		if ( !getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
 			// perf optimization
 			return false;
 		}
 
 		// ugh, this stuff has to be made easier...
+		final String fullPath = path.getFullPath();
 		String rootPropertyName = persister.getSubclassPropertyName( propertyNumber );
-		int pos = path.lastIndexOf( rootPropertyName );
+		int pos = fullPath.lastIndexOf( rootPropertyName );
 		String relativePropertyPath = pos >= 0
-				? path.substring( pos )
+				? fullPath.substring( pos )
 				: rootPropertyName;
 		String fetchRole = persister.getEntityName() + "." + relativePropertyPath;
 

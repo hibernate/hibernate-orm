@@ -173,6 +173,10 @@ public abstract class Loader {
 		return null;
 	}
 
+	protected int[][] getCompositeKeyManyToOneTargetIndices() {
+		return null;
+	}
+
 	/**
 	 * What lock options does this load entities with?
 	 *
@@ -599,19 +603,7 @@ public abstract class Loader {
 
 		final Loadable[] persisters = getEntityPersisters();
 		final int entitySpan = persisters.length;
-
-		for ( int i = 0; i < entitySpan; i++ ) {
-			keys[i] = getKeyFromResultSet(
-			        i,
-					persisters[i],
-					i == entitySpan - 1 ?
-							queryParameters.getOptionalId() :
-							null,
-					resultSet,
-					session
-				);
-			//TODO: the i==entitySpan-1 bit depends upon subclass implementation (very bad)
-		}
+		extractKeysFromResultSet( persisters, queryParameters, resultSet, session, keys, lockModesArray, hydratedObjects );
 
 		registerNonExists( keys, persisters, session );
 
@@ -646,6 +638,98 @@ public abstract class Loader {
 
 		return getResultColumnOrRow( row, queryParameters.getResultTransformer(), resultSet, session );
 
+	}
+
+	protected void extractKeysFromResultSet(
+			Loadable[] persisters,
+			QueryParameters queryParameters,
+			ResultSet resultSet,
+			SessionImplementor session,
+			EntityKey[] keys,
+			LockMode[] lockModes,
+			List hydratedObjects) throws SQLException {
+		final int entitySpan = persisters.length;
+
+		final int numberOfPersistersToProcess;
+		final Serializable optionalId = queryParameters.getOptionalId();
+		if ( isSingleRowLoader() && optionalId != null ) {
+			keys[ entitySpan - 1 ] = new EntityKey( optionalId, persisters[ entitySpan - 1 ], session.getEntityMode() );
+			// skip the last persister below...
+			numberOfPersistersToProcess = entitySpan - 1;
+		}
+		else {
+			numberOfPersistersToProcess = entitySpan;
+		}
+
+		final Object[] hydratedKeyState = new Object[numberOfPersistersToProcess];
+
+		for ( int i = 0; i < numberOfPersistersToProcess; i++ ) {
+			final Type idType = persisters[i].getIdentifierType();
+			hydratedKeyState[i] = idType.hydrate( resultSet, getEntityAliases()[i].getSuffixedKeyAliases(), session, null );
+		}
+
+		for ( int i = 0; i < numberOfPersistersToProcess; i++ ) {
+			final Type idType = persisters[i].getIdentifierType();
+			if ( idType.isComponentType() && getCompositeKeyManyToOneTargetIndices() != null ) {
+				// we may need to force resolve any key-many-to-one(s)
+				int[] keyManyToOneTargetIndices = getCompositeKeyManyToOneTargetIndices()[i];
+				// todo : better solution is to order the index processing based on target indices
+				//		that would account for multiple levels whereas this scheme does not
+				if ( keyManyToOneTargetIndices != null ) {
+					for ( int targetIndex : keyManyToOneTargetIndices ) {
+						if ( targetIndex < numberOfPersistersToProcess ) {
+							final Type targetIdType = persisters[targetIndex].getIdentifierType();
+							final Serializable targetId = (Serializable) targetIdType.resolve(
+									hydratedKeyState[targetIndex],
+									session,
+									null
+							);
+							// todo : need a way to signal that this key is resolved and its data resolved
+							keys[targetIndex] = new EntityKey( targetId, persisters[targetIndex], session.getEntityMode() );
+						}
+
+						// this part copied from #getRow, this section could be refactored out
+						Object object = session.getEntityUsingInterceptor( keys[targetIndex] );
+						if ( object != null ) {
+							//its already loaded so don't need to hydrate it
+							instanceAlreadyLoaded(
+									resultSet,
+									targetIndex,
+									persisters[targetIndex],
+									keys[targetIndex],
+									object,
+									lockModes[targetIndex],
+									session
+							);
+						}
+						else {
+							object = instanceNotYetLoaded(
+									resultSet,
+									targetIndex,
+									persisters[targetIndex],
+									getEntityAliases()[targetIndex].getRowIdAlias(),
+									keys[targetIndex],
+									lockModes[targetIndex],
+									getOptionalObjectKey( queryParameters, session ),
+									queryParameters.getOptionalObject(),
+									hydratedObjects,
+									session
+							);
+						}
+					}
+				}
+			}
+			final Serializable resolvedId = (Serializable) idType.resolve( hydratedKeyState[i], session, null );
+			keys[i] = resolvedId == null ? null : new EntityKey( resolvedId, persisters[i], session.getEntityMode() );
+		}
+	}
+
+	private Serializable determineResultId(SessionImplementor session, Serializable optionalId, Type idType, Serializable resolvedId) {
+		final boolean idIsResultId = optionalId != null
+				&& resolvedId != null
+				&& idType.isEqual( optionalId, resolvedId, session.getEntityMode(), factory );
+		final Serializable resultId = idIsResultId ? optionalId : resolvedId;
+		return resultId;
 	}
 
 	protected void applyPostLoadLocks(Object[] row, LockMode[] lockModesArray, SessionImplementor session) {

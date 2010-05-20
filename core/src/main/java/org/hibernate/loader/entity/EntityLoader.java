@@ -24,14 +24,12 @@
  */
 package org.hibernate.loader.entity;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
 
@@ -46,6 +44,7 @@ import org.hibernate.type.Type;
 public class EntityLoader extends AbstractEntityLoader {
 	
 	private final boolean batchLoader;
+	private final int[][] compositeKeyManyToOneTargetIndices;
 	
 	public EntityLoader(
 			OuterJoinLoadable persister, 
@@ -107,7 +106,7 @@ public class EntityLoader extends AbstractEntityLoader {
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
 
-		JoinWalker walker = new EntityJoinWalker(
+		EntityJoinWalker walker = new EntityJoinWalker(
 				persister, 
 				uniqueKey, 
 				batchSize, 
@@ -116,7 +115,7 @@ public class EntityLoader extends AbstractEntityLoader {
 				loadQueryInfluencers
 		);
 		initFromWalker( walker );
-
+		this.compositeKeyManyToOneTargetIndices = walker.getCompositeKeyManyToOneTargetIndices();
 		postInstantiate();
 
 		batchLoader = batchSize > 1;
@@ -134,7 +133,7 @@ public class EntityLoader extends AbstractEntityLoader {
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
 
-		JoinWalker walker = new EntityJoinWalker(
+		EntityJoinWalker walker = new EntityJoinWalker(
 				persister,
 				uniqueKey,
 				batchSize,
@@ -143,7 +142,7 @@ public class EntityLoader extends AbstractEntityLoader {
 				loadQueryInfluencers
 		);
 		initFromWalker( walker );
-
+		this.compositeKeyManyToOneTargetIndices = walker.getCompositeKeyManyToOneTargetIndices();
 		postInstantiate();
 
 		batchLoader = batchSize > 1;
@@ -163,5 +162,8 @@ public class EntityLoader extends AbstractEntityLoader {
 	protected boolean isSingleRowLoader() {
 		return !batchLoader;
 	}
-	
+
+	public int[][] getCompositeKeyManyToOneTargetIndices() {
+		return compositeKeyManyToOneTargetIndices;
+	}
 }

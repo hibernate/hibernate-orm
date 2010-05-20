@@ -30,7 +30,6 @@ import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.CascadeStyle;
@@ -38,12 +37,12 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.AbstractEntityJoinWalker;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ArrayHelper;
 
 /**
@@ -121,7 +120,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 	protected int getJoinType(
 			OuterJoinLoadable persister,
-			final String path,
+			final PropertyPath path,
 			int propertyNumber,
 			AssociationType associationType,
 			FetchMode metadataFetchMode,
@@ -130,15 +129,15 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			String[] lhsColumns,
 			final boolean nullable,
 			final int currentDepth) throws MappingException {
-		if ( translator.isJoin( path ) ) {
-			return translator.getJoinType( path );
+		if ( translator.isJoin( path.getFullPath() ) ) {
+			return translator.getJoinType( path.getFullPath() );
 		}
 		else {
 			if ( translator.hasProjection() ) {
 				return -1;
 			}
 			else {
-				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path );
+				FetchMode fetchMode = translator.getRootCriteria().getFetchMode( path.getFullPath() );
 				if ( isDefaultFetchMode( fetchMode ) ) {
 					if ( isJoinFetchEnabledByProfile( persister, path, propertyNumber ) ) {
 						return getJoinType( nullable, currentDepth );
@@ -174,14 +173,14 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	protected int getJoinType(
 			AssociationType associationType,
 			FetchMode config,
-			String path,
+			PropertyPath path,
 			String lhsTable,
 			String[] lhsColumns,
 			boolean nullable,
 			int currentDepth,
 			CascadeStyle cascadeStyle) throws MappingException {
-		return ( translator.isJoin( path ) ?
-				translator.getJoinType( path ) :
+		return ( translator.isJoin( path.getFullPath() ) ?
+				translator.getJoinType( path.getFullPath() ) :
 				super.getJoinType(
 						associationType,
 						config,
@@ -208,9 +207,9 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			( (Queryable) getPersister() ).filterFragment( getAlias(), getLoadQueryInfluencers().getEnabledFilters() );
 	}
 	
-	protected String generateTableAlias(int n, String path, Joinable joinable) {
+	protected String generateTableAlias(int n, PropertyPath path, Joinable joinable) {
 		if ( joinable.consumesEntityAlias() ) {
-			final Criteria subcriteria = translator.getCriteria(path);
+			final Criteria subcriteria = translator.getCriteria( path.getFullPath() );
 			String sqlAlias = subcriteria==null ? null : translator.getSQLAlias(subcriteria);
 			if (sqlAlias!=null) {
 				userAliasList.add( subcriteria.getAlias() ); //alias may be null
@@ -235,8 +234,8 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 		return "criteria query";
 	}
 
-	protected String getWithClause(String path) {
-		return translator.getWithClause(path); 
+	protected String getWithClause(PropertyPath path) {
+		return translator.getWithClause( path.getFullPath() );
 	}
 	
 }

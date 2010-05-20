@@ -1022,9 +1022,11 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable) throws HibernateException {
 		// todo : remove
-		LoadEventListener.LoadType type = nullable ? 
-				LoadEventListener.INTERNAL_LOAD_NULLABLE : 
-				eager ? LoadEventListener.INTERNAL_LOAD_EAGER : LoadEventListener.INTERNAL_LOAD_LAZY;
+		LoadEventListener.LoadType type = nullable
+				? LoadEventListener.INTERNAL_LOAD_NULLABLE
+				: eager
+						? LoadEventListener.INTERNAL_LOAD_EAGER
+						: LoadEventListener.INTERNAL_LOAD_LAZY;
 		LoadEvent event = new LoadEvent(id, entityName, true, this);
 		fireLoad(event, type);
 		if ( !nullable ) {

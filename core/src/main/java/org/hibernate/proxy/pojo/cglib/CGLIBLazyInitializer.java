@@ -39,7 +39,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
 
 import org.slf4j.LoggerFactory;
@@ -63,10 +63,15 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 	private Class[] interfaces;
 	private boolean constructed = false;
 
-	static HibernateProxy getProxy(final String entityName, final Class persistentClass,
-			final Class[] interfaces, final Method getIdentifierMethod,
-			final Method setIdentifierMethod, AbstractComponentType componentIdType,
-			final Serializable id, final SessionImplementor session) throws HibernateException {
+	static HibernateProxy getProxy(
+			final String entityName,
+			final Class persistentClass,
+			final Class[] interfaces,
+			final Method getIdentifierMethod,
+			final Method setIdentifierMethod,
+			CompositeType componentIdType,
+			final Serializable id,
+			final SessionImplementor session) throws HibernateException {
 		// note: interfaces is assumed to already contain HibernateProxy.class
 
 		try {
@@ -94,12 +99,16 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 		}
 	}
 
-	public static HibernateProxy getProxy(final Class factory, final String entityName,
-			final Class persistentClass, final Class[] interfaces,
-			final Method getIdentifierMethod, final Method setIdentifierMethod,
-			final AbstractComponentType componentIdType, final Serializable id,
+	public static HibernateProxy getProxy(
+			final Class factory,
+			final String entityName,
+			final Class persistentClass,
+			final Class[] interfaces,
+			final Method getIdentifierMethod,
+			final Method setIdentifierMethod,
+			final CompositeType componentIdType,
+			final Serializable id,
 			final SessionImplementor session) throws HibernateException {
-
 		final CGLIBLazyInitializer instance = new CGLIBLazyInitializer(
 				entityName,
 				persistentClass,
@@ -150,9 +159,14 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 		return e.createClass();
 	}
 
-	private CGLIBLazyInitializer(final String entityName, final Class persistentClass,
-			final Class[] interfaces, final Serializable id, final Method getIdentifierMethod,
-			final Method setIdentifierMethod, final AbstractComponentType componentIdType,
+	private CGLIBLazyInitializer(
+			final String entityName,
+			final Class persistentClass,
+			final Class[] interfaces,
+			final Serializable id,
+			final Method getIdentifierMethod,
+			final Method setIdentifierMethod,
+			final CompositeType componentIdType,
 			final SessionImplementor session) {
 		super(
 				entityName,

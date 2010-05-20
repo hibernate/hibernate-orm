@@ -34,8 +34,8 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.sql.Template;
-import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
@@ -206,7 +206,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		if (path!=null) addPropertyPath(path, type, columns, columnReaders, columnReaderTemplates, formulaTemplates);
 
 		if ( type.isComponentType() ) {
-			AbstractComponentType actype = (AbstractComponentType) type;
+			CompositeType actype = (CompositeType) type;
 			initComponentPropertyPaths( path, actype, columns, columnReaders, columnReaderTemplates, formulaTemplates, factory );
 			if ( actype.isEmbedded() ) {
 				initComponentPropertyPaths(
@@ -266,12 +266,11 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 
 	protected void initComponentPropertyPaths(
 			final String path,
-			final AbstractComponentType type,
+			final CompositeType type,
 			final String[] columns,
 			final String[] columnReaders,
 			final String[] columnReaderTemplates,
-			String[] formulaTemplates, final Mapping factory)
-	throws MappingException {
+			String[] formulaTemplates, final Mapping factory) throws MappingException {
 
 		Type[] types = type.getSubtypes();
 		String[] properties = type.getPropertyNames();

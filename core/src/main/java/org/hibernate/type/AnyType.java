@@ -52,7 +52,7 @@ import org.hibernate.util.ArrayHelper;
  * 
  * @author Gavin King
  */
-public class AnyType extends AbstractType implements AbstractComponentType, AssociationType {
+public class AnyType extends AbstractType implements CompositeType, AssociationType {
 	private final Type identifierType;
 	private final Type metaType;
 

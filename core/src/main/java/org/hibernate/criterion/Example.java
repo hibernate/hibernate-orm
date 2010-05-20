@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.criterion;
 
@@ -35,7 +34,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 
@@ -218,7 +217,7 @@ public class Example implements Criterion {
 					appendComponentCondition(
 						propertyName,
 						propertyValue,
-						(AbstractComponentType) propertyTypes[i],
+						(CompositeType) propertyTypes[i],
 						criteria,
 						criteriaQuery,
 						buf
@@ -261,7 +260,7 @@ public class Example implements Criterion {
 
 			if (isPropertyIncluded) {
 				if ( propertyTypes[i].isComponentType() ) {
-					addComponentTypedValues(name, value, (AbstractComponentType) type, list, criteria, criteriaQuery);
+					addComponentTypedValues(name, value, (CompositeType) type, list, criteria, criteriaQuery);
 				}
 				else {
 					addPropertyTypedValue(value, type, list);
@@ -296,7 +295,7 @@ public class Example implements Criterion {
 	protected void addComponentTypedValues(
 			String path, 
 			Object component, 
-			AbstractComponentType type, 
+			CompositeType type,
 			List list, 
 			Criteria criteria, 
 			CriteriaQuery criteriaQuery)
@@ -312,7 +311,7 @@ public class Example implements Criterion {
 				String subpath = StringHelper.qualify( path, propertyNames[i] );
 				if ( isPropertyIncluded(value, subpath, subtype) ) {
 					if ( subtype.isComponentType() ) {
-						addComponentTypedValues(subpath, value, (AbstractComponentType) subtype, list, criteria, criteriaQuery);
+						addComponentTypedValues(subpath, value, (CompositeType) subtype, list, criteria, criteriaQuery);
 					}
 					else {
 						addPropertyTypedValue(value, subtype, list);
@@ -356,7 +355,7 @@ public class Example implements Criterion {
 	protected void appendComponentCondition(
 		String path,
 		Object component,
-		AbstractComponentType type,
+		CompositeType type,
 		Criteria criteria,
 		CriteriaQuery criteriaQuery,
 		StringBuffer buf)
@@ -375,7 +374,7 @@ public class Example implements Criterion {
 						appendComponentCondition(
 							subpath,
 							value,
-							(AbstractComponentType) subtype,
+							(CompositeType) subtype,
 							criteria,
 							criteriaQuery,
 							buf

@@ -96,11 +96,11 @@ public interface Type extends Serializable {
 	public boolean isAnyType();
 
 	/**
-	 * Return true if the implementation is castable to {@link AbstractComponentType}. Essentially a polymorphic
-	 * version of {@code (type instanceof AbstractComponentType.class)}.  A component type may own collections or
+	 * Return true if the implementation is castable to {@link CompositeType}. Essentially a polymorphic
+	 * version of {@code (type instanceof CompositeType.class)}.  A component type may own collections or
 	 * associations and hence must provide certain extra functionality.
 	 *
-	 * @return True if this type is also an {@link CollectionType} implementor; false otherwise.
+	 * @return True if this type is also an {@link CompositeType} implementor; false otherwise.
 	 */
 	public boolean isComponentType();
 

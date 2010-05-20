@@ -38,9 +38,9 @@ import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
@@ -212,7 +212,7 @@ public final class Cascade {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				cascadeComponent( parent, child, (AbstractComponentType) type, propertyName, anything );
+				cascadeComponent( parent, child, (CompositeType) type, propertyName, anything );
 			}
 		}
 		else {
@@ -300,7 +300,7 @@ public final class Cascade {
 	private void cascadeComponent(
 			final Object parent,
 			final Object child,
-			final AbstractComponentType componentType,
+			final CompositeType componentType,
 			final String componentPropertyName,
 			final Object anything) {
 		componentPathStack.push( componentPropertyName );

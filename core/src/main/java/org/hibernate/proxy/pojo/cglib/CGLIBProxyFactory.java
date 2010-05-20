@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.proxy.pojo.cglib;
 
@@ -32,7 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.type.CompositeType;
 
 /**
  * @author Gavin King
@@ -46,7 +45,7 @@ public class CGLIBProxyFactory implements ProxyFactory {
 	private Class[] interfaces;
 	private Method getIdentifierMethod;
 	private Method setIdentifierMethod;
-	private AbstractComponentType componentIdType;
+	private CompositeType componentIdType;
 	private Class factory;
 
 	public void postInstantiate(
@@ -55,7 +54,7 @@ public class CGLIBProxyFactory implements ProxyFactory {
 		final Set interfaces,
 		final Method getIdentifierMethod,
 		final Method setIdentifierMethod,
-		AbstractComponentType componentIdType)
+		CompositeType componentIdType)
 	throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;

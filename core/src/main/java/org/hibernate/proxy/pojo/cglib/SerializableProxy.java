@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.proxy.pojo.cglib;
 
@@ -30,7 +29,7 @@ import java.lang.reflect.Method;
 import org.hibernate.HibernateException;
 import org.hibernate.proxy.AbstractSerializableProxy;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.type.CompositeType;
 
 /**
  * Serializable placeholder for <tt>CGLIB</tt> proxies
@@ -44,20 +43,20 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private String getIdentifierMethodName;
 	private String setIdentifierMethodName;
 	private Class[] setIdentifierMethodParams;
-	private AbstractComponentType componentIdType;
+	private CompositeType componentIdType;
 
-	public SerializableProxy() {}
+	public SerializableProxy() {
+	}
 
 	public SerializableProxy(
-		final String entityName,
-		final Class persistentClass,
-		final Class[] interfaces,
-		final Serializable id,
-		final Boolean readOnly,
-		final Method getIdentifierMethod,
-		final Method setIdentifierMethod,
-		AbstractComponentType componentIdType
-	) {
+			final String entityName,
+			final Class persistentClass,
+			final Class[] interfaces,
+			final Serializable id,
+			final Boolean readOnly,
+			final Method getIdentifierMethod,
+			final Method setIdentifierMethod,
+			CompositeType componentIdType) {
 		super( entityName, id, readOnly );
 		this.persistentClass = persistentClass;
 		this.interfaces = interfaces;

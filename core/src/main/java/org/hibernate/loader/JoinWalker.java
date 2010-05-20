@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader;
 
@@ -50,8 +49,8 @@ import org.hibernate.sql.ConditionFragment;
 import org.hibernate.sql.DisjunctionFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
@@ -348,7 +347,7 @@ public class JoinWalker {
 			}
 			else if ( type.isComponentType() ) {
 				walkCompositeElementTree(
-						(AbstractComponentType) type,
+						(CompositeType) type,
 						persister.getElementColumnNames(),
 						persister,
 						alias,
@@ -525,7 +524,7 @@ public class JoinWalker {
 			}
 			else if ( type.isComponentType() ) {
 				walkComponentTree(
-						( AbstractComponentType ) type,
+						( CompositeType ) type,
 						i,
 						0,
 						persister,
@@ -552,7 +551,7 @@ public class JoinWalker {
 	 * @throws org.hibernate.MappingException ???
 	 */
 	private void walkComponentTree(
-			final AbstractComponentType componentType,
+			final CompositeType componentType,
 			final int propertyNumber,
 			int begin,
 			final OuterJoinLoadable persister,
@@ -599,7 +598,7 @@ public class JoinWalker {
 			else if ( types[i].isComponentType() ) {
 				final PropertyPath subPath = path.append( propertyNames[i] );
 				walkComponentTree(
-						( AbstractComponentType ) types[i],
+						( CompositeType ) types[i],
 						propertyNumber,
 						begin,
 						persister,
@@ -617,7 +616,7 @@ public class JoinWalker {
 	 * For a composite element, add to a list of associations to be fetched by outerjoin
 	 */
 	private void walkCompositeElementTree(
-			final AbstractComponentType compositeType,
+			final CompositeType compositeType,
 			final String[] cols,
 			final QueryableCollection persister,
 			final String alias,
@@ -662,7 +661,7 @@ public class JoinWalker {
 			else if ( types[i].isComponentType() ) {
 				final PropertyPath subPath = path.append( propertyNames[i] );
 				walkCompositeElementTree(
-						(AbstractComponentType) types[i],
+						(CompositeType) types[i],
 						lhsColumns,
 						persister,
 						alias,

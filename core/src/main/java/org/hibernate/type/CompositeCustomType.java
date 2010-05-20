@@ -47,7 +47,7 @@ import org.hibernate.usertype.CompositeUserType;
  * Adapts <tt>CompositeUserType</tt> to <tt>Type</tt> interface
  * @author Gavin King
  */
-public class CompositeCustomType extends AbstractType implements AbstractComponentType {
+public class CompositeCustomType extends AbstractType implements CompositeType {
 	private final CompositeUserType userType;
 	private final String name;
 

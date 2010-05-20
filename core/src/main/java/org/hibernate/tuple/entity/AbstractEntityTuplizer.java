@@ -34,20 +34,17 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.engine.Cascade;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.PersistEvent;
-import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.id.Assigned;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
@@ -55,8 +52,8 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.VersionProperty;
-import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -84,7 +81,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	protected final boolean hasCustomAccessors;
 	private final Instantiator instantiator;
 	private final ProxyFactory proxyFactory;
-	private final AbstractComponentType identifierMapperType;
+	private final CompositeType identifierMapperType;
 
 	public Type getIdentifierMapperType() {
 		return identifierMapperType;
@@ -182,7 +179,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			mappedIdentifierValueMarshaller = null;
 		}
 		else {
-			identifierMapperType = (AbstractComponentType) mapper.getType();
+			identifierMapperType = (CompositeType) mapper.getType();
 			mappedIdentifierValueMarshaller = buildMappedIdentifierValueMarshaller(
 					(ComponentType) entityMetamodel.getIdentifierProperty().getType(),
 					(ComponentType) identifierMapperType
@@ -262,7 +259,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public void setIdentifier(Object entity, Serializable id, SessionImplementor session) {
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			if ( entity != id ) {
-				AbstractComponentType copier = (AbstractComponentType) entityMetamodel.getIdentifierProperty().getType();
+				CompositeType copier = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
 				copier.setPropertyValues( entity, copier.getPropertyValues( id, getEntityMode() ), getEntityMode() );
 			}
 		}

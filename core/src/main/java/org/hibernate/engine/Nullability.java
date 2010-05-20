@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
 
@@ -30,8 +29,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.AbstractComponentType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
@@ -138,7 +137,7 @@ public final class Nullability {
 	throws HibernateException {
 		//for non null args, check for components and elements containing components
 		if ( propertyType.isComponentType() ) {
-			return checkComponentNullability( value, (AbstractComponentType) propertyType );
+			return checkComponentNullability( value, (CompositeType) propertyType );
 		}
 		else if ( propertyType.isCollectionType() ) {
 
@@ -148,7 +147,7 @@ public final class Nullability {
 			if ( collectionElementType.isComponentType() ) {
 				//check for all components values in the collection
 
-				AbstractComponentType componentType = (AbstractComponentType) collectionElementType;
+				CompositeType componentType = (CompositeType) collectionElementType;
 				Iterator iter = CascadingAction.getLoadedElementsIterator(session, collectionType, value);
 				while ( iter.hasNext() ) {
 					Object compValue = iter.next();
@@ -171,7 +170,7 @@ public final class Nullability {
 	 * @return property path
 	 * @throws HibernateException error while getting subcomponent values
 	 */
-	private String checkComponentNullability(final Object value, final AbstractComponentType compType) 
+	private String checkComponentNullability(final Object value, final CompositeType compType)
 	throws HibernateException {
 		/* will check current level if some of them are not null
 		 * or sublevels if they exist

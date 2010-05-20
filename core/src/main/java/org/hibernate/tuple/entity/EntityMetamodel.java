@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple.entity;
 
@@ -35,27 +34,27 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.tuple.IdentifierProperty;
-import org.hibernate.tuple.StandardProperty;
-import org.hibernate.tuple.PropertyFactory;
-import org.hibernate.tuple.VersionProperty;
-import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.Versioning;
 import org.hibernate.engine.ValueInclusion;
+import org.hibernate.engine.Versioning;
+import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.tuple.IdentifierProperty;
+import org.hibernate.tuple.PropertyFactory;
+import org.hibernate.tuple.StandardProperty;
+import org.hibernate.tuple.VersionProperty;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.ReflectHelper;
 
@@ -430,7 +429,7 @@ public class EntityMetamodel implements Serializable {
 			return true;
 		}
 		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( ( AbstractComponentType ) type ).getSubtypes();
+			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
 				if ( indicatesCollection( subtypes[i] ) ) {
 					return true;

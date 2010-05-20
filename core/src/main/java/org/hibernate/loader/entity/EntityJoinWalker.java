@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.entity;
 
@@ -42,7 +41,7 @@ import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -160,21 +159,19 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 			if ( entityPersister != null
 					&& entityPersister.getIdentifierType().isComponentType()
 					&& ! entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded()
-					&& hasAssociation( (ComponentType) entityPersister.getIdentifierType() ) ) {
+					&& hasAssociation( (CompositeType) entityPersister.getIdentifierType() ) ) {
 				aliasesForAssociationsWithCompositesIds.add( oja.getRhsAlias() );
 			}
 		}
 
-		private boolean hasAssociation(ComponentType componentType) {
-			int i = 0;
+		private boolean hasAssociation(CompositeType componentType) {
 			for ( Type subType : componentType.getSubtypes() ) {
 				if ( subType.isEntityType() ) {
 					return true;
 				}
-				else if ( subType.isComponentType() && hasAssociation( ( (ComponentType) subType ) ) ) {
+				else if ( subType.isComponentType() && hasAssociation( ( (CompositeType) subType ) ) ) {
 					return true;
 				}
-				i++;
 			}
 			return false;
 		}
@@ -197,7 +194,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 				findKeyManyToOneTargetIndices(
 						keyManyToOneTargetIndices,
 						joinWithCompositeId,
-						(ComponentType) entityPersister.getIdentifierType()
+						(CompositeType) entityPersister.getIdentifierType()
 				);
 
 				if ( ! keyManyToOneTargetIndices.isEmpty() ) {
@@ -219,7 +216,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 		private void findKeyManyToOneTargetIndices(
 				ArrayList<Integer> keyManyToOneTargetIndices,
 				OuterJoinableAssociation joinWithCompositeId,
-				ComponentType componentType) {
+				CompositeType componentType) {
 			for ( Type subType : componentType.getSubtypes() ) {
 				if ( subType.isEntityType() ) {
 					Integer index = locateKeyManyToOneTargetIndex( joinWithCompositeId, (EntityType) subType );
@@ -231,7 +228,7 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 					findKeyManyToOneTargetIndices(
 							keyManyToOneTargetIndices,
 							joinWithCompositeId,
-							(ComponentType) subType
+							(CompositeType) subType
 					);
 				}
 			}

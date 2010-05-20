@@ -27,16 +27,16 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
+import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.EntityMode;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 
@@ -109,7 +109,7 @@ public class Property implements Serializable, MetaAttributable {
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		Type type = value.getType();
 		if ( type.isComponentType() && !type.isAnyType() ) {
-			AbstractComponentType actype = (AbstractComponentType) type;
+			CompositeType actype = (CompositeType) type;
 			int length = actype.getSubtypes().length;
 			for ( int i=0; i<length; i++ ) {
 				if ( actype.getCascadeStyle(i)!=CascadeStyle.NONE ) return CascadeStyle.ALL;

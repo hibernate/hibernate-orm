@@ -54,7 +54,7 @@ import org.hibernate.util.StringHelper;
  *
  * @author Gavin King
  */
-public class ComponentType extends AbstractType implements AbstractComponentType {
+public class ComponentType extends AbstractType implements CompositeType {
 
 	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;

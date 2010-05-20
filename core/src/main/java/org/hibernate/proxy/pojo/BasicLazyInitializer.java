@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.proxy.pojo;
 
@@ -29,7 +28,7 @@ import java.lang.reflect.Method;
 
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.util.MarkerObject;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
@@ -48,7 +47,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	protected Method setIdentifierMethod;
 	protected boolean overridesEquals;
 	private Object replacement;
-	protected AbstractComponentType componentIdType;
+	protected CompositeType componentIdType;
 
 	protected BasicLazyInitializer(
 			String entityName,
@@ -56,7 +55,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 	        Serializable id,
 	        Method getIdentifierMethod,
 	        Method setIdentifierMethod,
-	        AbstractComponentType componentIdType,
+	        CompositeType componentIdType,
 	        SessionImplementor session) {
 		super(entityName, id, session);
 		this.persistentClass = persistentClass;
@@ -68,30 +67,26 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected abstract Object serializableProxy();
 
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	protected final Object invoke(Method method, Object[] args, Object proxy) throws Throwable {
-
 		String methodName = method.getName();
 		int params = args.length;
 
 		if ( params==0 ) {
-
 			if ( "writeReplace".equals(methodName) ) {
 				return getReplacement();
 			}
 			else if ( !overridesEquals && "hashCode".equals(methodName) ) {
-				return new Integer( System.identityHashCode(proxy) );
+				return Integer.valueOf( System.identityHashCode(proxy) );
 			}
 			else if ( isUninitialized() && method.equals(getIdentifierMethod) ) {
 				return getIdentifier();
 			}
-
 			else if ( "getHibernateLazyInitializer".equals(methodName) ) {
 				return this;
 			}
-
 		}
 		else if ( params==1 ) {
-
 			if ( !overridesEquals && "equals".equals(methodName) ) {
 				return args[0]==proxy ? Boolean.TRUE : Boolean.FALSE;
 			}
@@ -100,7 +95,6 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 				setIdentifier( (Serializable) args[0] );
 				return INVOKE_IMPLEMENTATION;
 			}
-
 		}
 
 		//if it is a property of an embedded component, invoke on the "identifier"

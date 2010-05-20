@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple.entity;
 
@@ -33,20 +32,19 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.EntityNameResolver;
-import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.classic.Validatable;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.intercept.FieldInterceptor;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
@@ -54,7 +52,9 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.AbstractComponentType;
+import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.PojoInstantiator;
+import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -191,7 +191,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 					proxyGetIdentifierMethod,
 					proxySetIdentifierMethod,
 					persistentClass.hasEmbeddedIdentifier() ?
-			                (AbstractComponentType) persistentClass.getIdentifier().getType() :
+			                (CompositeType) persistentClass.getIdentifier().getType() :
 			                null
 			);
 		}

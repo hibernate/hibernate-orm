@@ -248,7 +248,7 @@ public class TypeHelper {
 			}
 			else if ( types[i].isComponentType() ) {
 				// need to extract the component values and check for subtype replacements...
-				AbstractComponentType componentType = ( AbstractComponentType ) types[i];
+				CompositeType componentType = ( CompositeType ) types[i];
 				Type[] subtypes = componentType.getSubtypes();
 				Object[] origComponentValues = original[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( original[i], session );
 				Object[] targetComponentValues = target[i] == null ? new Object[subtypes.length] : componentType.getPropertyValues( target[i], session );

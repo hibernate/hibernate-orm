@@ -105,7 +105,7 @@ public class EagerKeyManyToOneTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelfFailureExpected() {
+	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf() {
 		// long winded method name to say that this is a test specifically for HHH-2277 ;)
 		// essentially we have a bidirectional association where one side of the
 		// association is actually part of a composite PK.

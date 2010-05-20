@@ -1004,6 +1004,12 @@ public interface Session extends Serializable {
 	 */
 	public TypeHelper getTypeHelper();
 
+	/**
+	 * Retrieve this session's helper/delegate for creating LOB instances.
+	 *
+	 * @return This session's LOB helper
+	 */
+	public LobHelper getLobHelper();
 
 	/**
 	 * Contains locking details (LockMode, Timeout and Scope).

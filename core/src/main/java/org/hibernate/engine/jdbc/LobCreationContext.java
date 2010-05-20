@@ -26,9 +26,6 @@ package org.hibernate.engine.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.JDBCException;
-import org.hibernate.exception.SQLExceptionConverter;
-
 /**
  * Provides callback access into the context in which the LOB is to be created.  Mainly this is useful
  * for gaining access to the JDBC {@link Connection} for use in JDBC 4 environments.

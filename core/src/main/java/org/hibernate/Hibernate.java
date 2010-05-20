@@ -438,7 +438,7 @@ public final class Hibernate {
 	 *
 	 * @param bytes a byte array
 	 * @return the Blob
-	 * @deprecated Use {@link #createBlob(byte[], Session)} instead
+	 * @deprecated Use {@link LobHelper#createBlob(byte[])} instead.
 	 */
 	public static Blob createBlob(byte[] bytes) {
 		return NonContextualLobCreator.INSTANCE.wrap(
@@ -452,9 +452,9 @@ public final class Hibernate {
 	 * @param bytes a byte array
 	 * @param session The session in which the {@link Blob} will be used.
 	 * @return the Blob
+	 * @deprecated Use {@link LobHelper#createBlob(byte[])} instead.
 	 */
 	public static Blob createBlob(byte[] bytes, Session session) {
-		// todo : wrap?
 		return getLobCreator( session ).createBlob( bytes );
 	}
 
@@ -475,8 +475,9 @@ public final class Hibernate {
 	 * @param stream a binary stream
 	 * @param length the number of bytes in the stream
 	 * @return the Blob
-	 * @deprecated Use {@link #createBlob(InputStream, long, Session)} instead
+	 * @deprecated Use {@link LobHelper#createBlob(InputStream, long)} instead.
 	 */
+	@Deprecated
 	public static Blob createBlob(InputStream stream, int length) {
 		return NonContextualLobCreator.INSTANCE.wrap(
 				NonContextualLobCreator.INSTANCE.createBlob( stream, length )
@@ -489,8 +490,9 @@ public final class Hibernate {
 	 * @param stream a binary stream
 	 * @param length the number of bytes in the stream
 	 * @return the Blob
-	 * @deprecated Use {@link #createBlob(InputStream, long, Session)} instead
+	 * @deprecated Use {@link LobHelper#createBlob(InputStream, long)} instead.
 	 */
+	@Deprecated
 	public static Blob createBlob(InputStream stream, long length) {
 		return NonContextualLobCreator.INSTANCE.wrap(
 				NonContextualLobCreator.INSTANCE.createBlob( stream, length )
@@ -504,9 +506,10 @@ public final class Hibernate {
 	 * @param length the number of bytes in the stream
 	 * @param session The session in which the {@link Blob} will be used.
 	 * @return the Blob
+	 * @deprecated Use {@link LobHelper#createBlob(InputStream, long)} instead.
 	 */
+	@Deprecated
 	public static Blob createBlob(InputStream stream, long length, Session session) {
-		// todo : wrap?
 		return getLobCreator( session ).createBlob( stream, length );
 	}
 
@@ -520,8 +523,9 @@ public final class Hibernate {
 	 * @param stream a binary stream
 	 * @return the Blob
 	 * @throws IOException Indicates an I/O problem accessing the stream
-	 * @deprecated Use {@link #createBlob(InputStream, long, Session)} instead
+	 * @deprecated With no direct replacement.  Use {@link #createBlob(InputStream,long)} instead, passing in the length
 	 */
+	@Deprecated
 	public static Blob createBlob(InputStream stream) throws IOException {
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream( stream.available() );
 		StreamUtils.copy( stream, buffer );
@@ -533,8 +537,9 @@ public final class Hibernate {
 	 *
 	 * @param string The string data
 	 * @return The created {@link Clob}
-	 * @deprecated Use {@link #createClob(String, Session)} instead
+	 * @deprecated Use {@link LobHelper#createClob(String)} instead
 	 */
+	@Deprecated
 	public static Clob createClob(String string) {
 		return NonContextualLobCreator.INSTANCE.wrap(
 				NonContextualLobCreator.INSTANCE.createClob( string )
@@ -547,9 +552,10 @@ public final class Hibernate {
 	 * @param string The string data
 	 * @param session The session in which the {@link Clob} will be used.
 	 * @return The created {@link Clob}
+	 * @deprecated Use {@link LobHelper#createClob(String)} instead
 	 */
+	@Deprecated
 	public static Clob createClob(String string, Session session) {
-		// todo : wrap?
 		return getLobCreator( session ).createClob( string );
 	}
 
@@ -559,8 +565,9 @@ public final class Hibernate {
 	 * @param reader a character stream
 	 * @param length the number of characters in the stream
 	 * @return The created {@link Clob}
-	 * @deprecated Use {@link #createClob(Reader,long,Session)} instead
+	 * @deprecated Use {@link LobHelper#createClob(Reader, long)} instead
 	 */
+	@Deprecated
 	public static Clob createClob(Reader reader, int length) {
 		return NonContextualLobCreator.INSTANCE.wrap(
 				NonContextualLobCreator.INSTANCE.createClob( reader, length )
@@ -573,8 +580,9 @@ public final class Hibernate {
 	 * @param reader a character stream
 	 * @param length the number of characters in the stream
 	 * @return The created {@link Clob}
-	 * @deprecated Use {@link #createClob(Reader,long,Session)} instead
+	 * @deprecated Use {@link LobHelper#createClob(Reader, long)} instead
 	 */
+	@Deprecated
 	public static Clob createClob(Reader reader, long length) {
 		return NonContextualLobCreator.INSTANCE.wrap(
 				NonContextualLobCreator.INSTANCE.createClob( reader, length ) 
@@ -588,7 +596,9 @@ public final class Hibernate {
 	 * @param length the number of characters in the stream
 	 * @param session The session in which the {@link Clob} will be used.
 	 * @return The created {@link Clob}
+	 * @deprecated Use {@link LobHelper#createClob(Reader, long)} instead
 	 */
+	@Deprecated
 	public static Clob createClob(Reader reader, long length, Session session) {
 		return getLobCreator( session ).createClob( reader, length );
 	}

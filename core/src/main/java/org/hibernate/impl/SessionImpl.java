@@ -25,11 +25,15 @@
 package org.hibernate.impl;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Reader;
 import java.io.Serializable;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -52,6 +56,7 @@ import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectDeletedException;
@@ -83,6 +88,7 @@ import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.query.FilterQueryPlan;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
@@ -2199,6 +2205,9 @@ public final class SessionImpl extends AbstractSessionImpl
 		oos.writeObject( childSessionsByEntityMode );
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	public Object execute(Callback callback) {
 		Connection connection = jdbcContext.getConnectionManager().getConnection();
 		try {
@@ -2221,6 +2230,72 @@ public final class SessionImpl extends AbstractSessionImpl
 	 */
 	public TypeHelper getTypeHelper() {
 		return getSessionFactory().getTypeHelper();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public LobHelper getLobHelper() {
+		if ( lobHelper == null ) {
+			lobHelper = new LobHelperImpl( this );
+		}
+		return lobHelper;
+	}
+
+	private transient LobHelperImpl lobHelper;
+
+	private static class LobHelperImpl implements LobHelper {
+		private final SessionImpl session;
+
+		private LobHelperImpl(SessionImpl session) {
+			this.session = session;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Blob createBlob(byte[] bytes) {
+			return lobCreator().createBlob( bytes );
+		}
+
+		private LobCreator lobCreator() {
+			return session.getFactory().getSettings().getJdbcSupport().getLobCreator( session );
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Blob createBlob(InputStream stream, long length) {
+			return lobCreator().createBlob( stream, length );
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Clob createClob(String string) {
+			return lobCreator().createClob( string );
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Clob createClob(Reader reader, long length) {
+			return lobCreator().createClob( reader, length );
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Clob createNClob(String string) {
+			return lobCreator().createNClob( string );
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Clob createNClob(Reader reader, long length) {
+			return lobCreator().createNClob( reader, length );
+		}
 	}
 
 	private class CoordinatingEntityNameResolver implements EntityNameResolver {

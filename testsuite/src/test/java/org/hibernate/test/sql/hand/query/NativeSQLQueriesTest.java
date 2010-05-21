@@ -365,16 +365,26 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		sqlQuery = s.getNamedQuery("organizationreturnproperty");
-		sqlQuery.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP);
+		sqlQuery = s.getNamedQuery( "organizationreturnproperty" );
+		sqlQuery.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
 		list = sqlQuery.list();
-		assertEquals(2,list.size() );
+		assertEquals( 2,list.size() );
 		m = (Map) list.get(0);
-		assertTrue(m.containsKey("org"));
-		assertClassAssignability(m.get("org").getClass(), Organization.class);
-		assertTrue(m.containsKey("emp"));
-		assertClassAssignability(m.get("emp").getClass(), Employment.class);
-		assertEquals(2, m.size());
+		assertEquals( 2, m.size() );
+		assertTrue( m.containsKey("org") );
+		assertTrue( m.containsKey("emp") );
+		assertClassAssignability( m.get("org").getClass(), Organization.class );
+		if ( jboss.getId() == ( (Organization) m.get("org") ).getId() ) {
+			assertClassAssignability( m.get("emp").getClass(), Employment.class );
+		}
+		Map m2 = (Map) list.get(1);
+		assertEquals( 2, m.size() );
+		assertTrue( m2.containsKey("org") );
+		assertTrue( m2.containsKey("emp") );
+		assertClassAssignability( m2.get("org").getClass(), Organization.class );
+		if ( jboss.getId() == ( (Organization) m2.get("org") ).getId() ) {
+			assertClassAssignability( m2.get("emp").getClass(), Employment.class );
+		}
 		t.commit();
 		s.close();
 

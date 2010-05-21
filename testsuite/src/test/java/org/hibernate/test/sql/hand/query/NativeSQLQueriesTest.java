@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
@@ -112,6 +113,11 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		//      there is actually an exception thrown, but it is the database
 		//      throwing a sql exception because the SQL gets passed
 		//      "un-processed"...
+		//
+		// Oddly, H2 accepts this query.
+		if ( H2Dialect.class.isInstance( getDialect() ) ) {
+			return;
+		}
 		Session s = openSession();
 		s.beginTransaction();
 		try {

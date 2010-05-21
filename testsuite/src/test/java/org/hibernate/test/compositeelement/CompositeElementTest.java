@@ -88,47 +88,37 @@ public class CompositeElementTest extends FunctionalTestCase {
 	}
 	
 	public void testCustomColumnReadAndWrite() {
-		final double HEIGHT_INCHES = 49;
-		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Child c = new Child( "Child One" );
-		c.setHeightInches(HEIGHT_INCHES);
+		c.setPosition( 1 );
 		Parent p = new Parent( "Parent" );
 		p.getChildren().add( c );
 		c.setParent( p );
 		s.save( p );
 		s.flush();
 
-		// Test value conversion during insert
-		Double heightViaSql = (Double)s.createSQLQuery("select height_centimeters from parentchild c where c.name='Child One'")
-			.uniqueResult();
-		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
-		
-		// Test projection		
-		Double heightViaHql = (Double)s.createQuery("select c.heightInches from Parent p join p.children c where p.name='Parent'")
-			.uniqueResult();
-		assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
-		
-		// Test entity load via criteria
+		Integer sqlValue = (Integer) s.createSQLQuery("select child_position from parentchild c where c.name='Child One'")
+				.uniqueResult();
+		assertEquals( 0, sqlValue.intValue() );
+
+		Integer hqlValue = (Integer)s.createQuery("select c.position from Parent p join p.children c where p.name='Parent'")
+				.uniqueResult();
+		assertEquals( 1, hqlValue.intValue() );
+
 		p = (Parent)s.createCriteria(Parent.class).add(Restrictions.eq("name", "Parent")).uniqueResult();
 		c = (Child)p.getChildren().iterator().next();
-		assertEquals(HEIGHT_INCHES, c.getHeightInches(), 0.01d);
-		
-		// Test predicate and entity load via HQL
-		p = (Parent)s.createQuery("from Parent p join p.children c where c.heightInches between ? and ?")
-			.setDouble(0, HEIGHT_INCHES - 0.01d)
-			.setDouble(1, HEIGHT_INCHES + 0.01d)
-			.uniqueResult();
+		assertEquals( 1, c.getPosition() );
+
+		p = (Parent)s.createQuery("from Parent p join p.children c where c.position = 1").uniqueResult();
 		c = (Child)p.getChildren().iterator().next();
-		assertEquals(HEIGHT_INCHES, c.getHeightInches(), 0.01d);
-		
-		// Test update
-		c.setHeightInches(1);
+		assertEquals( 1, c.getPosition() );
+
+		c.setPosition( 2 );
 		s.flush();
-		heightViaSql = (Double)s.createSQLQuery("select height_centimeters from parentchild c where c.name='Child One'").uniqueResult();
-		assertEquals(2.54d, heightViaSql, 0.01d);
+		sqlValue = (Integer) s.createSQLQuery("select child_position from parentchild c where c.name='Child One'")
+				.uniqueResult();
+		assertEquals( 1, sqlValue.intValue() );
 		s.delete( p );
 		t.commit();
 		s.close();

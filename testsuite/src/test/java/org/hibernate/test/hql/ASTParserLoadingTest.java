@@ -26,6 +26,7 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -1370,9 +1371,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Object bodyWeight = s.createQuery("select cast(bodyWeight as integer) from Animal").uniqueResult();
 		assertTrue( Integer.class.isInstance( bodyWeight ) );
 		assertEquals( 12, bodyWeight );
+
 		bodyWeight = s.createQuery("select cast(bodyWeight as big_decimal) from Animal").uniqueResult();
 		assertTrue( BigDecimal.class.isInstance( bodyWeight ) );
-		assertEquals( BigDecimal.valueOf( a.getBodyWeight() ), bodyWeight );
+		assertEquals( a.getBodyWeight(), ( (BigDecimal) bodyWeight ).floatValue() );
+
 		Object literal = s.createQuery("select cast(10000000 as big_integer) from Animal").uniqueResult();
 		assertTrue( BigInteger.class.isInstance( literal ) );
 		assertEquals( BigInteger.valueOf( 10000000 ), literal );

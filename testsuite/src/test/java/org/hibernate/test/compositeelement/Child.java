@@ -9,7 +9,8 @@ public class Child {
 	private String bio;
 	private Parent parent;
 	private int bioLength;
-	private double heightInches;
+	private int position;
+
 	Child() {}
 	public Child(String name) {
 		this.name = name;
@@ -44,12 +45,15 @@ public class Child {
 	public void setBio(String bio) {
 		this.bio = bio;
 	}
-	public double getHeightInches() {
-		return heightInches;
+
+	public int getPosition() {
+		return position;
 	}
-	public void setHeightInches(double heightInches) {
-		this.heightInches = heightInches;
-	}	
+
+	public void setPosition(int position) {
+		this.position = position;
+	}
+
 	public int hashCode() {
 		return name.hashCode();
 	}

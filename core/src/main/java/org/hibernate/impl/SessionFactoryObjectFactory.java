@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
 
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
-
+import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.Name;
@@ -40,18 +39,18 @@ import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
 import javax.naming.spi.ObjectFactory;
 
-import org.hibernate.SessionFactory;
-import org.hibernate.util.FastHashMap;
-import org.hibernate.util.NamingHelper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.util.NamingHelper;
+
 /**
- * Resolves <tt>SessionFactory</tt> JNDI lookups and deserialization
+ * Resolves {@link SessionFactory} instances during <tt>JNDI<tt> look-ups as well as during deserialization
  */
 public class SessionFactoryObjectFactory implements ObjectFactory {
 
+	@SuppressWarnings({ "UnusedDeclaration" })
 	private static final SessionFactoryObjectFactory INSTANCE; //to stop the class from being unloaded
 
 	private static final Logger log;
@@ -62,8 +61,8 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 		log.debug("initializing class SessionFactoryObjectFactory");
 	}
 
-	private static final FastHashMap INSTANCES = new FastHashMap();
-	private static final FastHashMap NAMED_INSTANCES = new FastHashMap();
+	private static final ConcurrentHashMap<String, SessionFactory> INSTANCES = new ConcurrentHashMap<String, SessionFactory>();
+	private static final ConcurrentHashMap<String, SessionFactory> NAMED_INSTANCES = new ConcurrentHashMap<String, SessionFactory>();
 
 	private static final NamingListener LISTENER = new NamespaceChangeListener() {
 		public void objectAdded(NamingEvent evt) {
@@ -84,6 +83,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 			NAMED_INSTANCES.put( evt.getNewBinding().getName(), NAMED_INSTANCES.remove(name) );
 		}
 		public void namingExceptionThrown(NamingExceptionEvent evt) {
+			//noinspection ThrowableResultOfMethodCallIgnored
 			log.warn( "Naming exception occurred accessing factory: " + evt.getException() );
 		}
 	};

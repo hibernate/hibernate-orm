@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,20 +20,18 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple.entity;
 
-import java.util.Map;
-import java.lang.reflect.Constructor;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-
-import org.hibernate.util.FastHashMap;
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * A registry allowing users to define the default {@link EntityTuplizer} class to use per {@link EntityMode}.
@@ -41,10 +39,9 @@ import org.hibernate.mapping.PersistentClass;
  * @author Steve Ebersole
  */
 public class EntityTuplizerFactory implements Serializable {
-
 	public static final Class[] ENTITY_TUP_CTOR_SIG = new Class[] { EntityMetamodel.class, PersistentClass.class };
 
-	private Map defaultImplClassByMode = buildBaseMapping();
+	private Map<EntityMode,Class<? extends EntityTuplizer>> defaultImplClassByMode = buildBaseMapping();
 
 	/**
 	 * Method allowing registration of the tuplizer class to use as default for a particular entity-mode.
@@ -52,7 +49,7 @@ public class EntityTuplizerFactory implements Serializable {
 	 * @param entityMode The entity-mode for which to register the tuplizer class
 	 * @param tuplizerClass The class to use as the default tuplizer for the given entity-mode.
 	 */
-	public void registerDefaultTuplizerClass(EntityMode entityMode, Class tuplizerClass) {
+	public void registerDefaultTuplizerClass(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass) {
 		assert isEntityTuplizerImplementor( tuplizerClass )
 				: "Specified tuplizer class [" + tuplizerClass.getName() + "] does not implement " + EntityTuplizer.class.getName();
 		assert hasProperConstructor( tuplizerClass )
@@ -73,12 +70,13 @@ public class EntityTuplizerFactory implements Serializable {
 	 * @throws HibernateException If class name cannot be resolved to a class reference, or if the
 	 * {@link Constructor#newInstance} call fails.
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public EntityTuplizer constructTuplizer(
 			String tuplizerClassName,
 			EntityMetamodel metamodel,
 			PersistentClass persistentClass) {
 		try {
-			Class tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
+			Class<? extends EntityTuplizer> tuplizerClass = ReflectHelper.classForName( tuplizerClassName );
 			return constructTuplizer( tuplizerClass, metamodel, persistentClass );
 		}
 		catch ( ClassNotFoundException e ) {
@@ -98,13 +96,13 @@ public class EntityTuplizerFactory implements Serializable {
 	 * @throws HibernateException if the {@link Constructor#newInstance} call fails.
 	 */
 	public EntityTuplizer constructTuplizer(
-			Class tuplizerClass,
+			Class<? extends EntityTuplizer> tuplizerClass,
 			EntityMetamodel metamodel,
 			PersistentClass persistentClass) {
-		Constructor ctor = getProperConstructor( tuplizerClass );
-		assert ctor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
+		Constructor<? extends EntityTuplizer> constructor = getProperConstructor( tuplizerClass );
+		assert constructor != null : "Unable to locate proper constructor for tuplizer [" + tuplizerClass.getName() + "]";
 		try {
-			return ( EntityTuplizer ) ctor.newInstance( new Object[] { metamodel, persistentClass } );
+			return constructor.newInstance( metamodel, persistentClass );
 		}
 		catch ( Throwable t ) {
 			throw new HibernateException( "Unable to instantiate default tuplizer [" + tuplizerClass.getName() + "]", t );
@@ -127,7 +125,7 @@ public class EntityTuplizerFactory implements Serializable {
 			EntityMode entityMode,
 			EntityMetamodel metamodel,
 			PersistentClass persistentClass) {
-		Class tuplizerClass = ( Class ) defaultImplClassByMode.get( entityMode );
+		Class<? extends EntityTuplizer> tuplizerClass = defaultImplClassByMode.get( entityMode );
 		if ( tuplizerClass == null ) {
 			throw new HibernateException( "could not determine default tuplizer class to use [" + entityMode + "]" );
 		}
@@ -139,33 +137,33 @@ public class EntityTuplizerFactory implements Serializable {
 		return ReflectHelper.implementsInterface( tuplizerClass, EntityTuplizer.class );
 	}
 
-	private boolean hasProperConstructor(Class tuplizerClass) {
+	private boolean hasProperConstructor(Class<? extends EntityTuplizer> tuplizerClass) {
 		return getProperConstructor( tuplizerClass ) != null
 				&& ! ReflectHelper.isAbstractClass( tuplizerClass );
 	}
 
-	private Constructor getProperConstructor(Class clazz) {
-		Constructor ctor = null;
+	private Constructor<? extends EntityTuplizer> getProperConstructor(Class<? extends EntityTuplizer> clazz) {
+		Constructor<? extends EntityTuplizer> constructor = null;
 		try {
-			ctor = clazz.getDeclaredConstructor( ENTITY_TUP_CTOR_SIG );
-			if ( ! ReflectHelper.isPublic( ctor ) ) {
+			constructor = clazz.getDeclaredConstructor( ENTITY_TUP_CTOR_SIG );
+			if ( ! ReflectHelper.isPublic( constructor ) ) {
 				try {
-					// found a ctor, but it was not publicly accessible so try to request accessibility
-					ctor.setAccessible( true );
+					// found a constructor, but it was not publicly accessible so try to request accessibility
+					constructor.setAccessible( true );
 				}
 				catch ( SecurityException e ) {
-					ctor = null;
+					constructor = null;
 				}
 			}
 		}
 		catch ( NoSuchMethodException ignore ) {
 		}
 
-		return ctor;
+		return constructor;
 	}
 
-	private static Map buildBaseMapping() {
-		Map map = new FastHashMap();
+	private static Map<EntityMode,Class<? extends EntityTuplizer>> buildBaseMapping() {
+		Map<EntityMode,Class<? extends EntityTuplizer>> map = new ConcurrentHashMap<EntityMode,Class<? extends EntityTuplizer>>();
 		map.put( EntityMode.POJO, PojoEntityTuplizer.class );
 		map.put( EntityMode.DOM4J, Dom4jEntityTuplizer.class );
 		map.put( EntityMode.MAP, DynamicMapEntityTuplizer.class );

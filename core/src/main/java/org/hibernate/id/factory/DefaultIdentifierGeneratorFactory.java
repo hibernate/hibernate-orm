@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,12 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id.factory;
 
 import java.util.Properties;
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +46,6 @@ import org.hibernate.id.Configurable;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.type.Type;
-import org.hibernate.util.FastHashMap;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.MappingException;
@@ -60,7 +59,7 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	private static final Logger log = LoggerFactory.getLogger( DefaultIdentifierGeneratorFactory.class );
 
 	private transient Dialect dialect;
-	private FastHashMap generatorStrategyToClassNameMap = new FastHashMap();
+	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
 
 	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
@@ -126,7 +125,7 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 			return dialect.getNativeIdentifierGeneratorClass();
 		}
 
-		Class generatorClass = ( Class ) generatorStrategyToClassNameMap.get( strategy );
+		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
 				generatorClass = ReflectHelper.classForName( strategy );

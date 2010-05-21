@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,17 +20,16 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tuple;
 
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.util.FastHashMap;
 
 /**
  * Centralizes handling of {@link EntityMode} to {@link Tuplizer} mappings.
@@ -38,14 +37,13 @@ import org.hibernate.util.FastHashMap;
  * @author Steve Ebersole
  */
 public abstract class EntityModeToTuplizerMapping implements Serializable {
-
-	// map of EntityMode -> Tuplizer
-	private final Map tuplizers;
+	private final Map<EntityMode,Tuplizer> tuplizers;
 
 	public EntityModeToTuplizerMapping() {
-		tuplizers = new FastHashMap();
+		tuplizers = new ConcurrentHashMap<EntityMode,Tuplizer>();
 	}
 
+	@SuppressWarnings({ "unchecked", "UnusedDeclaration" })
 	public EntityModeToTuplizerMapping(Map tuplizers) {
 		this.tuplizers = tuplizers;
 	}
@@ -70,12 +68,9 @@ public abstract class EntityModeToTuplizerMapping implements Serializable {
 	 * @return The guessed entity mode.
 	 */
 	public EntityMode guessEntityMode(Object object) {
-		Iterator itr = tuplizers.entrySet().iterator();
-		while( itr.hasNext() ) {
-			Map.Entry entry = ( Map.Entry ) itr.next();
-			Tuplizer tuplizer = ( Tuplizer ) entry.getValue();
-			if ( tuplizer.isInstance( object ) ) {
-				return ( EntityMode ) entry.getKey();
+		for ( Map.Entry<EntityMode, Tuplizer> entityModeTuplizerEntry : tuplizers.entrySet() ) {
+			if ( entityModeTuplizerEntry.getValue().isInstance( object ) ) {
+				return entityModeTuplizerEntry.getKey();
 			}
 		}
 		return null;
@@ -89,7 +84,7 @@ public abstract class EntityModeToTuplizerMapping implements Serializable {
 	 * @return The tuplizer, or null if not found.
 	 */
 	public Tuplizer getTuplizerOrNull(EntityMode entityMode) {
-		return ( Tuplizer ) tuplizers.get( entityMode );
+		return tuplizers.get( entityMode );
 	}
 
 	/**

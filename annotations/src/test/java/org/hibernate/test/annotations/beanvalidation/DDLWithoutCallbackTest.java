@@ -22,9 +22,20 @@ public class DDLWithoutCallbackTest extends TestCase {
 		try {
 			s.persist( ch );
 			s.flush();
+			if ( getDialect().supportsColumnCheck() ) {
+				fail( "expecting SQL constraint violation" );
+			}
 		}
 		catch ( ConstraintViolationException e ) {
 			fail("invalid object should not be validated");
+		}
+		catch ( org.hibernate.exception.ConstraintViolationException e ) {
+			if ( getDialect().supportsColumnCheck() ) {
+				// expected
+			}
+			else {
+				fail( "Unexpected SQL constraint violation [" + e.getConstraintName() + "] : " + e.getSQLException() );
+			}
 		}
 		tx.rollback();
 		s.close();

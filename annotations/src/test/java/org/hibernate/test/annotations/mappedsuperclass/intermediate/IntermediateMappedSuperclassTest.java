@@ -40,7 +40,7 @@ public class IntermediateMappedSuperclassTest extends TestCase {
 	}
 
 	public void testGetOnIntermediateMappedSuperclass() {
-		final BigDecimal withdrawalLimit = new BigDecimal( 1000 );
+		final BigDecimal withdrawalLimit = new BigDecimal( 1000.00 ).setScale( 2 );
 		Session session = openSession();
 		session.beginTransaction();
 		SavingsAccount savingsAccount = new SavingsAccount( "123", withdrawalLimit );

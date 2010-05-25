@@ -32,10 +32,10 @@ public class EntityManagerSerializationTest extends org.hibernate.ejb.test.TestC
 		stream.close();
 		ByteArrayInputStream byteIn = new ByteArrayInputStream( serialized );
 		ObjectInputStream in = new ObjectInputStream( byteIn );
-		EntityManagerFactory seriallizedFactory = (EntityManagerFactory) in.readObject();
+		EntityManagerFactory serializedFactory = (EntityManagerFactory) in.readObject();
 		in.close();
 		byteIn.close();
-		EntityManager em = seriallizedFactory.createEntityManager();
+		EntityManager em = serializedFactory.createEntityManager();
 		//em.getTransaction().begin();
 		//em.setFlushMode( FlushModeType.NEVER );
 		Cat cat = new Cat();

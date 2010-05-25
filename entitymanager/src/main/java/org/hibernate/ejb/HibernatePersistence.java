@@ -38,6 +38,7 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
  * @author Gavin King
  */
 public class HibernatePersistence extends AvailableSettings implements PersistenceProvider {
+	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 	/**
 	 * Get an entity manager factory by its entity manager name, using the specified
@@ -85,11 +86,11 @@ public class HibernatePersistence extends AvailableSettings implements Persisten
 
 	private final ProviderUtil providerUtil = new ProviderUtil() {
 		public LoadState isLoadedWithoutReference(Object proxy, String property) {
-			return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property );
+			return PersistenceUtilHelper.isLoadedWithoutReference( proxy, property, cache );
 		}
 
 		public LoadState isLoadedWithReference(Object proxy, String property) {
-			return PersistenceUtilHelper.isLoadedWithReference( proxy, property );
+			return PersistenceUtilHelper.isLoadedWithReference( proxy, property, cache );
 		}
 
 		public LoadState isLoaded(Object o) {

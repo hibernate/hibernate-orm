@@ -65,6 +65,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final Metamodel metamodel;
 	private final HibernatePersistenceUnitUtil util;
 	private final Map<String,Object> properties;
+	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 	@SuppressWarnings( "unchecked" )
 	public EntityManagerFactoryImpl(
@@ -182,13 +183,15 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	private static class HibernatePersistenceUnitUtil implements PersistenceUnitUtil, Serializable {
 		private final HibernateEntityManagerFactory emf;
+		private transient PersistenceUtilHelper.MetadataCache cache;
 
 		private HibernatePersistenceUnitUtil(EntityManagerFactoryImpl emf) {
 			this.emf = emf;
+			this.cache = emf.cache;
 		}
 
 		public boolean isLoaded(Object entity, String attributeName) {
-			LoadState state = PersistenceUtilHelper.isLoadedWithoutReference( entity, attributeName );
+			LoadState state = PersistenceUtilHelper.isLoadedWithoutReference( entity, attributeName, cache );
 			if (state == LoadState.LOADED) {
 				return true;
 			}
@@ -196,7 +199,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 				return false;
 			}
 			else {
-				return PersistenceUtilHelper.isLoadedWithReference( entity, attributeName ) != LoadState.NOT_LOADED;
+				return PersistenceUtilHelper.isLoadedWithReference( entity, attributeName, cache ) != LoadState.NOT_LOADED;
 			}
 		}
 

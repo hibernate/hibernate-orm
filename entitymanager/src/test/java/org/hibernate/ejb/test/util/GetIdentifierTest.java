@@ -56,7 +56,8 @@ public class GetIdentifierTest extends TestCase {
 		return new Class[] {
 				Book.class,
 				Umbrella.class,
-				Sickness.class
+				Sickness.class,
+				Author.class
 		};
 	}
 }

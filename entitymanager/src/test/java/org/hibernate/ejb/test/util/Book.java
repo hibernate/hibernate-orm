@@ -8,9 +8,17 @@ import javax.persistence.GeneratedValue;
  * @author Emmanuel Bernard
  */
 @Entity
-public class Book {
+public class Book extends CopyrightableContent {
 	private Long id;
 	private String name;
+
+	public Book() {
+		super();
+	}
+
+	public Book(Author a) {
+		super(a);
+	}
 
 	@Id
 	@GeneratedValue

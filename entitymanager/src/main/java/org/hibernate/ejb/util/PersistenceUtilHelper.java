@@ -1,14 +1,21 @@
 package org.hibernate.ejb.util;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.AccessibleObject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import javax.persistence.spi.LoadState;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.intercept.FieldInterceptionHelper;
@@ -19,7 +26,7 @@ import org.hibernate.collection.PersistentCollection;
  * @author Emmanuel Bernard
  */
 public class PersistenceUtilHelper {
-	public static LoadState isLoadedWithoutReference(Object proxy, String property) {
+	public static LoadState isLoadedWithoutReference(Object proxy, String property, MetadataCache cache) {
 		Object entity;
 		boolean sureFromUs = false;
 		if ( proxy instanceof HibernateProxy ) {
@@ -44,7 +51,7 @@ public class PersistenceUtilHelper {
 			if (isInitialized && interceptor != null) {
 				//property is loaded according to bytecode enhancement, but is it loaded as far as association?
 				//it's ours, we can read
-				state = isLoaded( get( entity, property ) );
+				state = isLoaded( get( entity, property, cache ) );
 				//it's ours so we know it's loaded
 				if (state == LoadState.UNKNOWN) state = LoadState.LOADED;
 			}
@@ -54,7 +61,7 @@ public class PersistenceUtilHelper {
 			else if ( sureFromUs ) { //interceptor == null
 				//property is loaded according to bytecode enhancement, but is it loaded as far as association?
 				//it's ours, we can read
-				state = isLoaded( get( entity, property ) );
+				state = isLoaded( get( entity, property, cache ) );
 				//it's ours so we know it's loaded
 				if (state == LoadState.UNKNOWN) state = LoadState.LOADED;
 			}
@@ -71,31 +78,25 @@ public class PersistenceUtilHelper {
 		}
 	}
 
-	public static LoadState isLoadedWithReference(Object proxy, String property) {
+	public static LoadState isLoadedWithReference(Object proxy, String property, MetadataCache cache) {
 		//for sure we don't instrument and for sure it's not a lazy proxy
-		Object object = get(proxy, property);
+		Object object = get(proxy, property, cache);
 		return isLoaded( object );
 	}
 
-	private static Object get(Object proxy, String property) {
+	private static Object get(Object proxy, String property, MetadataCache cache) {
 		final Class<?> clazz = proxy.getClass();
+
 		try {
-			try {
-				final Field field = clazz.getField( property );
-				setAccessibility( field );
-				return field.get( proxy );
+			Member member = cache.getMember( clazz, property );
+			if (member instanceof Field) {
+				return ( (Field) member ).get( proxy );
 			}
-			catch ( NoSuchFieldException e ) {
-				final Method method = getMethod( clazz, property );
-				if (method != null) {
-					setAccessibility( method );
-					return method.invoke( proxy );
-				}
-				else {
-					throw new PersistenceException( "Unable to find field or method: "
-							+ clazz + "#"
-							+ property);
-				}
+			else if (member instanceof Method) {
+				return ( (Method) member ).invoke( proxy );
+			}
+			else {
+				throw new AssertionFailure( "Member object neither Field nor Method: " + member);
 			}
 		}
 		catch ( IllegalAccessException e ) {
@@ -107,6 +108,27 @@ public class PersistenceUtilHelper {
 			throw new PersistenceException( "Unable to access field or method: "
 							+ clazz + "#"
 							+ property, e);
+		}
+	}
+
+	private static void setAccessibility(Member member) {
+		if ( !Modifier.isPublic( member.getModifiers() ) ) {
+			//Sun's ease of use, sigh...
+			( ( AccessibleObject ) member ).setAccessible( true );
+		}
+	}
+
+	public static LoadState isLoaded(Object o) {
+		if ( o instanceof HibernateProxy ) {
+			final boolean isInitialized = !( ( HibernateProxy ) o ).getHibernateLazyInitializer().isUninitialized();
+			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+		}
+		else if ( o instanceof PersistentCollection ) {
+			final boolean isInitialized = ( ( PersistentCollection ) o ).wasInitialized();
+			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+		}
+		else {
+			return LoadState.UNKNOWN;
 		}
 	}
 
@@ -135,24 +157,83 @@ public class PersistenceUtilHelper {
 		}
 	}
 
-	private static void setAccessibility(Member member) {
-		if ( !Modifier.isPublic( member.getModifiers() ) ) {
-			//Sun's ease of use, sigh...
-			( ( AccessibleObject ) member ).setAccessible( true );
-		}
-	}
+	/**
+	 * Cache hierarchy and member resolution in a weak hash map
+	 */
+	//TODO not really thread-safe
+	public static class MetadataCache implements Serializable {
+		private transient Map<Class<?>, ClassCache> classCache = new WeakHashMap<Class<?>, ClassCache>();
 
-	public static LoadState isLoaded(Object o) {
-		if ( o instanceof HibernateProxy ) {
-			final boolean isInitialized = !( ( HibernateProxy ) o ).getHibernateLazyInitializer().isUninitialized();
-			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+
+		private void readObject(java.io.ObjectInputStream stream) {
+			classCache = new WeakHashMap<Class<?>, ClassCache>();
 		}
-		else if ( o instanceof PersistentCollection ) {
-			final boolean isInitialized = ( ( PersistentCollection ) o ).wasInitialized();
-			return isInitialized ? LoadState.LOADED : LoadState.NOT_LOADED;
+
+		Member getMember(Class<?> clazz, String property) {
+			ClassCache cache = classCache.get( clazz );
+			if (cache == null) {
+				cache = new ClassCache(clazz);
+				classCache.put( clazz, cache );
+			}
+			Member member = cache.members.get( property );
+			if ( member == null ) {
+				member = findMember( clazz, property );
+				cache.members.put( property, member );
+			}
+			return member;
 		}
-		else {
-			return LoadState.UNKNOWN;
+
+		private Member findMember(Class<?> clazz, String property) {
+			final List<Class<?>> classes = getClassHierarchy( clazz );
+
+			for (Class current : classes) {
+				final Field field;
+				try {
+					field = current.getDeclaredField( property );
+					setAccessibility( field );
+					return field;
+				}
+				catch ( NoSuchFieldException e ) {
+					final Method method = getMethod( clazz, property );
+					if (method != null) {
+						setAccessibility( method );
+						return method;
+					}
+				}
+			}
+			//we could not find any match
+			throw new PersistenceException( "Unable to find field or method: "
+							+ clazz + "#"
+							+ property);
+		}
+
+		private List<Class<?>> getClassHierarchy(Class<?> clazz) {
+			ClassCache cache = classCache.get( clazz );
+			if (cache == null) {
+				cache = new ClassCache(clazz);
+				classCache.put( clazz, cache );
+			}
+			return cache.classHierarchy;
+		}
+
+		private static List<Class<?>> findClassHierarchy(Class<?> clazz) {
+			List<Class<?>> classes = new ArrayList<Class<?>>();
+			Class<?> current = clazz;
+			do {
+				classes.add( current );
+				current = current.getSuperclass();
+			}
+			while ( current != null );
+			return classes;
+		}
+
+		private static class ClassCache {
+			List<Class<?>> classHierarchy;
+			Map<String, Member> members = new HashMap<String, Member>();
+
+			public ClassCache(Class<?> clazz) {
+				classHierarchy = findClassHierarchy( clazz );
+			}
 		}
 	}
 

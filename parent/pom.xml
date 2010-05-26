@@ -508,7 +508,7 @@
             <dependency>
                 <groupId>javassist</groupId>
                 <artifactId>javassist</artifactId>
-                <version>3.9.0.GA</version>
+                <version>3.12.0.GA</version>
             </dependency>
             <!-- cglib is optional, but if defined it should be version 2.2 -->
             <dependency>

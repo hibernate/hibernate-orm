@@ -371,6 +371,182 @@ public class Dog { ... }</programlisting>
         <literal>Dog.hbm.xml</literal>, or if using inheritance,
         <literal>Animal.hbm.xml</literal>.</para>
       </section>
+
+      <section id="mapping-declaration-key">
+        <title>Key</title>
+
+        <para>The <literal>&lt;key&gt;</literal> element is featured a few
+        times within this guide. It appears anywhere the parent mapping
+        element defines a join to a new table that references the primary key
+        of the original table. It also defines the foreign key in the joined
+        table:</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="key1" />
+
+            <area coords="3" id="key2" />
+
+            <area coords="4" id="key3" />
+
+            <area coords="5" id="key4" />
+
+            <area coords="6" id="key5" />
+
+            <area coords="7" id="key6" />
+          </areaspec>
+
+          <programlisting>&lt;key
+        column="columnname"
+        on-delete="noaction|cascade"
+        property-ref="propertyName"
+        not-null="true|false"
+        update="true|false"
+        unique="true|false"
+/&gt;</programlisting>
+
+          <calloutlist>
+            <callout arearefs="key1">
+              <para><literal>column</literal> (optional): the name of the
+              foreign key column. This can also be specified by nested
+              <literal>&lt;column&gt;</literal> element(s).</para>
+            </callout>
+
+            <callout arearefs="key2">
+              <para><literal>on-delete</literal> (optional - defaults to
+              <literal>noaction</literal>): specifies whether the foreign key
+              constraint has database-level cascade delete enabled.</para>
+            </callout>
+
+            <callout arearefs="key3">
+              <para><literal>property-ref</literal> (optional): specifies that
+              the foreign key refers to columns that are not the primary key
+              of the original table. It is provided for legacy data.</para>
+            </callout>
+
+            <callout arearefs="key4">
+              <para><literal>not-null</literal> (optional): specifies that the
+              foreign key columns are not nullable. This is implied whenever
+              the foreign key is also part of the primary key.</para>
+            </callout>
+
+            <callout arearefs="key5">
+              <para><literal>update</literal> (optional): specifies that the
+              foreign key should never be updated. This is implied whenever
+              the foreign key is also part of the primary key.</para>
+            </callout>
+
+            <callout arearefs="key6">
+              <para><literal>unique</literal> (optional): specifies that the
+              foreign key should have a unique constraint. This is implied
+              whenever the foreign key is also the primary key.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
+
+        <para>For systems where delete performance is important, we recommend
+        that all keys should be defined
+        <literal>on-delete="cascade"</literal>. Hibernate uses a
+        database-level <literal>ON CASCADE DELETE</literal> constraint,
+        instead of many individual <literal>DELETE</literal> statements. Be
+        aware that this feature bypasses Hibernate's usual optimistic locking
+        strategy for versioned data.</para>
+
+        <para>The <literal>not-null</literal> and <literal>update</literal>
+        attributes are useful when mapping a unidirectional one-to-many
+        association. If you map a unidirectional one-to-many association to a
+        non-nullable foreign key, you <emphasis>must</emphasis> declare the
+        key column using <literal>&lt;key
+        not-null="true"&gt;</literal>.</para>
+      </section>
+
+      <section id="mapping-declaration-import">
+        <title>Import</title>
+
+        <para>If your application has two persistent classes with the same
+        name, and you do not want to specify the fully qualified package name
+        in Hibernate queries, classes can be "imported" explicitly, rather
+        than relying upon <literal>auto-import="true"</literal>. You can also
+        import classes and interfaces that are not explicitly mapped:</para>
+
+        <programlisting role="XML">&lt;import class="java.lang.Object" rename="Universe"/&gt;</programlisting>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="import1" />
+
+            <area coords="3" id="import2" />
+          </areaspec>
+
+          <programlisting>&lt;import
+        class="ClassName"
+        rename="ShortName"
+/&gt;</programlisting>
+
+          <calloutlist>
+            <callout arearefs="import1">
+              <para><literal>class</literal>: the fully qualified class name
+              of any Java class.</para>
+            </callout>
+
+            <callout arearefs="import2">
+              <para><literal>rename</literal> (optional - defaults to the
+              unqualified class name): a name that can be used in the query
+              language.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
+
+        <note>
+          <para>This feature is unique to hbm.xml and is not supported in
+          annotations.</para>
+        </note>
+      </section>
+
+      <section id="mapping-column" revision="5">
+        <title>Column and formula elements</title>
+
+        <para>Mapping elements which accept a <literal>column</literal>
+        attribute will alternatively accept a
+        <literal>&lt;column&gt;</literal> subelement. Likewise,
+        <literal>&lt;formula&gt;</literal> is an alternative to the
+        <literal>formula</literal> attribute. For example:</para>
+
+        <programlisting role="XML">&lt;column
+        name="column_name"
+        length="N"
+        precision="N"
+        scale="N"
+        not-null="true|false"
+        unique="true|false"
+        unique-key="multicolumn_unique_key_name"
+        index="index_name"
+        sql-type="sql_type_name"
+        check="SQL expression"
+        default="SQL expression"
+        read="SQL expression"
+        write="SQL expression"/&gt;</programlisting>
+
+        <programlisting role="XML">&lt;formula&gt;SQL expression&lt;/formula&gt;</programlisting>
+
+        <para>Most of the attributes on <literal>column</literal> provide a
+        means of tailoring the DDL during automatic schema generation. The
+        <literal>read</literal> and <literal>write</literal> attributes allow
+        you to specify custom SQL that Hibernate will use to access the
+        column's value. For more on this, see the discussion of <link
+        linkend="mapping-column-read-and-write">column read and write
+        expressions</link>.</para>
+
+        <para>The <literal>column</literal> and <literal>formula</literal>
+        elements can even be combined within the same property or association
+        mapping to express, for example, exotic join conditions.</para>
+
+        <programlisting role="XML">&lt;many-to-one name="homeAddress" class="Address"
+        insert="false" update="false"&gt;
+    &lt;column name="person_id" not-null="true" length="10"/&gt;
+    &lt;formula&gt;'MAILING'&lt;/formula&gt;
+&lt;/many-to-one&gt;</programlisting>
+      </section>
     </section>
 
     <section id="mapping-declaration-class" revision="3">
@@ -4573,155 +4749,6 @@ public long getObjectVolume()</programlisting>
       <para>The use of this outside the context of mapping legacy data is not
       recommended.</para>
     </section>
-
-    <section id="mapping-declaration-key">
-      <title>Key</title>
-
-      <para>The <literal>&lt;key&gt;</literal> element has featured a few
-      times within this guide. It appears anywhere the parent mapping element
-      defines a join to a new table that references the primary key of the
-      original table. It also defines the foreign key in the joined
-      table:</para>
-
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="key1" />
-
-          <area coords="3" id="key2" />
-
-          <area coords="4" id="key3" />
-
-          <area coords="5" id="key4" />
-
-          <area coords="6" id="key5" />
-
-          <area coords="7" id="key6" />
-        </areaspec>
-
-        <programlisting>&lt;key
-        column="columnname"
-        on-delete="noaction|cascade"
-        property-ref="propertyName"
-        not-null="true|false"
-        update="true|false"
-        unique="true|false"
-/&gt;</programlisting>
-
-        <calloutlist>
-          <callout arearefs="key1">
-            <para><literal>column</literal> (optional): the name of the
-            foreign key column. This can also be specified by nested
-            <literal>&lt;column&gt;</literal> element(s).</para>
-          </callout>
-
-          <callout arearefs="key2">
-            <para><literal>on-delete</literal> (optional - defaults to
-            <literal>noaction</literal>): specifies whether the foreign key
-            constraint has database-level cascade delete enabled.</para>
-          </callout>
-
-          <callout arearefs="key3">
-            <para><literal>property-ref</literal> (optional): specifies that
-            the foreign key refers to columns that are not the primary key of
-            the original table. It is provided for legacy data.</para>
-          </callout>
-
-          <callout arearefs="key4">
-            <para><literal>not-null</literal> (optional): specifies that the
-            foreign key columns are not nullable. This is implied whenever the
-            foreign key is also part of the primary key.</para>
-          </callout>
-
-          <callout arearefs="key5">
-            <para><literal>update</literal> (optional): specifies that the
-            foreign key should never be updated. This is implied whenever the
-            foreign key is also part of the primary key.</para>
-          </callout>
-
-          <callout arearefs="key6">
-            <para><literal>unique</literal> (optional): specifies that the
-            foreign key should have a unique constraint. This is implied
-            whenever the foreign key is also the primary key.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
-
-      <para>For systems where delete performance is important, we recommend
-      that all keys should be defined <literal>on-delete="cascade"</literal>.
-      Hibernate uses a database-level <literal>ON CASCADE DELETE</literal>
-      constraint, instead of many individual <literal>DELETE</literal>
-      statements. Be aware that this feature bypasses Hibernate's usual
-      optimistic locking strategy for versioned data.</para>
-
-      <para>The <literal>not-null</literal> and <literal>update</literal>
-      attributes are useful when mapping a unidirectional one-to-many
-      association. If you map a unidirectional one-to-many association to a
-      non-nullable foreign key, you <emphasis>must</emphasis> declare the key
-      column using <literal>&lt;key not-null="true"&gt;</literal>.</para>
-    </section>
-
-    <section id="mapping-column" revision="5">
-      <title>Column and formula elements</title>
-
-      <para>Mapping elements which accept a <literal>column</literal>
-      attribute will alternatively accept a <literal>&lt;column&gt;</literal>
-      subelement. Likewise, <literal>&lt;formula&gt;</literal> is an
-      alternative to the <literal>formula</literal> attribute. For
-      example:</para>
-
-      <programlisting role="XML">&lt;column
-        name="column_name"
-        length="N"
-        precision="N"
-        scale="N"
-        not-null="true|false"
-        unique="true|false"
-        unique-key="multicolumn_unique_key_name"
-        index="index_name"
-        sql-type="sql_type_name"
-        check="SQL expression"
-        default="SQL expression"
-        read="SQL expression"
-        write="SQL expression"/&gt;</programlisting>
-
-      <programlisting role="XML">&lt;formula&gt;SQL expression&lt;/formula&gt;</programlisting>
-
-      <para>Most of the attributes on <literal>column</literal> provide a
-      means of tailoring the DDL during automatic schema generation. The
-      <literal>read</literal> and <literal>write</literal> attributes allow
-      you to specify custom SQL that Hibernate will use to access the column's
-      value. For more on this, see the discussion of <link
-      linkend="mapping-column-read-and-write">column read and write
-      expressions</link>.</para>
-
-      <para>The <literal>column</literal> and <literal>formula</literal>
-      elements can even be combined within the same property or association
-      mapping to express, for example, exotic join conditions.</para>
-
-      <programlisting role="XML">&lt;many-to-one name="homeAddress" class="Address"
-        insert="false" update="false"&gt;
-    &lt;column name="person_id" not-null="true" length="10"/&gt;
-    &lt;formula&gt;'MAILING'&lt;/formula&gt;
-&lt;/many-to-one&gt;</programlisting>
-    </section>
-
-    <section id="mapping-declaration-import">
-      <title>Import</title>
-
-      <para>If your application has two persistent classes with the same name,
-      and you do not want to specify the fully qualified package name in
-      Hibernate queries, classes can be "imported" explicitly, rather than
-      relying upon <literal>auto-import="true"</literal>. You can also import
-      classes and interfaces that are not explicitly mapped:</para>
-
-      <programlisting role="XML">&lt;import class="java.lang.Object" rename="Universe"/&gt;</programlisting>
-
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="import1" />
-
-          <area coords="3" id="import2" />
-        </areaspec>
 
         <programlisting>&lt;import
         class="ClassName"

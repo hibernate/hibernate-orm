@@ -4747,20 +4747,61 @@ public long getObjectVolume()</programlisting>
       <title>Any</title>
 
       <para>There is one more type of property mapping. The
-      <literal>&lt;any&gt;</literal> mapping element defines a polymorphic
-      association to classes from multiple tables. This type of mapping
-      requires more than one column. The first column contains the type of the
-      associated entity. The remaining columns contain the identifier. It is
-      impossible to specify a foreign key constraint for this kind of
-      association. This is not the usual way of mapping polymorphic
-      associations and you should use this only in special cases. For example,
-      for audit logs, user session data, etc.</para>
+      <classname>@Any</classname> mapping defines a polymorphic association to
+      classes from multiple tables. This type of mapping requires more than
+      one column. The first column contains the type of the associated entity.
+      The remaining columns contain the identifier. It is impossible to
+      specify a foreign key constraint for this kind of association. This is
+      not the usual way of mapping polymorphic associations and you should use
+      this only in special cases. For example, for audit logs, user session
+      data, etc.</para>
 
-      <para>The <literal>meta-type</literal> attribute allows the application
-      to specify a custom type that maps database column values to persistent
-      classes that have identifier properties of the type specified by
-      <literal>id-type</literal>. You must specify the mapping from values of
-      the meta-type to class names.</para>
+      <para>The <classname>@Any</classname> annotation describes the column
+      holding the metadata information. To link the value of the metadata
+      information and an actual entity type, The
+      <classname>@AnyDef</classname> and <classname>@AnyDefs</classname>
+      annotations are used. The <literal>metaType</literal> attribute allows
+      the application to specify a custom type that maps database column
+      values to persistent classes that have identifier properties of the type
+      specified by <literal>idType</literal>. You must specify the mapping
+      from values of the <literal>metaType</literal> to class names.</para>
+
+      <programlisting language="JAVA" role="JAVA">@Any( metaColumn = @Column( name = "property_type" ), fetch=FetchType.EAGER )
+@AnyMetaDef( 
+    idType = "integer", 
+    metaType = "string", 
+    metaValues = {
+        @MetaValue( value = "S", targetEntity = StringProperty.class ),
+        @MetaValue( value = "I", targetEntity = IntegerProperty.class )
+    } )
+@JoinColumn( name = "property_id" )
+public Property getMainProperty() {
+    return mainProperty;
+}</programlisting>
+
+      <para>Note that <classname>@AnyDef</classname> can be mutualized and
+      reused. It is recommended to place it as a package metadata in this
+      case.</para>
+
+      <programlisting language="JAVA" role="JAVA">//on a package
+@AnyMetaDef( name="property" 
+    idType = "integer", 
+    metaType = "string", 
+    metaValues = {
+        @MetaValue( value = "S", targetEntity = StringProperty.class ),
+        @MetaValue( value = "I", targetEntity = IntegerProperty.class )
+    } )
+package org.hibernate.test.annotations.any;
+
+
+//in a class
+    @Any( metaDef="property", metaColumn = @Column( name = "property_type" ), fetch=FetchType.EAGER )
+    @JoinColumn( name = "property_id" )
+    public Property getMainProperty() {
+        return mainProperty;
+    }</programlisting>
+
+      <para>The hbm.xml equivalent is:</para>
 
       <programlisting role="XML">&lt;any name="being" id-type="long" meta-type="string"&gt;
     &lt;meta-value value="TBL_ANIMAL" class="Animal"/&gt;
@@ -4769,6 +4810,11 @@ public long getObjectVolume()</programlisting>
     &lt;column name="table_name"/&gt;
     &lt;column name="id"/&gt;
 &lt;/any&gt;</programlisting>
+
+      <note>
+        <para>You cannot mutualize the metadata in hbm.xml as you can in
+        annotations.</para>
+      </note>
 
       <programlistingco role="XML">
         <areaspec>

@@ -24,27 +24,29 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.HibernateException;
-import org.hibernate.util.StringHelper;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.util.ReflectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.util.StringHelper;
 
 /**
  * Enum type mapper
  * Try and find the appropriate SQL type depending on column metadata
  * <p/>
  * TODO implements readobject/writeobject to recalculate the enumclasses
+ *
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
 public class EnumType implements EnhancedUserType, ParameterizedType, Serializable {
@@ -56,7 +58,8 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	 * in order to check the trace-enablement.  Driving this via a central Log-specific class
 	 * would alleviate that performance hit, and yet still allow more "normal" logging usage/config.
 	 */
-	private static final boolean IS_VALUE_TRACING_ENABLED = LoggerFactory.getLogger( StringHelper.qualifier( Type.class.getName() ) ).isTraceEnabled();
+	private static final boolean IS_VALUE_TRACING_ENABLED = LoggerFactory.getLogger( StringHelper.qualifier( Type.class.getName() ) )
+			.isTraceEnabled();
 	private transient Logger log;
 
 	private Logger log() {
@@ -75,12 +78,10 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 
 	private Class<? extends Enum> enumClass;
 	private transient Object[] enumValues;
-	private String catalog;
-	private String schema;
 	private int sqlType = Types.INTEGER; //before any guessing
 
 	public int[] sqlTypes() {
-		return new int[]{sqlType};
+		return new int[] { sqlType };
 	}
 
 	public Class<? extends Enum> returnedClass() {
@@ -95,7 +96,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		return x == null ? 0 : x.hashCode();
 	}
 
-	
+
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
 		Object object = rs.getObject( names[0] );
 		if ( rs.wasNull() ) {
@@ -106,7 +107,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		}
 		if ( object instanceof Number ) {
 			initEnumValues();
-			int ordinal = ( (Number) object ).intValue();
+			int ordinal = ( ( Number ) object ).intValue();
 			if ( ordinal < 0 || ordinal >= enumValues.length ) {
 				throw new IllegalArgumentException( "Unknown ordinal value for enum " + enumClass + ": " + ordinal );
 			}
@@ -116,36 +117,37 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 			return enumValues[ordinal];
 		}
 		else {
-			String name = (String) object;
+			String name = ( String ) object;
 			if ( IS_VALUE_TRACING_ENABLED ) {
 				log().debug( "Returning '{}' as column {}", name, names[0] );
 			}
 			try {
 				return Enum.valueOf( enumClass, name );
 			}
-			catch (IllegalArgumentException iae) {
+			catch ( IllegalArgumentException iae ) {
 				throw new IllegalArgumentException( "Unknown name value for enum " + enumClass + ": " + name, iae );
 			}
 		}
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
-		//if (!guessed) guessType( st, index );
 		if ( value == null ) {
-			if ( IS_VALUE_TRACING_ENABLED ) log().debug( "Binding null to parameter: {}", index );
+			if ( IS_VALUE_TRACING_ENABLED ) {
+				log().debug( "Binding null to parameter: {}", index );
+			}
 			st.setNull( index, sqlType );
 		}
 		else {
 			boolean isOrdinal = isOrdinal( sqlType );
 			if ( isOrdinal ) {
-				int ordinal = ( (Enum<?>) value ).ordinal();
+				int ordinal = ( ( Enum<?> ) value ).ordinal();
 				if ( IS_VALUE_TRACING_ENABLED ) {
 					log().debug( "Binding '{}' to parameter: {}", ordinal, index );
 				}
 				st.setObject( index, Integer.valueOf( ordinal ), sqlType );
 			}
 			else {
-				String enumString = ( (Enum<?>) value ).name();
+				String enumString = ( ( Enum<?> ) value ).name();
 				if ( IS_VALUE_TRACING_ENABLED ) {
 					log().debug( "Binding '{}' to parameter: {}", enumString, index );
 				}
@@ -183,7 +185,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	}
 
 	public Serializable disassemble(Object value) throws HibernateException {
-		return (Serializable) value;
+		return ( Serializable ) value;
 	}
 
 	public Object assemble(Serializable cached, Object owner) throws HibernateException {
@@ -199,23 +201,13 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		try {
 			enumClass = ReflectHelper.classForName( enumClassName, this.getClass() ).asSubclass( Enum.class );
 		}
-		catch (ClassNotFoundException exception) {
+		catch ( ClassNotFoundException exception ) {
 			throw new HibernateException( "Enum class not found", exception );
 		}
-		// is might be good to call it here, to see a possible error immediately
-		// initEnumValue();
-		
-		//nullify unnullified properties yuck!
-		schema = parameters.getProperty( SCHEMA );
-		if ( "".equals( schema ) ) schema = null;
-		catalog = parameters.getProperty( CATALOG );
-		if ( "".equals( catalog ) ) catalog = null;
-//		table = parameters.getProperty( TABLE );
-//		column = parameters.getProperty( COLUMN );
+
 		String type = parameters.getProperty( TYPE );
 		if ( type != null ) {
-			sqlType = Integer.decode( type ).intValue();
-//			guessed = true;
+			sqlType = Integer.decode( type );
 		}
 	}
 
@@ -224,41 +216,32 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	 */
 	private void initEnumValues() {
 		if ( enumValues == null ) {
-			try {
-				Method method = enumClass.getDeclaredMethod( "values" );
-				enumValues = (Object[]) method.invoke( null );
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Error while accessing enum.values(): " + enumClass, e );
+			this.enumValues = enumClass.getEnumConstants();
+			if ( enumValues == null ) {
+				throw new NullPointerException( "Failed to init enumValues" );
 			}
 		}
 	}
 
-	// is might be good to call initEnumValues() here, to see a possible error immediatelly, otherwise leave it commented
-//	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-//		initEnumValues();
-//		ois.defaultReadObject();
-//	}
-
 	public String objectToSQLString(Object value) {
 		boolean isOrdinal = isOrdinal( sqlType );
 		if ( isOrdinal ) {
-			int ordinal = ( (Enum) value ).ordinal();
+			int ordinal = ( ( Enum ) value ).ordinal();
 			return Integer.toString( ordinal );
 		}
 		else {
-			return '\'' + ( (Enum) value ).name() + '\'';
+			return '\'' + ( ( Enum ) value ).name() + '\'';
 		}
 	}
 
 	public String toXMLString(Object value) {
 		boolean isOrdinal = isOrdinal( sqlType );
 		if ( isOrdinal ) {
-			int ordinal = ( (Enum) value ).ordinal();
+			int ordinal = ( ( Enum ) value ).ordinal();
 			return Integer.toString( ordinal );
 		}
 		else {
-			return ( (Enum) value ).name();
+			return ( ( Enum ) value ).name();
 		}
 	}
 
@@ -271,11 +254,11 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 			}
 			return enumValues[ordinal];
 		}
-		catch(NumberFormatException e) {
+		catch ( NumberFormatException e ) {
 			try {
 				return Enum.valueOf( enumClass, xmlValue );
 			}
-			catch (IllegalArgumentException iae) {
+			catch ( IllegalArgumentException iae ) {
 				throw new IllegalArgumentException( "Unknown name value for enum " + enumClass + ": " + xmlValue, iae );
 			}
 		}

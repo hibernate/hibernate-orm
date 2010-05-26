@@ -63,7 +63,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		public void set(Object target, Object value, SessionFactoryImplementor factory) 
 		throws HibernateException {
 			try {
-				method.invoke( target, new Object[] { value } );
+				method.invoke( target, value );
 			}
 			catch (NullPointerException npe) {
 				if ( value==null && method.getParameterTypes()[0].isPrimitive() ) {
@@ -169,7 +169,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		 */
 		public Object get(Object target) throws HibernateException {
 			try {
-				return method.invoke(target, null);
+				return method.invoke( target, (Object[]) null );
 			}
 			catch (InvocationTargetException ite) {
 				throw new PropertyAccessException(
@@ -299,15 +299,15 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 
 		Method[] methods = theClass.getDeclaredMethods();
 		Method potentialSetter = null;
-		for (int i=0; i<methods.length; i++) {
-			String methodName = methods[i].getName();
+		for ( Method method : methods ) {
+			final String methodName = method.getName();
 
-			if ( methods[i].getParameterTypes().length==1 && methodName.startsWith("set") ) {
-				String testStdMethod = Introspector.decapitalize( methodName.substring(3) );
-				String testOldMethod = methodName.substring(3);
-				if ( testStdMethod.equals(propertyName) || testOldMethod.equals(propertyName) ) {
-					potentialSetter = methods[i];
-					if ( returnType==null || methods[i].getParameterTypes()[0].equals(returnType) ) {
+			if ( method.getParameterTypes().length == 1 && methodName.startsWith( "set" ) ) {
+				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
+				String testOldMethod = methodName.substring( 3 );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					potentialSetter = method;
+					if ( returnType == null || method.getParameterTypes()[0].equals( returnType ) ) {
 						return potentialSetter;
 					}
 				}
@@ -316,13 +316,11 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		return potentialSetter;
 	}
 
-	public Getter getGetter(Class theClass, String propertyName) 
-	throws PropertyNotFoundException {
+	public Getter getGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
 		return createGetter(theClass, propertyName);
 	}
 	
-	public static Getter createGetter(Class theClass, String propertyName) 
-	throws PropertyNotFoundException {
+	public static Getter createGetter(Class theClass, String propertyName) throws PropertyNotFoundException {
 		BasicGetter result = getGetterOrNull(theClass, propertyName);
 		if (result==null) {
 			throw new PropertyNotFoundException( 
@@ -333,17 +331,19 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 			);
 		}
 		return result;
-
 	}
 
 	private static BasicGetter getGetterOrNull(Class theClass, String propertyName) {
-
-		if (theClass==Object.class || theClass==null) return null;
+		if (theClass==Object.class || theClass==null) {
+			return null;
+		}
 
 		Method method = getterMethod(theClass, propertyName);
 
 		if (method!=null) {
-			if ( !ReflectHelper.isPublic(theClass, method) ) method.setAccessible(true);
+			if ( !ReflectHelper.isPublic(theClass, method) ) {
+				method.setAccessible(true);
+			}
 			return new BasicGetter(theClass, method, propertyName);
 		}
 		else {
@@ -359,33 +359,38 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 	}
 
 	private static Method getterMethod(Class theClass, String propertyName) {
-
 		Method[] methods = theClass.getDeclaredMethods();
-		for (int i=0; i<methods.length; i++) {
-			// only carry on if the method has no parameters
-			if ( methods[i].getParameterTypes().length == 0 ) {
-				String methodName = methods[i].getName();
+		for ( Method method : methods ) {
+			// if the method has parameters, skip it
+			if ( method.getParameterTypes().length != 0 ) {
+				continue;
+			}
+			// if the method is a "bridge", skip it
+			if ( method.isBridge() ) {
+				continue;
+			}
 
-				// try "get"
-				if ( methodName.startsWith("get") ) {
-					String testStdMethod = Introspector.decapitalize( methodName.substring(3) );
-					String testOldMethod = methodName.substring(3);
-					if ( testStdMethod.equals(propertyName) || testOldMethod.equals(propertyName) ) {
-						return methods[i];
-					}
+			final String methodName = method.getName();
 
+			// try "get"
+			if ( methodName.startsWith( "get" ) ) {
+				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
+				String testOldMethod = methodName.substring( 3 );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					return method;
 				}
+			}
 
-				// if not "get", then try "is"
-				if ( methodName.startsWith("is") ) {
-					String testStdMethod = Introspector.decapitalize( methodName.substring(2) );
-					String testOldMethod = methodName.substring(2);
-					if ( testStdMethod.equals(propertyName) || testOldMethod.equals(propertyName) ) {
-						return methods[i];
-					}
+			// if not "get", then try "is"
+			if ( methodName.startsWith( "is" ) ) {
+				String testStdMethod = Introspector.decapitalize( methodName.substring( 2 ) );
+				String testOldMethod = methodName.substring( 2 );
+				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+					return method;
 				}
 			}
 		}
+
 		return null;
 	}
 

@@ -4739,35 +4739,41 @@ public long getObjectVolume()</programlisting>
       unique key of the <literal>Person</literal> table, instead of to the
       primary key:</para>
 
-      <programlisting role="XML">&lt;many-to-one name="person"
+      <programlisting role="XML">&lt;many-to-one name="owner"
          class="Person" property-ref="name"&gt;
     &lt;column name="firstName"/&gt;
     &lt;column name="initial"/&gt;
     &lt;column name="lastName"/&gt;
 &lt;/many-to-one&gt;</programlisting>
 
+      <note>
+        <para>When using annotations as a mapping strategy, such construct is
+        not necessary as the binding between a column and its related column
+        on the associated table is done directly</para>
+
+        <programlisting>@Entity
+class Person {
+   @Id Integer personNumber;
+   String firstName;
+   @Column(name="I")
+   String initial;
+   String lastName;
+}
+
+@Entity
+class Home {
+   @ManyToOne
+   @JoinColumns({
+      @JoinColumn(name="first_name", referencedColumnName="firstName"),
+      @JoinColumn(name="init", referencedColumnName="I"),
+      @JoinColumn(name="last_name", referencedColumnName="lastName"),
+   })
+   Person owner
+}</programlisting>
+      </note>
+
       <para>The use of this outside the context of mapping legacy data is not
       recommended.</para>
-    </section>
-
-        <programlisting>&lt;import
-        class="ClassName"
-        rename="ShortName"
-/&gt;</programlisting>
-
-        <calloutlist>
-          <callout arearefs="import1">
-            <para><literal>class</literal>: the fully qualified class name of
-            any Java class.</para>
-          </callout>
-
-          <callout arearefs="import2">
-            <para><literal>rename</literal> (optional - defaults to the
-            unqualified class name): a name that can be used in the query
-            language.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
     </section>
 
     <section id="mapping-types-anymapping" revision="2">

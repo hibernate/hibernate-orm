@@ -38,7 +38,8 @@
         objects versus relational databases.  Hibernate is an Object/Relational Mapping solution for Java environments.
         The term Object/Relational Mapping refers to the technique of mapping a data representation from an object model
         to a relational data model with a SQL-based schema;
-        see <ulink url="http://en.wikipedia.org/wiki/Object-relational_mapping"/> for a discussion.
+        see <ulink url="http://en.wikipedia.org/wiki/Object-relational_mapping">http://en.wikipedia.org/wiki/Object-relational_mapping</ulink>
+        for a discussion.
     </para>
 
     <note>
@@ -50,12 +51,12 @@
             <itemizedlist>
                 <listitem>
                     <para>
-                        <ulink url="http://www.agiledata.org/essays/dataModeling101.html"/>
+                        <ulink url="http://www.agiledata.org/essays/dataModeling101.html">http://www.agiledata.org/essays/dataModeling101.html</ulink>
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        <ulink url="http://en.wikipedia.org/wiki/Data_modeling"/>
+                        <ulink url="http://en.wikipedia.org/wiki/Data_modeling">http://en.wikipedia.org/wiki/Data_modeling</ulink>
                     </para>
                 </listitem>
             </itemizedlist>
@@ -145,19 +146,54 @@
         </listitem>
      </orderedlist>
 
-     <para>
-         If you have questions, use the user forum linked on the Hibernate website. We also
-         provide a JIRA issue tracking system for bug reports and feature requests. If you
-         are interested in the development of Hibernate, join the developer mailing list. If
-         you are interested in translating this documentation into your language, contact us
-         on the developer mailing list.
-     </para>
-
-     <para>
-         Commercial development support, production support, and training for Hibernate is
-         available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/).
-         Hibernate is a Professional Open Source project and a critical component of the
-         JBoss Enterprise Middleware System (JEMS) suite of products.
-     </para>
+    <para>
+        There are a number of ways to become involved in the Hibernate community, including
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Trying stuff out and reporting bugs.  See
+                    <ulink url="http://hibernate.org/issuetracker.html">http://hibernate.org/issuetracker.html</ulink>
+                    details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Trying your hand at fixing some bugs or implementing enhancements.  Again, see
+                    <ulink url="http://hibernate.org/issuetracker.html">http://hibernate.org/issuetracker.html</ulink>
+                    details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="http://hibernate.org/community.html">http://hibernate.org/community.html</ulink> list
+                    a few ways to engage in the community.
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                There are forums for users to ask questions and receive help from the community.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                There are also <ulink url="http://en.wikipedia.org/wiki/Internet_Relay_Chat">IRC</ulink>
+                                channels for both user and developer discussions.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Helping improve or translate this documentation.  Contact us on the developer mailing list
+                    if you have interest.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Evangelizing Hibernate within your organization.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
 
 </preface>

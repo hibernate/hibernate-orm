@@ -5378,6 +5378,10 @@ package org.hibernate.test.annotations.any;
 
     <para>Associations are now specified using <literal>entity-name</literal>
     instead of <literal>class</literal>.</para>
+
+    <note>
+      <para>This feature is not supported in Annotations</para>
+    </note>
   </section>
 
   <section id="mapping-quotedidentifiers">

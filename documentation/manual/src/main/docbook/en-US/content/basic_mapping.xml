@@ -4572,13 +4572,114 @@ List results = s.createCriteria( Citizen.class )
       </itemizedlist>
     </section>
 
-    <section id="mapping-declaration-component" revision="2">
-      <title>Component and dynamic-component</title>
+    <section id="mapping-declaration-component">
+      <title>Embedded objects (aka components)</title>
 
-      <para>The <literal>&lt;component&gt;</literal> element maps properties
-      of a child object to columns of the table of a parent class. Components
-      can, in turn, declare their own properties, components or collections.
-      See the "Component" examples below:</para>
+      <para>Embeddable objects (or components) are objects whose properties
+      are mapped to the same table as the owning entity's table. Components
+      can, in turn, declare their own properties, components or
+      collections</para>
+
+      <para>It is possible to declare an embedded component inside an entity
+      and even override its column mapping. Component classes have to be
+      annotated at the class level with the <literal>@Embeddable</literal>
+      annotation. It is possible to override the column mapping of an embedded
+      object for a particular entity using the <literal>@Embedded</literal>
+      and <literal>@AttributeOverride</literal> annotation in the associated
+      property:</para>
+
+      <programlisting language="JAVA" role="JAVA">@Entity
+public class Person implements Serializable {
+
+    // Persistent component using defaults
+    Address homeAddress;
+
+    @Embedded
+    @AttributeOverrides( {
+            @AttributeOverride(name="iso2", column = @Column(name="bornIso2") ),
+            @AttributeOverride(name="name", column = @Column(name="bornCountryName") )
+    } )
+    Country bornIn;
+    ...
+}          </programlisting>
+
+      <programlisting language="JAVA" role="JAVA">@Embeddable
+public class Address implements Serializable {
+    String city;
+    Country nationality; //no overriding here
+}            </programlisting>
+
+      <programlisting language="JAVA" role="JAVA">@Embeddable
+public class Country implements Serializable {
+    private String iso2;
+    @Column(name="countryName") private String name;
+
+    public String getIso2() { return iso2; }
+    public void setIso2(String iso2) { this.iso2 = iso2; }
+
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    ...
+}            </programlisting>
+
+      <para>An embeddable object inherits the access type of its owning entity
+      (note that you can override that using the <literal>@Access</literal>
+      annotation).</para>
+
+      <para>The <literal>Person</literal> entity has two component properties,
+      <literal>homeAddress</literal> and <literal>bornIn</literal>.
+      <literal>homeAddress</literal> property has not been annotated, but
+      Hibernate will guess that it is a persistent component by looking for
+      the <literal>@Embeddable</literal> annotation in the Address class. We
+      also override the mapping of a column name (to
+      <literal>bornCountryName</literal>) with the
+      <literal>@Embedded</literal> and <literal>@AttributeOverride
+      </literal>annotations for each mapped attribute of
+      <literal>Country</literal>. As you can see, <literal>Country
+      </literal>is also a nested component of <literal>Address</literal>,
+      again using auto-detection by Hibernate and JPA defaults. Overriding
+      columns of embedded objects of embedded objects is through dotted
+      expressions.</para>
+
+      <programlisting language="JAVA" role="JAVA">    @Embedded
+    @AttributeOverrides( {
+            @AttributeOverride(name="city", column = @Column(name="fld_city") ),
+            @AttributeOverride(name="nationality.iso2", column = @Column(name="nat_Iso2") ),
+            @AttributeOverride(name="nationality.name", column = @Column(name="nat_CountryName") )
+            //nationality columns in homeAddress are overridden
+    } )
+    Address homeAddress;</programlisting>
+
+      <para>Hibernate Annotations supports something that is not explicitly
+      supported by the JPA specification. You can annotate a embedded object
+      with the <literal>@MappedSuperclass</literal> annotation to make the
+      superclass properties persistent (see
+      <literal>@MappedSuperclass</literal> for more informations).</para>
+
+      <para>You can also use association annotations in an embeddable object
+      (ie <literal>@OneToOne</literal>, <classname>@ManyToOne</classname>,
+      <classname>@OneToMany</classname> or <literal>@ManyToMany</literal>). To
+      override the association columns you can use
+      <literal>@AssociationOverride</literal>.</para>
+
+      <para>If you want to have the same embeddable object type twice in the
+      same entity, the column name defaulting will not work as several
+      embedded objects would share the same set of columns. In plain JPA, you
+      need to override at least one set of columns. Hibernate, however, allows
+      you to enhance the default naming mechanism through the
+      <classname>NamingStrategy</classname> interface. You can write a
+      strategy that prevent name clashing in such a situation.
+      <classname>DefaultComponentSafeNamingStrategy</classname> is an example
+      of this.</para>
+
+      <para>If a property of the embedded object points back to the owning
+      entity, annotate it with the <classname>@Parent</classname> annotation.
+      Hibernate will make sure this property is properly loaded with the
+      entity reference.</para>
+
+      <para>In XML, use the <literal>&lt;component&gt;</literal>
+      element.</para>
 
       <programlistingco role="XML">
         <areaspec>
@@ -4676,7 +4777,8 @@ List results = s.createCriteria( Citizen.class )
       <para>The <literal>&lt;dynamic-component&gt;</literal> element allows a
       <literal>Map</literal> to be mapped as a component, where the property
       names refer to keys of the map. See <xref
-      linkend="components-dynamic" /> for more information.</para>
+      linkend="components-dynamic" /> for more information. This feature is
+      not supported in annotations.</para>
     </section>
 
     <section id="mapping-declaration-properties" revision="2">

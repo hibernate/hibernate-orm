@@ -3206,39 +3206,577 @@ public class Flight implements Serializable {
     <section id="mapping-declaration-property" revision="4">
       <title>Property</title>
 
-      <para>The <literal>&lt;property&gt;</literal> element declares a
-      persistent JavaBean style property of the class.</para>
+      <para>You need to decide which property needs to be made persistent in a
+      given entity. This differs slightly between the annotation driven
+      metadata and the hbm.xml files.</para>
 
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="property1" />
+      <section>
+        <title>Property mapping with annotations</title>
 
-          <area coords="3" id="property2" />
+        <para>In the annotations world, every non static non transient
+        property (field or method depending on the access type) of an entity
+        is considered persistent, unless you annotate it as
+        <literal>@Transient</literal>. Not having an annotation for your
+        property is equivalent to the appropriate <literal>@Basic</literal>
+        annotation.</para>
 
-          <area coords="4" id="property3" />
+        <para>The <literal>@Basic</literal> annotation allows you to declare
+        the fetching strategy for a property. If set to
+        <literal>LAZY</literal>, specifies that this property should be
+        fetched lazily when the instance variable is first accessed. It
+        requires build-time bytecode instrumentation, if your classes are not
+        instrumented, property level lazy loading is silently ignored. The
+        default is <literal>EAGER</literal>. You can also mark a property as
+        not optional thanks to the <classname>@Basic.optional</classname>
+        attribute. This will ensure that the underlying column are not
+        nullable (if possible). Note that a better approach is to use the
+        <classname>@NotNull</classname> annotation of the Bean Validation
+        specification.</para>
 
-          <areaset coords="" id="property4-5">
-            <area coords="5" id="property4" />
+        <para>Let's look at a few examples:</para>
 
-            <area coords="6" id="property5" />
-          </areaset>
+        <programlisting language="JAVA" role="JAVA">public transient int counter; //transient property
 
-          <area coords="7" id="property6" />
+private String firstname; //persistent property
 
-          <area coords="8" id="property7" />
+@Transient
+String getLengthInMeter() { ... } //transient property
 
-          <area coords="9" id="property8" />
+String getName() {... } // persistent property
 
-          <area coords="10" id="property9" />
+@Basic
+int getLength() { ... } // persistent property
 
-          <area coords="11" id="property10" />
+@Basic(fetch = FetchType.LAZY)
+String getDetailedComment() { ... } // persistent property
 
-          <area coords="12" id="property11" />
+@Temporal(TemporalType.TIME)
+java.util.Date getDepartureTime() { ... } // persistent property           
 
-          <area coords="13" id="property12" />
-        </areaspec>
+@Enumerated(EnumType.STRING)
+Starred getNote() { ... } //enum persisted as String in database</programlisting>
 
-        <programlisting>&lt;property
+        <para><literal>counter</literal>, a transient field, and
+        <literal>lengthInMeter</literal>, a method annotated as
+        <literal>@Transient</literal>, and will be ignored by the Hibernate.
+        <literal>name</literal>, <literal>length</literal>, and
+        <literal>firstname</literal> properties are mapped persistent and
+        eagerly fetched (the default for simple properties). The
+        <literal>detailedComment</literal> property value will be lazily
+        fetched from the database once a lazy property of the entity is
+        accessed for the first time. Usually you don't need to lazy simple
+        properties (not to be confused with lazy association fetching). The
+        recommended alternative is to use the projection capability of JP-QL
+        (Java Persistence Query Language) or Criteria queries.</para>
+
+        <para>JPA support property mapping of all basic types supported by
+        Hibernate (all basic Java types , their respective wrappers and
+        serializable classes). Hibernate Annotations supports out of the box
+        enum type mapping either into a ordinal column (saving the enum
+        ordinal) or a string based column (saving the enum string
+        representation): the persistence representation, defaulted to ordinal,
+        can be overridden through the <literal>@Enumerated</literal>
+        annotation as shown in the <literal>note</literal> property
+        example.</para>
+
+        <para></para>
+
+        <para>In plain Java APIs, the temporal precision of time is not
+        defined. When dealing with temporal data you might want to describe
+        the expected precision in database. Temporal data can have
+        <literal>DATE</literal>, <literal>TIME</literal>, or
+        <literal>TIMESTAMP</literal> precision (ie the actual date, only the
+        time, or both). Use the <literal>@Temporal</literal> annotation to
+        fine tune that.</para>
+
+        <para><literal>@Lob</literal> indicates that the property should be
+        persisted in a Blob or a Clob depending on the property type:
+        <classname>java.sql.Clob</classname>,
+        <classname>Character[]</classname>, <classname>char[]</classname> and
+        java.lang.<classname>String</classname> will be persisted in a Clob.
+        <classname>java.sql.Blob</classname>, <classname>Byte[]</classname>,
+        <classname>byte[] </classname>and <classname>Serializable</classname>
+        type will be persisted in a Blob.</para>
+
+        <programlisting language="JAVA" role="JAVA">@Lob
+public String getFullText() {
+    return fullText;
+}
+
+@Lob
+public byte[] getFullCode() {
+    return fullCode;
+}</programlisting>
+
+        <para>If the property type implements
+        <classname>java.io.Serializable</classname> and is not a basic type,
+        and if the property is not annotated with <literal>@Lob</literal>,
+        then the Hibernate <literal>serializable</literal> type is
+        used.</para>
+
+        <section>
+          <title>Type</title>
+
+          <para>You can also manually specify a type using the
+          <literal>@org.hibernate.annotations.Type</literal> and some
+          parameters if needed. <classname>@Type.type</classname> could
+          be:</para>
+
+          <orderedlist spacing="compact">
+            <listitem>
+              <para>The name of a Hibernate basic type: <literal>integer,
+              string, character, date, timestamp, float, binary, serializable,
+              object, blob</literal> etc.</para>
+            </listitem>
+
+            <listitem>
+              <para>The name of a Java class with a default basic type:
+              <literal>int, float, char, java.lang.String, java.util.Date,
+              java.lang.Integer, java.sql.Clob</literal> etc.</para>
+            </listitem>
+
+            <listitem>
+              <para>The name of a serializable Java class.</para>
+            </listitem>
+
+            <listitem>
+              <para>The class name of a custom type:
+              <literal>com.illflow.type.MyCustomType</literal> etc.</para>
+            </listitem>
+          </orderedlist>
+
+          <para>If you do not specify a type, Hibernate will use reflection
+          upon the named property and guess the correct Hibernate type.
+          Hibernate will attempt to interpret the name of the return class of
+          the property getter using, in order, rules 2, 3, and 4.</para>
+
+          <para><literal>@org.hibernate.annotations.TypeDef</literal> and
+          <literal>@org.hibernate.annotations.TypeDefs</literal> allows you to
+          declare type definitions. These annotations can be placed at the
+          class or package level. Note that these definitions are global for
+          the session factory (even when defined at the class level). If the
+          type is used on a single entity, you can place the definition on the
+          entity itself. Otherwise, it is recommended to place the definition
+          at the package level. In the example below, when Hibernate
+          encounters a property of class <literal>PhoneNumer</literal>, it
+          delegates the persistence strategy to the custom mapping type
+          <literal>PhoneNumberType</literal>. However, properties belonging to
+          other classes, too, can delegate their persistence strategy to
+          <literal>PhoneNumberType</literal>, by explicitly using the
+          <literal>@Type</literal> annotation.</para>
+
+          <note>
+            <para>Package level annotations are placed in a file named
+            <filename>package-info.java</filename> in the appropriate package.
+            Place your annotations before the package declaration.</para>
+          </note>
+
+          <programlisting language="JAVA" role="JAVA">@TypeDef(
+   name = "phoneNumber",
+   defaultForType = PhoneNumber.class,
+   typeClass = PhoneNumberType.class
+)
+
+@Entity
+public class ContactDetails {
+   [...]
+   private PhoneNumber localPhoneNumber;
+   @Type(type="phoneNumber")
+   private OverseasPhoneNumber overseasPhoneNumber;
+   [...]
+}</programlisting>
+
+          <para>The following example shows the usage of the
+          <literal>parameters</literal> attribute to customize the
+          TypeDef.</para>
+
+          <programlisting language="JAVA" role="JAVA">//in org/hibernate/test/annotations/entity/package-info.java
+@TypeDefs(
+    {
+    @TypeDef(
+        name="caster",
+        typeClass = CasterStringType.class,
+        parameters = {
+            @Parameter(name="cast", value="lower")
+        }
+    )
+    }
+)
+package org.hibernate.test.annotations.entity;
+
+//in org/hibernate/test/annotations/entity/Forest.java
+public class Forest {
+    @Type(type="caster")
+    public String getSmallText() {
+    ...
+}      </programlisting>
+
+          <para>When using composite user type, you will have to express
+          column definitions. The <literal>@Columns</literal> has been
+          introduced for that purpose.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Type(type="org.hibernate.test.annotations.entity.MonetaryAmountUserType")
+@Columns(columns = {
+    @Column(name="r_amount"),
+    @Column(name="r_currency")
+})
+public MonetaryAmount getAmount() {
+    return amount;
+}
+
+
+public class MonetaryAmount implements Serializable {
+    private BigDecimal amount;
+    private Currency currency;
+    ...
+}</programlisting>
+        </section>
+
+        <section>
+          <title>Access type</title>
+
+          <para>By default the access type of a class hierarchy is defined by
+          the position of the <classname>@Id</classname> or
+          <classname>@EmbeddedId</classname> annotations. If these annotations
+          are on a field, then only fields are considered for persistence and
+          the state is accessed via the field. If there annotations are on a
+          getter, then only the getters are considered for persistence and the
+          state is accessed via the getter/setter. That works well in practice
+          and is the recommended approach.<note>
+              <para>The placement of annotations within a class hierarchy has
+              to be consistent (either field or on property) to be able to
+              determine the default access type. It is recommended to stick to
+              one single annotation placement strategy throughout your whole
+              application.</para>
+            </note></para>
+
+          <para>However in some situations, you need to:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>force the access type of the entity hierarchy</para>
+            </listitem>
+
+            <listitem>
+              <para>override the access type of a specific entity in the class
+              hierarchy</para>
+            </listitem>
+
+            <listitem>
+              <para>override the access type of an embeddable type</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>The best use case is an embeddable class used by several
+          entities that might not use the same access type. In this case it is
+          better to force the access type at the embeddable class
+          level.</para>
+
+          <para>To force the access type on a given class, use the
+          <classname>@Access</classname> annotation as showed below:</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Order {
+   @Id private Long id;
+   public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+
+   @Embedded private Address address;
+   public Address getAddress() { return address; }
+   public void setAddress() { this.address = address; }
+}
+
+@Entity
+public class User {
+   private Long id;
+   @Id public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+
+   private Address address;
+   @Embedded public Address getAddress() { return address; }
+   public void setAddress() { this.address = address; }
+}
+
+@Embeddable
+@Access(AcessType.PROPERTY)
+public class Address {
+   private String street1;
+   public String getStreet1() { return street1; }
+   public void setStreet1() { this.street1 = street1; }
+
+   private hashCode; //not persistent
+}</programlisting>
+
+          <para>You can also override the access type of a single property
+          while keeping the other properties standard.</para>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Order {
+   @Id private Long id;
+   public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+   @Transient private String userId;
+   @Transient private String orderId;
+
+   @Access(AccessType.PROPERTY)
+   public String getOrderNumber() { return userId + ":" + orderId; }
+   public void setOrderNumber() { this.userId = ...; this.orderId = ...; }
+}</programlisting>
+
+          <para>In this example, the default access type is
+          <classname>FIELD</classname> except for the
+          <literal>orderNumber</literal> property. Note that the corresponding
+          field, if any must be marked as <classname>@Transient</classname> or
+          <code>transient</code>.</para>
+
+          <note>
+            <title>@org.hibernate.annotations.AccessType</title>
+
+            <para>The annotation
+            <classname>@org.hibernate.annotations.AccessType</classname>
+            should be considered deprecated for FIELD and PROPERTY access. It
+            is still useful however if you need to use a custom access
+            type.</para>
+          </note>
+        </section>
+
+        <section>
+          <title>Optimistic lock</title>
+
+          <para>It is sometimes useful to avoid increasing the version number
+          even if a given property is dirty (particularly collections). You
+          can do that by annotating the property (or collection) with
+          <literal>@OptimisticLock(excluded=true)</literal>.</para>
+
+          <para>More formally, specifies that updates to this property do not
+          require acquisition of the optimistic lock.</para>
+        </section>
+
+        <section id="entity-mapping-property-column">
+          <title>Declaring column attributes</title>
+
+          <para>The column(s) used for a property mapping can be defined using
+          the <literal>@Column</literal> annotation. Use it to override
+          default values (see the JPA specification for more information on
+          the defaults). You can use this annotation at the property level for
+          properties that are:</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>not annotated at all</para>
+            </listitem>
+
+            <listitem>
+              <para>annotated with <literal>@Basic</literal></para>
+            </listitem>
+
+            <listitem>
+              <para>annotated with <literal>@Version</literal></para>
+            </listitem>
+
+            <listitem>
+              <para>annotated with <literal>@Lob</literal></para>
+            </listitem>
+
+            <listitem>
+              <para>annotated with <literal>@Temporal</literal></para>
+            </listitem>
+          </itemizedlist>
+
+          <programlisting language="JAVA" role="JAVA">
+@Entity
+public class Flight implements Serializable {
+...
+@Column(updatable = false, name = "flight_name", nullable = false, length=50)
+public String getName() { ... }
+            </programlisting>
+
+          <para>The <literal>name</literal> property is mapped to the
+          <literal>flight_name</literal> column, which is not nullable, has a
+          length of 50 and is not updatable (making the property
+          immutable).</para>
+
+          <para>This annotation can be applied to regular properties as well
+          as <literal>@Id</literal> or <literal>@Version</literal>
+          properties.</para>
+
+          <programlistingco>
+            <areaspec>
+              <area coords="2" id="hm1" />
+
+              <area coords="3" id="hm2" />
+
+              <area coords="4" id="hm3" />
+
+              <area coords="5" id="hm4" />
+
+              <area coords="6" id="hm5" />
+
+              <area coords="7" id="hm6" />
+
+              <area coords="8" id="hm7" />
+
+              <area coords="9" id="hm8" />
+
+              <area coords="10" id="hm9" />
+
+              <area coords="11" id="hm10" />
+            </areaspec>
+
+            <programlisting>@Column(
+    name="columnName";
+    boolean unique() default false;
+    boolean nullable() default true;
+    boolean insertable() default true;
+    boolean updatable() default true;
+    String columnDefinition() default "";
+    String table() default "";
+    int length() default 255;
+    int precision() default 0; // decimal precision
+    int scale() default 0; // decimal scale</programlisting>
+
+            <calloutlist>
+              <callout arearefs="hm1">
+                <para><literal>name</literal> (optional): the column name
+                (default to the property name)</para>
+              </callout>
+
+              <callout arearefs="hm2">
+                <para><literal>unique</literal> (optional): set a unique
+                constraint on this column or not (default false)</para>
+              </callout>
+
+              <callout arearefs="hm3">
+                <para><literal>nullable</literal> (optional): set the column
+                as nullable (default true).</para>
+              </callout>
+
+              <callout arearefs="hm4">
+                <para><literal>insertable</literal> (optional): whether or not
+                the column will be part of the insert statement (default
+                true)</para>
+              </callout>
+
+              <callout arearefs="hm5">
+                <para><literal>updatable</literal> (optional): whether or not
+                the column will be part of the update statement (default
+                true)</para>
+              </callout>
+
+              <callout arearefs="hm6">
+                <para><literal>columnDefinition</literal> (optional): override
+                the sql DDL fragment for this particular column (non
+                portable)</para>
+              </callout>
+
+              <callout arearefs="hm7">
+                <para><literal>table</literal> (optional): define the targeted
+                table (default primary table)</para>
+              </callout>
+
+              <callout arearefs="hm8">
+                <para><literal><literal>length</literal></literal> (optional):
+                column length (default 255)</para>
+              </callout>
+
+              <callout arearefs="hm8">
+                <para><literal><literal>precision</literal></literal>
+                (optional): column decimal precision (default 0)</para>
+              </callout>
+
+              <callout arearefs="hm10">
+                <para><literal><literal>scale</literal></literal> (optional):
+                column decimal scale if useful (default 0)</para>
+              </callout>
+            </calloutlist>
+          </programlistingco>
+        </section>
+
+        <section>
+          <title>Formula</title>
+
+          <para>Sometimes, you want the Database to do some computation for
+          you rather than in the JVM, you might also create some kind of
+          virtual column. You can use a SQL fragment (aka formula) instead of
+          mapping a property into a column. This kind of property is read only
+          (its value is calculated by your formula fragment).</para>
+
+          <programlisting language="JAVA" role="JAVA">@Formula("obj_length * obj_height * obj_width")
+public long getObjectVolume()</programlisting>
+
+          <para>The SQL fragment can be as complex as you want and even
+          include subselects.</para>
+        </section>
+
+        <section>
+          <title>Non-annotated property defaults</title>
+
+          <para>If a property is not annotated, the following rules
+          apply:<itemizedlist>
+              <listitem>
+                <para>If the property is of a single type, it is mapped as
+                @Basic</para>
+              </listitem>
+
+              <listitem>
+                <para>Otherwise, if the type of the property is annotated as
+                @Embeddable, it is mapped as @Embedded</para>
+              </listitem>
+
+              <listitem>
+                <para>Otherwise, if the type of the property is
+                <classname>Serializable</classname>, it is mapped as
+                <classname>@Basic</classname> in a column holding the object
+                in its serialized version</para>
+              </listitem>
+
+              <listitem>
+                <para>Otherwise, if the type of the property is
+                <classname>java.sql.Clob</classname> or
+                <classname>java.sql.Blob</classname>, it is mapped as
+                <classname>@Lob</classname> with the appropriate
+                <classname>LobType</classname></para>
+              </listitem>
+            </itemizedlist></para>
+        </section>
+      </section>
+
+      <section>
+        <title>Property mapping with hbm.xml</title>
+
+        <para>The <literal>&lt;property&gt;</literal> element declares a
+        persistent JavaBean style property of the class.</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="property1" />
+
+            <area coords="3" id="property2" />
+
+            <area coords="4" id="property3" />
+
+            <areaset coords="" id="property4-5">
+              <area coords="5" id="property4" />
+
+              <area coords="6" id="property5" />
+            </areaset>
+
+            <area coords="7" id="property6" />
+
+            <area coords="8" id="property7" />
+
+            <area coords="9" id="property8" />
+
+            <area coords="10" id="property9" />
+
+            <area coords="11" id="property10" />
+
+            <area coords="12" id="property11" />
+
+            <area coords="13" id="property12" />
+          </areaspec>
+
+          <programlisting>&lt;property
         name="propertyName"
         column="column_name"
         type="typename"
@@ -3259,144 +3797,146 @@ public class Flight implements Serializable {
         scale="S"
 /&gt;</programlisting>
 
-        <calloutlist>
-          <callout arearefs="property1">
-            <para><literal>name</literal>: the name of the property, with an
-            initial lowercase letter.</para>
-          </callout>
+          <calloutlist>
+            <callout arearefs="property1">
+              <para><literal>name</literal>: the name of the property, with an
+              initial lowercase letter.</para>
+            </callout>
 
-          <callout arearefs="property2">
-            <para><literal>column</literal> (optional - defaults to the
-            property name): the name of the mapped database table column. This
-            can also be specified by nested <literal>&lt;column&gt;</literal>
-            element(s).</para>
-          </callout>
+            <callout arearefs="property2">
+              <para><literal>column</literal> (optional - defaults to the
+              property name): the name of the mapped database table column.
+              This can also be specified by nested
+              <literal>&lt;column&gt;</literal> element(s).</para>
+            </callout>
 
-          <callout arearefs="property3">
-            <para><literal>type</literal> (optional): a name that indicates
-            the Hibernate type.</para>
-          </callout>
+            <callout arearefs="property3">
+              <para><literal>type</literal> (optional): a name that indicates
+              the Hibernate type.</para>
+            </callout>
 
-          <callout arearefs="property4-5">
-            <para><literal>update, insert</literal> (optional - defaults to
-            <literal>true</literal>): specifies that the mapped columns should
-            be included in SQL <literal>UPDATE</literal> and/or
-            <literal>INSERT</literal> statements. Setting both to
-            <literal>false</literal> allows a pure "derived" property whose
-            value is initialized from some other property that maps to the
-            same column(s), or by a trigger or other application.</para>
-          </callout>
+            <callout arearefs="property4-5">
+              <para><literal>update, insert</literal> (optional - defaults to
+              <literal>true</literal>): specifies that the mapped columns
+              should be included in SQL <literal>UPDATE</literal> and/or
+              <literal>INSERT</literal> statements. Setting both to
+              <literal>false</literal> allows a pure "derived" property whose
+              value is initialized from some other property that maps to the
+              same column(s), or by a trigger or other application.</para>
+            </callout>
 
-          <callout arearefs="property6">
-            <para><literal>formula</literal> (optional): an SQL expression
-            that defines the value for a <emphasis>computed</emphasis>
-            property. Computed properties do not have a column mapping of
-            their own.</para>
-          </callout>
+            <callout arearefs="property6">
+              <para><literal>formula</literal> (optional): an SQL expression
+              that defines the value for a <emphasis>computed</emphasis>
+              property. Computed properties do not have a column mapping of
+              their own.</para>
+            </callout>
 
-          <callout arearefs="property7">
-            <para><literal>access</literal> (optional - defaults to
-            <literal>property</literal>): the strategy Hibernate uses for
-            accessing the property value.</para>
-          </callout>
+            <callout arearefs="property7">
+              <para><literal>access</literal> (optional - defaults to
+              <literal>property</literal>): the strategy Hibernate uses for
+              accessing the property value.</para>
+            </callout>
 
-          <callout arearefs="property8">
-            <para><literal>lazy</literal> (optional - defaults to
-            <literal>false</literal>): specifies that this property should be
-            fetched lazily when the instance variable is first accessed. It
-            requires build-time bytecode instrumentation.</para>
-          </callout>
+            <callout arearefs="property8">
+              <para><literal>lazy</literal> (optional - defaults to
+              <literal>false</literal>): specifies that this property should
+              be fetched lazily when the instance variable is first accessed.
+              It requires build-time bytecode instrumentation.</para>
+            </callout>
 
-          <callout arearefs="property9">
-            <para><literal>unique</literal> (optional): enables the DDL
-            generation of a unique constraint for the columns. Also, allow
-            this to be the target of a <literal>property-ref</literal>.</para>
-          </callout>
+            <callout arearefs="property9">
+              <para><literal>unique</literal> (optional): enables the DDL
+              generation of a unique constraint for the columns. Also, allow
+              this to be the target of a
+              <literal>property-ref</literal>.</para>
+            </callout>
 
-          <callout arearefs="property10">
-            <para><literal>not-null</literal> (optional): enables the DDL
-            generation of a nullability constraint for the columns.</para>
-          </callout>
+            <callout arearefs="property10">
+              <para><literal>not-null</literal> (optional): enables the DDL
+              generation of a nullability constraint for the columns.</para>
+            </callout>
 
-          <callout arearefs="property11">
-            <para><literal>optimistic-lock</literal> (optional - defaults to
-            <literal>true</literal>): specifies that updates to this property
-            do or do not require acquisition of the optimistic lock. In other
-            words, it determines if a version increment should occur when this
-            property is dirty.</para>
-          </callout>
+            <callout arearefs="property11">
+              <para><literal>optimistic-lock</literal> (optional - defaults to
+              <literal>true</literal>): specifies that updates to this
+              property do or do not require acquisition of the optimistic
+              lock. In other words, it determines if a version increment
+              should occur when this property is dirty.</para>
+            </callout>
 
-          <callout arearefs="property12">
-            <para><literal>generated</literal> (optional - defaults to
-            <literal>never</literal>): specifies that this property value is
-            actually generated by the database. See the discussion of <link
-            linkend="mapping-generated">generated properties</link> for more
-            information.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
+            <callout arearefs="property12">
+              <para><literal>generated</literal> (optional - defaults to
+              <literal>never</literal>): specifies that this property value is
+              actually generated by the database. See the discussion of <link
+              linkend="mapping-generated">generated properties</link> for more
+              information.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
 
-      <para><emphasis>typename</emphasis> could be:</para>
+        <para><emphasis>typename</emphasis> could be:</para>
 
-      <orderedlist spacing="compact">
-        <listitem>
-          <para>The name of a Hibernate basic type: <literal>integer, string,
-          character, date, timestamp, float, binary, serializable, object,
-          blob</literal> etc.</para>
-        </listitem>
+        <orderedlist spacing="compact">
+          <listitem>
+            <para>The name of a Hibernate basic type: <literal>integer,
+            string, character, date, timestamp, float, binary, serializable,
+            object, blob</literal> etc.</para>
+          </listitem>
 
-        <listitem>
-          <para>The name of a Java class with a default basic type:
-          <literal>int, float, char, java.lang.String, java.util.Date,
-          java.lang.Integer, java.sql.Clob</literal> etc.</para>
-        </listitem>
+          <listitem>
+            <para>The name of a Java class with a default basic type:
+            <literal>int, float, char, java.lang.String, java.util.Date,
+            java.lang.Integer, java.sql.Clob</literal> etc.</para>
+          </listitem>
 
-        <listitem>
-          <para>The name of a serializable Java class.</para>
-        </listitem>
+          <listitem>
+            <para>The name of a serializable Java class.</para>
+          </listitem>
 
-        <listitem>
-          <para>The class name of a custom type:
-          <literal>com.illflow.type.MyCustomType</literal> etc.</para>
-        </listitem>
-      </orderedlist>
+          <listitem>
+            <para>The class name of a custom type:
+            <literal>com.illflow.type.MyCustomType</literal> etc.</para>
+          </listitem>
+        </orderedlist>
 
-      <para>If you do not specify a type, Hibernate will use reflection upon
-      the named property and guess the correct Hibernate type. Hibernate will
-      attempt to interpret the name of the return class of the property getter
-      using, in order, rules 2, 3, and 4. In certain cases you will need the
-      <literal>type</literal> attribute. For example, to distinguish between
-      <literal>Hibernate.DATE</literal> and
-      <literal>Hibernate.TIMESTAMP</literal>, or to specify a custom
-      type.</para>
+        <para>If you do not specify a type, Hibernate will use reflection upon
+        the named property and guess the correct Hibernate type. Hibernate
+        will attempt to interpret the name of the return class of the property
+        getter using, in order, rules 2, 3, and 4. In certain cases you will
+        need the <literal>type</literal> attribute. For example, to
+        distinguish between <literal>Hibernate.DATE</literal> and
+        <literal>Hibernate.TIMESTAMP</literal>, or to specify a custom
+        type.</para>
 
-      <para>The <literal>access</literal> attribute allows you to control how
-      Hibernate accesses the property at runtime. By default, Hibernate will
-      call the property get/set pair. If you specify
-      <literal>access="field"</literal>, Hibernate will bypass the get/set
-      pair and access the field directly using reflection. You can specify
-      your own strategy for property access by naming a class that implements
-      the interface
-      <literal>org.hibernate.property.PropertyAccessor</literal>.</para>
+        <para>The <literal>access</literal> attribute allows you to control
+        how Hibernate accesses the property at runtime. By default, Hibernate
+        will call the property get/set pair. If you specify
+        <literal>access="field"</literal>, Hibernate will bypass the get/set
+        pair and access the field directly using reflection. You can specify
+        your own strategy for property access by naming a class that
+        implements the interface
+        <literal>org.hibernate.property.PropertyAccessor</literal>.</para>
 
-      <para>A powerful feature is derived properties. These properties are by
-      definition read-only. The property value is computed at load time. You
-      declare the computation as an SQL expression. This then translates to a
-      <literal>SELECT</literal> clause subquery in the SQL query that loads an
-      instance:</para>
+        <para>A powerful feature is derived properties. These properties are
+        by definition read-only. The property value is computed at load time.
+        You declare the computation as an SQL expression. This then translates
+        to a <literal>SELECT</literal> clause subquery in the SQL query that
+        loads an instance:</para>
 
-      <programlisting role="XML">
+        <programlisting role="XML">
 &lt;property name="totalPrice"
     formula="( SELECT SUM (li.quantity*p.price) FROM LineItem li, Product p
                 WHERE li.productId = p.productId
                 AND li.customerId = customerId
                 AND li.orderNumber = orderNumber )"/&gt;</programlisting>
 
-      <para>You can reference the entity table by not declaring an alias on a
-      particular column. This would be <literal>customerId</literal> in the
-      given example. You can also use the nested
-      <literal>&lt;formula&gt;</literal> mapping element if you do not want to
-      use the attribute.</para>
+        <para>You can reference the entity table by not declaring an alias on
+        a particular column. This would be <literal>customerId</literal> in
+        the given example. You can also use the nested
+        <literal>&lt;formula&gt;</literal> mapping element if you do not want
+        to use the attribute.</para>
+      </section>
     </section>
 
     <section id="mapping-declaration-manytoone" revision="5">

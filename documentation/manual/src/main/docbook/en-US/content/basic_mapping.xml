@@ -1537,9 +1537,9 @@ public class Invoice {
 )
 public Integer getId() { ... }        </programlisting>
 
-        <para>The scope of a generator definitioncan be the application or the
-        class. Class-defined generators are not visible outside the class and
-        can override application level generators. Application level
+        <para>The scope of a generator definition can be the application or
+        the class. Class-defined generators are not visible outside the class
+        and can override application level generators. Application level
         generators are defined in JPA's XML deployment descriptors (see XXXXXX
         <xref linkend="xml-overriding" />):</para>
 

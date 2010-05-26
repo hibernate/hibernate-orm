@@ -4515,19 +4515,46 @@ public long getObjectVolume()</programlisting>
     <section id="mapping-declaration-naturalid">
       <title>Natural-id</title>
 
+      <para>Although we recommend the use of surrogate keys as primary keys,
+      you should try to identify natural keys for all entities. A natural key
+      is a property or combination of properties that is unique and non-null.
+      It is also immutable. Map the properties of the natural key as
+      <classname>@NaturalId</classname> or map them inside the
+      <literal>&lt;natural-id&gt;</literal> element. Hibernate will generate
+      the necessary unique key and nullability constraints and, as a result,
+      your mapping will be more self-documenting.</para>
+
+      <programlisting language="JAVA" role="JAVA">@Entity
+public class Citizen {
+    @Id
+    @GeneratedValue
+    private Integer id;
+    private String firstname;
+    private String lastname;
+    
+    @NaturalId
+    @ManyToOne
+    private State state;
+
+    @NaturalId
+    private String ssn;
+    ...
+}
+
+
+
+//and later on query
+List results = s.createCriteria( Citizen.class )
+                .add( Restrictions.naturalId().set( "ssn", "1234" ).set( "state", ste ) )
+                .list();</programlisting>
+
+      <para>Or in XML,</para>
+
       <programlisting role="XML">&lt;natural-id mutable="true|false"/&gt;
         &lt;property ... /&gt;
         &lt;many-to-one ... /&gt;
         ......
 &lt;/natural-id&gt;</programlisting>
-
-      <para>Although we recommend the use of surrogate keys as primary keys,
-      you should try to identify natural keys for all entities. A natural key
-      is a property or combination of properties that is unique and non-null.
-      It is also immutable. Map the properties of the natural key inside the
-      <literal>&lt;natural-id&gt;</literal> element. Hibernate will generate
-      the necessary unique key and nullability constraints and, as a result,
-      your mapping will be more self-documenting.</para>
 
       <para>It is recommended that you implement <literal>equals()</literal>
       and <literal>hashCode()</literal> to compare the natural key properties

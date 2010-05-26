@@ -5389,7 +5389,13 @@ package org.hibernate.test.annotations.any;
     <literal>Dialect</literal>. This is usually double quotes, but the SQL
     Server uses brackets and MySQL uses backticks.</para>
 
-    <programlisting role="XML">&lt;class name="LineItem" table="`Line Item`"&gt;
+    <programlisting role="XML">@Entity @Table(name="`Line Item`")
+class LineItem {
+   @id @Column(name="`Item Id`") Integer id;
+   @Column(name="`Item #`") int itemNumber
+}
+
+&lt;class name="LineItem" table="`Line Item`"&gt;
     &lt;id name="id" column="`Item Id`"/&gt;&lt;generator class="assigned"/&gt;&lt;/id&gt;
     &lt;property name="itemNumber" column="`Item #`"/&gt;
     ...
@@ -5427,6 +5433,9 @@ package org.hibernate.test.annotations.any;
 
     <para><literal>always</literal>: the property value is generated both on
     insert and on update.</para>
+
+    <para>To mark a property as generated, use
+    <classname>@Generated</classname>.</para>
   </section>
 
   <section id="mapping-column-read-and-write" revision="1">
@@ -5460,6 +5469,10 @@ package org.hibernate.test.annotations.any;
 
     <para>The <literal>write</literal> expression, if specified, must contain
     exactly one '?' placeholder for the value.</para>
+
+    <note>
+      <para>This feature is not supported in Annotations</para>
+    </note>
   </section>
 
   <section id="mapping-database-object">
@@ -5509,5 +5522,9 @@ package org.hibernate.test.annotations.any;
         &lt;dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/&gt;
     &lt;/database-object&gt;
 &lt;/hibernate-mapping&gt;</programlisting>
+
+    <note>
+      <para>This feature is not supported in Annotations</para>
+    </note>
   </section>
 </chapter>

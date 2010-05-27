@@ -192,4 +192,14 @@ public class AccessMappingTest extends TestCase {
 				tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
 		);
 	}
+
+	/**
+	 * HHH-5004
+	 */
+	public void testAccessOnClassAndId() throws Exception {
+		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		cfg.addAnnotatedClass( Course8.class );
+		cfg.addAnnotatedClass( Student.class );
+		cfg.buildSessionFactory();
+	}
 }

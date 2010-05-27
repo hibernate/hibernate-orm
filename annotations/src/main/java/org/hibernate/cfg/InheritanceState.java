@@ -35,7 +35,6 @@ import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -49,7 +48,6 @@ import org.hibernate.mapping.PersistentClass;
  */
 public class InheritanceState {
 	private XClass clazz;
-	private XClass identifierType;
 
 	/**
 	 * Has sibling (either mappedsuperclass entity)
@@ -75,7 +73,6 @@ public class InheritanceState {
 		this.setClazz( clazz );
 		this.mappings = mappings;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
-		this.identifierType = mappings.getReflectionManager().toXClass( void.class ); //not initialized
 		extractInheritanceType();
 	}
 
@@ -115,7 +112,7 @@ public class InheritanceState {
 		return null;
 	}
 
-	public static InheritanceState getSuperclassInheritanceState( XClass clazz, Map<XClass, InheritanceState> states) {
+	public static InheritanceState getSuperclassInheritanceState(XClass clazz, Map<XClass, InheritanceState> states) {
 		XClass superclass = clazz;
 		do {
 			superclass = superclass.getSuperclass();
@@ -171,7 +168,7 @@ public class InheritanceState {
 	void postProcess(PersistentClass persistenceClass, EntityBinder entityBinder) {
 		//make sure we run elements to process
 		getElementsToProcess();
-		addMappedSuperClassInMetadata(persistenceClass);
+		addMappedSuperClassInMetadata( persistenceClass );
 		entityBinder.setPropertyAccessType( accessType );
 	}
 
@@ -184,8 +181,8 @@ public class InheritanceState {
 		}
 		else {
 			InheritanceState state = InheritanceState.getSuperclassInheritanceState( clazz, inheritanceStatePerClass );
-			if (state != null){
-				return state.getClassWithIdClass(true);
+			if ( state != null ) {
+				return state.getClassWithIdClass( true );
 			}
 			else {
 				return null;
@@ -194,14 +191,14 @@ public class InheritanceState {
 	}
 
 	public Boolean hasIdClassOrEmbeddedId() {
-		if (hasIdClassOrEmbeddedId == null) {
+		if ( hasIdClassOrEmbeddedId == null ) {
 			hasIdClassOrEmbeddedId = false;
 			if ( getClassWithIdClass( true ) != null ) {
 				hasIdClassOrEmbeddedId = true;
 			}
 			else {
 				final ElementsToProcess process = getElementsToProcess();
-				for(PropertyData property : process.getElements() ) {
+				for ( PropertyData property : process.getElements() ) {
 					if ( property.getProperty().isAnnotationPresent( EmbeddedId.class ) ) {
 						hasIdClassOrEmbeddedId = true;
 						break;
@@ -213,33 +210,40 @@ public class InheritanceState {
 	}
 
 	/*
-		 * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
-		 * Change EntityBinder by side effect
-		 */
+     * Get the annotated elements, guessing the access type from @Id or @EmbeddedId presence.
+     * Change EntityBinder by side effect
+     */
+
 	public ElementsToProcess getElementsToProcess() {
-		if (elementsToProcess == null) {
+		if ( elementsToProcess == null ) {
 			InheritanceState inheritanceState = inheritanceStatePerClass.get( clazz );
 			assert !inheritanceState.isEmbeddableSuperclass();
 
 
 			getMappedSuperclassesTillNextEntityOrdered();
 
-			accessType = determineDefaultAccessType( );
+			accessType = determineDefaultAccessType();
 
 			List<PropertyData> elements = new ArrayList<PropertyData>();
 			int deep = classesToProcessForMappedSuperclass.size();
 			int idPropertyCount = 0;
 
 			for ( int index = 0; index < deep; index++ ) {
-				PropertyContainer propertyContainer = new PropertyContainer( classesToProcessForMappedSuperclass.get( index ), clazz );
-				int currentIdPropertyCount = AnnotationBinder.addElementsOfClass( elements, accessType, propertyContainer, mappings );
-				idPropertyCount +=  currentIdPropertyCount;
+				PropertyContainer propertyContainer = new PropertyContainer(
+						classesToProcessForMappedSuperclass.get(
+								index
+						), clazz
+				);
+				int currentIdPropertyCount = AnnotationBinder.addElementsOfClass(
+						elements, accessType, propertyContainer, mappings
+				);
+				idPropertyCount += currentIdPropertyCount;
 			}
 
 			if ( idPropertyCount == 0 && !inheritanceState.hasParents() ) {
 				throw new AnnotationException( "No identifier specified for entity: " + clazz.getName() );
 			}
-			elementsToProcess = new ElementsToProcess( elements, idPropertyCount);
+			elementsToProcess = new ElementsToProcess( elements, idPropertyCount );
 		}
 		return elementsToProcess;
 	}
@@ -251,25 +255,19 @@ public class InheritanceState {
 				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.PROPERTY.getType() ) ) {
 					final boolean isEmbeddedId = prop.isAnnotationPresent( EmbeddedId.class );
 					if ( prop.isAnnotationPresent( Id.class ) || isEmbeddedId ) {
-						if (isEmbeddedId) {
-							identifierType = prop.getClassOrElementClass();
-						}
 						return AccessType.PROPERTY;
 					}
 				}
 				for ( XProperty prop : xclass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
 					final boolean isEmbeddedId = prop.isAnnotationPresent( EmbeddedId.class );
 					if ( prop.isAnnotationPresent( Id.class ) || isEmbeddedId ) {
-						if ( isEmbeddedId ) {
-							identifierType = prop.getClassOrElementClass();
-						}
 						return AccessType.FIELD;
 					}
 				}
 			}
 			xclass = xclass.getSuperclass();
 		}
-		throw new AnnotationException( "No identifier specified for entity: " + clazz.getName() );
+		throw new AnnotationException( "No identifier specified for entity: " + clazz );
 	}
 
 	private void getMappedSuperclassesTillNextEntityOrdered() {
@@ -303,19 +301,20 @@ public class InheritanceState {
 						mappings.getClass( superEntityState.getClazz().getName() ) :
 						null;
 		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
-		for ( int index = 0 ; index < lastMappedSuperclass ; index++ ) {
+		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
 			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;
-			final Class<?> type = mappings.getReflectionManager().toClass( classesToProcessForMappedSuperclass.get( index ) );
+			final Class<?> type = mappings.getReflectionManager()
+					.toClass( classesToProcessForMappedSuperclass.get( index ) );
 			//add MAppedSuperclass if not already there
 			mappedSuperclass = mappings.getMappedSuperclass( type );
-			if (mappedSuperclass == null) {
-				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass(parentSuperclass, superEntity );
+			if ( mappedSuperclass == null ) {
+				mappedSuperclass = new org.hibernate.mapping.MappedSuperclass( parentSuperclass, superEntity );
 				mappedSuperclass.setMappedClass( type );
 				mappings.addMappedSuperclass( type, mappedSuperclass );
 			}
 		}
-		if (mappedSuperclass != null) {
-			persistentClass.setSuperMappedSuperclass(mappedSuperclass);
+		if ( mappedSuperclass != null ) {
+			persistentClass.setSuperMappedSuperclass( mappedSuperclass );
 		}
 	}
 

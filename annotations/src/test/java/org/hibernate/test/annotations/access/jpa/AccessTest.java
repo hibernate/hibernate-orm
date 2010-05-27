@@ -34,6 +34,7 @@ import org.hibernate.test.annotations.access.Closet;
 
 /**
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 public class AccessTest extends TestCase {
 

@@ -24,9 +24,10 @@
  */
 package org.hibernate.cfg;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import javax.persistence.Access;
 import javax.persistence.ManyToMany;
@@ -55,19 +56,40 @@ import org.hibernate.util.StringHelper;
 class PropertyContainer {
 
 	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
-	private final XClass entityAtStake;
-	private final TreeMap<String, XProperty> fieldAccessMap;
-	private final TreeMap<String, XProperty> propertyAccessMap;
-	private final XClass xClass;
+
 	private final AccessType explicitClassDefinedAccessType;
+
+	/**
+	 * Constains the properties which must be returned in case the class is accessed via {@code AccessType.FIELD}. Note,
+	 * this does not mean that all {@code XProperty}s in this map are fields. Due to JPA access rules single properties
+	 * can have different access type than the overall class access type.
+	 */
+	private final TreeMap<String, XProperty> fieldAccessMap;
+
+	/**
+	 * Constains the properties which must be returned in case the class is accessed via {@code AccessType.Property}. Note,
+	 * this does not mean that all {@code XProperty}s in this map are properties/methods. Due to JPA access rules single properties
+	 * can have different access type than the overall class access type.
+	 */
+	private final TreeMap<String, XProperty> propertyAccessMap;
+
+	/**
+	 * The class for which this container is created.
+	 */
+	private final XClass xClass;
+	private final XClass entityAtStake;
 
 	PropertyContainer(XClass clazz, XClass entityAtStake) {
 		this.xClass = clazz;
 		this.entityAtStake = entityAtStake;
+
+		explicitClassDefinedAccessType = determineClassDefinedAccessStrategy();
+
+		// first add all properties to field and property map
 		fieldAccessMap = initProperties( AccessType.FIELD );
 		propertyAccessMap = initProperties( AccessType.PROPERTY );
-		explicitClassDefinedAccessType = determineClassDefinedAccessStrategy();
-		checkForJpaAccess();
+
+		considerExplicitFieldAndPropertyAccess();
 	}
 
 	public XClass getEntityAtStake() {
@@ -87,16 +109,17 @@ class PropertyContainer {
 	}
 
 	public Collection<XProperty> getProperties(AccessType accessType) {
+		assertTypesAreResolvable( accessType );
 		if ( AccessType.DEFAULT == accessType || AccessType.PROPERTY == accessType ) {
-			return propertyAccessMap.values();
+			return Collections.unmodifiableCollection( propertyAccessMap.values() );
 		}
 		else {
-			return fieldAccessMap.values();
+			return Collections.unmodifiableCollection( fieldAccessMap.values() );
 		}
 	}
 
-	public void assertTypesAreResolvable(AccessType access) {
-		TreeMap<String, XProperty> xprops;
+	private void assertTypesAreResolvable(AccessType access) {
+		Map<String, XProperty> xprops;
 		if ( AccessType.PROPERTY.equals( access ) || AccessType.DEFAULT.equals( access ) ) {
 			xprops = propertyAccessMap;
 		}
@@ -113,29 +136,25 @@ class PropertyContainer {
 		}
 	}
 
-	private void checkForJpaAccess() {
-		List<XProperty> tmpList = new ArrayList<XProperty>();
+	private void considerExplicitFieldAndPropertyAccess() {
 		for ( XProperty property : fieldAccessMap.values() ) {
 			Access access = property.getAnnotation( Access.class );
 			if ( access == null ) {
 				continue;
 			}
 
+			// see "2.3.2 Explicit Access Type" of JPA 2 spec
+			// the access type for this property is explicitly set to AccessType.FIELD, hence we have to
+			// use field access for this property even if the default access type for the class is AccessType.PROPERTY
 			AccessType accessType = AccessType.getAccessStrategy( access.value() );
-			if ( accessType == AccessType.PROPERTY ) {
-				log.warn( "Placing @Access(AccessType.PROPERTY) on a field does not have any effect." );
-				continue;
+			if ( accessType == AccessType.FIELD ) {
+				propertyAccessMap.put( property.getName(), property );
 			}
-
-			tmpList.add( property );
-		}
-		for ( XProperty property : tmpList ) {
-			fieldAccessMap.remove( property.getName() );
-			propertyAccessMap.put( property.getName(), property );
+			else {   // AccessType.PROPERTY
+				log.warn( "Placing @Access(AccessType.PROPERTY) on a field does not have any effect." );
+			}
 		}
 
-
-		tmpList.clear();
 		for ( XProperty property : propertyAccessMap.values() ) {
 			Access access = property.getAnnotation( Access.class );
 			if ( access == null ) {
@@ -143,20 +162,32 @@ class PropertyContainer {
 			}
 
 			AccessType accessType = AccessType.getAccessStrategy( access.value() );
-			if ( accessType == AccessType.FIELD ) {
-				log.warn( "Placing @Access(AccessType.FIELD) on a field does not have any effect." );
-				continue;
-			}
 
-			tmpList.add( property );
-		}
-		for ( XProperty property : tmpList ) {
-			propertyAccessMap.remove( property.getName() );
-			fieldAccessMap.put( property.getName(), property );
+			// see "2.3.2 Explicit Access Type" of JPA 2 spec
+			// the access type for this property is explicitly set to AccessType.PROPERTY, hence we have to
+			// return use method access even if the default class access type is AccessType.FIELD
+			if ( accessType == AccessType.PROPERTY ) {
+				fieldAccessMap.put( property.getName(), property );
+			}
+			else { // AccessType.FIELD
+				log.warn( "Placing @Access(AccessType.FIELD) on a property does not have any effect." );
+			}
 		}
 	}
 
+	/**
+	 * Retrieves all properties from the {@code xClass} with the specified access type. This method does not take
+	 * any jpa access rules/annotations into account yet.
+	 *
+	 * @param access The access type - {@code AccessType.FIELD}  or {@code AccessType.Property}
+	 *
+	 * @return A maps of the properties with the given access type keyed against their property name
+	 */
 	private TreeMap<String, XProperty> initProperties(AccessType access) {
+		if ( !( AccessType.PROPERTY.equals( access ) || AccessType.FIELD.equals( access ) ) ) {
+			throw new IllegalArgumentException( "Acces type has to be AccessType.FIELD or AccessType.Property" );
+		}
+
 		//order so that property are used in the same order when binding native query
 		TreeMap<String, XProperty> propertiesMap = new TreeMap<String, XProperty>();
 		List<XProperty> properties = xClass.getDeclaredProperties( access.getType() );

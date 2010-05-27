@@ -1341,7 +1341,6 @@ public final class AnnotationBinder {
 			accessType = propertyContainer.getExplicitAccessStrategy();
 		}
 
-		propertyContainer.assertTypesAreResolvable( accessType );
 		Collection<XProperty> properties = propertyContainer.getProperties( accessType );
 		for ( XProperty p : properties ) {
 			final int currentIdPropertyCounter = addProperty(

@@ -184,7 +184,7 @@ public abstract class HibernateTestCase extends TestCase {
 				}
 				else {
 					if ( !dialectClass.isInstance( dialect ) ) {
-						return buildSkip( dialect, null, null );
+						return buildSkip( dialect, requiresDialectAnn.comment(), requiresDialectAnn.jiraKey() );
 					}
 				}
 			}
@@ -197,7 +197,7 @@ public abstract class HibernateTestCase extends TestCase {
 			DialectChecks check = checkClass.newInstance();
 			boolean skip = check.include( dialect );
 			if ( skip ) {
-				return buildSkip( dialect, null, null );
+				return buildSkip( dialect, requiresDialectFeatureAnn.comment(), requiresDialectFeatureAnn.jiraKey() );
 			}
 		}
 		return null;

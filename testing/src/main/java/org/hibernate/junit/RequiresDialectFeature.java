@@ -42,4 +42,18 @@ public @interface RequiresDialectFeature {
 	 * @return The name of the dialect feature.
 	 */
 	Class<? extends DialectChecks> value();
+
+	/**
+	 * Comment describing the reason why the feature is required.
+	 *
+	 * @return The comment
+	 */
+	String comment() default "";
+
+	/**
+	 * The key of a JIRA issue which relates this this feature requirement.
+	 *
+	 * @return The jira issue key
+	 */
+	String jiraKey() default "";
 }

@@ -33,14 +33,15 @@ import org.hibernate.dialect.Dialect;
 /**
  * Annotation used to indicate that a test should be run only when run against the
  * indicated dialects.
- * 
+ *
  * @author Hardy Ferentschik
  */
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequiresDialect {
 	/**
 	 * The dialects against which to run the test
+	 *
 	 * @return The dialects
 	 */
 	Class<? extends Dialect>[] value();
@@ -48,7 +49,22 @@ public @interface RequiresDialect {
 	/**
 	 * Used to indicate if the dialects should be matched strictly (classes equal) or
 	 * non-strictly (instanceof).
+	 *
 	 * @return Should strict matching be used?
 	 */
 	boolean strictMatching() default false;
+
+	/**
+	 * Comment describing the reason why the dialect is required.
+	 *
+	 * @return The comment
+	 */
+	String comment() default "";
+
+	/**
+	 * The key of a JIRA issue which relates this this restriction
+	 *
+	 * @return The jira issue key
+	 */
+	String jiraKey() default "";
 }

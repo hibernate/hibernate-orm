@@ -163,6 +163,7 @@ public class AnnotationConfiguration extends Configuration {
 	private boolean isValidatorNotPresentLogged;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
+	private Collection<FetchProfile> annotationConfiguredProfiles;
 
 	public AnnotationConfiguration() {
 		super();
@@ -268,7 +269,7 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	public ExtendedMappings createExtendedMappings() {
-		return new ExtendedMappingsImpl();
+		return new ExtendedMappingsImpl( annotationConfiguredProfiles );
 	}
 
 	@Override
@@ -311,6 +312,7 @@ public class AnnotationConfiguration extends Configuration {
 		reflectionManager = new JavaReflectionManager();
 		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
 		configurationArtefactPrecedence = Collections.emptyList();
+		annotationConfiguredProfiles = new HashSet<FetchProfile>();
 	}
 
 	@Override
@@ -1255,8 +1257,8 @@ public class AnnotationConfiguration extends Configuration {
 		private Boolean useNewGeneratorMappings;
 		private Collection<FetchProfile> annotationConfiguredProfile;
 
-		public ExtendedMappingsImpl() {
-			annotationConfiguredProfile = new ArrayList<FetchProfile>();
+		public ExtendedMappingsImpl(Collection<FetchProfile> fetchProfiles) {
+			annotationConfiguredProfile = fetchProfiles;
 		}
 
 		public void addDefaultGenerator(IdGenerator generator) {
@@ -1528,11 +1530,15 @@ public class AnnotationConfiguration extends Configuration {
 			return anyMetaDefs.get( name );
 		}
 
-		public void addAnnotationConfiguredFetchProfile(FetchProfile fetchProfile) {
-			annotationConfiguredProfile.add( fetchProfile );
+		public FetchProfile findOrCreateFetchProfile(String name) {
+			FetchProfile profile = super.findOrCreateFetchProfile( name );
+			if ( profile.getFetches().isEmpty() ) {
+				annotationConfiguredProfile.add( profile );
+			}
+			return profile;
 		}
 
-		public boolean containsAnnotationConfiguredFetchProfile(FetchProfile fetchProfile) {
+		public boolean isAnnotationConfiguredFetchProfile(FetchProfile fetchProfile) {
 			for ( FetchProfile profile : annotationConfiguredProfile ) {
 				// we need reference equality there!!
 				if ( profile == fetchProfile ) {

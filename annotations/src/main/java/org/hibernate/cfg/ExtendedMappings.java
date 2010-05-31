@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -207,14 +207,8 @@ public interface ExtendedMappings extends Mappings {
 	void addToOneAndIdProperty(XClass entity, PropertyData property);
 
 	/**
-	 * Add the specified profile to the list of fetch profiles configured via annotations.
-	 *
-	 * @param fetchProfile the fetch profile
+	 * @param fetchProfile The fetch profile to test.
+	 * @return {@code true} if the provided fetch profile has been configured via annotations, {@code false} otherwise.
 	 */
-	void addAnnotationConfiguredFetchProfile(FetchProfile fetchProfile);
-
-	/**
-	 * @return {@true} if the provided fetch profile has been configured via xml, {@false otherwise}.
-	 */
-	boolean containsAnnotationConfiguredFetchProfile(FetchProfile fetchProfile);
+	boolean isAnnotationConfiguredFetchProfile(FetchProfile fetchProfile);
 }

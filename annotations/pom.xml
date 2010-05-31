@@ -22,7 +22,9 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -44,7 +46,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -54,12 +56,12 @@
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.0-api</artifactId>
         </dependency>
-       <dependency>
-            <groupId>${groupId}</groupId>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-testing</artifactId>
-            <version>${version}</version>
-           <scope>test</scope>
-        </dependency>        
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>javassist</groupId>
             <artifactId>javassist</artifactId>
@@ -85,13 +87,6 @@
     <build>
         <testResources>
             <testResource>
-                <filtering>false</filtering>
-                <directory>src/test/java</directory>
-                <includes>
-                    <include>**/*.xml</include>
-                </includes>
-            </testResource>
-            <testResource>
                 <filtering>true</filtering>
                 <directory>src/test/resources</directory>
             </testResource>
@@ -116,17 +111,17 @@
                 <configuration>
                     <bytecodeInjections>
                         <bytecodeInjection>
-                            <expression>${pom.version}</expression>
+                            <expression>${project.version}</expression>
                             <targetMembers>
-                            	<methodBodyReturn>
-                            	    <className>org.hibernate.cfg.annotations.Version</className>
-                            	    <methodName>getVersionString</methodName>
-                            	</methodBodyReturn>
+                                <methodBodyReturn>
+                                    <className>org.hibernate.cfg.annotations.Version</className>
+                                    <methodName>getVersionString</methodName>
+                                </methodBodyReturn>
                             </targetMembers>
                         </bytecodeInjection>
                     </bytecodeInjections>
                 </configuration>
-            </plugin>            
+            </plugin>
             <plugin>
                 <groupId>org.twdata.maven</groupId>
                 <artifactId>maven-cli-plugin</artifactId>

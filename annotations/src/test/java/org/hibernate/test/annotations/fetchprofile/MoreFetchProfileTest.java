@@ -1,3 +1,28 @@
+// $Id: FetchProfileTest.java 19528 2010-05-17 14:28:55Z epbernard $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Middleware LLC.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ *
+ */
 package org.hibernate.test.annotations.fetchprofile;
 
 import java.util.Date;
@@ -5,17 +30,16 @@ import java.util.Date;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public class MoreFetchProfileTest extends TestCase{
+public class MoreFetchProfileTest extends TestCase {
 
-	@FailureExpected( jiraKey = "HHH-5233")
 	public void testFetchWithTwoOverrides() throws Exception {
-		Session s = openSession(  );
+		Session s = openSession();
 		s.enableFetchProfile( "customer-with-orders-and-country" );
 		final Transaction transaction = s.beginTransaction();
 		Country ctry = new Country();
@@ -43,10 +67,10 @@ public class MoreFetchProfileTest extends TestCase{
 
 		s.clear();
 
-		c = (Customer) s.get( Customer.class, c.getId() );
+		c = ( Customer ) s.get( Customer.class, c.getId() );
 		assertTrue( Hibernate.isInitialized( c.getLastOrder() ) );
 		assertTrue( Hibernate.isInitialized( c.getOrders() ) );
-		for(Order so : c.getOrders() ) {
+		for ( Order so : c.getOrders() ) {
 			assertTrue( Hibernate.isInitialized( so.getCountry() ) );
 		}
 		final Order order = c.getOrders().iterator().next();
@@ -62,7 +86,7 @@ public class MoreFetchProfileTest extends TestCase{
 		s.close();
 
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {

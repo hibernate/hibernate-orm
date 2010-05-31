@@ -1,4 +1,4 @@
-// $Id:$
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -47,7 +47,7 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		org.hibernate.mapping.FetchProfile profile = mappings.findOrCreateFetchProfile( fetchProfileName );
-		if ( skipProfile( profile ) ) {
+		if ( !mappings.isAnnotationConfiguredFetchProfile( profile ) ) {
 			return;
 		}
 
@@ -58,15 +58,6 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 		profile.addFetch(
 				fetch.entity().getName(), fetch.association(), fetch.mode().toString().toLowerCase()
 		);
-	}
-
-	private boolean skipProfile(org.hibernate.mapping.FetchProfile profile) {
-		if ( mappings.containsAnnotationConfiguredFetchProfile( profile ) ) {
-			return false;
-		}
-
-		// if there are fetches they must come from xml. If there are xml profiles the annotations get ignored
-		return !profile.getFetches().isEmpty();
 	}
 }
 

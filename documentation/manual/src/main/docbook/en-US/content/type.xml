@@ -610,6 +610,19 @@
                             </para>
                         </listitem>
                     </varlistentry>
+                    <varlistentry>
+                        <term><classname>org.hibernate.type.PostgresUUIDType</classname></term>
+                        <listitem>
+                            <para>
+                                Maps a java.util.UUID to the PostgreSQL UUID data type (through
+                                <literal>Types#OTHER</literal> which is how the PostgreSQL JDBC driver defines it).
+                            </para>
+                            <para>
+                                Registered under <literal>pg-uuid</literal> in the type registry (see
+                                <xref linkend="types.registry"/>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </section>
             <section id="types.basic.value.serializable">
@@ -698,28 +711,16 @@
             The main categorization was between entity types and value types.  To review we said that entities, by
             nature of their unique identifier, exist independently of other objects whereas values do not.  An
             application cannot "delete" a Product sku; instead, the sku is removed when the Product itself is
-            deleted (obviously you can <emphasis>update</emphasis> the sku of that Product to null to maker it
+            deleted (obviously you can <emphasis>update</emphasis> the sku of that Product to null to make it
             "go away", but even there the access is done through the Product).
         </para>
         <para>
             Nor can you define an association <emphasis>to</emphasis> that Product sku.  You <emphasis>can</emphasis>
-            define an association to Product <emphasis>based on</emphasis> its sku, assuming sku is unique but that
+            define an association to Product <emphasis>based on</emphasis> its sku, assuming sku is unique, but that
             is totally different.
-
-
-            entity types define
-            data that maintains its own lifecycle, while value types define data that only exists dependently.  Essentially it defines it own unique identifier.  In turn that means
-            that it can be used to share references to that data from other entities (or components or collections).
-            This dependence/independence has a few important ramifications:
-            <itemizedlist>
-                <listitem>
-                    <para>
-                        First, entities can be looked up and referenced (as in foreign keys).  The same is not true of
-                        a value type.  For example, a <classname>Product</classname> entity can be looked up by its
-                        unique identifier.  The sku of that Product
-                    </para>
-                </listitem>
-            </itemizedlist>
+        </para>
+        <para>
+            TBC...
         </para>
     </section>
 

@@ -45,7 +45,7 @@ import org.hibernate.id.SequenceGenerator;
 /**
  * An SQL dialect for Postgres
  * <p/>
- * For discussion of BLOB "support" in postrges, as of 8.4, have a peek at
+ * For discussion of BLOB support in Postgres, as of 8.4, have a peek at
  * <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
  * For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
  *
@@ -73,6 +73,7 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.CLOB, "text" );
 		registerColumnType( Types.BLOB, "oid" );
 		registerColumnType( Types.NUMERIC, "numeric($p, $s)" );
+		registerColumnType( Types.OTHER, "uuid" );
 
 		registerFunction( "abs", new StandardSQLFunction("abs") );
 		registerFunction( "sign", new StandardSQLFunction("sign", Hibernate.INTEGER) );

@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.Assigned;
@@ -65,7 +66,10 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
 	 */
 	public DefaultIdentifierGeneratorFactory() {
-		register( "uuid", UUIDHexGenerator.class );
+		register( "uuid2", UUIDGenerator.class );
+		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
+		register( "uuid", UUIDHexGenerator.class );			// "deprecated" for new use
+		register( "uuid.hex", UUIDHexGenerator.class ); 	// uuid.hex is deprecated
 		register( "hilo", TableHiLoGenerator.class );
 		register( "assigned", Assigned.class );
 		register( "identity", IdentityGenerator.class );
@@ -74,8 +78,6 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 		register( "seqhilo", SequenceHiLoGenerator.class );
 		register( "increment", IncrementGenerator.class );
 		register( "foreign", ForeignGenerator.class );
-		register( "guid", GUIDGenerator.class );
-		register( "uuid.hex", UUIDHexGenerator.class ); 	// uuid.hex is deprecated
 		register( "sequence-identity", SequenceIdentityGenerator.class );
 		register( "enhanced-sequence", SequenceStyleGenerator.class );
 		register( "enhanced-table", TableGenerator.class );

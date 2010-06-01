@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id;
 
@@ -41,10 +40,21 @@ import org.hibernate.exception.JDBCExceptionHelper;
  * @author Joseph Fifield
  */
 public class GUIDGenerator implements IdentifierGenerator {
-
 	private static final Logger log = LoggerFactory.getLogger(GUIDGenerator.class);
+	private static boolean warned = false;
 
-	public Serializable generate(SessionImplementor session, Object obj) 
+	public GUIDGenerator() {
+		if ( ! warned ) {
+			warned = true;
+			log.warn(
+					"DEPRECATED : use {} instead with custom {} implementation",
+					UUIDGenerator.class.getName(),
+					UUIDGenerationStrategy.class.getName()
+			);
+		}
+	}
+
+	public Serializable generate(SessionImplementor session, Object obj)
 	throws HibernateException {
 		
 		final String sql = session.getFactory().getDialect().getSelectGUIDString();

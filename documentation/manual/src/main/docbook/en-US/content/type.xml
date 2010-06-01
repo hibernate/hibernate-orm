@@ -583,8 +583,37 @@
                     </varlistentry>
                 </variablelist>
             </section>
+            <section id="types.basic.value.uuid">
+                <title><classname>java.util.UUID</classname></title>
+                <variablelist>
+                    <varlistentry>
+                        <term><classname>org.hibernate.type.UUIDBinaryType</classname></term>
+                        <listitem>
+                            <para>
+                                Maps a java.util.UUID to a JDBC BINARY
+                            </para>
+                            <para>
+                                Registered under <literal>uuid-binary</literal> and <literal>java.util.UUID</literal>
+                                in the type registry (see <xref linkend="types.registry"/>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term><classname>org.hibernate.type.UUIDCharType</classname></term>
+                        <listitem>
+                            <para>
+                                Maps a java.util.UUID to a JDBC CHAR (though VARCHAR is fine too for existing schemas)
+                            </para>
+                            <para>
+                                Registered under <literal>uuid-char</literal> in the type registry (see
+                                <xref linkend="types.registry"/>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </section>
             <section id="types.basic.value.serializable">
-                <title>java.io.Serializable</title>
+                <title><classname>java.io.Serializable</classname></title>
                 <variablelist>
                     <varlistentry>
                         <term><classname>org.hibernate.type.SerializableType</classname></term>

@@ -73,6 +73,8 @@ public class BasicTypeRegistry implements Serializable {
 		register( CurrencyType.INSTANCE );
 		register( TimeZoneType.INSTANCE );
 		register( ClassType.INSTANCE );
+		register( UUIDBinaryType.INSTANCE );
+		register( UUIDCharType.INSTANCE );
 
 		register( BinaryType.INSTANCE );
 		register( WrapperBinaryType.INSTANCE );

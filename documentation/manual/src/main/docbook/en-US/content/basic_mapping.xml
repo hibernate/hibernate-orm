@@ -1877,10 +1877,77 @@ public String getId() {</programlisting>
                 <term><literal>uuid</literal></term>
 
                 <listitem>
-                  <para>uses a 128-bit UUID algorithm to generate identifiers
-                  of type string that are unique within a network (the IP
-                  address is used). The UUID is encoded as a string of 32
-                  hexadecimal digits in length.</para>
+                  <para>Generates a 128-bit UUID based on a custom algorithm.
+                  The value generated is represented as a string of 32
+                  hexidecimal digits. Users can also configure it to use a
+                  separator (config parameter "separator") which separates the
+                  hexidecimal digits into 8{sep}8{sep}4{sep}8{sep}4. Note
+                  specifically that this is different than the IETF RFC 4122
+                  representation of 8-4-4-4-12. If you need RFC 4122 compliant
+                  UUIDs, consider using "uuid2" generator discussed
+                  below.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><literal>uuid2</literal></term>
+
+                <listitem>
+                  <para>Generates a IETF RFC 4122 compliant (variant 2)
+                  128-bit UUID. The exact "version" (the RFC term) generated
+                  depends on the pluggable "generation strategy" used (see
+                  below). Capable of generating values as
+                  <classname>java.util.UUID</classname>,
+                  <classname>java.lang.String</classname> or as a byte array
+                  of length 16 (<literal>byte[16]</literal>). The "generation
+                  strategy" is defined by the interface
+                  <interfacename>org.hibernate.id.UUIDGenerationStrategy</interfacename>.
+                  The generator defines 2 configuration parameters for
+                  defining which generation strategy to use: <variablelist>
+                      <varlistentry>
+                        <term><literal>uuid_gen_strategy_class</literal></term>
+
+                        <listitem>
+                          <para>Names the UUIDGenerationStrategy class to
+                          use</para>
+                        </listitem>
+                      </varlistentry>
+
+                      <varlistentry>
+                        <term><literal>uuid_gen_strategy</literal></term>
+
+                        <listitem>
+                          <para>Names the UUIDGenerationStrategy instance to
+                          use</para>
+                        </listitem>
+                      </varlistentry>
+                    </variablelist></para>
+
+                  <para>Out of the box, comes with the following strategies:
+                  <itemizedlist>
+                      <listitem>
+                        <para><classname>org.hibernate.id.uuid.StandardRandomStrategy</classname>
+                        (the default) - generates "version 3" (aka, "random")
+                        UUID values via the
+                        <methodname>randomUUID</methodname> method of
+                        <classname>java.util.UUID</classname></para>
+                      </listitem>
+
+                      <listitem>
+                        <para><classname>org.hibernate.id.uuid.CustomVersionOneStrategy</classname>
+                        - generates "version 1" UUID values, using IP address
+                        since mac address not available. If you need mac
+                        address to be used, consider leveraging one of the
+                        existing third party UUID generators which sniff out
+                        mac address and integrating it via the
+                        <interfacename>org.hibernate.id.UUIDGenerationStrategy</interfacename>
+                        contract. Two such libraries known at time of this
+                        writing include <ulink
+                        url="http://johannburkard.de/software/uuid/">http://johannburkard.de/software/uuid/</ulink>
+                        and <ulink
+                        url="http://commons.apache.org/sandbox/id/uuid.html">http://commons.apache.org/sandbox/id/uuid.html</ulink></para>
+                      </listitem>
+                    </itemizedlist></para>
                 </listitem>
               </varlistentry>
 

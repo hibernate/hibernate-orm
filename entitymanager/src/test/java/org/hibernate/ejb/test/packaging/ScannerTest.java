@@ -98,5 +98,10 @@ public class ScannerTest extends PackagingTestCase {
 		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( CustomScanner.isUsed() );
 		emf.close();
+
+		CustomScanner.resetUsed();
+		emf = Persistence.createEntityManagerFactory( "defaultpar", null );
+		assertTrue( ! CustomScanner.isUsed() );
+		emf.close();
 	}
 }

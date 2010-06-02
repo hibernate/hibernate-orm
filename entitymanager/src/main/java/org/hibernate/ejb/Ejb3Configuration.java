@@ -324,7 +324,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 						Scanner scanner = null;
 						URL jarURL = null;
 						if ( metadata.getName() == null ) {
-							scanner = buildScanner( metadata.getProps() );
+							scanner = buildScanner( metadata.getProps(), integration );
 							jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
 							metadata.setName( scanner.getUnqualifiedJarName(jarURL) );
 						}
@@ -333,7 +333,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 						}
 						else if ( persistenceUnitName == null || metadata.getName().equals( persistenceUnitName ) ) {
 							if (scanner == null) {
-								scanner = buildScanner( metadata.getProps() );
+								scanner = buildScanner( metadata.getProps(), integration );
 								jarURL = JarVisitorFactory.getJarURLFromURLEntry( url, "/META-INF/persistence.xml" );
 							}
 							//scan main JAR
@@ -373,8 +373,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-	private Scanner buildScanner(Properties properties) {
-		final Object scanner = properties.getProperty( AvailableSettings.SCANNER );
+	private Scanner buildScanner(Properties properties, Map<?,?> integration) {
+		//read the String or Instance from the integration map first and use the properties as a backup.
+		Object scanner = integration.get( AvailableSettings.SCANNER );
+		if (scanner == null) {
+			scanner = properties.getProperty( AvailableSettings.SCANNER );
+		}
 		if (scanner != null) {
 			Class<?> scannerClass;
 			if ( scanner instanceof String ) {
@@ -565,7 +569,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			ScanningContext context = new ScanningContext();
 			final Properties copyOfProperties = (Properties) info.getProperties().clone();
 			ConfigurationHelper.overrideProperties( copyOfProperties, integration );
-			context.scanner( buildScanner( copyOfProperties ) )
+			context.scanner( buildScanner( copyOfProperties, integration ) )
 					.searchOrm( searchForORMFiles )
 					.explicitMappingFiles( null ); //URLs provided by the container already
 

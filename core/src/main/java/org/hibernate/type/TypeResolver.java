@@ -60,6 +60,14 @@ public class TypeResolver implements Serializable {
 		basicTypeRegistry.register( type );
 	}
 
+	public void registerTypeOverride(UserType type, String[] keys) {
+		basicTypeRegistry.register( type, keys );
+	}
+
+	public void registerTypeOverride(CompositeUserType type, String[] keys) {
+		basicTypeRegistry.register( type, keys );
+	}
+
 	public TypeFactory getTypeFactory() {
 		return typeFactory;
 	}

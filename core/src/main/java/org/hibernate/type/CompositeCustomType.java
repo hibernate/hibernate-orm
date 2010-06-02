@@ -29,10 +29,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Properties;
 
 import org.dom4j.Element;
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -42,20 +42,40 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.LoggableUserType;
+import org.hibernate.util.ArrayHelper;
 
 /**
- * Adapts <tt>CompositeUserType</tt> to <tt>Type</tt> interface
+ * Adapts {@link CompositeUserType} to the {@link Type} interface
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class CompositeCustomType extends AbstractType implements CompositeType {
+public class CompositeCustomType extends AbstractType implements CompositeType, BasicType {
 	private final CompositeUserType userType;
+	private final String[] registrationKeys;
 	private final String name;
+	private final boolean customLogging;
 
 	public CompositeCustomType(CompositeUserType userType) {
+		this( userType, ArrayHelper.EMPTY_STRING_ARRAY );
+	}
+
+	public CompositeCustomType(CompositeUserType userType, String[] registrationKeys) {
 		this.userType = userType;
 		this.name = userType.getClass().getName();
+		this.customLogging = LoggableUserType.class.isInstance( userType );
+		this.registrationKeys = registrationKeys;
 	}
-	
+
+	public String[] getRegistrationKeys() {
+		return registrationKeys;
+	}
+
+	public CompositeUserType getUserType() {
+		return userType;
+	}
+
 	public boolean isMethodOf(Method method) {
 		return false;
 	}
@@ -155,8 +175,8 @@ public class CompositeCustomType extends AbstractType implements CompositeType {
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		Type[] types = userType.getPropertyTypes();
 		int n=0;
-		for (int i=0; i<types.length; i++) {
-			n+=types[i].getColumnSpan(mapping);
+		for ( Type type : types ) {
+			n += type.getColumnSpan( mapping );
 		}
 		return n;
 	}
@@ -217,20 +237,26 @@ public class CompositeCustomType extends AbstractType implements CompositeType {
 	}
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		Type[] types = userType.getPropertyTypes();
 		int[] result = new int[ getColumnSpan(mapping) ];
 		int n=0;
-		for (int i=0; i<types.length; i++) {
-			int[] sqlTypes = types[i].sqlTypes(mapping);
-			for ( int k=0; k<sqlTypes.length; k++ ) result[n++] = sqlTypes[k];
+		for ( Type type : userType.getPropertyTypes() ) {
+			for ( int sqlType : type.sqlTypes( mapping ) ) {
+				result[n++] = sqlType;
+			}
 		}
 		return result;
 	}
 	
-	public String toLoggableString(Object value, SessionFactoryImplementor factory)
-		throws HibernateException {
-
-		return value==null ? "null" : value.toString();
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+		if ( value == null ) {
+			return "null";
+		}
+		else if ( customLogging ) {
+			return ( (LoggableUserType) userType ).toLoggableString( value, factory );
+		}
+		else {
+			return value.toString();
+		}
 	}
 
 	public boolean[] getPropertyNullability() {

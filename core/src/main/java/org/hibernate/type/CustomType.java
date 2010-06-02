@@ -44,30 +44,40 @@ import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
  * to isolate user code from changes in the internal Type contracts.
  *
- * @see org.hibernate.usertype.UserType
  * @author Gavin King
+ * @author Steve Ebersole
  */
-public class CustomType extends AbstractType implements IdentifierType, DiscriminatorType, VersionType {
-
+public class CustomType extends AbstractType implements IdentifierType, DiscriminatorType, VersionType, BasicType {
 	private final UserType userType;
 	private final String name;
 	private final int[] types;
 	private final boolean customLogging;
+	private final String[] registrationKeys;
 
 	public CustomType(UserType userType) throws MappingException {
+		this( userType, ArrayHelper.EMPTY_STRING_ARRAY );
+	}
+
+	public CustomType(UserType userType, String[] registrationKeys) throws MappingException {
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 		this.types = userType.sqlTypes();
 		this.customLogging = LoggableUserType.class.isInstance( userType );
+		this.registrationKeys = registrationKeys;
 	}
 
 	public UserType getUserType() {
 		return userType;
+	}
+
+	public String[] getRegistrationKeys() {
+		return registrationKeys;
 	}
 
 	public int[] sqlTypes(Mapping pi) {
@@ -86,8 +96,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		return userType.equals(x, y);
 	}
 
-	public boolean isEqual(Object x, Object y, EntityMode entityMode)
-	throws HibernateException {
+	public boolean isEqual(Object x, Object y, EntityMode entityMode) throws HibernateException {
 		return isEqual(x, y);
 	}
 
@@ -95,33 +104,24 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		return userType.hashCode(x);
 	}
 
-	public Object nullSafeGet(
-		ResultSet rs,
-		String[] names,
-		SessionImplementor session,
-		Object owner
-	) throws HibernateException, SQLException {
-
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+			throws HibernateException, SQLException {
 		return userType.nullSafeGet(rs, names, owner);
 	}
 
-	public Object nullSafeGet(
-		ResultSet rs,
-		String columnName,
-		SessionImplementor session,
-		Object owner
-	) throws HibernateException, SQLException {
+	public Object nullSafeGet(ResultSet rs, String columnName, SessionImplementor session, Object owner)
+			throws HibernateException, SQLException {
 		return nullSafeGet(rs, new String[] { columnName }, session, owner);
 	}
 
 
 	public Object assemble(Serializable cached, SessionImplementor session, Object owner)
-	throws HibernateException {
+			throws HibernateException {
 		return userType.assemble(cached, owner);
 	}
 
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
-	throws HibernateException {
+			throws HibernateException {
 		return userType.disassemble(value);
 	}
 
@@ -130,42 +130,36 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 			Object target,
 			SessionImplementor session,
 			Object owner,
-			Map copyCache)
-	throws HibernateException {
+			Map copyCache) throws HibernateException {
 		return userType.replace(original, target, owner);
 	}
 
-	public void nullSafeSet(
-		PreparedStatement st,
-		Object value,
-		int index,
-		boolean[] settable,
-		SessionImplementor session
-	) throws HibernateException, SQLException {
-
-		if ( settable[0] ) userType.nullSafeSet(st, value, index);
+	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)
+			throws HibernateException, SQLException {
+		if ( settable[0] ) {
+			userType.nullSafeSet( st, value, index );
+		}
 	}
 
-	public void nullSafeSet(
-		PreparedStatement st,
-		Object value,
-		int index,
-		SessionImplementor session
-	) throws HibernateException, SQLException {
-
-		userType.nullSafeSet(st, value, index);
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+			throws HibernateException, SQLException {
+		userType.nullSafeSet( st, value, index );
 	}
 
+	@SuppressWarnings({ "UnusedDeclaration" })
 	public String toXMLString(Object value, SessionFactoryImplementor factory) {
-		if (value==null) return null;
-		if (userType instanceof EnhancedUserType) {
-			return ( (EnhancedUserType) userType ).toXMLString(value);
+		if ( value == null ) {
+			return null;
+		}
+		if ( userType instanceof EnhancedUserType ) {
+			return ( (EnhancedUserType) userType ).toXMLString( value );
 		}
 		else {
 			return value.toString();
 		}
 	}
 
+	@SuppressWarnings({ "UnusedDeclaration" })
 	public Object fromXMLString(String xml, Mapping factory) {
 		return ( (EnhancedUserType) userType ).fromXMLString(xml);
 	}
@@ -175,7 +169,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	}
 
 	public Object deepCopy(Object value, EntityMode entityMode, SessionFactoryImplementor factory)
-	throws HibernateException {
+			throws HibernateException {
 		return userType.deepCopy(value);
 	}
 
@@ -208,12 +202,12 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	}
 
 	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
+			throws HibernateException {
 		node.setText( toXMLString(value, factory) );
 	}
 
 	public String toLoggableString(Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
+			throws HibernateException {
 		if ( value == null ) {
 			return "null";
 		}
@@ -227,12 +221,14 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
-		if (value!=null) Arrays.fill(result, true);
+		if ( value != null ) {
+			Arrays.fill(result, true);
+		}
 		return result;
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) throws HibernateException {
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+			throws HibernateException {
 		return checkable[0] && isDirty(old, current, session);
 	}
-
 }

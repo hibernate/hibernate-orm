@@ -31,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
+import org.hibernate.usertype.CompositeUserType;
+import org.hibernate.usertype.UserType;
 
 /**
  * A registry of {@link BasicType} instances
@@ -144,6 +146,14 @@ public class BasicTypeRegistry implements Serializable {
 				log.debug( "   Overrides previous {}", old );
 			}
 		}
+	}
+
+	public void register(UserType type, String[] keys) {
+		register( new CustomType( type, keys ) );
+	}
+
+	public void register(CompositeUserType type, String[] keys) {
+		register( new CompositeCustomType( type, keys ) );
 	}
 
 	public BasicType getRegisteredType(String key) {

@@ -35,6 +35,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Persistence;
 
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.packaging.Scanner;
@@ -82,12 +83,19 @@ public class ScannerTest extends PackagingTestCase {
 		
 		EntityManagerFactory emf;
 		CustomScanner.resetUsed();
-		emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
+		final HashMap integration = new HashMap();
+		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( ! CustomScanner.isUsed() );
 		emf.close();
 
 		CustomScanner.resetUsed();
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
+		assertTrue( CustomScanner.isUsed() );
+		emf.close();
+
+		CustomScanner.resetUsed();
+		integration.put( AvailableSettings.SCANNER, new CustomScanner() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( CustomScanner.isUsed() );
 		emf.close();
 	}

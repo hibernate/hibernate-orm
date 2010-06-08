@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
 import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
@@ -264,7 +265,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
 
             // Checking if this is not a "fake" many-to-one bidirectional relation. The relation description may be
             // null in case of collections of non-entities.
-            RelationDescription rd = verCfg.getEntCfg().get(entityName).getRelationDescription(referencingPropertyName);
+            RelationDescription rd = searchForRelationDescription(entityName, referencingPropertyName);
             if (rd != null && rd.getMappedByPropertyName() != null) {
                 generateFakeBidirecationalRelationWorkUnits(auditProcess, newColl, oldColl, entityName,
                         referencingPropertyName, event, rd);
@@ -283,6 +284,24 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                 }
             }
         }
+    }
+
+    /**
+     * Looks up a relation description corresponding to the given property in the given entity. If no description is
+     * found in the given entity, the parent entity is checked (so that inherited relations work).
+     * @param entityName Name of the entity, in which to start looking.
+     * @param referencingPropertyName The name of the property.
+     * @return A found relation description corresponding to the given entity or {@code null}, if no description can
+     * be found.
+     */
+    private RelationDescription searchForRelationDescription(String entityName, String referencingPropertyName) {
+        EntityConfiguration configuration = verCfg.getEntCfg().get(entityName);
+        RelationDescription rd = configuration.getRelationDescription(referencingPropertyName);
+        if (rd == null && configuration.getParentEntityName() != null) {
+            return searchForRelationDescription(configuration.getParentEntityName(), referencingPropertyName);
+        }
+
+        return rd;
     }
 
     private CollectionEntry getCollectionEntry(AbstractCollectionEvent event) {

@@ -28,7 +28,7 @@ import org.hibernate.util.IdentityMap;
 
 /**
  * In EJB3, it is the create operation that is cascaded to unmanaged
- * ebtities at flush time (instead of the save-update operation in
+ * entities at flush time (instead of the save-update operation in
  * Hibernate).
  *
  * @author Gavin King

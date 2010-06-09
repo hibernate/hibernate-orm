@@ -100,11 +100,11 @@ public class EntityConfiguration {
         return propertyMapper;
     }
 
-    // For use by EntitiesConfigurations
-
-    String getParentEntityName() {
+    public String getParentEntityName() {
         return parentEntityName;
     }
+
+    // For use by EntitiesConfigurations
 
     String getVersionsEntityName() {
         return versionsEntityName;

@@ -3522,8 +3522,6 @@ Starred getNote() { ... } //enum persisted as String in database</programlisting
         annotation as shown in the <literal>note</literal> property
         example.</para>
 
-        <para></para>
-
         <para>In plain Java APIs, the temporal precision of time is not
         defined. When dealing with temporal data you might want to describe
         the expected precision in database. Temporal data can have

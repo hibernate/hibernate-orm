@@ -4945,7 +4945,7 @@ public class Country implements Serializable {
         not necessary as the binding between a column and its related column
         on the associated table is done directly</para>
 
-        <programlisting>@Entity
+        <programlisting role="JAVA">@Entity
 class Person {
    @Id Integer personNumber;
    String firstName;

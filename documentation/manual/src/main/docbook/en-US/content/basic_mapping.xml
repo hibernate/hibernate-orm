@@ -2323,7 +2323,7 @@ class Person {
           exhausted your in-memory value group. This is the role of the
           pluggable optimizers. Currently only the two enhanced generators
           (<xref linkend="mapping-declaration-id-enhanced" /> support this
-          operation. </para>
+          operation.</para>
 
           <itemizedlist spacing="compact">
             <listitem>
@@ -4182,52 +4182,300 @@ public long getObjectVolume()</programlisting>
       </section>
     </section>
 
-    <section id="mapping-declaration-manytoone" revision="5">
-      <title>Many-to-one</title>
+    <section>
+      <title>Mapping a to-one association</title>
 
-      <para>An ordinary association to another persistent class is declared
-      using a <literal>many-to-one</literal> element. The relational model is
-      a many-to-one association; a foreign key in one table is referencing the
-      primary key column(s) of the target table.</para>
+      <para>To link one entity to an other, you need to map the association
+      property as a to one association. In the relational model, you can
+      either use a foreign key or an association table, or (a bit less common)
+      share the same primary key value between the two entities.</para>
 
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="manytoone1" />
+      <para>To mark an association, use either
+      <classname>@ManyToOne</classname> or
+      <classname>@OnetoOne</classname>.</para>
 
-          <area coords="3" id="manytoone2" />
+      <section id="mapping-declaration-manytoone" revision="5">
+        <title>Using a foreign key or an association table</title>
 
-          <area coords="4" id="manytoone3" />
+        <para>An ordinary association to another persistent class is declared
+        using a</para>
 
-          <area coords="5" id="manytoone4" />
+        <itemizedlist>
+          <listitem>
+            <para><classname>@ManyToOne</classname> if several entities can
+            point to the the target entity</para>
+          </listitem>
 
-          <area coords="6" id="manytoone5" />
+          <listitem>
+            <para><classname>@OneToOne</classname> if only a single entity can
+            point to the the target entity</para>
+          </listitem>
+        </itemizedlist>
 
-          <areaset coords="" id="manytoone6-7">
-            <area coords="7" id="manytoone6" />
+        <para>and a foreign key in one table is referencing the primary key
+        column(s) of the target table.</para>
 
-            <area coords="8" id="manytoone7" />
-          </areaset>
+        <programlisting language="JAVA" role="JAVA">@Entity
+public class Flight implements Serializable {
+    @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
+    @JoinColumn(name="COMP_ID")
+    public Company getCompany() {
+        return company;
+    }
+    ...
+}            </programlisting>
 
-          <area coords="9" id="manytoone8" />
+        <para>The <literal>@JoinColumn</literal> attribute is optional, the
+        default value(s) is the concatenation of the name of the relationship
+        in the owner side, <keycap>_</keycap> (underscore), and the name of
+        the primary key column in the owned side. In this example
+        <literal>company_id</literal> because the property name is
+        <literal>company</literal> and the column id of Company is
+        <literal>id</literal>.</para>
 
-          <area coords="10" id="manytoone9" />
+        <para><literal>@ManyToOne</literal> has a parameter named
+        <literal>targetEntity</literal> which describes the target entity
+        name. You usually don't need this parameter since the default value
+        (the type of the property that stores the association) is good in
+        almost all cases. However this is useful when you want to use
+        interfaces as the return type instead of the regular entity.</para>
 
-          <area coords="11" id="manytoone10" />
+        <programlisting language="JAVA" role="JAVA">@Entity
+public class Flight implements Serializable {
+    @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE}, targetEntity=CompanyImpl.class )
+    @JoinColumn(name="COMP_ID")
+    public Company getCompany() {
+        return company;
+    }
+    ...
+}
 
-          <area coords="12" id="manytoone11" />
+public interface Company {
+    ...
+}</programlisting>
 
-          <area coords="13" id="manytoone12" />
+        <para>You can also map a to one association through an association
+        table. This association table described by the
+        <literal>@JoinTable</literal> annotation will contains a foreign key
+        referencing back the entity table (through
+        <literal>@JoinTable.joinColumns</literal>) and a a foreign key
+        referencing the target entity table (through
+        <literal>@JoinTable.inverseJoinColumns</literal>).</para>
 
-          <area coords="14" id="manytoone13" />
+        <programlisting language="JAVA" role="JAVA">@Entity
+public class Flight implements Serializable {
+    @ManyToOne( cascade = {CascadeType.PERSIST, CascadeType.MERGE} )
+    @JoinTable(name="Flight_Company",
+        joinColumns = @JoinColumn(name="FLIGHT_ID"),
+        inverseJoinColumns = @JoinColumn(name="COMP_ID")
+    )
+    public Company getCompany() {
+        return company;
+    }
+    ...
+}       </programlisting>
 
-          <area coords="15" id="manytoone14" />
+        <note>
+          <para>You can use a SQL fragment to simulate a physical join column
+          using the <classname>@JoinColumnOrFormula</classname> /
+          <classname>@JoinColumnOrformulas</classname> annotations (just like
+          you can use a SQL fragment to simulate a property column via the
+          <classname>@Formula</classname> annotation).</para>
 
-          <area coords="16" id="manytoone15" />
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Ticket implements Serializable {
+    @ManyToOne
+    @JoinColumnOrFormula(formula="(firstname + ' ' + lastname)")
+    public Person getOwner() {
+        return person;
+    }
+    ...
+}       </programlisting>
+        </note>
 
-          <area coords="17" id="manytoone16" />
-        </areaspec>
+        <para>You can mark an association as mandatory by using the
+        <literal>optional=false</literal> attribute. We recommend to use Bean
+        Validation's <classname>@NotNull</classname> annotation as a better
+        alternative however. As a consequence, the foreign key column(s) will
+        be marked as not nullable (if possible).</para>
 
-        <programlisting>&lt;many-to-one
+        <para>Setting a value of the <literal>cascade</literal> attribute to
+        any meaningful value other than nothing will propagate certain
+        operations to the associated object. The meaningful values are divided
+        into three categories.</para>
+
+        <orderedlist>
+          <listitem>
+            <para>basic operations, which include: <literal>persist, merge,
+            delete, save-update, evict, replicate, lock and
+            refresh</literal>;</para>
+          </listitem>
+
+          <listitem>
+            <para>special values: <literal>delete-orphan</literal> or
+            <literal>all</literal> ; </para>
+          </listitem>
+
+          <listitem>
+            <para>comma-separated combinations of operation names:
+            <literal>cascade="persist,merge,evict"</literal> or
+            <literal>cascade="all,delete-orphan"</literal>. See <xref
+            linkend="objectstate-transitive" /> for a full explanation. Note
+            that single valued many-to-one associations do not support orphan
+            delete.</para>
+          </listitem>
+        </orderedlist>
+
+        <para>By default, single point associations are eagerly fetched in JPA
+        2. You can mark it as lazily fetched by using
+        <classname>@ManyToOne(fetch=FetchType.LAZY) </classname>in which case
+        Hibernate will proxy the association and load it when the state of the
+        associated entity is reached. You can force Hibernate not to use a
+        proxy by using <classname>@LazyToOne(NO_PROXY)</classname>. In this
+        case, the property is fetched lazily when the instance variable is
+        first accessed. This requires build-time bytecode instrumentation.
+        lazy="false" specifies that the association will always be eagerly
+        fetched.</para>
+
+        <para>With the default JPA options, single-ended associations are
+        loaded with a subsequent select if set to <literal>LAZY</literal>, or
+        a SQL JOIN is used for <literal>EAGER</literal> associations. You can
+        however adjust the fetching strategy, ie how data is fetched by using
+        <literal>@Fetch</literal>. <literal>FetchMode</literal> can be
+        <literal>SELECT</literal> (a select is triggered when the association
+        needs to be loaded) or <literal>JOIN</literal> (use a SQL JOIN to load
+        the association while loading the owner entity).
+        <literal>JOIN</literal> overrides any lazy attribute (an association
+        loaded through a <literal>JOIN</literal> strategy cannot be
+        lazy).</para>
+
+        <para>When Hibernate cannot resolve the association because the
+        expected associated element is not in database (wrong id on the
+        association column), an exception is raised. This might be
+        inconvenient for legacy and badly maintained schemas. You can ask
+        Hibernate to ignore such elements instead of raising an exception
+        using the <literal>@NotFound</literal> annotation.</para>
+
+        <example>
+          <title>@NotFound annotation</title>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Child {
+    ...
+    @ManyToOne
+    @NotFound(action=NotFoundAction.IGNORE)
+    public Parent getParent() { ... }
+    ...
+}</programlisting>
+        </example>
+
+        <para>Sometimes you want to delegate to your database the deletion of
+        cascade when a given entity is deleted. In this case Hibernate
+        generates a cascade delete constraint at the database level.</para>
+
+        <example>
+          <title>@OnDelete annotation</title>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Child {
+    ...
+    @ManyToOne
+    @OnDelete(action=OnDeleteAction.CASCADE)
+    public Parent getParent() { ... }
+    ...
+}</programlisting>
+        </example>
+
+        <para>Foreign key constraints, while generated by Hibernate, have a
+        fairly unreadable name. You can override the constraint name using
+        <literal>@ForeignKey</literal>.</para>
+
+        <example>
+          <title>@ForeignKey annotation</title>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Child {
+    ...
+    @ManyToOne
+    @ForeignKey(name="FK_PARENT")
+    public Parent getParent() { ... }
+    ...
+}
+
+alter table Child add constraint FK_PARENT foreign key (parent_id) references Parent</programlisting>
+        </example>
+
+        <para>Sometimes, you want to link one entity to an other not by the
+        target entity primary key but by a different unique key. You can
+        achieve that by referencing the unique key column(s) in
+        <methodname>@JoinColumn.referenceColumnName</methodname>.</para>
+
+        <programlisting role="JAVA">@Entity
+class Person {
+   @Id Integer personNumber;
+   String firstName;
+   @Column(name="I")
+   String initial;
+   String lastName;
+}
+
+@Entity
+class Home {
+   @ManyToOne
+   @JoinColumns({
+      @JoinColumn(name="first_name", referencedColumnName="firstName"),
+      @JoinColumn(name="init", referencedColumnName="I"),
+      @JoinColumn(name="last_name", referencedColumnName="lastName"),
+   })
+   Person owner
+}</programlisting>
+
+        <para>This is not encouraged however and should be reserved to legacy
+        mappings.</para>
+
+        <para>In hbm.xml, mapping an association is similar. The main
+        difference is that a <classname>@OneToOne</classname> is mapped as
+        <literal>&lt;many-to-one unique="true"/&gt;</literal>, let's dive into
+        the subject.</para>
+
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="manytoone1" />
+
+            <area coords="3" id="manytoone2" />
+
+            <area coords="4" id="manytoone3" />
+
+            <area coords="5" id="manytoone4" />
+
+            <area coords="6" id="manytoone5" />
+
+            <areaset coords="" id="manytoone6-7">
+              <area coords="7" id="manytoone6" />
+
+              <area coords="8" id="manytoone7" />
+            </areaset>
+
+            <area coords="9" id="manytoone8" />
+
+            <area coords="10" id="manytoone9" />
+
+            <area coords="11" id="manytoone10" />
+
+            <area coords="12" id="manytoone11" />
+
+            <area coords="13" id="manytoone12" />
+
+            <area coords="14" id="manytoone13" />
+
+            <area coords="15" id="manytoone14" />
+
+            <area coords="16" id="manytoone15" />
+
+            <area coords="17" id="manytoone16" />
+          </areaspec>
+
+          <programlisting>&lt;many-to-one
         name="propertyName"
         column="column_name"
         class="ClassName"
@@ -4251,186 +4499,187 @@ public long getObjectVolume()</programlisting>
         foreign-key="foreign_key_name"
 /&gt;</programlisting>
 
-        <calloutlist>
-          <callout arearefs="manytoone1">
-            <para><literal>name</literal>: the name of the property.</para>
-          </callout>
+          <calloutlist>
+            <callout arearefs="manytoone1">
+              <para><literal>name</literal>: the name of the property.</para>
+            </callout>
 
-          <callout arearefs="manytoone2">
-            <para><literal>column</literal> (optional): the name of the
-            foreign key column. This can also be specified by nested
-            <literal>&lt;column&gt;</literal> element(s).</para>
-          </callout>
+            <callout arearefs="manytoone2">
+              <para><literal>column</literal> (optional): the name of the
+              foreign key column. This can also be specified by nested
+              <literal>&lt;column&gt;</literal> element(s).</para>
+            </callout>
 
-          <callout arearefs="manytoone3">
-            <para><literal>class</literal> (optional - defaults to the
-            property type determined by reflection): the name of the
-            associated class.</para>
-          </callout>
+            <callout arearefs="manytoone3">
+              <para><literal>class</literal> (optional - defaults to the
+              property type determined by reflection): the name of the
+              associated class.</para>
+            </callout>
 
-          <callout arearefs="manytoone4">
-            <para><literal>cascade</literal> (optional): specifies which
-            operations should be cascaded from the parent object to the
-            associated object.</para>
-          </callout>
+            <callout arearefs="manytoone4">
+              <para><literal>cascade</literal> (optional): specifies which
+              operations should be cascaded from the parent object to the
+              associated object.</para>
+            </callout>
 
-          <callout arearefs="manytoone5">
-            <para><literal>fetch</literal> (optional - defaults to
-            <literal>select</literal>): chooses between outer-join fetching or
-            sequential select fetching.</para>
-          </callout>
+            <callout arearefs="manytoone5">
+              <para><literal>fetch</literal> (optional - defaults to
+              <literal>select</literal>): chooses between outer-join fetching
+              or sequential select fetching.</para>
+            </callout>
 
-          <callout arearefs="manytoone6-7">
-            <para><literal>update, insert</literal> (optional - defaults to
-            <literal>true</literal>): specifies that the mapped columns should
-            be included in SQL <literal>UPDATE</literal> and/or
-            <literal>INSERT</literal> statements. Setting both to
-            <literal>false</literal> allows a pure "derived" association whose
-            value is initialized from another property that maps to the same
-            column(s), or by a trigger or other application.</para>
-          </callout>
+            <callout arearefs="manytoone6-7">
+              <para><literal>update, insert</literal> (optional - defaults to
+              <literal>true</literal>): specifies that the mapped columns
+              should be included in SQL <literal>UPDATE</literal> and/or
+              <literal>INSERT</literal> statements. Setting both to
+              <literal>false</literal> allows a pure "derived" association
+              whose value is initialized from another property that maps to
+              the same column(s), or by a trigger or other application.</para>
+            </callout>
 
-          <callout arearefs="manytoone8">
-            <para><literal>property-ref</literal> (optional): the name of a
-            property of the associated class that is joined to this foreign
-            key. If not specified, the primary key of the associated class is
-            used.</para>
-          </callout>
+            <callout arearefs="manytoone8">
+              <para><literal>property-ref</literal> (optional): the name of a
+              property of the associated class that is joined to this foreign
+              key. If not specified, the primary key of the associated class
+              is used.</para>
+            </callout>
 
-          <callout arearefs="manytoone9">
-            <para><literal>access</literal> (optional - defaults to
-            <literal>property</literal>): the strategy Hibernate uses for
-            accessing the property value.</para>
-          </callout>
+            <callout arearefs="manytoone9">
+              <para><literal>access</literal> (optional - defaults to
+              <literal>property</literal>): the strategy Hibernate uses for
+              accessing the property value.</para>
+            </callout>
 
-          <callout arearefs="manytoone10">
-            <para><literal>unique</literal> (optional): enables the DDL
-            generation of a unique constraint for the foreign-key column. By
-            allowing this to be the target of a
-            <literal>property-ref</literal>, you can make the association
-            multiplicity one-to-one.</para>
-          </callout>
+            <callout arearefs="manytoone10">
+              <para><literal>unique</literal> (optional): enables the DDL
+              generation of a unique constraint for the foreign-key column. By
+              allowing this to be the target of a
+              <literal>property-ref</literal>, you can make the association
+              multiplicity one-to-one.</para>
+            </callout>
 
-          <callout arearefs="manytoone11">
-            <para><literal>not-null</literal> (optional): enables the DDL
-            generation of a nullability constraint for the foreign key
-            columns.</para>
-          </callout>
+            <callout arearefs="manytoone11">
+              <para><literal>not-null</literal> (optional): enables the DDL
+              generation of a nullability constraint for the foreign key
+              columns.</para>
+            </callout>
 
-          <callout arearefs="manytoone12">
-            <para><literal>optimistic-lock</literal> (optional - defaults to
-            <literal>true</literal>): specifies that updates to this property
-            do or do not require acquisition of the optimistic lock. In other
-            words, it determines if a version increment should occur when this
-            property is dirty.</para>
-          </callout>
+            <callout arearefs="manytoone12">
+              <para><literal>optimistic-lock</literal> (optional - defaults to
+              <literal>true</literal>): specifies that updates to this
+              property do or do not require acquisition of the optimistic
+              lock. In other words, it determines if a version increment
+              should occur when this property is dirty.</para>
+            </callout>
 
-          <callout arearefs="manytoone13">
-            <para><literal>lazy</literal> (optional - defaults to
-            <literal>proxy</literal>): by default, single point associations
-            are proxied. <literal>lazy="no-proxy"</literal> specifies that the
-            property should be fetched lazily when the instance variable is
-            first accessed. This requires build-time bytecode instrumentation.
-            <literal>lazy="false"</literal> specifies that the association
-            will always be eagerly fetched.</para>
-          </callout>
+            <callout arearefs="manytoone13">
+              <para><literal>lazy</literal> (optional - defaults to
+              <literal>proxy</literal>): by default, single point associations
+              are proxied. <literal>lazy="no-proxy"</literal> specifies that
+              the property should be fetched lazily when the instance variable
+              is first accessed. This requires build-time bytecode
+              instrumentation. <literal>lazy="false"</literal> specifies that
+              the association will always be eagerly fetched.</para>
+            </callout>
 
-          <callout arearefs="manytoone14">
-            <para><literal>not-found</literal> (optional - defaults to
-            <literal>exception</literal>): specifies how foreign keys that
-            reference missing rows will be handled. <literal>ignore</literal>
-            will treat a missing row as a null association.</para>
-          </callout>
+            <callout arearefs="manytoone14">
+              <para><literal>not-found</literal> (optional - defaults to
+              <literal>exception</literal>): specifies how foreign keys that
+              reference missing rows will be handled.
+              <literal>ignore</literal> will treat a missing row as a null
+              association.</para>
+            </callout>
 
-          <callout arearefs="manytoone15">
-            <para><literal>entity-name</literal> (optional): the entity name
-            of the associated class.</para>
-          </callout>
+            <callout arearefs="manytoone15">
+              <para><literal>entity-name</literal> (optional): the entity name
+              of the associated class.</para>
+            </callout>
 
-          <callout arearefs="manytoone16">
-            <para><literal>formula</literal> (optional): an SQL expression
-            that defines the value for a <emphasis>computed</emphasis> foreign
-            key.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
+            <callout arearefs="manytoone16">
+              <para><literal>formula</literal> (optional): an SQL expression
+              that defines the value for a <emphasis>computed</emphasis>
+              foreign key.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
 
-      <para>Setting a value of the <literal>cascade</literal> attribute to any
-      meaningful value other than <literal>none</literal> will propagate
-      certain operations to the associated object. The meaningful values are
-      divided into three categories. First, basic operations, which include:
-      <literal>persist, merge, delete, save-update, evict, replicate, lock and
-      refresh</literal>; second, special values:
-      <literal>delete-orphan</literal>; and third,<literal>all</literal>
-      comma-separated combinations of operation names:
-      <literal>cascade="persist,merge,evict"</literal> or
-      <literal>cascade="all,delete-orphan"</literal>. See <xref
-      linkend="objectstate-transitive" /> for a full explanation. Note that
-      single valued, many-to-one and one-to-one, associations do not support
-      orphan delete.</para>
+        <para>Setting a value of the <literal>cascade</literal> attribute to
+        any meaningful value other than <literal>none</literal> will propagate
+        certain operations to the associated object. The meaningful values are
+        divided into three categories. First, basic operations, which include:
+        <literal>persist, merge, delete, save-update, evict, replicate, lock
+        and refresh</literal>; second, special values:
+        <literal>delete-orphan</literal>; and third,<literal>all</literal>
+        comma-separated combinations of operation names:
+        <literal>cascade="persist,merge,evict"</literal> or
+        <literal>cascade="all,delete-orphan"</literal>. See <xref
+        linkend="objectstate-transitive" /> for a full explanation. Note that
+        single valued, many-to-one and one-to-one, associations do not support
+        orphan delete.</para>
 
-      <para>Here is an example of a typical <literal>many-to-one</literal>
-      declaration:</para>
+        <para>Here is an example of a typical <literal>many-to-one</literal>
+        declaration:</para>
 
-      <programlisting role="XML">&lt;many-to-one name="product" class="Product" column="PRODUCT_ID"/&gt;</programlisting>
+        <programlisting role="XML">&lt;many-to-one name="product" class="Product" column="PRODUCT_ID"/&gt;</programlisting>
 
-      <para>The <literal>property-ref</literal> attribute should only be used
-      for mapping legacy data where a foreign key refers to a unique key of
-      the associated table other than the primary key. This is a complicated
-      and confusing relational model. For example, if the
-      <literal>Product</literal> class had a unique serial number that is not
-      the primary key. The <literal>unique</literal> attribute controls
-      Hibernate's DDL generation with the SchemaExport tool.</para>
+        <para>The <literal>property-ref</literal> attribute should only be
+        used for mapping legacy data where a foreign key refers to a unique
+        key of the associated table other than the primary key. This is a
+        complicated and confusing relational model. For example, if the
+        <literal>Product</literal> class had a unique serial number that is
+        not the primary key. The <literal>unique</literal> attribute controls
+        Hibernate's DDL generation with the SchemaExport tool.</para>
 
-      <programlisting role="XML">&lt;property name="serialNumber" unique="true" type="string" column="SERIAL_NUMBER"/&gt;</programlisting>
+        <programlisting role="XML">&lt;property name="serialNumber" unique="true" type="string" column="SERIAL_NUMBER"/&gt;</programlisting>
 
-      <para>Then the mapping for <literal>OrderItem</literal> might
-      use:</para>
+        <para>Then the mapping for <literal>OrderItem</literal> might
+        use:</para>
 
-      <programlisting role="XML">&lt;many-to-one name="product" property-ref="serialNumber" column="PRODUCT_SERIAL_NUMBER"/&gt;</programlisting>
+        <programlisting role="XML">&lt;many-to-one name="product" property-ref="serialNumber" column="PRODUCT_SERIAL_NUMBER"/&gt;</programlisting>
 
-      <para>This is not encouraged, however.</para>
+        <para>This is not encouraged, however.</para>
 
-      <para>If the referenced unique key comprises multiple properties of the
-      associated entity, you should map the referenced properties inside a
-      named <literal>&lt;properties&gt;</literal> element.</para>
+        <para>If the referenced unique key comprises multiple properties of
+        the associated entity, you should map the referenced properties inside
+        a named <literal>&lt;properties&gt;</literal> element.</para>
 
-      <para>If the referenced unique key is the property of a component, you
-      can specify a property path:</para>
+        <para>If the referenced unique key is the property of a component, you
+        can specify a property path:</para>
 
-      <programlisting role="XML">&lt;many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/&gt;</programlisting>
-    </section>
+        <programlisting role="XML">&lt;many-to-one name="owner" property-ref="identity.ssn" column="OWNER_SSN"/&gt;</programlisting>
+      </section>
 
-    <section id="mapping-declaration-onetoone" revision="3">
-      <title>One-to-one</title>
+      <section id="mapping-declaration-onetoone" revision="3">
+        <title>One-to-one</title>
 
-      <para>A one-to-one association to another persistent class is declared
-      using a <literal>one-to-one</literal> element.</para>
+        <para>A one-to-one association to another persistent class is declared
+        using a <literal>one-to-one</literal> element.</para>
 
-      <programlistingco role="XML">
-        <areaspec>
-          <area coords="2" id="onetoone1" />
+        <programlistingco role="XML">
+          <areaspec>
+            <area coords="2" id="onetoone1" />
 
-          <area coords="3" id="onetoone2" />
+            <area coords="3" id="onetoone2" />
 
-          <area coords="4" id="onetoone3" />
+            <area coords="4" id="onetoone3" />
 
-          <area coords="5" id="onetoone4" />
+            <area coords="5" id="onetoone4" />
 
-          <area coords="6" id="onetoone5" />
+            <area coords="6" id="onetoone5" />
 
-          <area coords="7" id="onetoone6" />
+            <area coords="7" id="onetoone6" />
 
-          <area coords="8" id="onetoone7" />
+            <area coords="8" id="onetoone7" />
 
-          <area coords="9" id="onetoone8" />
+            <area coords="9" id="onetoone8" />
 
-          <area coords="10" id="onetoone9" />
+            <area coords="10" id="onetoone9" />
 
-          <area coords="11" id="onetoone10" />
-        </areaspec>
+            <area coords="11" id="onetoone10" />
+          </areaspec>
 
-        <programlisting>&lt;one-to-one
+          <programlisting>&lt;one-to-one
         name="propertyName"
         class="ClassName"
         cascade="cascade_style"
@@ -4446,111 +4695,112 @@ public long getObjectVolume()</programlisting>
         foreign-key="foreign_key_name"
 /&gt;</programlisting>
 
-        <calloutlist>
-          <callout arearefs="onetoone1">
-            <para><literal>name</literal>: the name of the property.</para>
-          </callout>
+          <calloutlist>
+            <callout arearefs="onetoone1">
+              <para><literal>name</literal>: the name of the property.</para>
+            </callout>
 
-          <callout arearefs="onetoone2">
-            <para><literal>class</literal> (optional - defaults to the
-            property type determined by reflection): the name of the
-            associated class.</para>
-          </callout>
+            <callout arearefs="onetoone2">
+              <para><literal>class</literal> (optional - defaults to the
+              property type determined by reflection): the name of the
+              associated class.</para>
+            </callout>
 
-          <callout arearefs="onetoone3">
-            <para><literal>cascade</literal> (optional): specifies which
-            operations should be cascaded from the parent object to the
-            associated object.</para>
-          </callout>
+            <callout arearefs="onetoone3">
+              <para><literal>cascade</literal> (optional): specifies which
+              operations should be cascaded from the parent object to the
+              associated object.</para>
+            </callout>
 
-          <callout arearefs="onetoone4">
-            <para><literal>constrained</literal> (optional): specifies that a
-            foreign key constraint on the primary key of the mapped table and
-            references the table of the associated class. This option affects
-            the order in which <literal>save()</literal> and
-            <literal>delete()</literal> are cascaded, and determines whether
-            the association can be proxied. It is also used by the schema
-            export tool.</para>
-          </callout>
+            <callout arearefs="onetoone4">
+              <para><literal>constrained</literal> (optional): specifies that
+              a foreign key constraint on the primary key of the mapped table
+              and references the table of the associated class. This option
+              affects the order in which <literal>save()</literal> and
+              <literal>delete()</literal> are cascaded, and determines whether
+              the association can be proxied. It is also used by the schema
+              export tool.</para>
+            </callout>
 
-          <callout arearefs="onetoone5">
-            <para><literal>fetch</literal> (optional - defaults to
-            <literal>select</literal>): chooses between outer-join fetching or
-            sequential select fetching.</para>
-          </callout>
+            <callout arearefs="onetoone5">
+              <para><literal>fetch</literal> (optional - defaults to
+              <literal>select</literal>): chooses between outer-join fetching
+              or sequential select fetching.</para>
+            </callout>
 
-          <callout arearefs="onetoone6">
-            <para><literal>property-ref</literal> (optional): the name of a
-            property of the associated class that is joined to the primary key
-            of this class. If not specified, the primary key of the associated
-            class is used.</para>
-          </callout>
+            <callout arearefs="onetoone6">
+              <para><literal>property-ref</literal> (optional): the name of a
+              property of the associated class that is joined to the primary
+              key of this class. If not specified, the primary key of the
+              associated class is used.</para>
+            </callout>
 
-          <callout arearefs="onetoone7">
-            <para><literal>access</literal> (optional - defaults to
-            <literal>property</literal>): the strategy Hibernate uses for
-            accessing the property value.</para>
-          </callout>
+            <callout arearefs="onetoone7">
+              <para><literal>access</literal> (optional - defaults to
+              <literal>property</literal>): the strategy Hibernate uses for
+              accessing the property value.</para>
+            </callout>
 
-          <callout arearefs="onetoone8">
-            <para><literal>formula</literal> (optional): almost all one-to-one
-            associations map to the primary key of the owning entity. If this
-            is not the case, you can specify another column, columns or
-            expression to join on using an SQL formula. See
-            <literal>org.hibernate.test.onetooneformula</literal> for an
-            example.</para>
-          </callout>
+            <callout arearefs="onetoone8">
+              <para><literal>formula</literal> (optional): almost all
+              one-to-one associations map to the primary key of the owning
+              entity. If this is not the case, you can specify another column,
+              columns or expression to join on using an SQL formula. See
+              <literal>org.hibernate.test.onetooneformula</literal> for an
+              example.</para>
+            </callout>
 
-          <callout arearefs="onetoone9">
-            <para><literal>lazy</literal> (optional - defaults to
-            <literal>proxy</literal>): by default, single point associations
-            are proxied. <literal>lazy="no-proxy"</literal> specifies that the
-            property should be fetched lazily when the instance variable is
-            first accessed. It requires build-time bytecode instrumentation.
-            <literal>lazy="false"</literal> specifies that the association
-            will always be eagerly fetched. <emphasis>Note that if
-            <literal>constrained="false"</literal>, proxying is impossible and
-            Hibernate will eagerly fetch the association</emphasis>.</para>
-          </callout>
+            <callout arearefs="onetoone9">
+              <para><literal>lazy</literal> (optional - defaults to
+              <literal>proxy</literal>): by default, single point associations
+              are proxied. <literal>lazy="no-proxy"</literal> specifies that
+              the property should be fetched lazily when the instance variable
+              is first accessed. It requires build-time bytecode
+              instrumentation. <literal>lazy="false"</literal> specifies that
+              the association will always be eagerly fetched. <emphasis>Note
+              that if <literal>constrained="false"</literal>, proxying is
+              impossible and Hibernate will eagerly fetch the
+              association</emphasis>.</para>
+            </callout>
 
-          <callout arearefs="onetoone10">
-            <para><literal>entity-name</literal> (optional): the entity name
-            of the associated class.</para>
-          </callout>
-        </calloutlist>
-      </programlistingco>
+            <callout arearefs="onetoone10">
+              <para><literal>entity-name</literal> (optional): the entity name
+              of the associated class.</para>
+            </callout>
+          </calloutlist>
+        </programlistingco>
 
-      <para>There are two varieties of one-to-one associations:</para>
+        <para>There are two varieties of one-to-one associations:</para>
 
-      <itemizedlist>
-        <listitem>
-          <para>primary key associations</para>
-        </listitem>
+        <itemizedlist>
+          <listitem>
+            <para>primary key associations</para>
+          </listitem>
 
-        <listitem>
-          <para>unique foreign key associations</para>
-        </listitem>
-      </itemizedlist>
+          <listitem>
+            <para>unique foreign key associations</para>
+          </listitem>
+        </itemizedlist>
 
-      <para>Primary key associations do not need an extra table column. If two
-      rows are related by the association, then the two table rows share the
-      same primary key value. To relate two objects by a primary key
-      association, ensure that they are assigned the same identifier
-      value.</para>
+        <para>Primary key associations do not need an extra table column. If
+        two rows are related by the association, then the two table rows share
+        the same primary key value. To relate two objects by a primary key
+        association, ensure that they are assigned the same identifier
+        value.</para>
 
-      <para>For a primary key association, add the following mappings to
-      <literal>Employee</literal> and <literal>Person</literal>
-      respectively:</para>
+        <para>For a primary key association, add the following mappings to
+        <literal>Employee</literal> and <literal>Person</literal>
+        respectively:</para>
 
-      <programlisting role="XML">&lt;one-to-one name="person" class="Person"/&gt;</programlisting>
+        <programlisting role="XML">&lt;one-to-one name="person" class="Person"/&gt;</programlisting>
 
-      <programlisting role="XML">&lt;one-to-one name="employee" class="Employee" constrained="true"/&gt;</programlisting>
+        <programlisting role="XML">&lt;one-to-one name="employee" class="Employee" constrained="true"/&gt;</programlisting>
 
-      <para>Ensure that the primary keys of the related rows in the PERSON and
-      EMPLOYEE tables are equal. You use a special Hibernate identifier
-      generation strategy called <literal>foreign</literal>:</para>
+        <para>Ensure that the primary keys of the related rows in the PERSON
+        and EMPLOYEE tables are equal. You use a special Hibernate identifier
+        generation strategy called <literal>foreign</literal>:</para>
 
-      <programlisting role="XML">&lt;class name="person" table="PERSON"&gt;
+        <programlisting role="XML">&lt;class name="person" table="PERSON"&gt;
     &lt;id name="id" column="PERSON_ID"&gt;
         &lt;generator class="foreign"&gt;
             &lt;param name="property"&gt;employee&lt;/param&gt;
@@ -4562,21 +4812,22 @@ public long getObjectVolume()</programlisting>
         constrained="true"/&gt;
 &lt;/class&gt;</programlisting>
 
-      <para>A newly saved instance of <literal>Person</literal> is assigned
-      the same primary key value as the <literal>Employee</literal> instance
-      referred with the <literal>employee</literal> property of that
-      <literal>Person</literal>.</para>
+        <para>A newly saved instance of <literal>Person</literal> is assigned
+        the same primary key value as the <literal>Employee</literal> instance
+        referred with the <literal>employee</literal> property of that
+        <literal>Person</literal>.</para>
 
-      <para>Alternatively, a foreign key with a unique constraint, from
-      <literal>Employee</literal> to <literal>Person</literal>, can be
-      expressed as:</para>
+        <para>Alternatively, a foreign key with a unique constraint, from
+        <literal>Employee</literal> to <literal>Person</literal>, can be
+        expressed as:</para>
 
-      <programlisting role="XML">&lt;many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/&gt;</programlisting>
+        <programlisting role="XML">&lt;many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/&gt;</programlisting>
 
-      <para>This association can be made bidirectional by adding the following
-      to the <literal>Person</literal> mapping:</para>
+        <para>This association can be made bidirectional by adding the
+        following to the <literal>Person</literal> mapping:</para>
 
-      <programlisting role="XML">&lt;one-to-one name="employee" class="Employee" property-ref="person"/&gt;</programlisting>
+        <programlisting role="XML">&lt;one-to-one name="employee" class="Employee" property-ref="person"/&gt;</programlisting>
+      </section>
     </section>
 
     <section id="mapping-declaration-naturalid">

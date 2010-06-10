@@ -2308,8 +2308,8 @@ class Person {
 
             <listitem>
               <para><literal>optimizer</literal> (optional - defaults to
-              <literal></literal>): See <xref
-              linkend="mapping-declaration-id-enhanced-optimizers" /></para>
+              <literal>??</literal>): See <xref
+              linkend="mapping-declaration-id-enhanced-optimizers" />.</para>
             </listitem>
           </itemizedlist></para>
 
@@ -2323,35 +2323,37 @@ class Person {
           exhausted your in-memory value group. This is the role of the
           pluggable optimizers. Currently only the two enhanced generators
           (<xref linkend="mapping-declaration-id-enhanced" /> support this
-          operation. <itemizedlist spacing="compact">
-              <listitem>
-                <para><literal>none</literal> (generally this is the default
-                if no optimizer was specified): this will not perform any
-                optimizations and hit the database for each and every
-                request.</para>
-              </listitem>
+          operation. </para>
 
-              <listitem>
-                <para><literal>hilo</literal>: applies a hi/lo algorithm
-                around the database retrieved values. The values from the
-                database for this optimizer are expected to be sequential. The
-                values retrieved from the database structure for this
-                optimizer indicates the "group number". The
-                <literal>increment_size</literal> is multiplied by that value
-                in memory to define a group "hi value".</para>
-              </listitem>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para><literal>none</literal> (generally this is the default if
+              no optimizer was specified): this will not perform any
+              optimizations and hit the database for each and every
+              request.</para>
+            </listitem>
 
-              <listitem>
-                <para><literal>pooled</literal>: as with the case of
-                <literal>hilo</literal>, this optimizer attempts to minimize
-                the number of hits to the database. Here, however, we simply
-                store the starting value for the "next group" into the
-                database structure rather than a sequential value in
-                combination with an in-memory grouping algorithm. Here,
-                <literal>increment_size</literal> refers to the values coming
-                from the database.</para>
-              </listitem>
-            </itemizedlist></para>
+            <listitem>
+              <para><literal>hilo</literal>: applies a hi/lo algorithm around
+              the database retrieved values. The values from the database for
+              this optimizer are expected to be sequential. The values
+              retrieved from the database structure for this optimizer
+              indicates the "group number". The
+              <literal>increment_size</literal> is multiplied by that value in
+              memory to define a group "hi value".</para>
+            </listitem>
+
+            <listitem>
+              <para><literal>pooled</literal>: as with the case of
+              <literal>hilo</literal>, this optimizer attempts to minimize the
+              number of hits to the database. Here, however, we simply store
+              the starting value for the "next group" into the database
+              structure rather than a sequential value in combination with an
+              in-memory grouping algorithm. Here,
+              <literal>increment_size</literal> refers to the values coming
+              from the database.</para>
+            </listitem>
+          </itemizedlist>
         </section>
       </section>
 

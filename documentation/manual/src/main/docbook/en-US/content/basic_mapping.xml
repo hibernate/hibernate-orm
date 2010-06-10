@@ -4183,7 +4183,7 @@ public long getObjectVolume()</programlisting>
     </section>
 
     <section>
-      <title>Mapping a to-one association</title>
+      <title>Mapping one to one and one to many associations</title>
 
       <para>To link one entity to an other, you need to map the association
       property as a to one association. In the relational model, you can
@@ -4193,6 +4193,61 @@ public long getObjectVolume()</programlisting>
       <para>To mark an association, use either
       <classname>@ManyToOne</classname> or
       <classname>@OnetoOne</classname>.</para>
+
+      <para><literal>@ManyToOne</literal> and <classname>@OneToOne</classname>
+      have a parameter named <literal>targetEntity</literal> which describes
+      the target entity name. You usually don't need this parameter since the
+      default value (the type of the property that stores the association) is
+      good in almost all cases. However this is useful when you want to use
+      interfaces as the return type instead of the regular entity.</para>
+
+      <para>Setting a value of the <literal>cascade</literal> attribute to any
+      meaningful value other than nothing will propagate certain operations to
+      the associated object. The meaningful values are divided into three
+      categories.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>basic operations, which include: <literal>persist, merge,
+          delete, save-update, evict, replicate, lock and
+          refresh</literal>;</para>
+        </listitem>
+
+        <listitem>
+          <para>special values: <literal>delete-orphan</literal> or
+          <literal>all</literal> ;</para>
+        </listitem>
+
+        <listitem>
+          <para>comma-separated combinations of operation names:
+          <literal>cascade="persist,merge,evict"</literal> or
+          <literal>cascade="all,delete-orphan"</literal>. See <xref
+          linkend="objectstate-transitive" /> for a full explanation. Note
+          that single valued many-to-one associations do not support orphan
+          delete.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>By default, single point associations are eagerly fetched in JPA
+      2. You can mark it as lazily fetched by using
+      <classname>@ManyToOne(fetch=FetchType.LAZY) </classname>in which case
+      Hibernate will proxy the association and load it when the state of the
+      associated entity is reached. You can force Hibernate not to use a proxy
+      by using <classname>@LazyToOne(NO_PROXY)</classname>. In this case, the
+      property is fetched lazily when the instance variable is first accessed.
+      This requires build-time bytecode instrumentation. lazy="false"
+      specifies that the association will always be eagerly fetched.</para>
+
+      <para>With the default JPA options, single-ended associations are loaded
+      with a subsequent select if set to <literal>LAZY</literal>, or a SQL
+      JOIN is used for <literal>EAGER</literal> associations. You can however
+      adjust the fetching strategy, ie how data is fetched by using
+      <literal>@Fetch</literal>. <literal>FetchMode</literal> can be
+      <literal>SELECT</literal> (a select is triggered when the association
+      needs to be loaded) or <literal>JOIN</literal> (use a SQL JOIN to load
+      the association while loading the owner entity). <literal>JOIN</literal>
+      overrides any lazy attribute (an association loaded through a
+      <literal>JOIN</literal> strategy cannot be lazy).</para>
 
       <section id="mapping-declaration-manytoone" revision="5">
         <title>Using a foreign key or an association table</title>
@@ -4232,13 +4287,6 @@ public class Flight implements Serializable {
         <literal>company_id</literal> because the property name is
         <literal>company</literal> and the column id of Company is
         <literal>id</literal>.</para>
-
-        <para><literal>@ManyToOne</literal> has a parameter named
-        <literal>targetEntity</literal> which describes the target entity
-        name. You usually don't need this parameter since the default value
-        (the type of the property that stores the association) is good in
-        almost all cases. However this is useful when you want to use
-        interfaces as the return type instead of the regular entity.</para>
 
         <programlisting language="JAVA" role="JAVA">@Entity
 public class Flight implements Serializable {
@@ -4298,56 +4346,6 @@ public class Ticket implements Serializable {
         Validation's <classname>@NotNull</classname> annotation as a better
         alternative however. As a consequence, the foreign key column(s) will
         be marked as not nullable (if possible).</para>
-
-        <para>Setting a value of the <literal>cascade</literal> attribute to
-        any meaningful value other than nothing will propagate certain
-        operations to the associated object. The meaningful values are divided
-        into three categories.</para>
-
-        <orderedlist>
-          <listitem>
-            <para>basic operations, which include: <literal>persist, merge,
-            delete, save-update, evict, replicate, lock and
-            refresh</literal>;</para>
-          </listitem>
-
-          <listitem>
-            <para>special values: <literal>delete-orphan</literal> or
-            <literal>all</literal> ; </para>
-          </listitem>
-
-          <listitem>
-            <para>comma-separated combinations of operation names:
-            <literal>cascade="persist,merge,evict"</literal> or
-            <literal>cascade="all,delete-orphan"</literal>. See <xref
-            linkend="objectstate-transitive" /> for a full explanation. Note
-            that single valued many-to-one associations do not support orphan
-            delete.</para>
-          </listitem>
-        </orderedlist>
-
-        <para>By default, single point associations are eagerly fetched in JPA
-        2. You can mark it as lazily fetched by using
-        <classname>@ManyToOne(fetch=FetchType.LAZY) </classname>in which case
-        Hibernate will proxy the association and load it when the state of the
-        associated entity is reached. You can force Hibernate not to use a
-        proxy by using <classname>@LazyToOne(NO_PROXY)</classname>. In this
-        case, the property is fetched lazily when the instance variable is
-        first accessed. This requires build-time bytecode instrumentation.
-        lazy="false" specifies that the association will always be eagerly
-        fetched.</para>
-
-        <para>With the default JPA options, single-ended associations are
-        loaded with a subsequent select if set to <literal>LAZY</literal>, or
-        a SQL JOIN is used for <literal>EAGER</literal> associations. You can
-        however adjust the fetching strategy, ie how data is fetched by using
-        <literal>@Fetch</literal>. <literal>FetchMode</literal> can be
-        <literal>SELECT</literal> (a select is triggered when the association
-        needs to be loaded) or <literal>JOIN</literal> (use a SQL JOIN to load
-        the association while loading the owner entity).
-        <literal>JOIN</literal> overrides any lazy attribute (an association
-        loaded through a <literal>JOIN</literal> strategy cannot be
-        lazy).</para>
 
         <para>When Hibernate cannot resolve the association because the
         expected associated element is not in database (wrong id on the
@@ -4651,10 +4649,45 @@ class Home {
       </section>
 
       <section id="mapping-declaration-onetoone" revision="3">
-        <title>One-to-one</title>
+        <title>Sharing the primary key with the associated entity</title>
 
-        <para>A one-to-one association to another persistent class is declared
-        using a <literal>one-to-one</literal> element.</para>
+        <para>The second approach is to ensure an entity and its associated
+        entity share the same primary key. In this case the primary key column
+        is also a foreign key and there is no extra column. These associations
+        are always one to one.</para>
+
+        <example>
+          <title>One to One association</title>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+public class Body {
+    @Id
+    public Long getId() { return id; }
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @MapsId
+    public Heart getHeart() {
+        return heart;
+    }
+    ...
+}   
+
+@Entity
+public class Heart {
+    @Id
+    public Long getId() { ...}
+}           </programlisting>
+        </example>
+
+        <note>
+          <para>Many people got confused by these primary key based one to one
+          associations. They can only be lazily loaded if Hibernate knows that
+          the other side of the association is always present. To indicate to
+          Hibernate that it is the case, use
+          <classname>@OneToOne(optional=false)</classname>.</para>
+        </note>
+
+        <para>In hbm.xml, use the following mapping.</para>
 
         <programlistingco role="XML">
           <areaspec>
@@ -4770,18 +4803,6 @@ class Home {
           </calloutlist>
         </programlistingco>
 
-        <para>There are two varieties of one-to-one associations:</para>
-
-        <itemizedlist>
-          <listitem>
-            <para>primary key associations</para>
-          </listitem>
-
-          <listitem>
-            <para>unique foreign key associations</para>
-          </listitem>
-        </itemizedlist>
-
         <para>Primary key associations do not need an extra table column. If
         two rows are related by the association, then the two table rows share
         the same primary key value. To relate two objects by a primary key
@@ -4816,17 +4837,6 @@ class Home {
         the same primary key value as the <literal>Employee</literal> instance
         referred with the <literal>employee</literal> property of that
         <literal>Person</literal>.</para>
-
-        <para>Alternatively, a foreign key with a unique constraint, from
-        <literal>Employee</literal> to <literal>Person</literal>, can be
-        expressed as:</para>
-
-        <programlisting role="XML">&lt;many-to-one name="person" class="Person" column="PERSON_ID" unique="true"/&gt;</programlisting>
-
-        <para>This association can be made bidirectional by adding the
-        following to the <literal>Person</literal> mapping:</para>
-
-        <programlisting role="XML">&lt;one-to-one name="employee" class="Employee" property-ref="person"/&gt;</programlisting>
       </section>
     </section>
 

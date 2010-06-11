@@ -36,8 +36,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -53,8 +53,7 @@ import org.hibernate.test.annotations.HibernateTestCase;
  * @author Hardy Ferentschik
  */
 public abstract class TestCase extends HibernateTestCase {
-
-	private static final Log log = LogFactory.getLog( TestCase.class );
+	private static final Logger log = LoggerFactory.getLogger( TestCase.class );
 
 	protected static EntityManagerFactory factory;
 	private EntityManager em;

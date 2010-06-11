@@ -618,6 +618,14 @@ public class AttributeFactory {
 			return member;
 		}
 
+		public String getMemberDescription() {
+			return determineMemberDescription( getMember() );
+		}
+
+		public String determineMemberDescription(Member member) {
+			return member.getDeclaringClass().getName() + '#' + member.getName();
+		}
+
 		public Class<Y> getJavaType() {
 			return javaType;
 		}
@@ -823,20 +831,23 @@ public class AttributeFactory {
 		}
 
 		private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
-			Class<?> javaType;
-			Object unsafeElementType = type;
-			if ( unsafeElementType instanceof Class ) {
-				javaType = (Class) unsafeElementType;
+			if ( type instanceof Class ) {
+				return (Class) type;
 			}
-			else if ( unsafeElementType instanceof TypeVariable ) {
-				final java.lang.reflect.Type upperBound = ( ( TypeVariable ) unsafeElementType ).getBounds()[0];
-				javaType = getClassFromGenericArgument( upperBound );
+			else if ( type instanceof TypeVariable ) {
+				final java.lang.reflect.Type upperBound = ( ( TypeVariable ) type ).getBounds()[0];
+				return getClassFromGenericArgument( upperBound );
+			}
+			else if ( type instanceof ParameterizedType ) {
+				final java.lang.reflect.Type rawType = ( (ParameterizedType) type ).getRawType();
+				return getClassFromGenericArgument( rawType );
 			}
 			else {
-				throw new AssertionFailure("Fail to process type argument in a generic declaration. Type: "
-						+ type.getClass() );
+				throw new AssertionFailure(
+						"Fail to process type argument in a generic declaration. Member : " + getMemberDescription()
+								+ " Type: " + type.getClass()
+				);
 			}
-			return javaType;
 		}
 
 		public ValueContext getElementValueContext() {

@@ -38,7 +38,10 @@ import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.IdentifiableType;
 
+import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.test.TestCase;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * @author Emmanuel Bernard
@@ -50,6 +53,16 @@ public class MetadataTest extends TestCase {
 		assertNotNull( emf.getMetamodel() );
 		final EntityType<Fridge> entityType = emf.getMetamodel().entity( Fridge.class );
 		assertNotNull( entityType );
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	public void testBuildingMetamodelWithParameterizedCollection() {
+		AnnotationConfiguration cfg = new AnnotationConfiguration( );
+		configure( cfg );
+		cfg.addAnnotatedClass( WithGenericCollection.class );
+		cfg.buildMappings();
+		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory();
+		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi );
 	}
 
 	public void testLogicalManyToOne() throws Exception {
@@ -218,7 +231,7 @@ public class MetadataTest extends TestCase {
 
 		assertTrue( cat.hasVersionAttribute() );
 		assertEquals( "version", cat.getVersion(Long.class).getName() );
-		verifyDeclaredVersiobnNotPresent( cat );
+		verifyDeclaredVersionNotPresent( cat );
 		verifyDeclaredIdNotPresentAndIdPresent(cat);
 
 		assertEquals( Type.PersistenceType.MAPPED_SUPERCLASS, cat.getSupertype().getPersistenceType() );
@@ -229,7 +242,7 @@ public class MetadataTest extends TestCase {
 
 		assertTrue( cattish.hasVersionAttribute() );
 		assertEquals( "version", cattish.getVersion(Long.class).getName() );
-		verifyDeclaredVersiobnNotPresent( cattish );
+		verifyDeclaredVersionNotPresent( cattish );
 		verifyDeclaredIdNotPresentAndIdPresent(cattish);
 
 		assertEquals( Type.PersistenceType.ENTITY, cattish.getSupertype().getPersistenceType() );
@@ -240,7 +253,7 @@ public class MetadataTest extends TestCase {
 
 		assertTrue( feline.hasVersionAttribute() );
 		assertEquals( "version", feline.getVersion(Long.class).getName() );
-		verifyDeclaredVersiobnNotPresent( feline );
+		verifyDeclaredVersionNotPresent( feline );
 		verifyDeclaredIdNotPresentAndIdPresent(feline);
 
 		assertEquals( Type.PersistenceType.MAPPED_SUPERCLASS, feline.getSupertype().getPersistenceType() );
@@ -251,7 +264,7 @@ public class MetadataTest extends TestCase {
 
 		assertTrue( animal.hasVersionAttribute() );
 		assertEquals( "version", animal.getVersion(Long.class).getName() );
-		verifyDeclaredVersiobnNotPresent( animal );
+		verifyDeclaredVersionNotPresent( animal );
 		assertEquals( "id", animal.getId(Long.class).getName() );
 		final SingularAttribute<Animal, Long> id = animal.getDeclaredId( Long.class );
 		assertEquals( "id", id.getName() );
@@ -318,7 +331,7 @@ public class MetadataTest extends TestCase {
 		}
 	}
 
-	private void verifyDeclaredVersiobnNotPresent(IdentifiableType<?> type) {
+	private void verifyDeclaredVersionNotPresent(IdentifiableType<?> type) {
 		try {
 			type.getDeclaredVersion(Long.class);
 			fail("Should not have a declared version");

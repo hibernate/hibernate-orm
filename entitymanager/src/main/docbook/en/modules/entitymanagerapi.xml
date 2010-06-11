@@ -488,7 +488,7 @@ item = (Item) q.getSingleResult(); //from a class columns names match the mappin
     and any changes to persistent state will be persisted when the Entity
     manager is flushed (discussed later in this chapter). There is no need to
     call a particular method to make your modifications persistent. A
-    straightforward wayt to update the state of an entity instance is to
+    straightforward way to update the state of an entity instance is to
     <methodname>find()</methodname> it, and then manipulate it directly, while
     the persistence context is open:</para>
 

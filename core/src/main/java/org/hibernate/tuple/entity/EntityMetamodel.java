@@ -121,7 +121,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set subclassEntityNames = new HashSet();
-	private final Map entityNameByInheritenceClassNameMap = new HashMap();
+	private final Map entityNameByInheritenceClassMap = new HashMap();
 
 	private final EntityEntityModeToTuplizerMapping tuplizerMapping;
 
@@ -311,11 +311,11 @@ public class EntityMetamodel implements Serializable {
 		subclassEntityNames.add( name );
 
 		if ( persistentClass.hasPojoRepresentation() ) {
-			entityNameByInheritenceClassNameMap.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
+			entityNameByInheritenceClassMap.put( persistentClass.getMappedClass(), persistentClass.getEntityName() );
 			iter = persistentClass.getSubclassIterator();
 			while ( iter.hasNext() ) {
 				final PersistentClass pc = ( PersistentClass ) iter.next();
-				entityNameByInheritenceClassNameMap.put( pc.getMappedClass(), pc.getEntityName() );
+				entityNameByInheritenceClassMap.put( pc.getMappedClass(), pc.getEntityName() );
 			}
 		}
 
@@ -569,13 +569,13 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	/**
-	 * Return the entity-name mapped to the given class within our inheritence hierarchy, if any.
+	 * Return the entity-name mapped to the given class within our inheritance hierarchy, if any.
 	 *
 	 * @param inheritenceClass The class for which to resolve the entity-name.
 	 * @return The mapped entity-name, or null if no such mapping was found.
 	 */
 	public String findEntityNameByEntityClass(Class inheritenceClass) {
-		return ( String ) entityNameByInheritenceClassNameMap.get( inheritenceClass.getName() );
+		return ( String ) entityNameByInheritenceClassMap.get( inheritenceClass );
 	}
 
 	public String toString() {

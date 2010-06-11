@@ -56,7 +56,7 @@ public interface Instantiator extends Serializable {
 	 * or component which this Instantiator instantiates.
 	 *
 	 * @param object The object to be checked.
-	 * @return True is the object does respresent an instance of the underlying
+	 * @return True is the object does represent an instance of the underlying
 	 * entity/component.
 	 */
 	public boolean isInstance(Object object);

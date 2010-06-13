@@ -36,7 +36,7 @@ import org.hibernate.LockMode;
  * @author Steve Ebersole
  */
 public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
-	private String returnEntityName;
+	private final String returnEntityName;
 	private final int hashCode;
 
 	/**

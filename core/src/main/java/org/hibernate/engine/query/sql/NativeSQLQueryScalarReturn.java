@@ -32,8 +32,8 @@ import org.hibernate.type.Type;
  * @author gloegl
  */
 public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
-	private Type type;
-	private String columnAlias;
+	private final Type type;
+	private final String columnAlias;
 	private final int hashCode;
 
 	public NativeSQLQueryScalarReturn(String alias, Type type) {

@@ -38,8 +38,8 @@ import org.hibernate.LockMode;
  * @author Steve Ebersole
  */
 public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarReturn {
-	private String ownerEntityName;
-	private String ownerProperty;
+	private final String ownerEntityName;
+	private final String ownerProperty;
 	private final int hashCode;
 
 	/**

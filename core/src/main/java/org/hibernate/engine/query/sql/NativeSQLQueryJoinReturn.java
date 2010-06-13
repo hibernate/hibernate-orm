@@ -35,8 +35,8 @@ import org.hibernate.LockMode;
  * @author Steve Ebersole
  */
 public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
-	private String ownerAlias;
-	private String ownerProperty;
+	private final String ownerAlias;
+	private final String ownerProperty;
 	private final int hashCode;
 	/**
 	 * Construct a return descriptor representing some form of fetch.

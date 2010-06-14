@@ -290,6 +290,10 @@ public class PostgreSQLDialect extends Dialect {
 		return "select now()";
 	}
 
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
+
 	public String toBooleanValueString(boolean bool) {
 		return bool ? "true" : "false";
 	}

@@ -27,7 +27,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
@@ -1001,11 +1000,16 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			result = s.createCriteria( Student.class )
 				.setProjection( Projections.countDistinct( "cityState" ) )
 				.uniqueResult();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 			assertEquals( 1, ( ( Long ) result ).longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}
@@ -1277,10 +1281,16 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		t = s.beginTransaction();
 		try {
 			Object result = s.createCriteria( CourseMeeting.class).setProjection( Projections.countDistinct( "id" ) ).list();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
+			assertEquals( 1, ( ( Long ) result ).longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}

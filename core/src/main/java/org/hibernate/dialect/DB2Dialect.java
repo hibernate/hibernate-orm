@@ -432,4 +432,8 @@ public class DB2Dialect extends Dialect {
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return true;
 	}
+
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
 }

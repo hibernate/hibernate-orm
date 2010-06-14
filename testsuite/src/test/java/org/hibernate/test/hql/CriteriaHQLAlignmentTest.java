@@ -4,6 +4,7 @@ package org.hibernate.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.List;
 
 import junit.framework.Test;
 
@@ -31,6 +32,12 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	public CriteriaHQLAlignmentTest(String x) {
 		super( x );
 		SelectClause.VERSION2_SQL = true;
+	}
+
+	public String[] getMappings() {
+			return new String[] {
+					"hql/Animal.hbm.xml",
+			};
 	}
 
 	public boolean createSchema() {
@@ -119,6 +126,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	// HHH-1724 Align Criteria with HQL aggregation return types.
 	public void testCriteriaAggregationReturnType() {
 		Session s = openSession();
+		s.beginTransaction();
 		Human human = new Human();
 		human.setBigIntegerValue( new BigInteger("42") );
 		human.setBigDecimalValue( new BigDecimal(45) );
@@ -172,6 +180,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		
 		s.delete( human );
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -224,17 +233,22 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 				.setProjection( Projections.count( "nickName" ).setDistinct() )
 				.uniqueResult();
 		assertEquals( 2, count.longValue() );
-		s.clear();
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
 		try {
 			count = ( Long ) s.createQuery( "select count( distinct name ) from Human" ).uniqueResult();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 			assertEquals( 2, count.longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}
@@ -249,11 +263,16 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 			count = ( Long ) s.createCriteria( Human.class )
 				.setProjection( Projections.count( "name" ).setDistinct() )
 				.uniqueResult();
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 			assertEquals( 2, count.longValue() );
 		}
 		catch ( SQLGrammarException ex ) {
-			// HSQLDB's cannot handle more than 1 argument in SELECT COUNT( DISTINCT ... ) )
-			if ( ! ( getDialect() instanceof HSQLDialect ) )  {
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
 				throw ex;
 			}
 		}
@@ -278,10 +297,17 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t = s.beginTransaction();
 		try {
 			count = ( Long ) s.createQuery( "select count( name ) from Human" ).uniqueResult();
-			fail( "should have failed due to SQLGrammarException" );
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 		}
 		catch ( SQLGrammarException ex ) {
-			// expected
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw ex;
+			}
 		}
 		finally {
 			t.rollback();
@@ -294,10 +320,17 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 			count = ( Long ) s.createCriteria( Human.class )
 				.setProjection( Projections.count( "name" ) )
 				.uniqueResult();
-			fail( "should have failed due to SQLGrammarException" );
+			if ( ! getDialect().supportsTupleDistinctCounts() ) {
+				fail( "expected SQLGrammarException" );
+			}
 		}
 		catch ( SQLGrammarException ex ) {
-			// expected
+			if ( ! getDialect().supportsTupleCounts() ) {
+				// expected
+			}
+			else {
+				throw ex;
+			}
 		}
 		finally {
 			t.rollback();
@@ -310,5 +343,4 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t.commit();
 		s.close();
 	}
-
 }

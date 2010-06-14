@@ -309,4 +309,8 @@ public class H2Dialect extends Dialect {
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
+
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
 }

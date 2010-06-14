@@ -68,7 +68,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, options ) );
+					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, options ), getSqlType() );
 				}
 			};
 		}

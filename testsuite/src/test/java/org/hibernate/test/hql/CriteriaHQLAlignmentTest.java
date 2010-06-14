@@ -4,6 +4,7 @@ package org.hibernate.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.List;
 
 import junit.framework.Test;
 
@@ -31,6 +32,12 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	public CriteriaHQLAlignmentTest(String x) {
 		super( x );
 		SelectClause.VERSION2_SQL = true;
+	}
+
+	public String[] getMappings() {
+			return new String[] {
+					"hql/Animal.hbm.xml",
+			};
 	}
 
 	public boolean createSchema() {
@@ -119,6 +126,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 	// HHH-1724 Align Criteria with HQL aggregation return types.
 	public void testCriteriaAggregationReturnType() {
 		Session s = openSession();
+		s.beginTransaction();
 		Human human = new Human();
 		human.setBigIntegerValue( new BigInteger("42") );
 		human.setBigDecimalValue( new BigDecimal(45) );
@@ -172,6 +180,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		
 		s.delete( human );
 		s.flush();
+		s.getTransaction().commit();
 		s.close();
 	}
 
@@ -224,7 +233,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 				.setProjection( Projections.count( "nickName" ).setDistinct() )
 				.uniqueResult();
 		assertEquals( 2, count.longValue() );
-		s.clear();
+		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -336,5 +345,4 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		t.commit();
 		s.close();
 	}
-
 }

@@ -227,6 +227,8 @@ public class ImmutableNaturalIdTest extends FunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
+		s.getTransaction().commit();
+		s.close();
 
 		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );

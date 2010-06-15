@@ -11,9 +11,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.test.annotations.TestCase;
 
 /**
- * @author Emmanuel Bernard
+ * @author Vladimir Klyushnikov
  */
-public class BeanValidationDisabledTest extends TestCase {
+public class DDLWithoutCallbackTest extends TestCase {
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -30,16 +30,16 @@ public class BeanValidationDisabledTest extends TestCase {
 		s.close();
 	}
 	
-	public void testDDLDisabled() {
+	public void testDDLEnabled() {
 		PersistentClass classMapping = getCfg().getClassMapping( Address.class.getName() ); 		
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next(); 	
-		assertTrue("DDL constraints are applied", countryColumn.isNullable() ); 	
+		assertFalse("DDL constraints are not applied", countryColumn.isNullable() ); 	
 	}
 
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( "javax.persistence.validation.mode", "none" );
+		cfg.setProperty( "javax.persistence.validation.mode", "ddl" );
 	}
 
 	protected Class<?>[] getAnnotatedClasses() {

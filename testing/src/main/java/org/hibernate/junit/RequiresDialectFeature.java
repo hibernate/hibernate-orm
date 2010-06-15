@@ -21,47 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.junit;
 
-import org.hibernate.Session;
-import org.hibernate.junit.DialectChecks;
-import org.hibernate.junit.RequiresDialectFeature;
-import org.hibernate.test.annotations.TestCase;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * @author Emmanuel Bernard
+ * Annotation used to indicate that a test should be run only when the current dialect supports the
+ * specified feature.
+ *
+ * @author Hardy Ferentschik
  */
-public class HbmWithIdentityTest extends TestCase {
+@Target({ ElementType.METHOD, ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RequiresDialectFeature {
+	/**
+	 * @return The name of the dialect feature.
+	 */
+	Class<? extends DialectChecks> value();
 
-	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-	public void testManyToOneAndInterface() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		B b = new BImpl();
-		b.setBId( 1 );
-		s.persist( b );
-		Z z = new ZImpl();
-		z.setB( b );
-		s.persist( z );
-		s.flush();
-		s.getTransaction().rollback();
-		s.close();
-	}
+	/**
+	 * Comment describing the reason why the feature is required.
+	 *
+	 * @return The comment
+	 */
+	String comment() default "";
 
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Sky.class,
-				ZImpl.class
-
-		};
-	}
-
-	@Override
-	protected String[] getXmlFiles() {
-		return new String[] {
-				"org/hibernate/test/annotations/xml/hbm/A.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/B.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/CloudType.hbm.xml"
-		};
-	}
+	/**
+	 * The key of a JIRA issue which relates this this feature requirement.
+	 *
+	 * @return The jira issue key
+	 */
+	String jiraKey() default "";
 }

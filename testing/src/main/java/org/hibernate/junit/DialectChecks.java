@@ -21,47 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.xml.hbm;
+package org.hibernate.junit;
 
-import org.hibernate.Session;
-import org.hibernate.junit.DialectChecks;
-import org.hibernate.junit.RequiresDialectFeature;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.dialect.Dialect;
 
 /**
- * @author Emmanuel Bernard
+ * Container class for different implementation of the {@code DialectCheck} interface.
+ *
+ * @author Hardy Ferentschik
  */
-public class HbmWithIdentityTest extends TestCase {
+abstract public class DialectChecks {
 
-	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-	public void testManyToOneAndInterface() throws Exception {
-		Session s = openSession();
-		s.getTransaction().begin();
-		B b = new BImpl();
-		b.setBId( 1 );
-		s.persist( b );
-		Z z = new ZImpl();
-		z.setB( b );
-		s.persist( z );
-		s.flush();
-		s.getTransaction().rollback();
-		s.close();
+	abstract public boolean include(Dialect dialect);
+
+	public static class SupportsSequences extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsSequences();
+		}
 	}
 
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Sky.class,
-				ZImpl.class
-
-		};
+	public static class SupportsExpectedLobUsagePattern extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsExpectedLobUsagePattern();
+		}
 	}
 
-	@Override
-	protected String[] getXmlFiles() {
-		return new String[] {
-				"org/hibernate/test/annotations/xml/hbm/A.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/B.hbm.xml",
-				"org/hibernate/test/annotations/xml/hbm/CloudType.hbm.xml"
-		};
+	public static class SupportsIdentityColumns extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsIdentityColumns();
+		}
 	}
+
+
 }
+
+

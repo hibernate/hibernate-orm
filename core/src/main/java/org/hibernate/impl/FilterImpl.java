@@ -51,6 +51,7 @@ public class FilterImpl implements Filter, Serializable {
 	
 	void afterDeserialize(SessionFactoryImpl factory) {
 		definition = factory.getFilterDefinition(filterName);
+		validate();
 	}
 
 	/**

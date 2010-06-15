@@ -2152,14 +2152,12 @@ public final class SessionImpl extends AbstractSessionImpl
 
 		// LoadQueryInfluencers.getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
-		// Instead lookup the filter by name, call FilterImpl.afterDeserialize( factory ),
-		// and then validate.
+		// Instead lookup the filter by name and then call FilterImpl.afterDeserialize( factory ).
 		Iterator iter = loadQueryInfluencers.getEnabledFilterNames().iterator();
 		while ( iter.hasNext() ) {
 			String filterName = ( String ) iter.next();
-			FilterImpl filter = ( FilterImpl ) loadQueryInfluencers.getEnabledFilter( filterName );
-			filter.afterDeserialize( factory );
-			filter.validate();
+			 ( ( FilterImpl ) loadQueryInfluencers.getEnabledFilter( filterName )  )
+					.afterDeserialize( factory );
 		}
 
 		if ( isRootSession && childSessionsByEntityMode != null ) {

@@ -130,6 +130,43 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 	}
 
 	/**
+	 * Tests to validate that a session holding JDBC resources will not
+	 * be allowed to serialize.
+	 */
+	public final void testEnabledFilterSerialization() throws Throwable {
+		prepare();
+		Session sessionUnderTest = getSessionUnderTest();
+
+		sessionUnderTest.enableFilter( "nameIsNull" );
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+		sessionUnderTest.disconnect();
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+
+		byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
+		checkSerializedState( sessionUnderTest );
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+		reconnect( sessionUnderTest );
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+		sessionUnderTest.disconnect();
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+
+		Session s2 = ( Session ) SerializationHelper.deserialize( bytes );
+		checkDeserializedState( s2 );
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+		reconnect( s2 );
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+
+		s2.disconnect();
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+		reconnect( s2 );
+		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
+
+		release( sessionUnderTest );
+		release( s2 );
+		done();
+	}
+
+	/**
 	 * Test that a session which has been manually disconnected will be allowed
 	 * to serialize.
 	 */

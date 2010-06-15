@@ -56,7 +56,7 @@
     	<property name="sizeKb" lazy="true">
     		<column name="size_mb"
     			read="size_mb * 1024.0"
-    			write="? / 1024.0"/>
+    			write="? / cast( 1024.0 as float )"/>
     	</property>
     </class>
 

@@ -20,4 +20,6 @@
 		<property name="name"/>
 	</class>
 
+    <filter-def name="nameIsNull" condition="name is null" />
+
 </hibernate-mapping>

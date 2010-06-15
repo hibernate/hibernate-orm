@@ -2150,9 +2150,16 @@ public final class SessionImpl extends AbstractSessionImpl
 
 		childSessionsByEntityMode = ( Map ) ois.readObject();
 
-		Iterator iter = loadQueryInfluencers.getEnabledFilters().values().iterator();
+		// LoadQueryInfluencers.getEnabledFilters() tries to validate each enabled
+		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
+		// Instead lookup the filter by name, call FilterImpl.afterDeserialize( factory ),
+		// and then validate.
+		Iterator iter = loadQueryInfluencers.getEnabledFilterNames().iterator();
 		while ( iter.hasNext() ) {
-			( ( FilterImpl ) iter.next() ).afterDeserialize( factory );
+			String filterName = ( String ) iter.next();
+			FilterImpl filter = ( FilterImpl ) loadQueryInfluencers.getEnabledFilter( filterName );
+			filter.afterDeserialize( factory );
+			filter.validate();
 		}
 
 		if ( isRootSession && childSessionsByEntityMode != null ) {

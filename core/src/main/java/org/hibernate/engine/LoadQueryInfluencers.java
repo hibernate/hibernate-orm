@@ -111,6 +111,14 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledFilters;
 	}
 
+	/**
+	 * Returns an unmodifiable Set of enabled filter names.
+	 * @return an unmodifiable Set of enabled filter names.
+	 */
+	public Set getEnabledFilterNames() {
+		return java.util.Collections.unmodifiableSet( enabledFilters.keySet() );
+	}
+
 	public Filter getEnabledFilter(String filterName) {
 		return ( Filter ) enabledFilters.get( filterName );
 	}

@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.AccessibleObject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +23,7 @@ import org.hibernate.collection.PersistentCollection;
 
 /**
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 public class PersistenceUtilHelper {
 	public static LoadState isLoadedWithoutReference(Object proxy, String property, MetadataCache cache) {
@@ -112,10 +112,8 @@ public class PersistenceUtilHelper {
 	}
 
 	private static void setAccessibility(Member member) {
-		if ( !Modifier.isPublic( member.getModifiers() ) ) {
-			//Sun's ease of use, sigh...
-			( ( AccessibleObject ) member ).setAccessible( true );
-		}
+		//Sun's ease of use, sigh...
+		( ( AccessibleObject ) member ).setAccessible( true );
 	}
 
 	public static LoadState isLoaded(Object o) {
@@ -146,10 +144,10 @@ public class PersistenceUtilHelper {
 			string[0] = Character.toUpperCase( string[0] );
 			methodName = new String( string );
 			try {
-				return clazz.getMethod( "get" + methodName );
+				return clazz.getDeclaredMethod( "get" + methodName );
 			}
 			catch ( NoSuchMethodException e ) {
-				return clazz.getMethod( "is" + methodName );
+				return clazz.getDeclaredMethod( "is" + methodName );
 			}
 		}
 		catch ( NoSuchMethodException e ) {

@@ -6,13 +6,15 @@ import org.hibernate.mapping.Property;
 import org.hibernate.test.annotations.TestCase;
 
 /**
+ * Test verifying that DDL constraints get applied when Bean Validation / Hibernate Validator are enabled.
+ *
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 public class DDLTest extends TestCase {
 
 	public void testBasicDDL() {
 		PersistentClass classMapping = getCfg().getClassMapping( Address.class.getName() );
-		//new ClassValidator( Address.class, ResourceBundle.getBundle("messages", Locale.ENGLISH) ).apply( classMapping );
 		Column stateColumn = (Column) classMapping.getProperty( "state" ).getColumnIterator().next();
 		assertEquals( stateColumn.getLength(), 3 );
 		Column zipColumn = (Column) classMapping.getProperty( "zip" ).getColumnIterator().next();
@@ -23,8 +25,19 @@ public class DDLTest extends TestCase {
 	public void testApplyOnIdColumn() throws Exception {
 		PersistentClass classMapping = getCfg().getClassMapping( Tv.class.getName() );
 		Column serialColumn = (Column) classMapping.getIdentifierProperty().getColumnIterator().next();
-		assertEquals( "Vaidator annotation not applied on ids", 2, serialColumn.getLength() );
+		assertEquals( "Validator annotation not applied on ids", 2, serialColumn.getLength() );
 	}
+
+	/**
+	 * HHH-5281
+	 *
+	 * @throws Exception in case the test fails
+	 */
+	public void testLengthConstraint() throws Exception {
+		PersistentClass classMapping = getCfg().getClassMapping( Tv.class.getName() );
+		Column modelColumn = (Column) classMapping.getProperty( "model" ).getColumnIterator().next();
+		assertEquals( modelColumn.getLength(), 5 );
+	}	
 
 	public void testApplyOnManyToOne() throws Exception {
 		PersistentClass classMapping = getCfg().getClassMapping( TvOwner.class.getName() );

@@ -39,6 +39,7 @@ import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
 class TypeSafeActivator {
 
@@ -148,12 +149,17 @@ class TypeSafeActivator {
 			if ( canApplyNotNull ) {
 				hasNotNull = hasNotNull || applyNotNull( property, descriptor );
 			}
+
+			// apply bean validation specific constraints
 			applyDigits( property, descriptor );
 			applySize( property, descriptor, propertyDesc );
 			applyMin( property, descriptor );
 			applyMax( property, descriptor );
 
-			//pass an empty set as composing constraints inherit the main constraint and thus are matching already
+			// apply hibernate validator specific constraints - we cannot import any HV specific classes though!
+			applyLength( property, descriptor, propertyDesc );
+
+			// pass an empty set as composing constraints inherit the main constraint and thus are matching already
 			hasNotNull = hasNotNull || applyConstraints(
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
@@ -213,14 +219,28 @@ class TypeSafeActivator {
 		}
 	}
 
-	private static void applySize(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDesc) {
+	private static void applySize(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
-				&& String.class.equals( propertyDesc.getElementClass() ) ) {
-			@SuppressWarnings( "unchecked" )
-			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
+				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
+			@SuppressWarnings("unchecked")
+			ConstraintDescriptor<Size> sizeConstraint = ( ConstraintDescriptor<Size> ) descriptor;
 			int max = sizeConstraint.getAnnotation().max();
-			Column col = (Column) property.getColumnIterator().next();
-			if ( max < Integer.MAX_VALUE ) col.setLength( max );
+			Column col = ( Column ) property.getColumnIterator().next();
+			if ( max < Integer.MAX_VALUE ) {
+				col.setLength( max );
+			}
+		}
+	}
+
+	private static void applyLength(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+		if ( "org.hibernate.validator.constraints.Length".equals(descriptor.getAnnotation().annotationType().getName())
+			&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
+			@SuppressWarnings("unchecked")
+			int max = (Integer) descriptor.getAttributes().get( "max" );
+			Column col = ( Column ) property.getColumnIterator().next();
+			if ( max < Integer.MAX_VALUE ) {
+				col.setLength( max );
+			}
 		}
 	}
 

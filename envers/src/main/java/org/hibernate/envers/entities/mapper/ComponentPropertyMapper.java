@@ -27,16 +27,15 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-
-import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -84,8 +83,11 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 			}
 		}
 
-		// And we don't have to set anything on the object - the default value is null
-		if (!allNullAndSingle) {
+		if (allNullAndSingle) {
+			// single property, but default value need not be null, so we'll set it to null anyway 
+			setter.set(obj, null, null);			
+		} else {
+			// set the component
 			try {
 				Object subObj = ReflectHelper.getDefaultConstructor(
 						Thread.currentThread().getContextClassLoader().loadClass(componentClassName)).newInstance();
@@ -97,7 +99,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 		}
     }
 
-    public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
+ 	public List<PersistentCollectionChangeData> mapCollectionChanges(String referencingPropertyName,
                                                                                     PersistentCollection newColl,
                                                                                     Serializable oldColl,
                                                                                     Serializable id) {

@@ -5,6 +5,38 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.5.3 (2010.06.16)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11051
+
+** Bug
+    * [HHH-4036] - EntityMetamodel entityNameByInheritenceClassNameMap field used inconsistently
+    * [HHH-4968] - Cannot deactivate default BeanValidationListener independently of DDL constraints generation (Vladimir Klyushnikov)
+    * [HHH-5094] - PersistenceUtilHelper cannot access non-public fields/methods (it should be able to)
+    * [HHH-5098] - AssertionFailure thrown when collection contains a parameterized type
+    * [HHH-5191] - CollectionMetadataGenerator fails to obtain mappedBy attribute when is defined on superclasses
+    * [HHH-5195] - FilterImpl.validate() throws NullPointerExeption on deserialization
+    * [HHH-5204] - Introduce @RequiresDialectFeature annotation
+    * [HHH-5220] - Unit tests related to HHH-5063 and HHH-5135 fail on some dialects
+    * [HHH-5230] - Regresion! @SequenceGenerator with allocationSize=1 fails Other allocationSizes appear to be decremented by 1
+    * [HHH-5231] - Unit test failures lock up when they run on DB2 and PostgreSQL
+    * [HHH-5253] - TableHiLoGenerator does not increment hi-value any more when lo-range es exhausted
+    * [HHH-5258] - Persistence.isLoaded(Object, String) fails if the annotated property does not have a public getter or field
+    * [HHH-5286] - Jar Scanner instances cannot be passed to EntityManagerFactory creation method
+    * [HHH-5288] - Envers auditReader.find() returns wrong data for embedded components using fields with default values
+    * [HHH-5298] - @AuditMappedBy doesn't work on an inherited relation
+
+** Improvement
+    * [HHH-5251] - NativeSQLQueryReturn impls pre-cache a final hashcode based on non-final fields
+    * [HHH-5252] - AttributeFactory needs more info in AssertionFailure
+
+** Patch
+    * [HHH-3220] - Patch to prevent "org.hibernate.AssertionFailure: possible non-threadsafe access to the session" error caused by stateless sessions
+
+** Task
+    * [HHH-5281] - TypeSafeActivator should also generate constraints for @Length
+    * [HHH-5312] - update the db account used in branch 35 test
+
 
 Changes in version 3.5.2 (2010.05.13)
 -------------------------------------------

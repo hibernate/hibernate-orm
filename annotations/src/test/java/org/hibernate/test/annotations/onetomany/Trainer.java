@@ -53,7 +53,8 @@ public class Trainer {
 	@OneToMany
 	@JoinTable(
 			name = "TrainedMonkeys",
-			joinColumns = {@JoinColumn(name = "trainer_id")},
+			//columns are optional, here we explicit them
+			joinColumns = @JoinColumn(name = "trainer_id"),
 			inverseJoinColumns = @JoinColumn(name = "monkey_id")
 	)
 	@ForeignKey(name = "TM_TRA_FK", inverseName = "TM_MON_FK")

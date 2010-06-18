@@ -195,7 +195,7 @@ public abstract class HibernateTestCase extends TestCase {
 		if ( requiresDialectFeatureAnn != null ) {
 			Class<? extends DialectChecks> checkClass = requiresDialectFeatureAnn.value();
 			DialectChecks check = checkClass.newInstance();
-			boolean skip = check.include( dialect );
+			boolean skip = !check.include( dialect );
 			if ( skip ) {
 				return buildSkip( dialect, requiresDialectFeatureAnn.comment(), requiresDialectFeatureAnn.jiraKey() );
 			}

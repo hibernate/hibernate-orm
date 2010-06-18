@@ -40,7 +40,7 @@ public class IntermediateMappedSuperclassTest extends TestCase {
 	}
 
 	public void testGetOnIntermediateMappedSuperclass() {
-		final BigDecimal withdrawalLimit = new BigDecimal( 1000 );
+		final BigDecimal withdrawalLimit = new BigDecimal( 1000 ).setScale( 2 );
 		Session session = openSession();
 		session.beginTransaction();
 		SavingsAccount savingsAccount = new SavingsAccount( "123", withdrawalLimit );
@@ -50,8 +50,8 @@ public class IntermediateMappedSuperclassTest extends TestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		Account account = (Account) session.get( Account.class, savingsAccount.getId() );
-		assertEquals( withdrawalLimit, ( (SavingsAccount) account ).getWithdrawalLimit() );
+		Account account = ( Account ) session.get( Account.class, savingsAccount.getId() );
+		assertEquals( withdrawalLimit, ( ( SavingsAccount ) account ).getWithdrawalLimit() );
 		session.delete( account );
 		session.getTransaction().commit();
 		session.close();

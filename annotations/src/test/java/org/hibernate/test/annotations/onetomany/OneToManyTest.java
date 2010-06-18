@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -172,7 +173,28 @@ public class OneToManyTest extends TestCase {
 		assertNotNull( trainer );
 		assertNotNull( trainer.getTrainedMonkeys() );
 		assertEquals( 2, trainer.getTrainedMonkeys().size() );
-		tx.rollback();
+
+		//test suppression of trainer wo monkey
+		final Set<Monkey> monkeySet = new HashSet( trainer.getTrainedMonkeys() );
+		s.delete( trainer );
+		s.flush();
+		tx.commit();
+
+		s.clear();
+
+		tx = s.beginTransaction();
+		for ( Monkey m : monkeySet ) {
+			final Object managedMonkey = s.get( Monkey.class, m.getId() );
+			assertNotNull( "No trainers but monkeys should still be here", managedMonkey );
+		}
+
+		//clean up
+		for ( Monkey m : monkeySet ) {
+			final Object managedMonkey = s.get( Monkey.class, m.getId() );
+			s.delete(managedMonkey);
+		}
+		s.flush();
+		tx.commit();
 		s.close();
 	}
 

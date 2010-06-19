@@ -683,7 +683,7 @@
                 <dependency>
                     <groupId>postgresql</groupId>
                     <artifactId>postgresql</artifactId>
-                    <version>8.2-510</version>
+                    <version>8.4-701.jdbc3</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>
@@ -704,7 +704,7 @@
                 <dependency>
                     <groupId>postgresql</groupId>
                     <artifactId>postgresql</artifactId>
-                    <version>8.3-605</version>
+                    <version>8.4-701.jdbc3</version>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

@@ -1280,11 +1280,12 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		try {
-			Object result = s.createCriteria( CourseMeeting.class).setProjection( Projections.countDistinct( "id" ) ).list();
+			List result = s.createCriteria( CourseMeeting.class).setProjection( Projections.countDistinct( "id" ) ).list();
 			if ( ! getDialect().supportsTupleDistinctCounts() ) {
 				fail( "expected SQLGrammarException" );
 			}
-			assertEquals( 1, ( ( Long ) result ).longValue() );
+			assertFalse(result.isEmpty());
+			assertEquals( 1, ((Long)result.get(0)).intValue() );
 		}
 		catch ( SQLGrammarException ex ) {
 			if ( ! getDialect().supportsTupleDistinctCounts() ) {

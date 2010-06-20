@@ -49,6 +49,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctiona
 
 	@Override
 	protected void prepareTest() throws Exception {
+		if(sfi()==null)return;
 		Session session = sfi().openSession();
 		session.beginTransaction();
 		session.save( new Person( "me" ) );
@@ -58,6 +59,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctiona
 
 	@Override
 	protected void cleanupTest() throws Exception {
+		if(sfi()==null)return;
 		Session session = sfi().openSession();
 		session.beginTransaction();
 		session.createQuery( "delete Person" ).executeUpdate();

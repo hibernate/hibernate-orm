@@ -40,6 +40,8 @@ public class MigrationTest extends UnitTestCase {
 		SchemaUpdate v2schemaUpdate = new SchemaUpdate( v2cfg );
 		v2schemaUpdate.execute( true, true );
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
+		
+		new SchemaExport( v2cfg ).drop( false, true );
 
 	}
 

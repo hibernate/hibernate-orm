@@ -34,7 +34,7 @@ import org.hibernate.test.annotations.TestCase;
  * @author Steve Ebersole
  */
 public class ExplicitSqlResultSetMappingTest extends TestCase {
-	private String queryString = "select t.\"NAME\" as \"QuotEd_nAMe\" from \"MY_ENTITY_TABLE\" t";
+	private String queryString = null;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -47,6 +47,9 @@ public class ExplicitSqlResultSetMappingTest extends TestCase {
 	}
 
 	private void prepareTestData() {
+		char open = getDialect().openQuote();
+		char close = getDialect().closeQuote();
+		queryString="select t."+open+"NAME"+close+" as "+open+"QuotEd_nAMe"+close+" from "+open+"MY_ENTITY_TABLE"+close+" t";
 		Session s = sfi().openSession();
 		s.beginTransaction();
 		s.save( new MyEntity( "mine" ) );

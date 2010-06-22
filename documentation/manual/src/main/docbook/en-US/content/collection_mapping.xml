@@ -33,34 +33,20 @@
   <section id="collections-persistent" revision="3">
     <title>Persistent collections</title>
 
-    <para>Of course Hibernate also allows to persist collections. These
+    <para>Naturally Hibernate also allows to persist collections. These
     persistent collections can contain almost any other Hibernate type,
     including: basic types, custom types, components and references to other
-    entities. This is an important distinction. An object in a collection
-    might be handled with "value" semantics (its life cycle fully depends on
-    the collection owner), or it might be a reference to another entity with
-    its own life cycle. In the latter case, only the "link" between the two
-    objects is considered to be a state held by the collection.</para>
+    entities. The distinction between value and reference semantics is in this
+    context very important. An object in a collection might be handled with
+    "value" semantics (its life cycle fully depends on the collection owner),
+    or it might be a reference to another entity with its own life cycle. In
+    the latter case, only the "link" between the two objects is considered to
+    be a state held by the collection.</para>
 
     <para>As a requirement persistent collection-valued fields must be
-    declared as an interface type. For example:</para>
-
-    <example id="example-collection-values-field">
-      <title>Persistent collection-valued fields must be interfaces</title>
-
-      <programlisting role="JAVA">public class Product {
-    private String serialNumber;
-    private Set parts = new HashSet();
-    
-    public Set getParts() { return parts; }
-    void setParts(Set parts) { this.parts = parts; }
-
-    public String getSerialNumber() { return serialNumber; }
-    void setSerialNumber(String sn) { serialNumber = sn; }
-}</programlisting>
-    </example>
-
-    <para>The actual interface might be <literal>java.util.Set</literal>,
+    declared as an interface type (see <xref
+    linkend="example.collection.mapping.annotations" />). The actual interface
+    might be <literal>java.util.Set</literal>,
     <literal>java.util.Collection</literal>,
     <literal>java.util.List</literal>, <literal>java.util.Map</literal>,
     <literal>java.util.SortedSet</literal>,
@@ -68,15 +54,15 @@
     like" means you will have to write an implementation of
     <literal>org.hibernate.usertype.UserCollectionType</literal>).</para>
 
-    <para>Notice how in <xref linkend="example-collection-values-field" /> the
-    instance variable <literal>parts</literal> was initialized with an
-    instance of <literal>HashSet</literal>. This is the best way to initialize
-    collection valued properties of newly instantiated (non-persistent)
-    instances. When you make the instance persistent, by calling
-    <literal>persist()</literal>, Hibernate will actually replace the
-    <literal>HashSet</literal> with an instance of Hibernate's own
-    implementation of <literal>Set</literal>. Be aware of the following
-    error:</para>
+    <para>Notice how in <xref
+    linkend="example.collection.mapping.annotations" /> the instance variable
+    <literal>parts</literal> was initialized with an instance of
+    <literal>HashSet</literal>. This is the best way to initialize collection
+    valued properties of newly instantiated (non-persistent) instances. When
+    you make the instance persistent, by calling <literal>persist()</literal>,
+    Hibernate will actually replace the <literal>HashSet</literal> with an
+    instance of Hibernate's own implementation of <literal>Set</literal>. Be
+    aware of the following error:</para>
 
     <example>
       <title>Hibernate uses its own collection implementations</title>
@@ -108,23 +94,25 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     Hibernate does not distinguish between a null collection reference and an
     empty collection.</para>
 
-    <para>Use persistent collections the same way you use ordinary Java
-    collections. However, please ensure you understand the semantics of
-    bidirectional associations (see <xref
-    linkend="collections-bidirectional" />).</para>
+    <note>
+      <para>Use persistent collections the same way you use ordinary Java
+      collections. However, ensure you understand the semantics of
+      bidirectional associations (see <xref
+      linkend="collections-bidirectional" />).</para>
+    </note>
   </section>
 
   <section id="collections-mapping" revision="4">
-    <title>Collection mappings</title>
+    <title>How to map collections</title>
 
     <para>Using annotations you can map <classname>Collection</classname>s,
-    <classname>Lists</classname>, <classname>Maps</classname> and
-    <classname>Sets</classname> of associated entities using @OneToMany and
+    <classname>List</classname>s, <classname>Map</classname>s and
+    <classname>Set</classname>s of associated entities using @OneToMany and
     @ManyToMany. For collections of a basic or embeddable type use
     @ElementCollection. In the simplest case a collection mapping looks like
     this:</para>
 
-    <example>
+    <example id="example.collection.mapping.annotations">
       <title>Collection mapping using annotations</title>
 
       <programlisting role="JAVA">@Entity
@@ -149,14 +137,11 @@ public class Part {
 }</programlisting>
     </example>
 
-    <para>The <literal>@OneToMany</literal> and <literal>@ManyToOne</literal>
-    annotations have several options and there are other annotations which can
-    be used in in combination with these annotations. But lets first see how
-    collections are mapped using Hibernate mapping files. Here the situation
-    is more complex than in the annotation case, since the mapping element
-    used for mapping a collection depends upon the type of interface. For
-    example, a <literal>&lt;set&gt;</literal> element is used for mapping
-    properties of type <literal>Set</literal>.</para>
+    <para>Lets have a look how collections are mapped using Hibernate mapping
+    files. Here the first step is to chose the right mapping element, because
+    it depends on the type of interface. For example, a
+    <literal>&lt;set&gt;</literal> element is used for mapping properties of
+    type <literal>Set</literal>.</para>
 
     <example floatstyle="" id="example.collections.set">
       <title>Mapping a Set using &lt;set&gt;</title>
@@ -189,11 +174,11 @@ public class Part {
       </listitem>
     </itemizedlist>
 
-    <para>The <literal>&lt;one-to-many&gt;</literal> tag has the following
-    options.</para>
+    <para>Looking closer at the used <literal>&lt;one-to-many&gt;</literal>
+    tag we see that it has the following options.</para>
 
     <example>
-      <title>options of &lt;one-to-many&gt; tag</title>
+      <title>options of &lt;one-to-many&gt; element</title>
 
       <programlistingco role="XML">
         <areaspec>
@@ -246,8 +231,8 @@ public class Part {
       <literal>&lt;key&gt;</literal> mapping
       <literal>not-null="true"</literal> or <emphasis>use a bidirectional
       association</emphasis> with the collection mapping marked
-      <literal>inverse="true"</literal>. See the discussion of bidirectional
-      associations later in this chapter for more information.</para>
+      <literal>inverse="true"</literal>. See <xref
+      linkend="collections-bidirectional" />.</para>
     </warning>
 
     <para>Apart from the <literal>&lt;set&gt; </literal>tag as shown in <xref
@@ -411,12 +396,16 @@ public class Part {
       </programlistingco>
     </example>
 
+    <para>After exploring the basic mapping of collections in the preceding
+    paragraphs we will now focus details like physical mapping considerations,
+    indexed collections and collections of value types.</para>
+
     <section id="collections-foreignkeys">
       <title>Collection foreign keys</title>
 
-      <para>Collection instances are distinguished in the database by the
-      foreign key of the entity that owns the collection. This foreign key is
-      referred to as the <emphasis>collection key column</emphasis>, or
+      <para>On the database level collection instances are distinguished by
+      the foreign key of the entity that owns the collection. This foreign key
+      is referred to as the <emphasis>collection key column</emphasis>, or
       columns, of the collection table. The collection key column is mapped by
       the <literal>@JoinColumn</literal> annotation respectively the
       <literal>&lt;key&gt;</literal> XML element.</para>
@@ -442,8 +431,8 @@ public class Part {
 
       <programlisting role="Java">@OnDelete(action=OnDeleteAction.CASCADE)</programlisting>
 
-      <para>See <xref linkend="section-key" /> for more information about the
-      <literal>&lt;key&gt;</literal> element.</para>
+      <para>See <xref lang="" linkend="section.key" /> for more information
+      about the <literal>&lt;key&gt;</literal> element.</para>
     </section>
 
     <section id="collections-indexed">

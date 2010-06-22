@@ -5198,7 +5198,7 @@ class Home {
       </section>
 
       <section id="mapping-declaration-key">
-        <title>Key</title>
+        <title id="section.key">Key</title>
 
         <para>The <literal>&lt;key&gt;</literal> element is featured a few
         times within this guide. It appears anywhere the parent mapping

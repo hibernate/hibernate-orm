@@ -159,7 +159,7 @@ public class InfinispanRegionFactory implements RegionFactory {
 
    /** {@inheritDoc} */
    public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
-      log.debug("Building collection cache region [" + regionName + "]");
+      if (log.isDebugEnabled()) log.debug("Building collection cache region [" + regionName + "]");
       Cache cache = getCache(regionName, COLLECTION_KEY, properties);
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
       CollectionRegionImpl region = new CollectionRegionImpl(cacheAdapter, regionName, metadata, transactionManager, this);
@@ -182,7 +182,7 @@ public class InfinispanRegionFactory implements RegionFactory {
     */
    public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
             throws CacheException {
-      log.debug("Building query results cache region [" + regionName + "]");
+      if (log.isDebugEnabled()) log.debug("Building query results cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
       QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager, this);
@@ -195,7 +195,7 @@ public class InfinispanRegionFactory implements RegionFactory {
     */
    public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
             throws CacheException {
-      log.debug("Building timestamps cache region [" + regionName + "]");
+      if (log.isDebugEnabled()) log.debug("Building timestamps cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(TIMESTAMPS_KEY).getCacheName();
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
       TimestampsRegionImpl region = new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager, this);

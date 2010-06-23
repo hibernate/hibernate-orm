@@ -28,19 +28,18 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
-import org.hibernate.engine.jdbc.JdbcSupport;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
-import org.hibernate.tuple.component.ComponentTuplizerFactory;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * Settings that affect the behaviour of Hibernate at runtime.

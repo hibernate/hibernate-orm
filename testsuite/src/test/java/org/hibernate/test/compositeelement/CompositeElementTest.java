@@ -87,6 +87,70 @@ public class CompositeElementTest extends FunctionalTestCase {
 		s.close();
 	}
 	
+	public void testHandSQLSetOfCompositeElementsByAliasFailureExpected() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Child c = new Child( "Child One" );
+		Parent p = new Parent( "Parent" );
+		p.getChildren().add( c );
+		c.setParent( p );
+		s.save( p );
+		s.flush();
+
+		p.getChildren().remove( c );
+		c.setParent( null );
+		s.flush();
+
+		p.getChildren().add( c );
+		c.setParent( p );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.createQuery("select c from Parent p left outer join p.children c").uniqueResult();
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( p );
+		t.commit();
+		s.close();
+	}
+
+	public void testHandSQLSetOfCompositeElementsByPathFailureExpected() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		Child c = new Child( "Child One" );
+		Parent p = new Parent( "Parent" );
+		p.getChildren().add( c );
+		c.setParent( p );
+		s.save( p );
+		s.flush();
+
+		p.getChildren().remove( c );
+		c.setParent( null );
+		s.flush();
+
+		p.getChildren().add( c );
+		c.setParent( p );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.createQuery("select p.children from Parent p left outer join p.children").uniqueResult(); //we really need to be able to do this!
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		s.delete( p );
+		t.commit();
+		s.close();
+	}
+
 	public void testCustomColumnReadAndWrite() {
 		final double HEIGHT_INCHES = 49;
 		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;

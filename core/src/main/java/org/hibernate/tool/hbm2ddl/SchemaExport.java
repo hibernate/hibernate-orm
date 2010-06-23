@@ -73,13 +73,14 @@ public class SchemaExport {
 	private String[] dropSQL;
 	private String[] createSQL;
 	private String outputFile = null;
-	private String importFile = "/import.sql";
+	private String importFile;
 	private Dialect dialect;
 	private String delimiter;
 	private final List exceptions = new ArrayList();
 	private boolean haltOnError = false;
 	private Formatter formatter;
 	private SQLStatementLogger sqlStatementLogger;
+	private static final String DEFAULT_IMPORT_FILE = "/import.sql";
 
 	/**
 	 * Create a schema exporter for the given Configuration
@@ -105,6 +106,7 @@ public class SchemaExport {
 		createSQL = cfg.generateSchemaCreationScript( dialect );
 		sqlStatementLogger = settings.getSqlStatementLogger();
 		formatter = ( sqlStatementLogger.isFormatSql() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		importFile = settings.getImportFile() != null ? settings.getImportFile() : DEFAULT_IMPORT_FILE;
 	}
 
 	/**
@@ -129,6 +131,8 @@ public class SchemaExport {
 		createSQL = cfg.generateSchemaCreationScript( dialect );
 
 		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+
+		importFile = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILE, props, DEFAULT_IMPORT_FILE );
 	}
 
 	/**
@@ -144,6 +148,9 @@ public class SchemaExport {
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
 		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, cfg.getProperties() ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		importFile = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILE, cfg.getProperties(),
+				DEFAULT_IMPORT_FILE
+		);
 	}
 
 	/**
@@ -162,6 +169,7 @@ public class SchemaExport {
 	 *
 	 * @param filename The import file name.
 	 * @return this
+	 * @deprecated use {@link org.hibernate.cfg.Environment.HBM2DDL_IMPORT_FILE}
 	 */
 	public SchemaExport setImportFile(String filename) {
 		importFile = filename;
@@ -405,7 +413,7 @@ public class SchemaExport {
 			boolean halt = false;
 			boolean export = true;
 			String outFile = null;
-			String importFile = "/import.sql";
+			String importFile = DEFAULT_IMPORT_FILE;
 			String propFile = null;
 			boolean format = false;
 			String delim = null;
@@ -471,10 +479,12 @@ public class SchemaExport {
 				cfg.setProperties( props );
 			}
 
+			if (importFile != null) {
+				cfg.setProperty( Environment.HBM2DDL_IMPORT_FILE, importFile );
+			}
 			SchemaExport se = new SchemaExport( cfg )
 					.setHaltOnError( halt )
 					.setOutputFile( outFile )
-					.setImportFile( importFile )
 					.setDelimiter( delim );
 			if ( format ) {
 				se.setFormat( true );

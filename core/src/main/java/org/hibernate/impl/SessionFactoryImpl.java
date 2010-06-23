@@ -207,6 +207,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			Constructor constructor = concurrentStatsClass.getConstructor(new Class[]{SessionFactoryImplementor.class});
 			concurrentStatistics = (Statistics) constructor.newInstance(new Object[]{this});
 			log.trace("JDK 1.5 concurrent classes present");
+		} catch ( NoClassDefFoundError noJava5 ) {
+			log.trace("JDK 1.5 concurrent classes missing");
 		} catch (Exception noJava5) {
 			log.trace("JDK 1.5 concurrent classes missing");
 		}

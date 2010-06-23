@@ -100,7 +100,7 @@ public final class Settings {
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
 	private JdbcSupport jdbcSupport;
-private String importFile;
+	private String importFiles;
 
 	/**
 	 * Package protected constructor
@@ -118,12 +118,12 @@ private String importFile;
 //		return formatSql;
 //	}
 
-	public String getImportFile() {
-		return importFile;
+	public String getImportFiles() {
+		return importFiles;
 	}
 
-	public void setImportFile(String importFile) {
-		this.importFile = importFile;
+	public void setImportFiles(String importFiles) {
+		this.importFiles = importFiles;
 	}
 
 	public SQLStatementLogger getSqlStatementLogger() {

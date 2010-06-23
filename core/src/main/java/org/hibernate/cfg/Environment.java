@@ -469,13 +469,17 @@ public final class Environment {
 	public static final String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
-	 * Name of the optional file containing SQL DML statements executed during the SessionFactory creation.
+	 * Comma-separated names of the optional files containing SQL DML statements executed
+	 * during the SessionFactory creation.
+	 * File order matters, the statements of a give file are executed before the statements of the
+	 * following files.
+	 *
 	 * These statements are only executed if the schema is created ie if <tt>hibernate.hbm2ddl.auto</tt>
 	 * is set to <tt>create</tt> or <tt>create-drop</tt>.
 	 *
 	 * The default value is <tt>/import.sql</tt>
 	 */
-	public static final String HBM2DDL_IMPORT_FILE = "hibernate.hbm2ddl.import_file";
+	public static final String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
 
 	/**
 	 * The {@link org.hibernate.exception.SQLExceptionConverter} to use for converting SQLExceptions

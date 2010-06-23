@@ -73,7 +73,7 @@ public class SchemaExport {
 	private String[] dropSQL;
 	private String[] createSQL;
 	private String outputFile = null;
-	private String importFile;
+	private String importFiles;
 	private Dialect dialect;
 	private String delimiter;
 	private final List exceptions = new ArrayList();
@@ -106,7 +106,7 @@ public class SchemaExport {
 		createSQL = cfg.generateSchemaCreationScript( dialect );
 		sqlStatementLogger = settings.getSqlStatementLogger();
 		formatter = ( sqlStatementLogger.isFormatSql() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		importFile = settings.getImportFile() != null ? settings.getImportFile() : DEFAULT_IMPORT_FILE;
+		importFiles = settings.getImportFiles() != null ? settings.getImportFiles() : DEFAULT_IMPORT_FILE;
 	}
 
 	/**
@@ -132,7 +132,7 @@ public class SchemaExport {
 
 		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 
-		importFile = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILE, props, DEFAULT_IMPORT_FILE );
+		importFiles = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILES, props, DEFAULT_IMPORT_FILE );
 	}
 
 	/**
@@ -148,7 +148,7 @@ public class SchemaExport {
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
 		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, cfg.getProperties() ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		importFile = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILE, cfg.getProperties(),
+		importFiles = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILES, cfg.getProperties(),
 				DEFAULT_IMPORT_FILE
 		);
 	}
@@ -172,7 +172,7 @@ public class SchemaExport {
 	 * @deprecated use {@link org.hibernate.cfg.Environment.HBM2DDL_IMPORT_FILE}
 	 */
 	public SchemaExport setImportFile(String filename) {
-		importFile = filename;
+		importFiles = filename;
 		return this;
 	}
 
@@ -235,19 +235,22 @@ public class SchemaExport {
 
 		Connection connection = null;
 		Writer outputFileWriter = null;
-		Reader importFileReader = null;
+		List<NamedReader> importFileReaders = new ArrayList<NamedReader>();
 		Statement statement = null;
 
 		exceptions.clear();
 
 		try {
 
-			try {
-				InputStream stream = ConfigHelper.getResourceAsStream( importFile );
-				importFileReader = new InputStreamReader( stream );
-			}
-			catch ( HibernateException e ) {
-				log.debug( "import file not found: " + importFile );
+			for ( String currentFile : importFiles.split(",") ) {
+				try {
+					final String resourceName = currentFile.trim();
+					InputStream stream = ConfigHelper.getResourceAsStream( resourceName );
+					importFileReaders.add( new NamedReader( resourceName, stream ) );
+				}
+				catch ( HibernateException e ) {
+					log.debug( "import file not found: " + currentFile );
+				}
 			}
 
 			if ( outputFile != null ) {
@@ -268,8 +271,10 @@ public class SchemaExport {
 
 			if ( !justDrop ) {
 				create( script, export, outputFileWriter, statement );
-				if ( export && importFileReader != null ) {
-					importScript( importFileReader, statement );
+				if ( export && importFileReaders.size() > 0 ) {
+					for (NamedReader reader : importFileReaders) {
+						importScript( reader, statement );
+					}
 				}
 			}
 
@@ -301,22 +306,47 @@ public class SchemaExport {
 				if ( outputFileWriter != null ) {
 					outputFileWriter.close();
 				}
-				if ( importFileReader != null ) {
-					importFileReader.close();
-				}
 			}
 			catch ( IOException ioe ) {
 				exceptions.add( ioe );
 				log.error( "Error closing output file: " + outputFile, ioe );
 			}
+				for (NamedReader reader : importFileReaders) {
+					try {
+						reader.getReader().close();
+					}
+					catch ( IOException ioe ) {
+						exceptions.add( ioe );
+						log.error( "Error closing imput files: " + reader.getName(), ioe );
+					}
+				}
+
 
 		}
 	}
 
-	private void importScript(Reader importFileReader, Statement statement)
+	private class NamedReader {
+		private final Reader reader;
+		private final String name;
+
+		public NamedReader(String name, InputStream stream) {
+			this.name = name;
+			this.reader = new InputStreamReader( stream );
+		}
+
+		public Reader getReader() {
+			return reader;
+		}
+
+		public String getName() {
+			return name;
+		}
+	}
+
+	private void importScript(NamedReader importFileReader, Statement statement)
 			throws IOException {
-		log.info( "Executing import script: " + importFile );
-		BufferedReader reader = new BufferedReader( importFileReader );
+		log.info( "Executing import script: " + importFileReader.getName() );
+		BufferedReader reader = new BufferedReader( importFileReader.getReader() );
 		long lineNo = 0;
 		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
 			try {
@@ -480,7 +510,7 @@ public class SchemaExport {
 			}
 
 			if (importFile != null) {
-				cfg.setProperty( Environment.HBM2DDL_IMPORT_FILE, importFile );
+				cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, importFile );
 			}
 			SchemaExport se = new SchemaExport( cfg )
 					.setHaltOnError( halt )

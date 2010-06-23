@@ -16,9 +16,15 @@ public class ImportFileTest extends FunctionalTestCase {
 	public void testImportFile() throws Exception {
 		Session s = openSession(  );
 		final Transaction tx = s.beginTransaction();
-		final List<?> list = s.createQuery( "from " + Human.class.getName() ).list();
-		assertEquals( "database.sql not imported", 3, list.size() );
-		for (Object entity : list) {
+		final List<?> humans = s.createQuery( "from " + Human.class.getName() ).list();
+		assertEquals( "humans.sql not imported", 3, humans.size() );
+
+		final List<?> dogs = s.createQuery( "from " + Dog.class.getName() ).list();
+		assertEquals( "dogs.sql not imported", 3, dogs.size() );
+		for (Object entity : dogs) {
+			s.delete( entity );
+		}
+		for (Object entity : humans) {
 			s.delete( entity );
 		}
 		tx.commit();
@@ -26,7 +32,7 @@ public class ImportFileTest extends FunctionalTestCase {
 	}
 
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILE, "/database.sql");
+		cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, "/humans.sql,/dogs.sql");
 	}
 
 	public ImportFileTest(String string) {
@@ -35,7 +41,8 @@ public class ImportFileTest extends FunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] {
-				"importfile/Human.hbm.xml"
+				"importfile/Human.hbm.xml",
+				"importfile/Dog.hbm.xml"
 		};
 	}
 }

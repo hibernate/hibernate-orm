@@ -337,7 +337,7 @@ public class SettingsFactory implements Serializable {
 			settings.setAutoCreateSchema(true);
 			settings.setAutoDropSchema(true);
 		}
-		settings.setImportFile( properties.getProperty( Environment.HBM2DDL_IMPORT_FILE ) );
+		settings.setImportFiles( properties.getProperty( Environment.HBM2DDL_IMPORT_FILES ) );
 
 		EntityMode defaultEntityMode = EntityMode.parse( properties.getProperty( Environment.DEFAULT_ENTITY_MODE ) );
 		log.info( "Default entity-mode: " + defaultEntityMode );

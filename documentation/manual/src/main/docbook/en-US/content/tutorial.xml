@@ -140,7 +140,7 @@
             <tip>
                 <para>
                     It is not a requirement to use Maven.  If you wish to use something else to
-                    build this tutoial (such as Ant), the layout will remain the same.  The only
+                    build this tutorial (such as Ant), the layout will remain the same.  The only
                     change is that you will need to manually account for all the needed
                     dependencies.  If you use something like <ulink url="http://ant.apache.org/ivy/">Ivy</ulink>
                     providing transitive dependency management you would still use the dependencies
@@ -674,7 +674,7 @@ public class HibernateUtil {
             <title>Loading and storing objects</title>
 
             <para>
-                We are now ready to start doing some real worjk with Hibernate.
+                We are now ready to start doing some real work with Hibernate.
                 Let's start by writing an <literal>EventManager</literal> class
                 with a <literal>main()</literal> method:
             </para>
@@ -723,7 +723,7 @@ public class EventManager {
 
             <para>
                 A <interface>org.hibernate.Session</interface> is designed to
-                represent a single unit of work (a single atmoic piece of work
+                represent a single unit of work (a single atomic piece of work
                 to be performed).  For now we will keep things simple and assume
                 a one-to-one granularity between a Hibernate
                 <interface>org.hibernate.Session</interface> and a database

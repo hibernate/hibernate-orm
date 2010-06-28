@@ -518,7 +518,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
 
             <entry>Set this property to <literal>true</literal> if your JDBC
             driver returns correct row counts from
-            <literal>executeBatch()</literal>. Iit is usually safe to turn
+            <literal>executeBatch()</literal>. It is usually safe to turn
             this option on. Hibernate will then use batched DML for
             automatically versioned data. Defaults to
             <literal>false</literal>. <para> <emphasis
@@ -1598,7 +1598,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       one will be started and associated with that JTA transaction the first
       time you call <literal>sessionFactory.getCurrentSession()</literal>. The
       <literal>Session</literal>s retrieved via
-      <literal>getCurrentSession()</literal> in the<literal>"jta"</literal>
+      <literal>getCurrentSession()</literal> in the <literal>"jta"</literal>
       context are set to automatically flush before the transaction completes,
       close after the transaction completes, and aggressively release JDBC
       connections after each statement. This allows the

@@ -928,11 +928,11 @@ class UserId implements Serializable {
         name="propertyName"
         class="ClassName"
         mapped="true|false"
-        access="field|property|ClassName"&gt;
-        node="element-name|."
+        access="field|property|ClassName"
+        node="element-name|."&gt;
 
         &lt;key-property name="propertyName" type="typename" column="column_name"/&gt;
-        &lt;key-many-to-one name="propertyName class="ClassName" column="column_name"/&gt;
+        &lt;key-many-to-one name="propertyName" class="ClassName" column="column_name"/&gt;
         ......
 &lt;/composite-id&gt;</programlisting>
 

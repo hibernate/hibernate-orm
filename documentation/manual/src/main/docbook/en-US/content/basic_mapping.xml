@@ -1113,7 +1113,7 @@
         node="element-name|."
 
         <key-property name="propertyName" type="typename" column="column_name"/>
-        <key-many-to-one name="propertyName class="ClassName" column="column_name"/>
+        <key-many-to-one name="propertyName" class="ClassName" column="column_name"/>
         ......
 </composite-id>]]></programlisting>
 
@@ -1856,7 +1856,7 @@
                 associated object. The meaningful values are divided into three categories. First, basic
                 operations, which include: <literal>persist, merge, delete, save-update, evict, replicate, lock and
                 refresh</literal>; second, special values: <literal>delete-orphan</literal>;
-                and third,<literal>all</literal> comma-separated combinations of operation
+                and third, <literal>all</literal> comma-separated combinations of operation
                 names: <literal>cascade="persist,merge,evict"</literal> or
                 <literal>cascade="all,delete-orphan"</literal>. See <xref linkend="objectstate-transitive"/>
                 for a full explanation. Note that single valued, many-to-one and

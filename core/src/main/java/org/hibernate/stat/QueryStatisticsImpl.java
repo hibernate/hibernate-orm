@@ -85,21 +85,21 @@ public class QueryStatisticsImpl extends CategorizedStatistics implements QueryS
 	}
 
 	/**
-	 * average time in ms taken by the excution of this query onto the DB
+	 * average time in ms taken by the execution of this query onto the DB
 	 */
 	public long getExecutionAvgTime() {
 		return executionAvgTime;
 	}
 
 	/**
-	 * max time in ms taken by the excution of this query onto the DB
+	 * max time in ms taken by the execution of this query onto the DB
 	 */
 	public long getExecutionMaxTime() {
 		return executionMaxTime;
 	}
 
 	/**
-	 * min time in ms taken by the excution of this query onto the DB
+	 * min time in ms taken by the execution of this query onto the DB
 	 */
 	public long getExecutionMinTime() {
 		return executionMinTime;

@@ -24,7 +24,7 @@
 package org.hibernate.annotations;
 
 /**
- * Type of avaliable polymorphism for a particular entity
+ * Type of available polymorphism for a particular entity
  *
  * @author Emmanuel Bernard
  */
@@ -34,7 +34,7 @@ public enum PolymorphismType {
 	 */
 	IMPLICIT,
 	/**
-	 * this entity is retrived only if explicitly asked
+	 * this entity is retrieved only if explicitly asked
 	 */
 	EXPLICIT
 }

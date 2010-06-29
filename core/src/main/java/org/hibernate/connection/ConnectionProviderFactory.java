@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,21 +20,20 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.connection;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Map;
-import java.beans.Introspector;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,17 +50,20 @@ import org.hibernate.util.ReflectHelper;
  * to choose either <tt>DriverManagerConnectionProvider</tt>,
  * <tt>DatasourceConnectionProvider</tt>, <tt>C3P0ConnectionProvider</tt> or
  * <tt>DBCPConnectionProvider</tt>.
- * @see ConnectionProvider
+ *
  * @author Gavin King
+ * @see ConnectionProvider
  */
 
 public final class ConnectionProviderFactory {
 
-	private static final Logger log = LoggerFactory.getLogger(ConnectionProviderFactory.class);
+	private static final Logger log = LoggerFactory.getLogger( ConnectionProviderFactory.class );
 
 	/**
 	 * Instantiate a <tt>ConnectionProvider</tt> using <tt>System</tt> properties.
+	 *
 	 * @return The created connection provider.
+	 *
 	 * @throws HibernateException
 	 */
 	public static ConnectionProvider newConnectionProvider() throws HibernateException {
@@ -71,8 +73,11 @@ public final class ConnectionProviderFactory {
 	/**
 	 * Instantiate a <tt>ConnectionProvider</tt> using given properties.
 	 * Method newConnectionProvider.
+	 *
 	 * @param properties hibernate <tt>SessionFactory</tt> properties
+	 *
 	 * @return ConnectionProvider
+	 *
 	 * @throws HibernateException
 	 */
 	public static ConnectionProvider newConnectionProvider(Properties properties) throws HibernateException {
@@ -83,27 +88,26 @@ public final class ConnectionProviderFactory {
 	 * Create a connection provider based on the given information.
 	 *
 	 * @param properties Properties being used to build the {@link org.hibernate.SessionFactory}.
-	 * @param connectionProviderInjectionData Soemthing to be injected in the conenction provided
+	 * @param connectionProviderInjectionData Something to be injected in the connection provided
+	 *
 	 * @return The created connection provider
+	 *
 	 * @throws HibernateException
 	 */
-	public static ConnectionProvider newConnectionProvider(Properties properties, Map connectionProviderInjectionData) throws HibernateException {
+	public static ConnectionProvider newConnectionProvider(Properties properties, Map connectionProviderInjectionData)
+			throws HibernateException {
 		ConnectionProvider connections;
-		String providerClass = properties.getProperty(Environment.CONNECTION_PROVIDER);
-		if ( providerClass!=null ) {
-			try {
-				log.info("Initializing connection provider: " + providerClass);
-				connections = (ConnectionProvider) ReflectHelper.classForName(providerClass).newInstance();
-			}
-			catch ( Exception e ) {
-				log.error( "Could not instantiate connection provider", e );
-				throw new HibernateException("Could not instantiate connection provider: " + providerClass);
-			}
+		String providerClass = properties.getProperty( Environment.CONNECTION_PROVIDER );
+		if ( providerClass != null ) {
+			connections = initializeConnectionProviderFromConfig( providerClass );
 		}
-		else if ( properties.getProperty(Environment.DATASOURCE)!=null ) {
+		else if ( c3p0ConfigDefined( properties ) && c3p0ProviderPresent() ) {
+			connections = initializeConnectionProviderFromConfig("org.hibernate.connection.C3P0ConnectionProvider");
+		}
+		else if ( properties.getProperty( Environment.DATASOURCE ) != null ) {
 			connections = new DatasourceConnectionProvider();
 		}
-		else if ( properties.getProperty(Environment.URL)!=null ) {
+		else if ( properties.getProperty( Environment.URL ) != null ) {
 			connections = new DriverManagerConnectionProvider();
 		}
 		else {
@@ -116,30 +120,71 @@ public final class ConnectionProviderFactory {
 				BeanInfo info = Introspector.getBeanInfo( connections.getClass() );
 				PropertyDescriptor[] descritors = info.getPropertyDescriptors();
 				int size = descritors.length;
-				for (int index = 0 ; index < size ; index++) {
+				for ( int index = 0; index < size; index++ ) {
 					String propertyName = descritors[index].getName();
 					if ( connectionProviderInjectionData.containsKey( propertyName ) ) {
 						Method method = descritors[index].getWriteMethod();
-						method.invoke( connections, new Object[] { connectionProviderInjectionData.get( propertyName ) } );
+						method.invoke(
+								connections, new Object[] { connectionProviderInjectionData.get( propertyName ) }
+						);
 					}
 				}
 			}
-			catch (IntrospectionException e) {
-				throw new HibernateException("Unable to inject objects into the conenction provider", e);
+			catch ( IntrospectionException e ) {
+				throw new HibernateException( "Unable to inject objects into the connection provider", e );
 			}
-			catch (IllegalAccessException e) {
-				throw new HibernateException("Unable to inject objects into the conenction provider", e);
+			catch ( IllegalAccessException e ) {
+				throw new HibernateException( "Unable to inject objects into the connection provider", e );
 			}
-			catch (InvocationTargetException e) {
-				throw new HibernateException("Unable to inject objects into the conenction provider", e);
+			catch ( InvocationTargetException e ) {
+				throw new HibernateException( "Unable to inject objects into the connection provider", e );
 			}
 		}
-		connections.configure(properties);
+		connections.configure( properties );
+		return connections;
+	}
+
+	private static boolean c3p0ProviderPresent() {
+		try {
+			ReflectHelper.classForName( "org.hibernate.connection.C3P0ConnectionProvider" );
+		}
+		catch ( ClassNotFoundException e ) {
+			log.warn( "c3p0 properties is specificed, but could not find org.hibernate.connection.C3P0ConnectionProvider from the classpath, " +
+					"these properties are going to be ignored." );
+			return false;
+		}
+		return true;
+	}
+
+	private static boolean c3p0ConfigDefined(Properties properties) {
+		Iterator iter = properties.keySet().iterator();
+		while ( iter.hasNext() ) {
+			String property = (String) iter.next();
+			if ( property.startsWith( "hibernate.c3p0" ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static ConnectionProvider initializeConnectionProviderFromConfig(String providerClass) {
+		ConnectionProvider connections;
+		try {
+			log.info( "Initializing connection provider: " + providerClass );
+			connections = (ConnectionProvider) ReflectHelper.classForName( providerClass ).newInstance();
+		}
+		catch ( Exception e ) {
+			log.error( "Could not instantiate connection provider", e );
+			throw new HibernateException( "Could not instantiate connection provider: " + providerClass );
+		}
 		return connections;
 	}
 
 	// cannot be instantiated
-	private ConnectionProviderFactory() { throw new UnsupportedOperationException(); }
+
+	private ConnectionProviderFactory() {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Transform JDBC connection properties.
@@ -153,28 +198,31 @@ public final class ConnectionProviderFactory {
 		Properties result = new Properties();
 		while ( iter.hasNext() ) {
 			String prop = (String) iter.next();
-			if ( prop.startsWith(Environment.CONNECTION_PREFIX) && !SPECIAL_PROPERTIES.contains(prop) ) {
+			if ( prop.startsWith( Environment.CONNECTION_PREFIX ) && !SPECIAL_PROPERTIES.contains( prop ) ) {
 				result.setProperty(
-					prop.substring( Environment.CONNECTION_PREFIX.length()+1 ),
-					properties.getProperty(prop)
+						prop.substring( Environment.CONNECTION_PREFIX.length() + 1 ),
+						properties.getProperty( prop )
 				);
 			}
 		}
-		String userName = properties.getProperty(Environment.USER);
-		if (userName!=null) result.setProperty( "user", userName );
+		String userName = properties.getProperty( Environment.USER );
+		if ( userName != null ) {
+			result.setProperty( "user", userName );
+		}
 		return result;
 	}
 
 	private static final Set SPECIAL_PROPERTIES;
+
 	static {
 		SPECIAL_PROPERTIES = new HashSet();
-		SPECIAL_PROPERTIES.add(Environment.DATASOURCE);
-		SPECIAL_PROPERTIES.add(Environment.URL);
-		SPECIAL_PROPERTIES.add(Environment.CONNECTION_PROVIDER);
-		SPECIAL_PROPERTIES.add(Environment.POOL_SIZE);
-		SPECIAL_PROPERTIES.add(Environment.ISOLATION);
-		SPECIAL_PROPERTIES.add(Environment.DRIVER);
-		SPECIAL_PROPERTIES.add(Environment.USER);
+		SPECIAL_PROPERTIES.add( Environment.DATASOURCE );
+		SPECIAL_PROPERTIES.add( Environment.URL );
+		SPECIAL_PROPERTIES.add( Environment.CONNECTION_PROVIDER );
+		SPECIAL_PROPERTIES.add( Environment.POOL_SIZE );
+		SPECIAL_PROPERTIES.add( Environment.ISOLATION );
+		SPECIAL_PROPERTIES.add( Environment.DRIVER );
+		SPECIAL_PROPERTIES.add( Environment.USER );
 
 	}
 

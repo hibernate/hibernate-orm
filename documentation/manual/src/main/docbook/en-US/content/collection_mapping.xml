@@ -113,7 +113,7 @@ kittens = cat.getKittens(); // Okay, kittens collection is a Set
     this:</para>
 
     <example id="example.collection.mapping.annotations">
-      <title>Collection mapping using annotations</title>
+      <title>Collection mapping using @OneToMany and @JoinColumn</title>
 
       <programlisting role="JAVA">@Entity
 public class Product {
@@ -126,6 +126,7 @@ public class Product {
     void setSerialNumber(String sn) { serialNumber = sn; }
    
     @OneToMany
+    @JoinColumn(name="PART_ID")
     public Set&lt;Part&gt; getParts() { return parts; }
     void setParts(Set parts) { this.parts = parts; }
 }
@@ -137,9 +138,56 @@ public class Part {
 }</programlisting>
     </example>
 
-    <para>Lets have a look how collections are mapped using Hibernate mapping
-    files. Here the first step is to chose the right mapping element, because
-    it depends on the type of interface. For example, a
+    <para>Product describes a unidirectional relationship with Part using the
+    join column PART_ID. In this unidirectional one to many scenario you can
+    also use a join table as seen in <xref
+    linkend="example-one-to-many-with-join-table" />.</para>
+
+    <example id="example-one-to-many-with-join-table">
+      <title id="example-one-to-many-with-join-table">Collection mapping using
+      @OneToMany and @JoinTable</title>
+
+      <programlisting role="JAVA">@Entity
+public class Product {
+
+    private String serialNumber;
+    private Set&lt;Part&gt; parts = new HashSet&lt;Part&gt;();
+
+    @Id
+    public String getSerialNumber() { return serialNumber; }
+    void setSerialNumber(String sn) { serialNumber = sn; }
+   
+    @OneToMany
+    @JoinTable(
+            name="PRODUCT_PARTS",
+            joinColumns = @JoinColumn( name="PRODUCT_ID"),
+            inverseJoinColumns = @JoinColumn( name="PART_ID")
+    )
+    public Set&lt;Part&gt; getParts() { return parts; }
+    void setParts(Set parts) { this.parts = parts; }
+}
+
+
+@Entity
+public class Part {
+   ...
+}</programlisting>
+    </example>
+
+    <para>Without describing any physical mapping (no
+    <classname>@JoinColumn</classname> or <classname>@JoinTable</classname>),
+    a unidirectional one to many with join table is used. The table name is
+    the concatenation of the owner table name, _, and the other side table
+    name. The foreign key name(s) referencing the owner table is the
+    concatenation of the owner table, _, and the owner primary key column(s)
+    name. The foreign key name(s) referencing the other side is the
+    concatenation of the owner property name, _, and the other side primary
+    key column(s) name. A unique constraint is added to the foreign key
+    referencing the other side table to reflect the one to many.</para>
+
+    <para>Lets have a look now how collections are mapped using Hibernate
+    mapping files. In this case the first step is to chose the right mapping
+    element. It depends on the type of interface. For example, a
     <literal>&lt;set&gt;</literal> element is used for mapping properties of
     type <literal>Set</literal>.</para>
 
@@ -438,6 +486,10 @@ public class Part {
     <section id="collections-indexed">
       <title id="section.indexed.collections">Indexed collections</title>
 
+      <para>In the following paragraphs we have a closer at the indexed
+      collections <classname>List</classname> and <classname>Map</classname>
+      how the their index can be mapped in Hibernate.</para>
+
       <section>
         <title>Lists</title>
 
@@ -458,7 +510,7 @@ public class Part {
         <para>To order lists in memory, add
         <literal>@javax.persistence.OrderBy</literal> to your property. This
         annotation takes as parameter a list of comma separated properties (of
-        the target entity) and order the collection accordingly (eg
+        the target entity) and orders the collection accordingly (eg
         <code>firstname asc, age desc</code>), if the string is empty, the
         collection will be ordered by the primary key of the target
         entity.</para>
@@ -516,7 +568,7 @@ public class Order {
         <literal>orders_ORDER</literal>).</para>
 
         <example>
-          <title>Additional index column using
+          <title>Explicit index column using
           <classname>@OrderColumn</classname></title>
 
           <programlisting language="JAVA" role="JAVA">@Entity
@@ -569,11 +621,11 @@ public class Order {
           is 0 like in Java.</para>
         </note>
 
-        <para>Using mapping files the index of an array or list is always of
-        type <literal>integer</literal> and is mapped using the
-        <literal>&lt;list-index&gt;</literal> element. The mapped column
-        contains sequential integers that are numbered from zero by
-        default.</para>
+        <para>Looking again at the Hibernate mapping file equivalent, the
+        index of an array or list is always of type <literal>integer</literal>
+        and is mapped using the <literal>&lt;list-index&gt;</literal> element.
+        The mapped column contains sequential integers that are numbered from
+        zero by default.</para>
 
         <example>
           <title>index-list element for indexed collections in xml
@@ -615,20 +667,21 @@ public class Order {
       <section>
         <title>Maps</title>
 
-        <para>Maps can borrow their keys from one of the associated entity
-        properties or have dedicated columns to store an explicit key.</para>
+        <para>The question with <classname>Map</classname>s is where the key
+        value is stored. There are everal options. Maps can borrow their keys
+        from one of the associated entity properties or have dedicated columns
+        to store an explicit key.</para>
 
         <para>To use one of the target entity property as a key of the map,
-        use <literal>@MapKey(name="myProperty")</literal>
-        (<literal>myProperty</literal> is a property name in the target
-        entity). When using <literal>@MapKey</literal> (without property
-        name), the target entity primary key is used. The map key uses the
-        same column as the property pointed out: there is no additional column
-        defined to hold the map key, and it does make sense since the map key
-        actually represent a target property. Be aware that once loaded, the
-        key is no longer kept in sync with the property, in other words, if
-        you change the property value, the key will not change automatically
-        in your Java model.</para>
+        use <literal>@MapKey(name="myProperty")</literal>, where
+        <literal>myProperty</literal> is a property name in the target entity.
+        When using <literal>@MapKey</literal> without the name attribuate, the
+        target entity primary key is used. The map key uses the same column as
+        the property pointed out. There is no additional column defined to
+        hold the map key, because the map key represent a target property. Be
+        aware that once loaded, the key is no longer kept in sync with the
+        property. In other words, if you change the property value, the key
+        will not change automatically in your Java model.</para>
 
         <example>
           <title>Use of target entity property as map key via
@@ -673,14 +726,14 @@ public class Order {
 |-------------|</programlisting>
         </example>
 
-        <para>Otherwise, the map key is mapped to a dedicated column or
+        <para>Alternatively the map key is mapped to a dedicated column or
         columns. In order to customize the mapping use one of the following
         annotations:</para>
 
         <itemizedlist>
           <listitem>
             <para>@<classname>MapKeyColumn</classname> if the map key is a
-            basic type, if you don't specify the column name, the name of the
+            basic type. If you don't specify the column name, the name of the
             property followed by underscore followed by <literal>KEY</literal>
             is used (for example <literal>orders_KEY</literal>).</para>
           </listitem>
@@ -757,11 +810,11 @@ public class Order {
           the new standard approach described above</para>
         </note>
 
-        <para>Using Hibernate mapping files there exists similar concepts
-        using <literal>&lt;map-key&gt;</literal>,
+        <para>Using Hibernate mapping files there exists equivalent concepts
+        to the descibed annotations. You have to use
+        <literal>&lt;map-key&gt;</literal>,
         <literal>&lt;map-key-many-to-many&gt;</literal> and
-        <literal>&lt;composite-map-key&gt;</literal> which are even a little
-        more flexible since SQL expressions can be used to define the map key.
+        <literal>&lt;composite-map-key&gt;</literal>.
         <literal>&lt;map-key&gt;</literal> is used for any basic type,
         <literal>&lt;map-key-many-to-many&gt;</literal> for an entity
         reference and <literal>&lt;composite-map-key&gt;</literal> for a
@@ -845,11 +898,11 @@ public class Order {
     </section>
 
     <section id="collections-ofvalues" revision="2">
-      <title>Collections of values</title>
+      <title>Collections of basic types and embeddable objects</title>
 
       <para>In some situations you don't need to associate two entities but
       simply create a collection of basic types or embeddable objects. Use the
-      <classname>@ElementCollection</classname> in this case.</para>
+      <classname>@ElementCollection</classname> for this case.</para>
 
       <example>
         <title>Collection of basic types mapped via
@@ -869,7 +922,7 @@ public class User {
 
       <para>The collection table holding the collection data is set using the
       <classname>@CollectionTable</classname> annotation. If omitted the
-      collection table name default to the concatenation of the name of the
+      collection table name defaults to the concatenation of the name of the
       containing entity and the name of the collection attribute, separated by
       an underscore. In our example, it would be
       <literal>User_nicknames</literal>.</para>
@@ -992,9 +1045,9 @@ public class User {
       <para>Hibernate supports collections implementing
       <literal>java.util.SortedMap</literal> and
       <literal>java.util.SortedSet</literal>. With annotations you declare a
-      sort comparator using <literal>@Sort</literal>. You between the
+      sort comparator using <literal>@Sort</literal>. You chose between the
       comparator types unsorted, natural or custom. If you want to use your
-      own comparator implementation, you'll also have to express the
+      own comparator implementation, you'll also have to specify the
       implementation class using the <literal>comparator</literal> attribute.
       Note that you need to use either a <classname>SortedSet</classname> or a
       <classname>SortedMap</classname> interface.</para>
@@ -1005,8 +1058,6 @@ public class User {
         <programlisting language="JAVA" role="JAVA">@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
 @JoinColumn(name="CUST_ID")
 @Sort(type = SortType.COMPARATOR, comparator = TicketComparator.class)
-@Where(clause="1=1")
-@OnDelete(action=OnDeleteAction.CASCADE)
 public SortedSet&lt;Ticket&gt; getTickets() {
     return tickets;
 }</programlisting>
@@ -1036,17 +1087,18 @@ public SortedSet&lt;Ticket&gt; getTickets() {
       <literal>unsorted</literal>, <literal>natural</literal> and the name of
       a class implementing <literal>java.util.Comparator</literal>.</para>
 
-      <para>Sorted collections actually behave like
-      <literal>java.util.TreeSet</literal> or
-      <literal>java.util.TreeMap</literal>.</para>
+      <tip>
+        <para>Sorted collections actually behave like
+        <literal>java.util.TreeSet</literal> or
+        <literal>java.util.TreeMap</literal>.</para>
+      </tip>
 
       <para>If you want the database itself to order the collection elements,
       use the <literal>order-by</literal> attribute of <literal>set</literal>,
       <literal>bag</literal> or <literal>map</literal> mappings. This solution
-      is only available under JDK 1.4 or higher and is implemented using
-      <literal>LinkedHashSet</literal> or <literal>LinkedHashMap</literal>.
-      This performs the ordering in the SQL query and not in the
-      memory.</para>
+      is implemented using <literal>LinkedHashSet</literal> or
+      <literal>LinkedHashMap</literal> and performs the ordering in the SQL
+      query and not in the memory.</para>
 
       <example>
         <title>Sorting in database using order-by</title>
@@ -1161,10 +1213,11 @@ public class Soldier {
 }</programlisting>
       </example>
 
-      <para>Again a look at the maping file approach. There you can define a
-      bidirectional one-to-many association by mapping a one-to-many
-      association to the same table column(s) as a many-to-one association and
-      declaring the many-valued end <literal>inverse="true"</literal>.</para>
+      <para>How does the mappping of a bidirectional mapping look like in
+      Hibernate mapping xml? There you define a bidirectional one-to-many
+      association by mapping a one-to-many association to the same table
+      column(s) as a many-to-one association and declaring the many-valued end
+      <literal>inverse="true"</literal>.</para>
 
       <example>
         <title>Bidirectional one to many via Hibernate mapping files</title>
@@ -1233,9 +1286,7 @@ public class Employee implements Serializable {
 }                </programlisting>
       </example>
 
-      <para>We've already shown the many declarations and the detailed
-      attributes for associations. We'll go deeper in the
-      <literal>@JoinTable</literal> description, it defines a
+      <para>In this example <classname>@JoinTable</classname> defines a
       <literal>name</literal>, an array of join columns, and an array of
       inverse join columns. The latter ones are the columns of the association
       table which refer to the <classname>Employee</classname> primary key
@@ -1323,11 +1374,12 @@ public class Customer {
           <para>You cannot select an indexed collection.</para>
         </note></para>
 
-      <para>Here is an example of a bidirectional many-to-many association
-      that illustrates how each category can have many items and each item can
-      be in many categories:</para>
+      <para><xref linkend="example-many-to-many-mapping-file" /> shows a
+      bidirectional many-to-many association that illustrates how each
+      category can have many items and each item can be in many
+      categories:</para>
 
-      <example>
+      <example id="example-many-to-many-mapping-file">
         <title>Many to many association using Hibernate mapping files</title>
 
         <programlisting role="XML">&lt;class name="Category"&gt;
@@ -1376,15 +1428,11 @@ session.persist(category);               // The relationship will be saved</prog
     <section id="collections-indexedbidirectional">
       <title>Bidirectional associations with indexed collections</title>
 
-      <para>Here are some additional consideration for bidirectional mappings
-      with indexed collections using Hibernate mapping files. Refer also to
-      <xref linkend="section.indexed.collections" /> and <xref
-      linkend="section.sorted.collections" />.</para>
-
-      <para>A bidirectional association where one end is represented as a
-      <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal>,
-      requires special consideration. If there is a property of the child
-      class that maps to the index column you can use
+      <para>There are some additional considerations for bidirectional
+      mappings with indexed collections (where one end is represented as a
+      <literal>&lt;list&gt;</literal> or <literal>&lt;map&gt;</literal>) when
+      using Hibernate mapping files. If there is a property of the child class
+      that maps to the index column you can use
       <literal>inverse="true"</literal> on the collection mapping:</para>
 
       <example>
@@ -1491,12 +1539,12 @@ public class Company {
 
       <para>The majority of the many-to-many associations and collections of
       values shown previously all map to tables with composite keys, even
-      though it has been have suggested that entities should have synthetic
+      though it has been suggested that entities should have synthetic
       identifiers (surrogate keys). A pure association table does not seem to
       benefit much from a surrogate key, although a collection of composite
-      values <emphasis>might</emphasis>. It is for this reason Hibernate
-      provides a feature that allows you to map many-to-many associations and
-      collections of values to a table with a surrogate key.</para>
+      values <emphasis>might</emphasis>. For this reason Hibernate provides a
+      feature that allows you to map many-to-many associations and collections
+      of values to a table with a surrogate key.</para>
 
       <para>The <literal>&lt;idbag&gt;</literal> element lets you map a
       <literal>List</literal> (or <literal>Collection</literal>) with bag

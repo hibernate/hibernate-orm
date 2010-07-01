@@ -328,7 +328,7 @@ public class CustomLoader extends Loader {
 	}
 	
 	static private HolderInstantiator getHolderInstantiator(ResultTransformer resultTransformer, String[] queryReturnAliases) {
-		if ( resultTransformer != null ) {
+		if ( resultTransformer == null ) {
 			return HolderInstantiator.NOOP_INSTANTIATOR;
 		}
 		else {

@@ -2718,11 +2718,14 @@ public class Configuration implements Serializable {
 					finalName = ( String ) binding.logicalToPhysical.get( logicalName );
 				}
 				String key = buildTableNameKey(
-						currentTable.getSchema(), currentTable.getCatalog(), currentTable.getName()
+						currentTable.getQuotedSchema(), currentTable.getCatalog(), currentTable.getQuotedName()
 				);
 				TableDescription description = ( TableDescription ) tableNameBinding.get( key );
 				if ( description != null ) {
 					currentTable = description.denormalizedSupertable;
+				}
+				else {
+					currentTable = null;
 				}
 			} while ( finalName == null && currentTable != null );
 
@@ -2744,11 +2747,14 @@ public class Configuration implements Serializable {
 					logical = ( String ) binding.physicalToLogical.get( physicalName );
 				}
 				String key = buildTableNameKey(
-						currentTable.getSchema(), currentTable.getCatalog(), currentTable.getName()
+						currentTable.getQuotedSchema(), currentTable.getCatalog(), currentTable.getQuotedName()
 				);
 				description = ( TableDescription ) tableNameBinding.get( key );
 				if ( description != null ) {
 					currentTable = description.denormalizedSupertable;
+				}
+				else {
+					currentTable = null;
 				}
 			}
 			while ( logical == null && currentTable != null && description != null );

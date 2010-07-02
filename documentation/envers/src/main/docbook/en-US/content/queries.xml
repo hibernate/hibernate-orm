@@ -58,6 +58,12 @@
         than corresponding queries on "live" data, as they involve correlated subselects.
     </para>
 
+    <para>
+        In the future, queries will be improved both in terms of speed and possibilities, when using the valid-time
+        audit strategy, that is when storing both start and end revisions for entities. See
+        <xref linkend="configuration"/>.
+    </para>
+
     <section id="entities-at-revision">
 
         <title>Querying for entities of a class at a given revision</title>

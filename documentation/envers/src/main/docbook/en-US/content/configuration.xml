@@ -177,6 +177,32 @@
                         be the same as the catalog of the normal tables.                        
                     </entry>
                 </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.audit_strategy</property>
+                    </entry>
+                    <entry>
+                        org.hibernate.envers.strategy.DefaultAuditStrategy
+                    </entry>
+                    <entry>
+                        The audit strategy that should be used when persisting audit data. The default stores only the
+                        revision, at which an entity was modified. An alternative,
+                        <literal>org.hibernate.envers.strategy.ValidTimeAuditStrategy</literal> stores additionaly the
+                        end revision, until which the data was valid.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.audit_strategy_valid_time_end_name</property>
+                    </entry>
+                    <entry>
+                        REVEND
+                    </entry>
+                    <entry>
+                        Only valid if the audit strategy is valid-time. Name of the column that will hold the end
+                        revision number in audit entities.
+                    </entry>
+                </row>
             </tbody>
         </tgroup>
     </table>

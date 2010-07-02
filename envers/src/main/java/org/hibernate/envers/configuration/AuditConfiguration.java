@@ -27,10 +27,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
 
+import org.hibernate.MappingException;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.synchronization.AuditProcessManager;
+import org.hibernate.envers.strategy.AuditStrategy;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.AnnotationConfiguration;
@@ -38,11 +40,13 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Stephanie Pau at Markit Group Plc
  */
 public class AuditConfiguration {
     private final GlobalConfiguration globalCfg;
     private final AuditEntitiesConfiguration auditEntCfg;
     private final AuditProcessManager auditProcessManager;
+    private final AuditStrategy auditStrategy;
     private final EntitiesConfigurations entCfg;
     private final RevisionInfoQueryCreator revisionInfoQueryCreator;
     private final RevisionInfoNumberReader revisionInfoNumberReader;
@@ -71,7 +75,11 @@ public class AuditConfiguration {
         return revisionInfoNumberReader;
     }
 
-    @SuppressWarnings({"unchecked"})
+    public AuditStrategy getAuditStrategy() {
+        return auditStrategy;
+    }
+
+    @SuppressWarnings({ "unchecked" })
     public AuditConfiguration(Configuration cfg) {
         Properties properties = cfg.getProperties();
 
@@ -81,6 +89,14 @@ public class AuditConfiguration {
         auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
         globalCfg = new GlobalConfiguration(properties);
         auditProcessManager = new AuditProcessManager(revInfoCfgResult.getRevisionInfoGenerator());
+
+        try {
+            Class auditStrategyClass = Thread.currentThread().getContextClassLoader().loadClass(auditEntCfg.getAuditStrategyName());
+            auditStrategy = (AuditStrategy) auditStrategyClass.newInstance();
+        } catch (Exception e) {
+           throw new MappingException(String.format("Unable to create AuditStrategy[%s] instance." , auditEntCfg.getAuditStrategyName()));
+        }
+        
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
         entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg,

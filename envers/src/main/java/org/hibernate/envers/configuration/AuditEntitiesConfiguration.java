@@ -25,18 +25,28 @@ package org.hibernate.envers.configuration;
 
 import static org.hibernate.envers.tools.Tools.getProperty;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.MappingException;
+import org.hibernate.envers.strategy.DefaultAuditStrategy;
+import org.hibernate.envers.strategy.ValidTimeAuditStrategy;
+
 /**
  * Configuration of versions entities - names of fields, entities and tables created to store versioning information.
  * @author Adam Warski (adam at warski dot org)
+ * @author Stephanie Pau at Markit Group Plc
  */
 public class AuditEntitiesConfiguration {
     private final String auditTablePrefix;
     private final String auditTableSuffix;
 
+    private final String auditStrategyName;
     private final String originalIdPropName;
 
     private final String revisionFieldName;
@@ -50,6 +60,8 @@ public class AuditEntitiesConfiguration {
 
     private final Map<String, String> customAuditTablesNames;
 
+    private final String revisionEndFieldName;
+
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
 
@@ -61,6 +73,11 @@ public class AuditEntitiesConfiguration {
                 "org.hibernate.envers.audit_table_suffix", 
                 "org.hibernate.envers.auditTableSuffix",
                 "_AUD");
+
+        auditStrategyName = getProperty(properties,
+                "org.hibernate.envers.audit_strategy",
+                "org.hibernate.envers.audit_strategy",
+                DefaultAuditStrategy.class.getName());
 
         originalIdPropName = "originalId";
 
@@ -74,6 +91,11 @@ public class AuditEntitiesConfiguration {
                 "org.hibernate.envers.revisionTypeFieldName",
                 "REVTYPE");
         revisionTypePropType = "byte";
+
+        revisionEndFieldName = getProperty(properties,
+                "org.hibernate.envers.audit_strategy_valid_time_end_name",
+                "org.hibernate.envers.audit_strategy_valid_time_end_name",
+                "REVEND");
 
         customAuditTablesNames = new HashMap<String, String>();
 
@@ -132,5 +154,13 @@ public class AuditEntitiesConfiguration {
         }
 
         return customHistoryTableName;
+    }
+
+    public String getAuditStrategyName() {
+        return auditStrategyName;
+    }
+
+    public String getRevisionEndFieldName() {
+        return revisionEndFieldName;
     }
 }

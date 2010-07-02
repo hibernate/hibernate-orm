@@ -30,9 +30,7 @@ import javax.persistence.EntityManagerFactory;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.AuditEventListener;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.AfterClass;
+import org.testng.annotations.*;
 
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.event.*;
@@ -78,17 +76,23 @@ public abstract class AbstractEntityTest {
     }
 
     @BeforeClass
-    public void init() throws IOException {
-        init(true);
+    @Parameters("auditStrategy")    
+    public void init(@Optional String auditStrategy) throws IOException {
+        init(true, auditStrategy);
     }
 
-    protected void init(boolean audited) throws IOException {
+    protected void init(boolean audited, String auditStrategy) throws IOException {
         this.audited = audited;
 
         cfg = new Ejb3Configuration();
         if (audited) {
             initListeners();
         }
+
+        if (auditStrategy != null && !"".equals(auditStrategy)) {
+            cfg.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
+        }       
+
         cfg.configure("hibernate.test.cfg.xml");
         configure(cfg);
         emf = cfg.buildEntityManagerFactory();

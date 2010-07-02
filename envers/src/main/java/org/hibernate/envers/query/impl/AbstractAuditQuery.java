@@ -24,9 +24,7 @@
 package org.hibernate.envers.query.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 
@@ -80,15 +78,7 @@ public abstract class AbstractAuditQuery implements AuditQuery {
     }
 
     protected List buildAndExecuteQuery() {
-        StringBuilder querySb = new StringBuilder();
-        Map<String, Object> queryParamValues = new HashMap<String, Object>();
-
-        qb.build(querySb, queryParamValues);
-
-        Query query = versionsReader.getSession().createQuery(querySb.toString());
-        for (Map.Entry<String, Object> paramValue : queryParamValues.entrySet()) {
-            query.setParameter(paramValue.getKey(), paramValue.getValue());
-        }
+        Query query = qb.toQuery(versionsReader.getSession());
 
         setQueryProperties(query);
 

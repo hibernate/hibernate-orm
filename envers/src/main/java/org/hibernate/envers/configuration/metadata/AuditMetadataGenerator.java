@@ -38,6 +38,7 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.envers.strategy.ValidTimeAuditStrategy;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory;
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
  * @author Tomasz Bech
+ * @author Stephanie Pau at Markit Group Plc
  */
 public final class AuditMetadataGenerator {
     private static final Logger log = LoggerFactory.getLogger(AuditMetadataGenerator.class);
@@ -124,6 +126,21 @@ public final class AuditMetadataGenerator {
         Element revTypeProperty = MetadataTools.addProperty(any_mapping, verEntCfg.getRevisionTypePropName(),
                 verEntCfg.getRevisionTypePropType(), true, false);
         revTypeProperty.addAttribute("type", "org.hibernate.envers.entities.RevisionTypeType");
+
+        // Adding the end revision, if appropriate
+        addEndRevision(any_mapping);
+    }
+
+    private void addEndRevision(Element any_mapping) {
+        // Add the end-revision field, if the appropriate strategy is used.
+        if (ValidTimeAuditStrategy.class.getName().equals(verEntCfg.getAuditStrategyName())) {
+            Element end_rev_mapping = (Element) revisionInfoRelationMapping.clone();
+            end_rev_mapping.setName("many-to-one");
+            end_rev_mapping.addAttribute("name", verEntCfg.getRevisionEndFieldName());
+            MetadataTools.addOrModifyColumn(end_rev_mapping, verEntCfg.getRevisionEndFieldName());
+
+            any_mapping.add(end_rev_mapping);
+        }
     }
 
     @SuppressWarnings({"unchecked"})

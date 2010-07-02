@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
@@ -84,7 +85,7 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
             ((Map<String, Object>) persistentCollectionChangeData.getData().get(entitiesCfg.getOriginalIdPropName()))
                     .put(entitiesCfg.getRevisionFieldName(), revisionData);
 
-            session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
+            auditStrategy.performCollectionChange(session, verCfg, persistentCollectionChangeData, revisionData);
         }
     }
 
@@ -137,13 +138,24 @@ public class PersistentCollectionChangeWorkUnit extends AbstractAuditWorkUnit im
 
             // Including only those original changes, which are not overshadowed by new ones.
             for (PersistentCollectionChangeData originalCollectionChangeData : original.getCollectionChanges()) {
-                if (!newChangesIdMap.containsKey(getOriginalId(originalCollectionChangeData))) {
+                Object originalOriginalId = getOriginalId(originalCollectionChangeData);
+                if (!newChangesIdMap.containsKey(originalOriginalId)) {
                     mergedChanges.add(originalCollectionChangeData);
+                } else {
+                    // If the changes collide, checking if the first one isn't a DEL, and the second a subsequent ADD
+                    // If so, removing the change alltogether.
+                    String revTypePropName = verCfg.getAuditEntCfg().getRevisionTypePropName();
+                    if (RevisionType.ADD.equals(newChangesIdMap.get(originalOriginalId).getData().get(
+                            revTypePropName)) && RevisionType.DEL.equals(originalCollectionChangeData.getData().get(
+                            revTypePropName))) {
+                        newChangesIdMap.remove(originalOriginalId);
+                    }
                 }
             }
 
-            // Finally adding all of the new changes to the end of the list
-            mergedChanges.addAll(getCollectionChanges());
+            // Finally adding all of the new changes to the end of the list (the map values may differ from
+            // getCollectionChanges() because of the last operation above).
+            mergedChanges.addAll(newChangesIdMap.values());
 
             return new PersistentCollectionChangeWorkUnit(sessionImplementor, entityName, verCfg, id, mergedChanges, 
                     referencingPropertyName);

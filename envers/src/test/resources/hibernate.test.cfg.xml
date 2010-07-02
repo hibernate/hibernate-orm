@@ -23,6 +23,8 @@
         <!--<property name="connection.username">root</property>-->
         <!--<property name="connection.password"></property>-->
 
+        <!--<property name="org.hibernate.envers.audit_strategy">org.hibernate.envers.strategy.ValidTimeAuditStrategy</property>-->
+
         <!--<property name="hibernate.jdbc.batch_size">100</property>-->
 
         <!--<event type="post-insert">

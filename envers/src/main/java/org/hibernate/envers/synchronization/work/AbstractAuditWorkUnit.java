@@ -33,15 +33,18 @@ import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.envers.strategy.AuditStrategy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Stephanie Pau at Markit Group Plc
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected final SessionImplementor sessionImplementor;
     protected final AuditConfiguration verCfg;
     protected final Serializable id;
     protected final String entityName;
+    protected final AuditStrategy auditStrategy;
 
     private Object performedData;
 
@@ -51,6 +54,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
         this.verCfg = verCfg;
         this.id = id;
         this.entityName = entityName;
+        this.auditStrategy = verCfg.getAuditStrategy();
     }
 
     protected void fillDataWithId(Map<String, Object> data, Object revision, RevisionType revisionType) {
@@ -67,7 +71,7 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
     public void perform(Session session, Object revisionData) {
         Map<String, Object> data = generateData(revisionData);
 
-        session.save(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), data);
+        auditStrategy.perform(session, getEntityName(), verCfg, id, data, revisionData);
 
         setPerformed(data);
     }

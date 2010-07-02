@@ -24,9 +24,12 @@
 package org.hibernate.envers.tools.query;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.envers.tools.MutableInteger;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.tools.StringTools;
@@ -196,5 +199,19 @@ public class QueryBuilder {
         }
 
         return orderList;
+    }
+
+    public Query toQuery(Session session) {
+        StringBuilder querySb = new StringBuilder();
+        Map<String, Object> queryParamValues = new HashMap<String, Object>();
+
+        build(querySb, queryParamValues);
+
+        Query query = session.createQuery(querySb.toString());
+        for (Map.Entry<String, Object> paramValue : queryParamValues.entrySet()) {
+            query.setParameter(paramValue.getKey(), paramValue.getValue());
+        }
+
+        return query;
     }
 }

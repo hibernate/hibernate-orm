@@ -1,8 +1,5 @@
-<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
-
-<suite name="Envers">
-    <test name="All">
-        <packages>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" [
+   <!ENTITY packages '
             <package name="org.hibernate.envers.test.integration.accesstype" />
             <package name="org.hibernate.envers.test.integration.auditReader" />
             <package name="org.hibernate.envers.test.integration.basic" />
@@ -71,6 +68,19 @@
             <package name="org.hibernate.envers.test.integration.secondary.ids" />
             <package name="org.hibernate.envers.test.integration.serialization" />
             <package name="org.hibernate.envers.test.integration.superclass" />
+		'>
+]>
+
+<suite name="Envers">
+    <test name="All">
+        <packages>
+            &packages;
+        </packages>
+    </test>
+    <test name="ValidTimeAuditStrategy">
+        <parameter name="auditStrategy" value="org.hibernate.envers.strategy.ValidTimeAuditStrategy" />
+        <packages>
+            &packages;
         </packages>
     </test>
 </suite>

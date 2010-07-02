@@ -88,11 +88,11 @@ public abstract class AbstractPerformanceTest extends AbstractEntityTest {
         List<Long> unauditedRuns = new ArrayList<Long>();
         List<Long> auditedRuns = new ArrayList<Long>();
 
-        init(true);
+        init(true, null);
         long audited = run(numberOfRuns, auditedRuns);
         close();
 
-        init(false);
+        init(false, null);
         long unaudited = run(numberOfRuns, unauditedRuns);
         close();
 

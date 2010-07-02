@@ -90,9 +90,6 @@ public class CompositeTestUserType implements CompositeUserType {
     public Object nullSafeGet(final ResultSet rs, final String[] names,
                               final SessionImplementor session,
                               final Object owner) throws HibernateException, SQLException {
-        if (rs.wasNull()) {
-            return null;
-        }
         final String prop1 = rs.getString(names[0]);
         if (prop1 == null) {
             return null;

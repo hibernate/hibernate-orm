@@ -41,6 +41,7 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.Versioning;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -94,6 +95,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final int[] subclassColumnTableNumberClosure;
 	private final int[] subclassFormulaTableNumberClosure;
 
+	private final boolean[] subclassTableSequentialSelect;
+	private final boolean[] subclassTableIsLazyClosure;
+	
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of null primary key
 	// values in the outer join using an SQL CASE
@@ -173,6 +177,44 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumnReaderTemplates.add(keyColReaderTemplates);
 			cascadeDeletes.add( new Boolean( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() ) );
 		}
+		
+		//Span of the tables directly mapped by this entity and super-classes, if any
+		int coreTableSpan = tables.size();
+		
+		Iterator joinIter = persistentClass.getJoinClosureIterator();
+		while ( joinIter.hasNext() ) {
+			Join join = (Join) joinIter.next();
+			
+			Table tab = join.getTable();
+			 
+			String tabname = tab.getQualifiedName(
+					factory.getDialect(),
+					factory.getSettings().getDefaultCatalogName(),
+					factory.getSettings().getDefaultSchemaName()
+			);
+			tables.add(tabname);
+			
+			KeyValue key = join.getKey();
+			int joinIdColumnSpan = 	key.getColumnSpan();		
+			
+			String[] keyCols = new String[joinIdColumnSpan];
+			String[] keyColReaders = new String[joinIdColumnSpan];
+			String[] keyColReaderTemplates = new String[joinIdColumnSpan];
+						
+			Iterator citer = key.getColumnIterator();
+			
+			for ( int k=0; k<joinIdColumnSpan; k++ ) {
+				Column column = (Column) citer.next();
+				keyCols[k] = column.getQuotedName( factory.getDialect() );
+				keyColReaders[k] = column.getReadExpr( factory.getDialect() );
+				keyColReaderTemplates[k] = column.getTemplate( factory.getDialect(), factory.getSqlFunctionRegistry() );
+			}
+			keyColumns.add(keyCols);
+			keyColumnReaders.add(keyColReaders);
+			keyColumnReaderTemplates.add(keyColReaderTemplates);
+			cascadeDeletes.add( new Boolean( key.isCascadeDeleteEnabled() && factory.getDialect().supportsCascadeDelete() ) );
+		}
+		
 		naturalOrderTableNames = ArrayHelper.toStringArray(tables);
 		naturalOrderTableKeyColumns = ArrayHelper.to2DStringArray(keyColumns);
 		naturalOrderTableKeyColumnReaders = ArrayHelper.to2DStringArray(keyColumnReaders);
@@ -181,11 +223,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		ArrayList subtables = new ArrayList();
 		ArrayList isConcretes = new ArrayList();
+		ArrayList isDeferreds = new ArrayList();
+		ArrayList isLazies = new ArrayList();
+		
 		keyColumns = new ArrayList();
 		titer = persistentClass.getSubclassTableClosureIterator();
 		while ( titer.hasNext() ) {
 			Table tab = (Table) titer.next();
 			isConcretes.add( new Boolean( persistentClass.isClassOrSuperclassTable(tab) ) );
+			isDeferreds.add(Boolean.FALSE);
+			isLazies.add(Boolean.FALSE);
 			String tabname = tab.getQualifiedName(
 					factory.getDialect(),
 					factory.getSettings().getDefaultCatalogName(),
@@ -199,26 +246,65 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			keyColumns.add(key);
 		}
-		subclassTableNameClosure = ArrayHelper.toStringArray(subtables);
-		subclassTableKeyColumnClosure = ArrayHelper.to2DStringArray(keyColumns);
-		isClassOrSuperclassTable = ArrayHelper.toBooleanArray(isConcretes);
-
-		constraintOrderedTableNames = new String[subclassTableNameClosure.length];
-		constraintOrderedKeyColumnNames = new String[subclassTableNameClosure.length][];
-		int currentPosition = 0;
-		for ( int i = subclassTableNameClosure.length - 1; i >= 0 ; i--, currentPosition++ ) {
-			constraintOrderedTableNames[currentPosition] = subclassTableNameClosure[i];
-			constraintOrderedKeyColumnNames[currentPosition] = subclassTableKeyColumnClosure[i];
+		
+		//Add joins
+		joinIter = persistentClass.getSubclassJoinClosureIterator();
+		while ( joinIter.hasNext() ) {
+			Join join = (Join) joinIter.next();
+			
+			Table tab = join.getTable();
+			 
+			isConcretes.add( new Boolean( persistentClass.isClassOrSuperclassTable(tab) ) );
+			isDeferreds.add( new Boolean( join.isSequentialSelect() ) );
+			isLazies.add(new Boolean(join.isLazy()));
+			
+			String tabname = tab.getQualifiedName(
+					factory.getDialect(),
+					factory.getSettings().getDefaultCatalogName(),
+					factory.getSettings().getDefaultSchemaName()
+			);
+			subtables.add(tabname);
+			String[] key = new String[idColumnSpan];
+			Iterator citer = tab.getPrimaryKey().getColumnIterator();
+			for ( int k=0; k<idColumnSpan; k++ ) {
+				key[k] = ( (Column) citer.next() ).getQuotedName( factory.getDialect() );
+			}
+			keyColumns.add(key);
+						
 		}
+				
+		String [] naturalOrderSubclassTableNameClosure = ArrayHelper.toStringArray(subtables);
+		String[][] naturalOrderSubclassTableKeyColumnClosure = ArrayHelper.to2DStringArray(keyColumns);
+		isClassOrSuperclassTable = ArrayHelper.toBooleanArray(isConcretes);
+		subclassTableSequentialSelect = ArrayHelper.toBooleanArray(isDeferreds);
+		subclassTableIsLazyClosure = ArrayHelper.toBooleanArray(isLazies);
+		
+		constraintOrderedTableNames = new String[naturalOrderSubclassTableNameClosure.length];
+		constraintOrderedKeyColumnNames = new String[naturalOrderSubclassTableNameClosure.length][];
+		int currentPosition = 0;
+		for ( int i = naturalOrderSubclassTableNameClosure.length - 1; i >= 0 ; i--, currentPosition++ ) {
+			constraintOrderedTableNames[currentPosition] = naturalOrderSubclassTableNameClosure[i];
+			constraintOrderedKeyColumnNames[currentPosition] = naturalOrderSubclassTableKeyColumnClosure[i];
+		} 
 
+		/**
+		 * Suppose an entity Client extends Person, mapped to the tables CLIENT and PERSON respectively.
+		 * For the Client entity:
+		 * naturalOrderTableNames -> PERSON, CLIENT; this reflects the sequence in which the tables are 
+		 * added to the meta-data when the annotated entities are processed.
+		 * However, in some instances, for example when generating joins, the CLIENT table needs to be 
+		 * the first table as it will the driving table.
+		 * tableNames -> CLIENT, PERSON
+		 */
+				
 		tableSpan = naturalOrderTableNames.length;
-		tableNames = reverse(naturalOrderTableNames);
-		tableKeyColumns = reverse(naturalOrderTableKeyColumns);
-		tableKeyColumnReaders = reverse(naturalOrderTableKeyColumnReaders);
-		tableKeyColumnReaderTemplates = reverse(naturalOrderTableKeyColumnReaderTemplates);
-		reverse(subclassTableNameClosure, tableSpan);
-		reverse(subclassTableKeyColumnClosure, tableSpan);
-
+ 		tableNames = reverse(naturalOrderTableNames, coreTableSpan);
+		tableKeyColumns = reverse(naturalOrderTableKeyColumns, coreTableSpan);
+		tableKeyColumnReaders = reverse(naturalOrderTableKeyColumnReaders, coreTableSpan);
+		tableKeyColumnReaderTemplates = reverse(naturalOrderTableKeyColumnReaderTemplates, coreTableSpan);
+		subclassTableNameClosure = reverse(naturalOrderSubclassTableNameClosure, coreTableSpan);
+		subclassTableKeyColumnClosure = reverse(naturalOrderSubclassTableKeyColumnClosure, coreTableSpan);
+ 
 		spaces = ArrayHelper.join(
 				tableNames,
 				ArrayHelper.toStringArray( persistentClass.getSynchronizedTables() )
@@ -236,7 +322,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		deleteResultCheckStyles = new ExecuteUpdateResultCheckStyle[tableSpan];
 
 		PersistentClass pc = persistentClass;
-		int jk = tableSpan-1;
+		int jk = coreTableSpan-1;
 		while (pc!=null) {
 			customSQLInsert[jk] = pc.getCustomSQLInsert();
 			insertCallable[jk] = customSQLInsert[jk] != null && pc.isCustomInsertCallable();
@@ -256,12 +342,35 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			jk--;
 			pc = pc.getSuperclass();
 		}
+		
 		if ( jk != -1 ) {
 			throw new AssertionFailure( "Tablespan does not match height of joined-subclass hiearchy." );
 		}
-
+ 
+		joinIter = persistentClass.getJoinClosureIterator();
+		int j = coreTableSpan;
+		while ( joinIter.hasNext() ) {
+			Join join = (Join) joinIter.next();
+			
+			customSQLInsert[j] = join.getCustomSQLInsert();
+			insertCallable[j] = customSQLInsert[j] != null && join.isCustomInsertCallable();
+			insertResultCheckStyles[j] = join.getCustomSQLInsertCheckStyle() == null
+			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLInsert[j], insertCallable[j] )
+		                                  : join.getCustomSQLInsertCheckStyle();
+			customSQLUpdate[j] = join.getCustomSQLUpdate();
+			updateCallable[j] = customSQLUpdate[j] != null && join.isCustomUpdateCallable();
+			updateResultCheckStyles[j] = join.getCustomSQLUpdateCheckStyle() == null
+			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLUpdate[j], updateCallable[j] )
+		                                  : join.getCustomSQLUpdateCheckStyle();
+			customSQLDelete[j] = join.getCustomSQLDelete();
+			deleteCallable[j] = customSQLDelete[j] != null && join.isCustomDeleteCallable();
+			deleteResultCheckStyles[j] = join.getCustomSQLDeleteCheckStyle() == null
+			                              ? ExecuteUpdateResultCheckStyle.determineDefault( customSQLDelete[j], deleteCallable[j] )
+		                                  : join.getCustomSQLDeleteCheckStyle();
+			j++;
+		}
+		
 		// PROPERTIES
-
 		int hydrateSpan = getPropertySpan();
 		naturalOrderPropertyTableNumbers = new int[hydrateSpan];
 		propertyTableNumbers = new int[hydrateSpan];
@@ -297,7 +406,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					factory.getSettings().getDefaultSchemaName()
 			);
 			Integer tabnum = new Integer( getTableId(tabname, subclassTableNameClosure) );
-			propTableNumbers.add(tabnum);
+  			propTableNumbers.add(tabnum);
 
 			Iterator citer = prop.getColumnIterator();
 			while ( citer.hasNext() ) {
@@ -317,7 +426,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		subclassFormulaTableNumberClosure = ArrayHelper.toIntArray(formulaTableNumbers);
 
 		// SUBCLASSES
-
+ 
 		int subclassSpan = persistentClass.getSubclassSpan() + 1;
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[subclassSpan-1] = getEntityName();
@@ -383,6 +492,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	}
 
+	protected boolean isSubclassTableSequentialSelect(int j) {
+		return subclassTableSequentialSelect[j] && !isClassOrSuperclassTable[j];
+	}
+	
+	
 	/*public void postInstantiate() throws MappingException {
 		super.postInstantiate();
 		//TODO: other lock modes?
@@ -463,24 +577,51 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
-	private static final String[] reverse(String[] objects) {
-		int len = objects.length;
-		String[] temp = new String[len];
-		for (int i=0; i<len; i++) {
-			temp[i] = objects[len-i-1];
+	
+	/**
+	 * Reverse the first n elements of the incoming array
+	 * @param objects
+	 * @param n
+	 * @return New array with the first n elements in reversed order 
+	 */
+	private static final String[] reverse(String [] objects, int n) {
+		
+		int size = objects.length;
+		String[] temp = new String[size];
+		
+		for (int i=0; i<n; i++) {
+			temp[i] = objects[n-i-1];
 		}
+		
+		for (int i=n; i < size; i++) {
+			temp[i] =  objects[i];
+		}
+		
 		return temp;
 	}
-
-	private static final String[][] reverse(String[][] objects) {
-		int len = objects.length;
-		String[][] temp = new String[len][];
-		for (int i=0; i<len; i++) {
-			temp[i] = objects[len-i-1];
+		
+	/**
+	 * Reverse the first n elements of the incoming array
+	 * @param objects
+	 * @param n
+	 * @return New array with the first n elements in reversed order 
+	 */
+	private static final String[][] reverse(String[][] objects, int n) {
+		int size = objects.length;
+		String[][] temp = new String[size][];
+		for (int i=0; i<n; i++) {
+			temp[i] = objects[n-i-1];
 		}
+		
+		for (int i=n; i<size; i++) {
+			temp[i] = objects[i];
+		}
+		
 		return temp;
 	}
-
+	
+	
+	
 	public String fromTableFragment(String alias) {
 		return getTableName() + ' ' + alias;
 	}
@@ -597,6 +738,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return subclassTableNameClosure.length;
 	}
 
+	protected boolean isSubclassTableLazy(int j) {
+		return subclassTableIsLazyClosure[j];
+	}
+	
+	
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
 	}

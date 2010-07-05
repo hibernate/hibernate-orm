@@ -36,6 +36,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.profile.FetchProfile;
@@ -243,5 +244,11 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The profile definition
 	 */
 	public FetchProfile getFetchProfile(String name);
+
+	/**
+	 * Return the SessionFactoryObserver attached to the SessionFactory if any
+	 * @return
+	 */
+	public SessionFactoryObserver getFactoryObserver();
 
 }

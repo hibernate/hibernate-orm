@@ -32,18 +32,22 @@ import org.hibernate.envers.entities.mapper.id.IdMapper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class EntityConfiguration {
     private String versionsEntityName;
-    private IdMappingData idMappingData;
+    /** Holds the className for instantiation the configured entity */
+    private String entityClassName;
+	private IdMappingData idMappingData;
     private ExtendedPropertyMapper propertyMapper;
     // Maps from property name
     private Map<String, RelationDescription> relations;
     private String parentEntityName;
 
-    public EntityConfiguration(String versionsEntityName, IdMappingData idMappingData,
+    public EntityConfiguration(String versionsEntityName, String entityClassName, IdMappingData idMappingData,
                                ExtendedPropertyMapper propertyMapper, String parentEntityName) {
         this.versionsEntityName = versionsEntityName;
+        this.entityClassName = entityClassName;
         this.idMappingData = idMappingData;
         this.propertyMapper = propertyMapper;
         this.parentEntityName = parentEntityName;
@@ -113,4 +117,11 @@ public class EntityConfiguration {
     Iterable<RelationDescription> getRelationsIterator() {
         return relations.values();
     }
+    
+    /**
+     * @return the className for the configured entity
+     */
+    public String getEntityClassName() {
+		return entityClassName;
+	}    
 }

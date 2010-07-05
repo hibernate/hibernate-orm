@@ -33,11 +33,11 @@ import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-
 import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
     private final boolean selectEntitiesOnly;
@@ -53,6 +53,15 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
         this.selectDeletedEntities = selectDeletedEntities;
     }
 
+	public RevisionsOfEntityQuery(AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Class<?> cls, String entityName,
+			boolean selectEntitiesOnly, boolean selectDeletedEntities) {
+		super(verCfg, versionsReader, cls, entityName);
+
+		this.selectEntitiesOnly = selectEntitiesOnly;
+		this.selectDeletedEntities = selectDeletedEntities;
+	}
+	
     private Number getRevisionNumber(Map versionsEntity) {
         AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
 

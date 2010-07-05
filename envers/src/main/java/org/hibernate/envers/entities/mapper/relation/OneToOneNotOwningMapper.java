@@ -31,6 +31,7 @@ import javax.persistence.NoResultException;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
+import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
@@ -44,6 +45,7 @@ import org.hibernate.property.Setter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class OneToOneNotOwningMapper implements PropertyMapper {
     private String owningReferencePropertyName;
@@ -66,12 +68,18 @@ public class OneToOneNotOwningMapper implements PropertyMapper {
             return;
         }
 
-        Class<?> entityClass = ReflectionTools.loadClass(owningEntityName);
+    	EntityConfiguration entCfg = verCfg.getEntCfg().get(owningEntityName);
+    	if(entCfg == null) {
+    		// a relation marked as RelationTargetAuditMode.NOT_AUDITED 
+    		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(owningEntityName);
+    	}
+
+        Class<?> entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
 
         Object value;
 
         try {
-            value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, revision)
+            value = versionsReader.createQuery().forEntitiesAtRevision(entityClass, owningEntityName, revision)
                     .add(AuditEntity.relatedId(owningReferencePropertyName).eq(primaryKey)).getSingleResult();
         } catch (NoResultException e) {
             value = null;

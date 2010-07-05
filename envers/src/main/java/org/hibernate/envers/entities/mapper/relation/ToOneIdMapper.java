@@ -33,6 +33,7 @@ import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.ToOneDelegateSessionImplementor;
+import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
@@ -44,6 +45,7 @@ import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class ToOneIdMapper implements PropertyMapper {
     private final IdMapper delegate;
@@ -68,7 +70,7 @@ public class ToOneIdMapper implements PropertyMapper {
         delegate.mapToMapFromEntity(newData, nonInsertableFake ? oldObj : newObj);
 
         //noinspection SimplifiableConditionalExpression
-        return nonInsertableFake ? false : !Tools.entitiesEqual(session, newObj, oldObj);
+        return nonInsertableFake ? false : !Tools.entitiesEqual(session, referencedEntityName, newObj, oldObj);
     }
 
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
@@ -85,7 +87,13 @@ public class ToOneIdMapper implements PropertyMapper {
             if (versionsReader.getFirstLevelCache().contains(referencedEntityName, revision, entityId)) {
                 value = versionsReader.getFirstLevelCache().get(referencedEntityName, revision, entityId);
             } else {
-                Class<?> entityClass = ReflectionTools.loadClass(referencedEntityName);
+            	EntityConfiguration entCfg = verCfg.getEntCfg().get(referencedEntityName);
+            	if(entCfg == null) {
+            		// a relation marked as RelationTargetAuditMode.NOT_AUDITED 
+            		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(referencedEntityName);
+            	}
+            	
+                Class<?> entityClass = ReflectionTools.loadClass(entCfg.getEntityClassName());
 
                 value = versionsReader.getSessionImplementor().getFactory().getEntityPersister(referencedEntityName).
                         createProxy((Serializable)entityId, new ToOneDelegateSessionImplementor(versionsReader, entityClass, entityId, revision, verCfg));

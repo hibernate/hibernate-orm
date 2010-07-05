@@ -46,7 +46,7 @@ import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hernan Chanfreau
+ * @author Hern�n Chanfreau
  */
 public class AuditReaderImpl implements AuditReaderImplementor {
     private final AuditConfiguration verCfg;
@@ -81,16 +81,21 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         return firstLevelCache;
     }
 
-    @SuppressWarnings({"unchecked"})
     public <T> T find(Class<T> cls, Object primaryKey, Number revision) throws
             IllegalArgumentException, NotAuditedException, IllegalStateException {
+    	
+    	return this.find(cls, cls.getName(), primaryKey, revision);
+    }
+    
+    @SuppressWarnings({"unchecked"})
+    public <T> T find(Class<T> cls, String entityName, Object primaryKey, Number revision) throws
+            IllegalArgumentException, NotAuditedException, IllegalStateException {
         checkNotNull(cls, "Entity class");
+        checkNotNull(entityName, "Entity name");
         checkNotNull(primaryKey, "Primary key");
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
         checkSession();
-
-        String entityName = cls.getName();
 
         if (!verCfg.getEntCfg().isVersioned(entityName)) {
             throw new NotAuditedException(entityName, entityName + " is not versioned!");
@@ -103,7 +108,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         Object result;
         try {
             // The result is put into the cache by the entity instantiator called from the query
-            result = createQuery().forEntitiesAtRevision(cls, revision)
+            result = createQuery().forEntitiesAtRevision(cls, entityName, revision)
                 .add(AuditEntity.id().eq(primaryKey)).getSingleResult();
         } catch (NoResultException e) {
             result = null;
@@ -112,23 +117,28 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         }
 
         return (T) result;
+    }    
+
+    public List<Number> getRevisions(Class<?> cls, Object primaryKey)
+            throws IllegalArgumentException, NotAuditedException, IllegalStateException {
+    	
+    	return this.getRevisions(cls, cls.getName(), primaryKey);
     }
 
     @SuppressWarnings({"unchecked"})
-    public List<Number> getRevisions(Class<?> cls, Object primaryKey)
+    public List<Number> getRevisions(Class<?> cls, String entityName, Object primaryKey)
             throws IllegalArgumentException, NotAuditedException, IllegalStateException {
         // todo: if a class is not versioned from the beginning, there's a missing ADD rev - what then?
         checkNotNull(cls, "Entity class");
+        checkNotNull(entityName, "Entity name");
         checkNotNull(primaryKey, "Primary key");
         checkSession();
-
-        String entityName = cls.getName();
 
         if (!verCfg.getEntCfg().isVersioned(entityName)) {
             throw new NotAuditedException(entityName, entityName + " is not versioned!");
         }
 
-        return createQuery().forRevisionsOfEntity(cls, false, true)
+        return createQuery().forRevisionsOfEntity(cls, entityName, false, true)
                 .addProjection(AuditEntity.revisionNumber())
                 .add(AuditEntity.id().eq(primaryKey))
                 .getResultList();

@@ -61,6 +61,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class AuditEventListener implements PostInsertEventListener, PostUpdateEventListener,
         PostDeleteEventListener, PreCollectionUpdateEventListener, PreCollectionRemoveEventListener,
@@ -91,7 +92,7 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
                 Object oldValue = oldState == null ? null : oldState[i];
                 Object newValue = newState == null ? null : newState[i];
 
-                if (!Tools.entitiesEqual(session, oldValue, newValue)) {
+                if (!Tools.entitiesEqual(session, relDesc.getToEntityName(), oldValue, newValue)) {
                     // We have to generate changes both in the old collection (size decreses) and new collection
                     // (size increases).
                     if (newValue != null) {

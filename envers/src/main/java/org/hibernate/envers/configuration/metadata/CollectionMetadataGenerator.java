@@ -209,7 +209,7 @@ public final class CollectionMetadataGenerator {
                     // The mapper will only be used to map from entity to map, so no need to provide other details
                     // when constructing the PropertyData.
                     new PropertyData(auditMappedBy, null, null, null),
-                    referencedEntityName, false);
+                    referencingEntityName, false);
 
             // Checking if there's an index defined. If so, adding a mapper for it.
             if (propertyAuditingData.getPositionMappedBy() != null) {

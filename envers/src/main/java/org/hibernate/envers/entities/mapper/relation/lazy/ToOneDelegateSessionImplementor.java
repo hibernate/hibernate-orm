@@ -27,7 +27,6 @@ import java.io.Serializable;
 
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntitiesConfigurations;
-import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 
 import org.hibernate.HibernateException;
@@ -35,6 +34,7 @@ import org.hibernate.HibernateException;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Tomasz Bech
+ * @author Hern�n Chanfreau
  */
 public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImplementor {
 	private static final long serialVersionUID = 4770438372940785488L;
@@ -43,7 +43,7 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
     private final Class<?> entityClass;
     private final Object entityId;
     private final Number revision;
-	private EntityConfiguration notVersionedEntityConfiguration;
+    private EntitiesConfigurations entCfg;
 
 	public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
                                            Class<?> entityClass, Object entityId, Number revision,
@@ -53,14 +53,15 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
         this.entityClass = entityClass;
         this.entityId = entityId;
         this.revision = revision;
-        EntitiesConfigurations entCfg = verCfg.getEntCfg();
-        notVersionedEntityConfiguration = entCfg.getNotVersionEntityConfiguration(entityClass.getName());
+        this.entCfg = verCfg.getEntCfg();
     }
 
     public Object doImmediateLoad(String entityName) throws HibernateException {
-		if (notVersionedEntityConfiguration == null) {
-			return versionsReader.find(entityClass, entityId, revision);
+    	if(entCfg.getNotVersionEntityConfiguration(entityName) == null){
+    		// audited relation, look up entity with envers
+			return versionsReader.find(entityClass, entityName, entityId, revision);
 		} else {
+			// notAudited relation, look up entity with hibernate
 			return delegate.immediateLoad(entityName, (Serializable) entityId);
 		}
     }

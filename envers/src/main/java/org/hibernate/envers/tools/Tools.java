@@ -32,6 +32,7 @@ import java.util.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class Tools {
     public static <K,V> Map<K,V> newHashMap() {
@@ -46,14 +47,14 @@ public class Tools {
         return new LinkedHashMap<K,V>();
     }
 
-	public static boolean entitiesEqual(SessionImplementor session, Object obj1, Object obj2) {
-        Object id1 = getIdentifier(session, obj1);
-		Object id2 = getIdentifier(session, obj2);
+	public static boolean entitiesEqual(SessionImplementor session, String entityName, Object obj1, Object obj2) {
+        Object id1 = getIdentifier(session, entityName, obj1);
+		Object id2 = getIdentifier(session, entityName, obj2);
 
         return objectsEqual(id1, id2);
-    }
+    }	
 
-	public static Object getIdentifier(SessionImplementor session, Object obj) {
+	public static Object getIdentifier(SessionImplementor session, String entityName, Object obj) {
 		if (obj == null) {
 			return null;
 		}
@@ -63,9 +64,9 @@ public class Tools {
 			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
 		}
 
+		return session.getEntityPersister(entityName, obj).getIdentifier(obj, session);
+	}	    
 
-		return session.getEntityPersister( null, obj ).getIdentifier( obj, session );
-	}
 
     public static Object getTargetFromProxy(SessionFactoryImplementor sessionFactoryImplementor, HibernateProxy proxy) {
         if (!proxy.getHibernateLazyInitializer().isUninitialized()) {

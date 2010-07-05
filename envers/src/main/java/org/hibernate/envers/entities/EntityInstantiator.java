@@ -36,6 +36,7 @@ import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class EntityInstantiator {
     private final AuditConfiguration verCfg;
@@ -80,7 +81,13 @@ public class EntityInstantiator {
         // If it is not in the cache, creating a new entity instance
         Object ret;
         try {
-            Class<?> cls = ReflectionTools.loadClass(entityName);
+        	EntityConfiguration entCfg = verCfg.getEntCfg().get(entityName);
+        	if(entCfg == null) {
+        		// a relation marked as RelationTargetAuditMode.NOT_AUDITED 
+        		entCfg = verCfg.getEntCfg().getNotVersionEntityConfiguration(entityName);
+        	}
+
+            Class<?> cls = ReflectionTools.loadClass(entCfg.getEntityClassName());
             ret = ReflectHelper.getDefaultConstructor(cls).newInstance();
         } catch (Exception e) {
             throw new AuditException(e);

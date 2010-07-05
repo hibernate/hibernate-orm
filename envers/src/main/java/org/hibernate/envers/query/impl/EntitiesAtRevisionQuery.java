@@ -35,6 +35,7 @@ import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern�n Chanfreau
  */
 public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
     private final Number revision;
@@ -45,6 +46,12 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
         super(verCfg, versionsReader, cls);
         this.revision = revision;
     }
+    
+	public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Class<?> cls, String entityName, Number revision) {
+		super(verCfg, versionsReader, cls, entityName);
+		this.revision = revision;
+	}    
 
     @SuppressWarnings({"unchecked"})
     public List list() {

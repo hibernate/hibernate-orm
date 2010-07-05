@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
  * @author Sebastian Komander
  * @author Tomasz Bech
  * @author Stephanie Pau at Markit Group Plc
+ * @author Hern�n Chanfreau
  */
 public final class AuditMetadataGenerator {
     private static final Logger log = LoggerFactory.getLogger(AuditMetadataGenerator.class);
@@ -370,7 +371,7 @@ public final class AuditMetadataGenerator {
 
 			ExtendedPropertyMapper propertyMapper = null;
 			String parentEntityName = null;
-			EntityConfiguration entityCfg = new EntityConfiguration(entityName, idMapper, propertyMapper,
+			EntityConfiguration entityCfg = new EntityConfiguration(entityName, pc.getClassName(), idMapper, propertyMapper,
 					parentEntityName);
 			notAuditedEntitiesConfigurations.put(entityName, entityCfg);
 			return;
@@ -444,7 +445,7 @@ public final class AuditMetadataGenerator {
         addJoins(pc, propertyMapper, auditingData, pc.getEntityName(), xmlMappingData, true);
 
         // Storing the generated configuration
-        EntityConfiguration entityCfg = new EntityConfiguration(auditEntityName, idMapper,
+        EntityConfiguration entityCfg = new EntityConfiguration(auditEntityName,pc.getClassName(), idMapper,
                 propertyMapper, parentEntityName);
         entitiesConfigurations.put(pc.getEntityName(), entityCfg);
     }

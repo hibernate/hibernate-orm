@@ -183,7 +183,12 @@ public class InfinispanRegionFactory implements RegionFactory {
    public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
             throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building query results cache region [" + regionName + "]");
-      Cache cache = getCache(regionName, QUERY_KEY, properties);
+      String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
+      // If region name is not default one, lookup a cache for that region name
+      if (!regionName.equals("org.hibernate.cache.StandardQueryCache"))
+         cacheName = regionName;
+
+      Cache cache = getCache(cacheName, QUERY_KEY, properties);
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
       QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager, this);
       region.start();
@@ -369,7 +374,7 @@ public class InfinispanRegionFactory implements RegionFactory {
          String templateCacheName = null;
          Configuration regionCacheCfg = null;
          if (regionOverride != null) {
-            if (log.isDebugEnabled()) log.debug("Entity cache region specific configuration exists: " + regionOverride);
+            if (log.isDebugEnabled()) log.debug("Cache region specific configuration exists: " + regionOverride);
             regionOverride = overrideStatisticsIfPresent(regionOverride, properties);
             regionCacheCfg = regionOverride.createInfinispanConfiguration();
             String cacheName = regionOverride.getCacheName();

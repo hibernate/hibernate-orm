@@ -88,6 +88,7 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
    protected void standardConfigure(Configuration cfg) {
       super.standardConfigure(cfg);
       cfg.setProperty(InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query");
+      cfg.setProperty("hibernate.cache.infinispan.AccountRegion.cfg", "replicated-query");
    }
 
 
@@ -164,15 +165,25 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
       CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
-      localQueryCache = localManager.getCache("replicated-query");
+      // Bind a listener to the "remote" cache
+      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
+      String cacheName;
+      if (useNamedRegion) {
+         cacheName = "AccountRegion"; // As defined by ClassLoaderTestDAO via calls to query.setCacheRegion
+         // Define cache configurations for region early to avoid ending up with local caches for this region
+         localManager.defineConfiguration(cacheName, "replicated-query", new org.infinispan.config.Configuration());
+         remoteManager.defineConfiguration(cacheName, "replicated-query", new org.infinispan.config.Configuration());
+      } else {
+         cacheName = "replicated-query";
+      }
+
+      localQueryCache = localManager.getCache(cacheName);
       localQueryListener = new CacheAccessListener();
       localQueryCache.addListener(localQueryListener);
 
       TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
 
-      // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
-      remoteQueryCache = remoteManager.getCache("replicated-query");
+      remoteQueryCache = remoteManager.getCache(cacheName);
       remoteQueryListener = new CacheAccessListener();
       remoteQueryCache.addListener(remoteQueryListener);
 

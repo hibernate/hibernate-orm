@@ -99,7 +99,7 @@ public class InfinispanRegionFactory implements RegionFactory {
    /**
     * Name of the configuration that should be used for timestamp caches.
     * 
-    * @see #DEF_TS_RESOURCE
+    * @see #DEF_TIMESTAMPS_RESOURCE
     */
    public static final String TIMESTAMPS_CACHE_RESOURCE_PROP = PREFIX + TIMESTAMPS_KEY + CONFIG_SUFFIX;
 
@@ -113,7 +113,7 @@ public class InfinispanRegionFactory implements RegionFactory {
    public static final String QUERY_CACHE_RESOURCE_PROP = PREFIX + QUERY_KEY + CONFIG_SUFFIX;
 
    /**
-    * Default value for {@link #INFINISPAN_RESOURCE_PROP}. Specifies the "infinispan-configs.xml" file in this package.
+    * Default value for {@link #INFINISPAN_CONFIG_RESOURCE_PROP}. Specifies the "infinispan-configs.xml" file in this package.
     */
    public static final String DEF_INFINISPAN_CONFIG_RESOURCE = "org/hibernate/cache/infinispan/builder/infinispan-configs.xml";
 
@@ -184,7 +184,12 @@ public class InfinispanRegionFactory implements RegionFactory {
             throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building query results cache region [" + regionName + "]");
       String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
+      // If region name is not default one, lookup a cache for that region name
+      if (!regionName.equals("org.hibernate.cache.StandardQueryCache"))
+         cacheName = regionName;
+
+      Cache cache = getCache(cacheName, QUERY_KEY, properties);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
       QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager, this);
       region.start();
       return region;
@@ -369,7 +374,7 @@ public class InfinispanRegionFactory implements RegionFactory {
          String templateCacheName = null;
          Configuration regionCacheCfg = null;
          if (regionOverride != null) {
-            if (log.isDebugEnabled()) log.debug("Entity cache region specific configuration exists: " + regionOverride);
+            if (log.isDebugEnabled()) log.debug("Cache region specific configuration exists: " + regionOverride);
             regionOverride = overrideStatisticsIfPresent(regionOverride, properties);
             regionCacheCfg = regionOverride.createInfinispanConfiguration();
             String cacheName = regionOverride.getCacheName();

@@ -415,6 +415,32 @@ public class InfinispanRegionFactoryTestCase extends TestCase {
       }
    }
 
+   public void testBuildQueryRegionWithCustomRegionName() {
+      final String queryRegionName = "myquery";
+      Properties p = new Properties();
+      InfinispanRegionFactory factory = new InfinispanRegionFactory();
+      p.setProperty("hibernate.cache.infinispan.myquery.cfg", "timestamps-none-eviction");
+      p.setProperty("hibernate.cache.infinispan.myquery.eviction.strategy", "FIFO");
+      p.setProperty("hibernate.cache.infinispan.myquery.eviction.wake_up_interval", "2222");
+      p.setProperty("hibernate.cache.infinispan.myquery.eviction.max_entries", "11111");
+      factory.start(null, p);
+      CacheManager manager = factory.getCacheManager();
+      manager.getGlobalConfiguration().setTransportClass(null);
+      try {
+         assertTrue(factory.getDefinedConfigurations().contains("local-query"));
+         QueryResultsRegionImpl region = (QueryResultsRegionImpl) factory.buildQueryResultsRegion(queryRegionName, p);
+         assertNotNull(factory.getTypeOverrides().get(queryRegionName));
+         assertTrue(factory.getDefinedConfigurations().contains(queryRegionName));
+         CacheAdapter cache = region.getCacheAdapter();
+         Configuration cacheCfg = cache.getConfiguration();
+         assertEquals(EvictionStrategy.FIFO, cacheCfg.getEvictionStrategy());
+         assertEquals(2222, cacheCfg.getEvictionWakeUpInterval());
+         assertEquals(11111, cacheCfg.getEvictionMaxEntries());
+      } finally {
+         factory.stop();
+      }
+   }
+
    public void testEnableStatistics() {
       Properties p = new Properties();
       p.setProperty("hibernate.cache.infinispan.statistics", "true");

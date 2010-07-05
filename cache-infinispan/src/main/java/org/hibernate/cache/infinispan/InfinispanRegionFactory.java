@@ -99,7 +99,7 @@ public class InfinispanRegionFactory implements RegionFactory {
    /**
     * Name of the configuration that should be used for timestamp caches.
     * 
-    * @see #DEF_TS_RESOURCE
+    * @see #DEF_TIMESTAMPS_RESOURCE
     */
    public static final String TIMESTAMPS_CACHE_RESOURCE_PROP = PREFIX + TIMESTAMPS_KEY + CONFIG_SUFFIX;
 
@@ -113,7 +113,7 @@ public class InfinispanRegionFactory implements RegionFactory {
    public static final String QUERY_CACHE_RESOURCE_PROP = PREFIX + QUERY_KEY + CONFIG_SUFFIX;
 
    /**
-    * Default value for {@link #INFINISPAN_RESOURCE_PROP}. Specifies the "infinispan-configs.xml" file in this package.
+    * Default value for {@link #INFINISPAN_CONFIG_RESOURCE_PROP}. Specifies the "infinispan-configs.xml" file in this package.
     */
    public static final String DEF_INFINISPAN_CONFIG_RESOURCE = "org/hibernate/cache/infinispan/builder/infinispan-configs.xml";
 
@@ -183,8 +183,8 @@ public class InfinispanRegionFactory implements RegionFactory {
    public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
             throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building query results cache region [" + regionName + "]");
-      String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
+      Cache cache = getCache(regionName, QUERY_KEY, properties);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
       QueryResultsRegionImpl region = new QueryResultsRegionImpl(cacheAdapter, regionName, properties, transactionManager, this);
       region.start();
       return region;

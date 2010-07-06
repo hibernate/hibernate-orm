@@ -50,12 +50,14 @@ import org.hibernate.LockOptions;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hernán Chanfreau
  */
 public abstract class AbstractAuditQuery implements AuditQuery {
     protected EntityInstantiator entityInstantiator;
     protected List<AuditCriterion> criterions;
 
     protected String entityName;
+    protected String entityClassName;
     protected String versionsEntityName;
     protected QueryBuilder qb;
 
@@ -67,18 +69,25 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 
     protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
                                     Class<?> cls) {
-        this.verCfg = verCfg;
-        this.versionsReader = versionsReader;
-
-        criterions = new ArrayList<AuditCriterion>();
-        entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
-
-        entityName = cls.getName();
-        versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(entityName);
-
-        qb = new QueryBuilder(versionsEntityName, "e");
+    	this(verCfg, versionsReader, cls, cls.getName());
     }
 
+	protected AbstractAuditQuery(AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Class<?> cls, String entityName) {
+		this.verCfg = verCfg;
+		this.versionsReader = versionsReader;
+
+		criterions = new ArrayList<AuditCriterion>();
+		entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
+
+		entityClassName = cls.getName();
+		this.entityName = entityName;
+		versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
+				entityName);
+
+		qb = new QueryBuilder(versionsEntityName, "e");
+	}
+    
     protected List buildAndExecuteQuery() {
         StringBuilder querySb = new StringBuilder();
         Map<String, Object> queryParamValues = new HashMap<String, Object>();

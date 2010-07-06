@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+	<class name="org.hibernate.envers.test.entityNames.oneToManyNotAudited.Person" entity-name="Personaje">
+		
+		<id name="id" column="ID_PERSON" type="long" >
+			<generator class="native" />
+		</id>
+
+		<property name="name" type="string" length="255"
+			column="NAME" not-null="true" />
+			
+		<property name="age" type="int" column="AGE"/>
+			
+	</class>
+	
+	<class name="org.hibernate.envers.test.entityNames.oneToManyNotAudited.Car" >
+
+		<id name="id" column="ID_CAR" type="long">
+			<generator class="native" />
+		</id>
+
+		<property name="number" type="int" column="int" not-null="true" />
+
+		<bag name="owners" cascade="save-update">
+			<key column="ID_GARAGE" not-null="true" update="false" />
+			<one-to-many entity-name="Personaje"/>
+		</bag>
+		
+	</class>	
+	
+
+</hibernate-mapping>

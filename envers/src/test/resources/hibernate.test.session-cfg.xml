@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <property name="hbm2ddl.auto">create-drop</property>
+
+        <property name="show_sql">false</property>
+        <property name="format_sql">false</property>
+
+        <property name="dialect">org.hibernate.dialect.H2Dialect</property>
+        <property name="connection.url">jdbc:h2:mem:envers</property>
+        <property name="connection.driver_class">org.h2.Driver</property>
+        <property name="connection.username">sa</property>
+        <property name="connection.password"></property>
+
+        <!--<property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>-->
+        <!--<property name="connection.url">jdbc:mysql:///hibernate_tests?useUnicode=true&amp;characterEncoding=UTF-8</property>-->
+        <!--<property name="connection.driver_class">com.mysql.jdbc.Driver</property>-->
+        <!--<property name="connection.username">root</property>-->
+        <!--<property name="connection.password"></property>-->
+
+        <!--<property name="hibernate.jdbc.batch_size">100</property>-->
+
+        <event type="post-insert">
+            <listener class="org.hibernate.envers.event.AuditEventListener" />
+        </event>
+        <event type="post-update">
+            <listener class="org.hibernate.envers.event.AuditEventListener" />
+        </event>
+        <event type="post-delete">
+            <listener class="org.hibernate.envers.event.AuditEventListener" />
+        </event>
+        <event type="pre-collection-update">
+            <listener class="org.hibernate.envers.event.AuditEventListener" />
+        </event>
+        <event type="pre-collection-remove">
+            <listener class="org.hibernate.envers.event.AuditEventListener" />
+        </event>
+        <event type="post-collection-recreate">
+            <listener class="org.hibernate.envers.event.AuditEventListener" />
+        </event>
+    </session-factory>
+</hibernate-configuration>

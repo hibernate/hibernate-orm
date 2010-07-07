@@ -30,7 +30,6 @@
         <module>connection-proxool</module>
         <module>annotations</module>
         <module>envers</module>
-        <module>jmx</module>
         <module>jdbc3-testing</module>
         <module>cache-infinispan</module>
 <!--

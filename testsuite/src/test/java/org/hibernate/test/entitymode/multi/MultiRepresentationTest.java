@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
@@ -15,8 +14,8 @@ import org.dom4j.io.XMLWriter;
 import org.hibernate.EntityMode;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Implementation of MultiRepresentationTest.

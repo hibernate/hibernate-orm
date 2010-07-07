@@ -39,7 +39,7 @@ import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.DateType;
 import org.hibernate.type.EntityType;

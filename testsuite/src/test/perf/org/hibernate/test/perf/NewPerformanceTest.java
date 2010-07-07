@@ -7,8 +7,8 @@ import junit.framework.Test;
 import junit.textui.TestRunner;
 
 import org.hibernate.classic.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.legacy.Simple;
 
 public class NewPerformanceTest extends FunctionalTestCase {

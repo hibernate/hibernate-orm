@@ -26,10 +26,9 @@ import java.util.Collection;
 
 import junit.framework.Test;
 
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.event.collection.AbstractCollectionEventTest;
 import org.hibernate.test.event.collection.ParentWithCollection;
-import org.hibernate.test.event.collection.values.ParentWithCollectionOfValues;
 
 /**
  *

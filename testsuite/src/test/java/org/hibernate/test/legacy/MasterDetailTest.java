@@ -23,7 +23,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 

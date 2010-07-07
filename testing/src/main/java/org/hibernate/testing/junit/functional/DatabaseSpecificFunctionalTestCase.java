@@ -21,45 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit;
+package org.hibernate.testing.junit.functional;
 
-import java.util.Enumeration;
-
-import junit.framework.TestSuite;
-import junit.framework.Test;
+import org.hibernate.testing.junit.SkipLog;
 
 /**
- * Handles walking a TestSuite hierarchy for recognition of individual tests.
+ * {@inheritDoc}
  *
  * @author Steve Ebersole
  */
-public class TestSuiteVisitor {
-
-	private final TestSuiteVisitor.Handler handler;
-
-	public TestSuiteVisitor(TestSuiteVisitor.Handler handler) {
-		this.handler = handler;
+public abstract class DatabaseSpecificFunctionalTestCase extends FunctionalTestCase {
+	public DatabaseSpecificFunctionalTestCase(String string) {
+		super( string );
 	}
 
-	public void visit(TestSuite testSuite) {
-		handler.startingTestSuite( testSuite );
-		Enumeration tests = testSuite.tests();
-		while ( tests.hasMoreElements() ) {
-			Test test = ( Test ) tests.nextElement();
-			if ( test instanceof TestSuite ) {
-				visit( ( TestSuite ) test );
-			}
-			else {
-				handler.handleTestCase( test );
-			}
+	protected void runTest() throws Throwable {
+		// Note: this protection comes into play when running
+		// tests individually.  The suite as a whole is already
+		// "protected" by the fact that these tests are actually
+		// filtered out of the suite
+		if ( appliesTo( getDialect() ) ) {
+			super.runTest();
 		}
-		handler.completedTestSuite( testSuite );
+		else {
+			SkipLog.LOG.warn( "skipping database-specific test [" + fullTestName() + "] for dialect [" + getDialect().getClass().getName() + "]" );
+		}
 	}
-
-	public static interface Handler {
-		public void handleTestCase(Test test);
-		public void startingTestSuite(TestSuite suite);
-		public void completedTestSuite(TestSuite suite);
-	}
-
 }

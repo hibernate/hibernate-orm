@@ -26,13 +26,10 @@ package org.hibernate.test.onetomany;
 
 import java.util.ArrayList;
 
-import junit.framework.Test;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * @author Burkhard Graves, Gail Badner

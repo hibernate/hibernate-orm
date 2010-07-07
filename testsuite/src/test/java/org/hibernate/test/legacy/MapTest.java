@@ -14,7 +14,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 
 public class MapTest extends LegacyTestCase {

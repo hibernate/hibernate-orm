@@ -33,7 +33,7 @@ import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.Destructible;
 import org.hibernate.event.Initializable;
 import org.hibernate.event.DeleteEvent;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * CallbackTest implementation

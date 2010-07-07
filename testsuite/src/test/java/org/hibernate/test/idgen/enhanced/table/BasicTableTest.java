@@ -2,8 +2,8 @@ package org.hibernate.test.idgen.enhanced.table;
 
 import junit.framework.Test;
 
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.Session;

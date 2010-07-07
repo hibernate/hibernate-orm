@@ -33,8 +33,8 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Query;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King

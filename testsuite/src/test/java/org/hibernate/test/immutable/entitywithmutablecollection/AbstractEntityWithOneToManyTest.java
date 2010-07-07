@@ -35,7 +35,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * @author Gail Badner

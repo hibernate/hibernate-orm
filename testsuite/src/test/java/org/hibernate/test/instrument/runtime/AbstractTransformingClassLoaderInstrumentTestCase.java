@@ -7,7 +7,7 @@ import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.InstrumentedClassLoader;
 import org.hibernate.bytecode.util.BasicClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.junit.AbstractClassLoaderIsolatedTestCase;
+import org.hibernate.testing.junit.AbstractClassLoaderIsolatedTestCase;
 
 /**
  * @author Steve Ebersole

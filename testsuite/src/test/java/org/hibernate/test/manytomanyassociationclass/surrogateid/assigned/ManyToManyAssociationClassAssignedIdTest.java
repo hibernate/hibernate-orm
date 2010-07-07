@@ -28,7 +28,7 @@ import junit.framework.Test;
 
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests on many-to-many association using an association class with a surrogate ID that is assigned.

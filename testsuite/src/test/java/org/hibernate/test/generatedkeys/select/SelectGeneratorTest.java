@@ -5,8 +5,8 @@ import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Steve Ebersole

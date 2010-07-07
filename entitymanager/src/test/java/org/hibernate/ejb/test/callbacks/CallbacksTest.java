@@ -10,7 +10,7 @@ import javax.persistence.EntityManager;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.TestCase;
-import org.hibernate.junit.FailureExpected;
+import org.hibernate.testing.junit.FailureExpected;
 
 /**
  * @author Emmanuel Bernard

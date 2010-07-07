@@ -4,7 +4,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 

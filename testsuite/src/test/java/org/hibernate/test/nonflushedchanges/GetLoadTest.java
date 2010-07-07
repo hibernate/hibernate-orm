@@ -10,9 +10,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
 
 /**

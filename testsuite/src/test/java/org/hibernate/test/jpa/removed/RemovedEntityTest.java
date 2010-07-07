@@ -3,7 +3,7 @@ package org.hibernate.test.jpa.removed;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 

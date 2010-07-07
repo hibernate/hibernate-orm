@@ -4,11 +4,10 @@ package org.hibernate.test.legacy;
 import java.util.List;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 import org.hibernate.classic.Session;
 import org.hibernate.Transaction;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 
 public class ABCTest extends LegacyTestCase {

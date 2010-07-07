@@ -29,8 +29,8 @@ package org.hibernate.test.cascade.circle;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * The test case uses the following model:

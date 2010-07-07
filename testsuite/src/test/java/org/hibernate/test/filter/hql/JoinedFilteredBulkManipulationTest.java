@@ -26,7 +26,7 @@ package org.hibernate.test.filter.hql;
 
 import java.util.Date;
 
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
 
 /**

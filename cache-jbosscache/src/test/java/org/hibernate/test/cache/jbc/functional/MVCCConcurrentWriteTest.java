@@ -43,7 +43,7 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.jbc.JBossCacheRegionFactory;
 import org.hibernate.cache.jbc.builder.SharedCacheInstanceManager;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.jbc.functional.util.DualNodeConnectionProviderImpl;
 import org.hibernate.test.cache.jbc.functional.util.DualNodeJtaTransactionManagerImpl;

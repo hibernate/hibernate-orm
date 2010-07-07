@@ -8,8 +8,8 @@ import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.Session;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 import junit.framework.TestSuite;
 

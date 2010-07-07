@@ -26,21 +26,16 @@
 package org.hibernate.test.readonly;
 
 import java.math.BigDecimal;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
 
-import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * 

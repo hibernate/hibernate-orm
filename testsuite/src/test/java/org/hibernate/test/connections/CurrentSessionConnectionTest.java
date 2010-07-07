@@ -4,7 +4,7 @@ package org.hibernate.test.connections;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Implementation of CurrentSessionConnectionTest.

@@ -10,7 +10,7 @@ import org.hibernate.cache.CacheProvider;
 import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cache.HashtableCacheProvider;
 import org.hibernate.cache.access.SoftLock;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 public class CacheTest extends UnitTestCase {
 

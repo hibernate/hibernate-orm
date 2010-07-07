@@ -22,7 +22,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit;
+package org.hibernate.testing.junit;
 
 import org.hibernate.dialect.Dialect;
 

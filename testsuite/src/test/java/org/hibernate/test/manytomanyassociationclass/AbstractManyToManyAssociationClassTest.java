@@ -27,7 +27,7 @@ package org.hibernate.test.manytomanyassociationclass;
 import java.util.HashSet;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * Abstract class for tests on many-to-many association using an association class.

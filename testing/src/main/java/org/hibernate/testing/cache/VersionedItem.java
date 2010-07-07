@@ -21,33 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-package org.hibernate.test.cache;
+package org.hibernate.testing.cache;
 
 /**
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public class Item {
-	private Long id;
-	private String name;
-	private String description;
-	
-	public String getDescription() {
-		return description;
+public class VersionedItem extends Item {
+	private Long version;
+
+	public Long getVersion() {
+		return version;
 	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
+
+	public void setVersion(Long version) {
+		this.version = version;
 	}
 }

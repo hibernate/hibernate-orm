@@ -3,8 +3,8 @@ package org.hibernate.test.nonflushedchanges;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
 /**
  * {@inheritDoc}

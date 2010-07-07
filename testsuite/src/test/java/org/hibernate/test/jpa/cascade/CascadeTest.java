@@ -3,14 +3,8 @@ package org.hibernate.test.jpa.cascade;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
-import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.engine.Status;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.event.FlushEntityEventListener;
-import org.hibernate.event.FlushEntityEvent;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import junit.framework.Test;

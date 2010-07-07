@@ -13,8 +13,8 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.criterion.Projections;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
 /**
  * @author Gavin King, Gail Badner (adapted this from "ops" tests version)

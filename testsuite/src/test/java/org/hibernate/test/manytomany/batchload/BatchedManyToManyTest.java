@@ -22,20 +22,17 @@
 package org.hibernate.test.manytomany.batchload;
 
 import java.util.List;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 import junit.framework.Test;
 import junit.framework.Assert;
 
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.Session;
 import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
-import org.hibernate.HibernateException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.NonBatchingBatcher;

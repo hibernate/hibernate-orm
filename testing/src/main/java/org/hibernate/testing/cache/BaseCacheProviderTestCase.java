@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.cache;
+package org.hibernate.testing.cache;
 
 import java.util.Map;
 
@@ -30,11 +30,11 @@ import org.hibernate.Transaction;
 import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.test.tm.ConnectionProviderImpl;
-import org.hibernate.test.tm.TransactionManagerLookupImpl;
+import org.hibernate.testing.tm.ConnectionProviderImpl;
+import org.hibernate.testing.tm.TransactionManagerLookupImpl;
 import org.hibernate.transaction.JDBCTransactionFactory;
 
 /**

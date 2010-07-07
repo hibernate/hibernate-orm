@@ -1,7 +1,5 @@
 package org.hibernate.test.keymanytoone.bidir.component;
 
-import java.util.List;
-
 import junit.framework.Test;
 
 import org.hibernate.HibernateException;
@@ -11,8 +9,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.def.DefaultLoadEventListener;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Steve Ebersole

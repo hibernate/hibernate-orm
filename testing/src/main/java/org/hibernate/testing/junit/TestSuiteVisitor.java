@@ -21,37 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit;
+package org.hibernate.testing.junit;
+
+import java.util.Enumeration;
+
+import junit.framework.TestSuite;
+import junit.framework.Test;
 
 /**
- * A specialized TestCase for running tests in an isolated class-loader
+ * Handles walking a TestSuite hierarchy for recognition of individual tests.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractClassLoaderIsolatedTestCase extends UnitTestCase {
-	private ClassLoader parentLoader;
-	private ClassLoader isolatedLoader;
+public class TestSuiteVisitor {
 
-	public AbstractClassLoaderIsolatedTestCase(String string) {
-		super( string );
+	private final TestSuiteVisitor.Handler handler;
+
+	public TestSuiteVisitor(TestSuiteVisitor.Handler handler) {
+		this.handler = handler;
 	}
 
-	protected void setUp() throws Exception {
-		parentLoader = Thread.currentThread().getContextClassLoader();
-		isolatedLoader = buildIsolatedClassLoader( parentLoader );
-		Thread.currentThread().setContextClassLoader( isolatedLoader );
-		super.setUp();
+	public void visit(TestSuite testSuite) {
+		handler.startingTestSuite( testSuite );
+		Enumeration tests = testSuite.tests();
+		while ( tests.hasMoreElements() ) {
+			Test test = ( Test ) tests.nextElement();
+			if ( test instanceof TestSuite ) {
+				visit( ( TestSuite ) test );
+			}
+			else {
+				handler.handleTestCase( test );
+			}
+		}
+		handler.completedTestSuite( testSuite );
 	}
 
-	protected void tearDown() throws Exception {
-		super.tearDown();
-		Thread.currentThread().setContextClassLoader( parentLoader );
-		releaseIsolatedClassLoader( isolatedLoader );
-		parentLoader = null;
-		isolatedLoader = null;
+	public static interface Handler {
+		public void handleTestCase(Test test);
+		public void startingTestSuite(TestSuite suite);
+		public void completedTestSuite(TestSuite suite);
 	}
 
-	protected abstract ClassLoader buildIsolatedClassLoader(ClassLoader parent);
-
-	protected abstract void releaseIsolatedClassLoader(ClassLoader isolatedLoader);
 }

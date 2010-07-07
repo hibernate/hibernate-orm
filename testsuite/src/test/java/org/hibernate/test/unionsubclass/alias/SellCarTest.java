@@ -26,7 +26,7 @@ package org.hibernate.test.unionsubclass.alias;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * http://opensource.atlassian.com/projects/hibernate/browse/HHH-4825

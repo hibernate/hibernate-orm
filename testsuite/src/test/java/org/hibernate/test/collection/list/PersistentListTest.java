@@ -6,8 +6,8 @@ import junit.framework.Test;
 
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentList;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests related to operations on a PersistentList

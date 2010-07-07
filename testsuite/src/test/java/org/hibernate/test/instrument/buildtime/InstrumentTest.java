@@ -5,7 +5,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.test.instrument.cases.Executable;
 import org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite;
 import org.hibernate.test.instrument.cases.TestDirtyCheckExecutable;

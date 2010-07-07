@@ -13,7 +13,7 @@ import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.TextHolder;
 import org.hibernate.test.sql.hand.ImageHolder;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**
  * Abstract test case defining tests for the support for user-supplied (aka

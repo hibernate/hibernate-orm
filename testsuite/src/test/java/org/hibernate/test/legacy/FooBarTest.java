@@ -34,7 +34,6 @@ import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
-import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
 import org.hibernate.connection.ConnectionProvider;
@@ -58,9 +57,8 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.type.Type;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.SerializationHelper;
 

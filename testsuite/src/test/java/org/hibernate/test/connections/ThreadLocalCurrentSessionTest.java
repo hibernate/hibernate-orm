@@ -8,7 +8,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.ThreadLocalSessionContext;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Steve Ebersole

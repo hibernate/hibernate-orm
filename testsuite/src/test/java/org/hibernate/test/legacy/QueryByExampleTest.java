@@ -10,7 +10,7 @@ import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Query by example test to allow nested components

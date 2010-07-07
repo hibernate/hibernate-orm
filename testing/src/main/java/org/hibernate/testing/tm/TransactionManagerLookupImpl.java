@@ -11,7 +11,7 @@
  * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
  * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
  * for more details.
  *
@@ -21,19 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.cache;
+package org.hibernate.testing.tm;
+
+import java.util.Properties;
+import javax.transaction.TransactionManager;
+import javax.transaction.Transaction;
+
+import org.hibernate.transaction.TransactionManagerLookup;
+import org.hibernate.HibernateException;
 
 /**
+ * TransactionManagerLookupImpl implementation
+ *
  * @author Steve Ebersole
  */
-public class VersionedItem extends Item {
-	private Long version;
-
-	public Long getVersion() {
-		return version;
+public class TransactionManagerLookupImpl implements TransactionManagerLookup {
+	public TransactionManager getTransactionManager(Properties props) throws HibernateException {
+		return SimpleJtaTransactionManagerImpl.getInstance();
 	}
 
-	public void setVersion(Long version) {
-		this.version = version;
+	public String getUserTransactionName() {
+		throw new UnsupportedOperationException( "jndi currently not implemented for these tests" );
+	}
+
+	public Object getTransactionIdentifier(Transaction transaction) {
+		return transaction;
 	}
 }

@@ -4,7 +4,7 @@ import junit.framework.Test;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * todo: describe OracleCheckStyleTest

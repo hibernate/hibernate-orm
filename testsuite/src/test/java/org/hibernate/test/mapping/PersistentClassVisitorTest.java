@@ -13,7 +13,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * @author max

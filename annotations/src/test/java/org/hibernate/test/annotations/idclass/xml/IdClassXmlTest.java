@@ -22,7 +22,7 @@
  */
 package org.hibernate.test.annotations.idclass.xml;
 
-import org.hibernate.junit.FailureExpected;
+import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 
 /**

@@ -26,7 +26,7 @@ package org.hibernate.test.orphan.one2one.fk.reversed.unidirectional;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * TODO : javadoc

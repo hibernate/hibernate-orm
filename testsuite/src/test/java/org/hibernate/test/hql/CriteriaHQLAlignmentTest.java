@@ -4,16 +4,13 @@ package org.hibernate.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
-import java.util.List;
 
 import junit.framework.Test;
 
 import org.hibernate.Hibernate;
-import org.hibernate.QueryException;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.hql.QueryTranslator;

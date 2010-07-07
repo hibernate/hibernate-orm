@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit.functional;
+package org.hibernate.testing.junit.functional;
 
 import java.util.Iterator;
 import java.sql.Blob;

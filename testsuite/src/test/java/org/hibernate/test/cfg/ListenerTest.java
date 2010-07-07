@@ -31,7 +31,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.def.DefaultDeleteEventListener;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * {@inheritDoc}

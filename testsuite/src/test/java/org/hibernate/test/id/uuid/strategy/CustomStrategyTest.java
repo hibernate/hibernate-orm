@@ -24,7 +24,7 @@
 package org.hibernate.test.id.uuid.strategy;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * TODO : javadoc

@@ -12,8 +12,8 @@ import org.hibernate.Transaction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**
  * @author Gavin King

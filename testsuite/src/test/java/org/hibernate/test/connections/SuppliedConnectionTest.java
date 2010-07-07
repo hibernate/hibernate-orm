@@ -13,7 +13,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.connection.ConnectionProviderFactory;
 import org.hibernate.connection.UserSuppliedConnectionProvider;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**

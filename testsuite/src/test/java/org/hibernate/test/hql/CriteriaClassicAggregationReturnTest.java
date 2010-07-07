@@ -13,7 +13,7 @@ import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * {@inheritDoc}

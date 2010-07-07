@@ -15,10 +15,10 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.impl.SessionImpl;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.test.tm.ConnectionProviderImpl;
-import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
-import org.hibernate.test.tm.TransactionManagerLookupImpl;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.tm.ConnectionProviderImpl;
+import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.tm.TransactionManagerLookupImpl;
 import org.hibernate.transaction.CMTTransactionFactory;
 import org.hibernate.util.SerializationHelper;
 

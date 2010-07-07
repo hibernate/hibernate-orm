@@ -3,7 +3,7 @@ package org.hibernate.test.ops;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * {@inheritDoc}

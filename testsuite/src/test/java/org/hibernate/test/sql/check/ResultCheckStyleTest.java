@@ -3,7 +3,7 @@ package org.hibernate.test.sql.check;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**
  * todo: describe ResultCheckStyleTest

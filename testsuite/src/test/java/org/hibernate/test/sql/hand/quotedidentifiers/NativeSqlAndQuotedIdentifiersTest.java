@@ -26,7 +26,7 @@ package org.hibernate.test.sql.hand.quotedidentifiers;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**
  * Test of various situations with native-sql queries and quoted identifiers

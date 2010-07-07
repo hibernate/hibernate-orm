@@ -44,7 +44,7 @@ import org.hibernate.hql.ast.tree.IndexNode;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;

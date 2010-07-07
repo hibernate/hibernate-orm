@@ -27,7 +27,7 @@ package org.hibernate.test.onetomany;
 import junit.framework.Test;
 
 import org.hibernate.CacheMode;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Burkhard Graves, Gail Badner

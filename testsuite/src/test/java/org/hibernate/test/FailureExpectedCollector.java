@@ -8,7 +8,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.hibernate.junit.TestSuiteVisitor;
+import org.hibernate.testing.junit.TestSuiteVisitor;
 
 /**
  * A simple class to collect the names of "failure expected" tests...

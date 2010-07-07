@@ -13,7 +13,7 @@ import org.hibernate.event.PersistEventListener;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.util.IdentityMap;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 import java.io.Serializable;
 

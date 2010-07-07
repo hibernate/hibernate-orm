@@ -9,8 +9,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Implementation of VersionTest.

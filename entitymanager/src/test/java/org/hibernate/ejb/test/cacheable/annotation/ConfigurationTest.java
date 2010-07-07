@@ -31,7 +31,7 @@ import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.mapping.PersistentClass;
 
 /**

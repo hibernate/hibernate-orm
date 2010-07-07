@@ -52,7 +52,7 @@ import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 
 public class SQLFunctionsTest extends LegacyTestCase {

@@ -27,8 +27,8 @@ package org.hibernate.test.annotations.manytoone.referencedcolumnname;
 import java.math.BigDecimal;
 
 import org.hibernate.Session;
-import org.hibernate.junit.DialectChecks;
-import org.hibernate.junit.RequiresDialectFeature;
+import org.hibernate.testing.junit.DialectChecks;
+import org.hibernate.testing.junit.RequiresDialectFeature;
 import org.hibernate.test.annotations.TestCase;
 
 /**

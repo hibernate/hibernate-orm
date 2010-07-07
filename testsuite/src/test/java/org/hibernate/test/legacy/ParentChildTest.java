@@ -30,7 +30,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.impl.SessionImpl;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
 
 

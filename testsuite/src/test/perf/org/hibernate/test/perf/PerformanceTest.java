@@ -14,7 +14,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
 import org.hibernate.connection.ConnectionProvider;
 import org.hibernate.connection.ConnectionProviderFactory;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.test.legacy.Simple;
 
 public class PerformanceTest extends FunctionalTestCase {

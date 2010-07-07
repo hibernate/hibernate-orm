@@ -27,7 +27,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.tm.ConnectionProviderImpl;
+import org.hibernate.testing.tm.TransactionManagerLookupImpl;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,11 +112,11 @@ public abstract class CacheTestCaseBase extends FunctionalTestCase {
     protected abstract boolean getUseQueryCache();
     
     protected Class<?> getConnectionProviderClass() {
-        return org.hibernate.test.tm.ConnectionProviderImpl.class;
+        return ConnectionProviderImpl.class;
     }
     
     protected Class<?> getTransactionManagerLookupClass() {
-        return org.hibernate.test.tm.TransactionManagerLookupImpl.class;
+        return TransactionManagerLookupImpl.class;
     }
     
     protected Class<?> getTransactionFactoryClass() {

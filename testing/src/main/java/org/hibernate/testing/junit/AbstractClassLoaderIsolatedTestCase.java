@@ -21,16 +21,37 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.hibernate.testing.junit;
 
 /**
- * Well-known-location lookup for the test-skip log...
+ * A specialized TestCase for running tests in an isolated class-loader
  *
  * @author Steve Ebersole
  */
-public class SkipLog {
-	public static final Logger LOG = LoggerFactory.getLogger( "org.hibernate.test.SKIPPED" );
+public abstract class AbstractClassLoaderIsolatedTestCase extends UnitTestCase {
+	private ClassLoader parentLoader;
+	private ClassLoader isolatedLoader;
+
+	public AbstractClassLoaderIsolatedTestCase(String string) {
+		super( string );
+	}
+
+	protected void setUp() throws Exception {
+		parentLoader = Thread.currentThread().getContextClassLoader();
+		isolatedLoader = buildIsolatedClassLoader( parentLoader );
+		Thread.currentThread().setContextClassLoader( isolatedLoader );
+		super.setUp();
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+		Thread.currentThread().setContextClassLoader( parentLoader );
+		releaseIsolatedClassLoader( isolatedLoader );
+		parentLoader = null;
+		isolatedLoader = null;
+	}
+
+	protected abstract ClassLoader buildIsolatedClassLoader(ClassLoader parent);
+
+	protected abstract void releaseIsolatedClassLoader(ClassLoader isolatedLoader);
 }

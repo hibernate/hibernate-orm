@@ -12,7 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.junit.RequiresDialect;
+import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.TestCase;

@@ -8,7 +8,7 @@ import junit.framework.Test;
 import org.hibernate.LockMode;
 import org.hibernate.classic.Session;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King

@@ -26,12 +26,10 @@ import java.util.HashSet;
 
 import junit.framework.Test;
 
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.event.collection.Child;
 import org.hibernate.test.event.collection.ParentWithCollection;
 import org.hibernate.test.event.collection.association.AbstractAssociationCollectionEventTest;
-import org.hibernate.test.event.collection.association.bidirectional.onetomany.ChildWithManyToOne;
-import org.hibernate.test.event.collection.association.bidirectional.onetomany.ParentWithBidirectionalOneToMany;
 
 /**
  *

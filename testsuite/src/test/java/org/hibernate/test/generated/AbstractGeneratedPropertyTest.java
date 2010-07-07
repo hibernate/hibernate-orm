@@ -4,7 +4,7 @@ package org.hibernate.test.generated;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.Hibernate;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**
  * Implementation of AbstractGeneratedPropertyTest.

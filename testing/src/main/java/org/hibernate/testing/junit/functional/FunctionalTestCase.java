@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit.functional;
+package org.hibernate.testing.junit.functional;
 
 import java.util.List;
 import java.util.Map;
@@ -38,7 +38,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 import org.slf4j.Logger;

@@ -26,7 +26,7 @@ package org.hibernate.test.annotations.embedded.one2many;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.junit.FailureExpected;
+import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
 
 /**

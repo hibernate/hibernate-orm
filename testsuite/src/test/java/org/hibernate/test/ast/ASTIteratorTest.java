@@ -14,7 +14,7 @@ import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTParentsFirstIterator;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * Test ASTIterator.

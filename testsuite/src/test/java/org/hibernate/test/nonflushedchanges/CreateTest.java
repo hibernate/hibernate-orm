@@ -10,8 +10,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
 /**
  * @author Gavin King, Gail Badner (adapted this from "ops" tests version)

@@ -10,11 +10,11 @@ import org.dom4j.io.XMLWriter;
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * @author Paco Hernández
+ * @author Paco Hernï¿½ndez
  */
 public class Dom4jManyToOneTest extends FunctionalTestCase {
 

@@ -1,15 +1,11 @@
 //$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.readonly;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import junit.framework.Test;
 
-import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -17,23 +13,13 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Example;
-import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Projection;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.test.hql.Animal;
-import org.hibernate.test.hql.Reptile;
-import org.hibernate.test.readonly.AbstractReadOnlyTest;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.Type;
 import org.hibernate.util.SerializationHelper;
 
 /**

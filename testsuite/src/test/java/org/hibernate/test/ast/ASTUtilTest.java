@@ -7,7 +7,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * Unit test for ASTUtil.

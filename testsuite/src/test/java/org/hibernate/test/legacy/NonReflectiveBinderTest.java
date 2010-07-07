@@ -14,7 +14,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 
 public class NonReflectiveBinderTest extends UnitTestCase {

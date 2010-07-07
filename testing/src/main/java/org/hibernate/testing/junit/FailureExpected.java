@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -22,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit;
+package org.hibernate.testing.junit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -30,30 +29,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to indicate that a test should be run only when the current dialect suppports the
- * specified feature.
+ * Annotations used to mark a test as an expected failure.
  *
  * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-@Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RequiresDialectFeature {
+@Target({ ElementType.METHOD, ElementType.TYPE })
+public @interface FailureExpected {
 	/**
-	 * @return The name of the dialect feature.
-	 */
-	Class<? extends DialectChecks> value();
-
-	/**
-	 * Comment describing the reason why the feature is required.
-	 *
-	 * @return The comment
-	 */
-	String comment() default "";
-
-	/**
-	 * The key of a JIRA issue which relates this this feature requirement.
-	 *
+	 * The key of a JIRA issue which covers this expected failure.
 	 * @return The jira issue key
 	 */
-	String jiraKey() default "";
+	String jiraKey();
+
+	/**
+	 * A message explaining the reason for the expected failure.  Optional.
+	 * @return The reason
+	 */
+	String message() default "";
 }

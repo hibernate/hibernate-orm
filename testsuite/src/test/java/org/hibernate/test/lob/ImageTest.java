@@ -27,7 +27,7 @@ package org.hibernate.test.lob;
 
 import junit.framework.Test;
 
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests eager materialization and mutation of data mapped by

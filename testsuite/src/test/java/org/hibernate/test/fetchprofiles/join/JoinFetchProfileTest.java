@@ -26,7 +26,7 @@ package org.hibernate.test.fetchprofiles.join;
 
 import java.util.List;
 
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
 import org.hibernate.Hibernate;
 import org.hibernate.UnknownProfileException;

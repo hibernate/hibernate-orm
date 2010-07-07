@@ -3,7 +3,7 @@ package org.hibernate.test.generated;
 
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 import junit.framework.Test;
 

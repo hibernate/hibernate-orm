@@ -6,8 +6,8 @@ import org.hibernate.Session;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;

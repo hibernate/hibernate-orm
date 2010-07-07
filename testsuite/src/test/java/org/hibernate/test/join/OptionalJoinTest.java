@@ -4,13 +4,13 @@ package org.hibernate.test.join;
 /**
  * @author Chris Jones and Gail Badner
  */
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
 import junit.framework.Test;
 
-import java.sql.ResultSet;
 import java.util.List;
 
 public class OptionalJoinTest extends FunctionalTestCase {

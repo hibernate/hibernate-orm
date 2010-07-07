@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.junit;
+package org.hibernate.testing.junit;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -31,17 +31,17 @@ import java.lang.annotation.Target;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Annotation used to indicate that a test should be skipped when run against the
+ * Annotation used to indicate that a test should be run only when run against the
  * indicated dialects.
  *
  * @author Hardy Ferentschik
- * @author Steve Ebersole
  */
-@Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.TYPE })
-public @interface SkipForDialect {
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RequiresDialect {
 	/**
-	 * The dialects against which to skip the test
+	 * The dialects against which to run the test
+	 *
 	 * @return The dialects
 	 */
 	Class<? extends Dialect>[] value();
@@ -49,19 +49,21 @@ public @interface SkipForDialect {
 	/**
 	 * Used to indicate if the dialects should be matched strictly (classes equal) or
 	 * non-strictly (instanceof).
+	 *
 	 * @return Should strict matching be used?
 	 */
 	boolean strictMatching() default false;
 
 	/**
-	 * Comment describing the reason for the skip.
+	 * Comment describing the reason why the dialect is required.
+	 *
 	 * @return The comment
 	 */
 	String comment() default "";
 
 	/**
-	 * The key of a JIRA issue which covers the reason for this skip.  Eventually we should make this
-	 * a requirement.
+	 * The key of a JIRA issue which relates this this restriction
+	 *
 	 * @return The jira issue key
 	 */
 	String jiraKey() default "";

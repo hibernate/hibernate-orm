@@ -20,7 +20,7 @@ import junit.framework.ComparisonFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
@@ -32,7 +32,6 @@ import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.StringHelper;
 
 /**

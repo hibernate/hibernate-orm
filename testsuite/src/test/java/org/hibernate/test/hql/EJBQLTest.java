@@ -15,8 +15,8 @@ import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.ast.HqlParser;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 import antlr.RecognitionException;
 import antlr.TokenStreamException;

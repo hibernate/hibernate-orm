@@ -10,7 +10,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.Part;

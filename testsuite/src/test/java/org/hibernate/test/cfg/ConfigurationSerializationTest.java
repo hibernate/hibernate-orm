@@ -24,7 +24,7 @@ package org.hibernate.test.cfg;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.util.SerializationHelper;
 import org.hibernate.SessionFactory;

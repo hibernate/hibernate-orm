@@ -4,13 +4,8 @@ package org.hibernate.test.lob;
 import junit.framework.Test;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests of {@link org.hibernate.type.SerializableType}

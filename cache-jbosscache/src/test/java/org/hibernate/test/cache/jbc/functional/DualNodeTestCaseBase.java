@@ -20,7 +20,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.junit.functional.ExecutionEnvironment;
+import org.hibernate.testing.junit.functional.ExecutionEnvironment;
 import org.hibernate.test.cache.jbc.functional.util.DualNodeConnectionProviderImpl;
 import org.hibernate.test.cache.jbc.functional.util.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.jbc.functional.util.DualNodeTestUtil;

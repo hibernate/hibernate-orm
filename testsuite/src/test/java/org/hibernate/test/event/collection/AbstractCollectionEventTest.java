@@ -30,7 +30,7 @@ import org.hibernate.Transaction;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.collection.PersistentSet;
 import org.hibernate.event.AbstractCollectionEvent;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
 
 /**

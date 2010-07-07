@@ -6,7 +6,7 @@ import junit.framework.TestSuite;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * @author Gavin King

@@ -1,7 +1,8 @@
 package org.hibernate.test.entityname;
 
 import org.hibernate.Session;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
 /**
  * 
  * @author stliu

@@ -24,17 +24,12 @@
  */
 package org.hibernate.test.queryplan;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * Tests equals() for NativeSQLQueryReturn implementations.

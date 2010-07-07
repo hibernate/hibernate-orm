@@ -9,7 +9,7 @@ import junit.textui.TestRunner;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Test some cases of not-null properties inside components.

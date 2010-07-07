@@ -22,7 +22,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations;
+package org.hibernate.testing.junit.functional.annotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -38,12 +38,12 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jdbc.Work;
-import org.hibernate.junit.DialectChecks;
-import org.hibernate.junit.FailureExpected;
-import org.hibernate.junit.RequiresDialect;
-import org.hibernate.junit.RequiresDialectFeature;
-import org.hibernate.junit.SkipForDialect;
-import org.hibernate.junit.SkipLog;
+import org.hibernate.testing.junit.DialectChecks;
+import org.hibernate.testing.junit.FailureExpected;
+import org.hibernate.testing.junit.RequiresDialect;
+import org.hibernate.testing.junit.RequiresDialectFeature;
+import org.hibernate.testing.junit.SkipForDialect;
+import org.hibernate.testing.junit.SkipLog;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.StringHelper;
 

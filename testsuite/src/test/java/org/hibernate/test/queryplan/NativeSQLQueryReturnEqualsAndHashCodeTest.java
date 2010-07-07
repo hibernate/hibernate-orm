@@ -32,8 +32,7 @@ import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.type.TypeFactory;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * Tests equals() and hashCode() for NativeSQLQueryReturn implementations.

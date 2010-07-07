@@ -35,7 +35,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.test.hql.StateProvince;
 
 /**

@@ -26,8 +26,8 @@ package org.hibernate.cache;
 import junit.framework.Test;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.test.cache.BaseCacheProviderTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.cache.BaseCacheProviderTestCase;
 
 /**
  * @author Emmanuel Bernard

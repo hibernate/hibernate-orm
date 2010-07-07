@@ -8,7 +8,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
 
 /**

@@ -34,8 +34,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.util.ArrayHelper;
 
 /**

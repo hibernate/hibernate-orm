@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
-import org.hibernate.junit.UnitTestCase;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 import org.infinispan.Cache;
 import org.slf4j.Logger;

@@ -44,7 +44,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.test.annotations.HibernateTestCase;
+import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
 /**
  * A base class for all ejb tests.

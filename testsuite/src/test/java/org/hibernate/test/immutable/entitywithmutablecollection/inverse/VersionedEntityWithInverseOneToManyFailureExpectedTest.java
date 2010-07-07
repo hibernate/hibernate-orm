@@ -26,7 +26,7 @@ package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
 import junit.framework.Test;
 
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 
 /**

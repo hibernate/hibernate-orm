@@ -34,7 +34,7 @@ import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.jbc.functional.CacheTestCaseBase;
 import org.hibernate.test.cache.jbc.functional.Contact;
 import org.hibernate.test.cache.jbc.functional.Customer;
-import org.hibernate.test.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 import org.hibernate.transaction.CMTTransactionFactory;
 
 /**

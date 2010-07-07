@@ -30,11 +30,10 @@ import org.hibernate.test.sql.hand.TextHolder;
 import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.BasicTransformerAdapter;
 
 /**

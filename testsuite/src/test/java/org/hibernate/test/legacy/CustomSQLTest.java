@@ -9,10 +9,8 @@ import junit.framework.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.PostInsertIdentifierGenerator;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.classic.Session;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MySQLDialect;
 
 /**
  * @author MAX

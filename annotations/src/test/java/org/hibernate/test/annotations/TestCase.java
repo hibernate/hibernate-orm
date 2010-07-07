@@ -33,6 +33,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
 /**
  * A base class for all annotation tests.

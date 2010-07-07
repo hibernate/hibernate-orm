@@ -29,7 +29,7 @@ import java.util.Map;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.QueryPlanCache;
-import org.hibernate.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
 
 /**

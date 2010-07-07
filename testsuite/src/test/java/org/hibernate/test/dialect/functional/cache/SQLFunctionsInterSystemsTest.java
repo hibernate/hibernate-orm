@@ -37,7 +37,6 @@ import junit.framework.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
@@ -52,8 +51,8 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.legacy.Blobber;
 import org.hibernate.test.legacy.Broken;
 import org.hibernate.test.legacy.Fixed;

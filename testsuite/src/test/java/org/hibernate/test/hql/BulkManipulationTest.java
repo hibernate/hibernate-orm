@@ -13,8 +13,8 @@ import org.hibernate.classic.Session;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.junit.functional.FunctionalTestCase;
-import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.slf4j.Logger;

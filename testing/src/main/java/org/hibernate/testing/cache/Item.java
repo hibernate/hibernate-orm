@@ -11,7 +11,7 @@
  * Lesser General Public License, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
  * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
  * for more details.
  *
@@ -21,30 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.tm;
 
-import java.util.Properties;
-import javax.transaction.TransactionManager;
-import javax.transaction.Transaction;
-
-import org.hibernate.transaction.TransactionManagerLookup;
-import org.hibernate.HibernateException;
+package org.hibernate.testing.cache;
 
 /**
- * TransactionManagerLookupImpl implementation
- *
- * @author Steve Ebersole
+ * @author Gavin King
  */
-public class TransactionManagerLookupImpl implements TransactionManagerLookup {
-	public TransactionManager getTransactionManager(Properties props) throws HibernateException {
-		return SimpleJtaTransactionManagerImpl.getInstance();
+public class Item {
+	private Long id;
+	private String name;
+	private String description;
+	
+	public String getDescription() {
+		return description;
 	}
-
-	public String getUserTransactionName() {
-		throw new UnsupportedOperationException( "jndi currently not implemented for these tests" );
+	public void setDescription(String description) {
+		this.description = description;
 	}
-
-	public Object getTransactionIdentifier(Transaction transaction) {
-		return transaction;
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
 	}
 }

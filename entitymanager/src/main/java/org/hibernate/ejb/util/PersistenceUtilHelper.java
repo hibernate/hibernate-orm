@@ -192,7 +192,7 @@ public class PersistenceUtilHelper {
 					return field;
 				}
 				catch ( NoSuchFieldException e ) {
-					final Method method = getMethod( clazz, property );
+					final Method method = getMethod( current, property );
 					if (method != null) {
 						setAccessibility( method );
 						return method;

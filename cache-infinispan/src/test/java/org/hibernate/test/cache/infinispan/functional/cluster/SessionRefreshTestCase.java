@@ -30,7 +30,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.test.cache.infinispan.functional.classloader.Account;
 import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
 import org.infinispan.Cache;
-import org.infinispan.manager.CacheManager;
+import org.infinispan.manager.CacheContainer;
 import org.infinispan.test.TestingUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,12 +90,14 @@ public class SessionRefreshTestCase extends DualNodeTestCase {
 
    public void testRefreshAfterExternalChange() throws Exception {
       // First session factory uses a cache
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
+      CacheContainer localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       localCache = localManager.getCache(Account.class.getName());
       TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
       SessionFactory localFactory = getEnvironment().getSessionFactory();
 
       // Second session factory doesn't; just needs a transaction manager
+      // However, start at least the cache to avoid issues with replication and cache not being there
+      ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE).getCache(Account.class.getName());
       TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.REMOTE);
       SessionFactory remoteFactory = getSecondNodeEnvironment().getSessionFactory();
 

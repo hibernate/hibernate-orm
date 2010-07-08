@@ -34,7 +34,8 @@ import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Settings;
-import org.infinispan.manager.CacheManager;
+import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -47,7 +48,7 @@ import org.infinispan.util.logging.LogFactory;
 public class ClusterAwareRegionFactory implements RegionFactory {
    
    private static final Log log = LogFactory.getLog(ClusterAwareRegionFactory.class);
-   private static final Hashtable<String, CacheManager> cacheManagers = new Hashtable<String, CacheManager>();
+   private static final Hashtable<String, EmbeddedCacheManager> cacheManagers = new Hashtable<String, EmbeddedCacheManager>();
 
    private final InfinispanRegionFactory delegate = new InfinispanRegionFactory();
    private String cacheManagerName;
@@ -56,16 +57,16 @@ public class ClusterAwareRegionFactory implements RegionFactory {
    public ClusterAwareRegionFactory(Properties props) {
    }
    
-   public static CacheManager getCacheManager(String name) {
+   public static EmbeddedCacheManager getCacheManager(String name) {
       return cacheManagers.get(name);
    }
    
-   public static void addCacheManager(String name, CacheManager manager) {
+   public static void addCacheManager(String name, EmbeddedCacheManager manager) {
       cacheManagers.put(name, manager);
    }
    
    public static void clearCacheManagers() {
-      for (CacheManager manager : cacheManagers.values()) {
+      for (EmbeddedCacheManager manager : cacheManagers.values()) {
          try {
             manager.stop();
          } catch (Exception e) {
@@ -78,7 +79,7 @@ public class ClusterAwareRegionFactory implements RegionFactory {
    public void start(Settings settings, Properties properties) throws CacheException {
       cacheManagerName = properties.getProperty(DualNodeTestCase.NODE_ID_PROP);
       
-      CacheManager existing = getCacheManager(cacheManagerName);
+      EmbeddedCacheManager existing = getCacheManager(cacheManagerName);
       locallyAdded = (existing == null);
       
       if (locallyAdded) {

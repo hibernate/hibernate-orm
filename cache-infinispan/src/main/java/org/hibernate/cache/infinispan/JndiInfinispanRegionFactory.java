@@ -31,7 +31,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.util.NamingHelper;
 import org.hibernate.util.PropertiesHelper;
-import org.infinispan.manager.CacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -47,7 +47,7 @@ public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
    private static final Log log = LogFactory.getLog(JndiInfinispanRegionFactory.class);
 
    /**
-    * Specifies the JNDI name under which the {@link CacheManager} to use is bound.
+    * Specifies the JNDI name under which the {@link EmbeddedCacheManager} to use is bound.
     * There is no default value -- the user must specify the property.
     */
    public static final String CACHE_MANAGER_RESOURCE_PROP = "hibernate.cache.infinispan.cachemanager";
@@ -61,18 +61,18 @@ public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
    }
 
    @Override
-   protected CacheManager createCacheManager(Properties properties) throws CacheException {
+   protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
       String name = PropertiesHelper.getString(CACHE_MANAGER_RESOURCE_PROP, properties, null);
       if (name == null)
          throw new CacheException("Configuration property " + CACHE_MANAGER_RESOURCE_PROP + " not set");
       return locateCacheManager(name, NamingHelper.getJndiProperties(properties));
    }
 
-   private CacheManager locateCacheManager(String jndiNamespace, Properties jndiProperties) {
+   private EmbeddedCacheManager locateCacheManager(String jndiNamespace, Properties jndiProperties) {
       Context ctx = null;
       try {
           ctx = new InitialContext(jndiProperties);
-          return (CacheManager) ctx.lookup(jndiNamespace);
+          return (EmbeddedCacheManager) ctx.lookup(jndiNamespace);
       } catch (NamingException ne) {
           String msg = "Unable to retrieve CacheManager from JNDI [" + jndiNamespace + "]";
           log.info(msg, ne);

@@ -28,27 +28,25 @@ import javax.persistence.spi.LoadState;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 
 /**
- * Tests for HHH-5094
+ * Tests for HHH-5094 and HHH-5334
  *
  * @author Hardy Ferentschik
  */
 public class PersistenceUtilHelperTest extends junit.framework.TestCase {
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
-	public static class FieldAccessBean {
-		public String publicAccessProperty;
+	public static class FieldAccessBean extends FieldAccessBeanBase {
 		protected String protectedAccessProperty;
 		private String privateAccessProperty;
 	}
 
-	public static class MethodAccessBean {
-		private String publicAccessProperty;
+	public static class FieldAccessBeanBase {
+		public String publicAccessProperty;
+	}
+
+	public static class MethodAccessBean extends MethodAccessBeanBase {
 		private String protectedAccessProperty;
 		private String privateAccessProperty;
-
-		public String getPublicAccessPropertyValue() {
-			return publicAccessProperty;
-		}
 
 		protected String getProtectedAccessPropertyValue() {
 			return protectedAccessProperty;
@@ -56,6 +54,14 @@ public class PersistenceUtilHelperTest extends junit.framework.TestCase {
 
 		private String getPrivateAccessPropertyValue() {
 			return privateAccessProperty;
+		}
+	}
+
+	public static class MethodAccessBeanBase {
+		private String publicAccessProperty;
+
+		public String getPublicAccessPropertyValue() {
+			return publicAccessProperty;
 		}
 	}
 

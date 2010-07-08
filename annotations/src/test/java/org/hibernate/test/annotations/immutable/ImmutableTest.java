@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.immutable;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,12 +9,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.test.annotations.fkcircularity.A;
-import org.hibernate.test.annotations.fkcircularity.B;
-import org.hibernate.test.annotations.fkcircularity.C;
-import org.hibernate.test.annotations.fkcircularity.D;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

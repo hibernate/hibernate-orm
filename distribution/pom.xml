@@ -57,7 +57,6 @@
                             <source><![CDATA[
                                 def sourcePathName = 'javadocSourcePath'
                                 sourcePath = ant.path( id:sourcePathName ) {
-                                    ant.pathElement( path: "${pom.basedir}/../annotations/src/main/java" )
                                     ant.pathElement( path: "${pom.basedir}/../cache-ehcache/src/main/java" )
                                     ant.pathElement( path: "${pom.basedir}/../cache-infinispan/src/main/java" )
                                     ant.pathElement( path: "${pom.basedir}/../cache-jbosscache/src/main/java" )
@@ -202,11 +201,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>hibernate-jmx</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-ehcache</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -238,11 +232,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-proxool</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>hibernate-annotations</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

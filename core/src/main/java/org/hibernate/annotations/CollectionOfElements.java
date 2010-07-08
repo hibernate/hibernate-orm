@@ -48,5 +48,5 @@ public @interface CollectionOfElements {
 	 */
 	Class targetElement() default void.class;
 
-	FetchType fetch() default LAZY;
+	FetchType fetch() default FetchType.LAZY;
 }

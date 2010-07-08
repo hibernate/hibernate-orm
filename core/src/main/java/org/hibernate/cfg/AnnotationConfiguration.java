@@ -76,7 +76,6 @@ import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
-import org.hibernate.cfg.annotations.Version;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.cfg.beanvalidation.BeanValidationActivator;
 import org.hibernate.engine.NamedQueryDefinition;
@@ -130,10 +129,6 @@ public class AnnotationConfiguration extends Configuration {
 	 * Method to call to enable Search.
 	 */
 	private static final String SEARCH_STARTUP_METHOD = "enableHibernateSearch";
-
-	static {
-		Version.touch(); //touch version
-	}
 
 	public static final String ARTEFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
 	public static final ConfigurationArtefactType[] DEFAULT_ARTEFACT_PROCESSING_ORDER =
@@ -235,6 +230,7 @@ public class AnnotationConfiguration extends Configuration {
 	 *
 	 * @throws MappingException in case there is a configuration error for the specified class
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public AnnotationConfiguration addAnnotatedClass(Class persistentClass) throws MappingException {
 		XClass persistentXClass = reflectionManager.toXClass( persistentClass );
 		try {
@@ -431,6 +427,7 @@ public class AnnotationConfiguration extends Configuration {
 		applyBeanValidationConstraintsOnDDL();
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	private void applyHibernateValidatorLegacyConstraintsOnDDL() {
 		//TODO search for the method only once and cache it?
 		Constructor validatorCtr = null;
@@ -475,6 +472,7 @@ public class AnnotationConfiguration extends Configuration {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	private void applyBeanValidationConstraintsOnDDL() {
 		BeanValidationActivator.applyDDL( ( Collection<PersistentClass> ) classes.values(), getProperties() );
 	}
@@ -495,7 +493,7 @@ public class AnnotationConfiguration extends Configuration {
 		// split FkSecondPass instances into primary key and non primary key FKs.
 		// While doing so build a map of class names to FkSecondPass instances depending on this class.
 		Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<String, Set<FkSecondPass>>();
-		List endOfQueueFkSecondPasses = new ArrayList( fkSecondPasses.size() );
+		List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<FkSecondPass>( fkSecondPasses.size() );
 		for ( FkSecondPass sp : fkSecondPasses ) {
 			if ( sp.isInPrimaryKey() ) {
 				String referenceEntityName = sp.getReferencedEntityName();
@@ -512,7 +510,7 @@ public class AnnotationConfiguration extends Configuration {
 		}
 
 		// using the isADependencyOf map we order the FkSecondPass recursively instances into the right order for processing
-		List<FkSecondPass> orderedFkSecondPasses = new ArrayList( fkSecondPasses.size() );
+		List<FkSecondPass> orderedFkSecondPasses = new ArrayList<FkSecondPass>( fkSecondPasses.size() );
 		for ( String tableName : isADependencyOf.keySet() ) {
 			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, tableName, tableName );
 		}
@@ -525,7 +523,7 @@ public class AnnotationConfiguration extends Configuration {
 		processEndOfQueue( endOfQueueFkSecondPasses );
 	}
 
-	private void processEndOfQueue(List endOfQueueFkSecondPasses) {
+	private void processEndOfQueue(List<FkSecondPass> endOfQueueFkSecondPasses) {
 		/*
 		 * If a second pass raises a recoverableException, queue it for next round
 		 * stop of no pass has to be processed or if the number of pass to processes
@@ -535,10 +533,10 @@ public class AnnotationConfiguration extends Configuration {
 		boolean stopProcess = false;
 		RuntimeException originalException = null;
 		while ( !stopProcess ) {
-			List failingSecondPasses = new ArrayList();
-			Iterator it = endOfQueueFkSecondPasses.listIterator();
+			List<FkSecondPass> failingSecondPasses = new ArrayList<FkSecondPass>();
+			Iterator<FkSecondPass> it = endOfQueueFkSecondPasses.listIterator();
 			while ( it.hasNext() ) {
-				final SecondPass pass = ( SecondPass ) it.next();
+				final FkSecondPass pass = it.next();
 				try {
 					pass.doSecondPass( classes );
 				}
@@ -589,8 +587,10 @@ public class AnnotationConfiguration extends Configuration {
 	 * @param currentTable The current table name used to check for 'new' dependencies.
 	 */
 	private void buildRecursiveOrderedFkSecondPasses(
-			List orderedFkSecondPasses,
-			Map<String, Set<FkSecondPass>> isADependencyOf, String startTable, String currentTable) {
+			List<FkSecondPass> orderedFkSecondPasses,
+			Map<String, Set<FkSecondPass>> isADependencyOf,
+			String startTable,
+			String currentTable) {
 
 		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
 

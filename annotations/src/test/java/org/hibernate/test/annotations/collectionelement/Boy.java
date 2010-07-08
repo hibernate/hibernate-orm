@@ -21,7 +21,6 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.test.annotations.collectionelement.FavoriteFood;
 
 /**
  * @author Emmanuel Bernard

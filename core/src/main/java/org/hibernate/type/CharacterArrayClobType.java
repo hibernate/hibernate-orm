@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -23,14 +23,27 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
 
 /**
- * Map a char[] to a Clob
+ * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Character Character[]}
+ * <p/>
+ * Essentially a {@link MaterializedClobType} but represented as a Character[] in Java rather than String.
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
-public class PrimitiveCharacterArrayClobType extends CharacterArrayClobType {
-	public Class returnedClass() {
-		return char[].class;
+public class CharacterArrayClobType extends AbstractSingleColumnStandardBasicType<Character[]> {
+	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
+
+	public CharacterArrayClobType() {
+		super( ClobTypeDescriptor.INSTANCE, CharacterArrayTypeDescriptor.INSTANCE );
 	}
+
+	public String getName() {
+		// todo name these annotation types for addition to the registry
+		return null;
+	}
+
 }

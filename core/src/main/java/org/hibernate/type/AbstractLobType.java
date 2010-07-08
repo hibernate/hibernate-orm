@@ -36,7 +36,9 @@ import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Emmanuel Bernard
+ * @deprecated
  */
+@Deprecated
 public abstract class AbstractLobType extends AbstractType implements Serializable {
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
 			throws HibernateException {

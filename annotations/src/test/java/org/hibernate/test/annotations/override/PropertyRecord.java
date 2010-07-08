@@ -11,7 +11,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.CollectionTable;
 
-import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.CollectionOfElements;
 
 /**

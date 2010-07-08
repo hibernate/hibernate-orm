@@ -3,7 +3,6 @@ package org.hibernate.test.annotations.manytoone;
 
 import java.util.Set;
 import java.io.Serializable;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

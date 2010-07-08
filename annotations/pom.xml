@@ -105,6 +105,7 @@
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-test-ext-plugin</artifactId>
             </plugin>
+<!--
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-injection-plugin</artifactId>
@@ -122,6 +123,7 @@
                     </bytecodeInjections>
                 </configuration>
             </plugin>
+-->
             <plugin>
                 <groupId>org.twdata.maven</groupId>
                 <artifactId>maven-cli-plugin</artifactId>

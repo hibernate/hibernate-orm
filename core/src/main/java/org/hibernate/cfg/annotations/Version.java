@@ -24,23 +24,14 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.util.Date;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * @author Emmanuel Bernard
+ * @deprecated Use {@link org.hibernate.Version} instead
  */
+@Deprecated
 public class Version {
-	private static Logger log = LoggerFactory.getLogger( Version.class );
-
 	public static String getVersionString() {
-		return "[WORKING]-1";
-	}
-
-	static {
-		log.info( "Hibernate Annotations {}", getVersionString() );
+		return org.hibernate.Version.getVersionString();
 	}
 
 	public static void touch() {

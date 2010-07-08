@@ -154,8 +154,7 @@ public class SimpleValueBinder {
 										+ StringHelper.qualify( persistentClassName, propertyName )
 						);
 					}
-					break;
-				case TIMESTAMP:
+					break;				case TIMESTAMP:
 					type = isDate ? "timestamp" : "calendar";
 					break;
 				default:

@@ -9,9 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyClass;
-import javax.persistence.JoinColumn;
 
-import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.MapKeyManyToMany;
 
 /**

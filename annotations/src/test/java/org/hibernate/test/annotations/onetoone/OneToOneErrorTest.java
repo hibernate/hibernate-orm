@@ -3,7 +3,6 @@ package org.hibernate.test.annotations.onetoone;
 
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.annotations.IncorrectEntity;
 import org.hibernate.SessionFactory;
 import org.hibernate.AnnotationException;
 

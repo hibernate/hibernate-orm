@@ -4,7 +4,6 @@ package org.hibernate.test.annotations.target;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
-import javax.persistence.ManyToOne;
 import javax.persistence.Embedded;
 
 import org.hibernate.annotations.Target;

@@ -170,7 +170,6 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.type.TypeFactory;
 
 /**
  * JSR 175 annotation binder which reads the annotations from classes, applies the

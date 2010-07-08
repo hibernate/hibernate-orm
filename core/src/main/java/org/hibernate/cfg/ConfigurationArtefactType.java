@@ -1,7 +1,8 @@
+// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -21,25 +22,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
+package org.hibernate.cfg;
+
+import org.hibernate.HibernateException;
 
 /**
- * Map a byte[] to a Blob
- * @deprecated replaced by Hibernate Core's {@link org.hibernate.type.MaterializedBlobType}
- * 
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-@Deprecated
-public class PrimitiveByteArrayBlobType extends ByteArrayBlobType {
-	public Class getReturnedClass() {
-		return byte[].class;
-	}
+public enum ConfigurationArtefactType {
+	HBM,
+	CLASS;
 
-	protected Object wrap(byte[] bytes) {
-		return bytes;
-	}
-
-	protected byte[] unWrap(Object bytes) {
-		return (byte[]) bytes;
+	static ConfigurationArtefactType parsePrecedence(String s) {
+		if ( s.equalsIgnoreCase( "hbm" ) ) {
+			return HBM;
+		}
+		else if ( s.equalsIgnoreCase( "class" ) ) {
+			return CLASS;
+		}
+		else {
+			throw new HibernateException( "'" + s + "' - invalid value for precedence configuration." );
+		}
 	}
 }
+
+

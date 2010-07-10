@@ -25,11 +25,13 @@ package org.hibernate.ejb.criteria.basic;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -58,7 +60,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		product.setId( "product1" );
 		product.setPrice( 1.23d );
 		product.setQuantity( 2 );
-		product.setPartNumber( Integer.MAX_VALUE + 1 );
+		product.setPartNumber( ((long)Integer.MAX_VALUE) + 1 );
 		product.setRating( 1.999f );
 		product.setSomeBigInteger( BigInteger.valueOf( 987654321 ) );
 		product.setSomeBigDecimal( BigDecimal.valueOf( 987654.321 ) );
@@ -248,4 +250,39 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		return hqlQueryImpl.getParameterMetadata().getNamedParameterNames().size();
 	}
 
+	public void testInExplicitTupleList() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		Root<Product> from = criteria.from( Product.class );
+		criteria.where( from.get( Product_.partNumber ).in( Collections.singletonList( ((long)Integer.MAX_VALUE) + 1 ) ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testInExplicitTupleListVarargs() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		Root<Product> from = criteria.from( Product.class );
+		criteria.where( from.get( Product_.partNumber ).in( ((long)Integer.MAX_VALUE) + 1 ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testInExpressionVarargs() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
+		Root<Product> from = criteria.from( Product.class );
+		criteria.where( from.get( Product_.partNumber ).in( from.get( Product_.partNumber ) ) );
+		List<Product> result = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
 }

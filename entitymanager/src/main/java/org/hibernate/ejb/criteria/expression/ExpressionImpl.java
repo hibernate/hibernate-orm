@@ -88,7 +88,7 @@ public abstract class ExpressionImpl<T>
 	 * {@inheritDoc}
 	 */
 	public Predicate in(Collection<?> values) {
-		return criteriaBuilder().in( this, values );
+		return criteriaBuilder().in( this, values.toArray() );
 	}
 
 	/**

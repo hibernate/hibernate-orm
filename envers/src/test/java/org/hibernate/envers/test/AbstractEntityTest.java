@@ -27,9 +27,13 @@ import java.io.IOException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.AuditEventListener;
+import org.hibernate.testing.tm.ConnectionProviderImpl;
+import org.hibernate.testing.tm.TransactionManagerLookupImpl;
 import org.testng.annotations.*;
 
 import org.hibernate.ejb.Ejb3Configuration;
@@ -89,11 +93,15 @@ public abstract class AbstractEntityTest {
             initListeners();
         }
 
+        cfg.configure("hibernate.test.cfg.xml");
+
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             cfg.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);
-        }       
+        }
 
-        cfg.configure("hibernate.test.cfg.xml");
+        // Separate database for each test class
+        cfg.setProperty("hibernate.connection.url", "jdbc:h2:mem:" + this.getClass().getName());
+
         configure(cfg);
         emf = cfg.buildEntityManagerFactory();
 
@@ -116,5 +124,11 @@ public abstract class AbstractEntityTest {
 
     public Ejb3Configuration getCfg() {
         return cfg;
+    }
+
+    protected void addJTAConfig(Ejb3Configuration cfg) {        
+        cfg.setProperty("connection.provider_class", ConnectionProviderImpl.class.getName());
+		cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName());
+		cfg.setProperty(AvailableSettings.TRANSACTION_TYPE, "JTA");
     }
 }

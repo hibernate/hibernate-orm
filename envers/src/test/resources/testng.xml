@@ -38,6 +38,7 @@
             <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.subclass" />
             <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.joined" />
             <package name="org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.union" />
+            <package name="org.hibernate.envers.test.integration.jta" />
             <package name="org.hibernate.envers.test.integration.manytomany" />
             <package name="org.hibernate.envers.test.integration.manytomany.biowned" />
             <package name="org.hibernate.envers.test.integration.manytomany.inverseToSuperclass" />

@@ -37,11 +37,14 @@ import org.hibernate.envers.tools.Pair;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 
+import javax.transaction.Synchronization;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class AuditProcess implements BeforeTransactionCompletionProcess {
+public class AuditProcess implements BeforeTransactionCompletionProcess, Synchronization {
     private final RevisionInfoGenerator revisionInfoGenerator;
+    private final SessionImplementor session;
 
     private final LinkedList<AuditWorkUnit> workUnits;
     private final Queue<AuditWorkUnit> undoQueue;
@@ -49,8 +52,9 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
 
     private Object revisionData;
 
-    public AuditProcess(RevisionInfoGenerator revisionInfoGenerator) {
+    public AuditProcess(RevisionInfoGenerator revisionInfoGenerator, SessionImplementor session) {
         this.revisionInfoGenerator = revisionInfoGenerator;
+        this.session = session;
 
         workUnits = new LinkedList<AuditWorkUnit>();
         undoQueue = new LinkedList<AuditWorkUnit>();
@@ -153,4 +157,12 @@ public class AuditProcess implements BeforeTransactionCompletionProcess {
             session.flush();
         }
     }
+
+    // Synchronization methods
+
+    public void beforeCompletion() {
+        doBeforeTransactionCompletion(session);
+    }
+
+    public void afterCompletion(int status) { }
 }

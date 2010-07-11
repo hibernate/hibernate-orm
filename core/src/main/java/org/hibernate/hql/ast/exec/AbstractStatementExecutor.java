@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,12 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.ast.exec;
 
 import java.sql.PreparedStatement;
 import java.sql.Connection;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Collections;
@@ -43,12 +43,14 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.StringHelper;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of AbstractStatementExecutor.
@@ -56,6 +58,7 @@ import org.slf4j.Logger;
  * @author Steve Ebersole
  */
 public abstract class AbstractStatementExecutor implements StatementExecutor {
+	private static final Logger LOG = LoggerFactory.getLogger( AbstractStatementExecutor.class );
 
 	private final Logger log;
 	private final HqlSqlWalker walker;
@@ -141,23 +144,23 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		// simply allow the failure to be eaten and the subsequent insert-selects/deletes should fail
 		IsolatedWork work = new IsolatedWork() {
 			public void doWork(Connection connection) throws HibernateException {
-				Statement stmnt = null;
 				try {
-					stmnt = connection.createStatement();
-					stmnt.executeUpdate( persister.getTemporaryIdTableDDL() );
-				}
-				catch( Throwable t ) {
-					log.debug( "unable to create temporary id table [" + t.getMessage() + "]" );
-				}
-				finally {
-					if ( stmnt != null ) {
+					Statement statement = connection.createStatement();
+					try {
+						statement.executeUpdate( persister.getTemporaryIdTableDDL() );
+						JDBCExceptionReporter.handleAndClearWarnings( statement, CREATION_WARNING_HANDLER );
+					}
+					finally {
 						try {
-							stmnt.close();
+							statement.close();
 						}
 						catch( Throwable ignore ) {
 							// ignore
 						}
 					}
+				}
+				catch( Exception e ) {
+					log.debug( "unable to create temporary id table [" + e.getMessage() + "]" );
 				}
 			}
 		};
@@ -175,29 +178,45 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 	}
 
+	private static JDBCExceptionReporter.WarningHandler CREATION_WARNING_HANDLER = new JDBCExceptionReporter.WarningHandlerLoggingSupport() {
+		public boolean doProcess() {
+			return LOG.isDebugEnabled();
+		}
+
+		public void prepare(SQLWarning warning) {
+			LOG.debug( "Warnings creating temp table", warning );
+		}
+
+		@Override
+		protected void logWarning(String description, String message) {
+			LOG.debug( description );
+			LOG.debug( message );
+		}
+	};
+
 	protected void dropTemporaryTableIfNecessary(final Queryable persister, final SessionImplementor session) {
 		if ( getFactory().getDialect().dropTemporaryTableAfterUse() ) {
 			IsolatedWork work = new IsolatedWork() {
 				public void doWork(Connection connection) throws HibernateException {
-					Statement stmnt = null;
+					final String command = session.getFactory().getSettings().getDialect().getDropTemporaryTableString()
+							+ ' ' + persister.getTemporaryIdTableName();
 					try {
-						final String command = session.getFactory().getSettings().getDialect().getDropTemporaryTableString()
-								+ " " + persister.getTemporaryIdTableName();
-						stmnt = connection.createStatement();
-						stmnt.executeUpdate( command );
-					}
-					catch( Throwable t ) {
-						log.warn( "unable to drop temporary id table after use [" + t.getMessage() + "]" );
-					}
-					finally {
-						if ( stmnt != null ) {
+						Statement statement = connection.createStatement();
+						try {
+							statement = connection.createStatement();
+							statement.executeUpdate( command );
+						}
+						finally {
 							try {
-								stmnt.close();
+								statement.close();
 							}
 							catch( Throwable ignore ) {
 								// ignore
 							}
 						}
+					}
+					catch( Exception e ) {
+						log.warn( "unable to drop temporary id table after use [" + e.getMessage() + "]" );
 					}
 				}
 			};
@@ -249,6 +268,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 	}
 
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	protected boolean shouldIsolateTemporaryTableDDL() {
 		Boolean dialectVote = getFactory().getDialect().performTemporaryTableDDLInIsolation();
 		if ( dialectVote != null ) {

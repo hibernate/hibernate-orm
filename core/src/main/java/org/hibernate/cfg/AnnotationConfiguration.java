@@ -87,7 +87,6 @@ import org.hibernate.event.EventListeners;
 import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.mapping.Column;
-import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -160,7 +159,6 @@ public class AnnotationConfiguration extends Configuration {
 	private boolean isValidatorNotPresentLogged;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
-	private Collection<FetchProfile> annotationConfiguredProfiles;
 
 	public AnnotationConfiguration() {
 		super();
@@ -267,7 +265,7 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	public ExtendedMappings createExtendedMappings() {
-		return new ExtendedMappingsImpl( annotationConfiguredProfiles );
+		return new ExtendedMappingsImpl();
 	}
 
 	@Override
@@ -310,7 +308,6 @@ public class AnnotationConfiguration extends Configuration {
 		reflectionManager = new JavaReflectionManager();
 		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( new JPAMetadataProvider() );
 		configurationArtefactPrecedence = Collections.emptyList();
-		annotationConfiguredProfiles = new HashSet<FetchProfile>();
 	}
 
 	@Override
@@ -1257,11 +1254,6 @@ public class AnnotationConfiguration extends Configuration {
 
 	protected class ExtendedMappingsImpl extends MappingsImpl implements ExtendedMappings {
 		private Boolean useNewGeneratorMappings;
-		private Collection<FetchProfile> annotationConfiguredProfile;
-
-		public ExtendedMappingsImpl(Collection<FetchProfile> fetchProfiles) {
-			annotationConfiguredProfile = fetchProfiles;
-		}
 
 		public void addDefaultGenerator(IdGenerator generator) {
 			this.addGenerator( generator );
@@ -1530,24 +1522,6 @@ public class AnnotationConfiguration extends Configuration {
 
 		public AnyMetaDef getAnyMetaDef(String name) {
 			return anyMetaDefs.get( name );
-		}
-
-		public FetchProfile findOrCreateFetchProfile(String name) {
-			FetchProfile profile = super.findOrCreateFetchProfile( name );
-			if ( profile.getFetches().isEmpty() ) {
-				annotationConfiguredProfile.add( profile );
-			}
-			return profile;
-		}
-
-		public boolean isAnnotationConfiguredFetchProfile(FetchProfile fetchProfile) {
-			for ( FetchProfile profile : annotationConfiguredProfile ) {
-				// we need reference equality there!!
-				if ( profile == fetchProfile ) {
-					return true;
-				}
-			}
-			return false;
 		}
 	}
 

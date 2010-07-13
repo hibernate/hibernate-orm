@@ -21,15 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
-
 package org.hibernate.cfg;
 
 import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchProfile;
+import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 
 /**
@@ -48,8 +46,11 @@ public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
 	}
 
 	public void doSecondPass(Map persistentClasses) throws MappingException {
-		org.hibernate.mapping.FetchProfile profile = mappings.findOrCreateFetchProfile( fetchProfileName );
-		if ( !mappings.isAnnotationConfiguredFetchProfile( profile ) ) {
+		org.hibernate.mapping.FetchProfile profile = mappings.findOrCreateFetchProfile(
+				fetchProfileName,
+				MetadataSource.ANNOTATIONS
+		);
+		if ( MetadataSource.ANNOTATIONS != profile.getSource() ) {
 			return;
 		}
 

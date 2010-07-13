@@ -21,35 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.profile;
-
-import org.hibernate.persister.entity.EntityPersister;
+package org.hibernate.mapping;
 
 /**
- * Models the association of a given fetch.
+ * Enumeration of the known places from which a piece of metadata may come.
  *
  * @author Steve Ebersole
  */
-public class Association {
-	private final EntityPersister owner;
-	private final String associationPath;
-	private final String role;
-
-	public Association(EntityPersister owner, String associationPath) {
-		this.owner = owner;
-		this.associationPath = associationPath;
-		this.role = owner.getEntityName() + '.' + associationPath;
-	}
-
-	public EntityPersister getOwner() {
-		return owner;
-	}
-
-	public String getAssociationPath() {
-		return associationPath;
-	}
-
-	public String getRole() {
-		return role;
-	}
+public enum MetadataSource {
+	HBM,
+	ANNOTATIONS,
+	OTHER
 }

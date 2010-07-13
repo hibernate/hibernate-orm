@@ -118,6 +118,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -2598,10 +2599,10 @@ public class Configuration implements Serializable {
 			filterDefinitions.put( definition.getFilterName(), definition );
 		}
 
-		public FetchProfile findOrCreateFetchProfile(String name) {
+		public FetchProfile findOrCreateFetchProfile(String name, MetadataSource source) {
 			FetchProfile profile = ( FetchProfile ) fetchProfiles.get( name );
 			if ( profile == null ) {
-				profile = new FetchProfile( name );
+				profile = new FetchProfile( name, source );
 				fetchProfiles.put( name, profile );
 			}
 			return profile;

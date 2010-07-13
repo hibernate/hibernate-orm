@@ -208,9 +208,4 @@ public interface ExtendedMappings extends Mappings {
 
 	void addToOneAndIdProperty(XClass entity, PropertyData property);
 
-	/**
-	 * @param fetchProfile The fetch profile to test.
-	 * @return {@code true} if the provided fetch profile has been configured via annotations, {@code false} otherwise.
-	 */
-	boolean isAnnotationConfiguredFetchProfile(FetchProfile fetchProfile);
 }

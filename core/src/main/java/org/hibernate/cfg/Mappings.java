@@ -37,6 +37,7 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
@@ -390,9 +391,10 @@ public interface Mappings {
 	 * or by creating one (and adding it).
 	 *
 	 * @param name The name of the profile.
+	 * @param source The source from which this profile is named.
 	 * @return The fetch profile metadata.
 	 */
-	public FetchProfile findOrCreateFetchProfile(String name);
+	public FetchProfile findOrCreateFetchProfile(String name, MetadataSource source);
 
 	/**
 	 * Retrieves an iterator over the metadata pertaining to all auxilary database objects int this repository.

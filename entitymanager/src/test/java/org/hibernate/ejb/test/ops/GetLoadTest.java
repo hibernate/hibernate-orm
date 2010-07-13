@@ -1,114 +1,139 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
 //$Id$
 package org.hibernate.ejb.test.ops;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import java.util.Map;
+import javax.persistence.EntityManager;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.test.EJB3TestCase;
+import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.ejb.test.TestCase;
 
 /**
  * @author Gavin King
+ * @author Hardy Ferentschik
  */
-public class GetLoadTest extends EJB3TestCase {
-
-	public GetLoadTest(String str) {
-		super( str );
-	}
+public class GetLoadTest extends TestCase {
 
 	public void testGetLoad() {
 		clearCounts();
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Session s = ( Session ) em.getDelegate();
+
 		Employer emp = new Employer();
 		s.persist( emp );
 		Node node = new Node( "foo" );
 		Node parent = new Node( "bar" );
 		parent.addChild( node );
 		s.persist( parent );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		emp = (Employer) s.get( Employer.class, emp.getId() );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		s = ( Session ) em.getDelegate();
+		emp = ( Employer ) s.get( Employer.class, emp.getId() );
 		assertTrue( Hibernate.isInitialized( emp ) );
 		assertFalse( Hibernate.isInitialized( emp.getEmployees() ) );
-		node = (Node) s.get( Node.class, node.getName() );
+		node = ( Node ) s.get( Node.class, node.getName() );
 		assertTrue( Hibernate.isInitialized( node ) );
 		assertFalse( Hibernate.isInitialized( node.getChildren() ) );
 		assertFalse( Hibernate.isInitialized( node.getParent() ) );
 		assertNull( s.get( Node.class, "xyz" ) );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		emp = (Employer) s.load( Employer.class, emp.getId() );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		s = ( Session ) em.getDelegate();
+		emp = ( Employer ) s.load( Employer.class, emp.getId() );
 		emp.getId();
 		assertFalse( Hibernate.isInitialized( emp ) );
-		node = (Node) s.load( Node.class, node.getName() );
+		node = ( Node ) s.load( Node.class, node.getName() );
 		assertEquals( node.getName(), "foo" );
 		assertFalse( Hibernate.isInitialized( node ) );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		emp = (Employer) s.get( "org.hibernate.ejb.test.ops.Employer", emp.getId() );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		s = ( Session ) em.getDelegate();
+		emp = ( Employer ) s.get( "org.hibernate.ejb.test.ops.Employer", emp.getId() );
 		assertTrue( Hibernate.isInitialized( emp ) );
-		node = (Node) s.get( "org.hibernate.ejb.test.ops.Node", node.getName() );
+		node = ( Node ) s.get( "org.hibernate.ejb.test.ops.Node", node.getName() );
 		assertTrue( Hibernate.isInitialized( node ) );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		emp = (Employer) s.load( "org.hibernate.ejb.test.ops.Employer", emp.getId() );
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		s = ( Session ) em.getDelegate();
+		emp = ( Employer ) s.load( "org.hibernate.ejb.test.ops.Employer", emp.getId() );
 		emp.getId();
 		assertFalse( Hibernate.isInitialized( emp ) );
-		node = (Node) s.load( "org.hibernate.ejb.test.ops.Node", node.getName() );
+		node = ( Node ) s.load( "org.hibernate.ejb.test.ops.Node", node.getName() );
 		assertEquals( node.getName(), "foo" );
 		assertFalse( Hibernate.isInitialized( node ) );
-		tx.commit();
-		s.close();
+		em.getTransaction().commit();
+		em.close();
 
 		assertFetchCount( 0 );
 	}
 
 	private void clearCounts() {
-		getSessions().getStatistics().clear();
+		( ( EntityManagerFactoryImpl ) factory ).getSessionFactory().getStatistics().clear();
 	}
 
 	private void assertFetchCount(int count) {
-		int fetches = (int) getSessions().getStatistics().getEntityFetchCount();
+		int fetches = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+				.getStatistics()
+				.getEntityFetchCount();
 		assertEquals( count, fetches );
 	}
 
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( Environment.GENERATE_STATISTICS, "true" );
+		options.put( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[0];
 	}
 
 	protected String[] getMappings() {
-		return new String[]{
-				"ops/Node.hbm.xml",
-				"ops/Employer.hbm.xml"
+		return new String[] {
+				"org/hibernate/ejb/test/ops/Node.hbm.xml",
+				"org/hibernate/ejb/test/ops/Employer.hbm.xml"
 		};
 	}
-
-	public static Test suite() {
-		return new TestSuite( GetLoadTest.class );
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
-	}
-
 }
 

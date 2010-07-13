@@ -1,35 +1,53 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 //$Id$
 package org.hibernate.ejb.test.ops;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
+import java.util.Map;
+import javax.persistence.EntityManager;
+
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.test.EJB3TestCase;
+import org.hibernate.ejb.EntityManagerFactoryImpl;
+import org.hibernate.ejb.test.TestCase;
 
 /**
  * @author Gavin King
+ * @author Hardy Ferentschik
  */
-public class MergeTest extends EJB3TestCase {
-
-	public MergeTest(String str) {
-		super( str );
-	}
+public class MergeTest extends TestCase {
 
 	public void testMergeTree() {
-
 		clearCounts();
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		Node root = new Node( "root" );
 		Node child = new Node( "child" );
 		root.addChild( child );
-		s.persist( root );
-		tx.commit();
-		s.close();
+		em.persist( root );
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 2 );
 		clearCounts();
@@ -41,29 +59,27 @@ public class MergeTest extends EJB3TestCase {
 
 		root.addChild( secondChild );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.merge( root );
-		tx.commit();
-		s.close();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.merge( root );
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
-
 	}
 
 	public void testMergeTreeWithGeneratedId() {
-
 		clearCounts();
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		NumberedNode root = new NumberedNode( "root" );
 		NumberedNode child = new NumberedNode( "child" );
 		root.addChild( child );
-		s.persist( root );
-		tx.commit();
-		s.close();
+		em.persist( root );
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 2 );
 		clearCounts();
@@ -75,44 +91,48 @@ public class MergeTest extends EJB3TestCase {
 
 		root.addChild( secondChild );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		s.merge( root );
-		tx.commit();
-		s.close();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.merge( root );
+		em.getTransaction().commit();
+		em.close();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
-
 	}
 
 	private void clearCounts() {
-		getSessions().getStatistics().clear();
+		( ( EntityManagerFactoryImpl ) factory ).getSessionFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = (int) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+				.getStatistics()
+				.getEntityInsertCount();
 		assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = (int) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+				.getStatistics()
+				.getEntityUpdateCount();
 		assertEquals( count, updates );
 	}
 
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( Environment.GENERATE_STATISTICS, "true" );
+		options.put( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[0];
+	}
+
+	@Override
 	protected String[] getMappings() {
-		return new String[]{"ops/Node.hbm.xml"};
+		return new String[] { "org/hibernate/ejb/test/ops/Node.hbm.xml" };
 	}
-
-	public static Test suite() {
-		return new TestSuite( MergeTest.class );
-	}
-
 }
 

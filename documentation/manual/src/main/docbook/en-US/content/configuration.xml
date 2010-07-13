@@ -475,9 +475,33 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             <para> <emphasis role="strong">e.g.</emphasis>
             <literal>true</literal> | <literal>false</literal> </para></entry>
           </row>
+
+          <row>
+            <entry><property>hibernate.id.new_generator_mappings</property></entry>
+
+            <entry>Setting is relevant when using
+            <classname>@GeneratedValue</classname>. It indicates whether or
+            not the new <classname>IdentifierGenerator</classname>
+            implementations are used for
+            <classname>javax.persistence.GenerationType.AUTO</classname>,
+            <classname>javax.persistence.GenerationType.TABLE</classname> and
+            <classname>javax.persistence.GenerationType.SEQUENCE</classname>.
+            Default to <literal>false</literal> to keep backward
+            compatibility. <para> <emphasis role="strong">e.g.</emphasis>
+            <literal>true</literal> | <literal>false</literal> </para></entry>
+          </row>
         </tbody>
       </tgroup>
     </table>
+
+    <note>
+      <para>We recommend all new projects which make use of to use
+      <classname>@GeneratedValue</classname> to also set
+      <code>hibernate.id.new_generator_mappings=true</code> as the new
+      generators are more efficient and closer to the JPA 2 specification
+      semantic. However they are not backward compatible with existing
+      databases (if a sequence or a table is used for id generation).</para>
+    </note>
 
     <table frame="topbot" id="configuration-jdbc-properties" revision="8">
       <title>Hibernate JDBC and Connection Properties</title>
@@ -518,11 +542,10 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
 
             <entry>Set this property to <literal>true</literal> if your JDBC
             driver returns correct row counts from
-            <literal>executeBatch()</literal>. It is usually safe to turn
-            this option on. Hibernate will then use batched DML for
-            automatically versioned data. Defaults to
-            <literal>false</literal>. <para> <emphasis
-            role="strong">e.g.</emphasis> <literal>true</literal> |
+            <literal>executeBatch()</literal>. It is usually safe to turn this
+            option on. Hibernate will then use batched DML for automatically
+            versioned data. Defaults to <literal>false</literal>. <para>
+            <emphasis role="strong">e.g.</emphasis> <literal>true</literal> |
             <literal>false</literal> </para></entry>
           </row>
 
@@ -722,6 +745,17 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             a more human-friendly format. <para> <emphasis
             role="strong">e.g.</emphasis> <literal>true|false</literal>
             </para></entry>
+          </row>
+
+          <row>
+            <entry><literal>hibernate.cache.default_cache_concurrency_strategy</literal></entry>
+
+            <entry>Setting used to give the name of the default
+            <classname>org.hibernate.annotations.CacheConcurrencyStrategy</classname>
+            to use when either <classname>@Cacheable</classname> or
+            <classname>@Cache</classname> is used.
+            <code>@Cache(strategy="..")</code> is used to override this
+            default.</entry>
           </row>
         </tbody>
       </tgroup>

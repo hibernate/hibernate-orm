@@ -964,7 +964,7 @@
     </profiles>
 
     <properties>
-        <slf4jVersion>1.5.8</slf4jVersion>
+        <slf4jVersion>1.6.1</slf4jVersion>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 </project>

@@ -26,6 +26,9 @@ package org.hibernate.dialect;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -42,6 +45,7 @@ import org.hibernate.util.ReflectHelper;
  * @author Thomas Mueller
  */
 public class H2Dialect extends Dialect {
+	private static final Logger log = LoggerFactory.getLogger( H2Dialect.class );
 
 	private String querySequenceString;
 
@@ -51,14 +55,22 @@ public class H2Dialect extends Dialect {
 		querySequenceString = "select sequence_name from information_schema.sequences";
 		try {
 			// HHH-2300
-			Class constants = ReflectHelper.classForName( "org.h2.engine.Constants" );
-			Integer build = ( Integer ) constants.getDeclaredField( "BUILD_ID" ).get( null );
-			int buildid = build.intValue();
-			if ( buildid < 32 ) {
+			final Class constants = ReflectHelper.classForName( "org.h2.engine.Constants" );
+			final int majorVersion = ( Integer ) constants.getDeclaredField( "VERSION_MAJOR" ).get( null );
+			final int minorVersion = ( Integer ) constants.getDeclaredField( "VERSION_MINOR" ).get( null );
+			final int buildId = ( Integer ) constants.getDeclaredField( "BUILD_ID" ).get( null );
+			if ( buildId < 32 ) {
 				querySequenceString = "select name from information_schema.sequences";
 			}
+			if ( !( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
+				log.warn(
+						"The {} version of H2 implements temporary table creation such that it commits " +
+								"current transaction; multi-table, bulk hql/jpaql will not work properly",
+						( majorVersion + "." + minorVersion + "." + buildId )
+				);
+			}
 		}
-		catch ( Throwable e ) {
+		catch ( Exception e ) {
 			// ignore (probably H2 not in the classpath)
 		}
 
@@ -279,12 +291,24 @@ public class H2Dialect extends Dialect {
 		}
 	};
 
+	@Override
 	public boolean supportsTemporaryTables() {
 		return true;
 	}
 
+	@Override
 	public String getCreateTemporaryTableString() {
-		return "create temporary table if not exists";
+		return "create local temporary table if not exists";
+	}
+
+	@Override
+	public Boolean performTemporaryTableDDLInIsolation() {
+		return Boolean.FALSE;
+	}
+
+	@Override
+	public boolean dropTemporaryTableAfterUse() {
+		return false;
 	}
 
 	public boolean supportsCurrentTimestampSelection() {
@@ -306,6 +330,7 @@ public class H2Dialect extends Dialect {
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}

@@ -41,6 +41,8 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.transaction.synchronization.CallbackCoordinator;
+import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
@@ -82,6 +84,8 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	private transient boolean isTransactionCallbackRegistered;
 	private transient Transaction hibernateTransaction;
 
+	private CallbackCoordinator jtaSynchronizationCallbackCoordinator;
+
 	public JDBCContext(Context owner, Connection connection, Interceptor interceptor) {
 		this.owner = owner;
 		this.connectionManager = new ConnectionManager(
@@ -106,6 +110,20 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	 */
 	private JDBCContext() {
 	}
+
+	public CallbackCoordinator getJtaSynchronizationCallbackCoordinator() {
+		return jtaSynchronizationCallbackCoordinator;
+	}
+
+	public CallbackCoordinator getJtaSynchronizationCallbackCoordinator(javax.transaction.Transaction jtaTransaction) {
+		jtaSynchronizationCallbackCoordinator = new CallbackCoordinator( owner, this, jtaTransaction, hibernateTransaction );
+		return jtaSynchronizationCallbackCoordinator;
+	}
+
+	public void cleanUpJtaSynchronizationCallbackCoordinator() {
+		jtaSynchronizationCallbackCoordinator = null;
+	}
+
 
 	// ConnectionManager.Callback implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -194,7 +212,10 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 						if ( hibernateTransaction == null ) {
 							hibernateTransaction = owner.getFactory().getSettings().getTransactionFactory().createTransaction( this, owner );
 						}
-						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, hibernateTransaction) );
+						tx.registerSynchronization(
+								new HibernateSynchronizationImpl( getJtaSynchronizationCallbackCoordinator( tx ) )
+						);
+//						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, hibernateTransaction) );
 						isTransactionCallbackRegistered = true;
 						log.debug("successfully registered Synchronization");
 						return true;

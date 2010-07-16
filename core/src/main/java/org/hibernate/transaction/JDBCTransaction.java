@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.transaction;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 
@@ -36,11 +33,11 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.transaction.SynchronizationRegistry;
 import org.hibernate.jdbc.JDBCContext;
 
 /**
- * {@link Transaction} implementation based on transaction management through
- * a JDBC {@link java.sql.Connection}.
+ * {@link Transaction} implementation based on transaction management through a JDBC {@link java.sql.Connection}.
  * <p/>
  * This the Hibernate's default transaction strategy.
  *
@@ -48,9 +45,9 @@ import org.hibernate.jdbc.JDBCContext;
  * @author Gavin King
  */
 public class JDBCTransaction implements Transaction {
-
 	private static final Logger log = LoggerFactory.getLogger(JDBCTransaction.class);
 
+	private final SynchronizationRegistry synchronizationRegistry = new SynchronizationRegistry();
 	private final JDBCContext jdbcContext;
 	private final TransactionFactory.Context transactionContext;
 
@@ -59,7 +56,6 @@ public class JDBCTransaction implements Transaction {
 	private boolean rolledBack;
 	private boolean committed;
 	private boolean commitFailed;
-	private List synchronizations;
 	private boolean callback;
 	private int timeout = -1;
 
@@ -137,7 +133,7 @@ public class JDBCTransaction implements Transaction {
 			transactionContext.managedFlush(); //if an exception occurs during flush, user must call rollback()
 		}
 
-		notifyLocalSynchsBeforeTransactionCompletion();
+		notifySynchronizationsBeforeTransactionCompletion();
 		if ( callback ) {
 			jdbcContext.beforeTransactionCompletion( this );
 		}
@@ -149,7 +145,7 @@ public class JDBCTransaction implements Transaction {
 			if ( callback ) {
 				jdbcContext.afterTransactionCompletion( true, this );
 			}
-			notifyLocalSynchsAfterTransactionCompletion( Status.STATUS_COMMITTED );
+			notifySynchronizationsAfterTransactionCompletion( Status.STATUS_COMMITTED );
 		}
 		catch (SQLException e) {
 			log.error("JDBC commit failed", e);
@@ -157,7 +153,7 @@ public class JDBCTransaction implements Transaction {
 			if ( callback ) {
 				jdbcContext.afterTransactionCompletion( false, this );
 			}
-			notifyLocalSynchsAfterTransactionCompletion( Status.STATUS_UNKNOWN );
+			notifySynchronizationsAfterTransactionCompletion( Status.STATUS_UNKNOWN );
 			throw new TransactionException("JDBC commit failed", e);
 		}
 		finally {
@@ -196,11 +192,11 @@ public class JDBCTransaction implements Transaction {
 				rollbackAndResetAutoCommit();
 				log.debug("rolled back JDBC Connection");
 				rolledBack = true;
-				notifyLocalSynchsAfterTransactionCompletion(Status.STATUS_ROLLEDBACK);
+				notifySynchronizationsAfterTransactionCompletion(Status.STATUS_ROLLEDBACK);
 			}
 			catch (SQLException e) {
 				log.error("JDBC rollback failed", e);
-				notifyLocalSynchsAfterTransactionCompletion(Status.STATUS_UNKNOWN);
+				notifySynchronizationsAfterTransactionCompletion(Status.STATUS_UNKNOWN);
 				throw new TransactionException("JDBC rollback failed", e);
 			}
 			finally {
@@ -258,41 +254,17 @@ public class JDBCTransaction implements Transaction {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void registerSynchronization(Synchronization sync) throws HibernateException {
-		if (sync==null) throw new NullPointerException("null Synchronization");
-		if (synchronizations==null) {
-			synchronizations = new ArrayList();
-		}
-		synchronizations.add(sync);
+	public void registerSynchronization(Synchronization sync) {
+		synchronizationRegistry.registerSynchronization( sync );
 	}
 
-	private void notifyLocalSynchsBeforeTransactionCompletion() {
-		if (synchronizations!=null) {
-			for ( int i=0; i<synchronizations.size(); i++ ) {
-				Synchronization sync = (Synchronization) synchronizations.get(i);
-				try {
-					sync.beforeCompletion();
-				}
-				catch (Throwable t) {
-					log.error("exception calling user Synchronization", t);
-				}
-			}
-		}
+	private void notifySynchronizationsBeforeTransactionCompletion() {
+		synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
 	}
 
-	private void notifyLocalSynchsAfterTransactionCompletion(int status) {
+	private void notifySynchronizationsAfterTransactionCompletion(int status) {
 		begun = false;
-		if (synchronizations!=null) {
-			for ( int i=0; i<synchronizations.size(); i++ ) {
-				Synchronization sync = (Synchronization) synchronizations.get(i);
-				try {
-					sync.afterCompletion(status);
-				}
-				catch (Throwable t) {
-					log.error("exception calling user Synchronization", t);
-				}
-			}
-		}
+		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );
 	}
 
 	/**

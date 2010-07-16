@@ -55,18 +55,7 @@ public class AuditProcessManager {
             auditProcess = new AuditProcess(revisionInfoGenerator, session);
             auditProcesses.put(transaction, auditProcess);
 
-            /*
-             * HHH-5315: the process must be both a BeforeTransactionCompletionProcess and a TX Synchronization.
-             *
-             * In a resource-local tx env, the process is called after the flush, and populates the audit tables.
-             * Also, any exceptions that occur during that are propagated (if a Synchronization was used, the exceptions
-             * would be eaten).
-             *
-             * In a JTA env, the before transaction completion is called before the flush, so not all changes are yet
-             * written. However, Synchronization-s do propagate exceptions, so they can be safely used. 
-             */
             session.getActionQueue().registerProcess(auditProcess);
-            session.getTransaction().registerSynchronization(auditProcess);
 
             session.getActionQueue().registerProcess(new AfterTransactionCompletionProcess() {
                 public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {

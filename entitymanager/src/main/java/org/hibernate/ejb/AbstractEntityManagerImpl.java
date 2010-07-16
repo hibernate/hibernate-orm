@@ -101,6 +101,10 @@ import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transaction.TransactionFactory;
+import org.hibernate.transaction.synchronization.AfterCompletionAction;
+import org.hibernate.transaction.synchronization.BeforeCompletionManagedFlushChecker;
+import org.hibernate.transaction.synchronization.CallbackCoordinator;
+import org.hibernate.transaction.synchronization.ExceptionMapper;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.util.ReflectHelper;
@@ -1017,73 +1021,31 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					//flush before completion and
 					//register clear on rollback
 					log.trace( "Adding flush() and close() synchronization" );
-					joinableCMTTransaction.registerSynchronization(
-							new Synchronization() {
-								public void beforeCompletion() {
-									boolean flush = false;
-									TransactionFactory.Context ctx = null;
-									try {
-										ctx = ( TransactionFactory.Context ) session;
-										JoinableCMTTransaction joinable = ( JoinableCMTTransaction ) session.getTransaction();
-										javax.transaction.Transaction transaction = joinable.getTransaction();
-										if ( transaction == null ) {
-											log.warn(
-													"Transaction not available on beforeCompletionPhase: assuming valid"
-											);
-										}
-										flush = !ctx.isFlushModeNever() &&
-												//ctx.isFlushBeforeCompletionEnabled() &&
-												//TODO probably make it ! isFlushBeforecompletion()
-												( transaction == null || !JTAHelper.isRollback( transaction.getStatus() ) );
-										//transaction == null workaround a JBoss TMBug
+					CallbackCoordinator callbackCoordinator = ( (SessionImplementor ) getSession() ).getJDBCContext().getJtaSynchronizationCallbackCoordinator();
+					if ( callbackCoordinator == null ) {
+						throw new AssertionFailure( "Expecting CallbackCoordinator to be non-null" );
+					}
+					callbackCoordinator.setBeforeCompletionManagedFlushChecker(
+							new BeforeCompletionManagedFlushChecker() {
+								public boolean shouldDoManagedFlush(TransactionFactory.Context ctx, javax.transaction.Transaction jtaTransaction)
+										throws SystemException {
+									if ( transaction == null ) {
+										log.warn( "Transaction not available on beforeCompletion: assuming valid" );
 									}
-									catch ( SystemException se ) {
-										log.error( "could not determine transaction status", se );
-										PersistenceException pe = new PersistenceException(
-												"could not determine transaction status in beforeCompletion()",
-												se
-										);
-										// handlePersistenceException will mark the transaction as rollbacked
-										handlePersistenceException( pe );
-										throw pe;
-									}
-									catch ( HibernateException he ) {
-										throwPersistenceException( he );
-									}
-
-									try {
-										if ( flush ) {
-											log.trace( "automatically flushing session" );
-											ctx.managedFlush();
-										}
-										else {
-											log.trace( "skipping managed flushing" );
-										}
-									}
-									catch ( HibernateException he ) {
-										throw convert( he );
-									}
-									catch ( PersistenceException pe ) {
-										handlePersistenceException( pe );
-										throw pe;
-									}
-									catch ( RuntimeException re ) {
-										PersistenceException wrapped = new PersistenceException( re );
-										handlePersistenceException( wrapped );
-										throw wrapped;
-									}
+									return !ctx.isFlushModeNever()
+											&& ( jtaTransaction == null || !JTAHelper.isRollback( jtaTransaction.getStatus() ) );
 								}
-
-								public void afterCompletion(int status) {
+							}
+					);
+					callbackCoordinator.setAfterCompletionAction(
+							new AfterCompletionAction() {
+								public void doAction(TransactionFactory.Context ctx, int status) {
 									try {
-										if ( Status.STATUS_ROLLEDBACK == status
-												&& transactionType == PersistenceUnitTransactionType.JTA ) {
-											if ( session.isOpen() ) {
+										if ( !ctx.isClosed() ) {
+											if ( Status.STATUS_ROLLEDBACK == status
+													&& transactionType == PersistenceUnitTransactionType.JTA ) {
 												session.clear();
 											}
-										}
-										if ( session.isOpen() ) {
-											//only reset if the session is opened since you can't get the Transaction otherwise
 											JoinableCMTTransaction joinable = ( JoinableCMTTransaction ) session.getTransaction();
 											joinable.resetStatus();
 										}
@@ -1091,6 +1053,23 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 									catch ( HibernateException e ) {
 										throw convert( e );
 									}
+								}
+							}
+					);
+					callbackCoordinator.setExceptionMapper(
+							new ExceptionMapper() {
+								public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
+									throw new PersistenceException( message, systemException );
+								}
+
+								public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
+									if ( HibernateException.class.isInstance( failure ) ) {
+										throw convert( failure );
+									}
+									if ( PersistenceException.class.isInstance( failure ) ) {
+										throw failure;
+									}
+									throw new PersistenceException( message, failure );
 								}
 							}
 					);

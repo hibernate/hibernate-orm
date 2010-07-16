@@ -95,6 +95,8 @@
 
     <xi:include href="content/toolset_guide.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
+    <xi:include href="content/additionalmodules.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
     <xi:include href="content/example_parentchild.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/example_weblog.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/example_mappings.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

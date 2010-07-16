@@ -928,15 +928,42 @@ BEGIN
     <para>Hibernate3 can use custom SQL for create, update, and delete
     operations. The SQL can be overridden at the statement level or
     inidividual column level. This section describes statement overrides. For
-    columns, see <xref linkend="mapping-column-read-and-write" />.</para>
+    columns, see <xref linkend="mapping-column-read-and-write" />. <xref
+    linkend="example-custom-crdu-via-annotations" /> shows how to define
+    custom SQL operatons using annotations.</para>
 
-    <para>The class and collection persisters in Hibernate already contain a
-    set of configuration time generated strings (insertsql, deletesql,
-    updatesql etc.). The mapping tags <literal>&lt;sql-insert&gt;</literal>,
-    <literal>&lt;sql-delete&gt;</literal>, and
-    <literal>&lt;sql-update&gt;</literal> override these strings:</para>
+    <example id="example-custom-crdu-via-annotations">
+      <title>Custom CRUD via annotations</title>
 
-    <programlisting role="XML">&lt;class name="Person"&gt;
+      <programlisting language="JAVA" role="JAVA">@Entity
+@Table(name="CHAOS")
+@SQLInsert( sql="INSERT INTO CHAOS(size, name, nickname, id) VALUES(?,upper(?),?,?)")
+@SQLUpdate( sql="UPDATE CHAOS SET size = ?, name = upper(?), nickname = ? WHERE id = ?")
+@SQLDelete( sql="DELETE CHAOS WHERE id = ?")
+@SQLDeleteAll( sql="DELETE CHAOS")
+@Loader(namedQuery = "chaos")
+@NamedNativeQuery(name="chaos", query="select id, size, name, lower( nickname ) as nickname from CHAOS where id= ?", resultClass = Chaos.class)
+public class Chaos {
+    @Id
+    private Long id;
+    private Long size;
+    private String name;
+    private String nickname;</programlisting>
+    </example>
+
+    <para><literal>@SQLInsert</literal>, <literal>@SQLUpdate</literal>,
+    <literal>@SQLDelete</literal>, <literal>@SQLDeleteAll</literal>
+    respectively override the INSERT, UPDATE, DELETE, and DELETE all
+    statement. The same can be achieved using Hibernate mapping files and the
+    <literal>&lt;sql-insert&gt;</literal>,
+    <literal>&lt;sql-update&gt;</literal> and
+    <literal>&lt;sql-delete&gt;</literal> nodes. This can be seen in <xref
+    linkend="example-custom-crdu-via-xml" />.</para>
+
+    <example id="example-custom-crdu-via-xml">
+      <title>Custom CRUD XML</title>
+
+      <programlisting role="XML">&lt;class name="Person"&gt;
     &lt;id name="id"&gt;
         &lt;generator class="increment"/&gt;
     &lt;/id&gt;
@@ -945,41 +972,100 @@ BEGIN
     &lt;sql-update&gt;UPDATE PERSON SET NAME=UPPER(?) WHERE ID=?&lt;/sql-update&gt;
     &lt;sql-delete&gt;DELETE FROM PERSON WHERE ID=?&lt;/sql-delete&gt;
 &lt;/class&gt;</programlisting>
+    </example>
 
-    <para>The SQL is directly executed in your database, so you can use any
-    dialect you like. This will reduce the portability of your mapping if you
-    use database specific SQL.</para>
+    <para>If you expect to call a store procedure, be sure to set the
+    <literal>callable</literal> attribute to <constant>true</constant>. In
+    annotations as well as in xml. </para>
 
-    <para>Stored procedures are supported if the <literal>callable</literal>
-    attribute is set:</para>
+    <para>To check that the execution happens correctly, Hibernate allows you
+    to define one of those three strategies:</para>
 
-    <programlisting role="XML">&lt;class name="Person"&gt;
-    &lt;id name="id"&gt;
-        &lt;generator class="increment"/&gt;
-    &lt;/id&gt;
-    &lt;property name="name" not-null="true"/&gt;
-    &lt;sql-insert callable="true"&gt;{call createPerson (?, ?)}&lt;/sql-insert&gt;
-    &lt;sql-delete callable="true"&gt;{? = call deletePerson (?)}&lt;/sql-delete&gt;
-    &lt;sql-update callable="true"&gt;{? = call updatePerson (?, ?)}&lt;/sql-update&gt;
-&lt;/class&gt;</programlisting>
+    <itemizedlist>
+      <listitem>
+        <para>none: no check is performed: the store procedure is expected to
+        fail upon issues</para>
+      </listitem>
 
-    <para>The order of the positional parameters is vital, as they must be in
-    the same sequence as Hibernate expects them.</para>
+      <listitem>
+        <para>count: use of rowcount to check that the update is
+        successful</para>
+      </listitem>
 
-    <para>You can view the expected order by enabling debug logging for the
-    <literal>org.hibernate.persister.entity</literal> level. With this level
-    enabled, Hibernate will print out the static SQL that is used to create,
-    update, delete etc. entities. To view the expected sequence, do not
-    include your custom SQL in the mapping files, as this will override the
-    Hibernate generated static SQL.</para>
+      <listitem>
+        <para>param: like COUNT but using an output parameter rather that the
+        standard mechanism</para>
+      </listitem>
+    </itemizedlist>
 
-    <para>The stored procedures are in most cases required to return the
-    number of rows inserted, updated and deleted, as Hibernate has some
-    runtime checks for the success of the statement. Hibernate always
+    <para>To define the result check style, use the <literal>check</literal>
+    parameter which is again available in annoations as well as in xml.</para>
+
+    <para>You can use the exact same set of annotations respectively xml nodes
+    to override the collection related statements -see <xref
+    linkend="example-overriding-sql-collections-annotations" />.</para>
+
+    <example id="example-overriding-sql-collections-annotations">
+      <title>Overriding SQL statements for collections using
+      annotations</title>
+
+      <programlisting language="JAVA" role="JAVA">@OneToMany
+@JoinColumn(name="chaos_fk")
+@SQLInsert( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = ? where id = ?")
+@SQLDelete( sql="UPDATE CASIMIR_PARTICULE SET chaos_fk = null where id = ?")
+private Set&lt;CasimirParticle&gt; particles = new HashSet&lt;CasimirParticle&gt;();</programlisting>
+    </example>
+
+    <tip>
+      <para>The parameter order is important and is defined by the order
+      Hibernate handles properties. You can see the expected order by enabling
+      debug logging for the <literal>org.hibernate.persister.entity</literal>
+      level. With this level enabled Hibernate will print out the static SQL
+      that is used to create, update, delete etc. entities. (To see the
+      expected sequence, remember to not include your custom SQL through
+      annotations or mapping files as that will override the Hibernate
+      generated static sql)</para>
+    </tip>
+
+    <para>Overriding SQL statements for secondary tables is also possible
+    using <literal>@org.hibernate.annotations.Table</literal> and either (or
+    all) attributes <literal>sqlInsert</literal>,
+    <literal>sqlUpdate</literal>, <literal>sqlDelete</literal>:</para>
+
+    <example>
+      <title>Overriding SQL statements for secondary tables</title>
+
+      <programlisting language="JAVA" role="JAVA">@Entity
+@SecondaryTables({
+    @SecondaryTable(name = "`Cat nbr1`"),
+    @SecondaryTable(name = "Cat2"})
+@org.hibernate.annotations.Tables( {
+    @Table(appliesTo = "Cat", comment = "My cat table" ),
+    @Table(appliesTo = "Cat2", foreignKey = @ForeignKey(name="FK_CAT2_CAT"), fetch = FetchMode.SELECT,
+        sqlInsert=@SQLInsert(sql="insert into Cat2(storyPart2, id) values(upper(?), ?)") )
+} )
+public class Cat implements Serializable {</programlisting>
+    </example>
+
+    <para>The previous example also shows that you can give a comment to a
+    given table (primary or secondary): This comment will be used for DDL
+    generation.</para>
+
+    <tip>
+      <para>The SQL is directly executed in your database, so you can use any
+      dialect you like. This will, however, reduce the portability of your
+      mapping if you use database specific SQL.</para>
+    </tip>
+
+    <para>Last but not least, stored procedures are in most cases required to
+    return the number of rows inserted, updated and deleted. Hibernate always
     registers the first statement parameter as a numeric output parameter for
     the CUD operations:</para>
 
-    <programlisting>CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
+    <example>
+      <title>Stored procedures and their return value</title>
+
+      <programlisting>CREATE OR REPLACE FUNCTION updatePerson (uid IN NUMBER, uname IN VARCHAR2)
     RETURN NUMBER IS
 BEGIN
 
@@ -992,6 +1078,7 @@ BEGIN
     return SQL%ROWCOUNT;
 
 END updatePerson;</programlisting>
+    </example>
   </section>
 
   <section id="querysql-load">
@@ -1052,5 +1139,9 @@ END updatePerson;</programlisting>
         ON pers.ID = emp.PERSON_ID
     WHERE ID=?
 &lt;/sql-query&gt;</programlisting>
+
+    <para>The annotation equivalent <literal>&lt;loader&gt;</literal> is the
+    @Loader annotation as seen in <xref
+    linkend="example-custom-crdu-via-annotations" />.</para>
   </section>
 </chapter>

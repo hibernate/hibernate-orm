@@ -454,22 +454,63 @@ cats.close()</programlisting>
       <section id="objectstate-querying-executing-named" revision="1">
         <title>Externalizing named queries</title>
 
-        <para>You can also define named queries in the mapping document.
-        Remember to use a <literal>CDATA</literal> section if your query
-        contains characters that could be interpreted as markup.</para>
+        <para>Queries can also be configured as so called named queries using
+        annotations or Hibernate mapping documents.
+        <literal>@NamedQuery</literal> and <literal>@NamedQueries</literal>
+        can be defined at the class level as seen in <xref
+        linkend="example-named-query-annotation" /> . However their
+        definitions are global to the session factory/entity manager factory
+        scope. A named query is defined by its name and the actual query
+        string.</para>
 
-        <programlisting role="XML">&lt;query name="ByNameAndMaximumWeight"&gt;&lt;![CDATA[
+        <example id="example-named-query-annotation">
+          <title>Defining a named query using
+          <classname>@NamedQuery</classname></title>
+
+          <programlisting language="JAVA" role="JAVA">@Entity
+@NamedQuery(name="night.moreRecentThan", query="select n from Night n where n.date &gt;= :date")
+public class Night {
+    ...
+}
+
+public class MyDao {
+    doStuff() {
+        Query q = s.getNamedQuery("night.moreRecentThan");
+        q.setDate( "date", aMonthAgo );
+        List results = q.list();
+        ...
+    }
+    ...
+}      </programlisting>
+        </example>
+
+        <para>Using a mapping document can be configured using the
+        <literal>&lt;query&gt;</literal> node. Remember to use a
+        <literal>CDATA</literal> section if your query contains characters
+        that could be interpreted as markup.</para>
+
+        <example>
+          <title>Defining a named query using
+          <literal>&lt;query&gt;</literal></title>
+
+          <programlisting role="XML">&lt;query name="ByNameAndMaximumWeight"&gt;&lt;![CDATA[
     from eg.DomesticCat as cat
         where cat.name = ?
         and cat.weight &gt; ?
 ] ]&gt;&lt;/query&gt;</programlisting>
+        </example>
 
-        <para>Parameter binding and executing is done programatically:</para>
+        <para>Parameter binding and executing is done programatically as seen
+        in <xref linkend="example-parameter-binding-named-query" />.</para>
 
-        <programlisting role="JAVA">Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
+        <example id="example-parameter-binding-named-query">
+          <title>Parameter binding of a named query</title>
+
+          <programlisting role="JAVA">Query q = sess.getNamedQuery("ByNameAndMaximumWeight");
 q.setString(0, name);
 q.setInt(1, minWeight);
 List cats = q.list();</programlisting>
+        </example>
 
         <para>The actual program code is independent of the query language
         that is used. You can also define native SQL queries in metadata, or
@@ -1042,7 +1083,7 @@ sess.close();</programlisting>
 
     <note>
       <para>CascadeType.ALL also covers Hibernate specific operations like
-      save-update, lock etc... </para>
+      save-update, lock etc...</para>
     </note>
 
     <para>A special cascade style, <literal>delete-orphan</literal>, applies

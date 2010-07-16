@@ -532,14 +532,45 @@ Cat fritz = (Cat) iter.next();</programlisting>
       <interfacename>org.hibernate.SessionFactory</interfacename> but enabled,
       by name, on the <interfacename>org.hibernate.Session</interfacename>.
       Once enabled on a <interfacename>org.hibernate.Session</interfacename>,
-      the fetch profile wull be in affect for that
+      the fetch profile will be in affect for that
       <interfacename>org.hibernate.Session</interfacename> until it is
       explicitly disabled.</para>
 
       <para>So what does that mean? Well lets explain that by way of an
-      example. Say we have the following mappings:</para>
+      example which show the different available approaches to configure a
+      fetch profile:</para>
 
-      <programlisting role="XML">&lt;hibernate-mapping&gt;
+      <example>
+        <title>Specifying a fetch profile using
+        <classname>@FetchProfile</classname></title>
+
+        <programlisting role="XML">@Entity
+@FetchProfile(name = "customer-with-orders", fetchOverrides = {
+   @FetchProfile.FetchOverride(entity = Customer.class, association = "orders", mode = FetchMode.JOIN)
+})
+public class Customer {
+   @Id
+   @GeneratedValue
+   private long id;
+
+   private String name;
+
+   private long customerNumber;
+
+   @OneToMany
+   private Set&lt;Order&gt; orders;
+
+   // standard getter/setter
+   ...
+}</programlisting>
+      </example>
+
+      <example>
+        <title>Specifying a fetch profile using
+        <literal>&lt;fetch-profile&gt;</literal> outside
+        <literal>&lt;class&gt;</literal> node</title>
+
+        <programlisting role="XML">&lt;hibernate-mapping&gt;
     &lt;class name="Customer"&gt;
         ...
         &lt;set name="orders" inverse="true"&gt;
@@ -550,7 +581,35 @@ Cat fritz = (Cat) iter.next();</programlisting>
     &lt;class name="Order"&gt;
         ...
     &lt;/class&gt;
-&lt;/hibernate-mapping&gt;</programlisting>
+    &lt;fetch-profile name="customer-with-orders"&gt;
+        &lt;fetch entity="Customer" association="orders" style="join"/&gt;
+    &lt;/fetch-profile&gt;
+&lt;/hibernate-mapping&gt;
+</programlisting>
+      </example>
+
+      <example>
+        <title>Specifying a fetch profile using
+        <literal>&lt;fetch-profile&gt;</literal> inside
+        <literal>&lt;class&gt;</literal> node</title>
+
+        <programlisting role="XML">&lt;hibernate-mapping&gt;
+    &lt;class name="Customer"&gt;
+        ...
+        &lt;set name="orders" inverse="true"&gt;
+            &lt;key column="cust_id"/&gt;
+            &lt;one-to-many class="Order"/&gt;
+        &lt;/set&gt;
+        &lt;fetch-profile name="customer-with-orders"&gt;
+            &lt;fetch association="orders" style="join"/&gt;
+        &lt;/fetch-profile&gt;
+    &lt;/class&gt;
+    &lt;class name="Order"&gt;
+        ...
+    &lt;/class&gt;
+&lt;/hibernate-mapping&gt;
+</programlisting>
+      </example>
 
       <para>Now normally when you get a reference to a particular customer,
       that customer's set of orders will be lazy meaning we will not yet have
@@ -558,37 +617,28 @@ Cat fritz = (Cat) iter.next();</programlisting>
       Now lets say that you have a certain use case where it is more efficient
       to load the customer and their orders together. One way certainly is to
       use "dynamic fetching" strategies via an HQL or criteria queries. But
-      another option is to use a fetch profile to achieve that. Just add the
-      following to your mapping:</para>
+      another option is to use a fetch profile to achieve that. The following
+      code will load both the customer <emphasis>and</emphasis>their
+      orders:</para>
 
-      <programlisting role="XML">&lt;hibernate-mapping&gt;
-    ...
-    &lt;fetch-profile name="customer-with-orders"&gt;
-        &lt;fetch entity="Customer" association="orders" style="join"/&gt;
-    &lt;/fetch-profile&gt;
-&lt;/hibernate-mapping&gt;</programlisting>
+      <example>
+        <title>Activating a fetch profile for a given
+        <classname>Session</classname></title>
 
-      <para>or even:</para>
-
-      <programlisting role="XML">&lt;hibernate-mapping&gt;
-    &lt;class name="Customer"&gt;
-        ...
-        &lt;fetch-profile name="customer-with-orders"&gt;
-            &lt;fetch association="orders" style="join"/&gt;
-        &lt;/fetch-profile&gt;
-    &lt;/class&gt;
-    ...
-&lt;/hibernate-mapping&gt;</programlisting>
-
-      <para>Now the following code will actually load both the customer
-      <emphasis>and their orders</emphasis>:</para>
-
-      <programlisting role="JAVA">
-    Session session = ...;
-    session.enableFetchProfile( "customer-with-orders" );  // name matches from mapping
-    Customer customer = (Customer) session.get( Customer.class, customerId );
-
+        <programlisting role="JAVA">Session session = ...;
+session.enableFetchProfile( "customer-with-orders" );  // name matches from mapping
+Customer customer = (Customer) session.get( Customer.class, customerId );
 </programlisting>
+      </example>
+
+      <note>
+        <para><classname>@FetchProfile </classname>definitions are global and
+        it does not matter on which class you place them. You can place the
+        <classname>@FetchProfile</classname> annotation either onto a class or
+        package (package-info.java). In order to define multiple fetch
+        profiles for the same class or package
+        <classname>@FetchProfiles</classname> can be used.</para>
+      </note>
 
       <para>Currently only join style fetch profiles are supported, but they
       plan is to support additional styles. See <ulink

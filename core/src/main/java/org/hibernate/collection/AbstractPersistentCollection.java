@@ -36,14 +36,17 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.Status;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.EmptyIterator;
+import org.hibernate.util.IdentitySet;
 import org.hibernate.util.MarkerObject;
 
 /**
@@ -905,20 +908,29 @@ public abstract class AbstractPersistentCollection implements Serializable, Pers
 
 		// collect EntityIdentifier(s) of the *current* elements - add them into a HashSet for fast access
 		java.util.Set currentIds = new HashSet();
+		java.util.Set currentSaving = new IdentitySet();
 		for ( Iterator it=currentElements.iterator(); it.hasNext(); ) {
 			Object current = it.next();
 			if ( current!=null && ForeignKeys.isNotTransient(entityName, current, null, session) ) {
-				Serializable currentId = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, current, session);
-				currentIds.add( new TypedValue( idType, currentId, session.getEntityMode() ) );
+				EntityEntry ee = session.getPersistenceContext().getEntry( current );
+				if ( ee != null && ee.getStatus() == Status.SAVING ) {
+					currentSaving.add( current );
+				}
+				else {
+					Serializable currentId = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, current, session);
+					currentIds.add( new TypedValue( idType, currentId, session.getEntityMode() ) );
+				}
 			}
 		}
 
 		// iterate over the *old* list
 		for ( Iterator it=oldElements.iterator(); it.hasNext(); ) {
 			Object old = it.next();
-			Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, old, session);
-			if ( !currentIds.contains( new TypedValue( idType, oldId, session.getEntityMode() ) ) ) {
-				res.add(old);
+			if ( ! currentSaving.contains( old ) ) {
+				Serializable oldId = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, old, session);
+				if ( !currentIds.contains( new TypedValue( idType, oldId, session.getEntityMode() ) ) ) {
+					res.add(old);
+				}
 			}
 		}
 

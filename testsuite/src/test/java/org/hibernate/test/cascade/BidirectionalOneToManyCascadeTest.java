@@ -118,10 +118,8 @@ public class BidirectionalOneToManyCascadeTest extends FunctionalTestCase {
 	 * Saves the child object with the parent when the one-to-many association
 	 * uses cascade="all-delete-orphan" and the many-to-one association uses
 	 * cascade="all"
-	 * <p/>
-	 * This test is known to fail. See HHH-2269.
 	 */
-	public void testSaveOrphanDeleteChildWithParentFailureExpected() {
+	public void testSaveOrphanDeleteChildWithParent() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 		Parent parent = new Parent();

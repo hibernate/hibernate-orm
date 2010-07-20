@@ -34,6 +34,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CompositeCustomType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 
 /**
@@ -50,14 +52,19 @@ public final class BasicMetadataGenerator {
             if (parent != null) {
                 boolean addNestedType = (value instanceof SimpleValue) && ((SimpleValue) value).getTypeParameters() != null;
 
+                String typeName = type.getName();
+                if (typeName == null) {
+                    typeName = type.getClass().getName();
+                }
+
                 Element prop_mapping = MetadataTools.addProperty(parent, propertyAuditingData.getName(),
-                        addNestedType ? null : value.getType().getName(), propertyAuditingData.isForceInsertable() || insertable, key);
+                        addNestedType ? null : typeName, propertyAuditingData.isForceInsertable() || insertable, key);
                 MetadataTools.addColumns(prop_mapping, (Iterator<Column>) value.getColumnIterator());
 
                 if (addNestedType) {
                     Properties typeParameters = ((SimpleValue) value).getTypeParameters();
                     Element type_mapping = prop_mapping.addElement("type");
-                    type_mapping.addAttribute("name", value.getType().getName());
+                    type_mapping.addAttribute("name", typeName);
 
                     for (java.util.Map.Entry paramKeyValue : typeParameters.entrySet()) {
                         Element type_param = type_mapping.addElement("param");

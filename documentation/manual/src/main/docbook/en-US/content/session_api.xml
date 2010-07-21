@@ -633,20 +633,6 @@ sess.flush();  // changes to cat are automatically detected and persisted</progr
     and an SQL <literal>UPDATE</literal> to persist its updated state.
     Hibernate offers an alternate approach by using detached instances.</para>
 
-    <important>
-      <para>Hibernate does not offer its own API for direct execution of
-      <literal>UPDATE</literal> or <literal>DELETE</literal> statements.
-      Hibernate is a <emphasis>state management</emphasis> service, you do not
-      have to think in <emphasis>statements</emphasis> to use it. JDBC is a
-      perfect API for executing SQL statements, you can get a JDBC
-      <literal>Connection</literal> at any time by calling
-      <literal>session.connection()</literal>. Furthermore, the notion of mass
-      operations conflicts with object/relational mapping for online
-      transaction processing-oriented applications. Future versions of
-      Hibernate can, however, provide special mass operation functions. See
-      <xref linkend="batch" /> for some possible batch operation
-      tricks.</para>
-    </important>
   </section>
 
   <section id="objectstate-detached" revision="2">

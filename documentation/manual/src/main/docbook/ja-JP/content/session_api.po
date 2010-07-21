@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-07-20 21:02+0000\n"
+"POT-Creation-Date: 2010-07-21 05:43+0000\n"
 "PO-Revision-Date: 2010-01-07 14:56+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -1385,41 +1385,14 @@ msgstr ""
 "ます。そのため、 Hibernate は別の方法を用意しています。それは、 detached イン"
 "スタンスを使用する方法です。"
 
-#. Tag: para
-#: session_api.xml:481
-#, fuzzy, no-c-format
-msgid ""
-"Hibernate does not offer its own API for direct execution of "
-"<literal>UPDATE</literal> or <literal>DELETE</literal> statements. Hibernate "
-"is a <emphasis>state management</emphasis> service, you do not have to think "
-"in <emphasis>statements</emphasis> to use it. JDBC is a perfect API for "
-"executing SQL statements, you can get a JDBC <literal>Connection</literal> "
-"at any time by calling <literal>session.connection()</literal>. Furthermore, "
-"the notion of mass operations conflicts with object/relational mapping for "
-"online transaction processing-oriented applications. Future versions of "
-"Hibernate can, however, provide special mass operation functions. See <xref "
-"linkend=\"batch\"/> for some possible batch operation tricks."
-msgstr ""
-"Hibernate は、 <literal>UPDATE</literal> 文や <literal>DELETE</literal> 文を"
-"直接実行する API を用意していません。 Hibernate は、 <emphasis>ステートマネー"
-"ジメント</emphasis> サービスであり、それを使うのに <emphasis>ステートメント</"
-"emphasis> のことを開発者が考える必要はありません。 JDBC は SQL 文を実行する完"
-"璧な API であり、 <literal>session.connection()</literal> を呼ぶことでいつで"
-"も、 JDBC <literal>Connection</literal> を開発者は取得できます。さらに、大量"
-"のデータ操作の考え方は、オンライントランザクション処理向きアプリケーションの"
-"オブジェクト/リレーショナルマッピングと衝突します。しかし、 Hibernate の今後"
-"のバージョンでは、大量データを処理する特別な機能を提供するかもしれません。"
-"バッチ操作に利用できるいくつかの工夫については、 <xref linkend=\"batch\"/> を"
-"参照してください。"
-
 #. Tag: title
-#: session_api.xml:497
+#: session_api.xml:483
 #, no-c-format
 msgid "Modifying detached objects"
 msgstr "detached オブジェクトの修正"
 
 #. Tag: para
-#: session_api.xml:499
+#: session_api.xml:485
 #, no-c-format
 msgid ""
 "Many applications need to retrieve an object in one transaction, send it to "
@@ -1435,7 +1408,7 @@ msgstr ""
 "離性を保証するために、バージョンデータが通常使われます。"
 
 #. Tag: para
-#: session_api.xml:505
+#: session_api.xml:491
 #, no-c-format
 msgid ""
 "Hibernate supports this model by providing for reattachment of detached "
@@ -1447,7 +1420,7 @@ msgstr ""
 "モデルに対応します。"
 
 #. Tag: programlisting
-#: session_api.xml:509
+#: session_api.xml:495
 #, fuzzy, no-c-format
 msgid ""
 "// in the first session\n"
@@ -1475,7 +1448,7 @@ msgstr ""
 "secondSession.update(mate); // update mate"
 
 #. Tag: para
-#: session_api.xml:511
+#: session_api.xml:497
 #, no-c-format
 msgid ""
 "If the <literal>Cat</literal> with identifier <literal>catId</literal> had "
@@ -1487,7 +1460,7 @@ msgstr ""
 "ときに、例外が投げられます。"
 
 #. Tag: para
-#: session_api.xml:516
+#: session_api.xml:502
 #, no-c-format
 msgid ""
 "Use <literal>update()</literal> if you are certain that the session does not "
@@ -1506,7 +1479,7 @@ msgstr ""
 "のなかで最初に呼ばれるメソッドになります。"
 
 #. Tag: para
-#: session_api.xml:524
+#: session_api.xml:510
 #, fuzzy, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
@@ -1522,7 +1495,7 @@ msgstr ""
 "を参照してください。"
 
 #. Tag: para
-#: session_api.xml:530
+#: session_api.xml:516
 #, no-c-format
 msgid ""
 "The <literal>lock()</literal> method also allows an application to "
@@ -1534,7 +1507,7 @@ msgstr ""
 "ん。"
 
 #. Tag: programlisting
-#: session_api.xml:534
+#: session_api.xml:520
 #, fuzzy, no-c-format
 msgid ""
 "//just reassociate:\n"
@@ -1552,7 +1525,7 @@ msgstr ""
 "sess.lock(pk, LockMode.UPGRADE);"
 
 #. Tag: para
-#: session_api.xml:536
+#: session_api.xml:522
 #, no-c-format
 msgid ""
 "Note that <literal>lock()</literal> can be used with various "
@@ -1566,7 +1539,7 @@ msgstr ""
 "はありません。"
 
 #. Tag: para
-#: session_api.xml:541
+#: session_api.xml:527
 #, fuzzy, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
@@ -1576,13 +1549,13 @@ msgstr ""
 "optimistic\"/> で述べています。"
 
 #. Tag: title
-#: session_api.xml:546
+#: session_api.xml:532
 #, no-c-format
 msgid "Automatic state detection"
 msgstr "自動的な状態検出"
 
 #. Tag: para
-#: session_api.xml:548
+#: session_api.xml:534
 #, no-c-format
 msgid ""
 "Hibernate users have requested a general purpose method that either saves a "
@@ -1597,7 +1570,7 @@ msgstr ""
 "機能を実現したメソッドです。"
 
 #. Tag: programlisting
-#: session_api.xml:554
+#: session_api.xml:540
 #, fuzzy, no-c-format
 msgid ""
 "// in the first session\n"
@@ -1627,7 +1600,7 @@ msgstr ""
 "id)"
 
 #. Tag: para
-#: session_api.xml:556
+#: session_api.xml:542
 #, no-c-format
 msgid ""
 "The usage and semantics of <literal>saveOrUpdate()</literal> seems to be "
@@ -1645,7 +1618,7 @@ msgstr ""
 "もあります。"
 
 #. Tag: para
-#: session_api.xml:563
+#: session_api.xml:549
 #, no-c-format
 msgid ""
 "Usually <literal>update()</literal> or <literal>saveOrUpdate()</literal> are "
@@ -1655,31 +1628,31 @@ msgstr ""
 "のシナリオで使われます:"
 
 #. Tag: para
-#: session_api.xml:569
+#: session_api.xml:555
 #, no-c-format
 msgid "the application loads an object in the first session"
 msgstr "アプリケーションが最初のセッションでオブジェクトをロードします。"
 
 #. Tag: para
-#: session_api.xml:573
+#: session_api.xml:559
 #, no-c-format
 msgid "the object is passed up to the UI tier"
 msgstr "オブジェクトが UI 層に送られます。"
 
 #. Tag: para
-#: session_api.xml:577
+#: session_api.xml:563
 #, no-c-format
 msgid "some modifications are made to the object"
 msgstr "オブジェクトに対して変更が加えられます。"
 
 #. Tag: para
-#: session_api.xml:581
+#: session_api.xml:567
 #, no-c-format
 msgid "the object is passed back down to the business logic tier"
 msgstr "オブジェクトがビジネスロジック層に送られます。"
 
 #. Tag: para
-#: session_api.xml:585
+#: session_api.xml:571
 #, no-c-format
 msgid ""
 "the application persists these modifications by calling <literal>update()</"
@@ -1689,20 +1662,20 @@ msgstr ""
 "とで、これらの変更を永続化します。"
 
 #. Tag: para
-#: session_api.xml:590
+#: session_api.xml:576
 #, no-c-format
 msgid "<literal>saveOrUpdate()</literal> does the following:"
 msgstr "<literal>saveOrUpdate()</literal> は以下のことを行います:"
 
 #. Tag: para
-#: session_api.xml:594
+#: session_api.xml:580
 #, no-c-format
 msgid "if the object is already persistent in this session, do nothing"
 msgstr ""
 "オブジェクトがこのセッションで、すでに永続化されていれば、何もしません。"
 
 #. Tag: para
-#: session_api.xml:599
+#: session_api.xml:585
 #, no-c-format
 msgid ""
 "if another object associated with the session has the same identifier, throw "
@@ -1712,14 +1685,14 @@ msgstr ""
 "例外を投げます。"
 
 #. Tag: para
-#: session_api.xml:604
+#: session_api.xml:590
 #, no-c-format
 msgid "if the object has no identifier property, <literal>save()</literal> it"
 msgstr ""
 "オブジェクトの識別子が値を持たないならば、 <literal>save()</literal> します。"
 
 #. Tag: para
-#: session_api.xml:609
+#: session_api.xml:595
 #, no-c-format
 msgid ""
 "if the object's identifier has the value assigned to a newly instantiated "
@@ -1729,7 +1702,7 @@ msgstr ""
 "トのための値である場合、そのオブジェクトを <literal>save()</literal> します。"
 
 #. Tag: para
-#: session_api.xml:614
+#: session_api.xml:600
 #, no-c-format
 msgid ""
 "if the object is versioned by a <literal>&lt;version&gt;</literal> or "
@@ -1743,20 +1716,20 @@ msgstr ""
 "ある場合、そのオブジェクトを <literal>save()</literal> します。"
 
 #. Tag: para
-#: session_api.xml:622
+#: session_api.xml:608
 #, no-c-format
 msgid "otherwise <literal>update()</literal> the object"
 msgstr ""
 "そうでない場合は、そのオブジェクトを <literal>update()</literal> します。"
 
 #. Tag: para
-#: session_api.xml:626
+#: session_api.xml:612
 #, no-c-format
 msgid "and <literal>merge()</literal> is very different:"
 msgstr "そして、 <literal>merge()</literal> は以下のように非常に異なります:"
 
 #. Tag: para
-#: session_api.xml:630
+#: session_api.xml:616
 #, no-c-format
 msgid ""
 "if there is a persistent instance with the same identifier currently "
@@ -1767,7 +1740,7 @@ msgstr ""
 "ば、引数で受け取ったオブジェクトの状態を永続化インスタンスにコピーします。"
 
 #. Tag: para
-#: session_api.xml:636
+#: session_api.xml:622
 #, no-c-format
 msgid ""
 "if there is no persistent instance currently associated with the session, "
@@ -1777,13 +1750,13 @@ msgstr ""
 "からそれをロードするか、あるいは、新しい永続化インスタンスを作成します。"
 
 #. Tag: para
-#: session_api.xml:642
+#: session_api.xml:628
 #, no-c-format
 msgid "the persistent instance is returned"
 msgstr "永続化インスタンスが返されます。"
 
 #. Tag: para
-#: session_api.xml:646
+#: session_api.xml:632
 #, no-c-format
 msgid ""
 "the given instance does not become associated with the session, it remains "
@@ -1793,13 +1766,13 @@ msgstr ""
 "のままです。"
 
 #. Tag: title
-#: session_api.xml:653
+#: session_api.xml:639
 #, no-c-format
 msgid "Deleting persistent objects"
 msgstr "永続オブジェクトの削除"
 
 #. Tag: para
-#: session_api.xml:655
+#: session_api.xml:641
 #, no-c-format
 msgid ""
 "<literal>Session.delete()</literal> will remove an object's state from the "
@@ -1813,13 +1786,13 @@ msgstr ""
 "transient にするものと考えるのが一番です。"
 
 #. Tag: programlisting
-#: session_api.xml:660
+#: session_api.xml:646
 #, fuzzy, no-c-format
 msgid "sess.delete(cat);"
 msgstr "sess.delete(cat);"
 
 #. Tag: para
-#: session_api.xml:662
+#: session_api.xml:648
 #, no-c-format
 msgid ""
 "You can delete objects in any order, without risk of foreign key constraint "
@@ -1833,13 +1806,13 @@ msgstr ""
 "ジェクトを削除したときに、子供オブジェクトを削除し忘れた場合です。"
 
 #. Tag: title
-#: session_api.xml:670
+#: session_api.xml:656
 #, no-c-format
 msgid "Replicating object between two different datastores"
 msgstr "異なる二つのデータストア間でのオブジェクトのレプリケーション"
 
 #. Tag: para
-#: session_api.xml:672
+#: session_api.xml:658
 #, no-c-format
 msgid ""
 "It is sometimes useful to be able to take a graph of persistent instances "
@@ -1850,7 +1823,7 @@ msgstr ""
 "生成せずにすむと便利な場合があります。"
 
 #. Tag: programlisting
-#: session_api.xml:676
+#: session_api.xml:662
 #, fuzzy, no-c-format
 msgid ""
 "//retrieve a cat from one database\n"
@@ -1882,7 +1855,7 @@ msgstr ""
 "session2.close();"
 
 #. Tag: para
-#: session_api.xml:678
+#: session_api.xml:664
 #, no-c-format
 msgid ""
 "The <literal>ReplicationMode</literal> determines how <literal>replicate()</"
@@ -1893,7 +1866,7 @@ msgstr ""
 "します。"
 
 #. Tag: para
-#: session_api.xml:684
+#: session_api.xml:670
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.IGNORE</literal>: ignores the object when there is "
@@ -1903,7 +1876,7 @@ msgstr ""
 "に存在するなら、そのオブジェクトを無視します。"
 
 #. Tag: para
-#: session_api.xml:689
+#: session_api.xml:675
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.OVERWRITE</literal>: overwrites any existing "
@@ -1913,7 +1886,7 @@ msgstr ""
 "て上書きします。"
 
 #. Tag: para
-#: session_api.xml:694
+#: session_api.xml:680
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.EXCEPTION</literal>: throws an exception if there "
@@ -1923,7 +1896,7 @@ msgstr ""
 "スに存在するなら、例外を投げます。"
 
 #. Tag: para
-#: session_api.xml:700
+#: session_api.xml:686
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.LATEST_VERSION</literal>: overwrites the row if its "
@@ -1935,7 +1908,7 @@ msgstr ""
 "きします。"
 
 #. Tag: para
-#: session_api.xml:706
+#: session_api.xml:692
 #, no-c-format
 msgid ""
 "Usecases for this feature include reconciling data entered into different "
@@ -1948,13 +1921,13 @@ msgstr ""
 "ンザクションのなかで加えられた変更のロールバックなどです。"
 
 #. Tag: title
-#: session_api.xml:713
+#: session_api.xml:699
 #, no-c-format
 msgid "Flushing the Session"
 msgstr "セッションのフラッシュ"
 
 #. Tag: para
-#: session_api.xml:715
+#: session_api.xml:701
 #, no-c-format
 msgid ""
 "Sometimes the <literal>Session</literal> will execute the SQL statements "
@@ -1967,31 +1940,31 @@ msgstr ""
 "処理 <emphasis>flush</emphasis> は、デフォルトでは次のときに起こります。"
 
 #. Tag: para
-#: session_api.xml:723
+#: session_api.xml:709
 #, no-c-format
 msgid "before some query executions"
 msgstr "クエリを実行する前"
 
 #. Tag: para
-#: session_api.xml:727
+#: session_api.xml:713
 #, no-c-format
 msgid "from <literal>org.hibernate.Transaction.commit()</literal>"
 msgstr "<literal>org.hibernate.Transaction.commit()</literal> を実行したとき"
 
 #. Tag: para
-#: session_api.xml:732
+#: session_api.xml:718
 #, no-c-format
 msgid "from <literal>Session.flush()</literal>"
 msgstr "<literal>Session.flush()</literal> を実行したとき"
 
 #. Tag: para
-#: session_api.xml:736
+#: session_api.xml:722
 #, no-c-format
 msgid "The SQL statements are issued in the following order:"
 msgstr "SQL 文は以下の順番で発行されます。"
 
 #. Tag: para
-#: session_api.xml:740
+#: session_api.xml:726
 #, no-c-format
 msgid ""
 "all entity insertions in the same order the corresponding objects were saved "
@@ -2001,31 +1974,31 @@ msgstr ""
 "てセーブしたオブジェクトの順に実行していきます。"
 
 #. Tag: para
-#: session_api.xml:745
+#: session_api.xml:731
 #, no-c-format
 msgid "all entity updates"
 msgstr "すべてのエンティティの更新"
 
 #. Tag: para
-#: session_api.xml:749
+#: session_api.xml:735
 #, no-c-format
 msgid "all collection deletions"
 msgstr "すべてのコレクションの削除"
 
 #. Tag: para
-#: session_api.xml:753
+#: session_api.xml:739
 #, no-c-format
 msgid "all collection element deletions, updates and insertions"
 msgstr "すべてのコレクションの要素に対する削除、更新、挿入"
 
 #. Tag: para
-#: session_api.xml:757
+#: session_api.xml:743
 #, no-c-format
 msgid "all collection insertions"
 msgstr "すべてのコレクションの挿入"
 
 #. Tag: para
-#: session_api.xml:761
+#: session_api.xml:747
 #, no-c-format
 msgid ""
 "all entity deletions in the same order the corresponding objects were "
@@ -2035,7 +2008,7 @@ msgstr ""
 "使って削除したオブジェクトの順に実行していきます。"
 
 #. Tag: para
-#: session_api.xml:766
+#: session_api.xml:752
 #, no-c-format
 msgid ""
 "An exception is that objects using <literal>native</literal> ID generation "
@@ -2045,7 +2018,7 @@ msgstr ""
 "は、それらがセーブされたときに挿入されます。）"
 
 #. Tag: para
-#: session_api.xml:769
+#: session_api.xml:755
 #, no-c-format
 msgid ""
 "Except when you explicitly <literal>flush()</literal>, there are absolutely "
@@ -2061,7 +2034,7 @@ msgstr ""
 "データや間違ったデータ返さないことを保証しています。"
 
 #. Tag: para
-#: session_api.xml:776
+#: session_api.xml:762
 #, fuzzy, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
@@ -2083,7 +2056,7 @@ msgstr ""
 "してください)。"
 
 #. Tag: programlisting
-#: session_api.xml:786
+#: session_api.xml:772
 #, fuzzy, no-c-format
 msgid ""
 "sess = sf.openSession();\n"
@@ -2117,7 +2090,7 @@ msgstr ""
 "sess.close();"
 
 #. Tag: para
-#: session_api.xml:788
+#: session_api.xml:774
 #, fuzzy, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
@@ -2131,13 +2104,13 @@ msgstr ""
 "明します。"
 
 #. Tag: title
-#: session_api.xml:795
+#: session_api.xml:781
 #, no-c-format
 msgid "Transitive persistence"
 msgstr "連鎖的な永続化"
 
 #. Tag: para
-#: session_api.xml:797
+#: session_api.xml:783
 #, no-c-format
 msgid ""
 "It is quite cumbersome to save, delete, or reattach individual objects, "
@@ -2149,7 +2122,7 @@ msgstr ""
 "は、親子関係を扱うケースです。以下の例を考えてみましょう:"
 
 #. Tag: para
-#: session_api.xml:802
+#: session_api.xml:788
 #, no-c-format
 msgid ""
 "If the children in a parent/child relationship would be value typed (e.g. a "
@@ -2170,7 +2143,7 @@ msgstr ""
 "を共有できないので、データベースからその子供を削除します。"
 
 #. Tag: para
-#: session_api.xml:812
+#: session_api.xml:798
 #, no-c-format
 msgid ""
 "Now consider the same scenario with parent and child objects being entities, "
@@ -2190,7 +2163,7 @@ msgstr ""
 "よる永続化</emphasis> をデフォルトでは実行しません。"
 
 #. Tag: para
-#: session_api.xml:820
+#: session_api.xml:806
 #, no-c-format
 msgid ""
 "For each basic operation of the Hibernate session - including "
@@ -2210,25 +2183,25 @@ msgstr ""
 "ばなりません。例えば、以下のようにします:"
 
 #. Tag: programlisting
-#: session_api.xml:828
+#: session_api.xml:814
 #, fuzzy, no-c-format
 msgid "&lt;one-to-one name=\"person\" cascade=\"persist\"/&gt;"
 msgstr "&lt;one-to-one name=\"person\" cascade=\"persist\"/&gt;"
 
 #. Tag: para
-#: session_api.xml:830
+#: session_api.xml:816
 #, no-c-format
 msgid "Cascade styles my be combined:"
 msgstr "カスケードスタイルは、組み合わせることができます:"
 
 #. Tag: programlisting
-#: session_api.xml:832
+#: session_api.xml:818
 #, fuzzy, no-c-format
 msgid "&lt;one-to-one name=\"person\" cascade=\"persist,delete,lock\"/&gt;"
 msgstr "&lt;one-to-one name=\"person\" cascade=\"persist,delete,lock\"/&gt;"
 
 #. Tag: para
-#: session_api.xml:834
+#: session_api.xml:820
 #, no-c-format
 msgid ""
 "You can even use <literal>cascade=\"all\"</literal> to specify that "
@@ -2242,7 +2215,7 @@ msgstr ""
 "します。"
 
 #. Tag: para
-#: session_api.xml:839
+#: session_api.xml:825
 #, no-c-format
 msgid ""
 "In case you are using annotatons you probably have noticed the "
@@ -2253,7 +2226,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:848
+#: session_api.xml:834
 #, no-c-format
 msgid ""
 "<literal>CascadeType.PERSIST</literal>: cascades the persist (create) "
@@ -2262,7 +2235,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:854
+#: session_api.xml:840
 #, no-c-format
 msgid ""
 "<literal>CascadeType.MERGE</literal>: cascades the merge operation to "
@@ -2270,7 +2243,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:860
+#: session_api.xml:846
 #, no-c-format
 msgid ""
 "<literal>CascadeType.REMOVE</literal>: cascades the remove operation to "
@@ -2278,7 +2251,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:865
+#: session_api.xml:851
 #, no-c-format
 msgid ""
 "<literal>CascadeType.REFRESH:</literal> cascades the refresh operation to "
@@ -2286,7 +2259,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:870
+#: session_api.xml:856
 #, no-c-format
 msgid ""
 "<literal>CascadeType.DETACH:</literal> cascades the detach operation to "
@@ -2294,13 +2267,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:875
+#: session_api.xml:861
 #, fuzzy, no-c-format
 msgid "<literal>CascadeType.ALL</literal>: all of the above"
 msgstr "<literal>saveOrUpdate()</literal> は以下のことを行います:"
 
 #. Tag: para
-#: session_api.xml:880
+#: session_api.xml:866
 #, no-c-format
 msgid ""
 "CascadeType.ALL also covers Hibernate specific operations like save-update, "
@@ -2308,7 +2281,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:884
+#: session_api.xml:870
 #, no-c-format
 msgid ""
 "A special cascade style, <literal>delete-orphan</literal>, applies only to "
@@ -2325,13 +2298,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: session_api.xml:897
+#: session_api.xml:883
 #, no-c-format
 msgid "<literal>@OneToMany</literal> with <literal>orphanRemoval</literal>"
 msgstr ""
 
 #. Tag: programlisting
-#: session_api.xml:900
+#: session_api.xml:886
 #, no-c-format
 msgid ""
 "@Entity \n"
@@ -2355,13 +2328,13 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: session_api.xml:903
+#: session_api.xml:889
 #, no-c-format
 msgid "Recommendations:"
 msgstr "おすすめ："
 
 #. Tag: para
-#: session_api.xml:907
+#: session_api.xml:893
 #, fuzzy, no-c-format
 msgid ""
 "It does not usually make sense to enable cascade on a many-to-one or many-to-"
@@ -2376,7 +2349,7 @@ msgstr ""
 "literal> 関連に対しては、カスケードが役に立つことがあります。"
 
 #. Tag: para
-#: session_api.xml:915
+#: session_api.xml:901
 #, fuzzy, no-c-format
 msgid ""
 "If the child object's lifespan is bounded by the lifespan of the parent "
@@ -2389,7 +2362,7 @@ msgstr ""
 "を <emphasis>ライフサイクルオブジェクト</emphasis> にします。"
 
 #. Tag: para
-#: session_api.xml:923
+#: session_api.xml:909
 #, no-c-format
 msgid ""
 "Otherwise, you might not need cascade at all. But if you think that you will "
@@ -2403,7 +2376,7 @@ msgstr ""
 "literal> を使うことを考えましょう。"
 
 #. Tag: para
-#: session_api.xml:931
+#: session_api.xml:917
 #, no-c-format
 msgid ""
 "Mapping an association (either a single valued association, or a collection) "
@@ -2416,7 +2389,7 @@ msgstr ""
 "のセーブ/更新/削除が、子のセーブ/更新/削除を引き起こす関係のことです。"
 
 #. Tag: para
-#: session_api.xml:937
+#: session_api.xml:923
 #, fuzzy, no-c-format
 msgid ""
 "Furthermore, a mere reference to a child from a persistent parent will "
@@ -2435,7 +2408,7 @@ msgstr ""
 "なります:"
 
 #. Tag: para
-#: session_api.xml:948
+#: session_api.xml:934
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>persist()</literal>, all children are "
@@ -2445,7 +2418,7 @@ msgstr ""
 "<literal>persist()</literal> に渡されます。"
 
 #. Tag: para
-#: session_api.xml:953
+#: session_api.xml:939
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>merge()</literal>, all children are passed "
@@ -2455,7 +2428,7 @@ msgstr ""
 "literal> に渡されます。"
 
 #. Tag: para
-#: session_api.xml:958
+#: session_api.xml:944
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>save()</literal>, <literal>update()</"
@@ -2467,7 +2440,7 @@ msgstr ""
 "<literal>saveOrUpdate()</literal> に渡されます。"
 
 #. Tag: para
-#: session_api.xml:964
+#: session_api.xml:950
 #, no-c-format
 msgid ""
 "If a transient or detached child becomes referenced by a persistent parent, "
@@ -2477,7 +2450,7 @@ msgstr ""
 "<literal>saveOrUpdate()</literal> に渡されます。"
 
 #. Tag: para
-#: session_api.xml:970
+#: session_api.xml:956
 #, no-c-format
 msgid ""
 "If a parent is deleted, all children are passed to <literal>delete()</"
@@ -2487,7 +2460,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
-#: session_api.xml:975
+#: session_api.xml:961
 #, no-c-format
 msgid ""
 "If a child is dereferenced by a persistent parent, <emphasis>nothing special "
@@ -2501,7 +2474,7 @@ msgstr ""
 "きます。この場合、「親のない」子は削除されます。"
 
 #. Tag: para
-#: session_api.xml:983
+#: session_api.xml:969
 #, no-c-format
 msgid ""
 "Finally, note that cascading of operations can be applied to an object graph "
@@ -2520,13 +2493,13 @@ msgstr ""
 "エンティティに伝播します。"
 
 #. Tag: title
-#: session_api.xml:993
+#: session_api.xml:979
 #, no-c-format
 msgid "Using metadata"
 msgstr "メタデータの使用"
 
 #. Tag: para
-#: session_api.xml:995
+#: session_api.xml:981
 #, no-c-format
 msgid ""
 "Hibernate requires a rich meta-level model of all entity and value types. "
@@ -2545,7 +2518,7 @@ msgstr ""
 "るものです。"
 
 #. Tag: para
-#: session_api.xml:1002
+#: session_api.xml:988
 #, no-c-format
 msgid ""
 "Hibernate exposes metadata via the <literal>ClassMetadata</literal> and "
@@ -2559,7 +2532,7 @@ msgstr ""
 "スタンスは、 <literal>SessionFactory</literal> から得られます。"
 
 #. Tag: programlisting
-#: session_api.xml:1007
+#: session_api.xml:993
 #, fuzzy, no-c-format
 msgid ""
 "Cat fritz = ......;\n"
@@ -2593,6 +2566,32 @@ msgstr ""
 "        namedValues.put( propertyNames[i], propertyValues[i] );\n"
 "    }\n"
 "}"
+
+#, fuzzy
+#~ msgid ""
+#~ "Hibernate does not offer its own API for direct execution of "
+#~ "<literal>UPDATE</literal> or <literal>DELETE</literal> statements. "
+#~ "Hibernate is a <emphasis>state management</emphasis> service, you do not "
+#~ "have to think in <emphasis>statements</emphasis> to use it. JDBC is a "
+#~ "perfect API for executing SQL statements, you can get a JDBC "
+#~ "<literal>Connection</literal> at any time by calling <literal>session."
+#~ "connection()</literal>. Furthermore, the notion of mass operations "
+#~ "conflicts with object/relational mapping for online transaction "
+#~ "processing-oriented applications. Future versions of Hibernate can, "
+#~ "however, provide special mass operation functions. See <xref linkend="
+#~ "\"batch\"/> for some possible batch operation tricks."
+#~ msgstr ""
+#~ "Hibernate は、 <literal>UPDATE</literal> 文や <literal>DELETE</literal> 文"
+#~ "を直接実行する API を用意していません。 Hibernate は、 <emphasis>ステート"
+#~ "マネージメント</emphasis> サービスであり、それを使うのに <emphasis>ステー"
+#~ "トメント</emphasis> のことを開発者が考える必要はありません。 JDBC は SQL "
+#~ "文を実行する完璧な API であり、 <literal>session.connection()</literal> を"
+#~ "呼ぶことでいつでも、 JDBC <literal>Connection</literal> を開発者は取得でき"
+#~ "ます。さらに、大量のデータ操作の考え方は、オンライントランザクション処理向"
+#~ "きアプリケーションのオブジェクト/リレーショナルマッピングと衝突します。し"
+#~ "かし、 Hibernate の今後のバージョンでは、大量データを処理する特別な機能を"
+#~ "提供するかもしれません。バッチ操作に利用できるいくつかの工夫については、 "
+#~ "<xref linkend=\"batch\"/> を参照してください。"
 
 #~ msgid ""
 #~ "A special cascade style, <literal>delete-orphan</literal>, applies only "

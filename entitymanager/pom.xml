@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
-        <version>3.6.0-SNAPSHOT</version>
+        <version>3.6.0.Beta1</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
@@ -120,12 +120,12 @@
                 <!-- Define one configuration outside executions and without a phase in order to allow 'mvn antrun:run' -->
                 <configuration>
                     <tasks>
-                        <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen" />
-                        <property name="src.dir" value="${project.build.testSourceDirectory}" />
-                        <property name="jdk16_home" value="${jdk16_home}" />
-                        <property name="classpath" refid="maven.test.classpath" />
+                        <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
+                        <property name="src.dir" value="${project.build.testSourceDirectory}"/>
+                        <property name="jdk16_home" value="${jdk16_home}"/>
+                        <property name="classpath" refid="maven.test.classpath"/>
                         <ant antfile="${basedir}/build.xml">
-                            <target name="generate-metamodel" />
+                            <target name="generate-metamodel"/>
                         </ant>
                     </tasks>
                 </configuration>

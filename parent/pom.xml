@@ -540,9 +540,9 @@
                 <version>4.0.2.GA</version>
             </dependency>
             <dependency>
-                <groupId>org.hsqldb</groupId>
+                <groupId>hsqldb</groupId>
                 <artifactId>hsqldb</artifactId>
-                <version>1.8.0.10</version>
+                <version>1.8.0.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -572,7 +572,7 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>org.hsqldb</groupId>
+                    <groupId>hsqldb</groupId>
                     <artifactId>hsqldb</artifactId>
                     <scope>test</scope>
                 </dependency>

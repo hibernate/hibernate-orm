@@ -74,7 +74,9 @@
     <xi:include href="content/persistent_classes.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
     <xi:include href="content/basic_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
     <xi:include href="content/collection_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/type.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/association_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/component_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/inheritance_mapping.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

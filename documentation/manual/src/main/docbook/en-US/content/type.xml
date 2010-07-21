@@ -48,22 +48,22 @@
     </important>
 
     <para>
-        Hibernate categorizes types into two high-level groups: value types (see <xref linkend="types.value"/>) and
-        entity types (see <xref linkend="types.entity"/>).
+        Hibernate categorizes types into two high-level groups: value types (see <xref linkend="types-value"/>) and
+        entity types (see <xref linkend="types-entity"/>).
     </para>
 
-    <section id="types.value">
+    <section id="types-value">
         <title>Value types</title>
 
         <para>
             The main distinguishing characteristic of a value type is the fact that they do not define their own
             lifecycle.  We say that they are "owned" by something else (specifically an entity, as we will see later)
             which defines their lifecycle.  Value types are further classified into 3 sub-categories: basic types (see
-            <xref linkend="types.value.basic"/>), composite types (see <xref linkend="types.value.composite"/>)
-            amd collection types (see <xref linkend="types.value.collection"/>).
+            <xref linkend="types-value-basic"/>), composite types (see <xref linkend="types-value-composite"/>)
+            amd collection types (see <xref linkend="types-value-collection"/>).
         </para>
 
-        <section id="types.value.basic">
+        <section id="types-value-basic">
             <title>Basic value types</title>
             <para>
                 The norm for basic value types is that they map a single database value (column) to a single, 
@@ -72,7 +72,7 @@
                 JDBC specification.  We will later cover how to override these mapping and how to provide and use
                 alternative type mappings.
             </para>
-            <section id="types.value.basic.string">
+            <section id="types-value-basic-string">
                 <title>java.lang.String</title>
                 <variablelist>
                     <varlistentry>
@@ -84,7 +84,7 @@
                             </para>
                             <para>
                                 Registered under <literal>string</literal> and <literal>java.lang.String</literal>
-                                in the type registry (see <xref linkend="types.registry"/>).
+                                in the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -96,7 +96,7 @@
                             </para>
                             <para>
                                 Registered under <literal>materialized_clob</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -108,13 +108,13 @@
                             </para>
                             <para>
                                 Registered under <literal>text</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.character">
+            <section id="types-basic-value-character">
                 <title><classname>java.lang.Character</classname> (or char primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -125,13 +125,13 @@
                             </para>
                             <para>
                                 Registered under <literal>char</literal> and <literal>java.lang.Character</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.value.basic.boolean">
+            <section id="types-value-basic-boolean">
                 <title><classname>java.lang.Boolean</classname> (or boolean primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -142,7 +142,7 @@
                             </para>
                             <para>
                                 Registered under <literal>boolean</literal> and <literal>java.lang.Boolean</literal> in
-                                the type registry (see <xref linkend="types.registry"/>).
+                                the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -154,7 +154,7 @@
                             </para>
                             <para>
                                 Registered under <literal>numeric_boolean</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -166,7 +166,7 @@
                             </para>
                             <para>
                                 Registered under <literal>yes_no</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -178,13 +178,13 @@
                             </para>
                             <para>
                                 Registered under <literal>true_false</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.byte">
+            <section id="types-basic-value-byte">
                 <title><classname>java.lang.Byte</classname> (or byte primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -195,13 +195,13 @@
                             </para>
                             <para>
                                 Registered under <literal>byte</literal> and <literal>java.lang.Byte</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.short">
+            <section id="types-basic-value-short">
                 <title><classname>java.lang.Short</classname> (or short primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -212,13 +212,13 @@
                             </para>
                             <para>
                                 Registered under <literal>short</literal> and <literal>java.lang.Short</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.int">
+            <section id="types-basic-value-int">
                 <title><classname>java.lang.Integer</classname> (or int primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -229,13 +229,13 @@
                             </para>
                             <para>
                                 Registered under <literal>int</literal> and <literal>java.lang.Integer</literal>in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.long">
+            <section id="types-basic-value-long">
                 <title><classname>java.lang.Long</classname> (or long primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -246,13 +246,13 @@
                             </para>
                             <para>
                                 Registered under <literal>long</literal> and <literal>java.lang.Long</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.float">
+            <section id="types-basic-value-float">
                 <title><classname>java.lang.Float</classname> (or float primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -263,13 +263,13 @@
                             </para>
                             <para>
                                 Registered under <literal>float</literal> and <literal>java.lang.Float</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.double">
+            <section id="types-basic-value-double">
                 <title><classname>java.lang.Double</classname> (or double primitive)</title>
                 <variablelist>
                     <varlistentry>
@@ -280,13 +280,13 @@
                             </para>
                             <para>
                                 Registered under <literal>double</literal> and <literal>java.lang.Double</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.biginteger">
+            <section id="types-basic-value-biginteger">
                 <title><classname>java.math.BigInteger</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -297,13 +297,13 @@
                             </para>
                             <para>
                                 Registered under <literal>big_integer</literal> and <literal>java.math.BigInteger</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.bigdecimal">
+            <section id="types-basic-value-bigdecimal">
                 <title><classname>java.math.BigDecimal</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -314,13 +314,13 @@
                             </para>
                             <para>
                                 Registered under <literal>big_decimal</literal> and <literal>java.math.BigDecimal</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.timestamp">
+            <section id="types-basic-value-timestamp">
                 <title><classname>java.util.Date</classname> or <classname>java.sql.Timestamp</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -331,13 +331,13 @@
                             </para>
                             <para>
                                 Registered under <literal>timestamp</literal>, <literal>java.sql.Timestamp</literal> and
-                                <literal>java.util.Date</literal> in the type registry (see <xref linkend="types.registry"/>).
+                                <literal>java.util.Date</literal> in the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.time">
+            <section id="types-basic-value-time">
                 <title><classname>java.sql.Time</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -348,13 +348,13 @@
                             </para>
                             <para>
                                 Registered under <literal>time</literal> and <literal>java.sql.Time</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.date">
+            <section id="types-basic-value-date">
                 <title><classname>java.sql.Date</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -365,13 +365,13 @@
                             </para>
                             <para>
                                 Registered under <literal>date</literal> and <literal>java.sql.Date</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.calendar">
+            <section id="types-basic-value-calendar">
                 <title><classname>java.util.Calendar</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -383,7 +383,7 @@
                             <para>
                                 Registered under <literal>calendar</literal>, <literal>java.util.Calendar</literal> and
                                 <literal>java.util.GregorianCalendar</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -395,13 +395,13 @@
                             </para>
                             <para>
                                 Registered under <literal>calendar_date</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.currency">
+            <section id="types-basic-value-currency">
                 <title><classname>java.util.Currency</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -412,13 +412,13 @@
                             </para>
                             <para>
                                 Registered under <literal>currency</literal> and <literal>java.util.Currency</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.locale">
+            <section id="types-basic-value-locale">
                 <title><classname>java.util.Locale</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -429,13 +429,13 @@
                             </para>
                             <para>
                                 Registered under <literal>locale</literal> and <literal>java.util.Locale</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.timezone">
+            <section id="types-basic-value-timezone">
                 <title><classname>java.util.TimeZone</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -446,13 +446,13 @@
                             </para>
                             <para>
                                 Registered under <literal>timezone</literal> and <literal>java.util.TimeZone</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.class">
+            <section id="types-basic-value-class">
                 <title><classname>java.lang.Class</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -463,13 +463,13 @@
                             </para>
                             <para>
                                 Registered under <literal>class</literal> and <literal>java.lang.Class</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.blob">
+            <section id="types-basic-value-blob">
                 <title><classname>java.sql.Blob</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -480,13 +480,13 @@
                             </para>
                             <para>
                                 Registered under <literal>blob</literal> and <literal>java.sql.Blob</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.clob">
+            <section id="types-basic-value-clob">
                 <title><classname>java.sql.Clob</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -497,13 +497,13 @@
                             </para>
                             <para>
                                 Registered under <literal>clob</literal> and <literal>java.sql.Clob</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.binary">
+            <section id="types-basic-value-binary">
                 <title>byte[]</title>
                 <variablelist>
                     <varlistentry>
@@ -514,7 +514,7 @@
                             </para>
                             <para>
                                 Registered under <literal>binary</literal> and <literal>byte[]</literal> in the
-                                type registry (see <xref linkend="types.registry"/>).
+                                type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -526,13 +526,13 @@
                             </para>
                             <para>
                                 Registered under <literal>materialized_blob</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.wrapperbinary">
+            <section id="types-basic-value-wrapperbinary">
                 <title>byte[]</title>
                 <variablelist>
                     <varlistentry>
@@ -543,13 +543,13 @@
                             </para>
                             <para>
                                 Registered under <literal>wrapper-binary</literal>, <literal>Byte[]</literal> and
-                                <literal>java.lang.Byte[]</literal> in the type registry (see <xref linkend="types.registry"/>).
+                                <literal>java.lang.Byte[]</literal> in the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.chararray">
+            <section id="types-basic-value-chararray">
                 <title>char[]</title>
                 <variablelist>
                     <varlistentry>
@@ -560,13 +560,13 @@
                             </para>
                             <para>
                                 Registered under <literal>characters</literal> and <literal>char[]</literal>
-                                in the type registry (see <xref linkend="types.registry"/>).
+                                in the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.characterarray">
+            <section id="types-basic-value-characterarray">
                 <title>char[]</title>
                 <variablelist>
                     <varlistentry>
@@ -577,13 +577,13 @@
                             </para>
                             <para>
                                 Registered under <literal>wrapper-characters</literal>, <literal>Character[]</literal>
-                                and <literal>java.lang.Character[]</literal> in the type registry (see <xref linkend="types.registry"/>).
+                                and <literal>java.lang.Character[]</literal> in the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.uuid">
+            <section id="types-basic-value-uuid">
                 <title><classname>java.util.UUID</classname></title>
                 <variablelist>
                     <varlistentry>
@@ -594,7 +594,7 @@
                             </para>
                             <para>
                                 Registered under <literal>uuid-binary</literal> and <literal>java.util.UUID</literal>
-                                in the type registry (see <xref linkend="types.registry"/>).
+                                in the type registry (see <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -606,7 +606,7 @@
                             </para>
                             <para>
                                 Registered under <literal>uuid-char</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
@@ -619,14 +619,14 @@
                             </para>
                             <para>
                                 Registered under <literal>pg-uuid</literal> in the type registry (see
-                                <xref linkend="types.registry"/>).
+                                <xref linkend="types-registry"/>).
                             </para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types.basic.value.serializable">
-                <title><classname>java.io.Serializable</classname></title>
+            <section id="types-basic-value-serializable">
+                <title><interfacename>java.io.Serializable</interfacename></title>
                 <variablelist>
                     <varlistentry>
                         <term><classname>org.hibernate.type.SerializableType</classname></term>
@@ -636,9 +636,9 @@
                             </para>
                             <para>
                                 Unlike the other value types, there are multiple instances of this type.  It
-                                gets registered once under <literal>java.io.Serializable</literal>.  Additionally it
-                                gets registered under the specific <interfacename>java.io.Serializable</interfacename>
-                                implementation class names.
+                                gets registered once under <interfacename>java.io.Serializable</interfacename>.
+                                Additionally it gets registered under the specific
+                                <interfacename>java.io.Serializable</interfacename> implementation class names.
                             </para>
                         </listitem>
                     </varlistentry>
@@ -646,7 +646,7 @@
             </section>
         </section>
 
-        <section id="types.value.composite">
+        <section id="types-value-composite">
             <title>Composite types</title>
             <note>
                 <para>
@@ -666,7 +666,7 @@
             </para>
         </section>
 
-        <section id="types.value.collection">
+        <section id="types-value-collection">
             <title>Collection types</title>
             <important>
                 <para>
@@ -682,7 +682,7 @@
 
     </section>
 
-    <section id="types.entity">
+    <section id="types-entity">
         <title>Entity types</title>
         <para>
             The definition of entities is covered in detail in <xref linkend="persistent-classes"/>.  For the purpose of
@@ -701,7 +701,7 @@
         </para>
     </section>
 
-    <section id="types.category.significance">
+    <section id="types-category-significance">
         <title>Significance of type categories</title>
         <para>
             Why do we spend so much time categorizing the various types of types?  What is the significance of the
@@ -724,14 +724,14 @@
         </para>
     </section>
 
-    <section id="types.custom">
+    <section id="types-custom">
         <title>Custom types</title>
         <para>
             Hibernate makes it relatively easy for developers to create their own <emphasis>value</emphasis> types.  For
             example, you might want to persist properties of type <classname>java.lang.BigInteger</classname> to
             <literal>VARCHAR</literal> columns.  Custom types are not limited to mapping values to a single table
             column.  So, for example, you might want to concatenate together <literal>FIRST_NAME</literal>,
-            <literal>INITIAL</literal> and <literal>SURNAME</literal> columsn into a <classname>java,lang.String</classname>.
+            <literal>INITIAL</literal> and <literal>SURNAME</literal> columns into a <classname>java.lang.String</classname>.
         </para>
 
         <para>
@@ -740,19 +740,21 @@
             and <classname>java.util.Currency</classname> together into a custom <classname>Money</classname> class.
         </para>
 
-        <section id="types.custom.type">
+        <section id="types-custom-type">
             <title>Custom types using <interfacename>org.hibernate.type.Type</interfacename></title>
             <para>
                 The first approach is to directly implement the <interfacename>org.hibernate.type.Type</interfacename>
                 interface (or one of its derivatives).  Probably, you will be more interested in the more specific
                 <interfacename>org.hibernate.type.BasicType</interfacename> contract which would allow registration of
-                the type (see <xref linkend="types.registry"/>).  The benefit of this registration is that whenever
+                the type (see <xref linkend="types-registry"/>).  The benefit of this registration is that whenever
                 the metadata for a particular property does not specify the Hibernate type to use, Hibernate will
                 consult the registry for the exposed property type.  In our example, the property type would be
                 <classname>Money</classname>, which is the key we would use to register our type in the registry:
-                <example id="types.custom.type.ex.definition">
-                    <title>Defining and registering the custom Type</title>
-                    <programlisting role="JAVA"><![CDATA[public class MoneyType implements BasicType {
+            </para>
+
+            <example id="types-custom-type-ex-definition">
+                <title>Defining and registering the custom Type</title>
+                <programlisting role="JAVA"><![CDATA[public class MoneyType implements BasicType {
     public String[] getRegistrationKeys() {
         return new String[] { Money.class.getName() };
     }
@@ -798,22 +800,21 @@
     }
 
     ...
-}]]></programlisting>
-                    <programlisting role="JAVA">
-                        Configuration cfg = new Configuration();
-                        cfg.registerTypeOverride( new MoneyType() );
-                        cfg...;
-                    </programlisting>
-                </example>
-                <important>
-                    <para>
-                        It is important that we registered the type <emphasis>before</emphasis> adding mappings.
-                    </para>
-                </important>
-            </para>
+}
+
+Configuration cfg = new Configuration();
+cfg.registerTypeOverride( new MoneyType() );
+cfg...;
+]]></programlisting>
+            </example>
+            <important>
+                <para>
+                    It is important that we registered the type <emphasis>before</emphasis> adding mappings.
+                </para>
+            </important>
         </section>
 
-        <section id="types.custom.ut">
+        <section id="types-custom-ut">
             <title>Custom types using <interfacename>org.hibernate.usertype.UserType</interfacename></title>
             <note>
                 <para>
@@ -829,7 +830,7 @@
                 interface.  Using a <interfacename>org.hibernate.usertype.UserType</interfacename>, our
                 <classname>Money</classname> custom type would look as follows:
             </para>
-            <example id="types.custom.ut.ex.definition">
+            <example id="types-custom-ut-ex-definition">
                 <title>Defining the custom UserType</title>
                 <programlisting role="JAVA"><![CDATA[public class MoneyType implements UserType {
     public int[] sqlTypes() {
@@ -876,19 +877,19 @@
             </para>
         </section>
 
-        <section id="types.custom.cut">
+        <section id="types-custom-cut">
             <title>Custom types using <interfacename>org.hibernate.usertype.CompositeUserType</interfacename></title>
             <para>
                 The third and final approach is the use the <interfacename>org.hibernate.usertype.CompositeUserType</interfacename>
                 interface, which differs from <interfacename>org.hibernate.usertype.UserType</interfacename> in that it
                 gives us the ability to provide Hibernate the information to handle the composition within the
-                <classname>Money</classname> class (specifically the 2 attributes).  THis would give us the capability,
+                <classname>Money</classname> class (specifically the 2 attributes).  This would give us the capability,
                 for example, to reference the <literal>amount</literal> attribute in an HQL query.  Using a
-                <interfacename>org.hibernate.usertype.UserType</interfacename>, our <classname>Money</classname> custom
-                type would look as follows:
+                <interfacename>org.hibernate.usertype.CompositeUserType</interfacename>, our
+                <classname>Money</classname> custom type would look as follows:
             </para>
 
-            <example id="types.custom.cut.ex.definition">
+            <example id="types-custom-cut-ex-definition">
                 <title>Defining the custom CompositeUserType</title>
                 <programlisting role="JAVA"><![CDATA[public class MoneyType implements CompositeUserType {
     public String[] getPropertyNames() {
@@ -972,10 +973,10 @@
 
     </section>
 
-    <section id="types.registry">
+    <section id="types-registry">
         <title>Type registry</title>
         <para>
-            Internally Hibernate uses a registry of basic types (see <xref linkend="types.value.basic"/>) when
+            Internally Hibernate uses a registry of basic types (see <xref linkend="types-value-basic"/>) when
             it needs to resolve the specific <interfacename>org.hibernate.type.Type</interfacename> to use in certain
             situations.  It also provides a way for applications to add extra basic type registrations as well as
             override the standard basic type registrations.
@@ -985,36 +986,32 @@
             <methodname>registerTypeOverride</methodname> method of the <classname>org.hibernate.cfg.Configuration</classname>
             class when bootstrapping Hibernate.  For example, lets say you want Hibernate to use your custom
             <classname>SuperDuperStringType</classname>; during bootstrap you would call:
-            <example id="type.registry.override.ex">
-                <title>Overriding the standard <classname>StringType</classname></title>
-                <programlisting role="JAVA"><![CDATA[Configuration cfg = ...;
-    cfg.registerTypeOverride( new SuperDuperStringType() );]]></programlisting>
-            </example>
         </para>
+        <example id="type-registry-override-ex">
+            <title>Overriding the standard <classname>StringType</classname></title>
+            <programlisting role="JAVA"><![CDATA[Configuration cfg = ...;
+cfg.registerTypeOverride( new SuperDuperStringType() );]]></programlisting>
+        </example>
         <para>
             The argument to <methodname>registerTypeOverride</methodname> is a <interfacename>org.hibernate.type.BasicType</interfacename>
             which is a specialization of the <interfacename>org.hibernate.type.Type</interfacename> we saw before.  It
             adds a single method:
-            <example>
-                <title>Snippet from BasicType.java</title>
-                <programlisting role="JAVA" >
+        </para>
+        <example>
+            <title>Snippet from BasicType.java</title>
+            <programlisting role="JAVA" >
     /**
 	 * Get the names under which this type should be registered in the type registry.
 	 *
 	 * @return The keys under which to register this type.
 	 */
 	public String[] getRegistrationKeys();
-                </programlisting>
-            </example>
+            </programlisting>
+        </example>
+        <para>
             One approach is to use inheritance (<classname>SuperDuperStringType</classname> extends 
-            <classname>org.hibernate.typeStringType</classname>).  Another approach is to use delegation.
+            <classname>org.hibernate.type.StringType</classname>); another is to use delegation.
         </para>
-        <important>
-            <para>
-                Currently UserType and CompositeUserType cannot be registered with the registry.  See
-                <ulink url="http://opensource.atlassian.com/projects/hibernate/browse/HHH-5262"/> for details.
-            </para>
-        </important>
     </section>
 
 </chapter>

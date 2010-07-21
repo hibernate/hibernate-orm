@@ -6,6 +6,148 @@ refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
 
+Changes in version 3.6.0.Beta1 (2010.07.21)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/10941
+
+** Sub-task
+    * [HHH-3764] - Add the "end-revision" column when generating metadata
+    * [HHH-3765] - Fill the "end revision" column with appropriate data in add/mod/del/collection work units
+    * [HHH-5115] - Migrate Annotations documentation system to jdocbook's maven plugin (like core)
+    * [HHH-5149] - Update "Basic O/R Mapping" (chapter 5) and "Collection Mapping" (chapter 6) of Core manual to use annotations
+    * [HHH-5150] - Update settings section to reflect merge from Annotations and Core documentation
+    * [HHH-5153] - Update Filters chapter to also show annotation configuration
+    * [HHH-5155] - Move Additional modules chapter from Annotations to Core probably in Appendix
+    * [HHH-5366] - Move annotations module tests into testsuite module
+    * [HHH-5367] - Move annotations module sources into core module
+    * [HHH-5379] - Update "Transitive persistence" (10.11) section to incorporate annotations
+    * [HHH-5380] - Update "Cache mappings" (20.2.1) section to incorporate annotations
+    * [HHH-5388] - Add @NamedQuery, @NamedNativeQuery, @SqlResultSetMapping, @Tuplizers and @FetchProfile to Core documentation
+    * [HHH-5389] - Update custom CRUD chapter
+
+** Bug
+    * [HHH-2269] - Many-to-one cascade fails with TransientObjectException if the inverse collection is marked CascadeType.DELETE_ORPHAN
+    * [HHH-2277] - bidirectional <key-many-to-one> both lazy=false fetch=join lead to infinite loop
+    * [HHH-3001] - The NoopOptimizer is not thread safe
+    * [HHH-3005] - DTD: map-key should allow nested type rather than attribute.
+    * [HHH-3096] - COUNT DISTINCT operator with idenfication variable w/ composite primary key produces bad sql
+    * [HHH-3377] - Update H2Dialect to use DECIMAL SQL type instead of NUMERIC
+    * [HHH-3694] - ResultTransformer not used when scroll() is used on a named SQLQuery
+    * [HHH-4036] - EntityMetamodel entityNameByInheritenceClassNameMap field used inconsistently
+    * [HHH-4147] - Eager Bidirectional association with @ManyToOne in PK lead to infinite loop
+    * [HHH-4156] - c3p0 is not used when only specific hibernate.c3p0.* properties
+    * [HHH-4240] - SecondaryTables not recognized when using JOINED inheritance
+    * [HHH-4250] - @ManyToOne - @OneToMany doesn't work with @Inheritance(strategy= InheritanceType.JOINED)
+    * [HHH-4568] - Sybase - Test "BatchTest" fails due to "unexpected row count from update"
+    * [HHH-4647] - Problems with @JoinColumn referencedColumnName and quoted column and table names
+    * [HHH-4716] -  NotAuditedException using the entity name concept of hibernate.
+    * [HHH-4773] - @CollectionId does not force the id column to not-null
+    * [HHH-4957] - Criteria Projections.countDistinct() function broken
+    * [HHH-4966] - Entity Manager bug with ParameterExpressionImpl
+    * [HHH-4968] - Cannot deactivate default BeanValidationListener independently of DDL constraints generation (Vladimir Klyushnikov)
+    * [HHH-4991] - ManyToMany table not joined due to max_fetch_depth parameter, results to SQL exceptions
+    * [HHH-5006] - hibernate.globally_quoted_identifiers=true and Annotations tests
+    * [HHH-5032] - Setting LockModeType.OPTIMISTIC_FORCE_INCREMENT defaults to only OPTIMISTIC
+    * [HHH-5042] - TableGenerator does not increment hibernate_sequences.next_hi_value anymore after having exhausted the current lo-range
+    * [HHH-5063] - Projections that have aliases same as the property name result in invalid sql
+    * [HHH-5069] - Fix annotation documentation wrt setup
+    * [HHH-5094] - PersistenceUtilHelper cannot access non-public fields/methods (it should be able to)
+    * [HHH-5098] - AssertionFailure thrown when collection contains a parameterized type
+    * [HHH-5109] - @OneToOne - too many joins
+    * [HHH-5125] - The annotations @Entity and @MappedSuperclass used in one class produce a nullpointerexception
+    * [HHH-5131] - SchemaExport drop fails if constraint names change
+    * [HHH-5135] - "Ambiguous column" exception thrown with columns having the same name as a function registered with the dialect (e.g. to_date, floor)
+    * [HHH-5173] - hql - average returns double but looses the decimal part
+    * [HHH-5178] - Unit tests in org.hibernate.test.immutable fail on mssql and sybase due to keyword used for table and column name
+    * [HHH-5191] - CollectionMetadataGenerator fails to obtain mappedBy attribute when is defined on superclasses
+    * [HHH-5195] - FilterImpl.validate() throws NullPointerExeption on deserialization
+    * [HHH-5204] - Introduce @RequiresDialectFeature annotation
+    * [HHH-5207] - Unexpected exception occurs during refresh of a transient immutable business object.
+    * [HHH-5208] - Oracle 11g R2 RAC - Test SequenceIdentityTest fails because first value of sequence is "2"
+    * [HHH-5210] - Query Cache effective only after closing the session that created the cache
+    * [HHH-5211] - no need to create a schema first when run this test org.hibernate.test.sql.hand.custom.db2.DB2CustomSQLTest
+    * [HHH-5220] - Unit tests related to HHH-5063 and HHH-5135 fail on some dialects
+    * [HHH-5230] - Regresion! @SequenceGenerator with allocationSize=1 fails Other allocationSizes appear to be decremented by 1
+    * [HHH-5231] - Unit test failures lock up when they run on DB2 and PostgreSQL
+    * [HHH-5233] - @FetchProfile fails to take more than one @FetchProfile.FetchOverride
+    * [HHH-5253] - TableHiLoGenerator does not increment hi-value any more when lo-range es exhausted
+    * [HHH-5258] - Persistence.isLoaded(Object, String) fails if the annotated property does not have a public getter or field
+    * [HHH-5272] - Typo in tutorial at web site
+    * [HHH-5286] - Jar Scanner instances cannot be passed to EntityManagerFactory creation method
+    * [HHH-5288] - Envers auditReader.find() returns wrong data for embedded components using fields with default values
+    * [HHH-5298] - @AuditMappedBy doesn't work on an inherited relation
+    * [HHH-5315] - AuditJoinTable rows are no longer flushed to the database
+    * [HHH-5318] - Wrong logic for RequiresDialectFeature in org.hibernate.test.annotations.HibernateTestCase
+    * [HHH-5319] - Clean up data created in org.hibernate.test.annotations.onetomany.OneToManyTest#testUnidirectionalExplicit
+    * [HHH-5322] - Regression in PersistenceUtilHelper
+    * [HHH-5323] - correct jdbc driver version for testing
+    * [HHH-5324] - Tests fail on mysql
+    * [HHH-5329] - NoClassDefFoundError when using Hibernate 3.5 with J2SE 1.4 because of a wrong catch block
+    * [HHH-5332] - JndiInfinispanRegionFactory cannot be instantiated
+    * [HHH-5334] - PersistenceUtilHelpe.findMember(Class, String) private method doesn't work with members of a superclass
+    * [HHH-5340] - Typo in tutorial at web site
+    * [HHH-5370] - Building IN condition with CriteriaBuilder providing collection of values not working.
+    * [HHH-5384] - HEM should not register its own Synchronization
+    * [HHH-5395] - Fix the failing Lobs test
+
+** Improvement
+    * [HHH-3050] - Convert usage of Hibernate's FastHashMap to ConcurrentHashMap (Java 1.5)
+    * [HHH-4945] - Replace all usages of EJB3TestCase with org.hibernate.ejb.test.TestCase
+    * [HHH-5138] - Redesign types + introduce TypeRegistry & TypeResolver
+    * [HHH-5144] - Dont restrict on jdk5 in hibernate core development
+    * [HHH-5162] - Deprecate @Entity.mutable in favor of @Immutable
+    * [HHH-5171] - Allow usage of standalone @JoinFormula annotation
+    * [HHH-5182] - Inject SessionFactory into "non-basic" Types
+    * [HHH-5217] - Minimize double sequence value reads in PooledOptimizer
+    * [HHH-5218] - Provide a new "pooled value" based optimizer which interprets the database value as the low boundary instead of upper boundary
+    * [HHH-5245] - Introduce LobHelper
+    * [HHH-5248] - Introduce CompositeType interface (to replace AbstractComponentType interface)
+    * [HHH-5251] - NativeSQLQueryReturn impls pre-cache a final hashcode based on non-final fields
+    * [HHH-5252] - AttributeFactory needs more info in AssertionFailure
+    * [HHH-5262] - Allow UserType and CompositeUserType to be registered with BasicTypeRegistry
+    * [HHH-5268] - Support for java.util.UUID properties/generators
+    * [HHH-5285] - Add support for CompositeUserType to implement org.hibernate.usertype.LoggableUserType
+    * [HHH-5362] - Upgrade trunk to latest Infinispan 4.1
+    * [HHH-5373] - Better account for SQLWarnings in temp table creation
+
+** New Feature
+    * [HHH-3579] - Support for PostgreSQL UUID data type
+    * [HHH-3659] - statistics: Execution time of a query
+    * [HHH-5260] - Allow query region name specific eviction settings
+    * [HHH-5337] - Allow customization of "import.sql" file name and multi files import
+
+** Patch
+    * [HHH-1574] - AbstractEntityPersister.getNaturalIdentifierSnapshot doesn't work with many-to-one ids (Alex Burgel)
+    * [HHH-2268] - Skip bridge methods during getter determination (JDK Bug 5062759)
+    * [HHH-3220] - Patch to prevent "org.hibernate.AssertionFailure: possible non-threadsafe access to the session" error caused by stateless sessions
+    * [HHH-5064] - OrderBy string getting dumped to console on session factory creation (Shawn Clowater)
+    * [HHH-5078] - JPA criteria query numeric expressions produce wrong result (due to wrong bracketing)
+    * [HHH-5147] - EnumType speed up in initEnumValues()
+    * [HHH-5213] - Add native SQL Boolean type to Ingres10Dialect
+    * [HHH-5336] - a few typo fixes
+    * [HHH-5381] - HSQLDB new dialect (Fred Toussi)
+
+** Task
+    * [HHH-4868] - Upgrade to Javassist 3.12.0.GA
+    * [HHH-5139] - Increase minimum language level from 1.4 to 1.5
+    * [HHH-5145] - Update pom to use the new distributationManagement information
+    * [HHH-5148] - Merge Hibernate Annotations reference documentation into Core
+    * [HHH-5181] - Merge hibernate-annotations module code into hibernate-core
+    * [HHH-5186] - update db profiles id and jdbc properties' name to use dballocator
+    * [HHH-5200] - Prepare to use H2 as the default testing datbase
+    * [HHH-5254] - Present document on Types as a separate chapter
+    * [HHH-5281] - TypeSafeActivator should also generate constraints for @Length
+    * [HHH-5294] - declare source files encoding to utf-8 to avoid maven warning
+    * [HHH-5317] - Update Annotations and EM to use latest version of Hibernate Validator
+    * [HHH-5357] - Rename hibernate-testing packages
+    * [HHH-5358] - Merge jmx module back into core
+    * [HHH-5365] - merge annotations module into core module
+    * [HHH-5374] - Upgrade to H2 version 1.2.139
+    * [HHH-5382] - Upgrade to slf4j 1.6
+    * [HHH-5397] - Odds and ends from documentation merge
+
+
+
 Changes in version 3.5.1 (2010.04.14)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11021

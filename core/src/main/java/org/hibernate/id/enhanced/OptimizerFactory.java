@@ -187,15 +187,14 @@ public class OptimizerFactory {
 		 * {@inheritDoc}
 		 */
 		public Serializable generate(AccessCallback callback) {
-			if ( lastSourceValue == null ) {
-				do {
-					lastSourceValue = callback.getNextValue();
-				} while ( lastSourceValue.lt( 1 ) );
+			// IMPL NOTE : it is incredibly important that the method-local variable be used here to
+			//		avoid concurrency issues.
+			IntegralDataTypeHolder value = null;
+			while ( value == null || value.lt( 1 ) ) {
+				value = callback.getNextValue();
 			}
-			else {
-				lastSourceValue = callback.getNextValue();
-			}
-			return lastSourceValue.makeValue();
+			lastSourceValue = value;
+			return value.makeValue();
 		}
 
 		/**

@@ -572,9 +572,13 @@
             </activation>
             <dependencies>
                 <dependency>
-                    <groupId>hsqldb</groupId>
+                    <groupId>org.hsqldb</groupId>
                     <artifactId>hsqldb</artifactId>
-                    <version>1.8.0.2</version>
+                    <version>1.8.0.10</version>
+<!--
+  At the moment the JBoss Nexus repo cached version of this is screwed up :(
+                    <version>2.0.0</version>
+-->
                     <scope>test</scope>
                 </dependency>
             </dependencies>

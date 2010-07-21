@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-07-21 05:26+0000\n"
+"POT-Creation-Date: 2010-07-21 05:38+0000\n"
 "PO-Revision-Date: 2010-01-13 10:25+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -157,7 +157,8 @@ msgid ""
 "interfacename>. Once the <interfacename>org.hibernate.Session</"
 "interfacename> is closed, they will be detached and free to use in any "
 "application layer (for example, directly as data transfer objects to and "
-"from presentation). See"
+"from presentation). <xref linkend=\"objectstate\"/> discusses transient, "
+"persistent and detached object states."
 msgstr ""
 "永続化状態とビジネス機能を持つ、短命でシングルスレッドのオブジェクト。これは"
 "通常の JavaBeans/POJO のこともありますが、特徴的なことは、その時点での（ただ1"
@@ -167,20 +168,21 @@ msgstr ""
 "レゼンテーション層から、またはプレゼンテーション層へ直接使用できます）。"
 
 #. Tag: term
-#: architecture.xml:139
+#: architecture.xml:140
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "Transient と detached な objects と Collections"
 
 #. Tag: para
-#: architecture.xml:141
+#: architecture.xml:142
 #, fuzzy, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
 "<interfacename>org.hibernate.Session</interfacename>. They may have been "
 "instantiated by the application and not yet persisted, or they may have been "
 "instantiated by a closed <interfacename>org.hibernate.Session</"
-"interfacename>. See"
+"interfacename>. <xref linkend=\"objectstate\"/> discusses transient, "
+"persistent and detached object states."
 msgstr ""
 "現時点では <literal>Session</literal> と関連していない、永続クラスのインスタ"
 "ンス。すでにアプリケーション側でインスタンス化されていて、まだ永続化されてい"
@@ -188,13 +190,13 @@ msgstr ""
 "どちらかです。"
 
 #. Tag: term
-#: architecture.xml:151
+#: architecture.xml:152
 #, fuzzy, no-c-format
 msgid "Transaction (<interfacename>org.hibernate.Transaction</interfacename>)"
 msgstr "Transaction (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:153
+#: architecture.xml:154
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
@@ -214,7 +216,7 @@ msgstr ""
 "とは、決してオプションではありません。"
 
 #. Tag: term
-#: architecture.xml:164
+#: architecture.xml:165
 #, fuzzy, no-c-format
 msgid ""
 "ConnectionProvider (<interfacename>org.hibernate.connection."
@@ -224,7 +226,7 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:166
+#: architecture.xml:167
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for, and pool of, JDBC connections. It abstracts the "
@@ -239,7 +241,7 @@ msgstr ""
 "または実装することは可能です。"
 
 #. Tag: term
-#: architecture.xml:175
+#: architecture.xml:176
 #, fuzzy, no-c-format
 msgid ""
 "TransactionFactory (<interfacename>org.hibernate.TransactionFactory</"
@@ -248,7 +250,7 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:177
+#: architecture.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for <interfacename>org.hibernate.Transaction</"
@@ -259,13 +261,13 @@ msgstr ""
 "ケーションには公開されませんが、開発者が継承または実装することは可能です。"
 
 #. Tag: emphasis
-#: architecture.xml:185
+#: architecture.xml:186
 #, fuzzy, no-c-format
 msgid "Extension Interfaces"
 msgstr "<emphasis>Extension Interfaces</emphasis>"
 
 #. Tag: para
-#: architecture.xml:187
+#: architecture.xml:188
 #, no-c-format
 msgid ""
 "Hibernate offers a range of optional extension interfaces you can implement "
@@ -276,92 +278,13 @@ msgstr ""
 "インタフェースを用意しています。詳細は API ドキュメントを参照してください。"
 
 #. Tag: title
-#: architecture.xml:199
-#, no-c-format
-msgid "Instance states"
-msgstr "インスタンスの状態"
-
-#. Tag: para
 #: architecture.xml:200
-#, no-c-format
-msgid ""
-"An instance of a persistent class can be in one of three different states. "
-"These states are defined in relation to a <emphasis>persistence context</"
-"emphasis>. The Hibernate <literal>Session</literal> object is the "
-"persistence context. The three different states are as follows:"
-msgstr ""
-"永続クラスのインスタンスは、次の３つの異なる状態のどれかになります。それは、 "
-"<emphasis>永続コンテキスト</emphasis> によって決まります。 Hibernate の "
-"<literal>Session</literal> オブジェクトが、永続コンテキストになります:"
-
-#. Tag: term
-#: architecture.xml:208
-#, no-c-format
-msgid "transient"
-msgstr "transient"
-
-#. Tag: para
-#: architecture.xml:210
-#, fuzzy, no-c-format
-msgid ""
-"The instance is not associated with any persistence context. It has no "
-"persistent identity or primary key value."
-msgstr ""
-"この状態のインスタンスは、現在もそして過去においても、永続コンテキストに関連"
-"づいていません。また、永続 ID （主キーの値）を 持っていません。"
-
-#. Tag: term
-#: architecture.xml:218
-#, no-c-format
-msgid "persistent"
-msgstr "persistent"
-
-#. Tag: para
-#: architecture.xml:220
-#, no-c-format
-msgid ""
-"The instance is currently associated with a persistence context. It has a "
-"persistent identity (primary key value) and can have a corresponding row in "
-"the database. For a particular persistence context, Hibernate "
-"<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
-"Java identity in relation to the in-memory location of the object."
-msgstr ""
-"この状態のインスタンスは、その時点で永続コンテキストに関連づいています。ま"
-"た、永続 ID （主キーの値）を持ち、たいていはデータベースに対応する行を持って"
-"いるでしょう。特定の永続コンテキストのなかでは、永続 ID が Java の ID （オブ"
-"ジェクトのメモリ上の位置）と同じであることを Hibernate が <emphasis>保証</"
-"emphasis> します。"
-
-#. Tag: term
-#: architecture.xml:232
-#, no-c-format
-msgid "detached"
-msgstr "detached"
-
-#. Tag: para
-#: architecture.xml:234
-#, no-c-format
-msgid ""
-"The instance was once associated with a persistence context, but that "
-"context was closed, or the instance was serialized to another process. It "
-"has a persistent identity and can have a corresponding row in the database. "
-"For detached instances, Hibernate does not guarantee the relationship "
-"between persistent identity and Java identity."
-msgstr ""
-"この状態のインスタンスは、かつて永続コンテキストに関連づけられたが、そのコン"
-"テキストがクローズされたか、あるいは、他のプロセスにそのインスタンスがシリア"
-"ライズされたかです。このインスタンスは、永続 ID を持ち、たいていはデータベー"
-"スに対応する行を持っているでしょう。分離インスタンスに対しては、永続 ID と "
-"Java の ID との関連は、 Hibernate が保証しません。"
-
-#. Tag: title
-#: architecture.xml:249
 #, no-c-format
 msgid "JMX Integration"
 msgstr "JMX との統合"
 
 #. Tag: para
-#: architecture.xml:251
+#: architecture.xml:202
 #, no-c-format
 msgid ""
 "JMX is the J2EE standard for the management of Java components. Hibernate "
@@ -374,7 +297,7 @@ msgstr ""
 "hibernate.jmx.HibernateService</literal> という MBean 実装を用意しています。"
 
 #. Tag: para
-#: architecture.xml:257
+#: architecture.xml:208
 #, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
@@ -385,13 +308,13 @@ msgstr ""
 "<xref linkend=\"configuration-optional-statistics\"/> を見てください。"
 
 #. Tag: title
-#: architecture.xml:264
+#: architecture.xml:215
 #, no-c-format
 msgid "Contextual sessions"
 msgstr "コンテキスト上のセッション"
 
 #. Tag: para
-#: architecture.xml:265
+#: architecture.xml:216
 #, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" session, "
@@ -416,7 +339,7 @@ msgstr ""
 "ワークを利用するかのいずれかでした。"
 
 #. Tag: para
-#: architecture.xml:274
+#: architecture.xml:225
 #, fuzzy, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
@@ -441,7 +364,7 @@ msgstr ""
 "「コンテキスト上のセッション」を使うしかないでしょう。"
 
 #. Tag: para
-#: architecture.xml:284
+#: architecture.xml:235
 #, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
@@ -459,7 +382,7 @@ msgstr ""
 "current_session_context_class</literal> ) が追加されました。"
 
 #. Tag: para
-#: architecture.xml:291
+#: architecture.xml:242
 #, fuzzy, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
@@ -477,7 +400,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
-#: architecture.xml:301
+#: architecture.xml:252
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions "
@@ -491,7 +414,7 @@ msgstr ""
 "Javadoc を参照してください。"
 
 #. Tag: para
-#: architecture.xml:309
+#: architecture.xml:260
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current "
@@ -502,7 +425,7 @@ msgstr ""
 "さい。"
 
 #. Tag: para
-#: architecture.xml:315
+#: architecture.xml:266
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal>: current "
@@ -517,7 +440,7 @@ msgstr ""
 "ラッシュ、クローズしません。"
 
 #. Tag: para
-#: architecture.xml:324
+#: architecture.xml:275
 #, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
@@ -547,7 +470,7 @@ msgstr ""
 "\"transactions\"/> を参照してください。"
 
 #. Tag: para
-#: architecture.xml:336
+#: architecture.xml:287
 #, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "
@@ -569,6 +492,62 @@ msgstr ""
 "JTASessionContext</literal> を使うことに注意してください。通常このパラメータ"
 "の値には、3つの実装の中から使用する実装クラスの名前を直接指定します。しかし、"
 "\"jta\"、 \"thread\"、 \"managed\"というそれぞれの省略名も用意されています。"
+
+#~ msgid "Instance states"
+#~ msgstr "インスタンスの状態"
+
+#~ msgid ""
+#~ "An instance of a persistent class can be in one of three different "
+#~ "states. These states are defined in relation to a <emphasis>persistence "
+#~ "context</emphasis>. The Hibernate <literal>Session</literal> object is "
+#~ "the persistence context. The three different states are as follows:"
+#~ msgstr ""
+#~ "永続クラスのインスタンスは、次の３つの異なる状態のどれかになります。それ"
+#~ "は、 <emphasis>永続コンテキスト</emphasis> によって決まります。 Hibernate "
+#~ "の <literal>Session</literal> オブジェクトが、永続コンテキストになります:"
+
+#~ msgid "transient"
+#~ msgstr "transient"
+
+#, fuzzy
+#~ msgid ""
+#~ "The instance is not associated with any persistence context. It has no "
+#~ "persistent identity or primary key value."
+#~ msgstr ""
+#~ "この状態のインスタンスは、現在もそして過去においても、永続コンテキストに関"
+#~ "連づいていません。また、永続 ID （主キーの値）を 持っていません。"
+
+#~ msgid "persistent"
+#~ msgstr "persistent"
+
+#~ msgid ""
+#~ "The instance is currently associated with a persistence context. It has a "
+#~ "persistent identity (primary key value) and can have a corresponding row "
+#~ "in the database. For a particular persistence context, Hibernate "
+#~ "<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
+#~ "Java identity in relation to the in-memory location of the object."
+#~ msgstr ""
+#~ "この状態のインスタンスは、その時点で永続コンテキストに関連づいています。ま"
+#~ "た、永続 ID （主キーの値）を持ち、たいていはデータベースに対応する行を持っ"
+#~ "ているでしょう。特定の永続コンテキストのなかでは、永続 ID が Java の ID "
+#~ "（オブジェクトのメモリ上の位置）と同じであることを Hibernate が <emphasis>"
+#~ "保証</emphasis> します。"
+
+#~ msgid "detached"
+#~ msgstr "detached"
+
+#~ msgid ""
+#~ "The instance was once associated with a persistence context, but that "
+#~ "context was closed, or the instance was serialized to another process. It "
+#~ "has a persistent identity and can have a corresponding row in the "
+#~ "database. For detached instances, Hibernate does not guarantee the "
+#~ "relationship between persistent identity and Java identity."
+#~ msgstr ""
+#~ "この状態のインスタンスは、かつて永続コンテキストに関連づけられたが、そのコ"
+#~ "ンテキストがクローズされたか、あるいは、他のプロセスにそのインスタンスがシ"
+#~ "リアライズされたかです。このインスタンスは、永続 ID を持ち、たいていはデー"
+#~ "タベースに対応する行を持っているでしょう。分離インスタンスに対しては、永"
+#~ "続 ID と Java の ID との関連は、 Hibernate が保証しません。"
 
 #, fuzzy
 #~ msgid ""

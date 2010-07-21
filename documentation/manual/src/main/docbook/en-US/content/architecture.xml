@@ -131,7 +131,8 @@
                                 <interfacename>org.hibernate.Session</interfacename>. Once the
                                 <interfacename>org.hibernate.Session</interfacename> is closed, they will be detached
                                 and free to use in any application layer (for example, directly as data transfer objects
-                                to and from presentation).  See <xref linkend="architecture-states"/>
+                                to and from presentation).  <xref linkend="objectstate"/> discusses transient,
+                                persistent and detached object states.
                             </para>
                         </listitem>
                     </varlistentry>
@@ -143,7 +144,7 @@
                                 <interfacename>org.hibernate.Session</interfacename>. They may have been instantiated by
                                 the application and not yet persisted, or they may have been instantiated by a
                                 closed <interfacename>org.hibernate.Session</interfacename>.
-                                See <xref linkend="architecture-states"/>
+                                <xref linkend="objectstate"/> discusses transient, persistent and detached object states.
                             </para>
                         </listitem>
                     </varlistentry>
@@ -194,56 +195,6 @@
             </para>
         </section>
     </section>
-
-    <section id="architecture-states">
-        <title>Instance states</title>
-        <para>
-            An instance of a persistent class can be in one of three different states. These states are
-            defined in relation to a <emphasis>persistence context</emphasis>.
-            The Hibernate <literal>Session</literal> object is the persistence context. The three different states are as follows:
-        </para>
-        
-       <variablelist spacing="compact">
-            <varlistentry>
-                <term>transient</term>
-                <listitem>
-                    <para>
-                        The instance is not associated with
-                        any persistence context. It has no persistent identity or
-                        primary key value.
-                    </para>
-                </listitem>
-            </varlistentry>
-            <varlistentry>
-                <term>persistent</term>
-                <listitem>
-                    <para>
-                        The instance is currently associated with a persistence 
-                        context. It has a persistent identity (primary key value)
-                        and can have a corresponding row in the database. For a
-                        particular persistence context, Hibernate 
-                        <emphasis>guarantees</emphasis> that persistent identity
-                        is equivalent to Java identity in relation to the in-memory location of the
-                        object.
-                    </para>
-                </listitem>
-            </varlistentry>
-            <varlistentry>
-                <term>detached</term>
-                <listitem>
-                    <para>
-                        The instance was once associated with a persistence
-                        context, but that context was closed, or the instance
-                        was serialized to another process. It has a persistent 
-                        identity and can have a corresponding row in the database.
-                        For detached instances, Hibernate does not guarantee 
-                        the relationship between persistent identity and
-                        Java identity.
-                    </para>
-                </listitem>
-            </varlistentry>
-        </variablelist>
-    </section>    
 
     <section id="architecture-jmx" revision="1">
         <title>JMX Integration</title>

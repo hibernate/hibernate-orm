@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-07-21 05:26+0000\n"
+"POT-Creation-Date: 2010-07-21 05:38+0000\n"
 "PO-Revision-Date: 2010-03-15 08:47+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -153,7 +153,8 @@ msgid ""
 "interfacename>. Once the <interfacename>org.hibernate.Session</"
 "interfacename> is closed, they will be detached and free to use in any "
 "application layer (for example, directly as data transfer objects to and "
-"from presentation). See"
+"from presentation). <xref linkend=\"objectstate\"/> discusses transient, "
+"persistent and detached object states."
 msgstr ""
 "带有持久化状态的、具有业务功能的单线程对象，此对象生存期很短。这些对象可能是"
 "普通的JavaBeans/POJO，唯一特殊的是他们正与（仅仅一个）<literal>Session</"
@@ -162,33 +163,34 @@ msgstr ""
 "据传输对象）。"
 
 #. Tag: term
-#: architecture.xml:139
+#: architecture.xml:140
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "瞬态（transient）和脱管（detached）的对象及其集合"
 
 #. Tag: para
-#: architecture.xml:141
+#: architecture.xml:142
 #, fuzzy, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
 "<interfacename>org.hibernate.Session</interfacename>. They may have been "
 "instantiated by the application and not yet persisted, or they may have been "
 "instantiated by a closed <interfacename>org.hibernate.Session</"
-"interfacename>. See"
+"interfacename>. <xref linkend=\"objectstate\"/> discusses transient, "
+"persistent and detached object states."
 msgstr ""
 "那些目前没有与 <literal>Session</literal>关联的持久化类实例。他们可能是在被应"
 "用程序实例化后，尚未进行持久化的对象。也可能是因为实例化他们的 "
 "<literal>Session</literal> 已经被关闭而脱离持久化的对象。"
 
 #. Tag: term
-#: architecture.xml:151
+#: architecture.xml:152
 #, fuzzy, no-c-format
 msgid "Transaction (<interfacename>org.hibernate.Transaction</interfacename>)"
 msgstr "事务 Transaction (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:153
+#: architecture.xml:154
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
@@ -206,7 +208,7 @@ msgstr ""
 "<literal>Transaction</literal> 对象，事务边界的开启与关闭是必需的。 "
 
 #. Tag: term
-#: architecture.xml:164
+#: architecture.xml:165
 #, fuzzy, no-c-format
 msgid ""
 "ConnectionProvider (<interfacename>org.hibernate.connection."
@@ -216,7 +218,7 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:166
+#: architecture.xml:167
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for, and pool of, JDBC connections. It abstracts the "
@@ -230,7 +232,7 @@ msgstr ""
 "开。仅供开发者扩展/实现用，并不开放给应用程序使用。"
 
 #. Tag: term
-#: architecture.xml:175
+#: architecture.xml:176
 #, fuzzy, no-c-format
 msgid ""
 "TransactionFactory (<interfacename>org.hibernate.TransactionFactory</"
@@ -239,7 +241,7 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:177
+#: architecture.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for <interfacename>org.hibernate.Transaction</"
@@ -250,13 +252,13 @@ msgstr ""
 "实现用，并不开发能够给应用程序使用。"
 
 #. Tag: emphasis
-#: architecture.xml:185
+#: architecture.xml:186
 #, fuzzy, no-c-format
 msgid "Extension Interfaces"
 msgstr "<emphasis>扩展接口</emphasis> "
 
 #. Tag: para
-#: architecture.xml:187
+#: architecture.xml:188
 #, no-c-format
 msgid ""
 "Hibernate offers a range of optional extension interfaces you can implement "
@@ -267,89 +269,13 @@ msgstr ""
 "为。具体请参考 API 文档。"
 
 #. Tag: title
-#: architecture.xml:199
-#, no-c-format
-msgid "Instance states"
-msgstr "实例状态"
-
-#. Tag: para
 #: architecture.xml:200
-#, no-c-format
-msgid ""
-"An instance of a persistent class can be in one of three different states. "
-"These states are defined in relation to a <emphasis>persistence context</"
-"emphasis>. The Hibernate <literal>Session</literal> object is the "
-"persistence context. The three different states are as follows:"
-msgstr ""
-"一个持久化类的实例可能处于三种不同状态中的某一种。这三种状态的定义则与所谓的"
-"<emphasis>持久化上下文（persistence context）</emphasis>有关。Hibernate 的 "
-"<literal>Session</literal> 对象就是这个所谓的持久化上下文。这三种不同的状态如"
-"下："
-
-#. Tag: term
-#: architecture.xml:208
-#, no-c-format
-msgid "transient"
-msgstr "瞬态（transient）"
-
-#. Tag: para
-#: architecture.xml:210
-#, no-c-format
-msgid ""
-"The instance is not associated with any persistence context. It has no "
-"persistent identity or primary key value."
-msgstr ""
-"该实例从未与任何持久化上下文关联过。它没有持久化标识（相当于主键值）。 "
-
-#. Tag: term
-#: architecture.xml:218
-#, no-c-format
-msgid "persistent"
-msgstr "持久化（persistent）"
-
-#. Tag: para
-#: architecture.xml:220
-#, no-c-format
-msgid ""
-"The instance is currently associated with a persistence context. It has a "
-"persistent identity (primary key value) and can have a corresponding row in "
-"the database. For a particular persistence context, Hibernate "
-"<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
-"Java identity in relation to the in-memory location of the object."
-msgstr ""
-"实例目前与某个持久化上下文有关联。它拥有持久化标识（相当于主键值），并且可能"
-"在数据库中有一个对应的行。对于某一个特定的持久化上下文，Hibernate <emphasis>"
-"保证</emphasis> 持久化标识与 Java 标识（其值代表对象在内存中的位置）等价。　"
-
-#. Tag: term
-#: architecture.xml:232
-#, no-c-format
-msgid "detached"
-msgstr "脱管（detached）"
-
-#. Tag: para
-#: architecture.xml:234
-#, no-c-format
-msgid ""
-"The instance was once associated with a persistence context, but that "
-"context was closed, or the instance was serialized to another process. It "
-"has a persistent identity and can have a corresponding row in the database. "
-"For detached instances, Hibernate does not guarantee the relationship "
-"between persistent identity and Java identity."
-msgstr ""
-"实例曾经与某个持久化上下文发生过关联，不过那个上下文被关闭了，或者这个实例是"
-"被序列化（serialize）到另外的进程。它拥有持久化标识，并且在数据库中可能存在一"
-"个对应的行。对于脱管状态的实例，Hibernate 不保证任何持久化标识和 Java 标识的"
-"关系。 "
-
-#. Tag: title
-#: architecture.xml:249
 #, no-c-format
 msgid "JMX Integration"
 msgstr "JMX 整合"
 
 #. Tag: para
-#: architecture.xml:251
+#: architecture.xml:202
 #, no-c-format
 msgid ""
 "JMX is the J2EE standard for the management of Java components. Hibernate "
@@ -362,7 +288,7 @@ msgstr ""
 "jmx.HibernateService</literal>。 "
 
 #. Tag: para
-#: architecture.xml:257
+#: architecture.xml:208
 #, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
@@ -373,13 +299,13 @@ msgstr ""
 "息。参看 <xref linkend=\"configuration-optional-statistics\"/>。 "
 
 #. Tag: title
-#: architecture.xml:264
+#: architecture.xml:215
 #, no-c-format
 msgid "Contextual sessions"
 msgstr "上下文相关的会话（Contextual Session）"
 
 #. Tag: para
-#: architecture.xml:265
+#: architecture.xml:216
 #, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" session, "
@@ -402,7 +328,7 @@ msgstr ""
 "上下文相关的会话。"
 
 #. Tag: para
-#: architecture.xml:274
+#: architecture.xml:225
 #, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
@@ -424,7 +350,7 @@ msgstr ""
 "用 <literal>JTA</literal> 的上下文相关的会话可以满足你一切需要。"
 
 #. Tag: para
-#: architecture.xml:284
+#: architecture.xml:235
 #, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
@@ -441,7 +367,7 @@ msgstr ""
 "（scope）和上下文（context）的定义进行拔插。"
 
 #. Tag: para
-#: architecture.xml:291
+#: architecture.xml:242
 #, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
@@ -457,7 +383,7 @@ msgstr ""
 "的会话。Hibernate 内置了此接口的三种实现："
 
 #. Tag: para
-#: architecture.xml:301
+#: architecture.xml:252
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions "
@@ -470,7 +396,7 @@ msgstr ""
 "的。详情请参阅 Javadoc。"
 
 #. Tag: para
-#: architecture.xml:309
+#: architecture.xml:260
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current "
@@ -480,7 +406,7 @@ msgstr ""
 "通过当前执行的线程来跟踪和界定。详情也请参阅 Javadoc。"
 
 #. Tag: para
-#: architecture.xml:315
+#: architecture.xml:266
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal>: current "
@@ -494,7 +420,7 @@ msgstr ""
 "flush 或者关闭（close）任何 <literal>Session</literal>。"
 
 #. Tag: para
-#: architecture.xml:324
+#: architecture.xml:275
 #, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
@@ -520,7 +446,7 @@ msgstr ""
 "阅读更多的内容和示例代码。 "
 
 #. Tag: para
-#: architecture.xml:336
+#: architecture.xml:287
 #, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "
@@ -541,6 +467,59 @@ msgstr ""
 "<literal>org.hibernate.context.JTASessionContext</literal>。一般而言，此参数"
 "的值指明了要使用的实现类的全名，但那三种内置的实现可以使用简写，即 \"jta\"、"
 "\"thread\" 和 \"managed\"。 "
+
+#~ msgid "Instance states"
+#~ msgstr "实例状态"
+
+#~ msgid ""
+#~ "An instance of a persistent class can be in one of three different "
+#~ "states. These states are defined in relation to a <emphasis>persistence "
+#~ "context</emphasis>. The Hibernate <literal>Session</literal> object is "
+#~ "the persistence context. The three different states are as follows:"
+#~ msgstr ""
+#~ "一个持久化类的实例可能处于三种不同状态中的某一种。这三种状态的定义则与所谓"
+#~ "的<emphasis>持久化上下文（persistence context）</emphasis>有关。Hibernate "
+#~ "的 <literal>Session</literal> 对象就是这个所谓的持久化上下文。这三种不同的"
+#~ "状态如下："
+
+#~ msgid "transient"
+#~ msgstr "瞬态（transient）"
+
+#~ msgid ""
+#~ "The instance is not associated with any persistence context. It has no "
+#~ "persistent identity or primary key value."
+#~ msgstr ""
+#~ "该实例从未与任何持久化上下文关联过。它没有持久化标识（相当于主键值）。 "
+
+#~ msgid "persistent"
+#~ msgstr "持久化（persistent）"
+
+#~ msgid ""
+#~ "The instance is currently associated with a persistence context. It has a "
+#~ "persistent identity (primary key value) and can have a corresponding row "
+#~ "in the database. For a particular persistence context, Hibernate "
+#~ "<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
+#~ "Java identity in relation to the in-memory location of the object."
+#~ msgstr ""
+#~ "实例目前与某个持久化上下文有关联。它拥有持久化标识（相当于主键值），并且可"
+#~ "能在数据库中有一个对应的行。对于某一个特定的持久化上下文，Hibernate "
+#~ "<emphasis>保证</emphasis> 持久化标识与 Java 标识（其值代表对象在内存中的位"
+#~ "置）等价。　"
+
+#~ msgid "detached"
+#~ msgstr "脱管（detached）"
+
+#~ msgid ""
+#~ "The instance was once associated with a persistence context, but that "
+#~ "context was closed, or the instance was serialized to another process. It "
+#~ "has a persistent identity and can have a corresponding row in the "
+#~ "database. For detached instances, Hibernate does not guarantee the "
+#~ "relationship between persistent identity and Java identity."
+#~ msgstr ""
+#~ "实例曾经与某个持久化上下文发生过关联，不过那个上下文被关闭了，或者这个实例"
+#~ "是被序列化（serialize）到另外的进程。它拥有持久化标识，并且在数据库中可能"
+#~ "存在一个对应的行。对于脱管状态的实例，Hibernate 不保证任何持久化标识和 "
+#~ "Java 标识的关系。 "
 
 #~ msgid ""
 #~ "We do not have the scope in this document to provide a more detailed view "

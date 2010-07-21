@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-07-21 05:26+0000\n"
+"POT-Creation-Date: 2010-07-21 05:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -107,191 +107,143 @@ msgstr ""
 #. Tag: para
 #: architecture.xml:128
 #, no-c-format
-msgid "Short-lived, single threaded objects containing persistent state and business function. These can be ordinary JavaBeans/POJOs. They are associated with exactly one <interfacename>org.hibernate.Session</interfacename>. Once the <interfacename>org.hibernate.Session</interfacename> is closed, they will be detached and free to use in any application layer (for example, directly as data transfer objects to and from presentation). See"
+msgid "Short-lived, single threaded objects containing persistent state and business function. These can be ordinary JavaBeans/POJOs. They are associated with exactly one <interfacename>org.hibernate.Session</interfacename>. Once the <interfacename>org.hibernate.Session</interfacename> is closed, they will be detached and free to use in any application layer (for example, directly as data transfer objects to and from presentation). <xref linkend=\"objectstate\"/> discusses transient, persistent and detached object states."
 msgstr ""
 
 #. Tag: term
-#: architecture.xml:139
+#: architecture.xml:140
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:141
+#: architecture.xml:142
 #, no-c-format
-msgid "Instances of persistent classes that are not currently associated with a <interfacename>org.hibernate.Session</interfacename>. They may have been instantiated by the application and not yet persisted, or they may have been instantiated by a closed <interfacename>org.hibernate.Session</interfacename>. See"
+msgid "Instances of persistent classes that are not currently associated with a <interfacename>org.hibernate.Session</interfacename>. They may have been instantiated by the application and not yet persisted, or they may have been instantiated by a closed <interfacename>org.hibernate.Session</interfacename>. <xref linkend=\"objectstate\"/> discusses transient, persistent and detached object states."
 msgstr ""
 
 #. Tag: term
-#: architecture.xml:151
+#: architecture.xml:152
 #, no-c-format
 msgid "Transaction (<interfacename>org.hibernate.Transaction</interfacename>)"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:153
+#: architecture.xml:154
 #, no-c-format
 msgid "(Optional) A single-threaded, short-lived object used by the application to specify atomic units of work. It abstracts the application from the underlying JDBC, JTA or CORBA transaction. A <interfacename>org.hibernate.Session</interfacename> might span several <interfacename>org.hibernate.Transaction</interfacename>s in some cases. However, transaction demarcation, either using the underlying API or <interfacename>org.hibernate.Transaction</interfacename>, is never optional."
 msgstr ""
 
 #. Tag: term
-#: architecture.xml:164
+#: architecture.xml:165
 #, no-c-format
 msgid "ConnectionProvider (<interfacename>org.hibernate.connection.ConnectionProvider</interfacename>)"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:166
+#: architecture.xml:167
 #, no-c-format
 msgid "(Optional) A factory for, and pool of, JDBC connections. It abstracts the application from underlying <interfacename>javax.sql.DataSource</interfacename> or <interfacename>java.sql.DriverManager</interfacename>. It is not exposed to application, but it can be extended and/or implemented by the developer."
 msgstr ""
 
 #. Tag: term
-#: architecture.xml:175
+#: architecture.xml:176
 #, no-c-format
 msgid "TransactionFactory (<interfacename>org.hibernate.TransactionFactory</interfacename>)"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:177
+#: architecture.xml:178
 #, no-c-format
 msgid "(Optional) A factory for <interfacename>org.hibernate.Transaction</interfacename> instances. It is not exposed to the application, but it can be extended and/or implemented by the developer."
 msgstr ""
 
 #. Tag: emphasis
-#: architecture.xml:185
+#: architecture.xml:186
 #, no-c-format
 msgid "Extension Interfaces"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:187
+#: architecture.xml:188
 #, no-c-format
 msgid "Hibernate offers a range of optional extension interfaces you can implement to customize the behavior of your persistence layer. See the API documentation for details."
 msgstr ""
 
 #. Tag: title
-#: architecture.xml:199
-#, no-c-format
-msgid "Instance states"
-msgstr ""
-
-#. Tag: para
 #: architecture.xml:200
-#, no-c-format
-msgid "An instance of a persistent class can be in one of three different states. These states are defined in relation to a <emphasis>persistence context</emphasis>. The Hibernate <literal>Session</literal> object is the persistence context. The three different states are as follows:"
-msgstr ""
-
-#. Tag: term
-#: architecture.xml:208
-#, no-c-format
-msgid "transient"
-msgstr ""
-
-#. Tag: para
-#: architecture.xml:210
-#, no-c-format
-msgid "The instance is not associated with any persistence context. It has no persistent identity or primary key value."
-msgstr ""
-
-#. Tag: term
-#: architecture.xml:218
-#, no-c-format
-msgid "persistent"
-msgstr ""
-
-#. Tag: para
-#: architecture.xml:220
-#, no-c-format
-msgid "The instance is currently associated with a persistence context. It has a persistent identity (primary key value) and can have a corresponding row in the database. For a particular persistence context, Hibernate <emphasis>guarantees</emphasis> that persistent identity is equivalent to Java identity in relation to the in-memory location of the object."
-msgstr ""
-
-#. Tag: term
-#: architecture.xml:232
-#, no-c-format
-msgid "detached"
-msgstr ""
-
-#. Tag: para
-#: architecture.xml:234
-#, no-c-format
-msgid "The instance was once associated with a persistence context, but that context was closed, or the instance was serialized to another process. It has a persistent identity and can have a corresponding row in the database. For detached instances, Hibernate does not guarantee the relationship between persistent identity and Java identity."
-msgstr ""
-
-#. Tag: title
-#: architecture.xml:249
 #, no-c-format
 msgid "JMX Integration"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:251
+#: architecture.xml:202
 #, no-c-format
 msgid "JMX is the J2EE standard for the management of Java components. Hibernate can be managed via a JMX standard service. AN MBean implementation is provided in the distribution: <literal>org.hibernate.jmx.HibernateService</literal>."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:257
+#: architecture.xml:208
 #, no-c-format
 msgid "Another feature available as a JMX service is runtime Hibernate statistics. See <xref linkend=\"configuration-optional-statistics\"/> for more information."
 msgstr ""
 
 #. Tag: title
-#: architecture.xml:264
+#: architecture.xml:215
 #, no-c-format
 msgid "Contextual sessions"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:265
+#: architecture.xml:216
 #, no-c-format
 msgid "Most applications using Hibernate need some form of \"contextual\" session, where a given session is in effect throughout the scope of a given context. However, across applications the definition of what constitutes a context is typically different; different contexts define different scopes to the notion of current. Applications using Hibernate prior to version 3.0 tended to utilize either home-grown <literal>ThreadLocal</literal>-based contextual sessions, helper classes such as <literal>HibernateUtil</literal>, or utilized third-party frameworks, such as Spring or Pico, which provided proxy/interception-based contextual sessions."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:274
+#: architecture.xml:225
 #, no-c-format
 msgid "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory.getCurrentSession()</literal> method. Initially, this assumed usage of <literal>JTA</literal> transactions, where the <literal>JTA</literal> transaction defined both the scope and context of a current session. Given the maturity of the numerous stand-alone <literal>JTA TransactionManager</literal> implementations, most, if not all, applications should be using <literal>JTA</literal> transaction management, whether or not they are deployed into a <literal>J2EE</literal> container. Based on that, the <literal>JTA</literal>-based contextual sessions are all you need to use."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:284
+#: architecture.xml:235
 #, no-c-format
 msgid "However, as of version 3.1, the processing behind <literal>SessionFactory.getCurrentSession()</literal> is now pluggable. To that end, a new extension interface, <literal>org.hibernate.context.CurrentSessionContext</literal>, and a new configuration parameter, <literal>hibernate.current_session_context_class</literal>, have been added to allow pluggability of the scope and context of defining current sessions."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:291
+#: architecture.xml:242
 #, no-c-format
 msgid "See the Javadocs for the <literal>org.hibernate.context.CurrentSessionContext</literal> interface for a detailed discussion of its contract. It defines a single method, <literal>currentSession()</literal>, by which the implementation is responsible for tracking the current contextual session. Out-of-the-box, Hibernate comes with three implementations of this interface:"
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:301
+#: architecture.xml:252
 #, no-c-format
 msgid "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions are tracked and scoped by a <literal>JTA</literal> transaction. The processing here is exactly the same as in the older JTA-only approach. See the Javadocs for details."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:309
+#: architecture.xml:260
 #, no-c-format
 msgid "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current sessions are tracked by thread of execution. See the Javadocs for details."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:315
+#: architecture.xml:266
 #, no-c-format
 msgid "<literal>org.hibernate.context.ManagedSessionContext</literal>: current sessions are tracked by thread of execution. However, you are responsible to bind and unbind a <literal>Session</literal> instance with static methods on this class: it does not open, flush, or close a <literal>Session</literal>."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:324
+#: architecture.xml:275
 #, no-c-format
 msgid "The first two implementations provide a \"one session - one database transaction\" programming model. This is also known and used as <emphasis>session-per-request</emphasis>. The beginning and end of a Hibernate session is defined by the duration of a database transaction. If you use programmatic transaction demarcation in plain JSE without JTA, you are advised to use the Hibernate <literal>Transaction</literal> API to hide the underlying transaction system from your code. If you use JTA, you can utilize the JTA interfaces to demarcate transactions. If you execute in an EJB container that supports CMT, transaction boundaries are defined declaratively and you do not need any transaction or session demarcation operations in your code. Refer to <xref linkend=\"transactions\"/> for more information and code examples."
 msgstr ""
 
 #. Tag: para
-#: architecture.xml:336
+#: architecture.xml:287
 #, no-c-format
 msgid "The <literal>hibernate.current_session_context_class</literal> configuration parameter defines which <literal>org.hibernate.context.CurrentSessionContext</literal> implementation should be used. For backwards compatibility, if this configuration parameter is not set but a <literal>org.hibernate.transaction.TransactionManagerLookup</literal> is configured, Hibernate will use the <literal>org.hibernate.context.JTASessionContext</literal>. Typically, the value of this parameter would just name the implementation class to use. For the three out-of-the-box implementations, however, there are three corresponding short names: \"jta\", \"thread\", and \"managed\"."
 msgstr ""

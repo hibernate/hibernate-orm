@@ -275,7 +275,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-07-21 05:26+0000\n"
+"POT-Creation-Date: 2010-07-21 05:38+0000\n"
 "PO-Revision-Date: 2007-02-26 10:27+1000\n"
 "Last-Translator: \n"
 "Language-Team:  <de@li.org>\n"
@@ -430,7 +430,8 @@ msgid ""
 "interfacename>. Once the <interfacename>org.hibernate.Session</"
 "interfacename> is closed, they will be detached and free to use in any "
 "application layer (for example, directly as data transfer objects to and "
-"from presentation). See"
+"from presentation). <xref linkend=\"objectstate\"/> discusses transient, "
+"persistent and detached object states."
 msgstr ""
 "Kurzlebige, aus einem Thread bestehende Objekte, die persistenten Status und "
 "Unternehmensfunktionen beinhalten. Dabei kann es sich um gewöhnliche "
@@ -441,20 +442,21 @@ msgstr ""
 "Datentransferobjekte einer Präsentation) verwendet werden."
 
 #. Tag: term
-#: architecture.xml:139
+#: architecture.xml:140
 #, no-c-format
 msgid "Transient and detached objects and collections"
 msgstr "Temporäre und abgesetzte Objekte und Collections"
 
 #. Tag: para
-#: architecture.xml:141
+#: architecture.xml:142
 #, fuzzy, no-c-format
 msgid ""
 "Instances of persistent classes that are not currently associated with a "
 "<interfacename>org.hibernate.Session</interfacename>. They may have been "
 "instantiated by the application and not yet persisted, or they may have been "
 "instantiated by a closed <interfacename>org.hibernate.Session</"
-"interfacename>. See"
+"interfacename>. <xref linkend=\"objectstate\"/> discusses transient, "
+"persistent and detached object states."
 msgstr ""
 "Instanzen persistenter Klassen, die zum aktuellen Zeitpunkt mit keiner "
 "<literal>Session</literal> verbunden sind. Sie können von der Anwendung "
@@ -462,13 +464,13 @@ msgstr ""
 "geschlossenen <literal>Session</literal> instanziiert worden sein."
 
 #. Tag: term
-#: architecture.xml:151
+#: architecture.xml:152
 #, fuzzy, no-c-format
 msgid "Transaction (<interfacename>org.hibernate.Transaction</interfacename>)"
 msgstr "Transaktion (<literal>org.hibernate.Transaction</literal>)"
 
 #. Tag: para
-#: architecture.xml:153
+#: architecture.xml:154
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A single-threaded, short-lived object used by the application to "
@@ -488,7 +490,7 @@ msgstr ""
 "ist jedoch nie optional!"
 
 #. Tag: term
-#: architecture.xml:164
+#: architecture.xml:165
 #, fuzzy, no-c-format
 msgid ""
 "ConnectionProvider (<interfacename>org.hibernate.connection."
@@ -498,7 +500,7 @@ msgstr ""
 "literal>)"
 
 #. Tag: para
-#: architecture.xml:166
+#: architecture.xml:167
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for, and pool of, JDBC connections. It abstracts the "
@@ -513,7 +515,7 @@ msgstr ""
 "ausgesetzt, kann jedoch vom Entwickler erweitert/implementiert werden."
 
 #. Tag: term
-#: architecture.xml:175
+#: architecture.xml:176
 #, fuzzy, no-c-format
 msgid ""
 "TransactionFactory (<interfacename>org.hibernate.TransactionFactory</"
@@ -522,7 +524,7 @@ msgstr ""
 "TransactionFactory (<literal>org.hibernate.TransactionFactory</literal>)"
 
 #. Tag: para
-#: architecture.xml:177
+#: architecture.xml:178
 #, fuzzy, no-c-format
 msgid ""
 "(Optional) A factory for <interfacename>org.hibernate.Transaction</"
@@ -534,13 +536,13 @@ msgstr ""
 "implementiert werden."
 
 #. Tag: emphasis
-#: architecture.xml:185
+#: architecture.xml:186
 #, fuzzy, no-c-format
 msgid "Extension Interfaces"
 msgstr "Erweiterungsschnittstellen"
 
 #. Tag: para
-#: architecture.xml:187
+#: architecture.xml:188
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate offers a range of optional extension interfaces you can implement "
@@ -553,96 +555,13 @@ msgstr ""
 "der API-Dokumentation."
 
 #. Tag: title
-#: architecture.xml:199
-#, no-c-format
-msgid "Instance states"
-msgstr "Instanzstatus"
-
-#. Tag: para
 #: architecture.xml:200
-#, fuzzy, no-c-format
-msgid ""
-"An instance of a persistent class can be in one of three different states. "
-"These states are defined in relation to a <emphasis>persistence context</"
-"emphasis>. The Hibernate <literal>Session</literal> object is the "
-"persistence context. The three different states are as follows:"
-msgstr ""
-"Der Status der Instanz einer persistenten Klasse kann drei Formen haben, die "
-"unter Berücksichtigung eines <emphasis>Persistenzkontexts</emphasis> (sog. "
-"\"Persistence Context\") definiert sind. Das Hibernate <literal>Session</"
-"literal>-Objekt ist der Persistenzkontext:"
-
-#. Tag: term
-#: architecture.xml:208
-#, no-c-format
-msgid "transient"
-msgstr "transient"
-
-#. Tag: para
-#: architecture.xml:210
-#, fuzzy, no-c-format
-msgid ""
-"The instance is not associated with any persistence context. It has no "
-"persistent identity or primary key value."
-msgstr ""
-"Die Instanz ist nicht (und war auch nie) mit einem Persistenzkontext "
-"assoziiert. Sie besitzt keine persistente Identität (Wert des primären "
-"Kernbegriffs)."
-
-#. Tag: term
-#: architecture.xml:218
-#, no-c-format
-msgid "persistent"
-msgstr "persistent"
-
-#. Tag: para
-#: architecture.xml:220
-#, fuzzy, no-c-format
-msgid ""
-"The instance is currently associated with a persistence context. It has a "
-"persistent identity (primary key value) and can have a corresponding row in "
-"the database. For a particular persistence context, Hibernate "
-"<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
-"Java identity in relation to the in-memory location of the object."
-msgstr ""
-"Die Instanz wird zum aktuellen Zeitpunkt mit einem Persistenzkontext "
-"assoziiert. Sie besitzt eine persistente Identität (Wert des primären "
-"Kernbegriffs) und möglicherweise eine korrespondierende Reihe in der "
-"Datenbank. Für einen bestimmten Persistenzkontext <emphasis>garantiert</"
-"emphasis> Hibernate, dass die persistente Identität äquivalent zur Java "
-"Identität (Speicherstelle des Objekts) ist."
-
-#. Tag: term
-#: architecture.xml:232
-#, no-c-format
-msgid "detached"
-msgstr "detached (\"abgesetzt\")"
-
-#. Tag: para
-#: architecture.xml:234
-#, fuzzy, no-c-format
-msgid ""
-"The instance was once associated with a persistence context, but that "
-"context was closed, or the instance was serialized to another process. It "
-"has a persistent identity and can have a corresponding row in the database. "
-"For detached instances, Hibernate does not guarantee the relationship "
-"between persistent identity and Java identity."
-msgstr ""
-"Die Instanz war vormals mit einem Persistenzkontext assoziiert, aber der "
-"Kontext wurde geschlossen oder die Instanz in einem anderen Vorgang "
-"serialisiert. Sie besitzt eine persistente Identität und möglicherweise eine "
-"korrespondierende Reihe in der Datenbank. Für Instanzen im abgesetzten "
-"Status (\"detached\") garantiert Hibernate keine Verbindung zwischen "
-"persistenter Identität und Java-Identität."
-
-#. Tag: title
-#: architecture.xml:249
 #, no-c-format
 msgid "JMX Integration"
 msgstr "JMX-Integration"
 
 #. Tag: para
-#: architecture.xml:251
+#: architecture.xml:202
 #, fuzzy, no-c-format
 msgid ""
 "JMX is the J2EE standard for the management of Java components. Hibernate "
@@ -656,7 +575,7 @@ msgstr ""
 "bereitgestellt."
 
 #. Tag: para
-#: architecture.xml:257
+#: architecture.xml:208
 #, fuzzy, no-c-format
 msgid ""
 "Another feature available as a JMX service is runtime Hibernate statistics. "
@@ -667,13 +586,13 @@ msgstr ""
 "Statistiken, siehe <xref linkend=\"configuration-optional-statistics\"/>."
 
 #. Tag: title
-#: architecture.xml:264
+#: architecture.xml:215
 #, fuzzy, no-c-format
 msgid "Contextual sessions"
 msgstr "Kontextbezogene Sessions"
 
 #. Tag: para
-#: architecture.xml:265
+#: architecture.xml:216
 #, fuzzy, no-c-format
 msgid ""
 "Most applications using Hibernate need some form of \"contextual\" session, "
@@ -699,7 +618,7 @@ msgstr ""
 "basierte kontextbezogene Sessions bereitstellen."
 
 #. Tag: para
-#: architecture.xml:274
+#: architecture.xml:225
 #, fuzzy, no-c-format
 msgid ""
 "Starting with version 3.0.1, Hibernate added the <literal>SessionFactory."
@@ -726,7 +645,7 @@ msgstr ""
 "benötigen dürften."
 
 #. Tag: para
-#: architecture.xml:284
+#: architecture.xml:235
 #, fuzzy, no-c-format
 msgid ""
 "However, as of version 3.1, the processing behind <literal>SessionFactory."
@@ -745,7 +664,7 @@ msgstr ""
 "Gültigkeitsbereich und Kontext zu ermöglichen."
 
 #. Tag: para
-#: architecture.xml:291
+#: architecture.xml:242
 #, fuzzy, no-c-format
 msgid ""
 "See the Javadocs for the <literal>org.hibernate.context."
@@ -763,7 +682,7 @@ msgstr ""
 "Implementierungen dieses Interface geliefert."
 
 #. Tag: para
-#: architecture.xml:301
+#: architecture.xml:252
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.JTASessionContext</literal>: current sessions "
@@ -778,7 +697,7 @@ msgstr ""
 "finden Sie in Javadocs."
 
 #. Tag: para
-#: architecture.xml:309
+#: architecture.xml:260
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ThreadLocalSessionContext</literal>:current "
@@ -789,7 +708,7 @@ msgstr ""
 "finden Sie weitere Informationen in Javadocs."
 
 #. Tag: para
-#: architecture.xml:315
+#: architecture.xml:266
 #, fuzzy, no-c-format
 msgid ""
 "<literal>org.hibernate.context.ManagedSessionContext</literal>: current "
@@ -804,7 +723,7 @@ msgstr ""
 "geräumt oder geschlossen."
 
 #. Tag: para
-#: architecture.xml:324
+#: architecture.xml:275
 #, fuzzy, no-c-format
 msgid ""
 "The first two implementations provide a \"one session - one database "
@@ -835,7 +754,7 @@ msgstr ""
 "Code-Beispiele finden Sie unter <xref linkend=\"transactions\"/>."
 
 #. Tag: para
-#: architecture.xml:336
+#: architecture.xml:287
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>hibernate.current_session_context_class</literal> configuration "
@@ -860,6 +779,69 @@ msgstr ""
 "verwendende Implementierungsklasse für die drei gelieferten "
 "Implementierungen, jedoch existieren drei entsprechende Kurznamen \"jta\", "
 "\"thread\" sowie \"managed\"."
+
+#~ msgid "Instance states"
+#~ msgstr "Instanzstatus"
+
+#, fuzzy
+#~ msgid ""
+#~ "An instance of a persistent class can be in one of three different "
+#~ "states. These states are defined in relation to a <emphasis>persistence "
+#~ "context</emphasis>. The Hibernate <literal>Session</literal> object is "
+#~ "the persistence context. The three different states are as follows:"
+#~ msgstr ""
+#~ "Der Status der Instanz einer persistenten Klasse kann drei Formen haben, "
+#~ "die unter Berücksichtigung eines <emphasis>Persistenzkontexts</emphasis> "
+#~ "(sog. \"Persistence Context\") definiert sind. Das Hibernate "
+#~ "<literal>Session</literal>-Objekt ist der Persistenzkontext:"
+
+#~ msgid "transient"
+#~ msgstr "transient"
+
+#, fuzzy
+#~ msgid ""
+#~ "The instance is not associated with any persistence context. It has no "
+#~ "persistent identity or primary key value."
+#~ msgstr ""
+#~ "Die Instanz ist nicht (und war auch nie) mit einem Persistenzkontext "
+#~ "assoziiert. Sie besitzt keine persistente Identität (Wert des primären "
+#~ "Kernbegriffs)."
+
+#~ msgid "persistent"
+#~ msgstr "persistent"
+
+#, fuzzy
+#~ msgid ""
+#~ "The instance is currently associated with a persistence context. It has a "
+#~ "persistent identity (primary key value) and can have a corresponding row "
+#~ "in the database. For a particular persistence context, Hibernate "
+#~ "<emphasis>guarantees</emphasis> that persistent identity is equivalent to "
+#~ "Java identity in relation to the in-memory location of the object."
+#~ msgstr ""
+#~ "Die Instanz wird zum aktuellen Zeitpunkt mit einem Persistenzkontext "
+#~ "assoziiert. Sie besitzt eine persistente Identität (Wert des primären "
+#~ "Kernbegriffs) und möglicherweise eine korrespondierende Reihe in der "
+#~ "Datenbank. Für einen bestimmten Persistenzkontext <emphasis>garantiert</"
+#~ "emphasis> Hibernate, dass die persistente Identität äquivalent zur Java "
+#~ "Identität (Speicherstelle des Objekts) ist."
+
+#~ msgid "detached"
+#~ msgstr "detached (\"abgesetzt\")"
+
+#, fuzzy
+#~ msgid ""
+#~ "The instance was once associated with a persistence context, but that "
+#~ "context was closed, or the instance was serialized to another process. It "
+#~ "has a persistent identity and can have a corresponding row in the "
+#~ "database. For detached instances, Hibernate does not guarantee the "
+#~ "relationship between persistent identity and Java identity."
+#~ msgstr ""
+#~ "Die Instanz war vormals mit einem Persistenzkontext assoziiert, aber der "
+#~ "Kontext wurde geschlossen oder die Instanz in einem anderen Vorgang "
+#~ "serialisiert. Sie besitzt eine persistente Identität und möglicherweise "
+#~ "eine korrespondierende Reihe in der Datenbank. Für Instanzen im "
+#~ "abgesetzten Status (\"detached\") garantiert Hibernate keine Verbindung "
+#~ "zwischen persistenter Identität und Java-Identität."
 
 #, fuzzy
 #~ msgid ""

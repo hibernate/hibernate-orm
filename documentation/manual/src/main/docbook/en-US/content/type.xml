@@ -662,7 +662,7 @@
                 are both (generally speaking) classes written specifically for the application.  They both might have
                 references to other application-specific classes, as well as to collections and simple JDK types.  As
                 discussed before, the only distinguishing factory is the fact that a component does not own its own
-                lifecycle.
+                lifecycle nor does it define an identifier.
             </para>
         </section>
 

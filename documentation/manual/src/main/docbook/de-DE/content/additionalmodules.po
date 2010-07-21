@@ -1,0 +1,439 @@
+# Language de-DE translations for PACKAGE package.
+# Automatically generated, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: http://bugs.kde.org\n"
+"POT-Creation-Date: 2010-07-20 21:02+0000\n"
+"PO-Revision-Date: 2010-07-20 21:02+0000\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Tag: title
+#: additionalmodules.xml:28
+#, no-c-format
+msgid "Additional modules"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:30
+#, no-c-format
+msgid ""
+"Hibernate Core also offers integration with some external modules/projects. "
+"This includes Hibernate Validator the reference implementation of Bean "
+"Validation (JSR 303) and Hibernate Search."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:35
+#, no-c-format
+msgid "Bean Validation"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:37
+#, no-c-format
+msgid ""
+"Bean Validation standardizes how to define and declare domain model level "
+"constraints. You can, for example, express that a property should never be "
+"null, that the account balance should be strictly positive, etc. These "
+"domain model constraints are declared in the bean itself by annotating its "
+"properties. Bean Validation can then read them and check for constraint "
+"violations. The validation mechanism can be executed in different layers in "
+"your application without having to duplicate any of these rules "
+"(presentation layer, data access layer). Following the DRY principle, Bean "
+"Validation and its reference implementation Hibernate Validator has been "
+"designed for that purpose."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:48
+#, no-c-format
+msgid ""
+"The integration between Hibernate and Bean Validation works at two levels. "
+"First, it is able to check in-memory instances of a class for constraint "
+"violations. Second, it can apply the constraints to the Hibernate metamodel "
+"and incorporate them into the generated database schema."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:54
+#, no-c-format
+msgid ""
+"Each constraint annotation is associated to a validator implementation "
+"responsible for checking the constraint on the entity instance. A validator "
+"can also (optionally) apply the constraint to the Hibernate metamodel, "
+"allowing Hibernate to generate DDL that expresses the constraint. With the "
+"appropriate event listener, you can execute the checking operation on "
+"inserts, updates and deletes done by Hibernate."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:62
+#, no-c-format
+msgid ""
+"When checking instances at runtime, Hibernate Validator returns information "
+"about constraint violations in a set of <classname>ConstraintViolation</"
+"classname>s. Among other information, the <classname>ConstraintViolation</"
+"classname> contains an error description message that can embed the "
+"parameter values bundle with the annotation (eg. size limit), and message "
+"strings that may be externalized to a <classname>ResourceBundle</classname>."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:71
+#, no-c-format
+msgid "Adding Bean Validation"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:73
+#, no-c-format
+msgid ""
+"To enable Hibernate's Bean Validation integration, simply add a Bean "
+"Validation provider (preferably Hibernate Validation 4) on your classpath."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:79
+#, no-c-format
+msgid "Configuration"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:81
+#, no-c-format
+msgid "By default, no configuration is necessary."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:83
+#, no-c-format
+msgid ""
+"The <classname>Default</classname> group is validated on entity insert and "
+"update and the database model is updated accordingly based on the "
+"<classname>Default</classname> group as well."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:87
+#, no-c-format
+msgid ""
+"You can customize the Bean Validation integration by setting the validation "
+"mode. Use the <literal>javax.persistence.validation.mode</literal> property "
+"and set it up for example in your <filename>persistence.xml</filename> file "
+"or your <filename>hibernate.cfg.xml</filename> file. Several options are "
+"possible:"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:96
+#, no-c-format
+msgid ""
+"<literal>auto</literal> (default): enable integration between Bean "
+"Validation and Hibernate (callback and ddl generation) only if Bean "
+"Validation is present in the classpath."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:102
+#, no-c-format
+msgid ""
+"<literal>none</literal>: disable all integration between Bean Validation and "
+"Hibernate"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:107
+#, no-c-format
+msgid ""
+"<literal>callback</literal>: only validate entities when they are either "
+"inserted, updated or deleted. An exception is raised if no Bean Validation "
+"provider is present in the classpath."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:113
+#, no-c-format
+msgid ""
+"<literal>ddl</literal>: only apply constraints to the database schema when "
+"generated by Hibernate. An exception is raised if no Bean Validation "
+"provider is present in the classpath. This value is not defined by the Java "
+"Persistence spec and is specific to Hibernate."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:122
+#, no-c-format
+msgid ""
+"You can use both <literal>callback</literal> and <literal>ddl</literal> "
+"together by setting the property to <literal>callback, dll</literal>"
+msgstr ""
+
+#. Tag: programlisting
+#: additionalmodules.xml:126
+#, no-c-format
+msgid ""
+"&lt;persistence ...&gt;\n"
+"  &lt;persistence-unit ...&gt;\n"
+"    ...\n"
+"    &lt;properties&gt;\n"
+"      &lt;property name=\"javax.persistence.validation.mode\"\n"
+"                value=\"callback, ddl\"/&gt;\n"
+"    &lt;/properties&gt;\n"
+"  &lt;/persistence-unit&gt;\n"
+"&lt;/persistence&gt;"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:128
+#, no-c-format
+msgid ""
+"This is equivalent to <literal>auto</literal> except that if no Bean "
+"Validation provider is present, an exception is raised."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:132
+#, no-c-format
+msgid ""
+"If you want to validate different groups during insertion, update and "
+"deletion, use:"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:137
+#, no-c-format
+msgid ""
+"<literal>javax.persistence.validation.group.pre-persist</literal>: groups "
+"validated when an entity is about to be persisted (default to "
+"<classname>Default</classname>)"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:143
+#, no-c-format
+msgid ""
+"<literal>javax.persistence.validation.group.pre-update</literal>: groups "
+"validated when an entity is about to be updated (default to "
+"<classname>Default</classname>)"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:149
+#, no-c-format
+msgid ""
+"<literal>javax.persistence.validation.group.pre-remove</literal>: groups "
+"validated when an entity is about to be deleted (default to no group)"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:155
+#, no-c-format
+msgid ""
+"<literal>org.hibernate.validator.group.ddl</literal>: groups considered when "
+"applying constraints on the database schema (default to <classname>Default</"
+"classname>)"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:161
+#, no-c-format
+msgid ""
+"Each property accepts the fully qualified class names of the groups "
+"validated separated by a comma (,)"
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:165
+#, no-c-format
+msgid "Using custom groups for validation"
+msgstr ""
+
+#. Tag: programlisting
+#: additionalmodules.xml:167
+#, no-c-format
+msgid ""
+"&lt;persistence ...&gt;\n"
+"  &lt;persistence-unit ...&gt;\n"
+"    ...\n"
+"    &lt;properties&gt;\n"
+"      &lt;property name=\"javax.persistence.validation.group.pre-update\"\n"
+"                value=\"javax.validation.group.Default, com.acme.group.Strict"
+"\"/&gt;\n"
+"      &lt;property name=\"javax.persistence.validation.group.pre-remove\"\n"
+"                value=\"com.acme.group.OnDelete\"/&gt;\n"
+"      &lt;property name=\"org.hibernate.validator.group.ddl\"\n"
+"                value=\"com.acme.group.DDL\"/&gt;\n"
+"    &lt;/properties&gt;\n"
+"  &lt;/persistence-unit&gt;\n"
+"&lt;/persistence&gt;"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:171
+#, no-c-format
+msgid ""
+"You can set these properties in <filename>hibernate.cfg.xml</filename>, "
+"<filename>hibernate.properties</filename> or programmatically."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:178
+#, no-c-format
+msgid "Catching violations"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:180
+#, no-c-format
+msgid ""
+"If an entity is found to be invalid, the list of constraint violations is "
+"propagated by the <classname>ConstraintViolationException</classname> which "
+"exposes the set of <classname>ConstraintViolation</classname>s."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:185
+#, no-c-format
+msgid ""
+"This exception is wrapped in a <classname>RollbackException</classname> when "
+"the violation happens at commit time. Otherwise the "
+"<classname>ConstraintViolationException</classname> is returned (for example "
+"when calling <methodname>flush()</methodname>. Note that generally, "
+"catchable violations are validated at a higher level (for example in Seam / "
+"JSF 2 via the JSF - Bean Validation integration or in your business layer by "
+"explicitly calling Bean Validation)."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:194
+#, no-c-format
+msgid ""
+"An application code will rarely be looking for a "
+"<classname>ConstraintViolationException</classname> raised by Hibernate. "
+"This exception should be treated as fatal and the persistence context should "
+"be discarded (<classname>EntityManager</classname> or <classname>Session</"
+"classname>)."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:202
+#, no-c-format
+msgid "Database schema"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:204
+#, no-c-format
+msgid ""
+"Hibernate uses Bean Validation constraints to generate an accurate database "
+"schema:"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:209
+#, no-c-format
+msgid ""
+"<classname>@NotNull</classname> leads to a not null column (unless it "
+"conflicts with components or table inheritance)"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:214
+#, no-c-format
+msgid ""
+"<classname>@Size.max</classname> leads to a <literal>varchar(max)</literal> "
+"definition for Strings"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:219
+#, no-c-format
+msgid ""
+"<classname>@Min</classname>, <classname>@Max</classname> lead to column "
+"checks (like <code>value &lt;= max</code>)"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:224
+#, no-c-format
+msgid ""
+"<classname>@Digits</classname> leads to the definition of precision and "
+"scale (ever wondered which is which? It's easy now with <classname>@Digits</"
+"classname> :) )"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:230
+#, no-c-format
+msgid ""
+"These constraints can be declared directly on the entity properties or "
+"indirectly by using constraint composition."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:233
+#, no-c-format
+msgid ""
+"For more information check the Hibernate Validator <ulink url=\"http://docs."
+"jboss.org/hibernate/stable/validator/reference/en-US/html/\">reference "
+"documentation</ulink>."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:240
+#, no-c-format
+msgid "Hibernate Search"
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:243
+#, no-c-format
+msgid "Description"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:245
+#, no-c-format
+msgid ""
+"Full text search engines like <productname>Apache Lucene</productname> are a "
+"very powerful technology to bring free text/efficient queries to "
+"applications. If suffers several mismatches when dealing with a object "
+"domain model (keeping the index up to date, mismatch between the index "
+"structure and the domain model, querying mismatch...) Hibernate Search "
+"indexes your domain model thanks to a few annotations, takes care of the "
+"database / index synchronization and brings you back regular managed objects "
+"from free text queries. Hibernate Search is using <ulink url=\"http://lucene."
+"apache.org\">Apache Lucene</ulink> under the cover."
+msgstr ""
+
+#. Tag: title
+#: additionalmodules.xml:258
+#, no-c-format
+msgid "Integration with Hibernate Annotations"
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:260
+#, no-c-format
+msgid ""
+"Hibernate Search integrates with Hibernate Core transparently provided that "
+"the Hibernate Search jar is present on the classpath. If you do not wish to "
+"automatically register Hibernate Search event listeners, you can set "
+"<literal>hibernate.search.autoregister_listeners</literal> to false. Such a "
+"need is very uncommon and not recommended."
+msgstr ""
+
+#. Tag: para
+#: additionalmodules.xml:267
+#, no-c-format
+msgid ""
+"Check the Hibernate Search <ulink url=\"http://docs.jboss.org/hibernate/"
+"stable/search/reference/en-US/html/\">reference documentation</ulink> for "
+"more information."
+msgstr ""

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-03-12T00:03:48\n"
+"POT-Creation-Date: 2010-07-20 21:02+0000\n"
 "PO-Revision-Date: 2010-01-07 14:56+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -14,11 +14,13 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
+#: session_api.xml:31
 #, no-c-format
 msgid "Working with objects"
 msgstr "オブジェクトを扱う"
 
 #. Tag: para
+#: session_api.xml:33
 #, no-c-format
 msgid ""
 "Hibernate is a full object/relational mapping solution that not only shields "
@@ -35,6 +37,7 @@ msgstr ""
 "における永続化に対する、とても自然なオブジェクト指向の考え方を提供します。"
 
 #. Tag: para
+#: session_api.xml:40
 #, no-c-format
 msgid ""
 "In other words, Hibernate application developers should always think about "
@@ -49,16 +52,19 @@ msgstr ""
 "ムのパフォーマンスをチューニングするときにだけ、問題になってきます。"
 
 #. Tag: title
+#: session_api.xml:47
 #, no-c-format
 msgid "Hibernate object states"
 msgstr "Hibernate におけるオブジェクトの状態"
 
 #. Tag: para
+#: session_api.xml:49
 #, no-c-format
 msgid "Hibernate defines and supports the following object states:"
 msgstr "Hibernate は次のようなオブジェクトの状態を定義し、サポートしています:"
 
 #. Tag: para
+#: session_api.xml:53
 #, no-c-format
 msgid ""
 "<emphasis>Transient</emphasis> - an object is transient if it has just been "
@@ -81,6 +87,7 @@ msgstr ""
 "なる SQL 文の発行は、 Hibernate に任せましょう）。"
 
 #. Tag: para
+#: session_api.xml:65
 #, no-c-format
 msgid ""
 "<emphasis>Persistent</emphasis> - a persistent instance has a representation "
@@ -102,6 +109,7 @@ msgstr ""
 "ません。"
 
 #. Tag: para
+#: session_api.xml:77
 #, no-c-format
 msgid ""
 "<emphasis>Detached</emphasis> - a detached instance is an object that has "
@@ -126,6 +134,7 @@ msgstr ""
 "ち、ユーザーから見た作業単位だということです。"
 
 #. Tag: para
+#: session_api.xml:90
 #, no-c-format
 msgid ""
 "We will now discuss the states and state transitions (and the Hibernate "
@@ -135,11 +144,13 @@ msgstr ""
 "について、詳細に述べます。"
 
 #. Tag: title
+#: session_api.xml:95
 #, no-c-format
 msgid "Making objects persistent"
 msgstr "オブジェクトを永続状態にする"
 
 #. Tag: para
+#: session_api.xml:97
 #, fuzzy, no-c-format
 msgid ""
 "Newly instantiated instances of a persistent class are considered "
@@ -151,7 +162,24 @@ msgstr ""
 "づけることで、 transient インスタンスを <emphasis>永続状態 (persistent)</"
 "emphasis> にできます。"
 
+#. Tag: programlisting
+#: session_api.xml:102
+#, fuzzy, no-c-format
+msgid ""
+"DomesticCat fritz = new DomesticCat();\n"
+"fritz.setColor(Color.GINGER);\n"
+"fritz.setSex('M');\n"
+"fritz.setName(\"Fritz\");\n"
+"Long generatedId = (Long) sess.save(fritz);"
+msgstr ""
+"DomesticCat fritz = new DomesticCat();\n"
+"fritz.setColor(Color.GINGER);\n"
+"fritz.setSex('M');\n"
+"fritz.setName(\"Fritz\");\n"
+"Long generatedId = (Long) sess.save(fritz);"
+
 #. Tag: para
+#: session_api.xml:104
 #, no-c-format
 msgid ""
 "If <literal>Cat</literal> has a generated identifier, the identifier is "
@@ -173,6 +201,7 @@ msgstr ""
 "も可能です。"
 
 #. Tag: para
+#: session_api.xml:115
 #, no-c-format
 msgid ""
 "<literal>persist()</literal> makes a transient instance persistent. However, "
@@ -185,6 +214,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
+#: session_api.xml:126
 #, no-c-format
 msgid ""
 "<literal>save()</literal> does guarantee to return an identifier. If an "
@@ -195,6 +225,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
+#: session_api.xml:135
 #, fuzzy, no-c-format
 msgid ""
 "Alternatively, you can assign the identifier using an overloaded version of "
@@ -203,7 +234,28 @@ msgstr ""
 "代わりに、識別子を引数にとる <literal>save()</literal> メソッドを使って、識別"
 "子を割り当てることもできます。"
 
+#. Tag: programlisting
+#: session_api.xml:138
+#, fuzzy, no-c-format
+msgid ""
+"DomesticCat pk = new DomesticCat();\n"
+"pk.setColor(Color.TABBY);\n"
+"pk.setSex('F');\n"
+"pk.setName(\"PK\");\n"
+"pk.setKittens( new HashSet() );\n"
+"pk.addKitten(fritz);\n"
+"sess.save( pk, new Long(1234) );"
+msgstr ""
+"DomesticCat pk = new DomesticCat();\n"
+"pk.setColor(Color.TABBY);\n"
+"pk.setSex('F');\n"
+"pk.setName(\"PK\");\n"
+"pk.setKittens( new HashSet() );\n"
+"pk.addKitten(fritz);\n"
+"sess.save( pk, new Long(1234) );"
+
 #. Tag: para
+#: session_api.xml:140
 #, no-c-format
 msgid ""
 "If the object you make persistent has associated objects (e.g. the "
@@ -223,6 +275,7 @@ msgstr ""
 "ん。"
 
 #. Tag: para
+#: session_api.xml:148
 #, no-c-format
 msgid ""
 "Usually you do not bother with this detail, as you will normally use "
@@ -238,11 +291,13 @@ msgstr ""
 "章の後半に書かれています。"
 
 #. Tag: title
+#: session_api.xml:157
 #, no-c-format
 msgid "Loading an object"
 msgstr "オブジェクトのロード"
 
 #. Tag: para
+#: session_api.xml:159
 #, no-c-format
 msgid ""
 "The <literal>load()</literal> methods of <literal>Session</literal> provide "
@@ -256,13 +311,47 @@ msgstr ""
 "そのクラスのインスタンスを新たに生成し、状態をロードします。そのインスタンス"
 "の状態は、永続 (persistent) 状態です。"
 
+#. Tag: programlisting
+#: session_api.xml:165
+#, fuzzy, no-c-format
+msgid "Cat fritz = (Cat) sess.load(Cat.class, generatedId);"
+msgstr "Cat fritz = (Cat) sess.load(Cat.class, generatedId);"
+
+#. Tag: programlisting
+#: session_api.xml:167
+#, fuzzy, no-c-format
+msgid ""
+"// you need to wrap primitive identifiers\n"
+"long id = 1234;\n"
+"DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long(id) );"
+msgstr ""
+"// you need to wrap primitive identifiers\n"
+"long id = 1234;\n"
+"DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long(id) );"
+
 #. Tag: para
+#: session_api.xml:169
 #, no-c-format
 msgid "Alternatively, you can load state into a given instance:"
 msgstr ""
 "あるいは、以下のように、既存のインスタンスに状態をロードすることもできます:"
 
+#. Tag: programlisting
+#: session_api.xml:171
+#, fuzzy, no-c-format
+msgid ""
+"Cat cat = new DomesticCat();\n"
+"// load pk's state into cat\n"
+"sess.load( cat, new Long(pkId) );\n"
+"Set kittens = cat.getKittens();"
+msgstr ""
+"Cat cat = new DomesticCat();\n"
+"// load pk's state into cat\n"
+"sess.load( cat, new Long(pkId) );\n"
+"Set kittens = cat.getKittens();"
+
 #. Tag: para
+#: session_api.xml:173
 #, no-c-format
 msgid ""
 "Be aware that <literal>load()</literal> will throw an unrecoverable "
@@ -283,6 +372,7 @@ msgstr ""
 "定義されているならば、複数のインスタンスを一括でロードすることが可能です。"
 
 #. Tag: para
+#: session_api.xml:182
 #, no-c-format
 msgid ""
 "If you are not certain that a matching row exists, you should use the "
@@ -293,7 +383,26 @@ msgstr ""
 "ソッドを使うべきです。それは、データベースにすぐにアクセスし、該当する行が無"
 "い場合は null を返します。"
 
+#. Tag: programlisting
+#: session_api.xml:186
+#, fuzzy, no-c-format
+msgid ""
+"Cat cat = (Cat) sess.get(Cat.class, id);\n"
+"if (cat==null) {\n"
+"    cat = new Cat();\n"
+"    sess.save(cat, id);\n"
+"}\n"
+"return cat;"
+msgstr ""
+"Cat cat = (Cat) sess.get(Cat.class, id);\n"
+"if (cat==null) {\n"
+"    cat = new Cat();\n"
+"    sess.save(cat, id);\n"
+"}\n"
+"return cat;"
+
 #. Tag: para
+#: session_api.xml:188
 #, no-c-format
 msgid ""
 "You can even load an object using an SQL <literal>SELECT ... FOR UPDATE</"
@@ -304,7 +413,14 @@ msgstr ""
 "literal> という SQL を使ってオブジェクトをロードすることができます。詳細な情"
 "報は、 API ドキュメントを参照してください。"
 
+#. Tag: programlisting
+#: session_api.xml:192
+#, fuzzy, no-c-format
+msgid "Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);"
+msgstr "Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);"
+
 #. Tag: para
+#: session_api.xml:194
 #, no-c-format
 msgid ""
 "Any associated instances or contained collections will <emphasis>not</"
@@ -318,6 +434,7 @@ msgstr ""
 "しましょう。"
 
 #. Tag: para
+#: session_api.xml:199
 #, no-c-format
 msgid ""
 "It is possible to re-load an object and all its collections at any time, "
@@ -329,13 +446,26 @@ msgstr ""
 "ブルを更新した際に、そのテーブルに対応するオブジェクトのプロパティを同期する"
 "場合、このメソッドが役に立ちます。"
 
+#. Tag: programlisting
+#: session_api.xml:204
+#, fuzzy, no-c-format
+msgid ""
+"sess.save(cat);\n"
+"sess.flush(); //force the SQL INSERT\n"
+"sess.refresh(cat); //re-read the state (after the trigger executes)"
+msgstr ""
+"sess.save(cat);\n"
+"sess.flush(); //force the SQL INSERT\n"
+"sess.refresh(cat); //re-read the state (after the trigger executes)"
+
 #. Tag: para
+#: session_api.xml:206
 #, fuzzy, no-c-format
 msgid ""
 "How much does Hibernate load from the database and how many SQL "
 "<literal>SELECT</literal>s will it use? This depends on the "
 "<emphasis>fetching strategy</emphasis>. This is explained in <xref linkend="
-"\"performance-fetching\" />."
+"\"performance-fetching\"/>."
 msgstr ""
 "大切な問題は、いつも次の点に関するものです。それは、 Hibernate がデータベース"
 "から、どのくらいの量を復元するのかと、どのくらいの数の SQL の "
@@ -344,11 +474,13 @@ msgstr ""
 "fetching\"/> で説明しています。"
 
 #. Tag: title
+#: session_api.xml:213
 #, no-c-format
 msgid "Querying"
 msgstr "クエリ"
 
 #. Tag: para
+#: session_api.xml:215
 #, no-c-format
 msgid ""
 "If you do not know the identifiers of the objects you are looking for, you "
@@ -366,11 +498,13 @@ msgstr ""
 "データベースのネイティブな SQL でクエリを表現することもできます。"
 
 #. Tag: title
+#: session_api.xml:224
 #, no-c-format
 msgid "Executing queries"
 msgstr "クエリの実行"
 
 #. Tag: para
+#: session_api.xml:226
 #, no-c-format
 msgid ""
 "HQL and native SQL queries are represented with an instance of <literal>org."
@@ -385,7 +519,62 @@ msgstr ""
 "常、 <literal>Query</literal> は、以下に示すように、その時点の "
 "<literal>Session</literal> を使って取得します。"
 
+#. Tag: programlisting
+#: session_api.xml:232
+#, fuzzy, no-c-format
+msgid ""
+"List cats = session.createQuery(\n"
+"    \"from Cat as cat where cat.birthdate &lt; ?\")\n"
+"    .setDate(0, date)\n"
+"    .list();\n"
+"\n"
+"List mothers = session.createQuery(\n"
+"    \"select mother from Cat as cat join cat.mother as mother where cat.name "
+"= ?\")\n"
+"    .setString(0, name)\n"
+"    .list();\n"
+"\n"
+"List kittens = session.createQuery(\n"
+"    \"from Cat as cat where cat.mother = ?\")\n"
+"    .setEntity(0, pk)\n"
+"    .list();\n"
+"\n"
+"Cat mother = (Cat) session.createQuery(\n"
+"    \"select cat.mother from Cat as cat where cat = ?\")\n"
+"    .setEntity(0, izi)\n"
+"    .uniqueResult();]]\n"
+"\n"
+"Query mothersWithKittens = (Cat) session.createQuery(\n"
+"    \"select mother from Cat as mother left join fetch mother.kittens\");\n"
+"Set uniqueMothers = new HashSet(mothersWithKittens.list());"
+msgstr ""
+"List cats = session.createQuery(\n"
+"    \"from Cat as cat where cat.birthdate &lt; ?\")\n"
+"    .setDate(0, date)\n"
+"    .list();\n"
+"\n"
+"List mothers = session.createQuery(\n"
+"    \"select mother from Cat as cat join cat.mother as mother where cat.name "
+"= ?\")\n"
+"    .setString(0, name)\n"
+"    .list();\n"
+"\n"
+"List kittens = session.createQuery(\n"
+"    \"from Cat as cat where cat.mother = ?\")\n"
+"    .setEntity(0, pk)\n"
+"    .list();\n"
+"\n"
+"Cat mother = (Cat) session.createQuery(\n"
+"    \"select cat.mother from Cat as cat where cat = ?\")\n"
+"    .setEntity(0, izi)\n"
+"    .uniqueResult();]]\n"
+"\n"
+"Query mothersWithKittens = (Cat) session.createQuery(\n"
+"    \"select mother from Cat as mother left join fetch mother.kittens\");\n"
+"Set uniqueMothers = new HashSet(mothersWithKittens.list());"
+
 #. Tag: para
+#: session_api.xml:234
 #, no-c-format
 msgid ""
 "A query is usually executed by invoking <literal>list()</literal>. The "
@@ -407,11 +596,13 @@ msgstr ""
 "複は <literal>Set</literal> を使って取り除くことができます。"
 
 #. Tag: title
+#: session_api.xml:244
 #, no-c-format
 msgid "Iterating results"
 msgstr "結果をイテレートする"
 
 #. Tag: para
+#: session_api.xml:246
 #, no-c-format
 msgid ""
 "Occasionally, you might be able to achieve better performance by executing "
@@ -434,12 +625,46 @@ msgstr ""
 "と、実際のインスタンスを初期化するために後から行う <emphasis>n回</emphasis> "
 "の select のことです。"
 
+#. Tag: programlisting
+#: session_api.xml:257
+#, fuzzy, no-c-format
+msgid ""
+"// fetch ids\n"
+"Iterator iter = sess.createQuery(\"from eg.Qux q order by q.likeliness\")."
+"iterate();\n"
+"while ( iter.hasNext() ) {\n"
+"    Qux qux = (Qux) iter.next();  // fetch the object\n"
+"    // something we couldnt express in the query\n"
+"    if ( qux.calculateComplicatedAlgorithm() ) {\n"
+"        // delete the current instance\n"
+"        iter.remove();\n"
+"        // dont need to process the rest\n"
+"        break;\n"
+"    }\n"
+"}"
+msgstr ""
+"// fetch ids\n"
+"Iterator iter = sess.createQuery(\"from eg.Qux q order by q.likeliness\")."
+"iterate();\n"
+"while ( iter.hasNext() ) {\n"
+"    Qux qux = (Qux) iter.next();  // fetch the object\n"
+"    // something we couldnt express in the query\n"
+"    if ( qux.calculateComplicatedAlgorithm() ) {\n"
+"        // delete the current instance\n"
+"        iter.remove();\n"
+"        // dont need to process the rest\n"
+"        break;\n"
+"    }\n"
+"}"
+
 #. Tag: title
+#: session_api.xml:261
 #, no-c-format
 msgid "Queries that return tuples"
 msgstr "オブジェクトの組（tuple）を返すクエリ"
 
 #. Tag: para
+#: session_api.xml:263
 #, no-c-format
 msgid ""
 "Hibernate queries sometimes return tuples of objects. Each tuple is returned "
@@ -448,12 +673,44 @@ msgstr ""
 "Hibernate のクエリでは、時々、オブジェクトの組を返すことがあります。その場合"
 "は、各タプルは配列として返されます:"
 
+#. Tag: programlisting
+#: session_api.xml:266
+#, fuzzy, no-c-format
+msgid ""
+"Iterator kittensAndMothers = sess.createQuery(\n"
+"            \"select kitten, mother from Cat kitten join kitten.mother mother"
+"\")\n"
+"            .list()\n"
+"            .iterator();\n"
+"\n"
+"while ( kittensAndMothers.hasNext() ) {\n"
+"    Object[] tuple = (Object[]) kittensAndMothers.next();\n"
+"    Cat kitten = (Cat) tuple[0];\n"
+"    Cat mother = (Cat) tuple[1];\n"
+"    ....\n"
+"}"
+msgstr ""
+"Iterator kittensAndMothers = sess.createQuery(\n"
+"            \"select kitten, mother from Cat kitten join kitten.mother mother"
+"\")\n"
+"            .list()\n"
+"            .iterator();\n"
+"\n"
+"while ( kittensAndMothers.hasNext() ) {\n"
+"    Object[] tuple = (Object[]) kittensAndMothers.next();\n"
+"    Cat kitten  = tuple[0];\n"
+"    Cat mother  = tuple[1];\n"
+"    ....\n"
+"}"
+
 #. Tag: title
+#: session_api.xml:270
 #, no-c-format
 msgid "Scalar results"
 msgstr "スカラーの結果"
 
 #. Tag: para
+#: session_api.xml:272
 #, no-c-format
 msgid ""
 "Queries can specify a property of a class in the <literal>select</literal> "
@@ -464,12 +721,48 @@ msgstr ""
 "す。 SQL の集合関数を呼ぶこともできます。プロパティや集合関数は、（永続状態の"
 "エンティティではなく）「スカラー値」であると見なされます。"
 
+#. Tag: programlisting
+#: session_api.xml:277
+#, fuzzy, no-c-format
+msgid ""
+"Iterator results = sess.createQuery(\n"
+"        \"select cat.color, min(cat.birthdate), count(cat) from Cat cat \" "
+"+\n"
+"        \"group by cat.color\")\n"
+"        .list()\n"
+"        .iterator();\n"
+"\n"
+"while ( results.hasNext() ) {\n"
+"    Object[] row = (Object[]) results.next();\n"
+"    Color type = (Color) row[0];\n"
+"    Date oldest = (Date) row[1];\n"
+"    Integer count = (Integer) row[2];\n"
+"    .....\n"
+"}"
+msgstr ""
+"Iterator results = sess.createQuery(\n"
+"        \"select cat.color, min(cat.birthdate), count(cat) from Cat cat \" "
+"+\n"
+"        \"group by cat.color\")\n"
+"        .list()\n"
+"        .iterator();\n"
+"\n"
+"while ( results.hasNext() ) {\n"
+"    Object[] row = (Object[]) results.next();\n"
+"    Color type = (Color) row[0];\n"
+"    Date oldest = (Date) row[1];\n"
+"    Integer count = (Integer) row[2];\n"
+"    .....\n"
+"}"
+
 #. Tag: title
+#: session_api.xml:281
 #, no-c-format
 msgid "Bind parameters"
 msgstr "パラメータのバインド"
 
 #. Tag: para
+#: session_api.xml:283
 #, no-c-format
 msgid ""
 "Methods on <literal>Query</literal> are provided for binding values to named "
@@ -486,27 +779,84 @@ msgstr ""
 "です。"
 
 #. Tag: para
+#: session_api.xml:292
 #, no-c-format
 msgid ""
 "named parameters are insensitive to the order they occur in the query string"
 msgstr "名前付きパラメータは、クエリ文字列に登場する順番と無関係です"
 
 #. Tag: para
+#: session_api.xml:297
 #, no-c-format
 msgid "they can occur multiple times in the same query"
 msgstr "同じクエリ内に複数回登場することができます"
 
 #. Tag: para
+#: session_api.xml:301
 #, no-c-format
 msgid "they are self-documenting"
 msgstr "自分自身を説明します"
 
+#. Tag: programlisting
+#: session_api.xml:305
+#, fuzzy, no-c-format
+msgid ""
+"//named parameter (preferred)\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name = :name"
+"\");\n"
+"q.setString(\"name\", \"Fritz\");\n"
+"Iterator cats = q.iterate();"
+msgstr ""
+"//named parameter (preferred)\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name = :name"
+"\");\n"
+"q.setString(\"name\", \"Fritz\");\n"
+"Iterator cats = q.iterate();"
+
+#. Tag: programlisting
+#: session_api.xml:307
+#, fuzzy, no-c-format
+msgid ""
+"//positional parameter\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name = ?\");\n"
+"q.setString(0, \"Izi\");\n"
+"Iterator cats = q.iterate();"
+msgstr ""
+"//positional parameter\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name = ?\");\n"
+"q.setString(0, \"Izi\");\n"
+"Iterator cats = q.iterate();"
+
+#. Tag: programlisting
+#: session_api.xml:309
+#, fuzzy, no-c-format
+msgid ""
+"//named parameter list\n"
+"List names = new ArrayList();\n"
+"names.add(\"Izi\");\n"
+"names.add(\"Fritz\");\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name in (:"
+"namesList)\");\n"
+"q.setParameterList(\"namesList\", names);\n"
+"List cats = q.list();"
+msgstr ""
+"//named parameter list\n"
+"List names = new ArrayList();\n"
+"names.add(\"Izi\");\n"
+"names.add(\"Fritz\");\n"
+"Query q = sess.createQuery(\"from DomesticCat cat where cat.name in (:"
+"namesList)\");\n"
+"q.setParameterList(\"namesList\", names);\n"
+"List cats = q.list();"
+
 #. Tag: title
+#: session_api.xml:313
 #, no-c-format
 msgid "Pagination"
 msgstr "ページ分け"
 
 #. Tag: para
+#: session_api.xml:315
 #, no-c-format
 msgid ""
 "If you need to specify bounds upon your result set, that is, the maximum "
@@ -517,7 +867,22 @@ msgstr ""
 "ば、以下のように、 <literal>Query</literal> インターフェースのメソッドを使い"
 "ます。"
 
+#. Tag: programlisting
+#: session_api.xml:320
+#, fuzzy, no-c-format
+msgid ""
+"Query q = sess.createQuery(\"from DomesticCat cat\");\n"
+"q.setFirstResult(20);\n"
+"q.setMaxResults(10);\n"
+"List cats = q.list();"
+msgstr ""
+"Query q = sess.createQuery(\"from DomesticCat cat\");\n"
+"q.setFirstResult(20);\n"
+"q.setMaxResults(10);\n"
+"List cats = q.list();"
+
 #. Tag: para
+#: session_api.xml:322
 #, no-c-format
 msgid ""
 "Hibernate knows how to translate this limit query into the native SQL of "
@@ -527,11 +892,13 @@ msgstr ""
 "知っています。"
 
 #. Tag: title
+#: session_api.xml:327
 #, no-c-format
 msgid "Scrollable iteration"
 msgstr "スクロール可能なイテレーション"
 
 #. Tag: para
+#: session_api.xml:329
 #, no-c-format
 msgid ""
 "If your JDBC driver supports scrollable <literal>ResultSet</literal>s, the "
@@ -544,7 +911,60 @@ msgstr ""
 "<literal>ScrollableResults</literal> オブジェクトを取得できます。それを使う"
 "と、クエリの結果に対して柔軟にナビゲーションできます。"
 
+#. Tag: programlisting
+#: session_api.xml:334
+#, fuzzy, no-c-format
+msgid ""
+"Query q = sess.createQuery(\"select cat.name, cat from DomesticCat cat \" +\n"
+"                            \"order by cat.name\");\n"
+"ScrollableResults cats = q.scroll();\n"
+"if ( cats.first() ) {\n"
+"\n"
+"    // find the first name on each page of an alphabetical list of cats by "
+"name\n"
+"    firstNamesOfPages = new ArrayList();\n"
+"    do {\n"
+"        String name = cats.getString(0);\n"
+"        firstNamesOfPages.add(name);\n"
+"    }\n"
+"    while ( cats.scroll(PAGE_SIZE) );\n"
+"\n"
+"    // Now get the first page of cats\n"
+"    pageOfCats = new ArrayList();\n"
+"    cats.beforeFirst();\n"
+"    int i=0;\n"
+"    while( ( PAGE_SIZE &gt; i++ ) &amp;&amp; cats.next() ) pageOfCats.add"
+"( cats.get(1) );\n"
+"\n"
+"}\n"
+"cats.close()"
+msgstr ""
+"Query q = sess.createQuery(\"select cat.name, cat from DomesticCat cat \" +\n"
+"                            \"order by cat.name\");\n"
+"ScrollableResults cats = q.scroll();\n"
+"if ( cats.first() ) {\n"
+"\n"
+"    // find the first name on each page of an alphabetical list of cats by "
+"name\n"
+"    firstNamesOfPages = new ArrayList();\n"
+"    do {\n"
+"        String name = cats.getString(0);\n"
+"        firstNamesOfPages.add(name);\n"
+"    }\n"
+"    while ( cats.scroll(PAGE_SIZE) );\n"
+"\n"
+"    // Now get the first page of cats\n"
+"    pageOfCats = new ArrayList();\n"
+"    cats.beforeFirst();\n"
+"    int i=0;\n"
+"    while( ( PAGE_SIZE &gt; i++ ) &amp;&amp; cats.next() ) pageOfCats.add"
+"( cats.get(1) );\n"
+"\n"
+"}\n"
+"cats.close()"
+
 #. Tag: para
+#: session_api.xml:336
 #, no-c-format
 msgid ""
 "Note that an open database connection and cursor is required for this "
@@ -557,28 +977,116 @@ msgstr ""
 "いましょう。"
 
 #. Tag: title
+#: session_api.xml:343
 #, no-c-format
 msgid "Externalizing named queries"
 msgstr "名前付きクエリの外出し"
 
 #. Tag: para
+#: session_api.xml:345
 #, no-c-format
 msgid ""
-"You can also define named queries in the mapping document. Remember to use a "
-"<literal>CDATA</literal> section if your query contains characters that "
-"could be interpreted as markup."
+"Queries can also be configured as so called named queries using annotations "
+"or Hibernate mapping documents. <literal>@NamedQuery</literal> and "
+"<literal>@NamedQueries</literal> can be defined at the class level as seen "
+"in <xref linkend=\"example-named-query-annotation\"/> . However their "
+"definitions are global to the session factory/entity manager factory scope. "
+"A named query is defined by its name and the actual query string."
+msgstr ""
+
+#. Tag: title
+#: session_api.xml:355
+#, no-c-format
+msgid "Defining a named query using <classname>@NamedQuery</classname>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:358
+#, no-c-format
+msgid ""
+"@Entity\n"
+"@NamedQuery(name=\"night.moreRecentThan\", query=\"select n from Night n "
+"where n.date &gt;= :date\")\n"
+"public class Night {\n"
+"    ...\n"
+"}\n"
+"\n"
+"public class MyDao {\n"
+"    doStuff() {\n"
+"        Query q = s.getNamedQuery(\"night.moreRecentThan\");\n"
+"        q.setDate( \"date\", aMonthAgo );\n"
+"        List results = q.list();\n"
+"        ...\n"
+"    }\n"
+"    ...\n"
+"}"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:361
+#, fuzzy, no-c-format
+msgid ""
+"Using a mapping document can be configured using the <literal>&lt;query&gt;</"
+"literal> node. Remember to use a <literal>CDATA</literal> section if your "
+"query contains characters that could be interpreted as markup."
 msgstr ""
 "マッピングドキュメントに名前付きのクエリを定義することができます。（マーク"
 "アップと解釈される文字がクエリに含まれるなら、 <literal>CDATA</literal> セク"
 "ションを使うことを忘れないようにしましょう。）"
 
-#. Tag: para
+#. Tag: title
+#: session_api.xml:367
 #, no-c-format
-msgid "Parameter binding and executing is done programatically:"
+msgid "Defining a named query using <literal>&lt;query&gt;</literal>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:370
+#, fuzzy, no-c-format
+msgid ""
+"&lt;query name=\"ByNameAndMaximumWeight\"&gt;&lt;![CDATA[\n"
+"    from eg.DomesticCat as cat\n"
+"        where cat.name = ?\n"
+"        and cat.weight &gt; ?\n"
+"] ]&gt;&lt;/query&gt;"
+msgstr ""
+"&lt;query name=\"ByNameAndMaximumWeight\"&gt;&lt;![CDATA[\n"
+"    from eg.DomesticCat as cat\n"
+"        where cat.name = ?\n"
+"        and cat.weight &gt; ?\n"
+"] ]&gt;&lt;/query&gt;"
+
+#. Tag: para
+#: session_api.xml:373
+#, fuzzy, no-c-format
+msgid ""
+"Parameter binding and executing is done programatically as seen in <xref "
+"linkend=\"example-parameter-binding-named-query\"/>."
 msgstr ""
 "パラメータのバインディングと実行は、以下のようなプログラムで行われます:"
 
+#. Tag: title
+#: session_api.xml:377
+#, no-c-format
+msgid "Parameter binding of a named query"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:379
+#, fuzzy, no-c-format
+msgid ""
+"Query q = sess.getNamedQuery(\"ByNameAndMaximumWeight\");\n"
+"q.setString(0, name);\n"
+"q.setInt(1, minWeight);\n"
+"List cats = q.list();"
+msgstr ""
+"Query q = sess.getNamedQuery(\"ByNameAndMaximumWeight\");\n"
+"q.setString(0, name);\n"
+"q.setInt(1, minWeight);\n"
+"List cats = q.list();"
+
 #. Tag: para
+#: session_api.xml:382
 #, no-c-format
 msgid ""
 "The actual program code is independent of the query language that is used. "
@@ -591,6 +1099,7 @@ msgstr ""
 "ます。"
 
 #. Tag: para
+#: session_api.xml:387
 #, no-c-format
 msgid ""
 "Also note that a query declaration inside a <literal>&lt;hibernate-"
@@ -606,11 +1115,13 @@ msgstr ""
 "ByNameAndMaximumWeight</literal>"
 
 #. Tag: title
+#: session_api.xml:397
 #, no-c-format
 msgid "Filtering collections"
 msgstr "フィルタリングコレクション"
 
 #. Tag: para
+#: session_api.xml:399
 #, no-c-format
 msgid ""
 "A collection <emphasis>filter</emphasis> is a special type of query that can "
@@ -621,7 +1132,26 @@ msgstr ""
 "配列に適用される特殊なタイプのクエリです。そのクエリ文字列では、コレクション"
 "のその時点での要素を意味する <literal>this</literal> を使います。"
 
+#. Tag: programlisting
+#: session_api.xml:404
+#, fuzzy, no-c-format
+msgid ""
+"Collection blackKittens = session.createFilter(\n"
+"    pk.getKittens(), \n"
+"    \"where this.color = ?\")\n"
+"    .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )\n"
+"    .list()\n"
+");"
+msgstr ""
+"Collection blackKittens = session.createFilter(\n"
+"    pk.getKittens(), \n"
+"    \"where this.color = ?\")\n"
+"    .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )\n"
+"    .list()\n"
+");"
+
 #. Tag: para
+#: session_api.xml:406
 #, no-c-format
 msgid ""
 "The returned collection is considered a bag that is a copy of the given "
@@ -633,6 +1163,7 @@ msgstr ""
 "う名前の意味とは異なりますが、期待される動きとは一致しています）。"
 
 #. Tag: para
+#: session_api.xml:411
 #, no-c-format
 msgid ""
 "Observe that filters do not require a <literal>from</literal> clause, "
@@ -643,7 +1174,22 @@ msgstr ""
 "なら、持つことも可能ですが）。フィルタは、コレクションの要素自体を返して構い"
 "ません。"
 
+#. Tag: programlisting
+#: session_api.xml:415
+#, fuzzy, no-c-format
+msgid ""
+"Collection blackKittenMates = session.createFilter(\n"
+"    pk.getKittens(), \n"
+"    \"select this.mate where this.color = eg.Color.BLACK.intValue\")\n"
+"    .list();"
+msgstr ""
+"Collection blackKittenMates = session.createFilter(\n"
+"    pk.getKittens(), \n"
+"    \"select this.mate where this.color = eg.Color.BLACK.intValue\")\n"
+"    .list();"
+
 #. Tag: para
+#: session_api.xml:417
 #, no-c-format
 msgid ""
 "Even an empty filter query is useful, e.g. to load a subset of elements in a "
@@ -652,12 +1198,28 @@ msgstr ""
 "クエリを含まないフィルタも役に立ちます。例えば、非常に大きなコレクションの部"
 "分集合をロードするために使えます。"
 
+#. Tag: programlisting
+#: session_api.xml:420
+#, fuzzy, no-c-format
+msgid ""
+"Collection tenKittens = session.createFilter(\n"
+"    mother.getKittens(), \"\")\n"
+"    .setFirstResult(0).setMaxResults(10)\n"
+"    .list();"
+msgstr ""
+"Collection tenKittens = session.createFilter(\n"
+"    mother.getKittens(), \"\")\n"
+"    .setFirstResult(0).setMaxResults(10)\n"
+"    .list();"
+
 #. Tag: title
+#: session_api.xml:424
 #, no-c-format
 msgid "Criteria queries"
 msgstr "クライテリアのクエリ"
 
 #. Tag: para
+#: session_api.xml:426
 #, no-c-format
 msgid ""
 "HQL is extremely powerful, but some developers prefer to build queries "
@@ -670,22 +1232,39 @@ msgstr ""
 "Hibernate は直感的な <literal>Criteria</literal> クエリ API を提供していま"
 "す。"
 
+#. Tag: programlisting
+#: session_api.xml:431
+#, fuzzy, no-c-format
+msgid ""
+"Criteria crit = session.createCriteria(Cat.class);\n"
+"crit.add( Restrictions.eq( \"color\", eg.Color.BLACK ) );\n"
+"crit.setMaxResults(10);\n"
+"List cats = crit.list();"
+msgstr ""
+"Criteria crit = session.createCriteria(Cat.class);\n"
+"crit.add( Expression.eq( \"color\", eg.Color.BLACK ) );\n"
+"crit.setMaxResults(10);\n"
+"List cats = crit.list();"
+
 #. Tag: para
+#: session_api.xml:433
 #, fuzzy, no-c-format
 msgid ""
 "The <literal>Criteria</literal> and the associated <literal>Example</"
-"literal> API are discussed in more detail in <xref linkend=\"querycriteria"
-"\" />."
+"literal> API are discussed in more detail in <xref linkend=\"querycriteria\"/"
+">."
 msgstr ""
 "<literal>Criteria</literal> と <literal>Example</literal> API の詳細は、 "
 "<xref linkend=\"querycriteria\"/> に述べられています。"
 
 #. Tag: title
+#: session_api.xml:439
 #, no-c-format
 msgid "Queries in native SQL"
 msgstr "ネイティブ SQL のクエリ"
 
 #. Tag: para
+#: session_api.xml:441
 #, no-c-format
 msgid ""
 "You can express a query in SQL, using <literal>createSQLQuery()</literal> "
@@ -701,23 +1280,62 @@ msgstr ""
 "う。もし、 Hibernate API を使うのであれば、下記のように SQL の別名を括弧でく"
 "くらなければなりません。"
 
+#. Tag: programlisting
+#: session_api.xml:448
+#, fuzzy, no-c-format
+msgid ""
+"List cats = session.createSQLQuery(\"SELECT {cat.*} FROM CAT {cat} WHERE "
+"ROWNUM&lt;10\")\n"
+"    .addEntity(\"cat\", Cat.class)\n"
+".list();"
+msgstr ""
+"List cats = session.createSQLQuery(\n"
+"    \"SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM&lt;10\",\n"
+"    \"cat\",\n"
+"    Cat.class\n"
+").list();"
+
+#. Tag: programlisting
+#: session_api.xml:450
+#, fuzzy, no-c-format
+msgid ""
+"List cats = session.createSQLQuery(\n"
+"    \"SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, \" +\n"
+"           \"{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... \" "
+"+\n"
+"    \"FROM CAT {cat} WHERE ROWNUM&lt;10\")\n"
+"    .addEntity(\"cat\", Cat.class)\n"
+".list()"
+msgstr ""
+"List cats = session.createSQLQuery(\n"
+"    \"SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, \" +\n"
+"           \"{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... \" "
+"+\n"
+"    \"FROM CAT {cat} WHERE ROWNUM&lt;10\",\n"
+"    \"cat\",\n"
+"    Cat.class\n"
+").list()"
+
 #. Tag: para
+#: session_api.xml:452
 #, fuzzy, no-c-format
 msgid ""
 "SQL queries can contain named and positional parameters, just like Hibernate "
 "queries. More information about native SQL queries in Hibernate can be found "
-"in <xref linkend=\"querysql\" />."
+"in <xref linkend=\"querysql\"/>."
 msgstr ""
 "SQL クエリは、 Hibernate クエリと同じように、名前付きのパラメータと位置パラ"
 "メータを持つことができます。 Hibernate におけるネイティブな SQL クエリの詳細"
 "については、 <xref linkend=\"querysql\"/> を参照してください。"
 
 #. Tag: title
+#: session_api.xml:459
 #, no-c-format
 msgid "Modifying persistent objects"
 msgstr "永続オブジェクトの修正"
 
 #. Tag: para
+#: session_api.xml:461
 #, no-c-format
 msgid ""
 "<emphasis>Transactional persistent instances</emphasis> (i.e. objects "
@@ -740,7 +1358,20 @@ msgstr ""
 "クトを <literal>load()</literal> し、 <literal>Session</literal> をオープンに"
 "している間に、直接操作することです。"
 
+#. Tag: programlisting
+#: session_api.xml:473
+#, fuzzy, no-c-format
+msgid ""
+"DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long(69) );\n"
+"cat.setName(\"PK\");\n"
+"sess.flush();  // changes to cat are automatically detected and persisted"
+msgstr ""
+"DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long(69) );\n"
+"cat.setName(\"PK\");\n"
+"sess.flush();  // changes to cat are automatically detected and persisted"
+
 #. Tag: para
+#: session_api.xml:475
 #, no-c-format
 msgid ""
 "Sometimes this programming model is inefficient, as it requires in the same "
@@ -755,6 +1386,7 @@ msgstr ""
 "スタンスを使用する方法です。"
 
 #. Tag: para
+#: session_api.xml:481
 #, fuzzy, no-c-format
 msgid ""
 "Hibernate does not offer its own API for direct execution of "
@@ -766,7 +1398,7 @@ msgid ""
 "the notion of mass operations conflicts with object/relational mapping for "
 "online transaction processing-oriented applications. Future versions of "
 "Hibernate can, however, provide special mass operation functions. See <xref "
-"linkend=\"batch\" /> for some possible batch operation tricks."
+"linkend=\"batch\"/> for some possible batch operation tricks."
 msgstr ""
 "Hibernate は、 <literal>UPDATE</literal> 文や <literal>DELETE</literal> 文を"
 "直接実行する API を用意していません。 Hibernate は、 <emphasis>ステートマネー"
@@ -781,11 +1413,13 @@ msgstr ""
 "参照してください。"
 
 #. Tag: title
+#: session_api.xml:497
 #, no-c-format
 msgid "Modifying detached objects"
 msgstr "detached オブジェクトの修正"
 
 #. Tag: para
+#: session_api.xml:499
 #, no-c-format
 msgid ""
 "Many applications need to retrieve an object in one transaction, send it to "
@@ -801,6 +1435,7 @@ msgstr ""
 "離性を保証するために、バージョンデータが通常使われます。"
 
 #. Tag: para
+#: session_api.xml:505
 #, no-c-format
 msgid ""
 "Hibernate supports this model by providing for reattachment of detached "
@@ -811,7 +1446,36 @@ msgstr ""
 "()</literal> メソッドを使って、 detached インスタンスを再追加することで、この"
 "モデルに対応します。"
 
+#. Tag: programlisting
+#: session_api.xml:509
+#, fuzzy, no-c-format
+msgid ""
+"// in the first session\n"
+"Cat cat = (Cat) firstSession.load(Cat.class, catId);\n"
+"Cat potentialMate = new Cat();\n"
+"firstSession.save(potentialMate);\n"
+"\n"
+"// in a higher layer of the application\n"
+"cat.setMate(potentialMate);\n"
+"\n"
+"// later, in a new session\n"
+"secondSession.update(cat);  // update cat\n"
+"secondSession.update(mate); // update mate"
+msgstr ""
+"// in the first session\n"
+"Cat cat = (Cat) firstSession.load(Cat.class, catId);\n"
+"Cat potentialMate = new Cat();\n"
+"firstSession.save(potentialMate);\n"
+"\n"
+"// in a higher layer of the application\n"
+"cat.setMate(potentialMate);\n"
+"\n"
+"// later, in a new session\n"
+"secondSession.update(cat);  // update cat\n"
+"secondSession.update(mate); // update mate"
+
 #. Tag: para
+#: session_api.xml:511
 #, no-c-format
 msgid ""
 "If the <literal>Cat</literal> with identifier <literal>catId</literal> had "
@@ -823,6 +1487,7 @@ msgstr ""
 "ときに、例外が投げられます。"
 
 #. Tag: para
+#: session_api.xml:516
 #, no-c-format
 msgid ""
 "Use <literal>update()</literal> if you are certain that the session does not "
@@ -841,13 +1506,14 @@ msgstr ""
 "のなかで最初に呼ばれるメソッドになります。"
 
 #. Tag: para
+#: session_api.xml:524
 #, fuzzy, no-c-format
 msgid ""
 "The application should individually <literal>update()</literal> detached "
 "instances that are reachable from the given detached instance "
 "<emphasis>only</emphasis> if it wants their state to be updated. This can be "
 "automated using <emphasis>transitive persistence</emphasis>. See <xref "
-"linkend=\"objectstate-transitive\" /> for more information."
+"linkend=\"objectstate-transitive\"/> for more information."
 msgstr ""
 "detached インスタンスから到達可能な、 detached インスタンスをアプリケーション"
 "は個別に <literal>update()</literal> すべきです。それは、その状態を更新したい"
@@ -856,6 +1522,7 @@ msgstr ""
 "を参照してください。"
 
 #. Tag: para
+#: session_api.xml:530
 #, no-c-format
 msgid ""
 "The <literal>lock()</literal> method also allows an application to "
@@ -866,7 +1533,26 @@ msgstr ""
 "再関連付けできます。しかし、 detached インスタンスは無修正でなければなりませ"
 "ん。"
 
+#. Tag: programlisting
+#: session_api.xml:534
+#, fuzzy, no-c-format
+msgid ""
+"//just reassociate:\n"
+"sess.lock(fritz, LockMode.NONE);\n"
+"//do a version check, then reassociate:\n"
+"sess.lock(izi, LockMode.READ);\n"
+"//do a version check, using SELECT ... FOR UPDATE, then reassociate:\n"
+"sess.lock(pk, LockMode.UPGRADE);"
+msgstr ""
+"//just reassociate:\n"
+"sess.lock(fritz, LockMode.NONE);\n"
+"//do a version check, then reassociate:\n"
+"sess.lock(izi, LockMode.READ);\n"
+"//do a version check, using SELECT ... FOR UPDATE, then reassociate:\n"
+"sess.lock(pk, LockMode.UPGRADE);"
+
 #. Tag: para
+#: session_api.xml:536
 #, no-c-format
 msgid ""
 "Note that <literal>lock()</literal> can be used with various "
@@ -880,20 +1566,23 @@ msgstr ""
 "はありません。"
 
 #. Tag: para
+#: session_api.xml:541
 #, fuzzy, no-c-format
 msgid ""
 "Other models for long units of work are discussed in <xref linkend="
-"\"transactions-optimistic\" />."
+"\"transactions-optimistic\"/>."
 msgstr ""
 "期間の長い作業単位の、その他のモデルは、 <xref linkend=\"transactions-"
 "optimistic\"/> で述べています。"
 
 #. Tag: title
+#: session_api.xml:546
 #, no-c-format
 msgid "Automatic state detection"
 msgstr "自動的な状態検出"
 
 #. Tag: para
+#: session_api.xml:548
 #, no-c-format
 msgid ""
 "Hibernate users have requested a general purpose method that either saves a "
@@ -907,7 +1596,38 @@ msgstr ""
 "することのできるメソッドです。 <literal>saveOrUpdate()</literal> はこのような"
 "機能を実現したメソッドです。"
 
+#. Tag: programlisting
+#: session_api.xml:554
+#, fuzzy, no-c-format
+msgid ""
+"// in the first session\n"
+"Cat cat = (Cat) firstSession.load(Cat.class, catID);\n"
+"\n"
+"// in a higher tier of the application\n"
+"Cat mate = new Cat();\n"
+"cat.setMate(mate);\n"
+"\n"
+"// later, in a new session\n"
+"secondSession.saveOrUpdate(cat);   // update existing state (cat has a non-"
+"null id)\n"
+"secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null "
+"id)"
+msgstr ""
+"// in the first session\n"
+"Cat cat = (Cat) firstSession.load(Cat.class, catID);\n"
+"\n"
+"// in a higher tier of the application\n"
+"Cat mate = new Cat();\n"
+"cat.setMate(mate);\n"
+"\n"
+"// later, in a new session\n"
+"secondSession.saveOrUpdate(cat);   // update existing state (cat has a non-"
+"null id)\n"
+"secondSession.saveOrUpdate(mate);  // save the new instance (mate has a null "
+"id)"
+
 #. Tag: para
+#: session_api.xml:556
 #, no-c-format
 msgid ""
 "The usage and semantics of <literal>saveOrUpdate()</literal> seems to be "
@@ -925,6 +1645,7 @@ msgstr ""
 "もあります。"
 
 #. Tag: para
+#: session_api.xml:563
 #, no-c-format
 msgid ""
 "Usually <literal>update()</literal> or <literal>saveOrUpdate()</literal> are "
@@ -934,26 +1655,31 @@ msgstr ""
 "のシナリオで使われます:"
 
 #. Tag: para
+#: session_api.xml:569
 #, no-c-format
 msgid "the application loads an object in the first session"
 msgstr "アプリケーションが最初のセッションでオブジェクトをロードします。"
 
 #. Tag: para
+#: session_api.xml:573
 #, no-c-format
 msgid "the object is passed up to the UI tier"
 msgstr "オブジェクトが UI 層に送られます。"
 
 #. Tag: para
+#: session_api.xml:577
 #, no-c-format
 msgid "some modifications are made to the object"
 msgstr "オブジェクトに対して変更が加えられます。"
 
 #. Tag: para
+#: session_api.xml:581
 #, no-c-format
 msgid "the object is passed back down to the business logic tier"
 msgstr "オブジェクトがビジネスロジック層に送られます。"
 
 #. Tag: para
+#: session_api.xml:585
 #, no-c-format
 msgid ""
 "the application persists these modifications by calling <literal>update()</"
@@ -963,17 +1689,20 @@ msgstr ""
 "とで、これらの変更を永続化します。"
 
 #. Tag: para
+#: session_api.xml:590
 #, no-c-format
 msgid "<literal>saveOrUpdate()</literal> does the following:"
 msgstr "<literal>saveOrUpdate()</literal> は以下のことを行います:"
 
 #. Tag: para
+#: session_api.xml:594
 #, no-c-format
 msgid "if the object is already persistent in this session, do nothing"
 msgstr ""
 "オブジェクトがこのセッションで、すでに永続化されていれば、何もしません。"
 
 #. Tag: para
+#: session_api.xml:599
 #, no-c-format
 msgid ""
 "if another object associated with the session has the same identifier, throw "
@@ -983,12 +1712,14 @@ msgstr ""
 "例外を投げます。"
 
 #. Tag: para
+#: session_api.xml:604
 #, no-c-format
 msgid "if the object has no identifier property, <literal>save()</literal> it"
 msgstr ""
 "オブジェクトの識別子が値を持たないならば、 <literal>save()</literal> します。"
 
 #. Tag: para
+#: session_api.xml:609
 #, no-c-format
 msgid ""
 "if the object's identifier has the value assigned to a newly instantiated "
@@ -998,6 +1729,7 @@ msgstr ""
 "トのための値である場合、そのオブジェクトを <literal>save()</literal> します。"
 
 #. Tag: para
+#: session_api.xml:614
 #, no-c-format
 msgid ""
 "if the object is versioned by a <literal>&lt;version&gt;</literal> or "
@@ -1011,17 +1743,20 @@ msgstr ""
 "ある場合、そのオブジェクトを <literal>save()</literal> します。"
 
 #. Tag: para
+#: session_api.xml:622
 #, no-c-format
 msgid "otherwise <literal>update()</literal> the object"
 msgstr ""
 "そうでない場合は、そのオブジェクトを <literal>update()</literal> します。"
 
 #. Tag: para
+#: session_api.xml:626
 #, no-c-format
 msgid "and <literal>merge()</literal> is very different:"
 msgstr "そして、 <literal>merge()</literal> は以下のように非常に異なります:"
 
 #. Tag: para
+#: session_api.xml:630
 #, no-c-format
 msgid ""
 "if there is a persistent instance with the same identifier currently "
@@ -1032,6 +1767,7 @@ msgstr ""
 "ば、引数で受け取ったオブジェクトの状態を永続化インスタンスにコピーします。"
 
 #. Tag: para
+#: session_api.xml:636
 #, no-c-format
 msgid ""
 "if there is no persistent instance currently associated with the session, "
@@ -1041,11 +1777,13 @@ msgstr ""
 "からそれをロードするか、あるいは、新しい永続化インスタンスを作成します。"
 
 #. Tag: para
+#: session_api.xml:642
 #, no-c-format
 msgid "the persistent instance is returned"
 msgstr "永続化インスタンスが返されます。"
 
 #. Tag: para
+#: session_api.xml:646
 #, no-c-format
 msgid ""
 "the given instance does not become associated with the session, it remains "
@@ -1055,11 +1793,13 @@ msgstr ""
 "のままです。"
 
 #. Tag: title
+#: session_api.xml:653
 #, no-c-format
 msgid "Deleting persistent objects"
 msgstr "永続オブジェクトの削除"
 
 #. Tag: para
+#: session_api.xml:655
 #, no-c-format
 msgid ""
 "<literal>Session.delete()</literal> will remove an object's state from the "
@@ -1072,7 +1812,14 @@ msgstr ""
 "よいです。そのため、 <literal>delete()</literal> は永続インスタンスを "
 "transient にするものと考えるのが一番です。"
 
+#. Tag: programlisting
+#: session_api.xml:660
+#, fuzzy, no-c-format
+msgid "sess.delete(cat);"
+msgstr "sess.delete(cat);"
+
 #. Tag: para
+#: session_api.xml:662
 #, no-c-format
 msgid ""
 "You can delete objects in any order, without risk of foreign key constraint "
@@ -1086,11 +1833,13 @@ msgstr ""
 "ジェクトを削除したときに、子供オブジェクトを削除し忘れた場合です。"
 
 #. Tag: title
+#: session_api.xml:670
 #, no-c-format
 msgid "Replicating object between two different datastores"
 msgstr "異なる二つのデータストア間でのオブジェクトのレプリケーション"
 
 #. Tag: para
+#: session_api.xml:672
 #, no-c-format
 msgid ""
 "It is sometimes useful to be able to take a graph of persistent instances "
@@ -1100,7 +1849,40 @@ msgstr ""
 "永続インスタンスのグラフを別のデータストアに永続化する場合に、識別子の値を再"
 "生成せずにすむと便利な場合があります。"
 
+#. Tag: programlisting
+#: session_api.xml:676
+#, fuzzy, no-c-format
+msgid ""
+"//retrieve a cat from one database\n"
+"Session session1 = factory1.openSession();\n"
+"Transaction tx1 = session1.beginTransaction();\n"
+"Cat cat = session1.get(Cat.class, catId);\n"
+"tx1.commit();\n"
+"session1.close();\n"
+"\n"
+"//reconcile with a second database\n"
+"Session session2 = factory2.openSession();\n"
+"Transaction tx2 = session2.beginTransaction();\n"
+"session2.replicate(cat, ReplicationMode.LATEST_VERSION);\n"
+"tx2.commit();\n"
+"session2.close();"
+msgstr ""
+"//retrieve a cat from one database\n"
+"Session session1 = factory1.openSession();\n"
+"Transaction tx1 = session1.beginTransaction();\n"
+"Cat cat = session1.get(Cat.class, catId);\n"
+"tx1.commit();\n"
+"session1.close();\n"
+"\n"
+"//reconcile with a second database\n"
+"Session session2 = factory2.openSession();\n"
+"Transaction tx2 = session2.beginTransaction();\n"
+"session2.replicate(cat, ReplicationMode.LATEST_VERSION);\n"
+"tx2.commit();\n"
+"session2.close();"
+
 #. Tag: para
+#: session_api.xml:678
 #, no-c-format
 msgid ""
 "The <literal>ReplicationMode</literal> determines how <literal>replicate()</"
@@ -1111,6 +1893,7 @@ msgstr ""
 "します。"
 
 #. Tag: para
+#: session_api.xml:684
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.IGNORE</literal>: ignores the object when there is "
@@ -1120,6 +1903,7 @@ msgstr ""
 "に存在するなら、そのオブジェクトを無視します。"
 
 #. Tag: para
+#: session_api.xml:689
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.OVERWRITE</literal>: overwrites any existing "
@@ -1129,6 +1913,7 @@ msgstr ""
 "て上書きします。"
 
 #. Tag: para
+#: session_api.xml:694
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.EXCEPTION</literal>: throws an exception if there "
@@ -1138,6 +1923,7 @@ msgstr ""
 "スに存在するなら、例外を投げます。"
 
 #. Tag: para
+#: session_api.xml:700
 #, no-c-format
 msgid ""
 "<literal>ReplicationMode.LATEST_VERSION</literal>: overwrites the row if its "
@@ -1149,6 +1935,7 @@ msgstr ""
 "きします。"
 
 #. Tag: para
+#: session_api.xml:706
 #, no-c-format
 msgid ""
 "Usecases for this feature include reconciling data entered into different "
@@ -1161,11 +1948,13 @@ msgstr ""
 "ンザクションのなかで加えられた変更のロールバックなどです。"
 
 #. Tag: title
+#: session_api.xml:713
 #, no-c-format
 msgid "Flushing the Session"
 msgstr "セッションのフラッシュ"
 
 #. Tag: para
+#: session_api.xml:715
 #, no-c-format
 msgid ""
 "Sometimes the <literal>Session</literal> will execute the SQL statements "
@@ -1178,26 +1967,31 @@ msgstr ""
 "処理 <emphasis>flush</emphasis> は、デフォルトでは次のときに起こります。"
 
 #. Tag: para
+#: session_api.xml:723
 #, no-c-format
 msgid "before some query executions"
 msgstr "クエリを実行する前"
 
 #. Tag: para
+#: session_api.xml:727
 #, no-c-format
 msgid "from <literal>org.hibernate.Transaction.commit()</literal>"
 msgstr "<literal>org.hibernate.Transaction.commit()</literal> を実行したとき"
 
 #. Tag: para
+#: session_api.xml:732
 #, no-c-format
 msgid "from <literal>Session.flush()</literal>"
 msgstr "<literal>Session.flush()</literal> を実行したとき"
 
 #. Tag: para
+#: session_api.xml:736
 #, no-c-format
 msgid "The SQL statements are issued in the following order:"
 msgstr "SQL 文は以下の順番で発行されます。"
 
 #. Tag: para
+#: session_api.xml:740
 #, no-c-format
 msgid ""
 "all entity insertions in the same order the corresponding objects were saved "
@@ -1207,26 +2001,31 @@ msgstr ""
 "てセーブしたオブジェクトの順に実行していきます。"
 
 #. Tag: para
+#: session_api.xml:745
 #, no-c-format
 msgid "all entity updates"
 msgstr "すべてのエンティティの更新"
 
 #. Tag: para
+#: session_api.xml:749
 #, no-c-format
 msgid "all collection deletions"
 msgstr "すべてのコレクションの削除"
 
 #. Tag: para
+#: session_api.xml:753
 #, no-c-format
 msgid "all collection element deletions, updates and insertions"
 msgstr "すべてのコレクションの要素に対する削除、更新、挿入"
 
 #. Tag: para
+#: session_api.xml:757
 #, no-c-format
 msgid "all collection insertions"
 msgstr "すべてのコレクションの挿入"
 
 #. Tag: para
+#: session_api.xml:761
 #, no-c-format
 msgid ""
 "all entity deletions in the same order the corresponding objects were "
@@ -1236,6 +2035,7 @@ msgstr ""
 "使って削除したオブジェクトの順に実行していきます。"
 
 #. Tag: para
+#: session_api.xml:766
 #, no-c-format
 msgid ""
 "An exception is that objects using <literal>native</literal> ID generation "
@@ -1245,6 +2045,7 @@ msgstr ""
 "は、それらがセーブされたときに挿入されます。）"
 
 #. Tag: para
+#: session_api.xml:769
 #, no-c-format
 msgid ""
 "Except when you explicitly <literal>flush()</literal>, there are absolutely "
@@ -1260,6 +2061,7 @@ msgstr ""
 "データや間違ったデータ返さないことを保証しています。"
 
 #. Tag: para
+#: session_api.xml:776
 #, fuzzy, no-c-format
 msgid ""
 "It is possible to change the default behavior so that flush occurs less "
@@ -1269,7 +2071,7 @@ msgid ""
 "never flush unless <literal>flush()</literal> is called explicitly. The last "
 "mode is useful for long running units of work, where a <literal>Session</"
 "literal> is kept open and disconnected for a long time (see <xref linkend="
-"\"transactions-optimistic-longsession\" />)."
+"\"transactions-optimistic-longsession\"/>)."
 msgstr ""
 "フラッシュが頻繁に起こらないようにデフォルトの振る舞いを変えることができま"
 "す。 <literal>FlushMode</literal> クラスは3つの異なるモードを定義します。それ"
@@ -1280,13 +2082,48 @@ msgstr ""
 "役に立ちます ( <xref linkend=\"transactions-optimistic-longsession\"/> を参照"
 "してください)。"
 
+#. Tag: programlisting
+#: session_api.xml:786
+#, fuzzy, no-c-format
+msgid ""
+"sess = sf.openSession();\n"
+"Transaction tx = sess.beginTransaction();\n"
+"sess.setFlushMode(FlushMode.COMMIT); // allow queries to return stale state\n"
+"\n"
+"Cat izi = (Cat) sess.load(Cat.class, id);\n"
+"izi.setName(iznizi);\n"
+"\n"
+"// might return stale data\n"
+"sess.find(\"from Cat as cat left outer join cat.kittens kitten\");\n"
+"\n"
+"// change to izi is not flushed!\n"
+"...\n"
+"tx.commit(); // flush occurs\n"
+"sess.close();"
+msgstr ""
+"sess = sf.openSession();\n"
+"Transaction tx = sess.beginTransaction();\n"
+"sess.setFlushMode(FlushMode.COMMIT); // allow queries to return stale state\n"
+"\n"
+"Cat izi = (Cat) sess.load(Cat.class, id);\n"
+"izi.setName(iznizi);\n"
+"\n"
+"// might return stale data\n"
+"sess.find(\"from Cat as cat left outer join cat.kittens kitten\");\n"
+"\n"
+"// change to izi is not flushed!\n"
+"...\n"
+"tx.commit(); // flush occurs\n"
+"sess.close();"
+
 #. Tag: para
+#: session_api.xml:788
 #, fuzzy, no-c-format
 msgid ""
 "During flush, an exception might occur (e.g. if a DML operation violates a "
 "constraint). Since handling exceptions involves some understanding of "
 "Hibernate's transactional behavior, we discuss it in <xref linkend="
-"\"transactions\" />."
+"\"transactions\"/>."
 msgstr ""
 "フラッシュのとき、例外が発生するかもしれません（例えば、 DML 操作が制約を違反"
 "するような場合です）。例外処理を理解するためには、 Hibernate のトランザクショ"
@@ -1294,11 +2131,13 @@ msgstr ""
 "明します。"
 
 #. Tag: title
+#: session_api.xml:795
 #, no-c-format
 msgid "Transitive persistence"
 msgstr "連鎖的な永続化"
 
 #. Tag: para
+#: session_api.xml:797
 #, no-c-format
 msgid ""
 "It is quite cumbersome to save, delete, or reattach individual objects, "
@@ -1310,6 +2149,7 @@ msgstr ""
 "は、親子関係を扱うケースです。以下の例を考えてみましょう:"
 
 #. Tag: para
+#: session_api.xml:802
 #, no-c-format
 msgid ""
 "If the children in a parent/child relationship would be value typed (e.g. a "
@@ -1330,6 +2170,7 @@ msgstr ""
 "を共有できないので、データベースからその子供を削除します。"
 
 #. Tag: para
+#: session_api.xml:812
 #, no-c-format
 msgid ""
 "Now consider the same scenario with parent and child objects being entities, "
@@ -1349,6 +2190,7 @@ msgstr ""
 "よる永続化</emphasis> をデフォルトでは実行しません。"
 
 #. Tag: para
+#: session_api.xml:820
 #, no-c-format
 msgid ""
 "For each basic operation of the Hibernate session - including "
@@ -1367,12 +2209,26 @@ msgstr ""
 "沿ってカスケードさせたい操作があるなら、マッピングファイルにそう指定しなけれ"
 "ばなりません。例えば、以下のようにします:"
 
+#. Tag: programlisting
+#: session_api.xml:828
+#, fuzzy, no-c-format
+msgid "&lt;one-to-one name=\"person\" cascade=\"persist\"/&gt;"
+msgstr "&lt;one-to-one name=\"person\" cascade=\"persist\"/&gt;"
+
 #. Tag: para
+#: session_api.xml:830
 #, no-c-format
 msgid "Cascade styles my be combined:"
 msgstr "カスケードスタイルは、組み合わせることができます:"
 
+#. Tag: programlisting
+#: session_api.xml:832
+#, fuzzy, no-c-format
+msgid "&lt;one-to-one name=\"person\" cascade=\"persist,delete,lock\"/&gt;"
+msgstr "&lt;one-to-one name=\"person\" cascade=\"persist,delete,lock\"/&gt;"
+
 #. Tag: para
+#: session_api.xml:834
 #, no-c-format
 msgid ""
 "You can even use <literal>cascade=\"all\"</literal> to specify that "
@@ -1386,29 +2242,133 @@ msgstr ""
 "します。"
 
 #. Tag: para
+#: session_api.xml:839
+#, no-c-format
+msgid ""
+"In case you are using annotatons you probably have noticed the "
+"<literal>cascade</literal> attribute taking an array of "
+"<classname>CascadeType</classname> as a value. The cascade concept in JPA is "
+"very is similar to the transitive persistence and cascading of operations as "
+"described above, but with slightly different semantics and cascading types:"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:848
+#, no-c-format
+msgid ""
+"<literal>CascadeType.PERSIST</literal>: cascades the persist (create) "
+"operation to associated entities persist() is called or if the entity is "
+"managed"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:854
+#, no-c-format
+msgid ""
+"<literal>CascadeType.MERGE</literal>: cascades the merge operation to "
+"associated entities if merge() is called or if the entity is managed"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:860
+#, no-c-format
+msgid ""
+"<literal>CascadeType.REMOVE</literal>: cascades the remove operation to "
+"associated entities if delete() is called"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:865
+#, no-c-format
+msgid ""
+"<literal>CascadeType.REFRESH:</literal> cascades the refresh operation to "
+"associated entities if refresh() is called"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:870
+#, no-c-format
+msgid ""
+"<literal>CascadeType.DETACH:</literal> cascades the detach operation to "
+"associated entities if detach() is called"
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:875
+#, fuzzy, no-c-format
+msgid "<literal>CascadeType.ALL</literal>: all of the above"
+msgstr "<literal>saveOrUpdate()</literal> は以下のことを行います:"
+
+#. Tag: para
+#: session_api.xml:880
+#, no-c-format
+msgid ""
+"CascadeType.ALL also covers Hibernate specific operations like save-update, "
+"lock etc..."
+msgstr ""
+
+#. Tag: para
+#: session_api.xml:884
 #, no-c-format
 msgid ""
 "A special cascade style, <literal>delete-orphan</literal>, applies only to "
 "one-to-many associations, and indicates that the <literal>delete()</literal> "
 "operation should be applied to any child object that is removed from the "
-"association."
+"association. Using annotations there is no <literal>CascadeType.DELETE-"
+"ORPHAN</literal> equivalent. Instead you can use the attribute "
+"<literal>orphanRemoval as seen in </literal><xref linkend=\"example-one-to-"
+"many-with-orphan-removal\"/>. If an entity is removed from a "
+"<classname>@OneToMany</classname> collection or an associated entity is "
+"dereferenced from a <classname>@OneToOne</classname> association, this "
+"associated entity can be marked for deletion if <literal>orphanRemoval</"
+"literal> is set to true."
 msgstr ""
-"特殊なカスケードスタイル <literal>delete-orphan</literal> は、一対多関連にだ"
-"け適用できます。これは、関連から削除された子供のオブジェクトに対して、 "
-"<literal>delete()</literal> 操作が適用されることを意味します。"
+
+#. Tag: title
+#: session_api.xml:897
+#, no-c-format
+msgid "<literal>@OneToMany</literal> with <literal>orphanRemoval</literal>"
+msgstr ""
+
+#. Tag: programlisting
+#: session_api.xml:900
+#, no-c-format
+msgid ""
+"@Entity \n"
+"public class Customer {\n"
+"   private Set&lt;Order&gt; orders;\n"
+"\n"
+"   @OneToMany(cascade=CascadeType.ALL, orphanRemoval=true) \n"
+"   public Set&lt;Order&gt; getOrders() { return orders; }\n"
+"\n"
+"   public void setOrders(Set&lt;Order&gt; orders) { this.orders = orders; }\n"
+"\n"
+"   [...]\n"
+"}\n"
+"\n"
+"@Entity \n"
+"public class Order { ... }\n"
+"\n"
+"Customer customer = em.find(Customer.class, 1l);\n"
+"Order order = em.find(Order.class, 1l);\n"
+"customer.getOrders().remove(order); //order will be deleted by cascade"
+msgstr ""
 
 #. Tag: para
+#: session_api.xml:903
 #, no-c-format
 msgid "Recommendations:"
 msgstr "おすすめ："
 
 #. Tag: para
-#, no-c-format
+#: session_api.xml:907
+#, fuzzy, no-c-format
 msgid ""
-"It does not usually make sense to enable cascade on a <literal>&lt;many-to-"
-"one&gt;</literal> or <literal>&lt;many-to-many&gt;</literal> association. "
-"Cascade is often useful for <literal>&lt;one-to-one&gt;</literal> and "
-"<literal>&lt;one-to-many&gt;</literal> associations."
+"It does not usually make sense to enable cascade on a many-to-one or many-to-"
+"many association. In fact the <literal>@ManyToOne</literal> and "
+"<literal>@ManyToMany</literal> don't even offer a <literal>orphanRemoval</"
+"literal> attribute. Cascading is often useful for one-to-one and one-to-many "
+"associations."
 msgstr ""
 "普通、 <literal>&lt;many-to-one&gt;</literal> や <literal>&lt;many-to-"
 "many&gt;</literal> 関連に対しては、カスケードを設定する意味はありません。 "
@@ -1416,17 +2376,20 @@ msgstr ""
 "literal> 関連に対しては、カスケードが役に立つことがあります。"
 
 #. Tag: para
-#, no-c-format
+#: session_api.xml:915
+#, fuzzy, no-c-format
 msgid ""
 "If the child object's lifespan is bounded by the lifespan of the parent "
 "object, make it a <emphasis>life cycle object</emphasis> by specifying "
-"<literal>cascade=\"all,delete-orphan\"</literal>."
+"<literal>cascade=\"all,delete-orphan\"(<literal>@OneToMany"
+"(cascade=CascadeType.ALL, orphanRemoval=true)</literal>)</literal>."
 msgstr ""
 "子供オブジェクトの寿命が親オブジェクトの寿命に制限を受けるならば、 "
 "<literal>cascade=\"all,delete-orphan\"</literal> を指定し、子供オブジェクト"
 "を <emphasis>ライフサイクルオブジェクト</emphasis> にします。"
 
 #. Tag: para
+#: session_api.xml:923
 #, no-c-format
 msgid ""
 "Otherwise, you might not need cascade at all. But if you think that you will "
@@ -1440,6 +2403,7 @@ msgstr ""
 "literal> を使うことを考えましょう。"
 
 #. Tag: para
+#: session_api.xml:931
 #, no-c-format
 msgid ""
 "Mapping an association (either a single valued association, or a collection) "
@@ -1452,15 +2416,16 @@ msgstr ""
 "のセーブ/更新/削除が、子のセーブ/更新/削除を引き起こす関係のことです。"
 
 #. Tag: para
-#, no-c-format
+#: session_api.xml:937
+#, fuzzy, no-c-format
 msgid ""
 "Furthermore, a mere reference to a child from a persistent parent will "
 "result in save/update of the child. This metaphor is incomplete, however. A "
 "child which becomes unreferenced by its parent is <emphasis>not</emphasis> "
-"automatically deleted, except in the case of a <literal>&lt;one-to-many&gt;</"
-"literal> association mapped with <literal>cascade=\"delete-orphan\"</"
-"literal>. The precise semantics of cascading operations for a parent/child "
-"relationship are as follows:"
+"automatically deleted, except in the case of a one-to-many association "
+"mapped with <literal>cascade=\"delete-orphan\"</literal>. The precise "
+"semantics of cascading operations for a parent/child relationship are as "
+"follows:"
 msgstr ""
 "さらに、永続化された親が子を単に参照しているだけで、子のセーブ/更新を引き起こ"
 "します。しかし、このメタファーは不完全です。親から参照されなくなった子は、自"
@@ -1470,6 +2435,7 @@ msgstr ""
 "なります:"
 
 #. Tag: para
+#: session_api.xml:948
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>persist()</literal>, all children are "
@@ -1479,6 +2445,7 @@ msgstr ""
 "<literal>persist()</literal> に渡されます。"
 
 #. Tag: para
+#: session_api.xml:953
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>merge()</literal>, all children are passed "
@@ -1488,6 +2455,7 @@ msgstr ""
 "literal> に渡されます。"
 
 #. Tag: para
+#: session_api.xml:958
 #, no-c-format
 msgid ""
 "If a parent is passed to <literal>save()</literal>, <literal>update()</"
@@ -1499,6 +2467,7 @@ msgstr ""
 "<literal>saveOrUpdate()</literal> に渡されます。"
 
 #. Tag: para
+#: session_api.xml:964
 #, no-c-format
 msgid ""
 "If a transient or detached child becomes referenced by a persistent parent, "
@@ -1508,6 +2477,7 @@ msgstr ""
 "<literal>saveOrUpdate()</literal> に渡されます。"
 
 #. Tag: para
+#: session_api.xml:970
 #, no-c-format
 msgid ""
 "If a parent is deleted, all children are passed to <literal>delete()</"
@@ -1517,6 +2487,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
+#: session_api.xml:975
 #, no-c-format
 msgid ""
 "If a child is dereferenced by a persistent parent, <emphasis>nothing special "
@@ -1530,6 +2501,7 @@ msgstr ""
 "きます。この場合、「親のない」子は削除されます。"
 
 #. Tag: para
+#: session_api.xml:983
 #, no-c-format
 msgid ""
 "Finally, note that cascading of operations can be applied to an object graph "
@@ -1548,11 +2520,13 @@ msgstr ""
 "エンティティに伝播します。"
 
 #. Tag: title
+#: session_api.xml:993
 #, no-c-format
 msgid "Using metadata"
 msgstr "メタデータの使用"
 
 #. Tag: para
+#: session_api.xml:995
 #, no-c-format
 msgid ""
 "Hibernate requires a rich meta-level model of all entity and value types. "
@@ -1571,6 +2545,7 @@ msgstr ""
 "るものです。"
 
 #. Tag: para
+#: session_api.xml:1002
 #, no-c-format
 msgid ""
 "Hibernate exposes metadata via the <literal>ClassMetadata</literal> and "
@@ -1583,650 +2558,48 @@ msgstr ""
 "literal> 階層を通してメタデータを公開します。メタデータインターフェースのイン"
 "スタンスは、 <literal>SessionFactory</literal> から得られます。"
 
-#, fuzzy
+#. Tag: programlisting
+#: session_api.xml:1007
+#, fuzzy, no-c-format
+msgid ""
+"Cat fritz = ......;\n"
+"ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);\n"
+"\n"
+"Object[] propertyValues = catMeta.getPropertyValues(fritz);\n"
+"String[] propertyNames = catMeta.getPropertyNames();\n"
+"Type[] propertyTypes = catMeta.getPropertyTypes();\n"
+"\n"
+"// get a Map of all properties which are not collections or associations\n"
+"Map namedValues = new HashMap();\n"
+"for ( int i=0; i&lt;propertyNames.length; i++ ) {\n"
+"    if ( !propertyTypes[i].isEntityType() &amp;&amp; !propertyTypes[i]."
+"isCollectionType() ) {\n"
+"        namedValues.put( propertyNames[i], propertyValues[i] );\n"
+"    }\n"
+"}"
+msgstr ""
+"Cat fritz = ......;\n"
+"ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);\n"
+"\n"
+"Object[] propertyValues = catMeta.getPropertyValues(fritz);\n"
+"String[] propertyNames = catMeta.getPropertyNames();\n"
+"Type[] propertyTypes = catMeta.getPropertyTypes();\n"
+"\n"
+"// get a Map of all properties which are not collections or associations\n"
+"Map namedValues = new HashMap();\n"
+"for ( int i=0; i&lt;propertyNames.length; i++ ) {\n"
+"    if ( !propertyTypes[i].isEntityType() &amp;&amp; !propertyTypes[i]."
+"isCollectionType() ) {\n"
+"        namedValues.put( propertyNames[i], propertyValues[i] );\n"
+"    }\n"
+"}"
+
 #~ msgid ""
-#~ "<![CDATA[DomesticCat fritz = new DomesticCat();\n"
-#~ "fritz.setColor(Color.GINGER);\n"
-#~ "fritz.setSex('M');\n"
-#~ "fritz.setName(\"Fritz\");\n"
-#~ "Long generatedId = (Long) sess.save(fritz);]]>"
+#~ "A special cascade style, <literal>delete-orphan</literal>, applies only "
+#~ "to one-to-many associations, and indicates that the <literal>delete()</"
+#~ "literal> operation should be applied to any child object that is removed "
+#~ "from the association."
 #~ msgstr ""
-#~ "DomesticCat fritz = new DomesticCat();\n"
-#~ "fritz.setColor(Color.GINGER);\n"
-#~ "fritz.setSex('M');\n"
-#~ "fritz.setName(\"Fritz\");\n"
-#~ "Long generatedId = (Long) sess.save(fritz);"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[DomesticCat pk = new DomesticCat();\n"
-#~ "pk.setColor(Color.TABBY);\n"
-#~ "pk.setSex('F');\n"
-#~ "pk.setName(\"PK\");\n"
-#~ "pk.setKittens( new HashSet() );\n"
-#~ "pk.addKitten(fritz);\n"
-#~ "sess.save( pk, new Long(1234) );]]>"
-#~ msgstr ""
-#~ "DomesticCat pk = new DomesticCat();\n"
-#~ "pk.setColor(Color.TABBY);\n"
-#~ "pk.setSex('F');\n"
-#~ "pk.setName(\"PK\");\n"
-#~ "pk.setKittens( new HashSet() );\n"
-#~ "pk.addKitten(fritz);\n"
-#~ "sess.save( pk, new Long(1234) );"
-
-#, fuzzy
-#~ msgid "<![CDATA[Cat fritz = (Cat) sess.load(Cat.class, generatedId);]]>"
-#~ msgstr "Cat fritz = (Cat) sess.load(Cat.class, generatedId);"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[// you need to wrap primitive identifiers\n"
-#~ "long id = 1234;\n"
-#~ "DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long"
-#~ "(id) );]]>"
-#~ msgstr ""
-#~ "// you need to wrap primitive identifiers\n"
-#~ "long id = 1234;\n"
-#~ "DomesticCat pk = (DomesticCat) sess.load( DomesticCat.class, new Long"
-#~ "(id) );"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat cat = new DomesticCat();\n"
-#~ "// load pk's state into cat\n"
-#~ "sess.load( cat, new Long(pkId) );\n"
-#~ "Set kittens = cat.getKittens();]]>"
-#~ msgstr ""
-#~ "Cat cat = new DomesticCat();\n"
-#~ "// load pk's state into cat\n"
-#~ "sess.load( cat, new Long(pkId) );\n"
-#~ "Set kittens = cat.getKittens();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat cat = (Cat) sess.get(Cat.class, id);\n"
-#~ "if (cat==null) {\n"
-#~ "    cat = new Cat();\n"
-#~ "    sess.save(cat, id);\n"
-#~ "}\n"
-#~ "return cat;]]>"
-#~ msgstr ""
-#~ "Cat cat = (Cat) sess.get(Cat.class, id);\n"
-#~ "if (cat==null) {\n"
-#~ "    cat = new Cat();\n"
-#~ "    sess.save(cat, id);\n"
-#~ "}\n"
-#~ "return cat;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);]]>"
-#~ msgstr "Cat cat = (Cat) sess.get(Cat.class, id, LockMode.UPGRADE);"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[sess.save(cat);\n"
-#~ "sess.flush(); //force the SQL INSERT\n"
-#~ "sess.refresh(cat); //re-read the state (after the trigger executes)]]>"
-#~ msgstr ""
-#~ "sess.save(cat);\n"
-#~ "sess.flush(); //force the SQL INSERT\n"
-#~ "sess.refresh(cat); //re-read the state (after the trigger executes)"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[List cats = session.createQuery(\n"
-#~ "    \"from Cat as cat where cat.birthdate < ?\")\n"
-#~ "    .setDate(0, date)\n"
-#~ "    .list();\n"
-#~ "\n"
-#~ "List mothers = session.createQuery(\n"
-#~ "    \"select mother from Cat as cat join cat.mother as mother where cat."
-#~ "name = ?\")\n"
-#~ "    .setString(0, name)\n"
-#~ "    .list();\n"
-#~ "\n"
-#~ "List kittens = session.createQuery(\n"
-#~ "    \"from Cat as cat where cat.mother = ?\")\n"
-#~ "    .setEntity(0, pk)\n"
-#~ "    .list();\n"
-#~ "\n"
-#~ "Cat mother = (Cat) session.createQuery(\n"
-#~ "    \"select cat.mother from Cat as cat where cat = ?\")\n"
-#~ "    .setEntity(0, izi)\n"
-#~ "    .uniqueResult();]]\n"
-#~ "\n"
-#~ "Query mothersWithKittens = (Cat) session.createQuery(\n"
-#~ "    \"select mother from Cat as mother left join fetch mother.kittens"
-#~ "\");\n"
-#~ "Set uniqueMothers = new HashSet(mothersWithKittens.list());]]>"
-#~ msgstr ""
-#~ "List cats = session.createQuery(\n"
-#~ "    \"from Cat as cat where cat.birthdate &lt; ?\")\n"
-#~ "    .setDate(0, date)\n"
-#~ "    .list();\n"
-#~ "\n"
-#~ "List mothers = session.createQuery(\n"
-#~ "    \"select mother from Cat as cat join cat.mother as mother where cat."
-#~ "name = ?\")\n"
-#~ "    .setString(0, name)\n"
-#~ "    .list();\n"
-#~ "\n"
-#~ "List kittens = session.createQuery(\n"
-#~ "    \"from Cat as cat where cat.mother = ?\")\n"
-#~ "    .setEntity(0, pk)\n"
-#~ "    .list();\n"
-#~ "\n"
-#~ "Cat mother = (Cat) session.createQuery(\n"
-#~ "    \"select cat.mother from Cat as cat where cat = ?\")\n"
-#~ "    .setEntity(0, izi)\n"
-#~ "    .uniqueResult();]]\n"
-#~ "\n"
-#~ "Query mothersWithKittens = (Cat) session.createQuery(\n"
-#~ "    \"select mother from Cat as mother left join fetch mother.kittens"
-#~ "\");\n"
-#~ "Set uniqueMothers = new HashSet(mothersWithKittens.list());"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[// fetch ids\n"
-#~ "Iterator iter = sess.createQuery(\"from eg.Qux q order by q.likeliness\")."
-#~ "iterate();\n"
-#~ "while ( iter.hasNext() ) {\n"
-#~ "    Qux qux = (Qux) iter.next();  // fetch the object\n"
-#~ "    // something we couldnt express in the query\n"
-#~ "    if ( qux.calculateComplicatedAlgorithm() ) {\n"
-#~ "        // delete the current instance\n"
-#~ "        iter.remove();\n"
-#~ "        // dont need to process the rest\n"
-#~ "        break;\n"
-#~ "    }\n"
-#~ "}]]>"
-#~ msgstr ""
-#~ "// fetch ids\n"
-#~ "Iterator iter = sess.createQuery(\"from eg.Qux q order by q.likeliness\")."
-#~ "iterate();\n"
-#~ "while ( iter.hasNext() ) {\n"
-#~ "    Qux qux = (Qux) iter.next();  // fetch the object\n"
-#~ "    // something we couldnt express in the query\n"
-#~ "    if ( qux.calculateComplicatedAlgorithm() ) {\n"
-#~ "        // delete the current instance\n"
-#~ "        iter.remove();\n"
-#~ "        // dont need to process the rest\n"
-#~ "        break;\n"
-#~ "    }\n"
-#~ "}"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Iterator kittensAndMothers = sess.createQuery(\n"
-#~ "            \"select kitten, mother from Cat kitten join kitten.mother "
-#~ "mother\")\n"
-#~ "            .list()\n"
-#~ "            .iterator();\n"
-#~ "\n"
-#~ "while ( kittensAndMothers.hasNext() ) {\n"
-#~ "    Object[] tuple = (Object[]) kittensAndMothers.next();\n"
-#~ "    Cat kitten = (Cat) tuple[0];\n"
-#~ "    Cat mother = (Cat) tuple[1];\n"
-#~ "    ....\n"
-#~ "}]]>"
-#~ msgstr ""
-#~ "Iterator kittensAndMothers = sess.createQuery(\n"
-#~ "            \"select kitten, mother from Cat kitten join kitten.mother "
-#~ "mother\")\n"
-#~ "            .list()\n"
-#~ "            .iterator();\n"
-#~ "\n"
-#~ "while ( kittensAndMothers.hasNext() ) {\n"
-#~ "    Object[] tuple = (Object[]) kittensAndMothers.next();\n"
-#~ "    Cat kitten  = tuple[0];\n"
-#~ "    Cat mother  = tuple[1];\n"
-#~ "    ....\n"
-#~ "}"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Iterator results = sess.createQuery(\n"
-#~ "        \"select cat.color, min(cat.birthdate), count(cat) from Cat cat "
-#~ "\" +\n"
-#~ "        \"group by cat.color\")\n"
-#~ "        .list()\n"
-#~ "        .iterator();\n"
-#~ "\n"
-#~ "while ( results.hasNext() ) {\n"
-#~ "    Object[] row = (Object[]) results.next();\n"
-#~ "    Color type = (Color) row[0];\n"
-#~ "    Date oldest = (Date) row[1];\n"
-#~ "    Integer count = (Integer) row[2];\n"
-#~ "    .....\n"
-#~ "}]]>"
-#~ msgstr ""
-#~ "Iterator results = sess.createQuery(\n"
-#~ "        \"select cat.color, min(cat.birthdate), count(cat) from Cat cat "
-#~ "\" +\n"
-#~ "        \"group by cat.color\")\n"
-#~ "        .list()\n"
-#~ "        .iterator();\n"
-#~ "\n"
-#~ "while ( results.hasNext() ) {\n"
-#~ "    Object[] row = (Object[]) results.next();\n"
-#~ "    Color type = (Color) row[0];\n"
-#~ "    Date oldest = (Date) row[1];\n"
-#~ "    Integer count = (Integer) row[2];\n"
-#~ "    .....\n"
-#~ "}"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[//named parameter (preferred)\n"
-#~ "Query q = sess.createQuery(\"from DomesticCat cat where cat.name = :name"
-#~ "\");\n"
-#~ "q.setString(\"name\", \"Fritz\");\n"
-#~ "Iterator cats = q.iterate();]]>"
-#~ msgstr ""
-#~ "//named parameter (preferred)\n"
-#~ "Query q = sess.createQuery(\"from DomesticCat cat where cat.name = :name"
-#~ "\");\n"
-#~ "q.setString(\"name\", \"Fritz\");\n"
-#~ "Iterator cats = q.iterate();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[//positional parameter\n"
-#~ "Query q = sess.createQuery(\"from DomesticCat cat where cat.name = ?\");\n"
-#~ "q.setString(0, \"Izi\");\n"
-#~ "Iterator cats = q.iterate();]]>"
-#~ msgstr ""
-#~ "//positional parameter\n"
-#~ "Query q = sess.createQuery(\"from DomesticCat cat where cat.name = ?\");\n"
-#~ "q.setString(0, \"Izi\");\n"
-#~ "Iterator cats = q.iterate();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[//named parameter list\n"
-#~ "List names = new ArrayList();\n"
-#~ "names.add(\"Izi\");\n"
-#~ "names.add(\"Fritz\");\n"
-#~ "Query q = sess.createQuery(\"from DomesticCat cat where cat.name in (:"
-#~ "namesList)\");\n"
-#~ "q.setParameterList(\"namesList\", names);\n"
-#~ "List cats = q.list();]]>"
-#~ msgstr ""
-#~ "//named parameter list\n"
-#~ "List names = new ArrayList();\n"
-#~ "names.add(\"Izi\");\n"
-#~ "names.add(\"Fritz\");\n"
-#~ "Query q = sess.createQuery(\"from DomesticCat cat where cat.name in (:"
-#~ "namesList)\");\n"
-#~ "q.setParameterList(\"namesList\", names);\n"
-#~ "List cats = q.list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Query q = sess.createQuery(\"from DomesticCat cat\");\n"
-#~ "q.setFirstResult(20);\n"
-#~ "q.setMaxResults(10);\n"
-#~ "List cats = q.list();]]>"
-#~ msgstr ""
-#~ "Query q = sess.createQuery(\"from DomesticCat cat\");\n"
-#~ "q.setFirstResult(20);\n"
-#~ "q.setMaxResults(10);\n"
-#~ "List cats = q.list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Query q = sess.createQuery(\"select cat.name, cat from "
-#~ "DomesticCat cat \" +\n"
-#~ "                            \"order by cat.name\");\n"
-#~ "ScrollableResults cats = q.scroll();\n"
-#~ "if ( cats.first() ) {\n"
-#~ "\n"
-#~ "    // find the first name on each page of an alphabetical list of cats "
-#~ "by name\n"
-#~ "    firstNamesOfPages = new ArrayList();\n"
-#~ "    do {\n"
-#~ "        String name = cats.getString(0);\n"
-#~ "        firstNamesOfPages.add(name);\n"
-#~ "    }\n"
-#~ "    while ( cats.scroll(PAGE_SIZE) );\n"
-#~ "\n"
-#~ "    // Now get the first page of cats\n"
-#~ "    pageOfCats = new ArrayList();\n"
-#~ "    cats.beforeFirst();\n"
-#~ "    int i=0;\n"
-#~ "    while( ( PAGE_SIZE > i++ ) && cats.next() ) pageOfCats.add( cats.get"
-#~ "(1) );\n"
-#~ "\n"
-#~ "}\n"
-#~ "cats.close()]]>"
-#~ msgstr ""
-#~ "Query q = sess.createQuery(\"select cat.name, cat from DomesticCat cat \" "
-#~ "+\n"
-#~ "                            \"order by cat.name\");\n"
-#~ "ScrollableResults cats = q.scroll();\n"
-#~ "if ( cats.first() ) {\n"
-#~ "\n"
-#~ "    // find the first name on each page of an alphabetical list of cats "
-#~ "by name\n"
-#~ "    firstNamesOfPages = new ArrayList();\n"
-#~ "    do {\n"
-#~ "        String name = cats.getString(0);\n"
-#~ "        firstNamesOfPages.add(name);\n"
-#~ "    }\n"
-#~ "    while ( cats.scroll(PAGE_SIZE) );\n"
-#~ "\n"
-#~ "    // Now get the first page of cats\n"
-#~ "    pageOfCats = new ArrayList();\n"
-#~ "    cats.beforeFirst();\n"
-#~ "    int i=0;\n"
-#~ "    while( ( PAGE_SIZE &gt; i++ ) &amp;&amp; cats.next() ) pageOfCats.add"
-#~ "( cats.get(1) );\n"
-#~ "\n"
-#~ "}\n"
-#~ "cats.close()"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<query name=\"ByNameAndMaximumWeight\"><![CDATA[\n"
-#~ "    from eg.DomesticCat as cat\n"
-#~ "        where cat.name = ?\n"
-#~ "        and cat.weight > ?\n"
-#~ "] ]></query>]]>"
-#~ msgstr ""
-#~ "&lt;query name=\"ByNameAndMaximumWeight\"&gt;&lt;![CDATA[\n"
-#~ "    from eg.DomesticCat as cat\n"
-#~ "        where cat.name = ?\n"
-#~ "        and cat.weight &gt; ?\n"
-#~ "] ]&gt;&lt;/query&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Query q = sess.getNamedQuery(\"ByNameAndMaximumWeight\");\n"
-#~ "q.setString(0, name);\n"
-#~ "q.setInt(1, minWeight);\n"
-#~ "List cats = q.list();]]>"
-#~ msgstr ""
-#~ "Query q = sess.getNamedQuery(\"ByNameAndMaximumWeight\");\n"
-#~ "q.setString(0, name);\n"
-#~ "q.setInt(1, minWeight);\n"
-#~ "List cats = q.list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Collection blackKittens = session.createFilter(\n"
-#~ "    pk.getKittens(), \n"
-#~ "    \"where this.color = ?\")\n"
-#~ "    .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )\n"
-#~ "    .list()\n"
-#~ ");]]>"
-#~ msgstr ""
-#~ "Collection blackKittens = session.createFilter(\n"
-#~ "    pk.getKittens(), \n"
-#~ "    \"where this.color = ?\")\n"
-#~ "    .setParameter( Color.BLACK, Hibernate.custom(ColorUserType.class) )\n"
-#~ "    .list()\n"
-#~ ");"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Collection blackKittenMates = session.createFilter(\n"
-#~ "    pk.getKittens(), \n"
-#~ "    \"select this.mate where this.color = eg.Color.BLACK.intValue\")\n"
-#~ "    .list();]]>"
-#~ msgstr ""
-#~ "Collection blackKittenMates = session.createFilter(\n"
-#~ "    pk.getKittens(), \n"
-#~ "    \"select this.mate where this.color = eg.Color.BLACK.intValue\")\n"
-#~ "    .list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Collection tenKittens = session.createFilter(\n"
-#~ "    mother.getKittens(), \"\")\n"
-#~ "    .setFirstResult(0).setMaxResults(10)\n"
-#~ "    .list();]]>"
-#~ msgstr ""
-#~ "Collection tenKittens = session.createFilter(\n"
-#~ "    mother.getKittens(), \"\")\n"
-#~ "    .setFirstResult(0).setMaxResults(10)\n"
-#~ "    .list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Criteria crit = session.createCriteria(Cat.class);\n"
-#~ "crit.add( Restrictions.eq( \"color\", eg.Color.BLACK ) );\n"
-#~ "crit.setMaxResults(10);\n"
-#~ "List cats = crit.list();]]>"
-#~ msgstr ""
-#~ "Criteria crit = session.createCriteria(Cat.class);\n"
-#~ "crit.add( Expression.eq( \"color\", eg.Color.BLACK ) );\n"
-#~ "crit.setMaxResults(10);\n"
-#~ "List cats = crit.list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[List cats = session.createSQLQuery(\"SELECT {cat.*} FROM CAT "
-#~ "{cat} WHERE ROWNUM<10\")\n"
-#~ "    .addEntity(\"cat\", Cat.class)\n"
-#~ ".list();]]>"
-#~ msgstr ""
-#~ "List cats = session.createSQLQuery(\n"
-#~ "    \"SELECT {cat.*} FROM CAT {cat} WHERE ROWNUM&lt;10\",\n"
-#~ "    \"cat\",\n"
-#~ "    Cat.class\n"
-#~ ").list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[List cats = session.createSQLQuery(\n"
-#~ "    \"SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, \" +\n"
-#~ "           \"{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... "
-#~ "\" +\n"
-#~ "    \"FROM CAT {cat} WHERE ROWNUM<10\")\n"
-#~ "    .addEntity(\"cat\", Cat.class)\n"
-#~ ".list()]]>"
-#~ msgstr ""
-#~ "List cats = session.createSQLQuery(\n"
-#~ "    \"SELECT {cat}.ID AS {cat.id}, {cat}.SEX AS {cat.sex}, \" +\n"
-#~ "           \"{cat}.MATE AS {cat.mate}, {cat}.SUBCLASS AS {cat.class}, ... "
-#~ "\" +\n"
-#~ "    \"FROM CAT {cat} WHERE ROWNUM&lt;10\",\n"
-#~ "    \"cat\",\n"
-#~ "    Cat.class\n"
-#~ ").list()"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long"
-#~ "(69) );\n"
-#~ "cat.setName(\"PK\");\n"
-#~ "sess.flush();  // changes to cat are automatically detected and "
-#~ "persisted]]>"
-#~ msgstr ""
-#~ "DomesticCat cat = (DomesticCat) sess.load( Cat.class, new Long(69) );\n"
-#~ "cat.setName(\"PK\");\n"
-#~ "sess.flush();  // changes to cat are automatically detected and persisted"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[// in the first session\n"
-#~ "Cat cat = (Cat) firstSession.load(Cat.class, catId);\n"
-#~ "Cat potentialMate = new Cat();\n"
-#~ "firstSession.save(potentialMate);\n"
-#~ "\n"
-#~ "// in a higher layer of the application\n"
-#~ "cat.setMate(potentialMate);\n"
-#~ "\n"
-#~ "// later, in a new session\n"
-#~ "secondSession.update(cat);  // update cat\n"
-#~ "secondSession.update(mate); // update mate]]>"
-#~ msgstr ""
-#~ "// in the first session\n"
-#~ "Cat cat = (Cat) firstSession.load(Cat.class, catId);\n"
-#~ "Cat potentialMate = new Cat();\n"
-#~ "firstSession.save(potentialMate);\n"
-#~ "\n"
-#~ "// in a higher layer of the application\n"
-#~ "cat.setMate(potentialMate);\n"
-#~ "\n"
-#~ "// later, in a new session\n"
-#~ "secondSession.update(cat);  // update cat\n"
-#~ "secondSession.update(mate); // update mate"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[//just reassociate:\n"
-#~ "sess.lock(fritz, LockMode.NONE);\n"
-#~ "//do a version check, then reassociate:\n"
-#~ "sess.lock(izi, LockMode.READ);\n"
-#~ "//do a version check, using SELECT ... FOR UPDATE, then reassociate:\n"
-#~ "sess.lock(pk, LockMode.UPGRADE);]]>"
-#~ msgstr ""
-#~ "//just reassociate:\n"
-#~ "sess.lock(fritz, LockMode.NONE);\n"
-#~ "//do a version check, then reassociate:\n"
-#~ "sess.lock(izi, LockMode.READ);\n"
-#~ "//do a version check, using SELECT ... FOR UPDATE, then reassociate:\n"
-#~ "sess.lock(pk, LockMode.UPGRADE);"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[// in the first session\n"
-#~ "Cat cat = (Cat) firstSession.load(Cat.class, catID);\n"
-#~ "\n"
-#~ "// in a higher tier of the application\n"
-#~ "Cat mate = new Cat();\n"
-#~ "cat.setMate(mate);\n"
-#~ "\n"
-#~ "// later, in a new session\n"
-#~ "secondSession.saveOrUpdate(cat);   // update existing state (cat has a "
-#~ "non-null id)\n"
-#~ "secondSession.saveOrUpdate(mate);  // save the new instance (mate has a "
-#~ "null id)]]>"
-#~ msgstr ""
-#~ "// in the first session\n"
-#~ "Cat cat = (Cat) firstSession.load(Cat.class, catID);\n"
-#~ "\n"
-#~ "// in a higher tier of the application\n"
-#~ "Cat mate = new Cat();\n"
-#~ "cat.setMate(mate);\n"
-#~ "\n"
-#~ "// later, in a new session\n"
-#~ "secondSession.saveOrUpdate(cat);   // update existing state (cat has a "
-#~ "non-null id)\n"
-#~ "secondSession.saveOrUpdate(mate);  // save the new instance (mate has a "
-#~ "null id)"
-
-#, fuzzy
-#~ msgid "<![CDATA[sess.delete(cat);]]>"
-#~ msgstr "sess.delete(cat);"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[//retrieve a cat from one database\n"
-#~ "Session session1 = factory1.openSession();\n"
-#~ "Transaction tx1 = session1.beginTransaction();\n"
-#~ "Cat cat = session1.get(Cat.class, catId);\n"
-#~ "tx1.commit();\n"
-#~ "session1.close();\n"
-#~ "\n"
-#~ "//reconcile with a second database\n"
-#~ "Session session2 = factory2.openSession();\n"
-#~ "Transaction tx2 = session2.beginTransaction();\n"
-#~ "session2.replicate(cat, ReplicationMode.LATEST_VERSION);\n"
-#~ "tx2.commit();\n"
-#~ "session2.close();]]>"
-#~ msgstr ""
-#~ "//retrieve a cat from one database\n"
-#~ "Session session1 = factory1.openSession();\n"
-#~ "Transaction tx1 = session1.beginTransaction();\n"
-#~ "Cat cat = session1.get(Cat.class, catId);\n"
-#~ "tx1.commit();\n"
-#~ "session1.close();\n"
-#~ "\n"
-#~ "//reconcile with a second database\n"
-#~ "Session session2 = factory2.openSession();\n"
-#~ "Transaction tx2 = session2.beginTransaction();\n"
-#~ "session2.replicate(cat, ReplicationMode.LATEST_VERSION);\n"
-#~ "tx2.commit();\n"
-#~ "session2.close();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[sess = sf.openSession();\n"
-#~ "Transaction tx = sess.beginTransaction();\n"
-#~ "sess.setFlushMode(FlushMode.COMMIT); // allow queries to return stale "
-#~ "state\n"
-#~ "\n"
-#~ "Cat izi = (Cat) sess.load(Cat.class, id);\n"
-#~ "izi.setName(iznizi);\n"
-#~ "\n"
-#~ "// might return stale data\n"
-#~ "sess.find(\"from Cat as cat left outer join cat.kittens kitten\");\n"
-#~ "\n"
-#~ "// change to izi is not flushed!\n"
-#~ "...\n"
-#~ "tx.commit(); // flush occurs\n"
-#~ "sess.close();]]>"
-#~ msgstr ""
-#~ "sess = sf.openSession();\n"
-#~ "Transaction tx = sess.beginTransaction();\n"
-#~ "sess.setFlushMode(FlushMode.COMMIT); // allow queries to return stale "
-#~ "state\n"
-#~ "\n"
-#~ "Cat izi = (Cat) sess.load(Cat.class, id);\n"
-#~ "izi.setName(iznizi);\n"
-#~ "\n"
-#~ "// might return stale data\n"
-#~ "sess.find(\"from Cat as cat left outer join cat.kittens kitten\");\n"
-#~ "\n"
-#~ "// change to izi is not flushed!\n"
-#~ "...\n"
-#~ "tx.commit(); // flush occurs\n"
-#~ "sess.close();"
-
-#, fuzzy
-#~ msgid "<![CDATA[<one-to-one name=\"person\" cascade=\"persist\"/>]]>"
-#~ msgstr "&lt;one-to-one name=\"person\" cascade=\"persist\"/&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<one-to-one name=\"person\" cascade=\"persist,delete,lock\"/>]]>"
-#~ msgstr "&lt;one-to-one name=\"person\" cascade=\"persist,delete,lock\"/&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat fritz = ......;\n"
-#~ "ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);\n"
-#~ "\n"
-#~ "Object[] propertyValues = catMeta.getPropertyValues(fritz);\n"
-#~ "String[] propertyNames = catMeta.getPropertyNames();\n"
-#~ "Type[] propertyTypes = catMeta.getPropertyTypes();\n"
-#~ "\n"
-#~ "// get a Map of all properties which are not collections or associations\n"
-#~ "Map namedValues = new HashMap();\n"
-#~ "for ( int i=0; i<propertyNames.length; i++ ) {\n"
-#~ "    if ( !propertyTypes[i].isEntityType() && !propertyTypes[i]."
-#~ "isCollectionType() ) {\n"
-#~ "        namedValues.put( propertyNames[i], propertyValues[i] );\n"
-#~ "    }\n"
-#~ "}]]>"
-#~ msgstr ""
-#~ "Cat fritz = ......;\n"
-#~ "ClassMetadata catMeta = sessionfactory.getClassMetadata(Cat.class);\n"
-#~ "\n"
-#~ "Object[] propertyValues = catMeta.getPropertyValues(fritz);\n"
-#~ "String[] propertyNames = catMeta.getPropertyNames();\n"
-#~ "Type[] propertyTypes = catMeta.getPropertyTypes();\n"
-#~ "\n"
-#~ "// get a Map of all properties which are not collections or associations\n"
-#~ "Map namedValues = new HashMap();\n"
-#~ "for ( int i=0; i&lt;propertyNames.length; i++ ) {\n"
-#~ "    if ( !propertyTypes[i].isEntityType() &amp;&amp; !propertyTypes[i]."
-#~ "isCollectionType() ) {\n"
-#~ "        namedValues.put( propertyNames[i], propertyValues[i] );\n"
-#~ "    }\n"
-#~ "}"
+#~ "特殊なカスケードスタイル <literal>delete-orphan</literal> は、一対多関連に"
+#~ "だけ適用できます。これは、関連から削除された子供のオブジェクトに対して、 "
+#~ "<literal>delete()</literal> 操作が適用されることを意味します。"

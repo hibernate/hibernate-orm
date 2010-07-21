@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"POT-Creation-Date: 2010-07-20 21:02+0000\n"
 "PO-Revision-Date: 2010-03-16 10:12+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -15,77 +15,277 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
+#: preface.xml:33
 #, no-c-format
 msgid "Preface"
 msgstr "前言"
 
 #. Tag: para
-#, no-c-format
-msgid "Working with object-oriented software and a relational database can be cumbersome and time consuming in today's enterprise environments. Hibernate is an Object/Relational Mapping tool for Java environments. The term Object/Relational Mapping (ORM) refers to the technique of mapping a data representation from an object model to a relational data model with a SQL-based schema."
-msgstr "在今日的企业环境中，把面向对象的软件和关系型数据库一起使用可能是相当麻烦和浪费时间的。Hibernate 是一个面向 Java 环境的对象/关系型数据库映射工具。对象/关系型数据库映射（object/relational mapping，ORM）这个术语表示一种技术，用来把对象模型表示的对象映射到基于 SQL 的关系模型数据结构中去。 "
+#: preface.xml:35
+#, fuzzy, no-c-format
+msgid ""
+"Working with both Object-Oriented software and Relational Databases can be "
+"cumbersome and time consuming. Development costs are significantly higher "
+"due to a paradigm mismatch between how data is represented in objects versus "
+"relational databases. Hibernate is an Object/Relational Mapping solution for "
+"Java environments. The term Object/Relational Mapping refers to the "
+"technique of mapping a data representation from an object model to a "
+"relational data model with a SQL-based schema; see <ulink url=\"http://en."
+"wikipedia.org/wiki/Object-relational_mapping\">http://en.wikipedia.org/wiki/"
+"Object-relational_mapping</ulink> for a discussion."
+msgstr ""
+"在今日的企业环境中，把面向对象的软件和关系型数据库一起使用可能是相当麻烦和浪"
+"费时间的。Hibernate 是一个面向 Java 环境的对象/关系型数据库映射工具。对象/关"
+"系型数据库映射（object/relational mapping，ORM）这个术语表示一种技术，用来把"
+"对象模型表示的对象映射到基于 SQL 的关系模型数据结构中去。 "
 
 #. Tag: para
+#: preface.xml:46
 #, no-c-format
-msgid "Hibernate not only takes care of the mapping from Java classes to database tables (and from Java data types to SQL data types), but also provides data query and retrieval facilities. It can also significantly reduce development time otherwise spent with manual data handling in SQL and JDBC."
-msgstr "Hibernate 不仅管理 Java 类到数据库表的映射（包括 Java 数据类型到 SQL 数据类型的映射），还提供数据查询和获取数据的方法，可以大幅度减少开发时对人工使用 SQL 和 JDBC 处理数据的时间。 "
+msgid ""
+"While having a strong background in SQL is not required to use Hibernate, "
+"having a basic understanding of the concepts can greatly help you understand "
+"Hibernate more fully and quickly. Probably the single best background is an "
+"understanding of data modeling principles. You might want to consider these "
+"resources as a good starting point:"
+msgstr ""
+
+#. Tag: ulink
+#: preface.xml:54
+#, no-c-format
+msgid "http://www.agiledata.org/essays/dataModeling101.html"
+msgstr ""
+
+#. Tag: ulink
+#: preface.xml:59
+#, no-c-format
+msgid "http://en.wikipedia.org/wiki/Data_modeling"
+msgstr ""
 
 #. Tag: para
+#: preface.xml:66
 #, no-c-format
-msgid "Hibernate's goal is to relieve the developer from 95 percent of common data persistence related programming tasks. Hibernate may not be the best solution for data-centric applications that only use stored-procedures to implement the business logic in the database, it is most useful with object-oriented domain models and business logic in the Java-based middle-tier. However, Hibernate can certainly help you to remove or encapsulate vendor-specific SQL code and will help with the common task of result set translation from a tabular representation to a graph of objects."
-msgstr "Hibernate 的目标是对于开发者通常的数据持久化相关的编程任务，解放其中的 95%。对于以数据为中心的程序来说，它们往往只在数据库中使用存储过程来实现商业逻辑，Hibernate 可能不是最好的解决方案；对于那些在基于 Java 的中间层应用中，它们实现面向对象的业务模型和商业逻辑的应用，Hibernate 是最有用的。不管怎样，Hibernate 一定可以帮助你消除或者包装那些针对特定厂商的 SQL 代码，而且帮助你结果集从表格式的表示形式转换到一系列的对象中去。 "
+msgid ""
+"Hibernate not only takes care of the mapping from Java classes to database "
+"tables (and from Java data types to SQL data types), but also provides data "
+"query and retrieval facilities. It can also significantly reduce development "
+"time otherwise spent with manual data handling in SQL and JDBC."
+msgstr ""
+"Hibernate 不仅管理 Java 类到数据库表的映射（包括 Java 数据类型到 SQL 数据类型"
+"的映射），还提供数据查询和获取数据的方法，可以大幅度减少开发时对人工使用 SQL "
+"和 JDBC 处理数据的时间。 "
 
 #. Tag: para
+#: preface.xml:72
 #, no-c-format
-msgid "If you are new to Hibernate and Object/Relational Mapping or even Java, please follow these steps:"
-msgstr "如果你对 Hibernate 和对象/关系型数据库映射还是个新手，甚至对 Java 也不熟悉，请按照下面的步骤来学习。"
+msgid ""
+"Hibernate’s design goal is to relieve the developer from 95% of common data "
+"persistence-related programming tasks by eliminating the need for manual, "
+"hand-crafted data processing using SQL and JDBC. However, unlike many other "
+"persistence solutions, Hibernate does not hide the power of SQL from you and "
+"guarantees that your investment in relational technology and knowledge is as "
+"valid as always."
+msgstr ""
 
 #. Tag: para
-#, no-c-format
-msgid "Read <xref linkend=\"tutorial\" /> for a tutorial with step-by-step instructions. The source code for the tutorial is included in the distribution in the <literal>doc/reference/tutorial/</literal> directory."
-msgstr "阅读 <xref linkend=\"tutorial\"/>，这是一篇包含详细的逐步知道的指南。本指南的源代码包含在发行包里，你可以在 <literal>doc/reference/tutorial/</literal> 目录下找到。"
+#: preface.xml:79
+#, fuzzy, no-c-format
+msgid ""
+"Hibernate may not be the best solution for data-centric applications that "
+"only use stored-procedures to implement the business logic in the database, "
+"it is most useful with object-oriented domain models and business logic in "
+"the Java-based middle-tier. However, Hibernate can certainly help you to "
+"remove or encapsulate vendor-specific SQL code and will help with the common "
+"task of result set translation from a tabular representation to a graph of "
+"objects."
+msgstr ""
+"Hibernate 的目标是对于开发者通常的数据持久化相关的编程任务，解放其中的 95%。"
+"对于以数据为中心的程序来说，它们往往只在数据库中使用存储过程来实现商业逻辑，"
+"Hibernate 可能不是最好的解决方案；对于那些在基于 Java 的中间层应用中，它们实"
+"现面向对象的业务模型和商业逻辑的应用，Hibernate 是最有用的。不管怎样，"
+"Hibernate 一定可以帮助你消除或者包装那些针对特定厂商的 SQL 代码，而且帮助你结"
+"果集从表格式的表示形式转换到一系列的对象中去。 "
 
 #. Tag: para
+#: preface.xml:88
 #, no-c-format
-msgid "Read <xref linkend=\"architecture\" /> to understand the environments where Hibernate can be used."
-msgstr "阅读 <xref linkend=\"architecture\"/> 来理解 Hibernate 可以使用的环境。"
+msgid ""
+"If you are new to Hibernate and Object/Relational Mapping or even Java, "
+"please follow these steps:"
+msgstr ""
+"如果你对 Hibernate 和对象/关系型数据库映射还是个新手，甚至对 Java 也不熟悉，"
+"请按照下面的步骤来学习。"
 
 #. Tag: para
-#, no-c-format
-msgid "View the <literal>eg/</literal> directory in the Hibernate distribution. It contains a simple standalone application. Copy your JDBC driver to the <literal>lib/</literal> directory and edit <literal>etc/hibernate.properties</literal>, specifying correct values for your database. From a command prompt in the distribution directory, type <literal>ant eg</literal> (using Ant), or under Windows, type <literal>build eg</literal>."
-msgstr "查看 Hibernate 发行包中的 <literal>eg/</literal> 目录，里面有个一简单的独立运行的程序。把你的 JDBC 驱动复制到 <literal>lib/</literal> 目录并修改一下 <literal>etc/hibernate.properties</literal>，指定数据库的信息。然后进入命令行，切换到发行包的目录，输入 <literal>ant eg</literal>（使用 Ant），或者在 Windows 系统下使用 <literal>build eg</literal>。 "
+#: preface.xml:95
+#, fuzzy, no-c-format
+msgid ""
+"Read <xref linkend=\"tutorial\"/> for a tutorial with step-by-step "
+"instructions. The source code for the tutorial is included in the "
+"distribution in the <literal>doc/reference/tutorial/</literal> directory."
+msgstr ""
+"阅读 <xref linkend=\"tutorial\"/>，这是一篇包含详细的逐步知道的指南。本指南的"
+"源代码包含在发行包里，你可以在 <literal>doc/reference/tutorial/</literal> 目"
+"录下找到。"
 
 #. Tag: para
-#, no-c-format
-msgid "Use this reference documentation as your primary source of information. Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need more help with application design, or if you prefer a step-by-step tutorial. Also visit <ulink url=\"http://caveatemptor.hibernate.org\" /> and download the example application from <biblioref linkend=\"biblio-JPwH\"></biblioref>."
-msgstr "把这份文档作为你学习的主要信息来源。如果你需要应用程序设计方面的帮助或者你希望有一个按部就班的指南，你可以考虑阅读 <biblioref linkend=\"biblio-JPwH\"></biblioref> 。你也可以访问 <ulink url=\"http://caveatemptor.hibernate.org\" /> 并从 <biblioref linkend=\"biblio-JPwH\"></biblioref> 下载示例程序。"
+#: preface.xml:103
+#, fuzzy, no-c-format
+msgid ""
+"Read <xref linkend=\"architecture\"/> to understand the environments where "
+"Hibernate can be used."
+msgstr ""
+"阅读 <xref linkend=\"architecture\"/> 来理解 Hibernate 可以使用的环境。"
 
 #. Tag: para
+#: preface.xml:109
+#, no-c-format
+msgid ""
+"View the <literal>eg/</literal> directory in the Hibernate distribution. It "
+"contains a simple standalone application. Copy your JDBC driver to the "
+"<literal>lib/</literal> directory and edit <literal>etc/hibernate."
+"properties</literal>, specifying correct values for your database. From a "
+"command prompt in the distribution directory, type <literal>ant eg</literal> "
+"(using Ant), or under Windows, type <literal>build eg</literal>."
+msgstr ""
+"查看 Hibernate 发行包中的 <literal>eg/</literal> 目录，里面有个一简单的独立运"
+"行的程序。把你的 JDBC 驱动复制到 <literal>lib/</literal> 目录并修改一下 "
+"<literal>etc/hibernate.properties</literal>，指定数据库的信息。然后进入命令"
+"行，切换到发行包的目录，输入 <literal>ant eg</literal>（使用 Ant），或者在 "
+"Windows 系统下使用 <literal>build eg</literal>。 "
+
+#. Tag: para
+#: preface.xml:120
+#, fuzzy, no-c-format
+msgid ""
+"Use this reference documentation as your primary source of information. "
+"Consider reading <biblioref linkend=\"biblio-JPwH\"></biblioref> if you need "
+"more help with application design, or if you prefer a step-by-step tutorial. "
+"Also visit <ulink url=\"http://caveatemptor.hibernate.org\"></ulink> and "
+"download the example application from <biblioref linkend=\"biblio-JPwH\"></"
+"biblioref>."
+msgstr ""
+"把这份文档作为你学习的主要信息来源。如果你需要应用程序设计方面的帮助或者你希"
+"望有一个按部就班的指南，你可以考虑阅读 <biblioref linkend=\"biblio-JPwH\"></"
+"biblioref> 。你也可以访问 <ulink url=\"http://caveatemptor.hibernate.org\" /"
+"> 并从 <biblioref linkend=\"biblio-JPwH\"></biblioref> 下载示例程序。"
+
+#. Tag: para
+#: preface.xml:130
 #, no-c-format
 msgid "FAQs are answered on the Hibernate website."
 msgstr "在 Hibernate 网站上可以找到问题和解答（FAQ）。"
 
 #. Tag: para
+#: preface.xml:135
 #, no-c-format
-msgid "Links to third party demos, examples, and tutorials are maintained on the Hibernate website."
+msgid ""
+"Links to third party demos, examples, and tutorials are maintained on the "
+"Hibernate website."
 msgstr "在 Hibernate 网站上还有第三方的演示、示例和教程的链接。 "
 
 #. Tag: para
+#: preface.xml:141
 #, no-c-format
-msgid "The Community Area on the Hibernate website is a good resource for design patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, etc.)."
-msgstr "Hibernate 网站的社区是讨论关于设计模式以及很多整合方案（Tomcat、JBoss AS、Struts、EJB 等）的好地方。"
+msgid ""
+"The Community Area on the Hibernate website is a good resource for design "
+"patterns and various integration solutions (Tomcat, JBoss AS, Struts, EJB, "
+"etc.)."
+msgstr ""
+"Hibernate 网站的社区是讨论关于设计模式以及很多整合方案（Tomcat、JBoss AS、"
+"Struts、EJB 等）的好地方。"
 
 #. Tag: para
+#: preface.xml:149
 #, no-c-format
-msgid "If you have questions, use the user forum linked on the Hibernate website. We also provide a JIRA issue tracking system for bug reports and feature requests. If you are interested in the development of Hibernate, join the developer mailing list. If you are interested in translating this documentation into your language, contact us on the developer mailing list."
-msgstr "如果你有任何问题，请使用 Hibernate 网站上链接的用户论坛。我们也提供一个 JIRA 问题追踪系统，来搜集 bug 报告和新的功能请求。如果对开发 Hibernate 有兴趣，请加入开发者的邮件列表。如果你对翻译本文档感兴趣，请通过开发者的邮件列表来联系我们。 "
+msgid ""
+"There are a number of ways to become involved in the Hibernate community, "
+"including"
+msgstr ""
 
 #. Tag: para
+#: preface.xml:153
 #, no-c-format
-msgid "Commercial development support, production support, and training for Hibernate is available through JBoss Inc. (see http://www.hibernate.org/SupportTraining/). Hibernate is a Professional Open Source project and a critical component of the JBoss Enterprise Middleware System (JEMS) suite of products."
-msgstr "商业开发、产品支持和 Hibernate 培训可以通过 JBoss Inc. 获得（请查阅： http://www.hibernate.org/SupportTraining/）。Hibernate 是一个专业的开源项目，也是 JBoss 企业级中间件系统（JBoss Enterprise Middleware System，JEMS）里的一个核心组件。  "
+msgid ""
+"Trying stuff out and reporting bugs. See <ulink url=\"http://hibernate.org/"
+"issuetracker.html\">http://hibernate.org/issuetracker.html</ulink> details."
+msgstr ""
+
+#. Tag: para
+#: preface.xml:160
+#, no-c-format
+msgid ""
+"Trying your hand at fixing some bugs or implementing enhancements. Again, "
+"see <ulink url=\"http://hibernate.org/issuetracker.html\">http://hibernate."
+"org/issuetracker.html</ulink> details."
+msgstr ""
+
+#. Tag: para
+#: preface.xml:167
+#, no-c-format
+msgid ""
+"<ulink url=\"http://hibernate.org/community.html\">http://hibernate.org/"
+"community.html</ulink> list a few ways to engage in the community."
+msgstr ""
+
+#. Tag: para
+#: preface.xml:172
+#, no-c-format
+msgid ""
+"There are forums for users to ask questions and receive help from the "
+"community."
+msgstr ""
+
+#. Tag: para
+#: preface.xml:177
+#, no-c-format
+msgid ""
+"There are also <ulink url=\"http://en.wikipedia.org/wiki/Internet_Relay_Chat"
+"\">IRC</ulink> channels for both user and developer discussions."
+msgstr ""
+
+#. Tag: para
+#: preface.xml:186
+#, no-c-format
+msgid ""
+"Helping improve or translate this documentation. Contact us on the developer "
+"mailing list if you have interest."
+msgstr ""
+
+#. Tag: para
+#: preface.xml:192
+#, no-c-format
+msgid "Evangelizing Hibernate within your organization."
+msgstr ""
+
+#~ msgid ""
+#~ "If you have questions, use the user forum linked on the Hibernate "
+#~ "website. We also provide a JIRA issue tracking system for bug reports and "
+#~ "feature requests. If you are interested in the development of Hibernate, "
+#~ "join the developer mailing list. If you are interested in translating "
+#~ "this documentation into your language, contact us on the developer "
+#~ "mailing list."
+#~ msgstr ""
+#~ "如果你有任何问题，请使用 Hibernate 网站上链接的用户论坛。我们也提供一个 "
+#~ "JIRA 问题追踪系统，来搜集 bug 报告和新的功能请求。如果对开发 Hibernate 有"
+#~ "兴趣，请加入开发者的邮件列表。如果你对翻译本文档感兴趣，请通过开发者的邮件"
+#~ "列表来联系我们。 "
+
+#~ msgid ""
+#~ "Commercial development support, production support, and training for "
+#~ "Hibernate is available through JBoss Inc. (see http://www.hibernate.org/"
+#~ "SupportTraining/). Hibernate is a Professional Open Source project and a "
+#~ "critical component of the JBoss Enterprise Middleware System (JEMS) suite "
+#~ "of products."
+#~ msgstr ""
+#~ "商业开发、产品支持和 Hibernate 培训可以通过 JBoss Inc. 获得（请查阅： "
+#~ "http://www.hibernate.org/SupportTraining/）。Hibernate 是一个专业的开源项"
+#~ "目，也是 JBoss 企业级中间件系统（JBoss Enterprise Middleware System，"
+#~ "JEMS）里的一个核心组件。  "
 
 #~ msgid "Feedback"
 #~ msgstr "反馈"
+
 #~ msgid ""
 #~ "Use <ulink url=\"http://opensource.atlassian.com/projects/hibernate"
 #~ "\">Hibernate JIRA</ulink> to report errors or request enhacements to this "
@@ -93,4 +293,3 @@ msgstr "商业开发、产品支持和 Hibernate 培训可以通过 JBoss Inc. �
 #~ msgstr ""
 #~ "用 <ulink url=\"http://opensource.atlassian.com/projects/hibernate"
 #~ "\">Hibernate JIRA</ulink> 来报告错误或改进本文档。"
-

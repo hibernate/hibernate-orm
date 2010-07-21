@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Collection_Mapping\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"POT-Creation-Date: 2010-07-20 21:02+0000\n"
 "PO-Revision-Date: 2010-01-20 14:25+1000\n"
 "Last-Translator: Xi HUANG <xhuang@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -14,16 +14,19 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
+#: performance.xml:31
 #, no-c-format
 msgid "Improving performance"
 msgstr "パフォーマンスの改善"
 
 #. Tag: title
+#: performance.xml:34
 #, no-c-format
 msgid "Fetching strategies"
 msgstr "フェッチ戦略"
 
 #. Tag: para
+#: performance.xml:36
 #, no-c-format
 msgid ""
 "Hibernate uses a <emphasis>fetching strategy</emphasis> to retrieve "
@@ -37,11 +40,13 @@ msgstr ""
 "<literal>Criteria</literal> クエリでオーバーライドします。"
 
 #. Tag: para
+#: performance.xml:42
 #, no-c-format
 msgid "Hibernate3 defines the following fetching strategies:"
 msgstr "Hibernate3 は次に示すフェッチ戦略を定義しています:"
 
 #. Tag: para
+#: performance.xml:46
 #, no-c-format
 msgid ""
 "<emphasis>Join fetching</emphasis>: Hibernate retrieves the associated "
@@ -53,6 +58,7 @@ msgstr ""
 "<literal>SELECT</literal> で復元します。"
 
 #. Tag: para
+#: performance.xml:53
 #, no-c-format
 msgid ""
 "<emphasis>Select fetching</emphasis>: a second <literal>SELECT</literal> is "
@@ -66,6 +72,7 @@ msgstr ""
 "に関連にアクセスしたときのみ実行されるでしょう。"
 
 #. Tag: para
+#: performance.xml:61
 #, no-c-format
 msgid ""
 "<emphasis>Subselect fetching</emphasis>: a second <literal>SELECT</literal> "
@@ -81,6 +88,7 @@ msgstr ""
 "るでしょう。"
 
 #. Tag: para
+#: performance.xml:70
 #, no-c-format
 msgid ""
 "<emphasis>Batch fetching</emphasis>: an optimization strategy for select "
@@ -94,11 +102,13 @@ msgstr ""
 "することにより行います。"
 
 #. Tag: para
+#: performance.xml:77
 #, no-c-format
 msgid "Hibernate also distinguishes between:"
 msgstr "Hibernate は次に示す戦略とも区別をします: "
 
 #. Tag: para
+#: performance.xml:81
 #, no-c-format
 msgid ""
 "<emphasis>Immediate fetching</emphasis>: an association, collection or "
@@ -108,6 +118,7 @@ msgstr ""
 "に、関連、コレクションは即時にフェッチされます。"
 
 #. Tag: para
+#: performance.xml:87
 #, no-c-format
 msgid ""
 "<emphasis>Lazy collection fetching</emphasis>: a collection is fetched when "
@@ -119,6 +130,7 @@ msgstr ""
 "に対するデフォルトの動作です)"
 
 #. Tag: para
+#: performance.xml:93
 #, no-c-format
 msgid ""
 "<emphasis>\"Extra-lazy\" collection fetching</emphasis>: individual elements "
@@ -132,6 +144,7 @@ msgstr ""
 "きなコレクションに適しています）。"
 
 #. Tag: para
+#: performance.xml:101
 #, no-c-format
 msgid ""
 "<emphasis>Proxy fetching</emphasis>: a single-valued association is fetched "
@@ -142,6 +155,7 @@ msgstr ""
 "メソッドが関連オブジェクトで呼び出されるときにフェッチされます。"
 
 #. Tag: para
+#: performance.xml:107
 #, no-c-format
 msgid ""
 "<emphasis>\"No-proxy\" fetching</emphasis>: a single-valued association is "
@@ -159,6 +173,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
+#: performance.xml:117
 #, no-c-format
 msgid ""
 "<emphasis>Lazy attribute fetching</emphasis>: an attribute or single valued "
@@ -170,6 +185,7 @@ msgstr ""
 "みが必要になり、使う場面はまれです。"
 
 #. Tag: para
+#: performance.xml:124
 #, no-c-format
 msgid ""
 "We have two orthogonal notions here: <emphasis>when</emphasis> is the "
@@ -187,11 +203,13 @@ msgstr ""
 "す。"
 
 #. Tag: title
+#: performance.xml:132
 #, no-c-format
 msgid "Working with lazy associations"
 msgstr "遅延関連の働き"
 
 #. Tag: para
+#: performance.xml:134
 #, no-c-format
 msgid ""
 "By default, Hibernate3 uses lazy select fetching for collections and lazy "
@@ -203,6 +221,7 @@ msgstr ""
 "ぼすべてのアプリケーションのほぼすべての関連で意味があります。"
 
 #. Tag: para
+#: performance.xml:138
 #, no-c-format
 msgid ""
 "If you set <literal>hibernate.default_batch_fetch_size</literal>, Hibernate "
@@ -215,6 +234,7 @@ msgstr ""
 "す）。"
 
 #. Tag: para
+#: performance.xml:142
 #, no-c-format
 msgid ""
 "Please be aware that access to a lazy association outside of the context of "
@@ -224,7 +244,36 @@ msgstr ""
 "Hibernate の session をオープンしているコンテキストの外から遅延関連にアクセス"
 "すると、例外が発生します。例："
 
+#. Tag: programlisting
+#: performance.xml:146
+#, fuzzy, no-c-format
+msgid ""
+"s = sessions.openSession();\n"
+"Transaction tx = s.beginTransaction();\n"
+"            \n"
+"User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
+"    .setString(\"userName\", userName).uniqueResult();\n"
+"Map permissions = u.getPermissions();\n"
+"\n"
+"tx.commit();\n"
+"s.close();\n"
+"\n"
+"Integer accessLevel = (Integer) permissions.get(\"accounts\");  // Error!"
+msgstr ""
+"s = sessions.openSession();\n"
+"Transaction tx = s.beginTransaction();\n"
+"            \n"
+"User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
+"    .setString(\"userName\", userName).uniqueResult();\n"
+"Map permissions = u.getPermissions();\n"
+"\n"
+"tx.commit();\n"
+"s.close();\n"
+"\n"
+"Integer accessLevel = (Integer) permissions.get(\"accounts\");  // Error!"
+
 #. Tag: para
+#: performance.xml:148
 #, no-c-format
 msgid ""
 "Since the permissions collection was not initialized when the "
@@ -240,6 +289,7 @@ msgstr ""
 "ンザクションをコミットする直前に移動させます。"
 
 #. Tag: para
+#: performance.xml:155
 #, no-c-format
 msgid ""
 "Alternatively, you can use a non-lazy collection or association, by "
@@ -257,6 +307,7 @@ msgstr ""
 "にフェッチすることになるでしょう。"
 
 #. Tag: para
+#: performance.xml:162
 #, no-c-format
 msgid ""
 "On the other hand, you can use join fetching, which is non-lazy by nature, "
@@ -271,11 +322,13 @@ msgstr ""
 "フェッチ戦略を選択する仕組みは単一値関連とコレクションで変わりはありません。"
 
 #. Tag: title
+#: performance.xml:170
 #, no-c-format
 msgid "Tuning fetch strategies"
 msgstr "フェッチ戦略のチューニング"
 
 #. Tag: para
+#: performance.xml:172
 #, no-c-format
 msgid ""
 "Select fetching (the default) is extremely vulnerable to N+1 selects "
@@ -284,7 +337,30 @@ msgstr ""
 "セレクトフェッチ（デフォルト）は N+1 セレクト問題という大きな弱点があるため、"
 "マッピング定義で結合フェッチを有効にすることができます:"
 
+#. Tag: programlisting
+#: performance.xml:176
+#, fuzzy, no-c-format
+msgid ""
+"&lt;set name=\"permissions\"\n"
+"            fetch=\"join\"&gt;\n"
+"    &lt;key column=\"userId\"/&gt;\n"
+"    &lt;one-to-many class=\"Permission\"/&gt;\n"
+"&lt;/set"
+msgstr ""
+"&lt;set name=\"permissions\" \n"
+"            fetch=\"join\"&gt;\n"
+"    &lt;key column=\"userId\"/&gt;\n"
+"    &lt;one-to-many class=\"Permission\"/&gt;\n"
+"&lt;/set"
+
+#. Tag: programlisting
+#: performance.xml:178
+#, fuzzy, no-c-format
+msgid "&lt;many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/&gt;"
+msgstr "&lt;many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/&gt;"
+
 #. Tag: para
+#: performance.xml:180
 #, no-c-format
 msgid ""
 "The <literal>fetch</literal> strategy defined in the mapping document "
@@ -294,26 +370,31 @@ msgstr ""
 "す:"
 
 #. Tag: para
+#: performance.xml:185
 #, no-c-format
 msgid "retrieval via <literal>get()</literal> or <literal>load()</literal>"
 msgstr "<literal>get()</literal> や <literal>load()</literal> による復元"
 
 #. Tag: para
+#: performance.xml:190
 #, no-c-format
 msgid "retrieval that happens implicitly when an association is navigated"
 msgstr "関連にナビゲートしたときに発生する暗黙的な復元"
 
 #. Tag: para
+#: performance.xml:195
 #, no-c-format
 msgid "<literal>Criteria</literal> queries"
 msgstr "<literal>Criteria</literal> クエリ"
 
 #. Tag: para
+#: performance.xml:199
 #, no-c-format
 msgid "HQL queries if <literal>subselect</literal> fetching is used"
 msgstr "<literal>サブセレクト</literal> フェッチを使う HQL クエリ"
 
 #. Tag: para
+#: performance.xml:204
 #, no-c-format
 msgid ""
 "Irrespective of the fetching strategy you use, the defined non-lazy graph is "
@@ -325,6 +406,7 @@ msgstr ""
 "の SELECT 文が即時実行されることがあるので注意してください。"
 
 #. Tag: para
+#: performance.xml:209
 #, no-c-format
 msgid ""
 "Usually, the mapping document is not used to customize fetching. Instead, we "
@@ -342,6 +424,7 @@ msgstr ""
 "<literal>setFetchMode(FetchMode.JOIN)</literal> を使うことが出来ます。"
 
 #. Tag: para
+#: performance.xml:216
 #, no-c-format
 msgid ""
 "If you want to change the fetching strategy used by <literal>get()</literal> "
@@ -352,7 +435,22 @@ msgstr ""
 "戦略を変えたいと感じたときには、単純に <literal>Criteria</literal> クエリを"
 "使ってください。例："
 
+#. Tag: programlisting
+#: performance.xml:220
+#, fuzzy, no-c-format
+msgid ""
+"User user = (User) session.createCriteria(User.class)\n"
+"                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
+"                .add( Restrictions.idEq(userId) )\n"
+"                .uniqueResult();"
+msgstr ""
+"User user = (User) session.createCriteria(User.class)\n"
+"                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
+"                .add( Restrictions.idEq(userId) )\n"
+"                .uniqueResult();"
+
 #. Tag: para
+#: performance.xml:222
 #, no-c-format
 msgid ""
 "This is Hibernate's equivalent of what some ORM solutions call a \"fetch plan"
@@ -362,6 +460,7 @@ msgstr ""
 "です。）"
 
 #. Tag: para
+#: performance.xml:225
 #, no-c-format
 msgid ""
 "A completely different approach to problems with N+1 selects is to use the "
@@ -371,11 +470,13 @@ msgstr ""
 "とです。"
 
 #. Tag: title
+#: performance.xml:230
 #, no-c-format
 msgid "Single-ended association proxies"
 msgstr "単一端関連プロキシ"
 
 #. Tag: para
+#: performance.xml:232
 #, no-c-format
 msgid ""
 "Lazy fetching for collections is implemented using Hibernate's own "
@@ -392,6 +493,7 @@ msgstr ""
 "ジェクトの遅延初期化プロキシを実現しています。"
 
 #. Tag: para
+#: performance.xml:239
 #, no-c-format
 msgid ""
 "At startup, Hibernate3 generates proxies by default for all persistent "
@@ -403,6 +505,7 @@ msgstr ""
 "literal> 関連の遅延フェッチを可能にしています。"
 
 #. Tag: para
+#: performance.xml:244
 #, no-c-format
 msgid ""
 "The mapping file may declare an interface to use as the proxy interface for "
@@ -419,6 +522,7 @@ msgstr ""
 "emphasis>"
 
 #. Tag: para
+#: performance.xml:251
 #, no-c-format
 msgid ""
 "There are potential problems to note when extending this approach to "
@@ -427,7 +531,26 @@ msgstr ""
 "ポリモーフィズムのクラスに対してこの方法を適用するときにいくつか考慮すること"
 "があります。例："
 
+#. Tag: programlisting
+#: performance.xml:254
+#, fuzzy, no-c-format
+msgid ""
+"&lt;class name=\"Cat\" proxy=\"Cat\"&gt;\n"
+"    ......\n"
+"    &lt;subclass name=\"DomesticCat\"&gt;\n"
+"        .....\n"
+"    &lt;/subclass&gt;\n"
+"&lt;/class&gt;"
+msgstr ""
+"&lt;class name=\"Cat\" proxy=\"Cat\"&gt;\n"
+"    ......\n"
+"    &lt;subclass name=\"DomesticCat\"&gt;\n"
+"        .....\n"
+"    &lt;/subclass&gt;\n"
+"&lt;/class&gt;"
+
 #. Tag: para
+#: performance.xml:256
 #, no-c-format
 msgid ""
 "Firstly, instances of <literal>Cat</literal> will never be castable to "
@@ -438,12 +561,52 @@ msgstr ""
 "literal> にキャストできません。たとえ基となるインスタンスが "
 "<literal>DomesticCat</literal> であったとしてもです:"
 
+#. Tag: programlisting
+#: performance.xml:260
+#, fuzzy, no-c-format
+msgid ""
+"Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does "
+"not hit the db)\n"
+"if ( cat.isDomesticCat() ) {                  // hit the db to initialize "
+"the proxy\n"
+"    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
+"    ....\n"
+"}"
+msgstr ""
+"Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy (does "
+"not hit the db)\n"
+"if ( cat.isDomesticCat() ) {                  // hit the db to initialize "
+"the proxy\n"
+"    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
+"    ....\n"
+"}"
+
 #. Tag: para
+#: performance.xml:262
 #, no-c-format
 msgid "Secondly, it is possible to break proxy <literal>==</literal>:"
 msgstr "第二に、プロキシの <literal>==</literal> は成立しないことがあります。"
 
+#. Tag: programlisting
+#: performance.xml:265
+#, fuzzy, no-c-format
+msgid ""
+"Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat "
+"proxy\n"
+"DomesticCat dc = \n"
+"        (DomesticCat) session.load(DomesticCat.class, id);  // acquire new "
+"DomesticCat proxy!\n"
+"System.out.println(cat==dc);                            // false"
+msgstr ""
+"Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a Cat "
+"proxy\n"
+"DomesticCat dc = \n"
+"        (DomesticCat) session.load(DomesticCat.class, id);  // acquire new "
+"DomesticCat proxy!\n"
+"System.out.println(cat==dc);                            // false"
+
 #. Tag: para
+#: performance.xml:267
 #, no-c-format
 msgid ""
 "However, the situation is not quite as bad as it looks. Even though we now "
@@ -454,7 +617,18 @@ msgstr ""
 "キシオブジェクトへの二つの参照があったとしても、基となるインスタンスは同じオ"
 "ブジェクトです:"
 
+#. Tag: programlisting
+#: performance.xml:271
+#, fuzzy, no-c-format
+msgid ""
+"cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
+"System.out.println( dc.getWeight() );  // 11.0"
+msgstr ""
+"cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
+"System.out.println( dc.getWeight() );  // 11.0"
+
 #. Tag: para
+#: performance.xml:273
 #, no-c-format
 msgid ""
 "Third, you cannot use a CGLIB proxy for a <literal>final</literal> class or "
@@ -464,6 +638,7 @@ msgstr ""
 "を持つクラスに CGLIB プロキシを使えません。"
 
 #. Tag: para
+#: performance.xml:276
 #, no-c-format
 msgid ""
 "Finally, if your persistent object acquires any resources upon instantiation "
@@ -477,6 +652,7 @@ msgstr ""
 "クラスです。"
 
 #. Tag: para
+#: performance.xml:281
 #, no-c-format
 msgid ""
 "These problems are all due to fundamental limitations in Java's single "
@@ -492,7 +668,26 @@ msgstr ""
 "クラスで実装しなければなりません。マッピングファイルでこれらのインターフェー"
 "スを指定する必要があります。例："
 
+#. Tag: programlisting
+#: performance.xml:289
+#, fuzzy, no-c-format
+msgid ""
+"&lt;class name=\"CatImpl\" proxy=\"Cat\"&gt;\n"
+"    ......\n"
+"    &lt;subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\"&gt;\n"
+"        .....\n"
+"    &lt;/subclass&gt;\n"
+"&lt;/class&gt;"
+msgstr ""
+"&lt;class name=\"CatImpl\" proxy=\"Cat\"&gt;\n"
+"    ......\n"
+"    &lt;subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\"&gt;\n"
+"        .....\n"
+"    &lt;/subclass&gt;\n"
+"&lt;/class&gt;"
+
 #. Tag: para
+#: performance.xml:291
 #, fuzzy, no-c-format
 msgid ""
 "Then proxies for instances of <literal>Cat</literal> and "
@@ -503,17 +698,34 @@ msgstr ""
 "literal> にキャストできません。たとえ基となるインスタンスが "
 "<literal>DomesticCat</literal> であったとしてもです:"
 
+#. Tag: programlisting
+#: performance.xml:295
+#, fuzzy, no-c-format
+msgid ""
+"Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
+"Iterator iter = session.createQuery(\"from CatImpl as cat where cat."
+"name='fritz'\").iterate();\n"
+"Cat fritz = (Cat) iter.next();"
+msgstr ""
+"Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
+"Iterator iter = session.iterate(\"from CatImpl as cat where cat."
+"name='fritz'\");\n"
+"Cat fritz = (Cat) iter.next();"
+
 #. Tag: title
+#: performance.xml:298
 #, no-c-format
 msgid "Note"
 msgstr ""
 
 #. Tag: para
+#: performance.xml:300
 #, fuzzy, no-c-format
 msgid "<literal>list()</literal> does not usually return proxies."
 msgstr "<literal>full join</literal> (たいていの場合使いづらい)"
 
 #. Tag: para
+#: performance.xml:304
 #, no-c-format
 msgid ""
 "Relationships are also lazily initialized. This means you must declare any "
@@ -525,6 +737,7 @@ msgstr ""
 "ん。"
 
 #. Tag: para
+#: performance.xml:308
 #, no-c-format
 msgid ""
 "Certain operations do <emphasis>not</emphasis> require proxy initialization:"
@@ -532,6 +745,7 @@ msgstr ""
 "プロキシの初期化を <emphasis>必要としない</emphasis> 操作も存在します。"
 
 #. Tag: para
+#: performance.xml:313
 #, no-c-format
 msgid ""
 "<literal>equals()</literal>: if the persistent class does not override "
@@ -541,6 +755,7 @@ msgstr ""
 "バーライドしないとき）"
 
 #. Tag: para
+#: performance.xml:318
 #, no-c-format
 msgid ""
 "<literal>hashCode()</literal>: if the persistent class does not override "
@@ -550,11 +765,13 @@ msgstr ""
 "オーバーライドしないとき）"
 
 #. Tag: para
+#: performance.xml:323
 #, no-c-format
 msgid "The identifier getter method"
 msgstr "識別子の getter メソッド"
 
 #. Tag: para
+#: performance.xml:327
 #, no-c-format
 msgid ""
 "Hibernate will detect persistent classes that override <literal>equals()</"
@@ -564,6 +781,7 @@ msgstr ""
 "オーバーライドした永続クラスを検出します。"
 
 #. Tag: para
+#: performance.xml:330
 #, no-c-format
 msgid ""
 "By choosing <literal>lazy=\"no-proxy\"</literal> instead of the default "
@@ -577,11 +795,13 @@ msgstr ""
 "あっても、ただちにプロキシの初期化を行うことになるでしょう。"
 
 #. Tag: title
+#: performance.xml:338
 #, no-c-format
 msgid "Initializing collections and proxies"
 msgstr "コレクションとプロキシの初期化"
 
 #. Tag: para
+#: performance.xml:340
 #, no-c-format
 msgid ""
 "A <literal>LazyInitializationException</literal> will be thrown by Hibernate "
@@ -595,6 +815,7 @@ msgstr ""
 "への参照を持つエンティティが分離された状態の時です。"
 
 #. Tag: para
+#: performance.xml:346
 #, no-c-format
 msgid ""
 "Sometimes a proxy or collection needs to be initialized before closing the "
@@ -610,6 +831,7 @@ msgstr ""
 "いう点からも不便です。"
 
 #. Tag: para
+#: performance.xml:353
 #, no-c-format
 msgid ""
 "The static methods <literal>Hibernate.initialize()</literal> and "
@@ -629,6 +851,7 @@ msgstr ""
 "コレクションに対して同様の効果があります。"
 
 #. Tag: para
+#: performance.xml:362
 #, no-c-format
 msgid ""
 "Another option is to keep the <literal>Session</literal> open until all "
@@ -648,6 +871,7 @@ msgstr ""
 "つの基本的な方法があります:"
 
 #. Tag: para
+#: performance.xml:372
 #, no-c-format
 msgid ""
 "In a web-based application, a servlet filter can be used to close the "
@@ -670,6 +894,7 @@ msgstr ""
 "View\" パターンの例を参照してください。"
 
 #. Tag: para
+#: performance.xml:385
 #, no-c-format
 msgid ""
 "In an application with a separate business tier, the business logic must "
@@ -697,6 +922,7 @@ msgstr ""
 "emphasis> パターンを採用するほうがより簡単です。"
 
 #. Tag: para
+#: performance.xml:401
 #, no-c-format
 msgid ""
 "You can also attach a previously loaded object to a new <literal>Session</"
@@ -713,6 +939,7 @@ msgstr ""
 "emphasis> 。"
 
 #. Tag: para
+#: performance.xml:410
 #, no-c-format
 msgid ""
 "Sometimes you do not want to initialize a large collection, but still need "
@@ -723,6 +950,7 @@ msgstr ""
 "報（サイズのような）やデータのサブセットを必要とすることがあります。"
 
 #. Tag: para
+#: performance.xml:414
 #, no-c-format
 msgid ""
 "You can use a collection filter to get the size of a collection without "
@@ -731,7 +959,18 @@ msgstr ""
 "コレクションフィルタを使うことで、初期化せずにコレクションのサイズを取得する"
 "ことが出来ます："
 
+#. Tag: programlisting
+#: performance.xml:417
+#, fuzzy, no-c-format
+msgid ""
+"( (Integer) s.createFilter( collection, \"select count(*)\" ).list().get"
+"(0) ).intValue()"
+msgstr ""
+"( (Integer) s.createFilter( collection, \"select count(*)\" ).list().get"
+"(0) ).intValue()"
+
 #. Tag: para
+#: performance.xml:419
 #, no-c-format
 msgid ""
 "The <literal>createFilter()</literal> method is also used to efficiently "
@@ -741,12 +980,24 @@ msgstr ""
 "<literal>createFilter()</literal> メソッドは、コレクション全体を初期化する必"
 "要なしに、コレクションのサブセットを復元するために効果的に使えます:"
 
+#. Tag: programlisting
+#: performance.xml:423
+#, fuzzy, no-c-format
+msgid ""
+"s.createFilter( lazyCollection, \"\").setFirstResult(0).setMaxResults(10)."
+"list();"
+msgstr ""
+"s.createFilter( lazyCollection, \"\").setFirstResult(0).setMaxResults(10)."
+"list();"
+
 #. Tag: title
+#: performance.xml:427
 #, no-c-format
 msgid "Using batch fetching"
 msgstr "バッチフェッチの使用"
 
 #. Tag: para
+#: performance.xml:429
 #, no-c-format
 msgid ""
 "Using batch fetching, Hibernate can load several uninitialized proxies if "
@@ -761,6 +1012,7 @@ msgstr ""
 "レクションレベルです。"
 
 #. Tag: para
+#: performance.xml:434
 #, no-c-format
 msgid ""
 "Batch fetching for classes/entities is easier to understand. Consider the "
@@ -785,7 +1037,14 @@ msgstr ""
 "舞いを <literal>Person</literal> のマッピングの <literal>batch-size</"
 "literal> の指定で調整できます。"
 
+#. Tag: programlisting
+#: performance.xml:447
+#, fuzzy, no-c-format
+msgid "&lt;class name=\"Person\" batch-size=\"10\"&gt;...&lt;/class&gt;"
+msgstr "&lt;class name=\"Person\" batch-size=\"10\"&gt;...&lt;/class&gt;"
+
 #. Tag: para
+#: performance.xml:449
 #, no-c-format
 msgid ""
 "Hibernate will now execute only three queries: the pattern is 10, 10, 5."
@@ -794,6 +1053,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
+#: performance.xml:452
 #, no-c-format
 msgid ""
 "You can also enable batch fetching of collections. For example, if each "
@@ -813,7 +1073,24 @@ msgstr ""
 "のバッチフェッチを有効にすれば、 Hibernate はコレクションの事前フェッチが出来"
 "ます。"
 
+#. Tag: programlisting
+#: performance.xml:461
+#, fuzzy, no-c-format
+msgid ""
+"&lt;class name=\"Person\"&gt;\n"
+"    &lt;set name=\"cats\" batch-size=\"3\"&gt;\n"
+"        ...\n"
+"    &lt;/set&gt;\n"
+"&lt;/class&gt;"
+msgstr ""
+"&lt;class name=\"Person\"&gt;\n"
+"    &lt;set name=\"cats\" batch-size=\"3\"&gt;\n"
+"        ...\n"
+"    &lt;/set&gt;\n"
+"&lt;/class&gt;"
+
 #. Tag: para
+#: performance.xml:463
 #, no-c-format
 msgid ""
 "With a <literal>batch-size</literal> of 3, Hibernate will load 3, 3, 3, 1 "
@@ -827,6 +1104,7 @@ msgstr ""
 "レクションの期待数に依存します。"
 
 #. Tag: para
+#: performance.xml:468
 #, no-c-format
 msgid ""
 "Batch fetching of collections is particularly useful if you have a nested "
@@ -840,11 +1118,13 @@ msgstr ""
 "よりよい選択になります。）"
 
 #. Tag: title
+#: performance.xml:475
 #, no-c-format
 msgid "Using subselect fetching"
 msgstr "サブセレクトフェッチの使用"
 
 #. Tag: para
+#: performance.xml:477
 #, no-c-format
 msgid ""
 "If one lazy collection or single-valued proxy has to be fetched, Hibernate "
@@ -857,11 +1137,13 @@ msgstr ""
 "ん。"
 
 #. Tag: title
+#: performance.xml:486
 #, fuzzy, no-c-format
 msgid "Fetch profiles"
 msgstr "フェッチ戦略"
 
 #. Tag: para
+#: performance.xml:488
 #, no-c-format
 msgid ""
 "Another way to affect the fetching strategy for loading associated objects "
@@ -869,19 +1151,112 @@ msgid ""
 "associated with the <interfacename>org.hibernate.SessionFactory</"
 "interfacename> but enabled, by name, on the <interfacename>org.hibernate."
 "Session</interfacename>. Once enabled on a <interfacename>org.hibernate."
-"Session</interfacename>, the fetch profile wull be in affect for that "
+"Session</interfacename>, the fetch profile will be in affect for that "
 "<interfacename>org.hibernate.Session</interfacename> until it is explicitly "
 "disabled."
 msgstr ""
 
 #. Tag: para
+#: performance.xml:498
 #, no-c-format
 msgid ""
-"So what does that mean? Well lets explain that by way of an example. Say we "
-"have the following mappings:"
+"So what does that mean? Well lets explain that by way of an example which "
+"show the different available approaches to configure a fetch profile:"
+msgstr ""
+
+#. Tag: title
+#: performance.xml:503
+#, no-c-format
+msgid "Specifying a fetch profile using <classname>@FetchProfile</classname>"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:506
+#, no-c-format
+msgid ""
+"@Entity\n"
+"@FetchProfile(name = \"customer-with-orders\", fetchOverrides = {\n"
+"   @FetchProfile.FetchOverride(entity = Customer.class, association = "
+"\"orders\", mode = FetchMode.JOIN)\n"
+"})\n"
+"public class Customer {\n"
+"   @Id\n"
+"   @GeneratedValue\n"
+"   private long id;\n"
+"\n"
+"   private String name;\n"
+"\n"
+"   private long customerNumber;\n"
+"\n"
+"   @OneToMany\n"
+"   private Set&lt;Order&gt; orders;\n"
+"\n"
+"   // standard getter/setter\n"
+"   ...\n"
+"}"
+msgstr ""
+
+#. Tag: title
+#: performance.xml:510
+#, no-c-format
+msgid ""
+"Specifying a fetch profile using <literal>&lt;fetch-profile&gt;</literal> "
+"outside <literal>&lt;class&gt;</literal> node"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:514
+#, no-c-format
+msgid ""
+"&lt;hibernate-mapping&gt;\n"
+"    &lt;class name=\"Customer\"&gt;\n"
+"        ...\n"
+"        &lt;set name=\"orders\" inverse=\"true\"&gt;\n"
+"            &lt;key column=\"cust_id\"/&gt;\n"
+"            &lt;one-to-many class=\"Order\"/&gt;\n"
+"        &lt;/set&gt;\n"
+"    &lt;/class&gt;\n"
+"    &lt;class name=\"Order\"&gt;\n"
+"        ...\n"
+"    &lt;/class&gt;\n"
+"    &lt;fetch-profile name=\"customer-with-orders\"&gt;\n"
+"        &lt;fetch entity=\"Customer\" association=\"orders\" style=\"join\"/"
+"&gt;\n"
+"    &lt;/fetch-profile&gt;\n"
+"&lt;/hibernate-mapping&gt;"
+msgstr ""
+
+#. Tag: title
+#: performance.xml:518
+#, no-c-format
+msgid ""
+"Specifying a fetch profile using <literal>&lt;fetch-profile&gt;</literal> "
+"inside <literal>&lt;class&gt;</literal> node"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:522
+#, no-c-format
+msgid ""
+"&lt;hibernate-mapping&gt;\n"
+"    &lt;class name=\"Customer\"&gt;\n"
+"        ...\n"
+"        &lt;set name=\"orders\" inverse=\"true\"&gt;\n"
+"            &lt;key column=\"cust_id\"/&gt;\n"
+"            &lt;one-to-many class=\"Order\"/&gt;\n"
+"        &lt;/set&gt;\n"
+"        &lt;fetch-profile name=\"customer-with-orders\"&gt;\n"
+"            &lt;fetch association=\"orders\" style=\"join\"/&gt;\n"
+"        &lt;/fetch-profile&gt;\n"
+"    &lt;/class&gt;\n"
+"    &lt;class name=\"Order\"&gt;\n"
+"        ...\n"
+"    &lt;/class&gt;\n"
+"&lt;/hibernate-mapping&gt;"
 msgstr ""
 
 #. Tag: para
+#: performance.xml:525
 #, no-c-format
 msgid ""
 "Now normally when you get a reference to a particular customer, that "
@@ -890,23 +1265,39 @@ msgid ""
 "that you have a certain use case where it is more efficient to load the "
 "customer and their orders together. One way certainly is to use \"dynamic "
 "fetching\" strategies via an HQL or criteria queries. But another option is "
-"to use a fetch profile to achieve that. Just add the following to your "
-"mapping:"
+"to use a fetch profile to achieve that. The following code will load both "
+"the customer <emphasis>and</emphasis>their orders:"
 msgstr ""
 
-#. Tag: para
+#. Tag: title
+#: performance.xml:536
 #, no-c-format
-msgid "or even:"
+msgid "Activating a fetch profile for a given <classname>Session</classname>"
 msgstr ""
 
-#. Tag: para
+#. Tag: programlisting
+#: performance.xml:539
 #, no-c-format
 msgid ""
-"Now the following code will actually load both the customer <emphasis>and "
-"their orders</emphasis>:"
+"Session session = ...;\n"
+"session.enableFetchProfile( \"customer-with-orders\" );  // name matches "
+"from mapping\n"
+"Customer customer = (Customer) session.get( Customer.class, customerId );"
 msgstr ""
 
 #. Tag: para
+#: performance.xml:543
+#, no-c-format
+msgid ""
+"<classname>@FetchProfile </classname>definitions are global and it does not "
+"matter on which class you place them. You can place the "
+"<classname>@FetchProfile</classname> annotation either onto a class or "
+"package (package-info.java). In order to define multiple fetch profiles for "
+"the same class or package <classname>@FetchProfiles</classname> can be used."
+msgstr ""
+
+#. Tag: para
+#: performance.xml:551
 #, no-c-format
 msgid ""
 "Currently only join style fetch profiles are supported, but they plan is to "
@@ -915,11 +1306,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
+#: performance.xml:558
 #, no-c-format
 msgid "Using lazy property fetching"
 msgstr "遅延プロパティフェッチの使用"
 
 #. Tag: para
+#: performance.xml:560
 #, no-c-format
 msgid ""
 "Hibernate3 supports the lazy fetching of individual properties. This "
@@ -938,6 +1331,7 @@ msgstr ""
 "善できないなどの極端な場合には有用です。"
 
 #. Tag: para
+#: performance.xml:568
 #, no-c-format
 msgid ""
 "To enable lazy property loading, set the <literal>lazy</literal> attribute "
@@ -946,7 +1340,34 @@ msgstr ""
 "遅延プロパティ読み込みを有効にするには、対象のプロパティのマッピングで "
 "<literal>lazy</literal> 属性をセットしてください:"
 
+#. Tag: programlisting
+#: performance.xml:571
+#, fuzzy, no-c-format
+msgid ""
+"&lt;class name=\"Document\"&gt;\n"
+"       &lt;id name=\"id\"&gt;\n"
+"        &lt;generator class=\"native\"/&gt;\n"
+"    &lt;/id&gt;\n"
+"    &lt;property name=\"name\" not-null=\"true\" length=\"50\"/&gt;\n"
+"    &lt;property name=\"summary\" not-null=\"true\" length=\"200\" lazy="
+"\"true\"/&gt;\n"
+"    &lt;property name=\"text\" not-null=\"true\" length=\"2000\" lazy=\"true"
+"\"/&gt;\n"
+"&lt;/class&gt;"
+msgstr ""
+"&lt;class name=\"Document\"&gt;\n"
+"       &lt;id name=\"id\"&gt;\n"
+"        &lt;generator class=\"native\"/&gt;\n"
+"    &lt;/id&gt;\n"
+"    &lt;property name=\"name\" not-null=\"true\" length=\"50\"/&gt;\n"
+"    &lt;property name=\"summary\" not-null=\"true\" length=\"200\" lazy="
+"\"true\"/&gt;\n"
+"    &lt;property name=\"text\" not-null=\"true\" length=\"2000\" lazy=\"true"
+"\"/&gt;\n"
+"&lt;/class&gt;"
+
 #. Tag: para
+#: performance.xml:573
 #, no-c-format
 msgid ""
 "Lazy property loading requires buildtime bytecode instrumentation. If your "
@@ -958,11 +1379,49 @@ msgstr ""
 "を無視して、即時フェッチに戻します。"
 
 #. Tag: para
+#: performance.xml:577
 #, no-c-format
 msgid "For bytecode instrumentation, use the following Ant task:"
 msgstr "バイトコード組み込みは以下の Ant タスクを使ってください: "
 
+#. Tag: programlisting
+#: performance.xml:579
+#, fuzzy, no-c-format
+msgid ""
+"&lt;target name=\"instrument\" depends=\"compile\"&gt;\n"
+"    &lt;taskdef name=\"instrument\" classname=\"org.hibernate.tool."
+"instrument.InstrumentTask\"&gt;\n"
+"        &lt;classpath path=\"${jar.path}\"/&gt;\n"
+"        &lt;classpath path=\"${classes.dir}\"/&gt;\n"
+"        &lt;classpath refid=\"lib.class.path\"/&gt;\n"
+"    &lt;/taskdef&gt;\n"
+"\n"
+"    &lt;instrument verbose=\"true\"&gt;\n"
+"        &lt;fileset dir=\"${testclasses.dir}/org/hibernate/auction/model"
+"\"&gt;\n"
+"            &lt;include name=\"*.class\"/&gt;\n"
+"        &lt;/fileset&gt;\n"
+"    &lt;/instrument&gt;\n"
+"&lt;/target&gt;"
+msgstr ""
+"&lt;target name=\"instrument\" depends=\"compile\"&gt;\n"
+"    &lt;taskdef name=\"instrument\" classname=\"org.hibernate.tool."
+"instrument.InstrumentTask\"&gt;\n"
+"        &lt;classpath path=\"&#36;{jar.path}\"/&gt;\n"
+"        &lt;classpath path=\"&#36;{classes.dir}\"/&gt;\n"
+"        &lt;classpath refid=\"lib.class.path\"/&gt;\n"
+"    &lt;/taskdef&gt;\n"
+"\n"
+"    &lt;instrument verbose=\"true\"&gt;\n"
+"        &lt;fileset dir=\"&#36;{testclasses.dir}/org/hibernate/auction/model"
+"\"&gt;\n"
+"            &lt;include name=\"*.class\"/&gt;\n"
+"        &lt;/fileset&gt;\n"
+"    &lt;/instrument&gt;\n"
+"&lt;/target&gt;"
+
 #. Tag: para
+#: performance.xml:581
 #, no-c-format
 msgid ""
 "A different way of avoiding unnecessary column reads, at least for read-only "
@@ -976,6 +1435,7 @@ msgstr ""
 "す。"
 
 #. Tag: para
+#: performance.xml:586
 #, no-c-format
 msgid ""
 "You can force the usual eager fetching of properties using <literal>fetch "
@@ -985,11 +1445,13 @@ msgstr ""
 "パティの即時フェッチングを強制することが出来ます。"
 
 #. Tag: title
+#: performance.xml:592
 #, no-c-format
 msgid "The Second Level Cache"
 msgstr "第2レベルキャッシュ"
 
 #. Tag: para
+#: performance.xml:594
 #, no-c-format
 msgid ""
 "A Hibernate <literal>Session</literal> is a transaction-level cache of "
@@ -1009,15 +1471,17 @@ msgstr ""
 "す）。"
 
 #. Tag: para
-#, no-c-format
+#: performance.xml:602
+#, fuzzy, no-c-format
 msgid ""
 "You have the option to tell Hibernate which caching implementation to use by "
 "specifying the name of a class that implements <literal>org.hibernate.cache."
 "CacheProvider</literal> using the property <literal>hibernate.cache."
 "provider_class</literal>. Hibernate is bundled with a number of built-in "
-"integrations with the open-source cache providers that are listed below. You "
-"can also implement your own and plug it in as outlined above. Note that "
-"versions prior to 3.2 use EhCache as the default cache provider."
+"integrations with the open-source cache providers that are listed in <xref "
+"linkend=\"cacheproviders\"/>. You can also implement your own and plug it in "
+"as outlined above. Note that versions prior to Hibernate 3.2 use EhCache as "
+"the default cache provider."
 msgstr ""
 "Hibernate が使用するキャッシュ実装は、 <literal>hibernate.cache."
 "provider_class</literal> プロパティに <literal>org.hibernate.cache."
@@ -1029,155 +1493,401 @@ msgstr ""
 "ジョン3.2ではこれは当てはまりません。"
 
 #. Tag: title
+#: performance.xml:613
 #, no-c-format
 msgid "Cache Providers"
 msgstr "キャッシュプロバイダ"
 
 #. Tag: entry
+#: performance.xml:628 performance.xml:976
 #, no-c-format
 msgid "Cache"
 msgstr "キャッシュ"
 
 #. Tag: entry
+#: performance.xml:630
 #, no-c-format
 msgid "Provider class"
 msgstr "プロバイダクラス"
 
 #. Tag: entry
+#: performance.xml:632
 #, no-c-format
 msgid "Type"
 msgstr "タイプ"
 
 #. Tag: entry
+#: performance.xml:634
 #, no-c-format
 msgid "Cluster Safe"
 msgstr "クラスタセーフ"
 
 #. Tag: entry
+#: performance.xml:636
 #, no-c-format
 msgid "Query Cache Supported"
 msgstr "クエリキャッシュのサポート"
 
 #. Tag: entry
+#: performance.xml:642 performance.xml:990
 #, no-c-format
 msgid "Hashtable (not intended for production use)"
 msgstr "Hashtable（製品用として意図していません）"
 
-#. Tag: entry
+#. Tag: literal
+#: performance.xml:644
 #, fuzzy, no-c-format
-msgid "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
+msgid "org.hibernate.cache.HashtableCacheProvider"
 msgstr "<literal>org.hibernate.cache.HashtableCacheProvider</literal>"
 
 #. Tag: entry
+#: performance.xml:646
 #, no-c-format
 msgid "memory"
 msgstr "メモリ"
 
 #. Tag: entry
+#: performance.xml:650 performance.xml:662 performance.xml:674
+#: performance.xml:992 performance.xml:994 performance.xml:996
+#: performance.xml:1004 performance.xml:1006 performance.xml:1008
+#: performance.xml:1016 performance.xml:1018 performance.xml:1020
+#: performance.xml:1028 performance.xml:1030 performance.xml:1040
+#: performance.xml:1046 performance.xml:1052 performance.xml:1058
 #, no-c-format
-msgid "yes"
-msgstr ""
+msgid "<entry>yes</entry>"
+msgstr "<entry>yes</entry>"
 
 #. Tag: entry
+#: performance.xml:654 performance.xml:1002
 #, no-c-format
 msgid "EHCache"
 msgstr "EHCache"
 
-#. Tag: entry
+#. Tag: literal
+#: performance.xml:656
 #, fuzzy, no-c-format
-msgid "<literal>org.hibernate.cache.EhCacheProvider</literal>"
+msgid "org.hibernate.cache.EhCacheProvider"
 msgstr "<literal>org.hibernate.cache.EhCacheProvider</literal>"
 
 #. Tag: entry
+#: performance.xml:658 performance.xml:670
 #, no-c-format
 msgid "memory, disk"
 msgstr "メモリ、ディスク"
 
 #. Tag: entry
+#: performance.xml:666 performance.xml:1014
 #, no-c-format
 msgid "OSCache"
 msgstr "OSCache"
 
-#. Tag: entry
+#. Tag: literal
+#: performance.xml:668
 #, fuzzy, no-c-format
-msgid "<literal>org.hibernate.cache.OSCacheProvider</literal>"
+msgid "org.hibernate.cache.OSCacheProvider"
 msgstr "<literal>org.hibernate.cache.OSCacheProvider</literal>"
 
 #. Tag: entry
+#: performance.xml:678 performance.xml:1026
 #, no-c-format
 msgid "SwarmCache"
 msgstr "SwarmCache"
 
-#. Tag: entry
+#. Tag: literal
+#: performance.xml:680
 #, fuzzy, no-c-format
-msgid "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
+msgid "org.hibernate.cache.SwarmCacheProvider"
 msgstr "<literal>org.hibernate.cache.SwarmCacheProvider</literal>"
 
 #. Tag: entry
+#: performance.xml:682
 #, no-c-format
 msgid "clustered (ip multicast)"
 msgstr "クラスタ（ip マルチキャスト）"
 
 #. Tag: entry
+#: performance.xml:684
 #, no-c-format
 msgid "yes (clustered invalidation)"
 msgstr "yes（クラスタ無効化）"
 
 #. Tag: entry
+#: performance.xml:690 performance.xml:1038
 #, no-c-format
 msgid "JBoss Cache 1.x"
 msgstr ""
 
-#. Tag: entry
+#. Tag: literal
+#: performance.xml:692
 #, fuzzy, no-c-format
-msgid "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
+msgid "org.hibernate.cache.TreeCacheProvider"
 msgstr "<literal>org.hibernate.cache.TreeCacheProvider</literal>"
 
 #. Tag: entry
+#: performance.xml:694 performance.xml:706
 #, no-c-format
 msgid "clustered (ip multicast), transactional"
 msgstr "クラスタ（ip マルチキャスト）、トランザクショナル"
 
 #. Tag: entry
+#: performance.xml:696
 #, no-c-format
 msgid "yes (replication)"
 msgstr "yes（複製）"
 
 #. Tag: entry
+#: performance.xml:698 performance.xml:710
 #, no-c-format
 msgid "yes (clock sync req.)"
 msgstr "yes（時刻同期が必要）"
 
 #. Tag: entry
+#: performance.xml:702 performance.xml:1050
 #, no-c-format
 msgid "JBoss Cache 2"
 msgstr ""
 
-#. Tag: entry
+#. Tag: literal
+#: performance.xml:704
 #, fuzzy, no-c-format
-msgid "<literal>org.hibernate.cache.jbc.JBossCacheRegionFactory</literal>"
+msgid "org.hibernate.cache.jbc.JBossCacheRegionFactory"
 msgstr "<literal>org.hibernate.cache.jbc2.JBossCacheRegionFactory</literal>"
 
 #. Tag: entry
+#: performance.xml:708
 #, fuzzy, no-c-format
 msgid "yes (replication or invalidation)"
 msgstr "yes（クラスタ無効化）"
 
 #. Tag: title
+#: performance.xml:717
 #, no-c-format
 msgid "Cache mappings"
 msgstr "キャッシュのマッピング"
 
 #. Tag: para
+#: performance.xml:719
 #, no-c-format
 msgid ""
-"The <literal>&lt;cache&gt;</literal> element of a class or collection "
-"mapping has the following form:"
+"As we have done in previous chapters we are looking at the two different "
+"possibiltites to configure caching. First configuration via annotations and "
+"then via Hibernate mapping files."
 msgstr ""
-"クラスやコレクションのマッピングの <literal>&lt;cache&gt;</literal> 要素は以"
-"下の形式です。"
 
 #. Tag: para
+#: performance.xml:723
+#, no-c-format
+msgid ""
+"By default, entities are not part of the second level cache and we recommend "
+"you to stick to this setting. However, you can override this by setting the "
+"<literal>shared-cache-mode</literal> element in your <filename>persistence."
+"xml</filename> file or by using the <literal>javax.persistence.sharedCache."
+"mode </literal>property in your configuration. The following values are "
+"possible:"
+msgstr ""
+
+#. Tag: para
+#: performance.xml:732
+#, no-c-format
+msgid ""
+"<literal>ENABLE_SELECTIVE</literal> (Default and recommended value): "
+"entities are not cached unless explicitly marked as cacheable."
+msgstr ""
+
+#. Tag: para
+#: performance.xml:738
+#, no-c-format
+msgid ""
+"<literal>DISABLE_SELECTIVE</literal>: entities are cached unless explicitly "
+"marked as not cacheable."
+msgstr ""
+
+#. Tag: para
+#: performance.xml:743
+#, no-c-format
+msgid ""
+"<literal>ALL</literal>: all entities are always cached even if marked as non "
+"cacheable."
+msgstr ""
+
+#. Tag: para
+#: performance.xml:748
+#, no-c-format
+msgid ""
+"<literal>NONE</literal>: no entity are cached even if marked as cacheable. "
+"This option can make sense to disable second-level cache altogether."
+msgstr ""
+
+#. Tag: para
+#: performance.xml:754
+#, no-c-format
+msgid ""
+"The cache concurrency strategy used by default can be set globaly via the "
+"<literal>hibernate.cache.default_cache_concurrency_strategy</literal> "
+"configuration property. The values for this property are:"
+msgstr ""
+
+#. Tag: literal
+#: performance.xml:761
+#, fuzzy, no-c-format
+msgid "<literal>read-only</literal>"
+msgstr "<literal>Criteria</literal> クエリ"
+
+#. Tag: literal
+#: performance.xml:765
+#, fuzzy, no-c-format
+msgid "<literal>read-write</literal>"
+msgstr "<literal>Criteria</literal> クエリ"
+
+#. Tag: literal
+#: performance.xml:769
+#, fuzzy, no-c-format
+msgid "<literal>nonstrict-read-write</literal>"
+msgstr "厳密ではない read-write"
+
+#. Tag: literal
+#: performance.xml:773
+#, fuzzy, no-c-format
+msgid "<literal>transactional</literal>"
+msgstr "<literal>Criteria</literal> クエリ"
+
+#. Tag: para
+#: performance.xml:778
+#, no-c-format
+msgid ""
+"It is recommended to define the cache concurrency strategy per entity rather "
+"than using a global one. Use the <classname>@org.hibernate.annotations."
+"Cache</classname> annotation for that."
+msgstr ""
+
+#. Tag: title
+#: performance.xml:785
+#, no-c-format
+msgid ""
+"Definition of cache concurrency strategy via <classname>@Cache</classname>"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:788
+#, no-c-format
+msgid ""
+"@Entity \n"
+"@Cacheable\n"
+"@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)\n"
+"public class Forest { ... }"
+msgstr ""
+
+#. Tag: para
+#: performance.xml:791
+#, no-c-format
+msgid ""
+"Hibernate also let's you cache the content of a collection or the "
+"identifiers if the collection contains other entities. Use the "
+"<classname>@Cache</classname> annotation on the collection property."
+msgstr ""
+
+#. Tag: title
+#: performance.xml:797
+#, fuzzy, no-c-format
+msgid "Caching collections using annotations"
+msgstr "コレクションとプロキシの初期化"
+
+#. Tag: programlisting
+#: performance.xml:799
+#, no-c-format
+msgid ""
+"@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)\n"
+"@JoinColumn(name=\"CUST_ID\")\n"
+"@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)\n"
+"public SortedSet&lt;Ticket&gt; getTickets() {\n"
+"    return tickets;\n"
+"}"
+msgstr ""
+
+#. Tag: para
+#: performance.xml:802
+#, no-c-format
+msgid ""
+"shows the<literal> @org.hibernate.annotations.Cache</literal> annotations "
+"with its attributes. It allows you to define the caching strategy and region "
+"of a given second level cache."
+msgstr ""
+
+#. Tag: title
+#: performance.xml:808
+#, no-c-format
+msgid "<classname>@Cache</classname> annotation with attributes"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:820
+#, no-c-format
+msgid ""
+"@Cache(\n"
+"    CacheConcurrencyStrategy usage();\n"
+"    String region() default \"\";\n"
+"    String include() default \"all\";\n"
+")"
+msgstr ""
+
+#. Tag: para
+#: performance.xml:824
+#, no-c-format
+msgid ""
+"usage: the given cache concurrency strategy (NONE, READ_ONLY, "
+"NONSTRICT_READ_WRITE, READ_WRITE, TRANSACTIONAL)"
+msgstr ""
+
+#. Tag: para
+#: performance.xml:830
+#, no-c-format
+msgid ""
+"region (optional): the cache region (default to the fqcn of the class or the "
+"fq role name of the collection)"
+msgstr ""
+
+#. Tag: para
+#: performance.xml:835
+#, no-c-format
+msgid ""
+"<literal>include</literal> (optional): all to include all properties, non-"
+"lazy to only include non lazy properties (default all)."
+msgstr ""
+
+#. Tag: para
+#: performance.xml:843
+#, no-c-format
+msgid ""
+"Let's now take a look at Hibernate mapping files. There the <literal>&lt;"
+"cache&gt;</literal> element of a class or collection mapping is used to "
+"configure the second level cache. Looking at <xref linkend=\"example-"
+"hibernate-cache-mapping-element\"/> the parallels to anotations is obvious."
+msgstr ""
+
+#. Tag: title
+#: performance.xml:850
+#, no-c-format
+msgid "The Hibernate <literal>&lt;cache&gt;</literal> mapping element"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:862
+#, fuzzy, no-c-format
+msgid ""
+"&lt;cache\n"
+"    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
+"    region=\"RegionName\"\n"
+"    include=\"all|non-lazy\"\n"
+"/&gt;"
+msgstr ""
+"&lt;cache \n"
+"    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
+"    region=\"RegionName\"\n"
+"    include=\"all|non-lazy\"\n"
+"/&gt;"
+
+#. Tag: para
+#: performance.xml:866
 #, no-c-format
 msgid ""
 "<literal>usage</literal> (required) specifies the caching strategy: "
@@ -1189,6 +1899,7 @@ msgstr ""
 "<literal>nonstrict-read-write</literal> または <literal>read-only</literal>"
 
 #. Tag: para
+#: performance.xml:874
 #, no-c-format
 msgid ""
 "<literal>region</literal> (optional: defaults to the class or collection "
@@ -1198,6 +1909,7 @@ msgstr ""
 "のデフォルト) 2次レベルのキャッシュ領域の名前を指定します"
 
 #. Tag: para
+#: performance.xml:880
 #, no-c-format
 msgid ""
 "<literal>include</literal> (optional: defaults to <literal>all</literal>) "
@@ -1211,31 +1923,31 @@ msgstr ""
 "ティのプロパティはキャッシュされなくてもよいことを指定します。"
 
 #. Tag: para
-#, no-c-format
+#: performance.xml:890
+#, fuzzy, no-c-format
 msgid ""
-"Alternatively, you can specify <literal>&lt;class-cache&gt;</literal> and "
-"<literal>&lt;collection-cache&gt;</literal> elements in <literal>hibernate."
-"cfg.xml</literal>."
+"Alternatively to <literal>&lt;cache&gt;</literal>, you can use <literal>&lt;"
+"class-cache&gt;</literal> and <literal>&lt;collection-cache&gt;</literal> "
+"elements in <literal>hibernate.cfg.xml</literal>."
 msgstr ""
 "または（よりよい方法として？）、 <literal>hibernate.cfg.xml</literal> に "
 "<literal>&lt;class-cache&gt;</literal> と <literal>&lt;collection-cache&gt;</"
 "literal> 要素を指定することも出来ます。"
 
 #. Tag: para
+#: performance.xml:895
 #, no-c-format
-msgid ""
-"The <literal>usage</literal> attribute specifies a <emphasis>cache "
-"concurrency strategy</emphasis>."
+msgid "Let's now have a closer look at the different usage strategies"
 msgstr ""
-"<literal>usage</literal> 属性は <emphasis>キャッシュの並列性戦略</emphasis> "
-"を指定します。"
 
 #. Tag: title
+#: performance.xml:900
 #, no-c-format
 msgid "Strategy: read only"
 msgstr "read only 戦略"
 
 #. Tag: para
+#: performance.xml:902
 #, no-c-format
 msgid ""
 "If your application needs to read, but not modify, instances of a persistent "
@@ -1249,11 +1961,13 @@ msgstr ""
 "安全です。"
 
 #. Tag: title
+#: performance.xml:909
 #, no-c-format
 msgid "Strategy: read/write"
 msgstr "read/write 戦略"
 
 #. Tag: para
+#: performance.xml:911
 #, no-c-format
 msgid ""
 "If the application needs to update data, a <literal>read-write</literal> "
@@ -1282,11 +1996,13 @@ msgstr ""
 "emphasis> 。"
 
 #. Tag: title
+#: performance.xml:927
 #, no-c-format
 msgid "Strategy: nonstrict read/write"
 msgstr "厳密ではない read/write 戦略"
 
 #. Tag: para
+#: performance.xml:929
 #, no-c-format
 msgid ""
 "If the application only occasionally needs to update data (i.e. if it is "
@@ -1308,11 +2024,13 @@ msgstr ""
 "ションが完了していなければなりません。"
 
 #. Tag: title
+#: performance.xml:941
 #, no-c-format
 msgid "Strategy: transactional"
 msgstr "transactional 戦略"
 
 #. Tag: para
+#: performance.xml:943
 #, no-c-format
 msgid ""
 "The <literal>transactional</literal> cache strategy provides support for "
@@ -1326,11 +2044,13 @@ msgstr ""
 "manager_lookup_class</literal> を指定しなければなりません。"
 
 #. Tag: title
+#: performance.xml:950
 #, fuzzy, no-c-format
 msgid "Cache-provider/concurrency-strategy compatibility"
 msgstr "同時並行性キャッシュ戦略のサポート"
 
 #. Tag: para
+#: performance.xml:953
 #, no-c-format
 msgid ""
 "None of the cache providers support all of the cache concurrency strategies."
@@ -1339,6 +2059,7 @@ msgstr ""
 "ません。"
 
 #. Tag: para
+#: performance.xml:957
 #, no-c-format
 msgid ""
 "The following table shows which providers are compatible with which "
@@ -1347,36 +2068,43 @@ msgstr ""
 "以下の表はどのプロバイダがどの同時並列性戦略に対応するかを表しています。"
 
 #. Tag: title
+#: performance.xml:961
 #, no-c-format
 msgid "Cache Concurrency Strategy Support"
 msgstr "同時並行性キャッシュ戦略のサポート"
 
 #. Tag: entry
-#, no-c-format
-msgid "read-only"
-msgstr "read-only"
+#: performance.xml:978
+#, fuzzy, no-c-format
+msgid "<entry>read-only</entry>"
+msgstr "<entry>yes</entry>"
 
 #. Tag: entry
-#, no-c-format
-msgid "nonstrict-read-write"
+#: performance.xml:980
+#, fuzzy, no-c-format
+msgid "<entry>nonstrict-read-write</entry>"
 msgstr "厳密ではない read-write"
 
 #. Tag: entry
-#, no-c-format
-msgid "read-write"
-msgstr "read-write"
+#: performance.xml:982
+#, fuzzy, no-c-format
+msgid "<entry>read-write</entry>"
+msgstr "<entry>yes</entry>"
 
 #. Tag: entry
-#, no-c-format
-msgid "transactional"
-msgstr "transactional"
+#: performance.xml:984
+#, fuzzy, no-c-format
+msgid "<entry>transactional</entry>"
+msgstr "<entry>yes</entry>"
 
 #. Tag: title
+#: performance.xml:1067
 #, no-c-format
 msgid "Managing the caches"
 msgstr "キャッシュの管理"
 
 #. Tag: para
+#: performance.xml:1069
 #, no-c-format
 msgid ""
 "Whenever you pass an object to <literal>save()</literal>, <literal>update()</"
@@ -1394,6 +2122,7 @@ msgstr ""
 "内部キャッシュに追加されます。"
 
 #. Tag: para
+#: performance.xml:1076
 #, no-c-format
 msgid ""
 "When <literal>flush()</literal> is subsequently called, the state of that "
@@ -1409,7 +2138,36 @@ msgstr ""
 "</literal> メソッドを使って一次キャッシュからオブジェクトやコレクションを削除"
 "することが出来ます。"
 
+#. Tag: title
+#: performance.xml:1084
+#, no-c-format
+msgid ""
+"Explcitly evicting a cached instance from the first level cache using "
+"<methodname>Session.evict()</methodname>"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:1087
+#, fuzzy, no-c-format
+msgid ""
+"ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll(); //a "
+"huge result set\n"
+"while ( cats.next() ) {\n"
+"    Cat cat = (Cat) cats.get(0);\n"
+"    doSomethingWithACat(cat);\n"
+"    sess.evict(cat);\n"
+"}"
+msgstr ""
+"ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll(); //a "
+"huge result set\n"
+"while ( cats.next() ) {\n"
+"    Cat cat = (Cat) cats.get(0);\n"
+"    doSomethingWithACat(cat);\n"
+"    sess.evict(cat);\n"
+"}"
+
 #. Tag: para
+#: performance.xml:1090
 #, no-c-format
 msgid ""
 "The <literal>Session</literal> also provides a <literal>contains()</literal> "
@@ -1419,6 +2177,7 @@ msgstr ""
 "うかを判断するための <literal>contains()</literal> メソッドも提供します。"
 
 #. Tag: para
+#: performance.xml:1094
 #, no-c-format
 msgid ""
 "To evict all objects from the session cache, call <literal>Session.clear()</"
@@ -1428,6 +2187,7 @@ msgstr ""
 "<literal>Session.clear()</literal> を呼び出してください。"
 
 #. Tag: para
+#: performance.xml:1097
 #, no-c-format
 msgid ""
 "For the second-level cache, there are methods defined on "
@@ -1438,7 +2198,34 @@ msgstr ""
 "クラス全体、コレクションのインスタンス、コレクション全体をキャッシュから削除"
 "するためのメソッドがそれぞれ定義されています。"
 
+#. Tag: title
+#: performance.xml:1103
+#, no-c-format
+msgid ""
+"Second-level cache eviction via <methodname>SessionFactoty.evict() </"
+"methodname>and <methodname>SessionFacyory.evictCollection()</methodname>"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:1107
+#, fuzzy, no-c-format
+msgid ""
+"sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
+"sessionFactory.evict(Cat.class);  //evict all Cats\n"
+"sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a particular "
+"collection of kittens\n"
+"sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten "
+"collections"
+msgstr ""
+"sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
+"sessionFactory.evict(Cat.class);  //evict all Cats\n"
+"sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a particular "
+"collection of kittens\n"
+"sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten "
+"collections"
+
 #. Tag: para
+#: performance.xml:1110
 #, no-c-format
 msgid ""
 "The <literal>CacheMode</literal> controls how a particular session interacts "
@@ -1448,6 +2235,7 @@ msgstr ""
 "互作用するかを指定します。"
 
 #. Tag: para
+#: performance.xml:1115
 #, no-c-format
 msgid ""
 "<literal>CacheMode.NORMAL</literal>: will read items from and write items to "
@@ -1457,6 +2245,7 @@ msgstr ""
 "キャッシュを使います"
 
 #. Tag: para
+#: performance.xml:1120
 #, no-c-format
 msgid ""
 "<literal>CacheMode.GET</literal>: will read items from the second-level "
@@ -1466,6 +2255,7 @@ msgstr ""
 "データを更新した場合を除いて二次キャッシュに書き込みをしません。"
 
 #. Tag: para
+#: performance.xml:1126
 #, no-c-format
 msgid ""
 "<literal>CacheMode.PUT</literal>: will write items to the second-level "
@@ -1475,6 +2265,7 @@ msgstr ""
 "読み込みには二次キャッシュを使いません。"
 
 #. Tag: para
+#: performance.xml:1131
 #, no-c-format
 msgid ""
 "<literal>CacheMode.REFRESH</literal>: will write items to the second-level "
@@ -1488,6 +2279,7 @@ msgstr ""
 "アイテムの二次キャッシュを強制的にリフレッシュします。"
 
 #. Tag: para
+#: performance.xml:1139
 #, no-c-format
 msgid ""
 "To browse the contents of a second-level or query cache region, use the "
@@ -1496,7 +2288,30 @@ msgstr ""
 "二次キャッシュの内容やクエリキャッシュ領域を見るために、 "
 "<literal>Statistics</literal> API を使ってください:"
 
+#. Tag: title
+#: performance.xml:1143
+#, fuzzy, no-c-format
+msgid ""
+"Browsing the second-level cache entries via the <classname>Statistics</"
+"classname> API"
+msgstr ""
+"二次キャッシュの内容やクエリキャッシュ領域を見るために、 "
+"<literal>Statistics</literal> API を使ってください:"
+
+#. Tag: programlisting
+#: performance.xml:1146
+#, fuzzy, no-c-format
+msgid ""
+"Map cacheEntries = sessionFactory.getStatistics()\n"
+"        .getSecondLevelCacheStatistics(regionName)\n"
+"        .getEntries();"
+msgstr ""
+"Map cacheEntries = sessionFactory.getStatistics()\n"
+"        .getSecondLevelCacheStatistics(regionName)\n"
+"        .getEntries();"
+
 #. Tag: para
+#: performance.xml:1149
 #, no-c-format
 msgid ""
 "You will need to enable statistics and, optionally, force Hibernate to keep "
@@ -1506,11 +2321,29 @@ msgstr ""
 "解可能な形式で保持することを Hibernate に強制します:"
 
 #. Tag: title
+#: performance.xml:1153
+#, no-c-format
+msgid "Enabling Hibernate statistics"
+msgstr ""
+
+#. Tag: programlisting
+#: performance.xml:1155
+#, fuzzy, no-c-format
+msgid ""
+"hibernate.generate_statistics true\n"
+"hibernate.cache.use_structured_entries true"
+msgstr ""
+"hibernate.generate_statistics true\n"
+"hibernate.cache.use_structured_entries true"
+
+#. Tag: title
+#: performance.xml:1160
 #, no-c-format
 msgid "The Query Cache"
 msgstr "クエリキャッシュ"
 
 #. Tag: para
+#: performance.xml:1162
 #, fuzzy, no-c-format
 msgid ""
 "Query result sets can also be cached. This is only useful for queries that "
@@ -1521,11 +2354,13 @@ msgstr ""
 "にしなくてはなりません:"
 
 #. Tag: title
+#: performance.xml:1166
 #, no-c-format
 msgid "Enabling query caching"
 msgstr ""
 
 #. Tag: para
+#: performance.xml:1168
 #, no-c-format
 msgid ""
 "Caching of query results introduces some overhead in terms of your "
@@ -1538,12 +2373,20 @@ msgid ""
 "need to enable the query cache:"
 msgstr ""
 
+#. Tag: programlisting
+#: performance.xml:1177
+#, fuzzy, no-c-format
+msgid "hibernate.cache.use_query_cache true"
+msgstr "hibernate.cache.use_query_cache true"
+
 #. Tag: para
+#: performance.xml:1179
 #, no-c-format
 msgid "This setting creates two new cache regions:"
 msgstr ""
 
 #. Tag: para
+#: performance.xml:1181
 #, no-c-format
 msgid ""
 "<classname>org.hibernate.cache.StandardQueryCache</classname>, holding the "
@@ -1551,6 +2394,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
+#: performance.xml:1186
 #, no-c-format
 msgid ""
 "<classname>org.hibernate.cache.UpdateTimestampsCache</classname>, holding "
@@ -1559,10 +2403,11 @@ msgid ""
 msgstr ""
 
 #. Tag: para
+#: performance.xml:1194
 #, no-c-format
 msgid ""
 "If you configure your underlying cache implementation to use expiry or "
-"timeouts is is very important that the cache timeout of the underlying cache "
+"timeouts is very important that the cache timeout of the underlying cache "
 "region for the UpdateTimestampsCache be set to a higher value than the "
 "timeouts of any of the query caches. In fact, we recommend that the the "
 "UpdateTimestampsCache region not be configured for expiry at all. Note, in "
@@ -1570,6 +2415,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
+#: performance.xml:1203
 #, fuzzy, no-c-format
 msgid ""
 "As mentioned above, most queries do not benefit from caching or their "
@@ -1586,6 +2432,7 @@ msgstr ""
 "ます。"
 
 #. Tag: para
+#: performance.xml:1211
 #, no-c-format
 msgid ""
 "The query cache does not cache the state of the actual entities in the "
@@ -1596,11 +2443,13 @@ msgid ""
 msgstr ""
 
 #. Tag: title
+#: performance.xml:1221
 #, fuzzy, no-c-format
 msgid "Query cache regions"
 msgstr "クエリキャッシュのサポート"
 
 #. Tag: para
+#: performance.xml:1223
 #, no-c-format
 msgid ""
 "If you require fine-grained control over query cache expiration policies, "
@@ -1611,7 +2460,28 @@ msgstr ""
 "setCacheRegion()</literal> を呼び出して特定のクエリに対するキャッシュ領域を指"
 "定することが出来ます。"
 
+#. Tag: programlisting
+#: performance.xml:1227
+#, fuzzy, no-c-format
+msgid ""
+"List blogs = sess.createQuery(\"from Blog blog where blog.blogger = :blogger"
+"\")\n"
+"        .setEntity(\"blogger\", blogger)\n"
+"        .setMaxResults(15)\n"
+"        .setCacheable(true)\n"
+"        .setCacheRegion(\"frontpages\")\n"
+"        .list();"
+msgstr ""
+"List blogs = sess.createQuery(\"from Blog blog where blog.blogger = :blogger"
+"\")\n"
+"    .setEntity(\"blogger\", blogger)\n"
+"    .setMaxResults(15)\n"
+"    .setCacheable(true)\n"
+"    .setCacheRegion(\"frontpages\")\n"
+"    .list();"
+
 #. Tag: para
+#: performance.xml:1229
 #, fuzzy, no-c-format
 msgid ""
 "If you want to force the query cache to refresh one of its regions "
@@ -1633,11 +2503,13 @@ msgstr ""
 "シュ領域を消去することです。"
 
 #. Tag: title
+#: performance.xml:1242
 #, no-c-format
 msgid "Understanding Collection performance"
 msgstr "コレクションのパフォーマンスの理解"
 
 #. Tag: para
+#: performance.xml:1244
 #, no-c-format
 msgid ""
 "In the previous sections we have covered collections and their applications. "
@@ -1646,31 +2518,37 @@ msgid ""
 msgstr ""
 
 #. Tag: title
+#: performance.xml:1249
 #, no-c-format
 msgid "Taxonomy"
 msgstr "分類"
 
 #. Tag: para
+#: performance.xml:1251
 #, no-c-format
 msgid "Hibernate defines three basic kinds of collections:"
 msgstr "Hibernate は3つの基本的なコレクションの種類を定義しています:"
 
 #. Tag: para
+#: performance.xml:1255
 #, no-c-format
 msgid "collections of values"
 msgstr "値のコレクション"
 
 #. Tag: para
+#: performance.xml:1259
 #, no-c-format
 msgid "one-to-many associations"
 msgstr "一対多関連"
 
 #. Tag: para
+#: performance.xml:1263
 #, no-c-format
 msgid "many-to-many associations"
 msgstr "多対多関連"
 
 #. Tag: para
+#: performance.xml:1267
 #, no-c-format
 msgid ""
 "This classification distinguishes the various table and foreign key "
@@ -1687,21 +2565,25 @@ msgstr ""
 "す。"
 
 #. Tag: para
+#: performance.xml:1276
 #, no-c-format
 msgid "indexed collections"
 msgstr "インデックス付きコレクション"
 
 #. Tag: para
+#: performance.xml:1280
 #, no-c-format
 msgid "sets"
 msgstr "set"
 
 #. Tag: para
+#: performance.xml:1284
 #, no-c-format
 msgid "bags"
 msgstr "bag"
 
 #. Tag: para
+#: performance.xml:1288
 #, no-c-format
 msgid ""
 "All indexed collections (maps, lists, and arrays) have a primary key "
@@ -1717,6 +2599,7 @@ msgstr ""
 "に、その行を効率的に見つけることができます。"
 
 #. Tag: para
+#: performance.xml:1295
 #, no-c-format
 msgid ""
 "Sets have a primary key consisting of <literal>&lt;key&gt;</literal> and "
@@ -1739,6 +2622,7 @@ msgstr ""
 "\"</literal> を宣言しなければなりません。）"
 
 #. Tag: para
+#: performance.xml:1306
 #, no-c-format
 msgid ""
 "<literal>&lt;idbag&gt;</literal> mappings define a surrogate key, so they "
@@ -1748,6 +2632,7 @@ msgstr ""
 "新は常に非常に効率的です。事実上、これは最善のケースです。"
 
 #. Tag: para
+#: performance.xml:1309
 #, no-c-format
 msgid ""
 "Bags are the worst case since they permit duplicate element values and, as "
@@ -1763,6 +2648,7 @@ msgstr ""
 "ションの再作成を行います。これは非常に非効率的かもしれません。"
 
 #. Tag: para
+#: performance.xml:1316
 #, no-c-format
 msgid ""
 "For a one-to-many association, the \"primary key\" may not be the physical "
@@ -1776,12 +2662,14 @@ msgstr ""
 "ます。）"
 
 #. Tag: title
+#: performance.xml:1323
 #, no-c-format
 msgid ""
 "Lists, maps, idbags and sets are the most efficient collections to update"
 msgstr "更新にもっとも効率的なコレクション list、map、idbag、set"
 
 #. Tag: para
+#: performance.xml:1326
 #, no-c-format
 msgid ""
 "From the discussion above, it should be clear that indexed collections and "
@@ -1792,6 +2680,7 @@ msgstr ""
 "除、更新でもっとも効率的な操作が出来ることは明らかです。"
 
 #. Tag: para
+#: performance.xml:1330
 #, no-c-format
 msgid ""
 "There is, arguably, one more advantage that indexed collections have over "
@@ -1810,6 +2699,7 @@ msgstr ""
 "て行います。繰り返しますが、これは一対多関連には当てはまりません。"
 
 #. Tag: para
+#: performance.xml:1338
 #, no-c-format
 msgid ""
 "After observing that arrays cannot be lazy, you can conclude that lists, "
@@ -1825,6 +2715,7 @@ msgstr ""
 "デルではもっとも自然だからです。"
 
 #. Tag: para
+#: performance.xml:1344
 #, no-c-format
 msgid ""
 "However, in well-designed Hibernate domain models, most collections are in "
@@ -1839,11 +2730,13 @@ msgstr ""
 "フォーマンスの問題は当てはまりません。"
 
 #. Tag: title
+#: performance.xml:1352
 #, no-c-format
 msgid "Bags and lists are the most efficient inverse collections"
 msgstr "inverse コレクションにもっとも最適な bag と list"
 
 #. Tag: para
+#: performance.xml:1354
 #, no-c-format
 msgid ""
 "There is a particular case, however, in which bags, and also lists, are much "
@@ -1864,12 +2757,30 @@ msgstr ""
 "いからです （ <literal>Set</literal> とは異なります）。これは以下の共通処理を"
 "より速くすることができます。"
 
+#. Tag: programlisting
+#: performance.xml:1365
+#, fuzzy, no-c-format
+msgid ""
+"Parent p = (Parent) sess.load(Parent.class, id);\n"
+"Child c = new Child();\n"
+"c.setParent(p);\n"
+"p.getChildren().add(c);  //no need to fetch the collection!\n"
+"sess.flush();"
+msgstr ""
+"Parent p = (Parent) sess.load(Parent.class, id);\n"
+"Child c = new Child();\n"
+"c.setParent(p);\n"
+"p.getChildren().add(c);  //no need to fetch the collection!\n"
+"sess.flush();"
+
 #. Tag: title
+#: performance.xml:1369
 #, no-c-format
 msgid "One shot delete"
 msgstr "一括削除"
 
 #. Tag: para
+#: performance.xml:1371
 #, no-c-format
 msgid ""
 "Deleting collection elements one by one can sometimes be extremely "
@@ -1884,6 +2795,7 @@ msgstr ""
 "一回発行して、それですべて終わります。"
 
 #. Tag: para
+#: performance.xml:1377
 #, no-c-format
 msgid ""
 "Suppose you added a single element to a collection of size twenty and then "
@@ -1897,6 +2809,7 @@ msgstr ""
 "これは確かに望ましい動作です。"
 
 #. Tag: para
+#: performance.xml:1383
 #, no-c-format
 msgid ""
 "However, suppose that we remove eighteen elements, leaving two and then add "
@@ -1906,11 +2819,13 @@ msgstr ""
 "す。このとき二つの方法があります。"
 
 #. Tag: para
+#: performance.xml:1389
 #, no-c-format
 msgid "delete eighteen rows one by one and then insert three rows"
 msgstr "18行を一つ一つ削除して、3行を追加する"
 
 #. Tag: para
+#: performance.xml:1394
 #, no-c-format
 msgid ""
 "remove the whole collection in one SQL <literal>DELETE</literal> and insert "
@@ -1920,6 +2835,7 @@ msgstr ""
 "つの要素すべてを（一つずつ）追加する"
 
 #. Tag: para
+#: performance.xml:1400
 #, no-c-format
 msgid ""
 "Hibernate cannot know that the second option is probably quicker. It would "
@@ -1931,6 +2847,7 @@ msgstr ""
 "振る舞いはデータベースのトリガなどを混乱させるかもしれません。）"
 
 #. Tag: para
+#: performance.xml:1404
 #, no-c-format
 msgid ""
 "Fortunately, you can force this behavior (i.e. the second strategy) at any "
@@ -1942,6 +2859,7 @@ msgstr ""
 "戦略）を強制することが出来ます。時にこれはとても便利で強力です。"
 
 #. Tag: para
+#: performance.xml:1409
 #, no-c-format
 msgid ""
 "One-shot-delete does not apply to collections mapped <literal>inverse=\"true"
@@ -1951,11 +2869,13 @@ msgstr ""
 "ンには行いません。"
 
 #. Tag: title
+#: performance.xml:1415
 #, no-c-format
 msgid "Monitoring performance"
 msgstr "パフォーマンスのモニタリング"
 
 #. Tag: para
+#: performance.xml:1417
 #, no-c-format
 msgid ""
 "Optimization is not much use without monitoring and access to performance "
@@ -1968,11 +2888,13 @@ msgstr ""
 "は <literal>SessionFactory</literal> 単位で取得可能です。"
 
 #. Tag: title
+#: performance.xml:1423
 #, no-c-format
 msgid "Monitoring a SessionFactory"
 msgstr "SessionFactory のモニタリング"
 
 #. Tag: para
+#: performance.xml:1425
 #, no-c-format
 msgid ""
 "You can access <literal>SessionFactory</literal> metrics in two ways. Your "
@@ -1984,6 +2906,7 @@ msgstr ""
 "び出し、自分で <literal>Statistics</literal> の読み込みや表示を行います。"
 
 #. Tag: para
+#: performance.xml:1430
 #, no-c-format
 msgid ""
 "Hibernate can also use JMX to publish metrics if you enable the "
@@ -1997,7 +2920,56 @@ msgstr ""
 "に一つの MBean を有効にすることが出来ます。最小限の設定例である以下のコードを"
 "見てください:"
 
+#. Tag: programlisting
+#: performance.xml:1435
+#, fuzzy, no-c-format
+msgid ""
+"// MBean service registration for a specific SessionFactory\n"
+"Hashtable tb = new Hashtable();\n"
+"tb.put(\"type\", \"statistics\");\n"
+"tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
+"ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+"\n"
+"StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+"stats.setSessionFactory(sessionFactory); // Bind the stats to a "
+"SessionFactory\n"
+"server.registerMBean(stats, on); // Register the Mbean on the server"
+msgstr ""
+"// MBean service registration for a specific SessionFactory\n"
+"Hashtable tb = new Hashtable();\n"
+"tb.put(\"type\", \"statistics\");\n"
+"tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
+"ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+"\n"
+"StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+"stats.setSessionFactory(sessionFactory); // Bind the stats to a "
+"SessionFactory\n"
+"server.registerMBean(stats, on); // Register the Mbean on the server"
+
+#. Tag: programlisting
+#: performance.xml:1437
+#, fuzzy, no-c-format
+msgid ""
+"// MBean service registration for all SessionFactory's\n"
+"Hashtable tb = new Hashtable();\n"
+"tb.put(\"type\", \"statistics\");\n"
+"tb.put(\"sessionFactory\", \"all\");\n"
+"ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+"\n"
+"StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+"server.registerMBean(stats, on); // Register the MBean on the server"
+msgstr ""
+"// MBean service registration for all SessionFactory's\n"
+"Hashtable tb = new Hashtable();\n"
+"tb.put(\"type\", \"statistics\");\n"
+"tb.put(\"sessionFactory\", \"all\");\n"
+"ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
+"\n"
+"StatisticsService stats = new StatisticsService(); // MBean implementation\n"
+"server.registerMBean(stats, on); // Register the MBean on the server"
+
 #. Tag: para
+#: performance.xml:1439
 #, no-c-format
 msgid ""
 "You can activate and deactivate the monitoring for a "
@@ -2007,6 +2979,7 @@ msgstr ""
 "とが出来ます。"
 
 #. Tag: para
+#: performance.xml:1444
 #, no-c-format
 msgid ""
 "at configuration time, set <literal>hibernate.generate_statistics</literal> "
@@ -2016,6 +2989,7 @@ msgstr ""
 "<literal>false</literal> にします"
 
 #. Tag: para
+#: performance.xml:1452
 #, no-c-format
 msgid ""
 "at runtime: <literal>sf.getStatistics().setStatisticsEnabled(true)</literal> "
@@ -2026,6 +3000,7 @@ msgstr ""
 "び出します"
 
 #. Tag: para
+#: performance.xml:1458
 #, no-c-format
 msgid ""
 "Statistics can be reset programmatically using the <literal>clear()</"
@@ -2037,11 +3012,13 @@ msgstr ""
 "ることが出来ます（info レベルです）。"
 
 #. Tag: title
+#: performance.xml:1464
 #, no-c-format
 msgid "Metrics"
 msgstr "メトリクス"
 
 #. Tag: para
+#: performance.xml:1466
 #, no-c-format
 msgid ""
 "Hibernate provides a number of metrics, from basic information to more "
@@ -2053,6 +3030,7 @@ msgstr ""
 "literal> インターフェースの API に書かれており、3つの分類があります:"
 
 #. Tag: para
+#: performance.xml:1473
 #, no-c-format
 msgid ""
 "Metrics related to the general <literal>Session</literal> usage, such as "
@@ -2062,6 +3040,7 @@ msgstr ""
 "オープンしたセッションの数が JDBC コネクションと関連しているのと同じです。"
 
 #. Tag: para
+#: performance.xml:1479
 #, no-c-format
 msgid ""
 "Metrics related to the entities, collections, queries, and caches as a whole "
@@ -2071,6 +3050,7 @@ msgstr ""
 "（別名はグローバルメトリクスです）。"
 
 #. Tag: para
+#: performance.xml:1484
 #, no-c-format
 msgid ""
 "Detailed metrics related to a particular entity, collection, query or cache "
@@ -2080,6 +3060,7 @@ msgstr ""
 "関係しています。"
 
 #. Tag: para
+#: performance.xml:1489
 #, no-c-format
 msgid ""
 "For example, you can check the cache hit, miss, and put ratio of entities, "
@@ -2094,6 +3075,7 @@ msgstr ""
 "フォームによっては10秒単位でしか正確でないかもしれません。"
 
 #. Tag: para
+#: performance.xml:1495
 #, no-c-format
 msgid ""
 "Simple getters are used to access the global metrics (i.e. not tied to a "
@@ -2115,7 +3097,46 @@ msgstr ""
 "<literal>SecondLevelCacheStatistics</literal> 、 <literal>QueryStatistics</"
 "literal> API の javadoc を参照してください。以下のコードは簡単な例です:"
 
+#. Tag: programlisting
+#: performance.xml:1506
+#, fuzzy, no-c-format
+msgid ""
+"Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
+"\n"
+"double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
+"double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
+"double queryCacheHitRatio =\n"
+"  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
+"\n"
+"log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
+"\n"
+"EntityStatistics entityStats =\n"
+"  stats.getEntityStatistics( Cat.class.getName() );\n"
+"long changes =\n"
+"        entityStats.getInsertCount()\n"
+"        + entityStats.getUpdateCount()\n"
+"        + entityStats.getDeleteCount();\n"
+"log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );"
+msgstr ""
+"Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
+"\n"
+"double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
+"double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
+"double queryCacheHitRatio =\n"
+"  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
+"\n"
+"log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
+"\n"
+"EntityStatistics entityStats =\n"
+"  stats.getEntityStatistics( Cat.class.getName() );\n"
+"long changes =\n"
+"        entityStats.getInsertCount()\n"
+"        + entityStats.getUpdateCount()\n"
+"        + entityStats.getDeleteCount();\n"
+"log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );"
+
 #. Tag: para
+#: performance.xml:1508
 #, no-c-format
 msgid ""
 "You can work on all entities, collections, queries and region caches, by "
@@ -2129,6 +3150,29 @@ msgstr ""
 "literal>、 <literal>getCollectionRoleNames()</literal> 、 "
 "<literal>getSecondLevelCacheRegionNames()</literal> メソッドでそれぞれの名前"
 "のリストを取得することが出来ます。"
+
+#~ msgid ""
+#~ "The <literal>&lt;cache&gt;</literal> element of a class or collection "
+#~ "mapping has the following form:"
+#~ msgstr ""
+#~ "クラスやコレクションのマッピングの <literal>&lt;cache&gt;</literal> 要素は"
+#~ "以下の形式です。"
+
+#~ msgid ""
+#~ "The <literal>usage</literal> attribute specifies a <emphasis>cache "
+#~ "concurrency strategy</emphasis>."
+#~ msgstr ""
+#~ "<literal>usage</literal> 属性は <emphasis>キャッシュの並列性戦略</"
+#~ "emphasis> を指定します。"
+
+#~ msgid "read-only"
+#~ msgstr "read-only"
+
+#~ msgid "read-write"
+#~ msgstr "read-write"
+
+#~ msgid "transactional"
+#~ msgstr "transactional"
 
 #~ msgid ""
 #~ "This setting creates two new cache regions: one holding cached query "
@@ -2148,258 +3192,6 @@ msgstr ""
 #~ "しないことに注意してください。キャッシュするのは識別子の値と、値型の結果の"
 #~ "みです。そのため、クエリキャッシュは常に二次キャッシュと一緒に使うべきで"
 #~ "す。"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[s = sessions.openSession();\n"
-#~ "Transaction tx = s.beginTransaction();\n"
-#~ "            \n"
-#~ "User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
-#~ "    .setString(\"userName\", userName).uniqueResult();\n"
-#~ "Map permissions = u.getPermissions();\n"
-#~ "\n"
-#~ "tx.commit();\n"
-#~ "s.close();\n"
-#~ "\n"
-#~ "Integer accessLevel = (Integer) permissions.get(\"accounts\");  // "
-#~ "Error!]]>"
-#~ msgstr ""
-#~ "s = sessions.openSession();\n"
-#~ "Transaction tx = s.beginTransaction();\n"
-#~ "            \n"
-#~ "User u = (User) s.createQuery(\"from User u where u.name=:userName\")\n"
-#~ "    .setString(\"userName\", userName).uniqueResult();\n"
-#~ "Map permissions = u.getPermissions();\n"
-#~ "\n"
-#~ "tx.commit();\n"
-#~ "s.close();\n"
-#~ "\n"
-#~ "Integer accessLevel = (Integer) permissions.get(\"accounts\");  // Error!"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<set name=\"permissions\" \n"
-#~ "            fetch=\"join\">\n"
-#~ "    <key column=\"userId\"/>\n"
-#~ "    <one-to-many class=\"Permission\"/>\n"
-#~ "</set]]>"
-#~ msgstr ""
-#~ "&lt;set name=\"permissions\" \n"
-#~ "            fetch=\"join\"&gt;\n"
-#~ "    &lt;key column=\"userId\"/&gt;\n"
-#~ "    &lt;one-to-many class=\"Permission\"/&gt;\n"
-#~ "&lt;/set"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/>]]>"
-#~ msgstr "&lt;many-to-one name=\"mother\" class=\"Cat\" fetch=\"join\"/&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[User user = (User) session.createCriteria(User.class)\n"
-#~ "                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
-#~ "                .add( Restrictions.idEq(userId) )\n"
-#~ "                .uniqueResult();]]>"
-#~ msgstr ""
-#~ "User user = (User) session.createCriteria(User.class)\n"
-#~ "                .setFetchMode(\"permissions\", FetchMode.JOIN)\n"
-#~ "                .add( Restrictions.idEq(userId) )\n"
-#~ "                .uniqueResult();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<class name=\"Cat\" proxy=\"Cat\">\n"
-#~ "    ......\n"
-#~ "    <subclass name=\"DomesticCat\">\n"
-#~ "        .....\n"
-#~ "    </subclass>\n"
-#~ "</class>]]>"
-#~ msgstr ""
-#~ "&lt;class name=\"Cat\" proxy=\"Cat\"&gt;\n"
-#~ "    ......\n"
-#~ "    &lt;subclass name=\"DomesticCat\"&gt;\n"
-#~ "        .....\n"
-#~ "    &lt;/subclass&gt;\n"
-#~ "&lt;/class&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a "
-#~ "proxy (does not hit the db)\n"
-#~ "if ( cat.isDomesticCat() ) {                  // hit the db to initialize "
-#~ "the proxy\n"
-#~ "    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
-#~ "    ....\n"
-#~ "}]]>"
-#~ msgstr ""
-#~ "Cat cat = (Cat) session.load(Cat.class, id);  // instantiate a proxy "
-#~ "(does not hit the db)\n"
-#~ "if ( cat.isDomesticCat() ) {                  // hit the db to initialize "
-#~ "the proxy\n"
-#~ "    DomesticCat dc = (DomesticCat) cat;       // Error!\n"
-#~ "    ....\n"
-#~ "}"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat cat = (Cat) session.load(Cat.class, id);            // "
-#~ "instantiate a Cat proxy\n"
-#~ "DomesticCat dc = \n"
-#~ "        (DomesticCat) session.load(DomesticCat.class, id);  // acquire "
-#~ "new DomesticCat proxy!\n"
-#~ "System.out.println(cat==dc);                            // false]]>"
-#~ msgstr ""
-#~ "Cat cat = (Cat) session.load(Cat.class, id);            // instantiate a "
-#~ "Cat proxy\n"
-#~ "DomesticCat dc = \n"
-#~ "        (DomesticCat) session.load(DomesticCat.class, id);  // acquire "
-#~ "new DomesticCat proxy!\n"
-#~ "System.out.println(cat==dc);                            // false"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
-#~ "System.out.println( dc.getWeight() );  // 11.0]]>"
-#~ msgstr ""
-#~ "cat.setWeight(11.0);  // hit the db to initialize the proxy\n"
-#~ "System.out.println( dc.getWeight() );  // 11.0"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<class name=\"CatImpl\" proxy=\"Cat\">\n"
-#~ "    ......\n"
-#~ "    <subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\">\n"
-#~ "        .....\n"
-#~ "    </subclass>\n"
-#~ "</class>]]>"
-#~ msgstr ""
-#~ "&lt;class name=\"CatImpl\" proxy=\"Cat\"&gt;\n"
-#~ "    ......\n"
-#~ "    &lt;subclass name=\"DomesticCatImpl\" proxy=\"DomesticCat\"&gt;\n"
-#~ "        .....\n"
-#~ "    &lt;/subclass&gt;\n"
-#~ "&lt;/class&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
-#~ "Iterator iter = session.createQuery(\"from CatImpl as cat where cat."
-#~ "name='fritz'\").iterate();\n"
-#~ "Cat fritz = (Cat) iter.next();]]>"
-#~ msgstr ""
-#~ "Cat cat = (Cat) session.load(CatImpl.class, catid);\n"
-#~ "Iterator iter = session.iterate(\"from CatImpl as cat where cat."
-#~ "name='fritz'\");\n"
-#~ "Cat fritz = (Cat) iter.next();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[( (Integer) s.createFilter( collection, \"select count(*)\" )."
-#~ "list().get(0) ).intValue()]]>"
-#~ msgstr ""
-#~ "( (Integer) s.createFilter( collection, \"select count(*)\" ).list().get"
-#~ "(0) ).intValue()"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[s.createFilter( lazyCollection, \"\").setFirstResult(0)."
-#~ "setMaxResults(10).list();]]>"
-#~ msgstr ""
-#~ "s.createFilter( lazyCollection, \"\").setFirstResult(0).setMaxResults(10)."
-#~ "list();"
-
-#, fuzzy
-#~ msgid "<![CDATA[<class name=\"Person\" batch-size=\"10\">...</class>]]>"
-#~ msgstr "&lt;class name=\"Person\" batch-size=\"10\"&gt;...&lt;/class&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<class name=\"Person\">\n"
-#~ "    <set name=\"cats\" batch-size=\"3\">\n"
-#~ "        ...\n"
-#~ "    </set>\n"
-#~ "</class>]]>"
-#~ msgstr ""
-#~ "&lt;class name=\"Person\"&gt;\n"
-#~ "    &lt;set name=\"cats\" batch-size=\"3\"&gt;\n"
-#~ "        ...\n"
-#~ "    &lt;/set&gt;\n"
-#~ "&lt;/class&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<class name=\"Document\">\n"
-#~ "       <id name=\"id\">\n"
-#~ "        <generator class=\"native\"/>\n"
-#~ "    </id>\n"
-#~ "    <property name=\"name\" not-null=\"true\" length=\"50\"/>\n"
-#~ "    <property name=\"summary\" not-null=\"true\" length=\"200\" lazy="
-#~ "\"true\"/>\n"
-#~ "    <property name=\"text\" not-null=\"true\" length=\"2000\" lazy=\"true"
-#~ "\"/>\n"
-#~ "</class>]]>"
-#~ msgstr ""
-#~ "&lt;class name=\"Document\"&gt;\n"
-#~ "       &lt;id name=\"id\"&gt;\n"
-#~ "        &lt;generator class=\"native\"/&gt;\n"
-#~ "    &lt;/id&gt;\n"
-#~ "    &lt;property name=\"name\" not-null=\"true\" length=\"50\"/&gt;\n"
-#~ "    &lt;property name=\"summary\" not-null=\"true\" length=\"200\" lazy="
-#~ "\"true\"/&gt;\n"
-#~ "    &lt;property name=\"text\" not-null=\"true\" length=\"2000\" lazy="
-#~ "\"true\"/&gt;\n"
-#~ "&lt;/class&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<target name=\"instrument\" depends=\"compile\">\n"
-#~ "    <taskdef name=\"instrument\" classname=\"org.hibernate.tool."
-#~ "instrument.InstrumentTask\">\n"
-#~ "        <classpath path=\"${jar.path}\"/>\n"
-#~ "        <classpath path=\"${classes.dir}\"/>\n"
-#~ "        <classpath refid=\"lib.class.path\"/>\n"
-#~ "    </taskdef>\n"
-#~ "\n"
-#~ "    <instrument verbose=\"true\">\n"
-#~ "        <fileset dir=\"${testclasses.dir}/org/hibernate/auction/model\">\n"
-#~ "            <include name=\"*.class\"/>\n"
-#~ "        </fileset>\n"
-#~ "    </instrument>\n"
-#~ "</target>]]>"
-#~ msgstr ""
-#~ "&lt;target name=\"instrument\" depends=\"compile\"&gt;\n"
-#~ "    &lt;taskdef name=\"instrument\" classname=\"org.hibernate.tool."
-#~ "instrument.InstrumentTask\"&gt;\n"
-#~ "        &lt;classpath path=\"&#36;{jar.path}\"/&gt;\n"
-#~ "        &lt;classpath path=\"&#36;{classes.dir}\"/&gt;\n"
-#~ "        &lt;classpath refid=\"lib.class.path\"/&gt;\n"
-#~ "    &lt;/taskdef&gt;\n"
-#~ "\n"
-#~ "    &lt;instrument verbose=\"true\"&gt;\n"
-#~ "        &lt;fileset dir=\"&#36;{testclasses.dir}/org/hibernate/auction/"
-#~ "model\"&gt;\n"
-#~ "            &lt;include name=\"*.class\"/&gt;\n"
-#~ "        &lt;/fileset&gt;\n"
-#~ "    &lt;/instrument&gt;\n"
-#~ "&lt;/target&gt;"
-
-#~ msgid "<entry>yes</entry>"
-#~ msgstr "<entry>yes</entry>"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[<cache \n"
-#~ "    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
-#~ "    region=\"RegionName\"\n"
-#~ "    include=\"all|non-lazy\"\n"
-#~ "/>]]>"
-#~ msgstr ""
-#~ "&lt;cache \n"
-#~ "    usage=\"transactional|read-write|nonstrict-read-write|read-only\"\n"
-#~ "    region=\"RegionName\"\n"
-#~ "    include=\"all|non-lazy\"\n"
-#~ "/&gt;"
 
 #, fuzzy
 #~ msgid ""
@@ -2432,177 +3224,3 @@ msgstr ""
 #~ "        ....\n"
 #~ "    &lt;/set&gt;\n"
 #~ "&lt;/class&gt;"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[ScrollableResult cats = sess.createQuery(\"from Cat as cat\")."
-#~ "scroll(); //a huge result set\n"
-#~ "while ( cats.next() ) {\n"
-#~ "    Cat cat = (Cat) cats.get(0);\n"
-#~ "    doSomethingWithACat(cat);\n"
-#~ "    sess.evict(cat);\n"
-#~ "}]]>"
-#~ msgstr ""
-#~ "ScrollableResult cats = sess.createQuery(\"from Cat as cat\").scroll(); //"
-#~ "a huge result set\n"
-#~ "while ( cats.next() ) {\n"
-#~ "    Cat cat = (Cat) cats.get(0);\n"
-#~ "    doSomethingWithACat(cat);\n"
-#~ "    sess.evict(cat);\n"
-#~ "}"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[sessionFactory.evict(Cat.class, catId); //evict a particular "
-#~ "Cat\n"
-#~ "sessionFactory.evict(Cat.class);  //evict all Cats\n"
-#~ "sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a "
-#~ "particular collection of kittens\n"
-#~ "sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten "
-#~ "collections]]>"
-#~ msgstr ""
-#~ "sessionFactory.evict(Cat.class, catId); //evict a particular Cat\n"
-#~ "sessionFactory.evict(Cat.class);  //evict all Cats\n"
-#~ "sessionFactory.evictCollection(\"Cat.kittens\", catId); //evict a "
-#~ "particular collection of kittens\n"
-#~ "sessionFactory.evictCollection(\"Cat.kittens\"); //evict all kitten "
-#~ "collections"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Map cacheEntries = sessionFactory.getStatistics()\n"
-#~ "        .getSecondLevelCacheStatistics(regionName)\n"
-#~ "        .getEntries();]]>"
-#~ msgstr ""
-#~ "Map cacheEntries = sessionFactory.getStatistics()\n"
-#~ "        .getSecondLevelCacheStatistics(regionName)\n"
-#~ "        .getEntries();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[hibernate.generate_statistics true\n"
-#~ "hibernate.cache.use_structured_entries true]]>"
-#~ msgstr ""
-#~ "hibernate.generate_statistics true\n"
-#~ "hibernate.cache.use_structured_entries true"
-
-#, fuzzy
-#~ msgid "<![CDATA[hibernate.cache.use_query_cache true]]>"
-#~ msgstr "hibernate.cache.use_query_cache true"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[List blogs = sess.createQuery(\"from Blog blog where blog."
-#~ "blogger = :blogger\")\n"
-#~ "    .setEntity(\"blogger\", blogger)\n"
-#~ "    .setMaxResults(15)\n"
-#~ "    .setCacheable(true)\n"
-#~ "    .setCacheRegion(\"frontpages\")\n"
-#~ "    .list();]]>"
-#~ msgstr ""
-#~ "List blogs = sess.createQuery(\"from Blog blog where blog.blogger = :"
-#~ "blogger\")\n"
-#~ "    .setEntity(\"blogger\", blogger)\n"
-#~ "    .setMaxResults(15)\n"
-#~ "    .setCacheable(true)\n"
-#~ "    .setCacheRegion(\"frontpages\")\n"
-#~ "    .list();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Parent p = (Parent) sess.load(Parent.class, id);\n"
-#~ "Child c = new Child();\n"
-#~ "c.setParent(p);\n"
-#~ "p.getChildren().add(c);  //no need to fetch the collection!\n"
-#~ "sess.flush();]]>"
-#~ msgstr ""
-#~ "Parent p = (Parent) sess.load(Parent.class, id);\n"
-#~ "Child c = new Child();\n"
-#~ "c.setParent(p);\n"
-#~ "p.getChildren().add(c);  //no need to fetch the collection!\n"
-#~ "sess.flush();"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[// MBean service registration for a specific SessionFactory\n"
-#~ "Hashtable tb = new Hashtable();\n"
-#~ "tb.put(\"type\", \"statistics\");\n"
-#~ "tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
-#~ "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
-#~ "\n"
-#~ "StatisticsService stats = new StatisticsService(); // MBean "
-#~ "implementation\n"
-#~ "stats.setSessionFactory(sessionFactory); // Bind the stats to a "
-#~ "SessionFactory\n"
-#~ "server.registerMBean(stats, on); // Register the Mbean on the server]]>"
-#~ msgstr ""
-#~ "// MBean service registration for a specific SessionFactory\n"
-#~ "Hashtable tb = new Hashtable();\n"
-#~ "tb.put(\"type\", \"statistics\");\n"
-#~ "tb.put(\"sessionFactory\", \"myFinancialApp\");\n"
-#~ "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
-#~ "\n"
-#~ "StatisticsService stats = new StatisticsService(); // MBean "
-#~ "implementation\n"
-#~ "stats.setSessionFactory(sessionFactory); // Bind the stats to a "
-#~ "SessionFactory\n"
-#~ "server.registerMBean(stats, on); // Register the Mbean on the server"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[// MBean service registration for all SessionFactory's\n"
-#~ "Hashtable tb = new Hashtable();\n"
-#~ "tb.put(\"type\", \"statistics\");\n"
-#~ "tb.put(\"sessionFactory\", \"all\");\n"
-#~ "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
-#~ "\n"
-#~ "StatisticsService stats = new StatisticsService(); // MBean "
-#~ "implementation\n"
-#~ "server.registerMBean(stats, on); // Register the MBean on the server]]>"
-#~ msgstr ""
-#~ "// MBean service registration for all SessionFactory's\n"
-#~ "Hashtable tb = new Hashtable();\n"
-#~ "tb.put(\"type\", \"statistics\");\n"
-#~ "tb.put(\"sessionFactory\", \"all\");\n"
-#~ "ObjectName on = new ObjectName(\"hibernate\", tb); // MBean object name\n"
-#~ "\n"
-#~ "StatisticsService stats = new StatisticsService(); // MBean "
-#~ "implementation\n"
-#~ "server.registerMBean(stats, on); // Register the MBean on the server"
-
-#, fuzzy
-#~ msgid ""
-#~ "<![CDATA[Statistics stats = HibernateUtil.sessionFactory.getStatistics"
-#~ "();\n"
-#~ "\n"
-#~ "double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
-#~ "double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
-#~ "double queryCacheHitRatio =\n"
-#~ "  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
-#~ "\n"
-#~ "log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
-#~ "\n"
-#~ "EntityStatistics entityStats =\n"
-#~ "  stats.getEntityStatistics( Cat.class.getName() );\n"
-#~ "long changes =\n"
-#~ "        entityStats.getInsertCount()\n"
-#~ "        + entityStats.getUpdateCount()\n"
-#~ "        + entityStats.getDeleteCount();\n"
-#~ "log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );]]>"
-#~ msgstr ""
-#~ "Statistics stats = HibernateUtil.sessionFactory.getStatistics();\n"
-#~ "\n"
-#~ "double queryCacheHitCount  = stats.getQueryCacheHitCount();\n"
-#~ "double queryCacheMissCount = stats.getQueryCacheMissCount();\n"
-#~ "double queryCacheHitRatio =\n"
-#~ "  queryCacheHitCount / (queryCacheHitCount + queryCacheMissCount);\n"
-#~ "\n"
-#~ "log.info(\"Query Hit ratio:\" + queryCacheHitRatio);\n"
-#~ "\n"
-#~ "EntityStatistics entityStats =\n"
-#~ "  stats.getEntityStatistics( Cat.class.getName() );\n"
-#~ "long changes =\n"
-#~ "        entityStats.getInsertCount()\n"
-#~ "        + entityStats.getUpdateCount()\n"
-#~ "        + entityStats.getDeleteCount();\n"
-#~ "log.info(Cat.class.getName() + \" changed \" + changes + \"times\"  );"

@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: configuration\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-02-11T05:38:15\n"
+"POT-Creation-Date: 2010-07-20 21:02+0000\n"
 "PO-Revision-Date: 2010-03-16 11:05+1000\n"
 "Last-Translator: Angela Garcia <agarcia@redhat.com>\n"
 "Language-Team:  <en@li.org>\n"
@@ -24,11 +24,13 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 
 #. Tag: title
+#: configuration.xml:31
 #, no-c-format
 msgid "Configuration"
 msgstr "Configuración"
 
 #. Tag: para
+#: configuration.xml:33
 #, no-c-format
 msgid ""
 "Hibernate is designed to operate in many different environments and, as "
@@ -47,11 +49,13 @@ msgstr ""
 "necesidades."
 
 #. Tag: title
+#: configuration.xml:41
 #, no-c-format
 msgid "Programmatic configuration"
 msgstr "Configuración programática"
 
 #. Tag: para
+#: configuration.xml:43
 #, no-c-format
 msgid ""
 "An instance of <classname>org.hibernate.cfg.Configuration</classname> "
@@ -68,6 +72,7 @@ msgstr ""
 "varios archivos de mapeo XML."
 
 #. Tag: para
+#: configuration.xml:51
 #, no-c-format
 msgid ""
 "You can obtain a <classname>org.hibernate.cfg.Configuration</classname> "
@@ -80,7 +85,17 @@ msgstr ""
 "mapeo XML. Si los archivos de mapeo están en la ruta de clase, utilice "
 "<literal>addResource()</literal>. Por ejemplo:"
 
+#. Tag: programlisting
+#: configuration.xml:57
+#, no-c-format
+msgid ""
+"Configuration cfg = new Configuration()\n"
+"    .addResource(\"Item.hbm.xml\")\n"
+"    .addResource(\"Bid.hbm.xml\");"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:59
 #, no-c-format
 msgid ""
 "An alternative way is to specify the mapped class and allow Hibernate to "
@@ -89,7 +104,17 @@ msgstr ""
 "Una manera opcional es especificar la clase mapeada y dejar que Hibernate "
 "encuentre el documento de mapeo por usted:"
 
+#. Tag: programlisting
+#: configuration.xml:62
+#, no-c-format
+msgid ""
+"Configuration cfg = new Configuration()\n"
+"    .addClass(org.hibernate.auction.Item.class)\n"
+"    .addClass(org.hibernate.auction.Bid.class);"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:64
 #, no-c-format
 msgid ""
 "Hibernate will then search for mapping files named <filename>/org/hibernate/"
@@ -103,6 +128,7 @@ msgstr ""
 "nombre de archivo establecido manualmente."
 
 #. Tag: para
+#: configuration.xml:69
 #, no-c-format
 msgid ""
 "A <classname>org.hibernate.cfg.Configuration</classname> also allows you to "
@@ -111,7 +137,22 @@ msgstr ""
 "Una <classname>org.hibernate.cfg.Configuration</classname> también le "
 "permite especificar las propiedades de configuración. Por ejemplo:"
 
+#. Tag: programlisting
+#: configuration.xml:72
+#, no-c-format
+msgid ""
+"Configuration cfg = new Configuration()\n"
+"    .addClass(org.hibernate.auction.Item.class)\n"
+"    .addClass(org.hibernate.auction.Bid.class)\n"
+"    .setProperty(\"hibernate.dialect\", \"org.hibernate.dialect."
+"MySQLInnoDBDialect\")\n"
+"    .setProperty(\"hibernate.connection.datasource\", \"java:comp/env/jdbc/"
+"test\")\n"
+"    .setProperty(\"hibernate.order_updates\", \"true\");"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:74
 #, no-c-format
 msgid ""
 "This is not the only way to pass configuration properties to Hibernate. Some "
@@ -121,6 +162,7 @@ msgstr ""
 "Hibernate. Algunas opciones incluyen:"
 
 #. Tag: para
+#: configuration.xml:79
 #, no-c-format
 msgid ""
 "Pass an instance of <classname>java.util.Properties</classname> to "
@@ -130,6 +172,7 @@ msgstr ""
 "<literal>Configuration.setProperties()</literal>."
 
 #. Tag: para
+#: configuration.xml:84
 #, no-c-format
 msgid ""
 "Place a file named <filename>hibernate.properties</filename> in a root "
@@ -139,6 +182,7 @@ msgstr ""
 "directorio raíz de la ruta de clase."
 
 #. Tag: para
+#: configuration.xml:89
 #, no-c-format
 msgid ""
 "Set <literal>System</literal> properties using <literal>java -"
@@ -148,6 +192,7 @@ msgstr ""
 "Dproperty=value</literal>."
 
 #. Tag: para
+#: configuration.xml:94
 #, no-c-format
 msgid ""
 "Include <literal>&lt;property&gt;</literal> elements in <literal>hibernate."
@@ -157,6 +202,7 @@ msgstr ""
 "<literal>hibernate.cfg.xml</literal> (esto se discute más adelante)."
 
 #. Tag: para
+#: configuration.xml:99
 #, no-c-format
 msgid ""
 "If you want to get started quickly<filename>hibernate.properties</filename> "
@@ -166,6 +212,7 @@ msgstr ""
 "el enfoque más fácil."
 
 #. Tag: para
+#: configuration.xml:103
 #, no-c-format
 msgid ""
 "The <classname>org.hibernate.cfg.Configuration</classname> is intended as a "
@@ -177,11 +224,13 @@ msgstr ""
 "<literal>SessionFactory</literal>."
 
 #. Tag: title
+#: configuration.xml:109
 #, no-c-format
 msgid "Obtaining a SessionFactory"
 msgstr "Obtención de una SessionFactory"
 
 #. Tag: para
+#: configuration.xml:111
 #, no-c-format
 msgid ""
 "When all mappings have been parsed by the <classname>org.hibernate.cfg."
@@ -189,28 +238,38 @@ msgid ""
 "<interfacename>org.hibernate.Session</interfacename> instances. This factory "
 "is intended to be shared by all application threads:"
 msgstr ""
-"Cuando la <classname>org.hibernate.cfg."
-"Configuration</classname> ha "
+"Cuando la <classname>org.hibernate.cfg.Configuration</classname> ha "
 "analizado sintácticamente todos los mapeos, la aplicación tiene que obtener "
-"una fábrica para las instancias <interfacename>org.hibernate.Session</interfacename>. Esta fábrica está concebida para que todos los hilos de la "
+"una fábrica para las instancias <interfacename>org.hibernate.Session</"
+"interfacename>. Esta fábrica está concebida para que todos los hilos de la "
 "aplicación la compartan:"
 
+#. Tag: programlisting
+#: configuration.xml:117
+#, no-c-format
+msgid "SessionFactory sessions = cfg.buildSessionFactory();"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:119
 #, no-c-format
 msgid ""
 "Hibernate does allow your application to instantiate more than one "
 "<interfacename>org.hibernate.SessionFactory</interfacename>. This is useful "
 "if you are using more than one database."
 msgstr ""
-"Hibernate permite que su aplicación instancie más de una <interfacename>org.hibernate.SessionFactory</interfacename>. Esto es útil si está utilizando "
+"Hibernate permite que su aplicación instancie más de una <interfacename>org."
+"hibernate.SessionFactory</interfacename>. Esto es útil si está utilizando "
 "más de una base de datos."
 
 #. Tag: title
+#: configuration.xml:125
 #, no-c-format
 msgid "JDBC connections"
 msgstr "Conexiones JDBC"
 
 #. Tag: para
+#: configuration.xml:127
 #, no-c-format
 msgid ""
 "It is advisable to have the <interfacename>org.hibernate.SessionFactory</"
@@ -223,7 +282,14 @@ msgstr ""
 "este enfoque, el abrir una <interfacename>org.hibernate.Session</"
 "interfacename> es tan simple como:"
 
+#. Tag: programlisting
+#: configuration.xml:133
+#, no-c-format
+msgid "Session session = sessions.openSession(); // open a new Session"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:135
 #, no-c-format
 msgid ""
 "Once you start a task that requires access to the database, a JDBC "
@@ -233,6 +299,7 @@ msgstr ""
 "datos, se obtendrá una conexión JDBC del pool."
 
 #. Tag: para
+#: configuration.xml:138
 #, no-c-format
 msgid ""
 "Before you can do this, you first need to pass some JDBC connection "
@@ -248,6 +315,7 @@ msgstr ""
 "importantes para la conexión JDBC."
 
 #. Tag: para
+#: configuration.xml:144
 #, no-c-format
 msgid ""
 "Hibernate will obtain and pool connections using <classname>java.sql."
@@ -258,71 +326,89 @@ msgstr ""
 "propiedades:"
 
 #. Tag: title
+#: configuration.xml:149
 #, no-c-format
 msgid "Hibernate JDBC Properties"
 msgstr "Propiedades JDBC de Hibernate"
 
 #. Tag: entry
+#: configuration.xml:158 configuration.xml:236 configuration.xml:327
+#: configuration.xml:495 configuration.xml:657 configuration.xml:753
+#: configuration.xml:826
 #, no-c-format
 msgid "Property name"
 msgstr "Nombre de la propiedad"
 
 #. Tag: entry
+#: configuration.xml:160 configuration.xml:238 configuration.xml:329
+#: configuration.xml:497 configuration.xml:659 configuration.xml:755
+#: configuration.xml:828
 #, no-c-format
 msgid "Purpose"
 msgstr "Propósito"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.driver_class</property>"
+#. Tag: property
+#: configuration.xml:166
+#, fuzzy, no-c-format
+msgid "hibernate.connection.driver_class"
 msgstr "<property>hibernate.connection.driver_class</property>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis>JDBC driver class</emphasis>"
+#. Tag: emphasis
+#: configuration.xml:168
+#, fuzzy, no-c-format
+msgid "JDBC driver class"
 msgstr "<emphasis>clase del controlador JDBC</emphasis>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.url</property>"
+#. Tag: property
+#: configuration.xml:172
+#, fuzzy, no-c-format
+msgid "hibernate.connection.url"
 msgstr "<property>hibernate.connection.url</property>"
 
-#. Tag: entry
+#. Tag: emphasis
+#: configuration.xml:174
 #, no-c-format
-msgid "<emphasis>JDBC URL</emphasis>"
-msgstr "<emphasis>URL JDBC</emphasis>"
+msgid "JDBC URL"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.username</property>"
+#. Tag: property
+#: configuration.xml:178 configuration.xml:265
+#, fuzzy, no-c-format
+msgid "hibernate.connection.username"
 msgstr "<property>hibernate.connection.username</property>"
 
-#. Tag: entry
+#. Tag: emphasis
+#: configuration.xml:180
 #, no-c-format
-msgid "<emphasis>database user</emphasis>"
-msgstr "<emphasis>usuario de la base de datos</emphasis>"
+msgid "database user"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.password</property>"
+#. Tag: property
+#: configuration.xml:184 configuration.xml:271
+#, fuzzy, no-c-format
+msgid "hibernate.connection.password"
 msgstr "<property>hibernate.connection.password</property>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis>database user password</emphasis>"
+#. Tag: emphasis
+#: configuration.xml:186
+#, fuzzy, no-c-format
+msgid "database user password"
 msgstr "<emphasis>contraseña del usuario de la base de datos</emphasis>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.pool_size</property>"
+#. Tag: property
+#: configuration.xml:190
+#, fuzzy, no-c-format
+msgid "hibernate.connection.pool_size"
 msgstr "<property>hibernate.connection.pool_size</property>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis>maximum number of pooled connections</emphasis>"
+#. Tag: emphasis
+#: configuration.xml:192
+#, fuzzy, no-c-format
+msgid "maximum number of pooled connections"
 msgstr "<emphasis>número máximo de conexiones en pools</emphasis>"
 
 #. Tag: para
+#: configuration.xml:199
 #, no-c-format
 msgid ""
 "Hibernate's own connection pooling algorithm is, however, quite rudimentary. "
@@ -343,6 +429,7 @@ msgstr ""
 "Hibernate. Por ejemplo, es posible utilizar C3P0."
 
 #. Tag: para
+#: configuration.xml:208
 #, no-c-format
 msgid ""
 "C3P0 is an open source JDBC connection pool distributed along with Hibernate "
@@ -362,6 +449,7 @@ msgstr ""
 "obtener más información."
 
 #. Tag: para
+#: configuration.xml:216
 #, no-c-format
 msgid ""
 "The following is an example <filename>hibernate.properties</filename> file "
@@ -370,7 +458,23 @@ msgstr ""
 "Aquí hay un archivo <literal>hibernate.properties</literal> de ejemplo para "
 "c3p0:"
 
+#. Tag: programlisting
+#: configuration.xml:219
+#, no-c-format
+msgid ""
+"hibernate.connection.driver_class = org.postgresql.Driver\n"
+"hibernate.connection.url = jdbc:postgresql://localhost/mydatabase\n"
+"hibernate.connection.username = myuser\n"
+"hibernate.connection.password = secret\n"
+"hibernate.c3p0.min_size=5\n"
+"hibernate.c3p0.max_size=20\n"
+"hibernate.c3p0.timeout=1800\n"
+"hibernate.c3p0.max_statements=50\n"
+"hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:221
 #, no-c-format
 msgid ""
 "For use inside an application server, you should almost always configure "
@@ -385,36 +489,43 @@ msgstr ""
 "siguientes propiedades:"
 
 #. Tag: title
+#: configuration.xml:227
 #, no-c-format
 msgid "Hibernate Datasource Properties"
 msgstr "Propiedades de la Fuente de Datos de Hibernate"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.datasource</property>"
+#. Tag: property
+#: configuration.xml:244
+#, fuzzy, no-c-format
+msgid "hibernate.connection.datasource"
 msgstr "<property>hibernate.connection.datasource</property>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<emphasis>datasource JNDI name</emphasis>"
+#. Tag: emphasis
+#: configuration.xml:246
+#, fuzzy, no-c-format
+msgid "datasource JNDI name"
 msgstr "<emphasis>nombre JNDI de la fuente de datos</emphasis>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jndi.url</property>"
+#. Tag: property
+#: configuration.xml:250
+#, fuzzy, no-c-format
+msgid "hibernate.jndi.url"
 msgstr "<property>hibernate.jndi.url</property>"
 
 #. Tag: entry
+#: configuration.xml:252
 #, no-c-format
 msgid "<emphasis>URL of the JNDI provider</emphasis> (optional)"
 msgstr "<emphasis>URL del proveedor JNDI</emphasis> (opcional)"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jndi.class</property>"
+#. Tag: property
+#: configuration.xml:257
+#, fuzzy, no-c-format
+msgid "hibernate.jndi.class"
 msgstr "<property>hibernate.jndi.class</property>"
 
 #. Tag: entry
+#: configuration.xml:259
 #, no-c-format
 msgid ""
 "<emphasis>class of the JNDI <literal>InitialContextFactory</literal></"
@@ -424,16 +535,20 @@ msgstr ""
 "(opcional)"
 
 #. Tag: entry
+#: configuration.xml:267
 #, no-c-format
 msgid "<emphasis>database user</emphasis> (optional)"
 msgstr "<emphasis>usuario de la base de datos</emphasis> (opcional)"
 
 #. Tag: entry
+#: configuration.xml:273
 #, no-c-format
 msgid "<emphasis>database user password</emphasis> (optional)"
-msgstr "<emphasis>contraseña del usuario de la base de datos</emphasis> (opcional)"
+msgstr ""
+"<emphasis>contraseña del usuario de la base de datos</emphasis> (opcional)"
 
 #. Tag: para
+#: configuration.xml:280
 #, no-c-format
 msgid ""
 "Here is an example <filename>hibernate.properties</filename> file for an "
@@ -442,7 +557,20 @@ msgstr ""
 "He aquí un archivo <literal>hibernate.properties</literal> de ejemplo para "
 "una fuente de datos JNDI provisto por un servidor de aplicaciones:"
 
+#. Tag: programlisting
+#: configuration.xml:283
+#, no-c-format
+msgid ""
+"hibernate.connection.datasource = java:/comp/env/jdbc/test\n"
+"hibernate.transaction.factory_class = \\\n"
+"    org.hibernate.transaction.JTATransactionFactory\n"
+"hibernate.transaction.manager_lookup_class = \\\n"
+"    org.hibernate.transaction.JBossTransactionManagerLookup\n"
+"hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:285
 #, no-c-format
 msgid ""
 "JDBC connections obtained from a JNDI datasource will automatically "
@@ -453,6 +581,7 @@ msgstr ""
 "administradas por el contenedor."
 
 #. Tag: para
+#: configuration.xml:289
 #, no-c-format
 msgid ""
 "Arbitrary connection properties can be given by prepending "
@@ -467,6 +596,7 @@ msgstr ""
 "property>."
 
 #. Tag: para
+#: configuration.xml:294
 #, no-c-format
 msgid ""
 "You can define your own plugin strategy for obtaining JDBC connections by "
@@ -482,11 +612,13 @@ msgstr ""
 "provider_class</property>."
 
 #. Tag: title
+#: configuration.xml:302
 #, no-c-format
 msgid "Optional configuration properties"
 msgstr "Parámetros de configuración opcionales"
 
 #. Tag: para
+#: configuration.xml:304
 #, no-c-format
 msgid ""
 "There are a number of other properties that control the behavior of "
@@ -496,6 +628,7 @@ msgstr ""
 "de ejecución. Todas son opcionales y tienen valores razonables por defecto. "
 
 #. Tag: para
+#: configuration.xml:309
 #, no-c-format
 msgid ""
 "<emphasis>Some of these properties are \"system-level\" only.</emphasis> "
@@ -503,23 +636,26 @@ msgid ""
 "literal> or <filename>hibernate.properties</filename>. They "
 "<emphasis>cannot</emphasis> be set by the other techniques described above."
 msgstr ""
-"<emphasis>Algunas de estas propiedades se encuentran a \"nivel del sistema sólamente\".</emphasis> "
-"Las propiedades a nivel del sistema sólamente se pueden establecer por medio "
-"de <literal>java -Dproperty=value</"
-"literal> o <filename>hibernate.properties</filename>. <emphasis>No</emphasis> se pueden establecer por medio de las "
-"técnicas descritas anteriormente."
+"<emphasis>Algunas de estas propiedades se encuentran a \"nivel del sistema "
+"sólamente\".</emphasis> Las propiedades a nivel del sistema sólamente se "
+"pueden establecer por medio de <literal>java -Dproperty=value</literal> o "
+"<filename>hibernate.properties</filename>. <emphasis>No</emphasis> se pueden "
+"establecer por medio de las técnicas descritas anteriormente."
 
 #. Tag: title
+#: configuration.xml:318
 #, no-c-format
 msgid "Hibernate Configuration Properties"
 msgstr "Propiedades de Configuración de Hibernate"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.dialect</property>"
+#. Tag: property
+#: configuration.xml:335
+#, fuzzy, no-c-format
+msgid "hibernate.dialect"
 msgstr "<property>hibernate.dialect</property>"
 
 #. Tag: entry
+#: configuration.xml:337
 #, no-c-format
 msgid ""
 "The classname of a Hibernate <classname>org.hibernate.dialect.Dialect</"
@@ -531,6 +667,7 @@ msgstr ""
 "para una base de datos relacional en particular. "
 
 #. Tag: para
+#: configuration.xml:340
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>full.classname.of."
@@ -540,6 +677,7 @@ msgstr ""
 "Dialect</literal>"
 
 #. Tag: para
+#: configuration.xml:341
 #, no-c-format
 msgid ""
 "In most cases Hibernate will actually be able to choose the correct "
@@ -551,12 +689,14 @@ msgstr ""
 "con base en los <literal>JDBC metadata</literal> que el controlador JDBC "
 "retorna."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.show_sql</property>"
+#. Tag: property
+#: configuration.xml:349
+#, fuzzy, no-c-format
+msgid "hibernate.show_sql"
 msgstr "<property>hibernate.show_sql</property>"
 
 #. Tag: entry
+#: configuration.xml:351
 #, no-c-format
 msgid ""
 "Write all SQL statements to console. This is an alternative to setting the "
@@ -568,6 +708,11 @@ msgstr ""
 "literal> a <literal>debug</literal>."
 
 #. Tag: para
+#: configuration.xml:353 configuration.xml:361 configuration.xml:426
+#: configuration.xml:435 configuration.xml:443 configuration.xml:453
+#: configuration.xml:468 configuration.xml:525 configuration.xml:545
+#: configuration.xml:555 configuration.xml:598 configuration.xml:797
+#: configuration.xml:808 configuration.xml:904
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>true</literal> | "
@@ -576,22 +721,26 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>true</literal> | "
 "<literal>false</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.format_sql</property>"
+#. Tag: property
+#: configuration.xml:359
+#, fuzzy, no-c-format
+msgid "hibernate.format_sql"
 msgstr "<property>hibernate.format_sql</property>"
 
 #. Tag: entry
+#: configuration.xml:361
 #, no-c-format
 msgid "Pretty print the SQL in the log and console."
 msgstr "Imprime el SQL en el registro y la consola."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.default_schema</property>"
+#. Tag: property
+#: configuration.xml:367
+#, fuzzy, no-c-format
+msgid "hibernate.default_schema"
 msgstr "<property>hibernate.default_schema</property>"
 
 #. Tag: entry
+#: configuration.xml:369
 #, no-c-format
 msgid ""
 "Qualify unqualified table names with the given schema/tablespace in "
@@ -601,33 +750,44 @@ msgstr ""
 "dado en el SQL generado. "
 
 #. Tag: para
+#: configuration.xml:370
 #, no-c-format
-msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
-msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
+msgid ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
+msgstr ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>SCHEMA_NAME</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.default_catalog</property>"
+#. Tag: property
+#: configuration.xml:376
+#, fuzzy, no-c-format
+msgid "hibernate.default_catalog"
 msgstr "<property>hibernate.default_catalog</property>"
 
 #. Tag: entry
+#: configuration.xml:378
 #, no-c-format
-msgid "Qualifies unqualified table names with the given catalog in generated SQL."
+msgid ""
+"Qualifies unqualified table names with the given catalog in generated SQL."
 msgstr ""
 "Califica los nombres de tabla sin calificar con el catálogo dado en el SQL "
 "generado."
 
 #. Tag: para
+#: configuration.xml:379
 #, no-c-format
-msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
-msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
+msgid ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
+msgstr ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>CATALOG_NAME</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.session_factory_name</property>"
+#. Tag: property
+#: configuration.xml:384
+#, fuzzy, no-c-format
+msgid "hibernate.session_factory_name"
 msgstr "<property>hibernate.session_factory_name</property>"
 
 #. Tag: entry
+#: configuration.xml:386
 #, no-c-format
 msgid ""
 "The <interfacename>org.hibernate.SessionFactory</interfacename> will be "
@@ -637,6 +797,7 @@ msgstr ""
 "interfacename> a este nombre en JNDI después de que se ha creado."
 
 #. Tag: para
+#: configuration.xml:389 configuration.xml:776
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>jndi/composite/name</"
@@ -645,12 +806,14 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>jndi/composite/name</"
 "literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.max_fetch_depth</property>"
+#. Tag: property
+#: configuration.xml:394
+#, fuzzy, no-c-format
+msgid "hibernate.max_fetch_depth"
 msgstr "<property>hibernate.max_fetch_depth</property>"
 
 #. Tag: entry
+#: configuration.xml:396
 #, no-c-format
 msgid ""
 "Sets a maximum \"depth\" for the outer join fetch tree for single-ended "
@@ -663,6 +826,7 @@ msgstr ""
 "externa predeterminada."
 
 #. Tag: para
+#: configuration.xml:398
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> recommended values between "
@@ -671,12 +835,14 @@ msgstr ""
 "<emphasis role=\"strong\">ej.</emphasis> los valores recomendados entre "
 "<literal>0</literal> y <literal>3</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.default_batch_fetch_size</property>"
+#. Tag: property
+#: configuration.xml:404
+#, fuzzy, no-c-format
+msgid "hibernate.default_batch_fetch_size"
 msgstr "<property>hibernate.default_batch_fetch_size</property>"
 
 #. Tag: entry
+#: configuration.xml:406
 #, no-c-format
 msgid "Sets a default size for Hibernate batch fetching of associations."
 msgstr ""
@@ -684,6 +850,7 @@ msgstr ""
 "de Hibernate."
 
 #. Tag: para
+#: configuration.xml:407
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> recommended values <literal>4</"
@@ -692,12 +859,14 @@ msgstr ""
 "<emphasis role=\"strong\">ej.</emphasis> valores recomendados <literal>4</"
 "literal>, <literal>8</literal>, <literal>16</literal> "
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.default_entity_mode</property>"
+#. Tag: property
+#: configuration.xml:413
+#, fuzzy, no-c-format
+msgid "hibernate.default_entity_mode"
 msgstr "<property>hibernate.default_entity_mode</property>"
 
 #. Tag: entry
+#: configuration.xml:415
 #, no-c-format
 msgid ""
 "Sets a default mode for entity representation for all sessions opened from "
@@ -707,6 +876,7 @@ msgstr ""
 "las sesiones abiertas desde esta <literal>SessionFactory</literal> "
 
 #. Tag: para
+#: configuration.xml:416
 #, no-c-format
 msgid ""
 "<literal>dynamic-map</literal>, <literal>dom4j</literal>, <literal>pojo</"
@@ -715,12 +885,14 @@ msgstr ""
 "<literal>dynamic-map</literal>, <literal>dom4j</literal>, <literal>pojo</"
 "literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.order_updates</property>"
+#. Tag: property
+#: configuration.xml:422
+#, fuzzy, no-c-format
+msgid "hibernate.order_updates"
 msgstr "<property>hibernate.order_updates</property>"
 
 #. Tag: entry
+#: configuration.xml:424
 #, no-c-format
 msgid ""
 "Forces Hibernate to order SQL updates by the primary key value of the items "
@@ -731,24 +903,29 @@ msgstr ""
 "clave principal de los items a actualizar. Esto resultará en menos bloqueos "
 "de transacción en sistemas altamente concurrentes."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.generate_statistics</property>"
-msgstr "<property>hibernate.generate_statistics</property>"
+#. Tag: property
+#: configuration.xml:432
+#, fuzzy, no-c-format
+msgid "hibernate.generate_statistics"
+msgstr "Estadísticas de Hibernate"
 
 #. Tag: entry
+#: configuration.xml:434
 #, no-c-format
-msgid "If enabled, Hibernate will collect statistics useful for performance tuning."
+msgid ""
+"If enabled, Hibernate will collect statistics useful for performance tuning."
 msgstr ""
 "De habilitarse, Hibernate colectará estadísticas útiles para la afinación de "
 "rendimiento. "
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.use_identifier_rollback</property>"
+#. Tag: property
+#: configuration.xml:440
+#, fuzzy, no-c-format
+msgid "hibernate.use_identifier_rollback"
 msgstr "<property>hibernate.use_identifier_rollback</property>"
 
 #. Tag: entry
+#: configuration.xml:442
 #, no-c-format
 msgid ""
 "If enabled, generated identifier properties will be reset to default values "
@@ -757,12 +934,14 @@ msgstr ""
 "De habilitarse, cuando se borren los objetos las propiedades identificadoras "
 "generadas se resetearán a losvalores establecidos por defecto."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.use_sql_comments</property>"
+#. Tag: property
+#: configuration.xml:449
+#, fuzzy, no-c-format
+msgid "hibernate.use_sql_comments"
 msgstr "<property>hibernate.use_sql_comments</property>"
 
 #. Tag: entry
+#: configuration.xml:451
 #, no-c-format
 msgid ""
 "If turned on, Hibernate will generate comments inside the SQL, for easier "
@@ -771,17 +950,51 @@ msgstr ""
 "De activarse, Hibernate generará comentarios dentro del SQL, para una "
 "depuración más fácil, por defecto es <literal>false</literal>."
 
+#. Tag: property
+#: configuration.xml:458
+#, no-c-format
+msgid "hibernate.id.new_generator_mappings"
+msgstr ""
+
+#. Tag: entry
+#: configuration.xml:460
+#, no-c-format
+msgid ""
+"Setting is relevant when using <classname>@GeneratedValue</classname>. It "
+"indicates whether or not the new <classname>IdentifierGenerator</classname> "
+"implementations are used for <classname>javax.persistence.GenerationType."
+"AUTO</classname>, <classname>javax.persistence.GenerationType.TABLE</"
+"classname> and <classname>javax.persistence.GenerationType.SEQUENCE</"
+"classname>. Default to <literal>false</literal> to keep backward "
+"compatibility."
+msgstr ""
+
+#. Tag: para
+#: configuration.xml:476
+#, no-c-format
+msgid ""
+"We recommend all new projects which make use of to use "
+"<classname>@GeneratedValue</classname> to also set <code>hibernate.id."
+"new_generator_mappings=true</code> as the new generators are more efficient "
+"and closer to the JPA 2 specification semantic. However they are not "
+"backward compatible with existing databases (if a sequence or a table is "
+"used for id generation)."
+msgstr ""
+
 #. Tag: title
+#: configuration.xml:485
 #, no-c-format
 msgid "Hibernate JDBC and Connection Properties"
 msgstr "Propiedades de JDBC y Conexiones de Hibernate"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.fetch_size</property>"
+#. Tag: property
+#: configuration.xml:503
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.fetch_size"
 msgstr "<property>hibernate.jdbc.fetch_size</property>"
 
 #. Tag: entry
+#: configuration.xml:505
 #, no-c-format
 msgid ""
 "A non-zero value determines the JDBC fetch size (calls <literal>Statement."
@@ -790,12 +1003,14 @@ msgstr ""
 "Un valor distinto de cero que determina el tamaño de recuperación de JDBC "
 "(llama a <literal>Statement.setFetchSize()</literal>)."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.batch_size</property>"
+#. Tag: property
+#: configuration.xml:510
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.batch_size"
 msgstr "<property>hibernate.jdbc.batch_size</property>"
 
 #. Tag: entry
+#: configuration.xml:512
 #, no-c-format
 msgid "A non-zero value enables use of JDBC2 batch updates by Hibernate."
 msgstr ""
@@ -803,6 +1018,7 @@ msgstr ""
 "en lote de JDBC2. "
 
 #. Tag: para
+#: configuration.xml:513
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> recommended values between "
@@ -811,16 +1027,18 @@ msgstr ""
 "<emphasis role=\"strong\">ej.</emphasis> valores recomendados entre "
 "<literal>5</literal> y <literal>30</literal> "
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.batch_versioned_data</property>"
+#. Tag: property
+#: configuration.xml:519
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.batch_versioned_data"
 msgstr "<property>hibernate.jdbc.batch_versioned_data</property>"
 
 #. Tag: entry
-#, no-c-format
+#: configuration.xml:521
+#, fuzzy, no-c-format
 msgid ""
 "Set this property to <literal>true</literal> if your JDBC driver returns "
-"correct row counts from <literal>executeBatch()</literal>. Iit is usually "
+"correct row counts from <literal>executeBatch()</literal>. It is usually "
 "safe to turn this option on. Hibernate will then use batched DML for "
 "automatically versioned data. Defaults to <literal>false</literal>."
 msgstr ""
@@ -830,12 +1048,14 @@ msgstr ""
 "para versionar automáticamente los datos. Por defecto es <literal>false</"
 "literal>."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.factory_class</property>"
+#. Tag: property
+#: configuration.xml:531
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.factory_class"
 msgstr "<property>hibernate.jdbc.factory_class</property>"
 
 #. Tag: entry
+#: configuration.xml:533
 #, no-c-format
 msgid ""
 "Select a custom <interfacename>org.hibernate.jdbc.Batcher</interfacename>. "
@@ -846,6 +1066,7 @@ msgstr ""
 "de configuración. "
 
 #. Tag: para
+#: configuration.xml:535
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
@@ -854,12 +1075,14 @@ msgstr ""
 "<emphasis role=\"strong\">eg.</emphasis> <literal>classname.of."
 "BatcherFactory</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.use_scrollable_resultset</property>"
+#. Tag: property
+#: configuration.xml:541
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.use_scrollable_resultset"
 msgstr "<property>hibernate.jdbc.use_scrollable_resultset</property>"
 
 #. Tag: entry
+#: configuration.xml:543
 #, no-c-format
 msgid ""
 "Enables use of JDBC2 scrollable resultsets by Hibernate. This property is "
@@ -871,12 +1094,14 @@ msgstr ""
 "JDBC provistas por el usuario. En el caso contrario Hibernate utiliza los "
 "metadatos de conexión."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.use_streams_for_binary</property>"
+#. Tag: property
+#: configuration.xml:551
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.use_streams_for_binary"
 msgstr "<property>hibernate.jdbc.use_streams_for_binary</property>"
 
 #. Tag: entry
+#: configuration.xml:553
 #, no-c-format
 msgid ""
 "Use streams when writing/reading <literal>binary</literal> or "
@@ -887,12 +1112,14 @@ msgstr ""
 "<literal>serializable</literal> a/desde JDBC. <emphasis>Propiedad a nivel de "
 "sistema</emphasis>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.jdbc.use_get_generated_keys</property>"
+#. Tag: property
+#: configuration.xml:561
+#, fuzzy, no-c-format
+msgid "hibernate.jdbc.use_get_generated_keys"
 msgstr "<property>hibernate.jdbc.use_get_generated_keys</property>"
 
 #. Tag: entry
+#: configuration.xml:563
 #, no-c-format
 msgid ""
 "Enables use of JDBC3 <literal>PreparedStatement.getGeneratedKeys()</literal> "
@@ -909,16 +1136,21 @@ msgstr ""
 "controlador utilizando los metadatos de conexión."
 
 #. Tag: para
+#: configuration.xml:569 configuration.xml:678 configuration.xml:687
+#: configuration.xml:696 configuration.xml:723
 #, no-c-format
 msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>true|false</literal>"
-msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>true|false</literal>"
+msgstr ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>true|false</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.provider_class</property>"
+#. Tag: property
+#: configuration.xml:574
+#, fuzzy, no-c-format
+msgid "hibernate.connection.provider_class"
 msgstr "<property>hibernate.connection.provider_class</property>"
 
 #. Tag: entry
+#: configuration.xml:576
 #, no-c-format
 msgid ""
 "The classname of a custom <interfacename>org.hibernate.connection."
@@ -930,6 +1162,7 @@ msgstr ""
 "JDBC a Hibernate. "
 
 #. Tag: para
+#: configuration.xml:578
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
@@ -938,12 +1171,14 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
 "ConnectionProvider</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.isolation</property>"
+#. Tag: property
+#: configuration.xml:584
+#, fuzzy, no-c-format
+msgid "hibernate.connection.isolation"
 msgstr "<property>hibernate.connection.isolation</property>"
 
 #. Tag: entry
+#: configuration.xml:586
 #, no-c-format
 msgid ""
 "Sets the JDBC transaction isolation level. Check <interfacename>java.sql."
@@ -958,28 +1193,34 @@ msgstr ""
 "adicionales y no estándares."
 
 #. Tag: para
+#: configuration.xml:589
 #, no-c-format
 msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>1, 2, 4, 8</literal>"
-msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>1, 2, 4, 8</literal>"
+msgstr ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>1, 2, 4, 8</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.autocommit</property>"
+#. Tag: property
+#: configuration.xml:595
+#, fuzzy, no-c-format
+msgid "hibernate.connection.autocommit"
 msgstr "<property>hibernate.connection.autocommit</property>"
 
 #. Tag: entry
+#: configuration.xml:597
 #, no-c-format
 msgid "Enables autocommit for JDBC pooled connections (it is not recommended)."
 msgstr ""
 "Habilita un guardado automático (autocommit) para las conexiones JDBC en "
 "pool (no se recomienda)."
 
-#. Tag: entry
-#, no-c-format
-msgid "<property>hibernate.connection.release_mode</property>"
+#. Tag: property
+#: configuration.xml:603
+#, fuzzy, no-c-format
+msgid "hibernate.connection.release_mode"
 msgstr "<property>hibernate.connection.release_mode</property>"
 
 #. Tag: entry
+#: configuration.xml:605
 #, no-c-format
 msgid ""
 "Specifies when Hibernate should release JDBC connections. By default, a JDBC "
@@ -1004,6 +1245,7 @@ msgstr ""
 "estrategia JDBC de transacción. "
 
 #. Tag: para
+#: configuration.xml:615
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>auto</literal> (default) "
@@ -1015,15 +1257,15 @@ msgstr ""
 "<literal>after_statement</literal>"
 
 #. Tag: para
-#, no-c-format
+#: configuration.xml:618
+#, fuzzy, no-c-format
 msgid ""
 "This setting only affects <literal>Session</literal>s returned from "
 "<literal>SessionFactory.openSession</literal>. For <literal>Session</"
 "literal>s obtained through <literal>SessionFactory.getCurrentSession</"
 "literal>, the <literal>CurrentSessionContext</literal> implementation "
 "configured for use controls the connection release mode for those "
-"<literal>Session</literal>s. See <xref linkend=\"architecture-current-session"
-"\" />"
+"<literal>Session</literal>s. See"
 msgstr ""
 "Esta configuración sólamente afecta las <literal>Session</literal>es "
 "retornadas desde <literal>SessionFactory.openSession</literal>. Para las "
@@ -1034,6 +1276,7 @@ msgstr ""
 "literal>es. Consulte <xref linkend=\"architecture-current-session\" />."
 
 #. Tag: entry
+#: configuration.xml:630
 #, no-c-format
 msgid ""
 "<property>hibernate.connection.</property><emphasis>&lt;propertyName&gt;</"
@@ -1043,6 +1286,7 @@ msgstr ""
 "emphasis>"
 
 #. Tag: entry
+#: configuration.xml:632
 #, no-c-format
 msgid ""
 "Pass the JDBC property <emphasis>&lt;propertyName&gt;</emphasis> to "
@@ -1052,11 +1296,15 @@ msgstr ""
 "<literal>DriverManager.getConnection()</literal>."
 
 #. Tag: entry
+#: configuration.xml:638
 #, no-c-format
-msgid "<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
-msgstr "<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
+msgid ""
+"<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
+msgstr ""
+"<property>hibernate.jndi.</property><emphasis>&lt;propertyName&gt;</emphasis>"
 
 #. Tag: entry
+#: configuration.xml:640
 #, no-c-format
 msgid ""
 "Pass the property <emphasis>&lt;propertyName&gt;</emphasis> to the JNDI "
@@ -1066,21 +1314,26 @@ msgstr ""
 "<literal>InitialContextFactory</literal> JNDI."
 
 #. Tag: title
+#: configuration.xml:648
 #, no-c-format
 msgid "Hibernate Cache Properties"
 msgstr "Propiedades de Caché de Hibernate"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.provider_class</literal>"
+#. Tag: literal
+#: configuration.xml:665
+#, fuzzy, no-c-format
+msgid "hibernate.cache.provider_class"
 msgstr "<literal>hibernate.cache.provider_class</literal>"
 
 #. Tag: entry
+#: configuration.xml:667
 #, no-c-format
 msgid "The classname of a custom <literal>CacheProvider</literal>."
-msgstr "El nombre de clase de un <literal>CacheProvider</literal> personalizado."
+msgstr ""
+"El nombre de clase de un <literal>CacheProvider</literal> personalizado."
 
 #. Tag: para
+#: configuration.xml:668
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
@@ -1089,12 +1342,14 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
 "CacheProvider</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.use_minimal_puts</literal>"
+#. Tag: literal
+#: configuration.xml:673
+#, fuzzy, no-c-format
+msgid "hibernate.cache.use_minimal_puts"
 msgstr "<literal>hibernate.cache.use_minimal_puts</literal>"
 
 #. Tag: entry
+#: configuration.xml:675
 #, no-c-format
 msgid ""
 "Optimizes second-level cache operation to minimize writes, at the cost of "
@@ -1106,24 +1361,29 @@ msgstr ""
 "cachés en clúster y en Hibernate3, está habilitado por defecto para "
 "implementaciones de caché en clúster. "
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.use_query_cache</literal>"
+#. Tag: literal
+#: configuration.xml:684
+#, fuzzy, no-c-format
+msgid "hibernate.cache.use_query_cache"
 msgstr "<literal>hibernate.cache.use_query_cache</literal>"
 
 #. Tag: entry
+#: configuration.xml:686
 #, no-c-format
-msgid "Enables the query cache. Individual queries still have to be set cachable."
+msgid ""
+"Enables the query cache. Individual queries still have to be set cachable."
 msgstr ""
 "Habilita el caché de consultas. Las consultas individuales todavía tienen "
 "que establecerse con cachés. "
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.use_second_level_cache</literal>"
+#. Tag: literal
+#: configuration.xml:692
+#, fuzzy, no-c-format
+msgid "hibernate.cache.use_second_level_cache"
 msgstr "<literal>hibernate.cache.use_second_level_cache</literal>"
 
 #. Tag: entry
+#: configuration.xml:694
 #, no-c-format
 msgid ""
 "Can be used to completely disable the second level cache, which is enabled "
@@ -1134,12 +1394,14 @@ msgstr ""
 "que está habilitado por defecto para clases que especifican un mapeo "
 "<literal>&lt;cache&gt;</literal>. "
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.query_cache_factory</literal>"
+#. Tag: literal
+#: configuration.xml:702
+#, fuzzy, no-c-format
+msgid "hibernate.cache.query_cache_factory"
 msgstr "<literal>hibernate.cache.query_cache_factory</literal>"
 
 #. Tag: entry
+#: configuration.xml:704
 #, no-c-format
 msgid ""
 "The classname of a custom <literal>QueryCache</literal> interface, defaults "
@@ -1150,6 +1412,7 @@ msgstr ""
 "incorporado."
 
 #. Tag: para
+#: configuration.xml:706
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of.QueryCache</"
@@ -1158,12 +1421,14 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of.QueryCache</"
 "literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.region_prefix</literal>"
+#. Tag: literal
+#: configuration.xml:712
+#, fuzzy, no-c-format
+msgid "hibernate.cache.region_prefix"
 msgstr "<literal>hibernate.cache.region_prefix</literal>"
 
 #. Tag: entry
+#: configuration.xml:714
 #, no-c-format
 msgid "A prefix to use for second-level cache region names."
 msgstr ""
@@ -1171,16 +1436,19 @@ msgstr ""
 "segundo nivel."
 
 #. Tag: para
+#: configuration.xml:714
 #, no-c-format
 msgid "<emphasis role=\"strong\">e.g.</emphasis> <literal>prefix</literal>"
 msgstr "<emphasis role=\"strong\">e.g.</emphasis> <literal>prefix</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.cache.use_structured_entries</literal>"
+#. Tag: literal
+#: configuration.xml:720
+#, fuzzy, no-c-format
+msgid "hibernate.cache.use_structured_entries"
 msgstr "<literal>hibernate.cache.use_structured_entries</literal>"
 
 #. Tag: entry
+#: configuration.xml:722
 #, no-c-format
 msgid ""
 "Forces Hibernate to store data in the second-level cache in a more human-"
@@ -1189,17 +1457,36 @@ msgstr ""
 "Obliga a Hibernate a almacenar los datos en el caché de segundo nivel en un "
 "formato más amigable para personas."
 
+#. Tag: literal
+#: configuration.xml:729
+#, no-c-format
+msgid "hibernate.cache.default_cache_concurrency_strategy"
+msgstr ""
+
+#. Tag: entry
+#: configuration.xml:731
+#, no-c-format
+msgid ""
+"Setting used to give the name of the default <classname>org.hibernate."
+"annotations.CacheConcurrencyStrategy</classname> to use when either "
+"<classname>@Cacheable</classname> or <classname>@Cache</classname> is used. "
+"<code>@Cache(strategy=\"..\")</code> is used to override this default."
+msgstr ""
+
 #. Tag: title
+#: configuration.xml:744
 #, no-c-format
 msgid "Hibernate Transaction Properties"
 msgstr "Propiedades de Transacción de Hibernate"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.transaction.factory_class</literal>"
+#. Tag: literal
+#: configuration.xml:761
+#, fuzzy, no-c-format
+msgid "hibernate.transaction.factory_class"
 msgstr "<literal>hibernate.transaction.factory_class</literal>"
 
 #. Tag: entry
+#: configuration.xml:763
 #, no-c-format
 msgid ""
 "The classname of a <literal>TransactionFactory</literal> to use with "
@@ -1211,6 +1498,7 @@ msgstr ""
 "<literal>JDBCTransactionFactory</literal>)."
 
 #. Tag: para
+#: configuration.xml:765
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
@@ -1219,12 +1507,14 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
 "TransactionFactory</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>jta.UserTransaction</literal>"
+#. Tag: literal
+#: configuration.xml:771
+#, fuzzy, no-c-format
+msgid "jta.UserTransaction"
 msgstr "<literal>jta.UserTransaction</literal>"
 
 #. Tag: entry
+#: configuration.xml:773
 #, no-c-format
 msgid ""
 "A JNDI name used by <literal>JTATransactionFactory</literal> to obtain the "
@@ -1234,12 +1524,14 @@ msgstr ""
 "obtener la <literal>UserTransaction</literal> de JTA del servidor de "
 "aplicaciones. "
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.transaction.manager_lookup_class</literal>"
+#. Tag: literal
+#: configuration.xml:781
+#, fuzzy, no-c-format
+msgid "hibernate.transaction.manager_lookup_class"
 msgstr "<literal>hibernate.transaction.manager_lookup_class</literal>"
 
 #. Tag: entry
+#: configuration.xml:783
 #, no-c-format
 msgid ""
 "The classname of a <literal>TransactionManagerLookup</literal>. It is "
@@ -1251,6 +1543,7 @@ msgstr ""
 "un generador alto/bajo en un entorno JTA."
 
 #. Tag: para
+#: configuration.xml:786
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
@@ -1259,17 +1552,19 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>classname.of."
 "TransactionManagerLookup</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.transaction.flush_before_completion</literal>"
+#. Tag: literal
+#: configuration.xml:792
+#, fuzzy, no-c-format
+msgid "hibernate.transaction.flush_before_completion"
 msgstr "<literal>hibernate.transaction.flush_before_completion</literal>"
 
 #. Tag: entry
-#, no-c-format
+#: configuration.xml:794
+#, fuzzy, no-c-format
 msgid ""
 "If enabled, the session will be automatically flushed during the before "
 "completion phase of the transaction. Built-in and automatic session context "
-"management is preferred, see <xref linkend=\"architecture-current-session\" /"
+"management is preferred, see <xref linkend=\"architecture-current-session\"/"
 ">."
 msgstr ""
 "Si está habilitado, la sesión se vaciará automáticamente durante la fase "
@@ -1277,17 +1572,19 @@ msgstr ""
 "del contexto de sesión automático e incorporado. Consulte <xref linkend="
 "\"architecture-current-session\" />."
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.transaction.auto_close_session</literal>"
+#. Tag: literal
+#: configuration.xml:803
+#, fuzzy, no-c-format
+msgid "hibernate.transaction.auto_close_session"
 msgstr "<literal>hibernate.transaction.auto_close_session</literal>"
 
 #. Tag: entry
-#, no-c-format
+#: configuration.xml:805
+#, fuzzy, no-c-format
 msgid ""
 "If enabled, the session will be automatically closed during the after "
 "completion phase of the transaction. Built-in and automatic session context "
-"management is preferred, see <xref linkend=\"architecture-current-session\" /"
+"management is preferred, see <xref linkend=\"architecture-current-session\"/"
 ">."
 msgstr ""
 "Si se habilita, la sesión se cerrará automáticamente durante la fase "
@@ -1296,21 +1593,24 @@ msgstr ""
 "\"architecture-current-session\" />."
 
 #. Tag: title
+#: configuration.xml:817
 #, no-c-format
 msgid "Miscellaneous Properties"
 msgstr "Propiedades Misceláneas"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.current_session_context_class</literal>"
+#. Tag: literal
+#: configuration.xml:834
+#, fuzzy, no-c-format
+msgid "hibernate.current_session_context_class"
 msgstr "<literal>hibernate.current_session_context_class</literal>"
 
 #. Tag: entry
-#, no-c-format
+#: configuration.xml:836
+#, fuzzy, no-c-format
 msgid ""
 "Supply a custom strategy for the scoping of the \"current\" "
 "<literal>Session</literal>. See <xref linkend=\"architecture-current-session"
-"\" /> for more information about the built-in strategies."
+"\"/> for more information about the built-in strategies."
 msgstr ""
 "Proporciona una estrategia personalizada para el alcance de la "
 "<literal>Session</literal> \"actual\". Consulte <xref linkend=\"architecture-"
@@ -1318,6 +1618,7 @@ msgstr ""
 "incorporadas. "
 
 #. Tag: para
+#: configuration.xml:839
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>jta</literal> | "
@@ -1328,17 +1629,20 @@ msgstr ""
 "<literal>thread</literal> | <literal>managed</literal> | <literal>custom."
 "Class</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.query.factory_class</literal>"
+#. Tag: literal
+#: configuration.xml:846
+#, fuzzy, no-c-format
+msgid "hibernate.query.factory_class"
 msgstr "<literal>hibernate.query.factory_class</literal>"
 
 #. Tag: entry
+#: configuration.xml:848
 #, no-c-format
 msgid "Chooses the HQL parser implementation."
 msgstr "Elige la implementación de análisis sintáctico HQL."
 
 #. Tag: para
+#: configuration.xml:848
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>org.hibernate.hql.ast."
@@ -1349,12 +1653,14 @@ msgstr ""
 "ASTQueryTranslatorFactory</literal> o <literal>org.hibernate.hql.classic."
 "ClassicQueryTranslatorFactory</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.query.substitutions</literal>"
+#. Tag: literal
+#: configuration.xml:857
+#, fuzzy, no-c-format
+msgid "hibernate.query.substitutions"
 msgstr "<literal>hibernate.query.substitutions</literal>"
 
 #. Tag: entry
+#: configuration.xml:859
 #, no-c-format
 msgid ""
 "Is used to map from tokens in Hibernate queries to SQL tokens (tokens might "
@@ -1364,6 +1670,7 @@ msgstr ""
 "(por ejemplo, los tokens pueden ser nombres de función o literales). "
 
 #. Tag: para
+#: configuration.xml:861
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>hqlLiteral=SQL_LITERAL, "
@@ -1372,12 +1679,14 @@ msgstr ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>hqlLiteral=SQL_LITERAL, "
 "hqlFunction=SQLFUNC</literal>"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>hibernate.hbm2ddl.auto</literal>"
+#. Tag: literal
+#: configuration.xml:867
+#, fuzzy, no-c-format
+msgid "hibernate.hbm2ddl.auto"
 msgstr "<literal>hibernate.hbm2ddl.auto</literal>"
 
 #. Tag: entry
+#: configuration.xml:869
 #, no-c-format
 msgid ""
 "Automatically validates or exports schema DDL to the database when the "
@@ -1391,6 +1700,7 @@ msgstr ""
 "<literal>SessionFactory</literal> se cierre explícitamente."
 
 #. Tag: para
+#: configuration.xml:873
 #, no-c-format
 msgid ""
 "<emphasis role=\"strong\">e.g.</emphasis> <literal>validate</literal> | "
@@ -1401,12 +1711,49 @@ msgstr ""
 "<literal>update</literal> | <literal>create</literal> | <literal>create-"
 "drop</literal>"
 
-#. Tag: entry
+#. Tag: literal
+#: configuration.xml:880
+#, fuzzy, no-c-format
+msgid "hibernate.hbm2ddl.import_file"
+msgstr "<literal>hibernate.hbm2ddl.auto</literal>"
+
+#. Tag: para
+#: configuration.xml:882
 #, no-c-format
-msgid "<literal>hibernate.cglib.use_reflection_optimizer</literal>"
+msgid ""
+"Comma-separated names of the optional files containing SQL DML statements "
+"executed during the <classname>SessionFactory</classname> creation. This is "
+"useful for testing or demoing: by adding INSERT statements for example you "
+"can populate your database with a minimal set of data when it is deployed."
+msgstr ""
+
+#. Tag: para
+#: configuration.xml:887
+#, no-c-format
+msgid ""
+"File order matters, the statements of a give file are executed before the "
+"statements of the following files. These statements are only executed if the "
+"schema is created ie if <literal>hibernate.hbm2ddl.auto</literal> is set to "
+"<literal>create</literal> or <literal>create-drop</literal>."
+msgstr ""
+
+#. Tag: para
+#: configuration.xml:892
+#, fuzzy, no-c-format
+msgid ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>/humans.sql,/dogs.sql</"
+"literal>"
+msgstr ""
+"<emphasis role=\"strong\">e.g.</emphasis> <literal>true|false</literal>"
+
+#. Tag: literal
+#: configuration.xml:898
+#, fuzzy, no-c-format
+msgid "hibernate.cglib.use_reflection_optimizer"
 msgstr "<literal>hibernate.cglib.use_reflection_optimizer</literal>"
 
 #. Tag: entry
+#: configuration.xml:900
 #, no-c-format
 msgid ""
 "Enables the use of CGLIB instead of runtime reflection (System-level "
@@ -1421,11 +1768,13 @@ msgstr ""
 "xml</literal>."
 
 #. Tag: title
+#: configuration.xml:913
 #, no-c-format
 msgid "SQL Dialects"
 msgstr "Dialectos de SQL"
 
 #. Tag: para
+#: configuration.xml:915
 #, no-c-format
 msgid ""
 "Always set the <literal>hibernate.dialect</literal> property to the correct "
@@ -1442,256 +1791,307 @@ msgstr ""
 "manualmente."
 
 #. Tag: title
+#: configuration.xml:922
 #, no-c-format
 msgid "Hibernate SQL Dialects (<literal>hibernate.dialect</literal>)"
 msgstr "Dialectos SQL de Hibernate(<literal>hibernate.dialect</literal>)"
 
 #. Tag: entry
+#: configuration.xml:933
 #, no-c-format
 msgid "RDBMS"
 msgstr "RDBMS"
 
 #. Tag: entry
+#: configuration.xml:935
 #, no-c-format
 msgid "Dialect"
 msgstr "Dialecto"
 
 #. Tag: entry
+#: configuration.xml:941
 #, no-c-format
-msgid "DB2"
-msgstr "DB2"
+msgid "<entry>DB2</entry>"
+msgstr ""
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.DB2Dialect</literal>"
+#. Tag: literal
+#: configuration.xml:943
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.DB2Dialect"
 msgstr "<literal>org.hibernate.dialect.DB2Dialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:947
 #, no-c-format
 msgid "DB2 AS/400"
 msgstr "DB2 AS/400"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.DB2400Dialect</literal>"
+#. Tag: literal
+#: configuration.xml:949
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.DB2400Dialect"
 msgstr "<literal>org.hibernate.dialect.DB2400Dialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:953
 #, no-c-format
 msgid "DB2 OS390"
 msgstr "DB2 OS390"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.DB2390Dialect</literal>"
+#. Tag: literal
+#: configuration.xml:955
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.DB2390Dialect"
 msgstr "<literal>org.hibernate.dialect.DB2390Dialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:959
 #, no-c-format
 msgid "PostgreSQL"
 msgstr "PostgreSQL"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.PostgreSQLDialect</literal>"
+#. Tag: literal
+#: configuration.xml:961
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.PostgreSQLDialect"
 msgstr "<literal>org.hibernate.dialect.PostgreSQLDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:965
 #, no-c-format
 msgid "MySQL"
 msgstr "MySQL"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.MySQLDialect</literal>"
+#. Tag: literal
+#: configuration.xml:967
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.MySQLDialect"
 msgstr "<literal>org.hibernate.dialect.MySQLDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:971
 #, no-c-format
 msgid "MySQL with InnoDB"
 msgstr "MySQL con InnoDB"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.MySQLInnoDBDialect</literal>"
+#. Tag: literal
+#: configuration.xml:973
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.MySQLInnoDBDialect"
 msgstr "<literal>org.hibernate.dialect.MySQLInnoDBDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:977
 #, no-c-format
 msgid "MySQL with MyISAM"
 msgstr "MySQL con MyISAM"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.MySQLMyISAMDialect</literal>"
+#. Tag: literal
+#: configuration.xml:979
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.MySQLMyISAMDialect"
 msgstr "<literal>org.hibernate.dialect.MySQLMyISAMDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:983
 #, no-c-format
 msgid "Oracle (any version)"
 msgstr "Oracle (cualquier versión)"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.OracleDialect</literal>"
+#. Tag: literal
+#: configuration.xml:985
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.OracleDialect"
 msgstr "<literal>org.hibernate.dialect.OracleDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:989
 #, no-c-format
 msgid "Oracle 9i"
 msgstr "Oracle 9i"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.Oracle9iDialect</literal>"
+#. Tag: literal
+#: configuration.xml:991
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.Oracle9iDialect"
 msgstr "<literal>org.hibernate.dialect.Oracle9iDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:995
 #, no-c-format
 msgid "Oracle 10g"
 msgstr "Oracle 10g"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.Oracle10gDialect</literal>"
+#. Tag: literal
+#: configuration.xml:997
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.Oracle10gDialect"
 msgstr "<literal>org.hibernate.dialect.Oracle10gDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1001
 #, no-c-format
 msgid "Sybase"
 msgstr "Sybase"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.SybaseDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1003
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.SybaseDialect"
 msgstr "<literal>org.hibernate.dialect.SybaseDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1007
 #, no-c-format
 msgid "Sybase Anywhere"
 msgstr "Sybase Anywhere"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.SybaseAnywhereDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1009
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.SybaseAnywhereDialect"
 msgstr "<literal>org.hibernate.dialect.SybaseAnywhereDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1013
 #, no-c-format
 msgid "Microsoft SQL Server"
 msgstr "Microsoft SQL Server"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.SQLServerDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1015
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.SQLServerDialect"
 msgstr "<literal>org.hibernate.dialect.SQLServerDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1019
 #, no-c-format
 msgid "SAP DB"
 msgstr "SAP DB"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.SAPDBDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1021
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.SAPDBDialect"
 msgstr "<literal>org.hibernate.dialect.SAPDBDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1025
 #, no-c-format
 msgid "Informix"
 msgstr "Informix"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.InformixDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1027
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.InformixDialect"
 msgstr "<literal>org.hibernate.dialect.InformixDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1031
 #, no-c-format
 msgid "HypersonicSQL"
 msgstr "HypersonicSQL"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.HSQLDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1033
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.HSQLDialect"
 msgstr "<literal>org.hibernate.dialect.HSQLDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1037
 #, no-c-format
 msgid "Ingres"
 msgstr "Ingres"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.IngresDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1039
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.IngresDialect"
 msgstr "<literal>org.hibernate.dialect.IngresDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1043
 #, no-c-format
 msgid "Progress"
 msgstr "Progress"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.ProgressDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1045
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.ProgressDialect"
 msgstr "<literal>org.hibernate.dialect.ProgressDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1049
 #, no-c-format
 msgid "Mckoi SQL"
 msgstr "Mckoi SQL"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.MckoiDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1051
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.MckoiDialect"
 msgstr "<literal>org.hibernate.dialect.MckoiDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1055
 #, no-c-format
 msgid "Interbase"
 msgstr "Interbase"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.InterbaseDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1057
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.InterbaseDialect"
 msgstr "<literal>org.hibernate.dialect.InterbaseDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1061
 #, no-c-format
 msgid "Pointbase"
 msgstr "Pointbase"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.PointbaseDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1063
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.PointbaseDialect"
 msgstr "<literal>org.hibernate.dialect.PointbaseDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1067
 #, no-c-format
 msgid "FrontBase"
 msgstr "FrontBase"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.FrontbaseDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1069
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.FrontbaseDialect"
 msgstr "<literal>org.hibernate.dialect.FrontbaseDialect</literal>"
 
 #. Tag: entry
+#: configuration.xml:1073
 #, no-c-format
 msgid "Firebird"
 msgstr "Firebird"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.dialect.FirebirdDialect</literal>"
+#. Tag: literal
+#: configuration.xml:1075
+#, fuzzy, no-c-format
+msgid "org.hibernate.dialect.FirebirdDialect"
 msgstr "<literal>org.hibernate.dialect.FirebirdDialect</literal>"
 
 #. Tag: title
+#: configuration.xml:1083
 #, no-c-format
 msgid "Outer Join Fetching"
 msgstr "Recuperación por Unión Externa - Outer Join Fetching"
 
 #. Tag: para
+#: configuration.xml:1085
 #, no-c-format
 msgid ""
 "If your database supports ANSI, Oracle or Sybase style outer joins, "
@@ -1710,6 +2110,7 @@ msgstr ""
 "muchos y uno-a-uno sea recuperado en un sólo <literal>SELECT</literal> SQL."
 
 #. Tag: para
+#: configuration.xml:1094
 #, no-c-format
 msgid ""
 "Outer join fetching can be disabled <emphasis>globally</emphasis> by setting "
@@ -1726,18 +2127,21 @@ msgstr ""
 "con <literal>fetch=\"join\"</literal>."
 
 #. Tag: para
-#, no-c-format
-msgid "See <xref linkend=\"performance-fetching\" /> for more information."
+#: configuration.xml:1100
+#, fuzzy, no-c-format
+msgid "See <xref linkend=\"performance-fetching\"/> for more information."
 msgstr ""
 "Consulte <xref linkend=\"performance-fetching\" /> para obtener más "
 "información."
 
 #. Tag: title
+#: configuration.xml:1105
 #, no-c-format
 msgid "Binary Streams"
 msgstr "Flujos Binarios"
 
 #. Tag: para
+#: configuration.xml:1107
 #, no-c-format
 msgid ""
 "Oracle limits the size of <literal>byte</literal> arrays that can be passed "
@@ -1753,16 +2157,18 @@ msgstr ""
 "<emphasis>Esta es una configuración a nivel de sistema sólamente.</emphasis>"
 
 #. Tag: title
+#: configuration.xml:1116
 #, no-c-format
 msgid "Second-level and query cache"
 msgstr "Caché de segundo nivel y de lectura"
 
 #. Tag: para
-#, no-c-format
+#: configuration.xml:1118
+#, fuzzy, no-c-format
 msgid ""
 "The properties prefixed by <literal>hibernate.cache</literal> allow you to "
 "use a process or cluster scoped second-level cache system with Hibernate. "
-"See the <xref linkend=\"performance-cache\" /> for more information."
+"See the <xref linkend=\"performance-cache\"/> for more information."
 msgstr ""
 "Las propiedades prefijadas por <literal>hibernate.cache</literal> le "
 "permiten utilizar un sistema de caché de segundo nivel en el ámbito de un "
@@ -1770,11 +2176,13 @@ msgstr ""
 "> para obtener más detalles."
 
 #. Tag: title
+#: configuration.xml:1125
 #, no-c-format
 msgid "Query Language Substitution"
 msgstr "Sustitución de Lenguaje de Consulta"
 
 #. Tag: para
+#: configuration.xml:1127
 #, no-c-format
 msgid ""
 "You can define new Hibernate query tokens using <literal>hibernate.query."
@@ -1783,7 +2191,14 @@ msgstr ""
 "Puede definir nuevos tokens de consulta de Hibernate utilizando "
 "<literal>hibernate.query.substitutions</literal>. Por ejemplo:"
 
+#. Tag: programlisting
+#: configuration.xml:1130
+#, fuzzy, no-c-format
+msgid "hibernate.query.substitutions true=1, false=0"
+msgstr "<literal>hibernate.query.substitutions</literal>"
+
 #. Tag: para
+#: configuration.xml:1132
 #, no-c-format
 msgid ""
 "This would cause the tokens <literal>true</literal> and <literal>false</"
@@ -1792,17 +2207,28 @@ msgstr ""
 "Esto causaría que los tokens <literal>true</literal> y <literal>false</"
 "literal> sean traducidos a literales enteros en el SQL generado."
 
+#. Tag: programlisting
+#: configuration.xml:1136
+#, fuzzy, no-c-format
+msgid "hibernate.query.substitutions toLowercase=LOWER"
+msgstr "<literal>hibernate.query.substitutions</literal>"
+
 #. Tag: para
+#: configuration.xml:1138
 #, no-c-format
-msgid "This would allow you to rename the SQL <literal>LOWER</literal> function."
-msgstr "Esto le permitiría renombrar la función <literal>LOWER</literal> de SQL."
+msgid ""
+"This would allow you to rename the SQL <literal>LOWER</literal> function."
+msgstr ""
+"Esto le permitiría renombrar la función <literal>LOWER</literal> de SQL."
 
 #. Tag: title
+#: configuration.xml:1143
 #, no-c-format
 msgid "Hibernate statistics"
 msgstr "Estadísticas de Hibernate"
 
 #. Tag: para
+#: configuration.xml:1145
 #, no-c-format
 msgid ""
 "If you enable <literal>hibernate.generate_statistics</literal>, Hibernate "
@@ -1819,11 +2245,13 @@ msgstr ""
 "stats</literal> para obtener más información."
 
 #. Tag: title
+#: configuration.xml:1155
 #, no-c-format
 msgid "Logging"
 msgstr "Registros de mensajes (Logging)"
 
 #. Tag: para
+#: configuration.xml:1157
 #, no-c-format
 msgid ""
 "Hibernate utilizes <ulink url=\"http://www.slf4j.org/\">Simple Logging "
@@ -1854,6 +2282,7 @@ msgstr ""
 "literal>."
 
 #. Tag: para
+#: configuration.xml:1171
 #, no-c-format
 msgid ""
 "It is recommended that you familiarize yourself with Hibernate's log "
@@ -1869,56 +2298,67 @@ msgstr ""
 "registro más interesantes son las siguientes: "
 
 #. Tag: title
+#: configuration.xml:1178
 #, no-c-format
 msgid "Hibernate Log Categories"
 msgstr "Categorías de Registro de Hibernate"
 
 #. Tag: entry
+#: configuration.xml:1187
 #, no-c-format
 msgid "Category"
 msgstr "Categoría"
 
 #. Tag: entry
+#: configuration.xml:1189
 #, no-c-format
 msgid "Function"
 msgstr "Función"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.SQL</literal>"
+#. Tag: literal
+#: configuration.xml:1195
+#, fuzzy, no-c-format
+msgid "org.hibernate.SQL"
 msgstr "<literal>org.hibernate.SQL</literal>"
 
 #. Tag: entry
+#: configuration.xml:1197
 #, no-c-format
 msgid "Log all SQL DML statements as they are executed"
 msgstr "Registra todas las declaraciones DML de SQL a medida que se ejecutan"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.type</literal>"
+#. Tag: literal
+#: configuration.xml:1201
+#, fuzzy, no-c-format
+msgid "org.hibernate.type"
 msgstr "<literal>org.hibernate.type</literal>"
 
 #. Tag: entry
+#: configuration.xml:1203
 #, no-c-format
 msgid "Log all JDBC parameters"
 msgstr "Registra todos los parámetros JDBC"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.tool.hbm2ddl</literal>"
+#. Tag: literal
+#: configuration.xml:1207
+#, fuzzy, no-c-format
+msgid "org.hibernate.tool.hbm2ddl"
 msgstr "<literal>org.hibernate.tool.hbm2ddl</literal>"
 
 #. Tag: entry
+#: configuration.xml:1209
 #, no-c-format
 msgid "Log all SQL DDL statements as they are executed"
 msgstr "Registra todas las declaraciones DDL de SQL a medida que se ejecutan"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.pretty</literal>"
+#. Tag: literal
+#: configuration.xml:1213
+#, fuzzy, no-c-format
+msgid "org.hibernate.pretty"
 msgstr "<literal>org.hibernate.pretty</literal>"
 
 #. Tag: entry
+#: configuration.xml:1215
 #, no-c-format
 msgid ""
 "Log the state of all entities (max 20 entities) associated with the session "
@@ -1927,62 +2367,74 @@ msgstr ""
 "Registra el estado de todas las entidades (máximo 20 entidades) asociadas "
 "con la sesión en tiempo de limpieza (flush)"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.cache</literal>"
+#. Tag: literal
+#: configuration.xml:1220
+#, fuzzy, no-c-format
+msgid "org.hibernate.cache"
 msgstr "<literal>org.hibernate.cache</literal>"
 
 #. Tag: entry
+#: configuration.xml:1222
 #, no-c-format
 msgid "Log all second-level cache activity"
 msgstr "Registra toda la actividad del caché de segundo nivel"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction</literal>"
+#. Tag: literal
+#: configuration.xml:1226
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction"
 msgstr "<literal>org.hibernate.transaction</literal>"
 
 #. Tag: entry
+#: configuration.xml:1228
 #, no-c-format
 msgid "Log transaction related activity"
 msgstr "Registra la actividad relacionada con la transacción"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.jdbc</literal>"
+#. Tag: literal
+#: configuration.xml:1232
+#, fuzzy, no-c-format
+msgid "org.hibernate.jdbc"
 msgstr "<literal>org.hibernate.jdbc</literal>"
 
 #. Tag: entry
+#: configuration.xml:1234
 #, no-c-format
 msgid "Log all JDBC resource acquisition"
 msgstr "Registra toda adquisición de recursos JDBC"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.hql.ast.AST</literal>"
+#. Tag: literal
+#: configuration.xml:1238
+#, fuzzy, no-c-format
+msgid "org.hibernate.hql.ast.AST"
 msgstr "<literal>org.hibernate.hql.ast.AST</literal>"
 
 #. Tag: entry
+#: configuration.xml:1240
 #, no-c-format
 msgid "Log HQL and SQL ASTs during query parsing"
 msgstr "Regista los ASTs de HQL y SQL, durante análisis de consultas."
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.secure</literal>"
+#. Tag: literal
+#: configuration.xml:1244
+#, fuzzy, no-c-format
+msgid "org.hibernate.secure"
 msgstr "<literal>org.hibernate.secure</literal>"
 
 #. Tag: entry
+#: configuration.xml:1246
 #, no-c-format
 msgid "Log all JAAS authorization requests"
 msgstr "Registra todas las peticiones de autorización JAAS"
 
-#. Tag: entry
+#. Tag: literal
+#: configuration.xml:1250
 #, no-c-format
-msgid "<literal>org.hibernate</literal>"
-msgstr "<literal>org.hibernate</literal>"
+msgid "org.hibernate"
+msgstr ""
 
 #. Tag: entry
+#: configuration.xml:1252
 #, no-c-format
 msgid ""
 "Log everything. This is a lot of information but it is useful for "
@@ -1992,6 +2444,7 @@ msgstr ""
 "problemas"
 
 #. Tag: para
+#: configuration.xml:1259
 #, no-c-format
 msgid ""
 "When developing applications with Hibernate, you should almost always work "
@@ -2005,11 +2458,13 @@ msgstr ""
 "literal> habilitada."
 
 #. Tag: title
+#: configuration.xml:1266
 #, no-c-format
 msgid "Implementing a <literal>NamingStrategy</literal>"
 msgstr "Implementación de una <literal>NamingStrategy</literal>"
 
 #. Tag: para
+#: configuration.xml:1268
 #, no-c-format
 msgid ""
 "The interface <literal>org.hibernate.cfg.NamingStrategy</literal> allows you "
@@ -2020,6 +2475,7 @@ msgstr ""
 "los elementos del esquema."
 
 #. Tag: para
+#: configuration.xml:1272
 #, no-c-format
 msgid ""
 "You can provide rules for automatically generating database identifiers from "
@@ -2038,6 +2494,7 @@ msgstr ""
 "bastante mínima."
 
 #. Tag: para
+#: configuration.xml:1279
 #, no-c-format
 msgid ""
 "You can specify a different strategy by calling <literal>Configuration."
@@ -2046,7 +2503,19 @@ msgstr ""
 "Puede especificar una estrategia diferente llamando a <literal>Configuration."
 "setNamingStrategy()</literal> antes de agregar los mapeos:"
 
+#. Tag: programlisting
+#: configuration.xml:1283
+#, no-c-format
+msgid ""
+"SessionFactory sf = new Configuration()\n"
+"    .setNamingStrategy(ImprovedNamingStrategy.INSTANCE)\n"
+"    .addFile(\"Item.hbm.xml\")\n"
+"    .addFile(\"Bid.hbm.xml\")\n"
+"    .buildSessionFactory();"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:1285
 #, no-c-format
 msgid ""
 "<literal>org.hibernate.cfg.ImprovedNamingStrategy</literal> is a built-in "
@@ -2057,11 +2526,13 @@ msgstr ""
 "aplicaciones."
 
 #. Tag: title
+#: configuration.xml:1291
 #, no-c-format
 msgid "XML configuration file"
 msgstr "Archivo de configuración XML"
 
 #. Tag: para
+#: configuration.xml:1293
 #, no-c-format
 msgid ""
 "An alternative approach to configuration is to specify a full configuration "
@@ -2076,6 +2547,7 @@ msgstr ""
 "sobrescribir propiedades."
 
 #. Tag: para
+#: configuration.xml:1299
 #, no-c-format
 msgid ""
 "The XML configuration file is by default expected to be in the root of your "
@@ -2084,7 +2556,53 @@ msgstr ""
 "El archivo de configuración XML por defecto se espera en la raíz de su "
 "<literal>CLASSPATH</literal>. Este es un ejemplo:"
 
+#. Tag: programlisting
+#: configuration.xml:1302
+#, no-c-format
+msgid ""
+"&lt;?xml version='1.0' encoding='utf-8'?&gt;\n"
+"&lt;!DOCTYPE hibernate-configuration PUBLIC\n"
+"    \"-//Hibernate/Hibernate Configuration DTD//EN\"\n"
+"    \"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"
+"\"&gt;\n"
+"\n"
+"&lt;hibernate-configuration&gt;\n"
+"\n"
+"    &lt;!-- a SessionFactory instance listed as /jndi/name --&gt;\n"
+"    &lt;session-factory\n"
+"        name=\"java:hibernate/SessionFactory\"&gt;\n"
+"\n"
+"        &lt;!-- properties --&gt;\n"
+"        &lt;property name=\"connection.datasource\"&gt;java:/comp/env/jdbc/"
+"MyDB&lt;/property&gt;\n"
+"        &lt;property name=\"dialect\"&gt;org.hibernate.dialect."
+"MySQLDialect&lt;/property&gt;\n"
+"        &lt;property name=\"show_sql\"&gt;false&lt;/property&gt;\n"
+"        &lt;property name=\"transaction.factory_class\"&gt;\n"
+"            org.hibernate.transaction.JTATransactionFactory\n"
+"        &lt;/property&gt;\n"
+"        &lt;property name=\"jta.UserTransaction\"&gt;java:comp/"
+"UserTransaction&lt;/property&gt;\n"
+"\n"
+"        &lt;!-- mapping files --&gt;\n"
+"        &lt;mapping resource=\"org/hibernate/auction/Item.hbm.xml\"/&gt;\n"
+"        &lt;mapping resource=\"org/hibernate/auction/Bid.hbm.xml\"/&gt;\n"
+"\n"
+"        &lt;!-- cache settings --&gt;\n"
+"        &lt;class-cache class=\"org.hibernate.auction.Item\" usage=\"read-"
+"write\"/&gt;\n"
+"        &lt;class-cache class=\"org.hibernate.auction.Bid\" usage=\"read-only"
+"\"/&gt;\n"
+"        &lt;collection-cache collection=\"org.hibernate.auction.Item.bids\" "
+"usage=\"read-write\"/&gt;\n"
+"\n"
+"    &lt;/session-factory&gt;\n"
+"\n"
+"&lt;/hibernate-configuration&gt;"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:1304
 #, no-c-format
 msgid ""
 "The advantage of this approach is the externalization of the mapping file "
@@ -2102,21 +2620,42 @@ msgstr ""
 "los beneficios de utilizar la sintaxis XML que mencionados anteriormente."
 
 #. Tag: para
+#: configuration.xml:1311
 #, no-c-format
 msgid "With the XML configuration, starting Hibernate is then as simple as:"
 msgstr "Con la configuración XML, iniciar Hibernate es tan simple como:"
 
+#. Tag: programlisting
+#: configuration.xml:1314
+#, no-c-format
+msgid ""
+"SessionFactory sf = new Configuration().configure().buildSessionFactory();"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:1316
 #, no-c-format
 msgid "You can select a different XML configuration file using:"
-msgstr "Puede seleccionar un fichero de configuración XML diferente utilizando:"
+msgstr ""
+"Puede seleccionar un fichero de configuración XML diferente utilizando:"
+
+#. Tag: programlisting
+#: configuration.xml:1318
+#, no-c-format
+msgid ""
+"SessionFactory sf = new Configuration()\n"
+"    .configure(\"catdb.cfg.xml\")\n"
+"    .buildSessionFactory();"
+msgstr ""
 
 #. Tag: title
+#: configuration.xml:1322
 #, no-c-format
 msgid "J2EE Application Server integration"
 msgstr "Integración con Servidores de Aplicaciones J2EE"
 
 #. Tag: para
+#: configuration.xml:1324
 #, no-c-format
 msgid "Hibernate has the following integration points for J2EE infrastructure:"
 msgstr ""
@@ -2124,6 +2663,7 @@ msgstr ""
 "J2EE:"
 
 #. Tag: para
+#: configuration.xml:1329
 #, no-c-format
 msgid ""
 "<emphasis>Container-managed datasources</emphasis>: Hibernate can use JDBC "
@@ -2146,6 +2686,7 @@ msgstr ""
 "literal> de Hibernate para mantener portátil su código."
 
 #. Tag: para
+#: configuration.xml:1343
 #, no-c-format
 msgid ""
 "<emphasis>Automatic JNDI binding</emphasis>: Hibernate can bind its "
@@ -2155,6 +2696,7 @@ msgstr ""
 "sus <literal>SessionFactory</literal> a JNDI después del inicio."
 
 #. Tag: para
+#: configuration.xml:1350
 #, no-c-format
 msgid ""
 "<emphasis>JTA Session binding:</emphasis> the Hibernate <literal>Session</"
@@ -2174,6 +2716,7 @@ msgstr ""
 "(CMT) o programática (BMT/UserTransaction)."
 
 #. Tag: para
+#: configuration.xml:1362
 #, no-c-format
 msgid ""
 "<emphasis>JMX deployment:</emphasis> if you have a JMX capable application "
@@ -2194,6 +2737,7 @@ msgstr ""
 "de que Hibernate inicie, etc)."
 
 #. Tag: para
+#: configuration.xml:1373
 #, no-c-format
 msgid ""
 "Depending on your environment, you might have to set the configuration "
@@ -2206,11 +2750,13 @@ msgstr ""
 "conexión\"."
 
 #. Tag: title
+#: configuration.xml:1379
 #, no-c-format
 msgid "Transaction strategy configuration"
 msgstr "Configuración de la estrategia de transacción"
 
 #. Tag: para
+#: configuration.xml:1381
 #, no-c-format
 msgid ""
 "The Hibernate <literal>Session</literal> API is independent of any "
@@ -2229,6 +2775,7 @@ msgstr ""
 "<literal>UserTransaction</literal> cuando sea necesario."
 
 #. Tag: para
+#: configuration.xml:1389
 #, no-c-format
 msgid ""
 "To keep your code portable between these two (and other) environments we "
@@ -2246,26 +2793,31 @@ msgstr ""
 "literal> de Hibernate."
 
 #. Tag: para
+#: configuration.xml:1397
 #, no-c-format
 msgid "There are three standard, or built-in, choices:"
 msgstr "Existen tres opciones estándares o incorporadas:"
 
-#. Tag: term
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.JDBCTransactionFactory</literal>"
+#. Tag: literal
+#: configuration.xml:1401
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.JDBCTransactionFactory"
 msgstr "<literal>org.hibernate.transaction.JDBCTransactionFactory</literal>"
 
 #. Tag: para
+#: configuration.xml:1404
 #, no-c-format
 msgid "delegates to database (JDBC) transactions (default)"
 msgstr "delega a transacciones de bases de datos (JDBC) (por defecto)"
 
-#. Tag: term
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.JTATransactionFactory</literal>"
+#. Tag: literal
+#: configuration.xml:1409
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.JTATransactionFactory"
 msgstr "<literal>org.hibernate.transaction.JTATransactionFactory</literal>"
 
 #. Tag: para
+#: configuration.xml:1412
 #, no-c-format
 msgid ""
 "delegates to container-managed transactions if an existing transaction is "
@@ -2277,17 +2829,20 @@ msgstr ""
 "de bean de sesión EJB). De otra manera, se inicia una nueva transacción y se "
 "utilizan las transacciones administradas por bean."
 
-#. Tag: term
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.CMTTransactionFactory</literal>"
+#. Tag: literal
+#: configuration.xml:1420
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.CMTTransactionFactory"
 msgstr "<literal>org.hibernate.transaction.CMTTransactionFactory</literal>"
 
 #. Tag: para
+#: configuration.xml:1423
 #, no-c-format
 msgid "delegates to container-managed JTA transactions"
 msgstr "delega a transacciones JTA administradas por el contenedor"
 
 #. Tag: para
+#: configuration.xml:1428
 #, no-c-format
 msgid ""
 "You can also define your own transaction strategies (for a CORBA transaction "
@@ -2297,6 +2852,7 @@ msgstr ""
 "para un servicio de transacción CORBA)."
 
 #. Tag: para
+#: configuration.xml:1431
 #, no-c-format
 msgid ""
 "Some features in Hibernate (i.e., the second level cache, Contextual "
@@ -2314,134 +2870,163 @@ msgstr ""
 "no estandariza un sólo mecanismo:"
 
 #. Tag: title
+#: configuration.xml:1439
 #, no-c-format
 msgid "JTA TransactionManagers"
 msgstr "TransactionManagers de JTA"
 
 #. Tag: entry
+#: configuration.xml:1448
 #, no-c-format
 msgid "Transaction Factory"
 msgstr "Transaction Factory"
 
 #. Tag: entry
+#: configuration.xml:1450
 #, no-c-format
 msgid "Application Server"
 msgstr "Servidor de Aplicaciones"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1456
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.JBossTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1458
 #, no-c-format
 msgid "JBoss"
 msgstr "JBoss"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1462
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.WeblogicTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.WeblogicTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1464
 #, no-c-format
 msgid "Weblogic"
 msgstr "Weblogic"
 
-#. Tag: entry
-#, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</"
-"literal>"
+#. Tag: literal
+#: configuration.xml:1468
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.WebSphereTransactionManagerLookup"
 msgstr ""
 "<literal>org.hibernate.transaction.WebSphereTransactionManagerLookup</"
 "literal>"
 
 #. Tag: entry
+#: configuration.xml:1470
 #, no-c-format
 msgid "WebSphere"
 msgstr "WebSphere"
 
-#. Tag: entry
-#, no-c-format
-msgid ""
-"<literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</"
-"literal>"
+#. Tag: literal
+#: configuration.xml:1474
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.WebSphereExtendedJTATransactionLookup"
 msgstr ""
 "<literal>org.hibernate.transaction.WebSphereExtendedJTATransactionLookup</"
 "literal>"
 
 #. Tag: entry
+#: configuration.xml:1476
 #, no-c-format
 msgid "WebSphere 6"
 msgstr "WebSphere 6"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1480
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.OrionTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.OrionTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1482
 #, no-c-format
 msgid "Orion"
 msgstr "Orion"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1486
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.ResinTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.ResinTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1488
 #, no-c-format
 msgid "Resin"
 msgstr "Resin"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1492
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.JOTMTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.JOTMTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1494
 #, no-c-format
 msgid "JOTM"
 msgstr "JOTM"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1498
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.JOnASTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.JOnASTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1500
 #, no-c-format
 msgid "JOnAS"
 msgstr "JOnAS"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1504
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.JRun4TransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.JRun4TransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1506
 #, no-c-format
 msgid "JRun4"
 msgstr "JRun4"
 
-#. Tag: entry
-#, no-c-format
-msgid "<literal>org.hibernate.transaction.BESTransactionManagerLookup</literal>"
-msgstr "<literal>org.hibernate.transaction.BESTransactionManagerLookup</literal>"
+#. Tag: literal
+#: configuration.xml:1510
+#, fuzzy, no-c-format
+msgid "org.hibernate.transaction.BESTransactionManagerLookup"
+msgstr ""
+"<literal>org.hibernate.transaction.BESTransactionManagerLookup</literal>"
 
 #. Tag: entry
+#: configuration.xml:1512
 #, no-c-format
 msgid "Borland ES"
 msgstr "Borland ES"
 
 #. Tag: title
+#: configuration.xml:1520
 #, no-c-format
 msgid "JNDI-bound <literal>SessionFactory</literal>"
 msgstr "<literal>SessionFactory</literal> enlazado a JNDI"
 
 #. Tag: para
+#: configuration.xml:1522
 #, no-c-format
 msgid ""
 "A JNDI-bound Hibernate <literal>SessionFactory</literal> can simplify the "
@@ -2456,6 +3041,7 @@ msgstr ""
 "utilizan el mismo registro."
 
 #. Tag: para
+#: configuration.xml:1528
 #, no-c-format
 msgid ""
 "If you wish to have the <literal>SessionFactory</literal> bound to a JNDI "
@@ -2474,6 +3060,7 @@ msgstr ""
 "lectura por defecto (por ejemplo, en Tomcat)."
 
 #. Tag: para
+#: configuration.xml:1536
 #, no-c-format
 msgid ""
 "When binding the <literal>SessionFactory</literal> to JNDI, Hibernate will "
@@ -2487,6 +3074,7 @@ msgstr ""
 "especifican, se utilizará el <literal>InitialContext</literal> por defecto."
 
 #. Tag: para
+#: configuration.xml:1542
 #, no-c-format
 msgid ""
 "Hibernate will automatically place the <literal>SessionFactory</literal> in "
@@ -2504,6 +3092,7 @@ msgstr ""
 "mayor detalle)."
 
 #. Tag: para
+#: configuration.xml:1550
 #, no-c-format
 msgid ""
 "If you use a JNDI <literal>SessionFactory</literal>, an EJB or any other "
@@ -2515,7 +3104,8 @@ msgstr ""
 "utilizando una búsqueda JNDI."
 
 #. Tag: para
-#, no-c-format
+#: configuration.xml:1554
+#, fuzzy, no-c-format
 msgid ""
 "It is recommended that you bind the <literal>SessionFactory</literal> to "
 "JNDI in a managed environment and use a <literal>static</literal> singleton "
@@ -2523,7 +3113,7 @@ msgid ""
 "recommend to hide the actual lookup code for a <literal>SessionFactory</"
 "literal> in a helper class, such as <literal>HibernateUtil.getSessionFactory"
 "()</literal>. Note that such a class is also a convenient way to startup "
-"Hibernate&mdash;see chapter 1."
+"Hibernate—see chapter 1."
 msgstr ""
 "Le recomendamos que vincule el <literal>SessionFactory</literal> a JNDI en "
 "un entorno administrado y que de otra manera, use un singleton "
@@ -2534,22 +3124,24 @@ msgstr ""
 "también es una manera práctica de iniciar Hibernate&mdash; vea el capítulo 1."
 
 #. Tag: title
+#: configuration.xml:1565
 #, no-c-format
 msgid "Current Session context management with JTA"
 msgstr "Administración de contexto de Sesión Actual con JTA"
 
 #. Tag: para
-#, no-c-format
+#: configuration.xml:1567
+#, fuzzy, no-c-format
 msgid ""
 "The easiest way to handle <literal>Sessions</literal> and transactions is "
 "Hibernate's automatic \"current\" <literal>Session</literal> management. For "
 "a discussion of contextual sessions see <xref linkend=\"architecture-current-"
-"session\" />. Using the <literal>\"jta\"</literal> session context, if there "
+"session\"/>. Using the <literal>\"jta\"</literal> session context, if there "
 "is no Hibernate <literal>Session</literal> associated with the current JTA "
 "transaction, one will be started and associated with that JTA transaction "
 "the first time you call <literal>sessionFactory.getCurrentSession()</"
 "literal>. The <literal>Session</literal>s retrieved via "
-"<literal>getCurrentSession()</literal> in the<literal>\"jta\"</literal> "
+"<literal>getCurrentSession()</literal> in the <literal>\"jta\"</literal> "
 "context are set to automatically flush before the transaction completes, "
 "close after the transaction completes, and aggressively release JDBC "
 "connections after each statement. This allows the <literal>Session</"
@@ -2584,11 +3176,13 @@ msgstr ""
 "con CTM."
 
 #. Tag: title
+#: configuration.xml:1590
 #, no-c-format
 msgid "JMX deployment"
 msgstr "Despliegue JMX"
 
 #. Tag: para
+#: configuration.xml:1592
 #, no-c-format
 msgid ""
 "The line <literal>cfg.buildSessionFactory()</literal> still has to be "
@@ -2604,6 +3198,7 @@ msgstr ""
 "desplegar Hibernate como un <emphasis>servicio administrado</emphasis>."
 
 #. Tag: para
+#: configuration.xml:1598
 #, no-c-format
 msgid ""
 "Hibernate is distributed with <literal>org.hibernate.jmx.HibernateService</"
@@ -2617,7 +3212,64 @@ msgstr ""
 "vendedor. He aquí un ejemplo de <literal>jboss-service.xml</literal> para "
 "JBoss 4.0.x: "
 
+#. Tag: programlisting
+#: configuration.xml:1604
+#, no-c-format
+msgid ""
+"&lt;?xml version=\"1.0\"?&gt;\n"
+"&lt;server&gt;\n"
+"\n"
+"&lt;mbean code=\"org.hibernate.jmx.HibernateService\"\n"
+"    name=\"jboss.jca:service=HibernateFactory,name=HibernateFactory\"&gt;\n"
+"\n"
+"    &lt;!-- Required services --&gt;\n"
+"    &lt;depends&gt;jboss.jca:service=RARDeployer&lt;/depends&gt;\n"
+"    &lt;depends&gt;jboss.jca:service=LocalTxCM,name=HsqlDS&lt;/depends&gt;\n"
+"\n"
+"    &lt;!-- Bind the Hibernate service to JNDI --&gt;\n"
+"    &lt;attribute name=\"JndiName\"&gt;java:/hibernate/SessionFactory&lt;/"
+"attribute&gt;\n"
+"\n"
+"    &lt;!-- Datasource settings --&gt;\n"
+"    &lt;attribute name=\"Datasource\"&gt;java:HsqlDS&lt;/attribute&gt;\n"
+"    &lt;attribute name=\"Dialect\"&gt;org.hibernate.dialect.HSQLDialect&lt;/"
+"attribute&gt;\n"
+"\n"
+"    &lt;!-- Transaction integration --&gt;\n"
+"    &lt;attribute name=\"TransactionStrategy\"&gt;\n"
+"        org.hibernate.transaction.JTATransactionFactory&lt;/attribute&gt;\n"
+"    &lt;attribute name=\"TransactionManagerLookupStrategy\"&gt;\n"
+"        org.hibernate.transaction.JBossTransactionManagerLookup&lt;/"
+"attribute&gt;\n"
+"    &lt;attribute name=\"FlushBeforeCompletionEnabled\"&gt;true&lt;/"
+"attribute&gt;\n"
+"    &lt;attribute name=\"AutoCloseSessionEnabled\"&gt;true&lt;/"
+"attribute&gt;\n"
+"\n"
+"    &lt;!-- Fetching options --&gt;\n"
+"    &lt;attribute name=\"MaximumFetchDepth\"&gt;5&lt;/attribute&gt;\n"
+"\n"
+"    &lt;!-- Second-level caching --&gt;\n"
+"    &lt;attribute name=\"SecondLevelCacheEnabled\"&gt;true&lt;/"
+"attribute&gt;\n"
+"    &lt;attribute name=\"CacheProviderClass\"&gt;org.hibernate.cache."
+"EhCacheProvider&lt;/attribute&gt;\n"
+"    &lt;attribute name=\"QueryCacheEnabled\"&gt;true&lt;/attribute&gt;\n"
+"\n"
+"    &lt;!-- Logging --&gt;\n"
+"    &lt;attribute name=\"ShowSqlEnabled\"&gt;true&lt;/attribute&gt;\n"
+"\n"
+"    &lt;!-- Mapping files --&gt;\n"
+"    &lt;attribute name=\"MapResources\"&gt;auction/Item.hbm.xml,auction/"
+"Category.hbm.xml&lt;/attribute&gt;\n"
+"\n"
+"&lt;/mbean&gt;\n"
+"\n"
+"&lt;/server&gt;"
+msgstr ""
+
 #. Tag: para
+#: configuration.xml:1606
 #, no-c-format
 msgid ""
 "This file is deployed in a directory called <literal>META-INF</literal> and "
@@ -2641,3 +3293,17 @@ msgstr ""
 "apagarlo). Consulte la documentación de JBoss AS para obtener más "
 "información sobre el servicio JMX y la implementación de EJB."
 
+#~ msgid "<emphasis>JDBC URL</emphasis>"
+#~ msgstr "<emphasis>URL JDBC</emphasis>"
+
+#~ msgid "<emphasis>database user</emphasis>"
+#~ msgstr "<emphasis>usuario de la base de datos</emphasis>"
+
+#~ msgid "<property>hibernate.generate_statistics</property>"
+#~ msgstr "<property>hibernate.generate_statistics</property>"
+
+#~ msgid "DB2"
+#~ msgstr "DB2"
+
+#~ msgid "<literal>org.hibernate</literal>"
+#~ msgstr "<literal>org.hibernate</literal>"

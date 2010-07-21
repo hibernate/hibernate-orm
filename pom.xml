@@ -28,7 +28,6 @@
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
-        <module>annotations</module>
         <module>envers</module>
         <module>jdbc3-testing</module>
         <module>cache-infinispan</module>

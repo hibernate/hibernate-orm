@@ -135,11 +135,6 @@
             </dependency>
             <dependency>
                 <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-annotations</artifactId>
-                <version>${version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.hibernate</groupId>
                 <artifactId>hibernate-entitymanager</artifactId>
                 <version>${version}</version>
             </dependency>

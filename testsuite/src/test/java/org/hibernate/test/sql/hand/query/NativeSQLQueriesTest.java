@@ -13,9 +13,14 @@ import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TimestampType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
@@ -41,6 +46,7 @@ import org.hibernate.transform.BasicTransformerAdapter;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
 public class NativeSQLQueriesTest extends FunctionalTestCase {
 
 	public NativeSQLQueriesTest(String x) {
@@ -604,6 +610,87 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
+	}
+
+	public void testExplicitReturnAPI() {
+		Session s = openSession();
+		s.beginTransaction();
+		Organization jboss = new Organization( "JBoss" );
+		Person me = new Person( "Steve" );
+		Employment emp = new Employment( me, jboss, "US" );
+		Serializable jbossId = s.save( jboss );
+		s.save( me );
+		s.save( emp );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+
+		String sql =
+				"SELECT org.ORGID 		as orgid," +
+				"       org.NAME 		as name," +
+				"       emp.EMPLOYER 	as employer," +
+				"       emp.EMPID 		as empid," +
+				"       emp.EMPLOYEE 	as employee," +
+				"       emp.EMPLOYER 	as employer," +
+				"       emp.STARTDATE 	as startDate," +
+				"       emp.ENDDATE 	as endDate," +
+				"       emp.REGIONCODE 	as regionCode," +
+				"       emp.VALUE 		as VALUE," +
+				"       emp.CURRENCY 	as CURRENCY" +
+				" FROM 	ORGANIZATION org" +
+				"    LEFT OUTER JOIN EMPLOYMENT emp ON org.ORGID = emp.EMPLOYER";
+
+		// as a control, lets apply an existing rs mapping
+		SQLQuery sqlQuery = s.createSQLQuery( sql );
+		sqlQuery.setResultSetMapping( "org-description" );
+		sqlQuery.list();
+
+		// next try a partial mapping def
+		sqlQuery.addRoot( "org", Organization.class );
+		sqlQuery.addFetch( "emp", "org", "employments" );
+		sqlQuery.list();
+
+		// now try full explicit mappings
+		sqlQuery.addRoot( "org", Organization.class )
+				.addProperty( "id", "orgid" )
+				.addProperty( "name" ).addColumnAlias( "name" );
+		sqlQuery.addFetch( "emp", "org", "employments" )
+				.addProperty( "key", "employer" )
+				.addProperty( "element", "empid" )
+				.addProperty( "element.employee", "employee" )
+				.addProperty( "element.employer", "employer" )
+				.addProperty( "element.startDate", "startDate" )
+				.addProperty( "element.endDate", "endDate" )
+				.addProperty( "element.regionCode", "regionCode" )
+				.addProperty( "element.employmentId", "empId" )
+				.addProperty( "element.salary" ).addColumnAlias( "VALUE" ).addColumnAlias( "CURRENCY" );
+		sqlQuery.list();
+
+		// lets try a totally different approach now and pull back scalars, first with explicit types
+		sqlQuery.addScalar( "orgid", LongType.INSTANCE )
+				.addScalar( "name", StringType.INSTANCE )
+				.addScalar( "empid", LongType.INSTANCE )
+				.addScalar( "employee", LongType.INSTANCE )
+				.addScalar( "startDate", TimestampType.INSTANCE )
+				.addScalar( "endDate", TimestampType.INSTANCE )
+				.addScalar( "regionCode", StringType.INSTANCE )
+				.addScalar( "empId", LongType.INSTANCE )
+				.addScalar( "VALUE", FloatType.INSTANCE )
+				.addScalar( "CURRENCY", StringType.INSTANCE );
+
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.delete( emp );
+		s.delete( jboss );
+		s.delete( me );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	public void testMixAndMatchEntityScalar() {

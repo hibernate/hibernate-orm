@@ -26,6 +26,8 @@ package org.hibernate.engine.query.sql;
 
 /**
  * Describes a return in a native SQL query.
+ * <p/>
+ * IMPL NOTE : implementations should be immutable as they are used as part of cache keys for result caching.
  *
  * @author Steve Ebersole
  */

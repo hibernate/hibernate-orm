@@ -68,7 +68,7 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 		Attribute cmAtt = queryElem.attribute( "comment" );
 		String comment = cmAtt == null ? null : cmAtt.getValue();
 
-		java.util.List synchronizedTables = new ArrayList();
+		java.util.List<String> synchronizedTables = new ArrayList<String>();
 		Iterator tables = queryElem.elementIterator( "synchronize" );
 		while ( tables.hasNext() ) {
 			synchronizedTables.add( ( (Element) tables.next() ).attributeValue( "table" ) );

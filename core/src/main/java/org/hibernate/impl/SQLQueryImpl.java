@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -53,28 +53,23 @@ import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.type.Type;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
 
 /**
- * Implements SQL query passthrough.
- *
- * <pre>
- * <sql-query name="mySqlQuery">
- * <return alias="person" class="eg.Person"/>
- *   SELECT {person}.NAME AS {person.name}, {person}.AGE AS {person.age}, {person}.SEX AS {person.sex}
- *   FROM PERSON {person} WHERE {person}.NAME LIKE 'Hiber%'
- * </sql-query>
- * </pre>
+ * Implementation of the {@link SQLQuery} contract.
  *
  * @author Max Andersen
+ * @author Steve Ebersole
  */
 public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
-	private final List queryReturns;
-	private Collection querySpaces;
+	private List<NativeSQLQueryReturn> queryReturns;
+	private List<ReturnBuilder> queryReturnBuilders;
+	private boolean autoDiscoverTypes;
+
+	private Collection<String> querySpaces;
+
 	private final boolean callable;
-	private boolean autodiscovertypes;
 
 	/**
 	 * Constructs a SQLQueryImpl given a sql query defined in the mappings.
@@ -100,7 +95,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 			this.queryReturns = Arrays.asList( queryDef.getQueryReturns() );
 		}
 		else {
-			this.queryReturns = new ArrayList();
+			this.queryReturns = new ArrayList<NativeSQLQueryReturn>();
 		}
 
 		this.querySpaces = queryDef.getQuerySpaces();
@@ -109,31 +104,16 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
 	SQLQueryImpl(
 			final String sql,
-	        final List queryReturns,
-	        final Collection querySpaces,
-	        final FlushMode flushMode,
-	        boolean callable,
-	        final SessionImplementor session,
-	        ParameterMetadata parameterMetadata) {
-		// TODO : absolutely no usages of this constructor form; can it go away?
-		super( sql, flushMode, session, parameterMetadata );
-		this.queryReturns = queryReturns;
-		this.querySpaces = querySpaces;
-		this.callable = callable;
-	}
-
-	SQLQueryImpl(
-			final String sql,
 	        final String returnAliases[],
 	        final Class returnClasses[],
 	        final LockMode[] lockModes,
 	        final SessionImplementor session,
-	        final Collection querySpaces,
+	        final Collection<String> querySpaces,
 	        final FlushMode flushMode,
 	        ParameterMetadata parameterMetadata) {
 		// TODO : this constructor form is *only* used from constructor directly below us; can it go away?
 		super( sql, flushMode, session, parameterMetadata );
-		queryReturns = new ArrayList(returnAliases.length);
+		queryReturns = new ArrayList<NativeSQLQueryReturn>( returnAliases.length );
 		for ( int i=0; i<returnAliases.length; i++ ) {
 			NativeSQLQueryRootReturn ret = new NativeSQLQueryRootReturn(
 					returnAliases[i],
@@ -157,15 +137,13 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 
 	SQLQueryImpl(String sql, SessionImplementor session, ParameterMetadata parameterMetadata) {
 		super( sql, null, session, parameterMetadata );
-		queryReturns = new ArrayList();
+		queryReturns = new ArrayList<NativeSQLQueryReturn>();
 		querySpaces = null;
 		callable = false;
 	}
 
-	private static final NativeSQLQueryReturn[] NO_SQL_RETURNS = new NativeSQLQueryReturn[0];
-
 	private NativeSQLQueryReturn[] getQueryReturns() {
-		return ( NativeSQLQueryReturn[] ) queryReturns.toArray( NO_SQL_RETURNS );
+		return queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] );
 	}
 
 	public List list() throws HibernateException {
@@ -220,28 +198,46 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	public QueryParameters getQueryParameters(Map namedParams) {
 		QueryParameters qp = super.getQueryParameters(namedParams);
 		qp.setCallable(callable);
-		qp.setAutoDiscoverScalarTypes(autodiscovertypes);
+		qp.setAutoDiscoverScalarTypes( autoDiscoverTypes );
 		return qp;
 	}
 
 	protected void verifyParameters() {
+		// verifyParameters is called at the start of all execution type methods, so we use that here to perform
+		// some preparation work.
+		prepare();
 		verifyParameters( callable );
 		boolean noReturns = queryReturns==null || queryReturns.isEmpty();
 		if ( noReturns ) {
-			this.autodiscovertypes = noReturns;
+			this.autoDiscoverTypes = noReturns;
 		}
 		else {
-			Iterator itr = queryReturns.iterator();
-			while ( itr.hasNext() ) {
-				NativeSQLQueryReturn rtn = ( NativeSQLQueryReturn ) itr.next();
-				if ( rtn instanceof NativeSQLQueryScalarReturn ) {
-					NativeSQLQueryScalarReturn scalar = ( NativeSQLQueryScalarReturn ) rtn;
+			for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
+				if ( queryReturn instanceof NativeSQLQueryScalarReturn ) {
+					NativeSQLQueryScalarReturn scalar = (NativeSQLQueryScalarReturn) queryReturn;
 					if ( scalar.getType() == null ) {
-						autodiscovertypes = true;
+						autoDiscoverTypes = true;
 						break;
 					}
 				}
 			}
+		}
+	}
+
+	private void prepare() {
+		if ( queryReturnBuilders != null ) {
+			if ( ! queryReturnBuilders.isEmpty() ) {
+				if ( queryReturns != null ) {
+					queryReturns.clear();
+					queryReturns = null;
+				}
+				queryReturns = new ArrayList<NativeSQLQueryReturn>();
+				for ( ReturnBuilder builder : queryReturnBuilders ) {
+					queryReturns.add( builder.buildReturn() );
+				}
+				queryReturnBuilders.clear();
+			}
+			queryReturnBuilders = null;
 		}
 	}
 
@@ -266,23 +262,35 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		return null;
 	}
 
-	public SQLQuery addScalar(String columnAlias, Type type) {
-		queryReturns.add( new NativeSQLQueryScalarReturn( columnAlias, type ) );
+	public SQLQuery addScalar(final String columnAlias, final Type type) {
+		if ( queryReturnBuilders == null ) {
+			queryReturnBuilders = new ArrayList<ReturnBuilder>();
+		}
+		queryReturnBuilders.add(
+				new ReturnBuilder() {
+					public NativeSQLQueryReturn buildReturn() {
+						return new NativeSQLQueryScalarReturn( columnAlias, type );
+					}
+				}
+		);
 		return this;
 	}
 
 	public SQLQuery addScalar(String columnAlias) {
-		autodiscovertypes = true;
-		queryReturns.add( new NativeSQLQueryScalarReturn( columnAlias, null ) );
-		return this;
+		return addScalar( columnAlias, null );
 	}
 
-	public SQLQuery addJoin(String alias, String path) {
-		return addJoin(alias, path, LockMode.READ);
+	public RootReturn addRoot(String tableAlias, String entityName) {
+		RootReturnBuilder builder = new RootReturnBuilder( tableAlias, entityName );
+		if ( queryReturnBuilders == null ) {
+			queryReturnBuilders = new ArrayList<ReturnBuilder>();
+		}
+		queryReturnBuilders.add( builder );
+		return builder;
 	}
 
-	public SQLQuery addEntity(Class entityClass) {
-		return addEntity( StringHelper.unqualify( entityClass.getName() ), entityClass );
+	public RootReturn addRoot(String tableAlias, Class entityType) {
+		return addRoot( tableAlias, entityType.getName() );
 	}
 
 	public SQLQuery addEntity(String entityName) {
@@ -290,31 +298,59 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	}
 
 	public SQLQuery addEntity(String alias, String entityName) {
-		return addEntity(alias, entityName, LockMode.READ);
+		addRoot( alias, entityName );
+		return this;
+	}
+
+	public SQLQuery addEntity(String alias, String entityName, LockMode lockMode) {
+		addRoot( alias, entityName ).setLockMode( lockMode );
+		return this;
+	}
+
+	public SQLQuery addEntity(Class entityType) {
+		return addEntity( entityType.getName() );
 	}
 
 	public SQLQuery addEntity(String alias, Class entityClass) {
 		return addEntity( alias, entityClass.getName() );
 	}
 
-	public SQLQuery addJoin(String alias, String path, LockMode lockMode) {
+	public SQLQuery addEntity(String alias, Class entityClass, LockMode lockMode) {
+		return addEntity( alias, entityClass.getName(), lockMode );
+	}
+
+	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+		FetchReturnBuilder builder = new FetchReturnBuilder( tableAlias, ownerTableAlias, joinPropertyName );
+		if ( queryReturnBuilders == null ) {
+			queryReturnBuilders = new ArrayList<ReturnBuilder>();
+		}
+		queryReturnBuilders.add( builder );
+		return builder;
+	}
+
+	public SQLQuery addJoin(String tableAlias, String ownerTableAlias, String joinPropertyName) {
+		addFetch( tableAlias, ownerTableAlias, joinPropertyName );
+		return this;
+	}
+
+	public SQLQuery addJoin(String alias, String path) {
+		createFetchJoin( alias, path );
+		return this;
+	}
+
+	private FetchReturn createFetchJoin(String tableAlias, String path) {
 		int loc = path.indexOf('.');
 		if ( loc < 0 ) {
 			throw new QueryException( "not a property path: " + path );
 		}
-		String ownerAlias = path.substring(0, loc);
-		String role = path.substring(loc+1);
-		queryReturns.add( new NativeSQLQueryJoinReturn(alias, ownerAlias, role, CollectionHelper.EMPTY_MAP, lockMode) );
-		return this;
+		final String ownerTableAlias = path.substring( 0, loc );
+		final String joinedPropertyName = path.substring( loc+1 );
+		return addFetch( tableAlias, ownerTableAlias, joinedPropertyName );
 	}
 
-	public SQLQuery addEntity(String alias, String entityName, LockMode lockMode) {
-		queryReturns.add( new NativeSQLQueryRootReturn(alias, entityName, lockMode) );
+	public SQLQuery addJoin(String alias, String path, LockMode lockMode) {
+		createFetchJoin( alias, path ).setLockMode( lockMode );
 		return this;
-	}
-
-	public SQLQuery addEntity(String alias, Class entityClass, LockMode lockMode) {
-		return addEntity( alias, entityClass.getName(), lockMode );
 	}
 
 	public SQLQuery setResultSetMapping(String name) {
@@ -323,16 +359,13 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
 		NativeSQLQueryReturn[] returns = mapping.getQueryReturns();
-		int length = returns.length;
-		for ( int index = 0 ; index < length ; index++ ) {
-			queryReturns.add( returns[index] );
-		}
+		queryReturns.addAll( Arrays.asList( returns ) );
 		return this;
 	}
 
 	public SQLQuery addSynchronizedQuerySpace(String querySpace) {
 		if ( querySpaces == null ) {
-			querySpaces = new ArrayList();
+			querySpaces = new ArrayList<String>();
 		}
 		querySpaces.add( querySpace );
 		return this;
@@ -349,11 +382,9 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	private SQLQuery addQuerySpaces(Serializable[] spaces) {
 		if ( spaces != null ) {
 			if ( querySpaces == null ) {
-				querySpaces = new ArrayList();
+				querySpaces = new ArrayList<String>();
 			}
-			for ( int i = 0; i < spaces.length; i++ ) {
-				querySpaces.add( spaces[i] );
-			}
+			querySpaces.addAll( Arrays.asList( (String[]) spaces ) );
 		}
 		return this;
 	}
@@ -372,4 +403,97 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 	}
 
+	private class RootReturnBuilder implements RootReturn, ReturnBuilder {
+		private final String alias;
+		private final String entityName;
+		private LockMode lockMode = LockMode.READ;
+		private Map<String,List<String>> propertyMappings;
+
+		private RootReturnBuilder(String alias, String entityName) {
+			this.alias = alias;
+			this.entityName = entityName;
+		}
+
+		public RootReturn setLockMode(LockMode lockMode) {
+			this.lockMode = lockMode;
+			return this;
+		}
+
+		public RootReturn setDiscriminatorAlias(String alias) {
+			addProperty( "class", alias );
+			return this;
+		}
+
+		public RootReturn addProperty(String propertyName, String columnAlias) {
+			addProperty( propertyName ).addColumnAlias( columnAlias );
+			return this;
+		}
+
+		public ReturnProperty addProperty(final String propertyName) {
+			if ( propertyMappings == null ) {
+				propertyMappings = new HashMap<String,List<String>>();
+			}
+			return new ReturnProperty() {
+				public ReturnProperty addColumnAlias(String columnAlias) {
+					List<String> columnAliases = propertyMappings.get( propertyName );
+					if ( columnAliases == null ) {
+						columnAliases = new ArrayList<String>();
+					}
+					columnAliases.add( columnAlias );
+					return this;
+				}
+			};
+		}
+
+		public NativeSQLQueryReturn buildReturn() {
+			return new NativeSQLQueryRootReturn( alias, entityName, propertyMappings, lockMode );
+		}
+	}
+	private class FetchReturnBuilder implements FetchReturn, ReturnBuilder {
+		private final String alias;
+		private String ownerTableAlias;
+		private final String joinedPropertyName;
+		private LockMode lockMode = LockMode.READ;
+		private Map<String,List<String>> propertyMappings;
+
+		private FetchReturnBuilder(String alias, String ownerTableAlias, String joinedPropertyName) {
+			this.alias = alias;
+			this.ownerTableAlias = ownerTableAlias;
+			this.joinedPropertyName = joinedPropertyName;
+		}
+
+		public FetchReturn setLockMode(LockMode lockMode) {
+			this.lockMode = lockMode;
+			return this;
+		}
+
+		public FetchReturn addProperty(String propertyName, String columnAlias) {
+			addProperty( propertyName ).addColumnAlias( columnAlias );
+			return this;
+		}
+
+		public ReturnProperty addProperty(final String propertyName) {
+			if ( propertyMappings == null ) {
+				propertyMappings = new HashMap<String,List<String>>();
+			}
+			return new ReturnProperty() {
+				public ReturnProperty addColumnAlias(String columnAlias) {
+					List<String> columnAliases = propertyMappings.get( propertyName );
+					if ( columnAliases == null ) {
+						columnAliases = new ArrayList<String>();
+					}
+					columnAliases.add( columnAlias );
+					return this;
+				}
+			};
+		}
+
+		public NativeSQLQueryReturn buildReturn() {
+			return new NativeSQLQueryJoinReturn( alias, ownerTableAlias, joinedPropertyName, propertyMappings, lockMode );
+		}
+	}
+
+	private interface ReturnBuilder {
+		NativeSQLQueryReturn buildReturn();
+	}
 }

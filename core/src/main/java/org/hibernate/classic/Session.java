@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.type.Type;
 
 /**
@@ -297,24 +298,34 @@ public interface Session extends org.hibernate.Session {
 
 	/**
 	 * Create a new instance of <tt>Query</tt> for the given SQL string.
-	 *
-	 * @deprecated will be replaced with a more Query like interface in later release
+	 * <p/>
+	 * Returned instances should all be {@link org.hibernate.SQLQuery}.
 	 *
 	 * @param sql a query expressed in SQL
 	 * @param returnAlias a table alias that appears inside <tt>{}</tt> in the SQL string
 	 * @param returnClass the returned persistent class
+	 *
+	 * @deprecated use {@link org.hibernate.SQLQuery#addRoot} or {@link org.hibernate.SQLQuery#addEntity} variants
+	 * instead to define the alias/class
 	 */
+	@Deprecated
+	@SuppressWarnings({ "JavaDoc" })
 	public Query createSQLQuery(String sql, String returnAlias, Class returnClass);
 	
 	/**
 	 * Create a new instance of <tt>Query</tt> for the given SQL string.
-	 *
-	 * @deprecated will be replaced with a more Query like interface in later release
+	 * <p/>
+	 * Returned instances should all be {@link org.hibernate.SQLQuery}.
 	 *
 	 * @param sql a query expressed in SQL
 	 * @param returnAliases an array of table aliases that appear inside <tt>{}</tt> in the SQL string
 	 * @param returnClasses the returned persistent classes
+	 *
+	 * @deprecated use {@link org.hibernate.SQLQuery#addRoot} or {@link org.hibernate.SQLQuery#addEntity} variants
+	 * instead to define the aliases/classes
 	 */
+	@Deprecated
+	@SuppressWarnings({ "JavaDoc" })
 	public Query createSQLQuery(String sql, String[] returnAliases, Class[] returnClasses);
 	
 	

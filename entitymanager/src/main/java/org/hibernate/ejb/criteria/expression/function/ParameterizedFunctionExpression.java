@@ -98,8 +98,10 @@ public class ParameterizedFunctionExpression<X>
 	}
 
 	protected void renderArguments(StringBuilder buffer, CriteriaQueryCompiler.RenderingContext renderingContext) {
+		String sep = "";
 		for ( Expression argument : argumentExpressions ) {
-			buffer.append( ( (Renderable) argument ).render( renderingContext ) );
+			buffer.append( sep ).append( ( (Renderable) argument ).render( renderingContext ) );
+			sep = ", ";
 		}
 	}
 }

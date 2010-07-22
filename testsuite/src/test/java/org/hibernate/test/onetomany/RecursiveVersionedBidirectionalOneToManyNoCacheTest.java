@@ -33,7 +33,7 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Burkhard Graves, Gail Badner
  */
 
-public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
+public class RecursiveVersionedBidirectionalOneToManyNoCacheTest extends AbstractVersionedRecursiveBidirectionalOneToManyTest {
 
     /*
 	 *  What is done:
@@ -50,15 +50,19 @@ public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveB
 	 * in Node.java makes the assertion true (in check() below).
 	 */
 
-	public RecursiveBidirectionalOneToManyCacheTest(String str) {
+	public RecursiveVersionedBidirectionalOneToManyNoCacheTest(String str) {
 		super(str);
 	}
 
+	public String getCacheConcurrencyStrategy() {
+			return null;
+	}
+
 	protected CacheMode getSessionCacheMode() {
-			return CacheMode.NORMAL;
+			return CacheMode.IGNORE;
 	}
 
 	public static Test suite() {
-		return new FunctionalTestClassTestSuite( RecursiveBidirectionalOneToManyCacheTest.class );
+		return new FunctionalTestClassTestSuite( RecursiveVersionedBidirectionalOneToManyNoCacheTest.class );
 	}
 }

@@ -8,6 +8,7 @@
         <id name="id" column="id" type="java.lang.Integer">
             <!--<generator class="native"/> -->
         </id>
+        <version name="version" column="vers" type="long" />
         <property name="description"/>
         <many-to-one name="parentNode"
                      class="Node"

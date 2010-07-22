@@ -88,10 +88,11 @@ public class ManyToOneType extends EntityType {
 	}
 
 	public boolean isAlwaysDirtyChecked() {
-		// If we have <tt>not-found="ignore"</tt> association mapped to a
-		// formula, we always need to dirty check it, so we can update the
-		// second-level cache
-		return ignoreNotFound;
+		// always need to dirty-check, even when non-updateable;
+		// this ensures that when the association is updated,
+		// the entity containing this association will be updated
+		// in the cache
+		return true;
 	}
 
 	public boolean isOneToOne() {

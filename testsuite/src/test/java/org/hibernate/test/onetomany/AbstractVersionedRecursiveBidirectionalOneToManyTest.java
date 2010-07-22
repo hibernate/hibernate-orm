@@ -24,16 +24,20 @@
  */
 package org.hibernate.test.onetomany;
 
-import junit.framework.Test;
+import java.util.ArrayList;
 
 import org.hibernate.CacheMode;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.test.readonly.VersionedNode;
 
 /**
  * @author Burkhard Graves, Gail Badner
  */
 
-public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
+public abstract class AbstractVersionedRecursiveBidirectionalOneToManyTest extends AbstractRecursiveBidirectionalOneToManyTest {
 
     /*
 	 *  What is done:
@@ -45,20 +49,27 @@ public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveB
 	 *       |
 	 *     	 3
 	 *
-	 * Commenting out
-	 * @Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
-	 * in Node.java makes the assertion true (in check() below).
 	 */
 
-	public RecursiveBidirectionalOneToManyCacheTest(String str) {
+	public AbstractVersionedRecursiveBidirectionalOneToManyTest(String str) {
 		super(str);
 	}
 
-	protected CacheMode getSessionCacheMode() {
-			return CacheMode.NORMAL;
+	public String[] getMappings() {
+		return new String[] { "onetomany/VersionedNode.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( RecursiveBidirectionalOneToManyCacheTest.class );
+	void check(boolean simplePropertyUpdated) {
+		super.check( simplePropertyUpdated );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Node node1 = ( Node ) s.get( Node.class, new Integer( 1 ) );
+		Node node2 = ( Node ) s.get( Node.class, new Integer( 2 ) );
+		Node node3 = ( Node ) s.get( Node.class, new Integer( 3 ) );
+		assertEquals( 1, node1.getVersion() );
+		assertEquals( 1, node2.getVersion() );
+		assertEquals( 1, node3.getVersion() );
+		tx.commit();
+		s.close();
 	}
 }

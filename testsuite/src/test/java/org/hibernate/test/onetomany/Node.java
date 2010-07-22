@@ -31,15 +31,17 @@ import java.util.ArrayList;
 public class Node implements Serializable {
 
 	private Integer id;
-
+	private long version;
 	private Node parentNode;
+	private String description;
 	private List subNodes = new ArrayList();
 
 	public Node() {
 	}
 
-	public Node(int id) {
+	public Node(int id, String description) {
 		setId( id );
+		setDescription( description );
 	}
 
     public Integer getId() {
@@ -48,6 +50,22 @@ public class Node implements Serializable {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public long getVersion() {
+		return version;
+	}
+
+	public void setVersion(long version) {
+		this.version = version;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public Node getParentNode() {

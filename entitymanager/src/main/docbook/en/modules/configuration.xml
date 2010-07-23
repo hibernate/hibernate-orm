@@ -66,12 +66,14 @@
       </itemizedlist></para>
 
     <note>
-      <title>What is hibernate-jpa-2.0-api-x.y.z.jar</title>
+      <title>What is hibernate-jpa-2.0-api-x.y.z.jar?</title>
 
-      <para>This is the JAR containing the JPA 2.0 API, it is fully compliant
-      with the spec and passed the TCK signature test. You typically don't
-      need it when you deploy your application in a Java EE 6 application
-      server (like JBoss AS 6 for example).</para>
+      <para>This is the JAR containing the JPA 2.0 API, it provides all the
+      interfaces and concrete classes that the specification defines as public
+      API. Said otherwise, you can use this JAR to bootstrap any JPA provider
+      implementation. Note that you typically don't need it when you deploy
+      your application in a Java EE 6 application server (like JBoss AS 6 for
+      example).</para>
     </note>
 
     <para>Alternatively, if you use Maven, add the following

@@ -150,16 +150,25 @@ public class DetachedCriteria implements CriteriaSpecification, Serializable {
         criteria.createAlias(associationPath, alias, joinType);
         return this;
     }
-
-    public DetachedCriteria createCriteria(String associationPath, int joinType) throws HibernateException {
+	
+	public DetachedCriteria createAlias(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+		criteria.createAlias(associationPath, alias, joinType, withClause);
+		return this;
+	}
+	
+	public DetachedCriteria createCriteria(String associationPath, int joinType) throws HibernateException {
         return new DetachedCriteria(impl, criteria.createCriteria(associationPath, joinType));
     }
 
     public DetachedCriteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
         return new DetachedCriteria(impl, criteria.createCriteria(associationPath, alias, joinType));
     }
-
-    public DetachedCriteria setComment(String comment) {
+	
+	public DetachedCriteria createCriteria(String associationPath, String alias, int joinType, Criterion withClause) throws HibernateException {
+		return new DetachedCriteria(impl, criteria.createCriteria(associationPath, alias, joinType, withClause));
+	}
+	
+	public DetachedCriteria setComment(String comment) {
         criteria.setComment(comment);
         return this;
     }

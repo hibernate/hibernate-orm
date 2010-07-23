@@ -63,6 +63,7 @@ public class BasicTypeRegistry implements Serializable {
 		register( BigIntegerType.INSTANCE );
 
 		register( StringType.INSTANCE );
+		register( UrlType.INSTANCE );
 
 		register( DateType.INSTANCE );
 		register( TimeType.INSTANCE );

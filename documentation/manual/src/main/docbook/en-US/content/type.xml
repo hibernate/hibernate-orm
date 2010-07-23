@@ -452,6 +452,23 @@
                     </varlistentry>
                 </variablelist>
             </section>
+            <section id="types-basic-value-url">
+                <title><classname>java.net.URL</classname></title>
+                <variablelist>
+                    <varlistentry>
+                        <term><classname>org.hibernate.type.UrlType</classname></term>
+                        <listitem>
+                            <para>
+                                Maps a <classname>java.net.URL</classname> to a JDBC VARCHAR (using the external form)
+                            </para>
+                            <para>
+                                Registered under <literal>url</literal> and <literal>java.net.URL</literal> in the
+                                type registry (see <xref linkend="types-registry"/>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </section>
             <section id="types-basic-value-class">
                 <title><classname>java.lang.Class</classname></title>
                 <variablelist>

@@ -24,7 +24,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.net.URL;
+import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,6 +34,7 @@ import junit.framework.TestCase;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
@@ -66,13 +67,13 @@ public class BasicTypeRegistryTest extends TestCase {
 	}
 
 	public void testExpanding() {
-		BasicType type = registry.getRegisteredType( URL.class.getName() );
+		BasicType type = registry.getRegisteredType( SomeNoopType.INSTANCE.getName() );
 		assertNull( type );
 
-		registry.register( UrlType.INSTANCE );
-		type = registry.getRegisteredType( URL.class.getName() );
+		registry.register( SomeNoopType.INSTANCE );
+		type = registry.getRegisteredType( SomeNoopType.INSTANCE.getName() );
 		assertNotNull( type );
-		assertSame( UrlType.INSTANCE, type );
+		assertSame( SomeNoopType.INSTANCE, type );
 	}
 
 	public void testRegisteringUserTypes() {
@@ -96,20 +97,20 @@ public class BasicTypeRegistryTest extends TestCase {
 		assertEquals( CustomType.class, type.getClass() );
 	}
 
-	public static class UrlType extends AbstractSingleColumnStandardBasicType<URL> {
-		public static final UrlType INSTANCE = new UrlType();
+	public static class SomeNoopType extends AbstractSingleColumnStandardBasicType<String> {
+		public static final SomeNoopType INSTANCE = new SomeNoopType();
 
-		public UrlType() {
-			super( VarcharTypeDescriptor.INSTANCE, UrlTypeDescriptor.INSTANCE );
+		public SomeNoopType() {
+			super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
 		}
 
 		public String getName() {
-			return "url";
+			return "noop";
 		}
 
 		@Override
 		protected boolean registerUnderJavaType() {
-			return true;
+			return false;
 		}
 	}
 

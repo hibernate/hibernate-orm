@@ -36,7 +36,10 @@ import org.hibernate.util.ArrayHelper;
  * @see org.hibernate.stat.Statistics 
  *  
  * @author Gavin King
+ *
+ * @deprecated Use {@link org.hibernate.stat.ConcurrentStatisticsImpl} instead
  */
+@Deprecated
 public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	
 	//TODO: we should provide some way to get keys of collection of statistics to make it easier to retrieve from a GUI perspective

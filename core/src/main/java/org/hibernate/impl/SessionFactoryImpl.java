@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
 
@@ -30,17 +29,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.LinkedHashSet;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -50,20 +48,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.Cache;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.SessionFactory;
-import org.hibernate.StatelessSession;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.EntityNameResolver;
-import org.hibernate.Cache;
+import org.hibernate.StatelessSession;
 import org.hibernate.TypeHelper;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.EntityRegion;
@@ -90,9 +87,9 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.Association;
+import org.hibernate.engine.profile.Fetch;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
@@ -109,23 +106,24 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.PersisterFactory;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.StatisticsImpl;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.transaction.TransactionFactory;
+import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.EmptyIterator;
+import org.hibernate.util.ReflectHelper;
 
 
 /**
@@ -201,27 +199,9 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			SessionFactoryObserver observer) throws HibernateException {
 		log.info("building session factory");
 
-		Statistics concurrentStatistics = null;
-		try {
-			Class concurrentStatsClass = ReflectHelper.classForName("org.hibernate.stat.ConcurrentStatisticsImpl");
-			Constructor constructor = concurrentStatsClass.getConstructor(new Class[]{SessionFactoryImplementor.class});
-			concurrentStatistics = (Statistics) constructor.newInstance(new Object[]{this});
-			log.trace("JDK 1.5 concurrent classes present");
-		} catch ( NoClassDefFoundError noJava5 ) {
-			log.trace("JDK 1.5 concurrent classes missing");
-		} catch (Exception noJava5) {
-			log.trace("JDK 1.5 concurrent classes missing");
-		}
-
-		if (concurrentStatistics != null) {
-			this.statistics = concurrentStatistics;
-		} else {
-			this.statistics = new StatisticsImpl(this);
-		}
-
-		if ( log.isTraceEnabled() ) {
-			log.trace("Statistics initialized with " + statistics.getClass().getName());
-		}
+		this.statistics = new ConcurrentStatisticsImpl( this );
+		getStatistics().setStatisticsEnabled( settings.isStatisticsEnabled() );
+		log.debug( "Statistics initialized [enabled={}]}", settings.isStatisticsEnabled() );
 
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
@@ -443,9 +423,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 				throw new HibernateException( failingQueries.toString() );
 			}
 		}
-
-		//stats
-		getStatistics().setStatisticsEnabled( settings.isStatisticsEnabled() );
 
 		// EntityNotFoundDelegate
 		EntityNotFoundDelegate entityNotFoundDelegate = cfg.getEntityNotFoundDelegate();

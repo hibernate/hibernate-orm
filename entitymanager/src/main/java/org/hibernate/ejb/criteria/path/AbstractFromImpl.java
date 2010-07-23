@@ -24,6 +24,7 @@
 package org.hibernate.ejb.criteria.path;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.persistence.criteria.CollectionJoin;
@@ -243,8 +244,11 @@ public abstract class AbstractFromImpl<Z,X>
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Set<Join<X, ?>> getJoins() {
-		return joins;
+		return joins == null
+				? Collections.EMPTY_SET
+				: joins;
 	}
 
 	/**
@@ -575,8 +579,11 @@ public abstract class AbstractFromImpl<Z,X>
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public Set<Fetch<X, ?>> getFetches() {
-		return fetches;
+		return fetches == null
+				? Collections.EMPTY_SET
+				: fetches;
 	}
 
 	public <Y> Fetch<X, Y> fetch(SingularAttribute<? super X, Y> singularAttribute) {

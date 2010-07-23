@@ -70,7 +70,7 @@ public class QueryStructure<T> implements Serializable {
 
 	private boolean distinct;
 	private Selection<? extends T> selection;
-	private Set<Root<?>> roots = new HashSet<Root<?>>();
+	private Set<Root<?>> roots = new LinkedHashSet<Root<?>>();
 	private Set<FromImplementor> correlationRoots;
 	private Predicate restriction;
 	private List<Expression<?>> groupings = Collections.emptyList();

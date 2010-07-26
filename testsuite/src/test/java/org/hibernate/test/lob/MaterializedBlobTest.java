@@ -50,6 +50,16 @@ public class MaterializedBlobTest extends LongByteArrayTest {
 		return new FunctionalTestClassTestSuite( MaterializedBlobTest.class );
 	}
 
+	@Override
+	public void testBoundedLongByteArrayAccess() {
+		super.testBoundedLongByteArrayAccess();
+	}
+
+	@Override
+	public void testSaving() {
+		super.testSaving();
+	}
+
 	public boolean appliesTo(Dialect dialect) {
 		if ( ! dialect.supportsExpectedLobUsagePattern() ) {
 			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );

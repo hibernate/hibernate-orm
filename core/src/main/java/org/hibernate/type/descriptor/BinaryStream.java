@@ -39,6 +39,13 @@ public interface BinaryStream {
 	public InputStream getInputStream();
 
 	/**
+	 * Access to the bytes.
+	 *
+	 * @return The bytes.
+	 */
+	public byte[] getBytes();
+
+	/**
 	 * Retrieve the length of the input stream
 	 *
 	 * @return The input stream length

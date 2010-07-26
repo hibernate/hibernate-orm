@@ -33,17 +33,21 @@ import org.hibernate.type.descriptor.BinaryStream;
  *
  * @author Steve Ebersole
  */
-public class BinaryStreamImpl implements BinaryStream {
-	private final ByteArrayInputStream stream;
+public class BinaryStreamImpl extends ByteArrayInputStream implements BinaryStream {
 	private final int length;
 
 	public BinaryStreamImpl(byte[] bytes) {
-		this.stream = new ByteArrayInputStream( bytes );
+		super( bytes );
 		this.length = bytes.length;
 	}
 
 	public InputStream getInputStream() {
-		return stream;
+		return this;
+	}
+
+	public byte[] getBytes() {
+		// from ByteArrayInputStream
+		return buf;
 	}
 
 	public int getLength() {

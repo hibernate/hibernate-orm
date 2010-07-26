@@ -29,8 +29,10 @@ import java.lang.reflect.Proxy;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
+import org.hibernate.type.descriptor.java.BinaryStreamImpl;
+import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
  * Manages aspects of proxying {@link Blob Blobs} for non-contextual creation, including proxy creation and
@@ -48,18 +50,18 @@ public class BlobProxy implements InvocationHandler {
 	private boolean needsReset = false;
 
 	/**
-	 * Ctor used to build {@link Blob} from byte array.
+	 * Constructor used to build {@link Blob} from byte array.
 	 *
 	 * @param bytes The byte array
 	 * @see #generateProxy(byte[])
 	 */
 	private BlobProxy(byte[] bytes) {
-		this.stream = new ByteArrayInputStream( bytes );
+		this.stream = new BinaryStreamImpl( bytes );
 		this.length = bytes.length;
 	}
 
 	/**
-	 * Ctor used to build {@link Blob} from a stream.
+	 * Constructor used to build {@link Blob} from a stream.
 	 *
 	 * @param stream The binary stream
 	 * @param length The length of the stream
@@ -93,26 +95,62 @@ public class BlobProxy implements InvocationHandler {
 	 * @throws UnsupportedOperationException if any methods other than {@link Blob#length()}
 	 * or {@link Blob#getBinaryStream} are invoked.
 	 */
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		if ( "length".equals( method.getName() ) ) {
-			return new Long( getLength() );
+		final String methodName = method.getName();
+		final int argCount = method.getParameterTypes().length;
+
+		if ( "length".equals( methodName ) && argCount == 0 ) {
+			return Long.valueOf( getLength() );
 		}
-		if ( "getBinaryStream".equals( method.getName() ) && method.getParameterTypes().length == 0 ) {
-			return getStream();
+		if ( "getBinaryStream".equals( methodName ) ) {
+			if ( argCount == 0 ) {
+				return getStream();
+			}
+			else if ( argCount == 2 ) {
+				long start = (Long) args[0];
+				if ( start < 1 ) {
+					throw new SQLException( "Start position 1-based; must be 1 or more." );
+				}
+				if ( start > getLength() ) {
+					throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
+				}
+				int length = (Integer) args[1];
+				if ( length < 0 ) {
+					// java docs specifically say for getBinaryStream(long,int) that the start+length must not exceed the
+					// total length, however that is at odds with the getBytes(long,int) behavior.
+					throw new SQLException( "Length must be great-than-or-equal to zero." );
+				}
+				return DataHelper.subStream( getStream(), start-1, length );
+			}
 		}
-		if ( "free".equals( method.getName() ) ) {
+		if ( "getBytes".equals( methodName ) ) {
+			if ( argCount == 2 ) {
+				long start = (Long) args[0];
+				if ( start < 1 ) {
+					throw new SQLException( "Start position 1-based; must be 1 or more." );
+				}
+				int length = (Integer) args[1];
+				if ( length < 0 ) {
+					throw new SQLException( "Length must be great-than-or-equal to zero." );
+				}
+				return DataHelper.extractBytes( getStream(), start-1, length );
+			}
+		}
+		if ( "free".equals( methodName ) && argCount == 0 ) {
 			stream.close();
 			return null;
 		}
-		if ( "toString".equals( method.getName() ) ) {
+		if ( "toString".equals( methodName ) && argCount == 0 ) {
 			return this.toString();
 		}
-		if ( "equals".equals( method.getName() ) ) {
+		if ( "equals".equals( methodName ) && argCount == 1 ) {
 			return Boolean.valueOf( proxy == args[0] );
 		}
-		if ( "hashCode".equals( method.getName() ) ) {
+		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
 			return new Integer( this.hashCode() );
 		}
+
 		throw new UnsupportedOperationException( "Blob may not be manipulated from creating session" );
 	}
 

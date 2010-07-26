@@ -33,6 +33,8 @@ import java.io.StringReader;
 import java.io.InputStream;
 import java.io.IOException;
 
+import org.hibernate.type.descriptor.java.DataHelper;
+
 /**
  * Manages aspects of proxying {@link Clob Clobs} for non-contextual creation, including proxy creation and
  * handling proxy invocations.
@@ -51,7 +53,7 @@ public class ClobProxy implements InvocationHandler {
 
 
 	/**
-	 * Ctor used to build {@link Clob} from string data.
+	 * Constructor used to build {@link Clob} from string data.
 	 *
 	 * @param string The byte array
 	 * @see #generateProxy(String)
@@ -63,7 +65,7 @@ public class ClobProxy implements InvocationHandler {
 	}
 
 	/**
-	 * Ctor used to build {@link Clob} from a reader.
+	 * Constructor used to build {@link Clob} from a reader.
 	 *
 	 * @param reader The character reader.
 	 * @param length The length of the reader stream.
@@ -88,12 +90,13 @@ public class ClobProxy implements InvocationHandler {
 		return reader;
 	}
 
-	protected String getSubString(long pos, int length) {
+	protected String getSubString(long start, int length) {
 		if ( string == null ) {
 			throw new UnsupportedOperationException( "Clob was not created from string; cannot substring" );
 		}
-		// naive impl...
-		return string.substring( (int)pos-1, (int)(pos+length-1) );
+		// semi-naive implementation
+		int endIndex = Math.min( ((int)start)+length, string.length() );
+		return string.substring( (int)start, endIndex );
 	}
 
 	/**
@@ -104,31 +107,64 @@ public class ClobProxy implements InvocationHandler {
 	 */
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		if ( "length".equals( method.getName() ) ) {
+		final String methodName = method.getName();
+		final int argCount = method.getParameterTypes().length;
+
+		if ( "length".equals( methodName ) && argCount == 0 ) {
 			return Long.valueOf( getLength() );
 		}
-		if ( "getAsciiStream".equals( method.getName() ) ) {
+		if ( "getAsciiStream".equals( methodName ) && argCount == 0 ) {
 			return getAsciiStream();
 		}
-		if ( "getCharacterStream".equals( method.getName() ) ) {
-			return getCharacterStream();
+		if ( "getCharacterStream".equals( methodName ) ) {
+			if ( argCount == 0 ) {
+				return getCharacterStream();
+			}
+			else if ( argCount == 2 ) {
+				long start = (Long) args[0];
+				if ( start < 1 ) {
+					throw new SQLException( "Start position 1-based; must be 1 or more." );
+				}
+				if ( start > getLength() ) {
+					throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
+				}
+				int length = (Integer) args[1];
+				if ( length < 0 ) {
+					// java docs specifically say for getCharacterStream(long,int) that the start+length must not exceed the
+					// total length, however that is at odds with the getSubString(long,int) behavior.
+					throw new SQLException( "Length must be great-than-or-equal to zero." );
+				}
+				return DataHelper.subStream( getCharacterStream(), start-1, length );
+			}
 		}
-		if ( "getSubString".equals( method.getName() ) ) {
-			return getSubString( (Long)args[0], (Integer)args[1] );
+		if ( "getSubString".equals( methodName ) && argCount == 2 ) {
+			long start = (Long) args[0];
+			if ( start < 1 ) {
+				throw new SQLException( "Start position 1-based; must be 1 or more." );
+			}
+			if ( start > getLength() ) {
+				throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
+			}
+			int length = (Integer) args[1];
+			if ( length < 0 ) {
+				throw new SQLException( "Length must be great-than-or-equal to zero." );
+			}
+			return getSubString( start-1, length );
 		}
-		if ( "free".equals( method.getName() ) ) {
+		if ( "free".equals( methodName ) && argCount == 0 ) {
 			reader.close();
 			return null;
 		}
-		if ( "toString".equals( method.getName() ) ) {
+		if ( "toString".equals( methodName ) && argCount == 0 ) {
 			return this.toString();
 		}
-		if ( "equals".equals( method.getName() ) ) {
+		if ( "equals".equals( methodName ) && argCount == 1 ) {
 			return Boolean.valueOf( proxy == args[0] );
 		}
-		if ( "hashCode".equals( method.getName() ) ) {
+		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
 			return new Integer( this.hashCode() );
 		}
+
 		throw new UnsupportedOperationException( "Clob may not be manipulated from creating session" );
 	}
 

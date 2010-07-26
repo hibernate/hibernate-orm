@@ -45,14 +45,16 @@ import org.hibernate.engine.jdbc.NClobImplementer;
  * @author Steve Ebersole
  */
 public class JdbcSupportTest extends TestCase {
-	public void testLobCreator() throws ClassNotFoundException, SQLException {
-		final LobCreationContext lobCreationContext = new LobCreationContext() {
-			public Object execute(Callback callback) {
-				fail( "Unexpeted call to getConnection" );
-				return null;
-			}
-		};
+	private static class LobCreationContextImpl implements LobCreationContext {
+		public Object execute(Callback callback) {
+			fail( "Unexpected call to getConnection" );
+			return null;
+		}
+	}
 
+	private LobCreationContextImpl lobCreationContext = new LobCreationContextImpl();
+
+	public void testLobCreator() throws ClassNotFoundException, SQLException {
 		LobCreator lobCreator = JdbcSupportLoader.loadJdbcSupport( null ).getLobCreator( lobCreationContext );
 
 		Blob blob = lobCreator.createBlob( new byte[] {} );
@@ -69,6 +71,20 @@ public class JdbcSupportTest extends TestCase {
 		assertTrue( nclob instanceof NClobImplementer );
 		nclob = lobCreator.wrap( nclob );
 		assertTrue( nclob instanceof WrappedClob );
+	}
 
+	public void testLobAccess() throws SQLException {
+		LobCreator lobCreator = JdbcSupportLoader.loadJdbcSupport( null ).getLobCreator( lobCreationContext );
+
+		Blob blob = lobCreator.createBlob( "Hi".getBytes() );
+		assertEquals( 2, blob.length() );
+		assertEquals( 2, blob.getBytes( 1, 5 ).length );
+		blob.getBinaryStream();
+
+		Clob clob = lobCreator.createClob( "Hi" );
+		assertEquals( 2, clob.length() );
+		assertEquals( 2, clob.getSubString( 1, 5 ).length() );
+		clob.getCharacterStream();
+		clob.getAsciiStream();
 	}
 }

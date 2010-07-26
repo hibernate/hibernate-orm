@@ -56,6 +56,11 @@ public class BlobTypeDescriptor implements SqlTypeDescriptor {
 					final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, options );
 					st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
 				}
+				else if ( byte[].class.isInstance( value ) ) {
+					// performance shortcut for binding BLOB data in byte[] format
+					final byte[] bytes = (byte[]) value;
+					st.setBytes( index, bytes );
+				}
 				else {
 					st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
 				}

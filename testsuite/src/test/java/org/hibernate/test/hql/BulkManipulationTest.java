@@ -833,6 +833,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		catch ( AssertionFailedError afe ) {
 			if ( H2Dialect.class.isInstance( getDialect() ) ) {
 				// http://groups.google.com/group/h2-database/t/5548ff9fd3abdb7
+				// this is fixed in H2 1.2.140
 				count = s.createQuery( "delete Vehicle" ).executeUpdate();
 				assertEquals( "incorrect count", 4, count );
 			}

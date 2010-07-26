@@ -35,7 +35,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.util.ReflectHelper;
 
 /**
- * TODO : javadoc
+ * A help for dealing with BLOB and CLOB data
  *
  * @author Steve Ebersole
  */
@@ -49,7 +49,7 @@ public class DataHelper {
 			nClobClass = ReflectHelper.classForName( "java.sql.NClob", DataHelper.class );
 		}
 		catch ( ClassNotFoundException e ) {
-			e.printStackTrace();
+			log.info( "Could not locate 'java.sql.NClob' class; assuming JDBC 3" );
 		}
 	}
 

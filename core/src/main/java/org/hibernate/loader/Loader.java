@@ -2275,6 +2275,13 @@ public abstract class Loader {
 				session
 		);
 		
+		if ( querySpaces == null || querySpaces.size() == 0 ) {
+			log.trace( "unexpected querySpaces is "+( querySpaces == null ? "null" : "empty" ) );
+		}
+		else {
+			log.trace( "querySpaces is "+querySpaces.toString() );
+		}
+
 		List result = getResultFromQueryCache(
 				session, 
 				queryParameters, 
@@ -2327,6 +2334,11 @@ public abstract class Loader {
 			}
 			try {
 				result = queryCache.get( key, resultTypes, isImmutableNaturalKeyLookup, querySpaces, session );
+				logCachedResultDetails(
+						key.getResultTransformer(),
+						resultTypes,
+						result
+				);
 			}
 			finally {
 				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
@@ -2355,6 +2367,13 @@ public abstract class Loader {
 			final QueryKey key,
 			final List result) {
 		if ( session.getCacheMode().isPutEnabled() ) {
+			if ( log.isTraceEnabled() ) {
+				logCachedResultDetails(
+						key.getResultTransformer(),
+						resultTypes,
+						result
+				);
+			}
 			boolean put = queryCache.put( key, resultTypes, result, queryParameters.isNaturalKeyLookup(), session );
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor()
@@ -2362,6 +2381,86 @@ public abstract class Loader {
 			}
 		}
 	}
+
+
+	private void logCachedResultDetails(ResultTransformer resultTransformer, Type[] returnTypes, List result) {
+		if ( ! log.isTraceEnabled() ) {
+			return;
+		}
+		if ( returnTypes == null || returnTypes.length == 0 ) {
+				log.trace( "unexpected returnTypes is "+( returnTypes == null ? "null" : "empty" )+
+						"! transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+						" result"+( result == null ? " is null": ".size()=" + result.size() ) );
+		}
+		else {
+			StringBuffer returnTypeNames = new StringBuffer();
+			StringBuffer returnClassNames = new StringBuffer();
+			for ( int i=0; i<returnTypes.length; i++ ) {
+				returnTypeNames.append( returnTypes[ i ].getName() ).append(' ');
+				returnClassNames.append( returnTypes[ i ].getReturnedClass() ).append(' ');
+			}
+			log.trace( "transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+					" returnTypes=[ "+returnTypeNames+"]"+" returnClasses=[ "+returnClassNames+"]" );
+		}
+		if ( result != null && result.size() != 0 ) {
+			for ( Iterator it = result.iterator(); it.hasNext(); ) {
+			 	Object value = it.next();
+				if ( value == null ) {
+					log.trace( "transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+							" value is null; returnTypes is "+( returnTypes == null ? "null" : "Type["+returnTypes.length+"]" ) );
+					if ( returnTypes != null && returnTypes.length > 1 ) {
+						log.trace( "unexpected result value! "+
+								"transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+								"value is null; should be Object["+returnTypes.length+"]!" );
+					}
+				}
+				else {
+					if ( returnTypes == null || returnTypes.length == 0 ) {
+						log.trace( "unexpected result value! "+
+								"transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+								"value is non-null; returnTypes is "+( returnTypes == null ? "null" : "empty" ) );
+					}
+					else if ( Object[].class.isInstance( value ) ) {
+						Object[] tuple = ( Object[] ) value;
+						log.trace( "transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+								" value is Object["+tuple.length+
+								"]; returnTypes is Type["+returnTypes.length+"]" );
+						if ( tuple.length != returnTypes.length ) {
+							log.trace( "unexpected tuple length! transformer="+
+								( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+								" expected="+returnTypes.length+
+								" got="+tuple.length );
+						}
+						else {
+							for ( int j = 0; j < tuple.length; j++ ) {
+								if ( tuple[ j ] != null && ! returnTypes[ j ].getReturnedClass().isInstance( tuple[ j ] ) ) {
+									log.trace( "unexpected tuple value type! transformer="+
+											( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+											" expected="+returnTypes[ j ].getReturnedClass().getName()+
+											" got="+tuple[ j ].getClass().getName() );
+								}
+							}
+						}
+					}
+					else {
+						if ( returnTypes.length != 1 ) {
+							log.trace( "unexpected number of result columns! should be Object["+returnTypes.length+"]! transformer="+
+									( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+									" value type="+value.getClass().getName()+
+									" returnTypes is Type["+returnTypes.length+"]" );
+						}
+						else if ( ! returnTypes[ 0 ].getReturnedClass().isInstance( value ) ) {
+							log.trace( "unexpected value type! transformer="+
+									( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
+									" expected="+returnTypes[ 0 ].getReturnedClass().getName()+
+									" got="+ value.getClass().getName() );
+						}
+					}
+				}
+			}
+		}
+	}
+
 
 	/**
 	 * Actually execute a query, ignoring the query cache

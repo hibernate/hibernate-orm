@@ -173,6 +173,10 @@ public class QueryKey implements Serializable {
 		this.hashCode = generateHashCode();
 	}
 
+	public ResultTransformer getResultTransformer() {
+		return customTransformer;
+	}
+
 	/**
 	 * Deserialization hook used to re-init the cached hashcode which is needed for proper clustering support.
 	 *

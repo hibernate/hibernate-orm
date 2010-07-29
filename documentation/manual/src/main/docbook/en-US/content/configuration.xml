@@ -1514,7 +1514,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             <row>
               <entry><literal>org.hibernate.transaction.JBossTransactionManagerLookup</literal></entry>
 
-              <entry align="center">JBoss</entry>
+              <entry align="center">JBoss AS</entry>
             </row>
 
             <row>

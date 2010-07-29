@@ -741,6 +741,18 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			}
 		}
 
+		//this should fail on Oracle due to the alias being used in the where clause
+		resultList = s.createCriteria(Student.class)
+			.add(Restrictions.eq("name", "Gavin King"))
+			.setProjection( Projections.projectionList()
+					.add( Projections.id().as( "studentNumber" ))
+					.add( Property.forName( "name" ), "name" )
+					.add( Property.forName( "cityState" ), "cityState" )
+					.add( Property.forName("preferredCourse"), "preferredCourse" )
+			)
+			.list();
+		assertEquals( 1, resultList.size() );
+		
 		Object[] aResult = ( Object[] ) s.createCriteria(Student.class)
 			.add( Restrictions.idEq( new Long( 667 ) ) )
 			.setProjection( Projections.projectionList()

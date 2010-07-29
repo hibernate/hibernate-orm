@@ -1570,6 +1570,13 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
 
               <entry align="center">Borland ES</entry>
             </row>
+
+            <row>
+              <entry><literal>org.hibernate.transaction.JBossTSStandaloneTransactionManagerLookup</literal></entry>
+
+              <entry align="center">JBoss TS used standalone (ie. outside JBoss AS and a JNDI environment generally).
+              Known to work for <literal>org.jboss.jbossts:jbossjta:4.11.0.Final</literal></entry>
+            </row>
           </tbody>
         </tgroup>
       </table>

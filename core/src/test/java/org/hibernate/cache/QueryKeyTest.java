@@ -24,12 +24,14 @@
  */
 package org.hibernate.cache;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
 
 import org.hibernate.EntityMode;
+import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.RootEntityResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
@@ -47,6 +49,18 @@ import org.hibernate.util.ArrayHelper;
 public class QueryKeyTest extends TestCase {
 	private static final String QUERY_STRING = "the query string";
 
+	public static class AClass implements Serializable {
+		private String propAccessedByField;
+		private String propAccessedByMethod;
+
+		public String getPropAccessedByMethod() {
+			return propAccessedByMethod;
+		}
+
+		public void setPropAccessedByMethod(String propAccessedByMethod) {
+			this.propAccessedByMethod = propAccessedByMethod;
+		}
+	}
 	public void testSerializedEquality() {
 		doTest( buildBasicKey( null ) );
 	}
@@ -57,6 +71,18 @@ public class QueryKeyTest extends TestCase {
 		doTest( buildBasicKey( DistinctResultTransformer.INSTANCE ) );
 		doTest( buildBasicKey( AliasToEntityMapResultTransformer.INSTANCE ) );
 		doTest( buildBasicKey( PassThroughResultTransformer.INSTANCE ) );
+
+		// settings are lazily initialized when calling transformTuple(),
+		// so they have not been initialized for the following test
+		// (it *should* be initialized before creating a QueryKey)
+		doTest( buildBasicKey( new AliasToBeanResultTransformer( AClass.class ) ) );
+
+		// initialize settings for the next test
+		AliasToBeanResultTransformer transformer = new AliasToBeanResultTransformer( AClass.class );
+		transformer.transformTuple(
+				new Object[] { "abc", "def" },  
+				new String[] { "propAccessedByField", "propAccessedByMethod" } );
+		doTest( buildBasicKey( transformer ) );
 	}
 
 	private QueryKey buildBasicKey(ResultTransformer resultTransformer) {

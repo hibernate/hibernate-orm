@@ -382,6 +382,10 @@ public class QueryLoader extends BasicLoader {
 		return implicitResultTransformer != null;
 	}
 
+	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+		return HolderInstantiator.resolveResultTransformer( implicitResultTransformer, resultTransformer );
+	}
+	
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 

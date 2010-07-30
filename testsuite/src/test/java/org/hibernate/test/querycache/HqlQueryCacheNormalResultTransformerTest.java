@@ -45,29 +45,4 @@ public class HqlQueryCacheNormalResultTransformerTest extends HqlQueryCachePutRe
 	protected CacheMode getQueryCacheMode() {
 		return CacheMode.NORMAL;
 	}
-
-	public void testAliasToBeanDtoMultiArgList() {
-		reportSkip( "Results from queries using Transformers.aliasToBean cannot be found in the cache due to bug in hashCode",
-				"Query using Transformers.aliasToBean with cache"
-		);
-	}
-	public void testAliasToBeanDtoMultiArgListFailureExpected() throws Exception {
-		super.testAliasToBeanDtoMultiArgList();
-	}
-
-	public void testAliasToBeanDtoLiteralArgList() {
-		reportSkip( "Results from queries using Transformers.aliasToBean cannot be found in the cache due to bug in hashCode",
-				"Query using Transformers.aliasToBean with cache" );
-	}
-	public void testAliasToBeanDtoLiteralArgListFailureExpected() throws Exception {
-		super.testAliasToBeanDtoLiteralArgList();
-	}
-
-	public void testAliasToBeanDtoWithNullAliasList() {
-		reportSkip( "Results from queries using Transformers.aliasToBean cannot be found in the cache due to bug in hashCode",
-				"Query using Transformers.aliasToBean with cache" );
-	}
-	public void testAliasToBeanDtoWithNullAliasListFailureExpected() throws Exception {
-		super.testAliasToBeanDtoWithNullAliasList();
-	}
 }

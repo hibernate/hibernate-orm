@@ -41,13 +41,16 @@ public final class HolderInstantiator {
 	private final String[] queryReturnAliases;
 	
 	public static HolderInstantiator getHolderInstantiator(ResultTransformer selectNewTransformer, ResultTransformer customTransformer, String[] queryReturnAliases) {
-		if(selectNewTransformer!=null) {
-			return new HolderInstantiator(selectNewTransformer, queryReturnAliases);
-		} else {
-			return new HolderInstantiator(customTransformer, queryReturnAliases);
-		}
+		return new HolderInstantiator(
+				resolveResultTransformer( selectNewTransformer, customTransformer ),
+				queryReturnAliases
+		);
 	}
-	
+
+	public static ResultTransformer resolveResultTransformer(ResultTransformer selectNewTransformer, ResultTransformer customTransformer) {
+		return selectNewTransformer != null ? selectNewTransformer : customTransformer;
+	}	
+
 	public static ResultTransformer createSelectNewTransformer(Constructor constructor, boolean returnMaps, boolean returnLists) {
 		if ( constructor != null ) {
 			return new AliasToBeanConstructorResultTransformer(constructor);
@@ -65,14 +68,15 @@ public final class HolderInstantiator {
 	
 	static public HolderInstantiator createClassicHolderInstantiator(Constructor constructor, 
 			ResultTransformer transformer) {
-		if ( constructor != null ) {
-			return new HolderInstantiator(new AliasToBeanConstructorResultTransformer(constructor), null);
-		}
-		else {
-			return new HolderInstantiator(transformer, null);
-		}
+		return new HolderInstantiator( resolveClassicResultTransformer( constructor, transformer ), null );
 	}
-	
+
+	static public ResultTransformer resolveClassicResultTransformer(
+			Constructor constructor,
+			ResultTransformer transformer) {
+		return constructor != null ? new AliasToBeanConstructorResultTransformer( constructor ) : transformer;
+	}	
+
 	public HolderInstantiator( 
 			ResultTransformer transformer,
 			String[] queryReturnAliases

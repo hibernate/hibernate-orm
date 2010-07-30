@@ -335,6 +335,10 @@ public class CustomLoader extends Loader {
 			return new HolderInstantiator(resultTransformer, queryReturnAliases);
 		}
 	}
+
+	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+		return HolderInstantiator.resolveResultTransformer( null, resultTransformer );
+	}
 	
 	protected Object getResultColumnOrRow(
 			Object[] row,

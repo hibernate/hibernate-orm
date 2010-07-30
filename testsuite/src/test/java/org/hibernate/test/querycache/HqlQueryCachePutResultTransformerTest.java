@@ -50,29 +50,4 @@ public class HqlQueryCachePutResultTransformerTest extends HqlQueryCacheIgnoreRe
 	protected boolean areDynamicNonLazyAssociationsChecked() {
 		return false;
 	}
-
-	public void testAliasToEntityMapOneProjectionList() {
-		reportSkip( "HQL queries using a ResultTransformer are known to fail when caching a row with a single value",
-				"HQL queries using a ResultTransformer has row with a single value");
-	}
-	public void testAliasToEntityMapOneProjectionListFailureExpected() throws Exception {
-		super.testAliasToEntityMapOneProjectionList();
-	}
-
-	public void testAliasToBeanDtoOneArgList() {
-		reportSkip( "HQL queries using a ResultTransformer are known to fail when caching a row with a single value",
-				"HQL queries using a ResultTransformer has row with a single value");
-	}
-
-	public void testAliasToBeanDtoOneArgListFailureExpected() throws Exception {
-		super.testAliasToBeanDtoOneArgList();
-	}
-
-	public void testOneSelectNewList() {
-		reportSkip( "HQL queries using a ResultTransformer are known to fail when caching a row with a single value",
-				"HQL queries using a ResultTransformer has row with a single value");
-	}
-	public void testOneSelectNewListFailureExpected() throws Exception {
-		super.testOneSelectNewList();
-	}
 }

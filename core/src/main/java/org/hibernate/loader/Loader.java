@@ -1008,8 +1008,28 @@ public abstract class Loader {
 				.endLoadingCollections( collectionPersister );
 	}
 
+	/**
+	 * Determine the actual ResultTransformer that will be used to
+	 * transform query results.
+	 *
+	 * @param resultTransformer the specified result transformer
+	 * @return the actual result transformer
+	 */
+	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+		return resultTransformer;
+	}
+	
 	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
 		return results;
+	}
+
+	/**
+	 * Are rows transformed immediately after being read from the ResultSet?
+	 * @param transformer, the specified transformer
+	 * @return true, if getResultColumnOrRow() transforms the results; false, otherwise
+	 */
+	protected boolean areResultSetRowsTransformedImmediately(ResultTransformer transformer) {
+		return false;
 	}
 
 	/**
@@ -2272,7 +2292,11 @@ public abstract class Loader {
 				getSQLString(), 
 				queryParameters, 
 				filterKeys, 
-				session
+				session,
+				( areResultSetRowsTransformedImmediately( queryParameters.getResultTransformer() ) ?
+						queryParameters.getResultTransformer() :
+						null
+				)
 		);
 		
 		if ( querySpaces == null || querySpaces.size() == 0 ) {
@@ -2294,7 +2318,7 @@ public abstract class Loader {
 		if ( result == null ) {
 			result = doList( session, queryParameters );
 
-			putResultInQueryCache( 
+			putResultInQueryCache(
 					session, 
 					queryParameters, 
 					resultTypes,
@@ -2303,6 +2327,7 @@ public abstract class Loader {
 					result 
 			);
 		}
+
 
 		return getResultList( result, queryParameters.getResultTransformer() );
 	}
@@ -2344,6 +2369,22 @@ public abstract class Loader {
 				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
 			}
 
+			// If there is a result transformer, but the loader is not expecting the data to be
+			// transformed yet, then the loader expects result elements that are Object[].
+			// The problem is that StandardQueryCache.get(...) does not return a tuple when
+			// resultTypes.length == 1. The following changes the data returned from the cache
+			// to be a tuple.
+			// TODO: this really doesn't belong here, but only Loader has the information
+			// to be able to do this.
+			if ( result != null &&
+					resultTypes.length == 1 &&
+					key.getResultTransformer() == null &&
+					resolveResultTransformer( queryParameters.getResultTransformer() ) != null ) {
+				for ( int i = 0 ; i < result.size() ; i++ ) {
+					result.set( i, new Object[] { result.get( i ) } );
+				}
+			}
+
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
 				if ( result == null ) {
 					factory.getStatisticsImplementor()
@@ -2374,14 +2415,29 @@ public abstract class Loader {
 						result
 				);
 			}
-			boolean put = queryCache.put( key, resultTypes, result, queryParameters.isNaturalKeyLookup(), session );
+			// If there is a result transformer, but the data has not been transformed yet,
+			// then result elements are Object[]. The problem is that StandardQueryCache.put(...)
+			// does not expect a tuple when resultTypes.length == 1. The following changes the
+			// data being cached to what StandardQueryCache.put(...) expects.
+			// TODO: this really doesn't belong here, but only Loader has the information
+			// to be able to do this.
+			List cachedResult = result;
+			if ( resultTypes.length == 1 &&
+					key.getResultTransformer() == null &&
+					resolveResultTransformer( queryParameters.getResultTransformer() ) != null ) {
+				cachedResult = new ArrayList( result.size() );
+				for ( int i = 0 ; i < result.size() ; i++ ) {
+					cachedResult.add( ( ( Object[] ) result.get( i ) )[ 0 ] );
+				}
+			}
+
+			boolean put = queryCache.put( key, resultTypes, cachedResult, queryParameters.isNaturalKeyLookup(), session );
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor()
 						.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
 			}
 		}
 	}
-
 
 	private void logCachedResultDetails(ResultTransformer resultTransformer, Type[] returnTypes, List result) {
 		if ( ! log.isTraceEnabled() ) {

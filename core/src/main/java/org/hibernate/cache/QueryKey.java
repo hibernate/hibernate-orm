@@ -73,6 +73,8 @@ public class QueryKey implements Serializable {
 	 * @param queryParameters The query parameters
 	 * @param filterKeys The keys of any enabled filters.
 	 * @param session The current session.
+	 * @param customTransformer The result transformer; should be
+	 *            null if data is not transformed before being cached.
 	 *
 	 * @return The generate query cache key.
 	 */
@@ -80,7 +82,8 @@ public class QueryKey implements Serializable {
 			String queryString,
 			QueryParameters queryParameters,
 			Set filterKeys,
-			SessionImplementor session) {
+			SessionImplementor session,
+			ResultTransformer customTransformer) {
 		// disassemble positional parameters
 		final int positionalParameterCount = queryParameters.getPositionalParameterTypes().length;
 		final Type[] types = new Type[positionalParameterCount];
@@ -134,7 +137,7 @@ public class QueryKey implements Serializable {
 				maxRows,
 				filterKeys,
 				session.getEntityMode(),
-				queryParameters.getResultTransformer()
+				customTransformer
 		);
 	}
 

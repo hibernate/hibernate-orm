@@ -979,6 +979,13 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		throw new UnsupportedOperationException( "Not supported!  Use the AST translator...");
 	}
 
+	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+		return HolderInstantiator.resolveClassicResultTransformer(
+				holderConstructor,
+				resultTransformer
+		);
+	}
+
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 		row = toResultRow( row );

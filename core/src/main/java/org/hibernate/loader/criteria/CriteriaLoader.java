@@ -120,6 +120,16 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 	}
 
+	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+		return translator.getRootCriteria().getResultTransformer();
+	}
+
+	protected boolean areResultSetRowsTransformedImmediately( ResultTransformer transformer ) {
+		// comparing to null just in case there is no transformer
+		// (there should always be a result transformer; 
+		return resolveResultTransformer( transformer ) != null;
+	}
+
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 	throws SQLException, HibernateException {
 		final Object[] result;
@@ -145,8 +155,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 			result = row;
 			aliases = userAliases;
 		}
-		return translator.getRootCriteria().getResultTransformer()
-				.transformTuple(result, aliases);
+		return resolveResultTransformer( transformer ).transformTuple(result, aliases);
 	}
 
 	public Set getQuerySpaces() {
@@ -196,9 +205,9 @@ public class CriteriaLoader extends OuterJoinLoader {
 	protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
 	}
-	
+
 	protected List getResultList(List results, ResultTransformer resultTransformer) {
-		return translator.getRootCriteria().getResultTransformer().transformList( results );
+		return resolveResultTransformer( resultTransformer ).transformList( results );
 	}
 
 }

@@ -224,7 +224,7 @@ public class QueryCacheTest extends FunctionalTestCase {
 		getSessions().evictQueries();
         getSessions().getStatistics().clear();
 
-		final String queryString = "select i.description from Item i where i.name='widget'";
+		final String queryString = "select i.description as desc from Item i where i.name='widget'";
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -239,48 +239,64 @@ public class QueryCacheTest extends FunctionalTestCase {
         QueryStatistics qs = s.getSessionFactory().getStatistics().getQueryStatistics( queryString );
 		EntityStatistics es = s.getSessionFactory().getStatistics().getEntityStatistics( Item.class.getName() );
 
+		assertEquals( qs.getCacheHitCount(), 0 );
+		assertEquals( qs.getCacheMissCount(), 1 );
+		assertEquals( qs.getCachePutCount(), 1 );
+
 		Thread.sleep(200);
 
 		s = openSession();
 		t = s.beginTransaction();
 		List result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
+		assertEquals( i.getDescription(), ( ( String ) result.get( 0 ) ) );
 		t.commit();
 		s.close();
 
 		assertEquals( qs.getCacheHitCount(), 0 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
 
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
 		assertEquals( result.size(), 1 );
+		assertEquals( i.getDescription(), result.get( 0 ) );
 		t.commit();
 		s.close();
 
 		assertEquals( qs.getCacheHitCount(), 1 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
 
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
 		assertEquals( result.size(), 1 );
 		Map m = (Map) result.get(0);
-		assertEquals(1, m.size());
+		assertEquals( 1, m.size() );
+		assertEquals( i.getDescription(), m.get( "desc" ) );
 		t.commit();
 		s.close();
 
-		assertEquals( "hit count should not go up since we are adding a resulttransformer", qs.getCacheHitCount(), 1 );
-		
+		assertEquals( "hit count should go up since data is not transformed until after it is cached", qs.getCacheHitCount(), 2 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
+
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list();
 		assertEquals( result.size(), 1 );
 		m = (Map) result.get(0);
 		assertEquals(1, m.size());
+		assertEquals( i.getDescription(), m.get( "desc" ) );
 		t.commit();
 		s.close();
-		
-		assertEquals( "hit count should go up since we are using the same resulttransformer", qs.getCacheHitCount(), 2 );
-		
+
+		assertEquals( "hit count should go up since data is not transformed until after it is cachedr", qs.getCacheHitCount(), 3 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
+
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();
@@ -292,8 +308,9 @@ public class QueryCacheTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( qs.getCacheHitCount(), 3 );
-		assertEquals( qs.getCacheMissCount(), 3 );
+		assertEquals( qs.getCacheHitCount(), 4 );
+		assertEquals( qs.getCacheMissCount(), 2 );
+		assertEquals( qs.getCachePutCount(), 2 );
 
 		Thread.sleep(200);
 
@@ -303,15 +320,19 @@ public class QueryCacheTest extends FunctionalTestCase {
 		assertEquals( result.size(), 1 );
 		i = (Item) s.get( Item.class, new Long(i.getId()) );
 		assertEquals( (String) result.get(0), "A middle-quality widget." );
-		
+
+		assertEquals( qs.getCacheHitCount(), 4 );
+		assertEquals( qs.getCacheMissCount(), 3 );
+		assertEquals( qs.getCachePutCount(), 3 );
+
 		s.delete(i);
 		t.commit();
 		s.close();
 
-		assertEquals( qs.getCacheHitCount(), 3 );
-		assertEquals( qs.getCacheMissCount(), 4 );
-		assertEquals( qs.getCachePutCount(), 4 );
-		assertEquals( qs.getExecutionCount(), 4 );
+		assertEquals( qs.getCacheHitCount(), 4 );
+		assertEquals( qs.getCacheMissCount(), 3 );
+		assertEquals( qs.getCachePutCount(), 3 );
+		assertEquals( qs.getExecutionCount(), 3 );
 		assertEquals( es.getFetchCount(), 0 ); //check that it was being cached
 
 	}

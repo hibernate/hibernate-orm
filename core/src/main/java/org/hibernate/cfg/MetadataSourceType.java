@@ -21,30 +21,47 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
-
 package org.hibernate.cfg;
 
 import org.hibernate.HibernateException;
 
 /**
+ * Enumeration of the types of sources of mapping metadata
+ * 
  * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-public enum ConfigurationArtefactType {
-	HBM,
-	CLASS;
+public enum MetadataSourceType {
+	/**
+	 * Indicates metadata coming from <tt>hbm.xml</tt> files
+	 */
+	HBM( "hbm" ),
+	/**
+	 * Indicates metadata coming from either annotations, <tt>orx.xml</tt> or a combination of the two.
+	 */
+	CLASS( "class" );
 
-	static ConfigurationArtefactType parsePrecedence(String s) {
-		if ( s.equalsIgnoreCase( "hbm" ) ) {
+	private final String name;
+
+	private MetadataSourceType(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
+
+	static MetadataSourceType parsePrecedence(String value) {
+		if ( HBM.name.equalsIgnoreCase( value ) ) {
 			return HBM;
 		}
-		else if ( s.equalsIgnoreCase( "class" ) ) {
+
+		if ( CLASS.name.equalsIgnoreCase( value ) ) {
 			return CLASS;
 		}
-		else {
-			throw new HibernateException( "'" + s + "' - invalid value for precedence configuration." );
-		}
+
+		throw new HibernateException( "Unknown metadata source type value [" + value + "]" );
 	}
 }
 

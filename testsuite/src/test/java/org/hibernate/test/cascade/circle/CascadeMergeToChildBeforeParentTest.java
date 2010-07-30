@@ -29,6 +29,8 @@ package org.hibernate.test.cascade.circle;
 import junit.framework.Test;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
@@ -64,8 +66,12 @@ public class CascadeMergeToChildBeforeParentTest extends FunctionalTestCase {
 		return new String[] {
 				"cascade/circle/CascadeMergeToChildBeforeParent.hbm.xml"
 		};
+	}@Override
+	 public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
 	}
-	
+
 	public static Test suite() {
 		return new FunctionalTestClassTestSuite( CascadeMergeToChildBeforeParentTest.class );
 	}

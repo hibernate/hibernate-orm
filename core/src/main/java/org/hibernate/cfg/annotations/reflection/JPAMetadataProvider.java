@@ -23,6 +23,9 @@
  */
 package org.hibernate.cfg.annotations.reflection;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,11 +50,19 @@ import org.hibernate.util.ReflectHelper;
  *
  * @author Emmanuel Bernard
  */
-public class JPAMetadataProvider implements MetadataProvider {
-	private MetadataProvider delegate = new JavaMetadataProvider();
+public class JPAMetadataProvider implements MetadataProvider, Serializable {
+	private transient MetadataProvider delegate = new JavaMetadataProvider();
+	private transient Map<Object, Object> defaults;
+	private transient Map<AnnotatedElement, AnnotationReader> cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
+
+	//all of the above can be safely rebuilt from XMLContext: only XMLContext this object is serialized
 	private XMLContext xmlContext = new XMLContext();
-	private Map<Object, Object> defaults;
-	private Map<AnnotatedElement, AnnotationReader> cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
+
+	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+		ois.defaultReadObject();
+		delegate = new JavaMetadataProvider();
+		cache = new HashMap<AnnotatedElement, AnnotationReader>(100);
+	}
 
 	public AnnotationReader getAnnotationReader(AnnotatedElement annotatedElement) {
 		AnnotationReader reader = cache.get( annotatedElement );

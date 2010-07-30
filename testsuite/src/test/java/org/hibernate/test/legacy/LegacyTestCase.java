@@ -3,6 +3,7 @@ package org.hibernate.test.legacy;
 import java.util.Iterator;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.DefaultNamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
@@ -53,6 +54,7 @@ public abstract class LegacyTestCase extends FunctionalTestCase {
 					subs += ", true=1, false=0";
 				}
 				cfg.getProperties().setProperty( Environment.QUERY_SUBSTITUTIONS, subs );
+				cfg.setNamingStrategy( DefaultNamingStrategy.INSTANCE );
 			}
 			catch( NumberFormatException nfe ) {
 				// the Integer#parseInt call failed...

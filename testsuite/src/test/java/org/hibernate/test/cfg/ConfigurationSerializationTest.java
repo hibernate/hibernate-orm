@@ -21,6 +21,9 @@
  */
 package org.hibernate.test.cfg;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
@@ -86,6 +89,7 @@ public class ConfigurationSerializationTest extends UnitTestCase {
 			"legacy/UpDown.hbm.xml",
 			"legacy/Vetoer.hbm.xml",
 			"legacy/WZ.hbm.xml",
+			"cfg/orm-serializable.xml"
 	};
 
 	public void testConfiguraionSerializability() {
@@ -94,11 +98,28 @@ public class ConfigurationSerializationTest extends UnitTestCase {
 			cfg.addResource( "org/hibernate/test/" + file );
 		}
 
+		cfg.addAnnotatedClass( Serial.class );
+
 		byte[] bytes = SerializationHelper.serialize( cfg );
 		cfg = ( Configuration ) SerializationHelper.deserialize( bytes );
 
 		// try to build SF
 		SessionFactory factory = cfg.buildSessionFactory();
 		factory.close();
+	}
+
+	@Entity
+	public static class Serial {
+		private String id;
+		private String value;
+
+		@Id
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
 	}
 }

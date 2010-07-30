@@ -126,8 +126,10 @@ public class MappingExceptionTest extends UnitTestCase {
 		String resourceName = "org/hibernate/test/mappingexception/User.hbm.xml";
 		Configuration cfg = new Configuration();
 		cfg.addResource( resourceName );
+		cfg.buildMappings();
 		try {
 			cfg.addResource( resourceName );
+			cfg.buildMappings();
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {

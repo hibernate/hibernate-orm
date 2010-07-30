@@ -67,6 +67,7 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
 	}
 
 	public String[] getMappings() {

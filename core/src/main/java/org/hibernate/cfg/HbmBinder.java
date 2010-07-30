@@ -97,6 +97,8 @@ import org.hibernate.type.TypeFactory;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.hibernate.util.XMLHelper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,37 +122,38 @@ public final class HbmBinder {
 	 * The main contract into the hbm.xml-based binder. Performs necessary binding operations
 	 * represented by the given DOM.
 	 *
-	 * @param doc The DOM to be parsed and bound.
+	 * @param metadataXml The DOM to be parsed and bound.
 	 * @param mappings Current bind state.
 	 * @param inheritedMetas Any inherited meta-tag information.
+	 * @param entityNames Any state
+	 *
 	 * @throws MappingException
 	 */
-	public static void bindRoot(Document doc, Mappings mappings, java.util.Map inheritedMetas)
-			throws MappingException {
+	public static void bindRoot(
+			XMLHelper.MetadataXml metadataXml,
+			Mappings mappings,
+			java.util.Map inheritedMetas,
+			java.util.Set<String> entityNames) throws MappingException {
 
-		java.util.List names = HbmBinder.getExtendsNeeded( doc, mappings );
+		final Document doc = metadataXml.getXmlDocument();
+		final Element hibernateMappingElement = doc.getRootElement();
+
+		java.util.List<String> names = HbmBinder.getExtendsNeeded( metadataXml, mappings );
 		if ( !names.isEmpty() ) {
 			// classes mentioned in extends not available - so put it in queue
-			Element hmNode = doc.getRootElement();
-			Attribute packNode = hmNode.attribute( "package" );
-			String packageName = null;
-			if ( packNode != null ) {
-				packageName = packNode.getValue();
-			}
-			Iterator itr = names.iterator();
-			while ( itr.hasNext() ) {
-				String extendsName = (String) itr.next();
-				mappings.addToExtendsQueue( new ExtendsQueueEntry( extendsName, packageName, doc ) );
+			Attribute packageAttribute = hibernateMappingElement.attribute( "package" );
+			String packageName = packageAttribute == null ? null : packageAttribute.getValue();
+			for ( String name : names ) {
+				mappings.addToExtendsQueue( new ExtendsQueueEntry( name, packageName, metadataXml, entityNames ) );
 			}
 			return;
 		}
 
-		Element hmNode = doc.getRootElement();
 		// get meta's from <hibernate-mapping>
-		inheritedMetas = getMetas( hmNode, inheritedMetas, true );
-		extractRootAttributes( hmNode, mappings );
+		inheritedMetas = getMetas( hibernateMappingElement, inheritedMetas, true );
+		extractRootAttributes( hibernateMappingElement, mappings );
 
-		Iterator rootChildren = hmNode.elementIterator();
+		Iterator rootChildren = hibernateMappingElement.elementIterator();
 		while ( rootChildren.hasNext() ) {
 			final Element element = (Element) rootChildren.next();
 			final String elementName = element.getName();
@@ -1465,6 +1468,9 @@ public final class HbmBinder {
 						null,
 						path
 				);
+				if ( ownerTable.isQuoted() ) {
+					tableName = StringHelper.quote( tableName );
+				}
 			}
 			Attribute schemaNode = node.attribute( "schema" );
 			String schema = schemaNode == null ?
@@ -3066,14 +3072,14 @@ public final class HbmBinder {
 	 * For the given document, locate all extends attributes which refer to
 	 * entities (entity-name or class-name) not defined within said document.
 	 *
-	 * @param doc The document to check
+	 * @param metadataXml The document to check
 	 * @param mappings The already processed mappings.
 	 * @return The list of unresolved extends names.
 	 */
-	public static java.util.List getExtendsNeeded(Document doc, Mappings mappings) {
-		java.util.List extendz = new ArrayList();
+	public static java.util.List<String> getExtendsNeeded(XMLHelper.MetadataXml metadataXml, Mappings mappings) {
+		java.util.List<String> extendz = new ArrayList<String>();
 		Iterator[] subclasses = new Iterator[3];
-		final Element hmNode = doc.getRootElement();
+		final Element hmNode = metadataXml.getXmlDocument().getRootElement();
 
 		Attribute packNode = hmNode.attribute( "package" );
 		final String packageName = packNode == null ? null : packNode.getValue();
@@ -3107,7 +3113,7 @@ public final class HbmBinder {
 			// extends names which require us to delay processing (i.e.
 			// external to this document and not yet processed) are contained
 			// in the returned result
-			final java.util.Set set = new HashSet( extendz );
+			final java.util.Set<String> set = new HashSet<String>( extendz );
 			EntityElementHandler handler = new EntityElementHandler() {
 				public void handleEntity(String entityName, String className, Mappings mappings) {
 					if ( entityName != null ) {

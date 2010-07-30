@@ -26,6 +26,7 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,7 @@ import org.slf4j.Logger;
 /**
  * @author Emmanuel Bernard
  */
-public class XMLContext {
+public class XMLContext implements Serializable {
 	private Logger log = LoggerFactory.getLogger( XMLContext.class );
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<String, Element>();
@@ -224,7 +225,7 @@ public class XMLContext {
 		return hasContext;
 	}
 
-	public static class Default {
+	public static class Default implements Serializable {
 		private AccessType access;
 		private String packageName;
 		private String schema;

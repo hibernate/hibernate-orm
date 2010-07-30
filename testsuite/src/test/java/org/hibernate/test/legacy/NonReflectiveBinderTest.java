@@ -8,6 +8,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -36,7 +37,8 @@ public class NonReflectiveBinderTest extends UnitTestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		cfg = new Configuration()
-				.addResource( "org/hibernate/test/legacy/Wicked.hbm.xml" );
+				.addResource( "org/hibernate/test/legacy/Wicked.hbm.xml" )
+				.setProperty( "javax.persistence.validation.mode", "none" );
 		cfg.buildMappings();
 	}
 

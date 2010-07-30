@@ -23,7 +23,9 @@
  */
 package org.hibernate.cfg;
 
-import org.dom4j.Document;
+import java.util.Set;
+
+import org.hibernate.util.XMLHelper;
 
 /**
  * Represents a mapping queued for delayed processing to await
@@ -34,12 +36,14 @@ import org.dom4j.Document;
 public class ExtendsQueueEntry {
 	private final String explicitName;
 	private final String mappingPackage;
-	private final Document document;
+	private final XMLHelper.MetadataXml metadataXml;
+	private final Set<String> entityNames;
 
-	public ExtendsQueueEntry(String explicitName, String mappingPackage, Document document) {
+	public ExtendsQueueEntry(String explicitName, String mappingPackage, XMLHelper.MetadataXml metadataXml, Set<String> entityNames) {
 		this.explicitName = explicitName;
 		this.mappingPackage = mappingPackage;
-		this.document = document;
+		this.metadataXml = metadataXml;
+		this.entityNames = entityNames;
 	}
 
 	public String getExplicitName() {
@@ -50,7 +54,11 @@ public class ExtendsQueueEntry {
 		return mappingPackage;
 	}
 
-	public Document getDocument() {
-		return document;
+	public XMLHelper.MetadataXml getMetadataXml() {
+		return metadataXml;
+	}
+
+	public Set<String> getEntityNames() {
+		return entityNames;
 	}
 }

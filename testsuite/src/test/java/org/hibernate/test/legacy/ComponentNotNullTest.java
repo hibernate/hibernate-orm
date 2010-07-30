@@ -9,6 +9,8 @@ import junit.textui.TestRunner;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -34,8 +36,10 @@ public class ComponentNotNullTest extends LegacyTestCase {
 		return new FunctionalTestClassTestSuite( ComponentNotNullTest.class );
 	}
 
-	public static void main(String[] args) throws Exception {
-		TestRunner.run(suite());
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
 	}
 
 	public void testComponentNotNull() throws Exception {

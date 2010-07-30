@@ -106,17 +106,6 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		sf.close();
 	}
 
-	public void testDeclarativeAnnWoAnnConfig() throws Exception {
-		Configuration cfg = new Configuration();
-		try {
-			cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
-			fail( "Configuration object should fail when finding annotated elements declarations" );
-		}
-		catch (MappingException e) {
-			//success
-		}
-	}
-
 	public void testHbmWithSubclassExtends() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );

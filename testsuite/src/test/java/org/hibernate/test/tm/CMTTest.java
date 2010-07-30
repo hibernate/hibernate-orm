@@ -59,6 +59,8 @@ public class CMTTest extends FunctionalTestCase {
 
 	public void testConcurrent() throws Exception {
 		getSessions().getStatistics().clear();
+		assertNotNull( sfi().getEntityPersister( "Item" ).getCacheAccessStrategy() );
+		assertEquals( 0, getSessions().getStatistics().getEntityLoadCount() );
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -111,11 +113,11 @@ public class CMTTest extends FunctionalTestCase {
 		s2.createCriteria( "Item" ).list();
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
-		assertEquals( getSessions().getStatistics().getEntityLoadCount(), 7 );
-		assertEquals( getSessions().getStatistics().getEntityFetchCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 3 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 0 );
+		assertEquals( 7, getSessions().getStatistics().getEntityLoadCount() );
+		assertEquals( 0, getSessions().getStatistics().getEntityFetchCount() );
+		assertEquals( 3, getSessions().getStatistics().getQueryExecutionCount() );
+		assertEquals( 0, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 0, getSessions().getStatistics().getQueryCacheMissCount() );
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();

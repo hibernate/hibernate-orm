@@ -33,30 +33,42 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.MapsId;
 
 import org.dom4j.Attribute;
+import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
@@ -66,6 +78,14 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.AnyMetaDef;
+import org.hibernate.annotations.common.reflection.MetadataProvider;
+import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
+import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
+import org.hibernate.cfg.beanvalidation.BeanValidationActivator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -115,8 +135,10 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
+import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.Index;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
@@ -141,6 +163,7 @@ import org.hibernate.usertype.UserType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ConfigHelper;
+import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.SerializationHelper;
@@ -165,32 +188,59 @@ import org.hibernate.util.XMLHelper;
  * @see org.hibernate.SessionFactory
  */
 public class Configuration implements Serializable {
-
 	private static Logger log = LoggerFactory.getLogger( Configuration.class );
 
-	protected Map classes;
-	protected Map imports;
-	protected Map collections;
-	protected Map tables;
-	protected List auxiliaryDatabaseObjects;
+	/**
+	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
+	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
+	 * {@link org.hibernate.annotations.Cache @Cache} is used.  {@link org.hibernate.annotations.Cache @Cache(strategy="..")} is used to override.
+	 */
+	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
 
-	protected Map namedQueries;
-	protected Map namedSqlQueries;
-	protected Map/*<String, SqlResultSetMapping>*/ sqlResultSetMappings;
+	/**
+	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
+	 * for AUTO, TABLE and SEQUENCE.
+	 * Default to false to keep backward compatibility.
+	 */
+	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
 
-	protected Map typeDefs;
-	protected Map filterDefinitions;
-	protected Map fetchProfiles;
+	public static final String ARTEFACT_PROCESSING_ORDER = "hibernate.mapping.precedence";
+
+	/**
+	 * Class name of the class needed to enable Search.
+	 */
+	private static final String SEARCH_STARTUP_CLASS = "org.hibernate.search.event.EventListenerRegister";
+
+	/**
+	 * Method to call to enable Search.
+	 */
+	private static final String SEARCH_STARTUP_METHOD = "enableHibernateSearch";
+
+	protected MetadataSourceQueue metadataSourceQueue;
+	private transient ReflectionManager reflectionManager;
+
+	protected Map<String, PersistentClass> classes;
+	protected Map<String, String> imports;
+	protected Map<String, Collection> collections;
+	protected Map<String, Table> tables;
+	protected List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects;
+
+	protected Map<String, NamedQueryDefinition> namedQueries;
+	protected Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	protected Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
+
+	protected Map<String, TypeDef> typeDefs;
+	protected Map<String, FilterDefinition> filterDefinitions;
+	protected Map<String, FetchProfile> fetchProfiles;
 
 	protected Map tableNameBinding;
 	protected Map columnNameBindingPerTable;
 
-	protected List secondPasses;
-	protected List propertyReferences;
-//	protected List extendsQueue;
-	protected Map extendsQueue;
+	protected List<SecondPass> secondPasses;
+	protected List<Mappings.PropertyReference> propertyReferences;
+	protected Map<ExtendsQueueEntry, ?> extendsQueue;
 
-	protected Map sqlFunctions;
+	protected Map<String, SQLFunction> sqlFunctions;
 	private TypeResolver typeResolver = new TypeResolver();
 
 	private EntityTuplizerFactory entityTuplizerFactory;
@@ -213,8 +263,27 @@ public class Configuration implements Serializable {
 
 	private DefaultIdentifierGeneratorFactory identifierGeneratorFactory;
 
-	//Map<Class<?>, org.hibernate.mapping.MappedSuperclass>
-	private Map mappedSuperclasses;
+	private Map<Class<?>, org.hibernate.mapping.MappedSuperclass> mappedSuperClasses;
+
+	private Map<String, IdGenerator> namedGenerators;
+	private Map<String, Map<String, Join>> joins;
+	private Map<String, AnnotatedClassType> classTypes;
+	private Set<String> defaultNamedQueryNames;
+	private Set<String> defaultNamedNativeQueryNames;
+	private Set<String> defaultSqlResultSetMappingNames;
+	private Set<String> defaultNamedGenerators;
+	private Map<String, Properties> generatorTables;
+	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
+	private Map<String, String> mappedByResolver;
+	private Map<String, String> propertyRefResolver;
+	private Map<String, AnyMetaDef> anyMetaDefs;
+	private List<CacheHolder> caches;
+	private boolean inSecondPass = false;
+	private boolean isDefaultProcessed = false;
+	private boolean isValidatorNotPresentLogged;
+	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
+	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
+
 
 	protected Configuration(SettingsFactory settingsFactory) {
 		this.settingsFactory = settingsFactory;
@@ -226,47 +295,72 @@ public class Configuration implements Serializable {
 	}
 
 	protected void reset() {
-		classes = new HashMap();
-		imports = new HashMap();
-		collections = new HashMap();
-		tables = new TreeMap();
+		metadataSourceQueue = new MetadataSourceQueue();
+		createReflectionManager();
 
-		namedQueries = new HashMap();
-		namedSqlQueries = new HashMap();
-		sqlResultSetMappings = new HashMap();
+		classes = new HashMap<String,PersistentClass>();
+		imports = new HashMap<String,String>();
+		collections = new HashMap<String,Collection>();
+		tables = new TreeMap<String,Table>();
 
-		typeDefs = new HashMap();
-		filterDefinitions = new HashMap();
-		fetchProfiles = new HashMap();
-		auxiliaryDatabaseObjects = new ArrayList();
+		namedQueries = new HashMap<String,NamedQueryDefinition>();
+		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
+		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+
+		typeDefs = new HashMap<String,TypeDef>();
+		filterDefinitions = new HashMap<String, FilterDefinition>();
+		fetchProfiles = new HashMap<String, FetchProfile>();
+		auxiliaryDatabaseObjects = new ArrayList<AuxiliaryDatabaseObject>();
 
 		tableNameBinding = new HashMap();
 		columnNameBindingPerTable = new HashMap();
 
-		propertyReferences = new ArrayList();
-		secondPasses = new ArrayList();
-//		extendsQueue = new ArrayList();
-		extendsQueue = new HashMap();
+		secondPasses = new ArrayList<SecondPass>();
+		propertyReferences = new ArrayList<Mappings.PropertyReference>();
+		extendsQueue = new HashMap<ExtendsQueueEntry, String>();
 
-		namingStrategy = DefaultNamingStrategy.INSTANCE;
 		xmlHelper = new XMLHelper();
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = Environment.getProperties();
 		entityResolver = XMLHelper.DEFAULT_DTD_RESOLVER;
 		eventListeners = new EventListeners();
 
-		sqlFunctions = new HashMap();
+		sqlFunctions = new HashMap<String, SQLFunction>();
 
 		entityTuplizerFactory = new EntityTuplizerFactory();
 //		componentTuplizerFactory = new ComponentTuplizerFactory();
 
 		identifierGeneratorFactory = new DefaultIdentifierGeneratorFactory();
 
-		mappedSuperclasses = new HashMap();
+		mappedSuperClasses = new HashMap<Class<?>, MappedSuperclass>();
+
+		metadataSourcePrecedence = Collections.emptyList();
+
+		namedGenerators = new HashMap<String, IdGenerator>();
+		joins = new HashMap<String, Map<String, Join>>();
+		classTypes = new HashMap<String, AnnotatedClassType>();
+		generatorTables = new HashMap<String, Properties>();
+		defaultNamedQueryNames = new HashSet<String>();
+		defaultNamedNativeQueryNames = new HashSet<String>();
+		defaultSqlResultSetMappingNames = new HashSet<String>();
+		defaultNamedGenerators = new HashSet<String>();
+		uniqueConstraintHoldersByTable = new HashMap<Table, List<UniqueConstraintHolder>>();
+		mappedByResolver = new HashMap<String, String>();
+		propertyRefResolver = new HashMap<String, String>();
+		caches = new ArrayList<CacheHolder>();
+		namingStrategy = EJB3NamingStrategy.INSTANCE;
+		setEntityResolver( new EJB3DTDEntityResolver() );
+		anyMetaDefs = new HashMap<String, AnyMetaDef>();
+		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String, PropertyData>>();
+		propertiesAnnotatedWithIdAndToOne = new HashMap<XClass, Map<String, PropertyData>>();
 	}
 
 	public EntityTuplizerFactory getEntityTuplizerFactory() {
 		return entityTuplizerFactory;
+	}
+
+	public ReflectionManager getReflectionManager() {
+		return reflectionManager;
 	}
 
 //	public ComponentTuplizerFactory getComponentTuplizerFactory() {
@@ -278,7 +372,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @return Iterator of the entity mappings currently contained in the configuration.
 	 */
-	public Iterator getClassMappings() {
+	public Iterator<PersistentClass> getClassMappings() {
 		return classes.values().iterator();
 	}
 
@@ -296,18 +390,18 @@ public class Configuration implements Serializable {
 	 *
 	 * @return Iterator of the table mappings currently contained in the configuration.
 	 */
-	public Iterator getTableMappings() {
+	public Iterator<Table> getTableMappings() {
 		return tables.values().iterator();
 	}
 
 	/**
-	 * Iterate the mapped superclasses mappings
+	 * Iterate the mapped super class mappings
 	 * EXPERIMENTAL Consider this API as PRIVATE
 	 *
-	 * @return Iterator<MappedSuperclass> over the MappedSuperclass mapping currently contained in the configuration.
+	 * @return iterator over the MappedSuperclass mapping currently contained in the configuration.
 	 */
-	public Iterator getMappedSuperclassMappings() {
-		return mappedSuperclasses.values().iterator();
+	public Iterator<MappedSuperclass> getMappedSuperclassMappings() {
+		return mappedSuperClasses.values().iterator();
 	}
 
 	/**
@@ -317,7 +411,7 @@ public class Configuration implements Serializable {
 	 * @return the entity mapping information
 	 */
 	public PersistentClass getClassMapping(String entityName) {
-		return (PersistentClass) classes.get( entityName );
+		return classes.get( entityName );
 	}
 
 	/**
@@ -327,7 +421,7 @@ public class Configuration implements Serializable {
 	 * @return The collection mapping information
 	 */
 	public Collection getCollectionMapping(String role) {
-		return (Collection) collections.get( role );
+		return collections.get( role );
 	}
 
 	/**
@@ -384,31 +478,67 @@ public class Configuration implements Serializable {
 	 *
 	 * @param xmlFile a path to a file
 	 * @return this (for method chaining purposes)
-	 * @throws org.hibernate.MappingException Indicates inability to locate or parse
-	 * the specified mapping file.
+	 * @throws MappingException Indicates inability to locate the specified mapping file.  Historically this could
+	 * have indicated a problem parsing the XML document, but that is now delayed until after {@link #buildMappings}
 	 */
-	public Configuration addFile(File xmlFile) throws MappingException {
+	public Configuration addFile(final File xmlFile) throws MappingException {
 		log.info( "Reading mappings from file: " + xmlFile.getPath() );
-		if ( !xmlFile.exists() ) {
+
+		final String name =  xmlFile.getAbsolutePath();
+		final InputSource inputSource;
+		try {
+			inputSource = new InputSource( new FileInputStream( xmlFile ) );
+		}
+		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( "file", xmlFile.toString() );
 		}
-		try {
-			List errors = new ArrayList();
-			org.dom4j.Document doc = xmlHelper.createSAXReader( xmlFile.toString(), errors, entityResolver ).read( xmlFile );
-			if ( errors.size() != 0 ) {
-				throw new InvalidMappingException( "file", xmlFile.toString(), ( Throwable ) errors.get( 0 ) );
+
+		add(
+				new XMLHelper.MetadataXmlSource() {
+					private final Origin origin = new Origin() {
+						public String getType() {
+							return "file";
+						}
+
+						public String getName() {
+							return name;
+						}
+					};
+
+					public Origin getOrigin() {
+						return origin;
+					}
+
+					public InputSource getInputSource() {
+						return inputSource;
+					}
+				}
+		);
+		return this;
+	}
+
+	private XMLHelper.MetadataXml add(XMLHelper.MetadataXmlSource metadataXmlSource) {
+		XMLHelper.MetadataXml metadataXml = xmlHelper.readMappingDocument( entityResolver, metadataXmlSource );
+		add( metadataXml );
+		return metadataXml;
+	}
+
+	private void add(XMLHelper.MetadataXml metadataXml) {
+		if ( inSecondPass || !metadataXml.isOrmXml() ) {
+			metadataSourceQueue.add( metadataXml );
+		}
+		else {
+			final MetadataProvider metadataProvider = ( (MetadataProviderInjector) reflectionManager ).getMetadataProvider();
+			JPAMetadataProvider jpaMetadataProvider = ( JPAMetadataProvider ) metadataProvider;
+			List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( metadataXml.getXmlDocument() );
+			for ( String className : classNames ) {
+				try {
+					metadataSourceQueue.add( reflectionManager.classForName( className, this.getClass() ) );
+				}
+				catch ( ClassNotFoundException e ) {
+					throw new AnnotationException( "Unable to load class defined in XML: " + className, e );
+				}
 			}
-			add( doc );
-			return this;
-		}
-		catch ( InvalidMappingException e ) {
-			throw e;
-		}
-		catch  ( MappingNotFoundException e ) {
-			throw e;
-		}
-		catch ( Exception e ) {
-			throw new InvalidMappingException( "file", xmlFile.toString(), e );
 		}
 	}
 
@@ -441,33 +571,47 @@ public class Configuration implements Serializable {
 			log.warn( "I/O reported cached file could not be found : " + cachedFile.getPath() + " : " + e );
 		}
 
-		if ( !xmlFile.exists() ) {
+		final String name = xmlFile.getAbsolutePath();
+		final InputSource inputSource;
+		try {
+			inputSource = new InputSource( new FileInputStream( xmlFile ) );
+		}
+		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( "file", xmlFile.toString() );
 		}
 
 		log.info( "Reading mappings from file: " + xmlFile );
-		List errors = new ArrayList();
+		XMLHelper.MetadataXml metadataXml = add(
+				new XMLHelper.MetadataXmlSource() {
+					private final Origin origin = new Origin() {
+						public String getType() {
+							return "file";
+						}
+
+						public String getName() {
+							return name;
+						}
+					};
+					public Origin getOrigin() {
+						return origin;
+					}
+
+					public InputSource getInputSource() {
+						return inputSource;
+					}
+				}
+		);
+
+
 		try {
-			org.dom4j.Document doc = xmlHelper.createSAXReader( xmlFile.getAbsolutePath(), errors, entityResolver ).read( xmlFile );
-			if ( errors.size() != 0 ) {
-				throw new InvalidMappingException( "file", xmlFile.toString(), (Throwable) errors.get(0) );
-			}
-
-			try {
-				log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
-				SerializationHelper.serialize( ( Serializable ) doc, new FileOutputStream( cachedFile ) );
-			}
-			catch ( SerializationException e ) {
-				log.warn( "Could not write cached file: " + cachedFile, e );
-			}
-			catch ( FileNotFoundException e ) {
-				log.warn( "I/O reported error writing cached file : " + cachedFile.getPath(), e );
-			}
-
-			add( doc );
+			log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
+			SerializationHelper.serialize( ( Serializable ) metadataXml.getXmlDocument(), new FileOutputStream( cachedFile ) );
 		}
-		catch (DocumentException e) {
-			throw new InvalidMappingException( "file", xmlFile.toString(), e );
+		catch ( SerializationException e ) {
+			log.warn( "Could not write cached file: " + cachedFile, e );
+		}
+		catch ( FileNotFoundException e ) {
+			log.warn( "I/O reported error writing cached file : " + cachedFile.getPath(), e );
 		}
 
 		return this;
@@ -487,12 +631,10 @@ public class Configuration implements Serializable {
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
-	 * @throws MappingException Indicates a problem in the underlyiong call to {@link #add(org.dom4j.Document)}
 	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
 	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
-	public Configuration addCacheableFileStrictly(File xmlFile)
-			throws MappingException, SerializationException, FileNotFoundException {
+	public Configuration addCacheableFileStrictly(File xmlFile) throws SerializationException, FileNotFoundException {
 		final File cachedFile = determineCachedDomFile( xmlFile );
 
 		final boolean useCachedFile = xmlFile.exists()
@@ -504,9 +646,8 @@ public class Configuration implements Serializable {
 		}
 
 		log.info( "Reading mappings from cache file: " + cachedFile );
-		org.dom4j.Document document =
-				( org.dom4j.Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
-		add( document );
+		Document document = ( Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
+		add( xmlHelper.buildMetadataXml( document, "file", xmlFile.getAbsolutePath() ) );
 		return this;
 	}
 
@@ -537,18 +678,30 @@ public class Configuration implements Serializable {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Mapping XML:\n" + xml );
 		}
-		try {
-			List errors = new ArrayList();
-			org.dom4j.Document doc = xmlHelper.createSAXReader( "XML String", errors, entityResolver )
-					.read( new StringReader( xml ) );
-			if ( errors.size() != 0 ) {
-				throw new MappingException( "invalid mapping", (Throwable) errors.get( 0 ) );
-			}
-			add( doc );
-		}
-		catch (DocumentException e) {
-			throw new MappingException( "Could not parse mapping document in XML string", e );
-		}
+
+		final InputSource inputSource = new InputSource( new StringReader( xml ) );
+
+		add(
+				new XMLHelper.MetadataXmlSource() {
+					final Origin origin = new Origin() {
+						public String getType() {
+							return "string";
+						}
+
+						public String getName() {
+							return "XML String";
+						}
+					};
+
+					public Origin getOrigin() {
+						return origin;
+					}
+
+					public InputSource getInputSource() {
+						return inputSource;
+					}
+				}
+		);
 		return this;
 	}
 
@@ -561,21 +714,55 @@ public class Configuration implements Serializable {
 	 * the mapping document.
 	 */
 	public Configuration addURL(URL url) throws MappingException {
+		final String urlExternalForm = url.toExternalForm();
+
 		if ( log.isDebugEnabled() ) {
-			log.debug( "Reading mapping document from URL:" + url.toExternalForm() );
+			log.debug( "Reading mapping document from URL : {}", urlExternalForm );
 		}
+
 		try {
-			addInputStream( url.openStream() );
+			add( url.openStream(), "URL", urlExternalForm );
 		}
-		catch ( InvalidMappingException e ) {
-			throw new InvalidMappingException( "URL", url.toExternalForm(), e.getCause() );
-		}
-		catch (Exception e) {
-			throw new InvalidMappingException( "URL", url.toExternalForm(), e );
+		catch ( IOException e ) {
+			throw new InvalidMappingException( "Unable to open url stream [" + urlExternalForm + "]", "URL", urlExternalForm, e );
 		}
 		return this;
 	}
 
+	private XMLHelper.MetadataXml add(InputStream inputStream, final String type, final String name) {
+		final XMLHelper.MetadataXmlSource.Origin origin = new XMLHelper.MetadataXmlSource.Origin() {
+			public String getType() {
+				return type;
+			}
+
+			public String getName() {
+				return name;
+			}
+		};
+		final InputSource inputSource = new InputSource( inputStream );
+
+		try {
+			return add(
+					new XMLHelper.MetadataXmlSource() {
+						public Origin getOrigin() {
+							return origin;
+						}
+
+						public InputSource getInputSource() {
+							return inputSource;
+						}
+					}
+			);
+		}
+		finally {
+			try {
+				inputStream.close();
+			}
+			catch ( IOException ignore ) {
+				log.trace( "Was unable to close input stream" );
+			}
+		}
+	}
 	/**
 	 * Read mappings from a DOM <tt>Document</tt>
 	 *
@@ -584,11 +771,14 @@ public class Configuration implements Serializable {
 	 * @throws MappingException Indicates problems reading the DOM or processing
 	 * the mapping document.
 	 */
-	public Configuration addDocument(Document doc) throws MappingException {
+	public Configuration addDocument(org.w3c.dom.Document doc) throws MappingException {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Mapping document:\n" + doc );
 		}
-		add( xmlHelper.createDOMReader().read( doc ) );
+
+		final Document document = xmlHelper.createDOMReader().read( doc );
+		add( xmlHelper.buildMetadataXml( document, "unknown", null ) );
+
 		return this;
 	}
 
@@ -601,27 +791,8 @@ public class Configuration implements Serializable {
 	 * processing the contained mapping document.
 	 */
 	public Configuration addInputStream(InputStream xmlInputStream) throws MappingException {
-		try {
-			List errors = new ArrayList();
-			org.dom4j.Document doc = xmlHelper.createSAXReader( "XML InputStream", errors, entityResolver )
-					.read( new InputSource( xmlInputStream ) );
-			if ( errors.size() != 0 ) {
-				throw new InvalidMappingException( "invalid mapping", null, (Throwable) errors.get( 0 ) );
-			}
-			add( doc );
-			return this;
-		}
-		catch (DocumentException e) {
-			throw new InvalidMappingException( "input stream", null, e );
-		}
-		finally {
-			try {
-				xmlInputStream.close();
-			}
-			catch (IOException ioe) {
-				log.warn( "Could not close input stream", ioe );
-			}
-		}
+		add( xmlInputStream, "input stream", null );
+		return this;
 	}
 
 	/**
@@ -635,21 +806,17 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration addResource(String resourceName, ClassLoader classLoader) throws MappingException {
 		log.info( "Reading mappings from resource: " + resourceName );
-		InputStream rsrc = classLoader.getResourceAsStream( resourceName );
-		if ( rsrc == null ) {
+		InputStream resourceInputStream = classLoader.getResourceAsStream( resourceName );
+		if ( resourceInputStream == null ) {
 			throw new MappingNotFoundException( "resource", resourceName );
 		}
-		try {
-			return addInputStream( rsrc );
-		}
-		catch (MappingException me) {
-			throw new InvalidMappingException( "resource", resourceName, me );
-		}
+		add( resourceInputStream, "resource", resourceName );
+		return this;
 	}
 
 	/**
 	 * Read mappings as a application resourceName (i.e. classpath lookup)
-	 * trying different classloaders.
+	 * trying different class loaders.
 	 *
 	 * @param resourceName The resource name
 	 * @return this (for method chaining purposes)
@@ -659,26 +826,22 @@ public class Configuration implements Serializable {
 	public Configuration addResource(String resourceName) throws MappingException {
 		log.info( "Reading mappings from resource : " + resourceName );
 		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-		InputStream rsrc = null;
-		if (contextClassLoader!=null) {
-			rsrc = contextClassLoader.getResourceAsStream( resourceName );
+		InputStream resourceInputStream = null;
+		if ( contextClassLoader != null ) {
+			resourceInputStream = contextClassLoader.getResourceAsStream( resourceName );
 		}
-		if ( rsrc == null ) {
-			rsrc = Environment.class.getClassLoader().getResourceAsStream( resourceName );
+		if ( resourceInputStream == null ) {
+			resourceInputStream = Environment.class.getClassLoader().getResourceAsStream( resourceName );
 		}
-		if ( rsrc == null ) {
+		if ( resourceInputStream == null ) {
 			throw new MappingNotFoundException( "resource", resourceName );
 		}
-		try {
-			return addInputStream( rsrc );
-		}
-		catch (MappingException me) {
-			throw new InvalidMappingException( "resource", resourceName, me );
-		}
+		add( resourceInputStream, "resource", resourceName );
+		return this;
 	}
 
 	/**
-	 * Read a mapping as an application resouurce using the convention that a class
+	 * Read a mapping as an application resource using the convention that a class
 	 * named <tt>foo.bar.Foo</tt> is mapped by a file <tt>foo/bar/Foo.hbm.xml</tt>
 	 * which can be resolved as a classpath resource.
 	 *
@@ -691,6 +854,41 @@ public class Configuration implements Serializable {
 		String mappingResourceName = persistentClass.getName().replace( '.', '/' ) + ".hbm.xml";
 		log.info( "Reading mappings from resource: " + mappingResourceName );
 		return addResource( mappingResourceName, persistentClass.getClassLoader() );
+	}
+
+	/**
+	 * Read metadata from the annotations associated with this class.
+	 *
+	 * @param annotatedClass The class containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public Configuration addAnnotatedClass(Class annotatedClass) {
+		XClass xClass = reflectionManager.toXClass( annotatedClass );
+		metadataSourceQueue.add( xClass );
+		return this;
+	}
+
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageName java package name
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
+	 */
+	public Configuration addPackage(String packageName) throws MappingException {
+		log.info( "Mapping package {}", packageName );
+		try {
+			AnnotationBinder.bindPackage( packageName, createMappings() );
+			return this;
+		}
+		catch ( MappingException me ) {
+			log.error( "Could not parse the package-level metadata [" + packageName + "]" );
+			throw me;
+		}
 	}
 
 	/**
@@ -761,39 +959,35 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration addDirectory(File dir) throws MappingException {
 		File[] files = dir.listFiles();
-		for ( int i = 0; i < files.length ; i++ ) {
-			if ( files[i].isDirectory() ) {
-				addDirectory( files[i] );
+		for ( File file : files ) {
+			if ( file.isDirectory() ) {
+				addDirectory( file );
 			}
-			else if ( files[i].getName().endsWith( ".hbm.xml" ) ) {
-				addFile( files[i] );
+			else if ( file.getName().endsWith( ".hbm.xml" ) ) {
+				addFile( file );
 			}
 		}
 		return this;
 	}
 
-	protected void add(org.dom4j.Document doc) throws MappingException {
-		HbmBinder.bindRoot( doc, createMappings(), CollectionHelper.EMPTY_MAP );
-	}
-
 	/**
-	 * Create a new <tt>Mappings</tt> to add class and collection
-	 * mappings to.
+	 * Create a new <tt>Mappings</tt> to add class and collection mappings to.
+	 *
+	 * @return The created mappings
 	 */
-	public Mappings createMappings() {
+	public ExtendedMappings createMappings() {
 		return new MappingsImpl();
 	}
 
 
-	private Iterator iterateGenerators(Dialect dialect) throws MappingException {
+	@SuppressWarnings({ "unchecked" })
+	private Iterator<IdentifierGenerator> iterateGenerators(Dialect dialect) throws MappingException {
 
 		TreeMap generators = new TreeMap();
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
 		String defaultSchema = properties.getProperty( Environment.DEFAULT_SCHEMA );
 
-		Iterator iter = classes.values().iterator();
-		while ( iter.hasNext() ) {
-			PersistentClass pc = ( PersistentClass ) iter.next();
+		for ( PersistentClass pc : classes.values() ) {
 			if ( !pc.isInherited() ) {
 				IdentifierGenerator ig = pc.getIdentifier().createIdentifierGenerator(
 						getIdentifierGeneratorFactory(),
@@ -812,9 +1006,7 @@ public class Configuration implements Serializable {
 			}
 		}
 
-		iter = collections.values().iterator();
-		while ( iter.hasNext() ) {
-			Collection collection = ( Collection ) iter.next();
+		for ( Collection collection : collections.values() ) {
 			if ( collection.isIdentified() ) {
 				IdentifierGenerator ig = ( ( IdentifierCollection ) collection ).getIdentifier().createIdentifierGenerator(
 						getIdentifierGeneratorFactory(),
@@ -836,34 +1028,41 @@ public class Configuration implements Serializable {
 	/**
 	 * Generate DDL for dropping tables
 	 *
+	 * @param dialect The dialect for which to generate the drop script
+
+	 * @return The sequence of DDL commands to drop the schema objects
+
+	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
+
 	 * @see org.hibernate.tool.hbm2ddl.SchemaExport
 	 */
 	public String[] generateDropSchemaScript(Dialect dialect) throws HibernateException {
-
 		secondPassCompile();
 
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
 		String defaultSchema = properties.getProperty( Environment.DEFAULT_SCHEMA );
 
-		ArrayList script = new ArrayList( 50 );
+		ArrayList<String> script = new ArrayList<String>( 50 );
 
 		// drop them in reverse order in case db needs it done that way...
-		ListIterator itr = auxiliaryDatabaseObjects.listIterator( auxiliaryDatabaseObjects.size() );
-		while ( itr.hasPrevious() ) {
-			AuxiliaryDatabaseObject object = (AuxiliaryDatabaseObject) itr.previous();
-			if ( object.appliesToDialect( dialect ) ) {
-				script.add( object.sqlDropString( dialect, defaultCatalog, defaultSchema ) );
+		{
+			ListIterator itr = auxiliaryDatabaseObjects.listIterator( auxiliaryDatabaseObjects.size() );
+			while ( itr.hasPrevious() ) {
+				AuxiliaryDatabaseObject object = (AuxiliaryDatabaseObject) itr.previous();
+				if ( object.appliesToDialect( dialect ) ) {
+					script.add( object.sqlDropString( dialect, defaultCatalog, defaultSchema ) );
+				}
 			}
 		}
 
 		if ( dialect.dropConstraints() ) {
-			Iterator iter = getTableMappings();
-			while ( iter.hasNext() ) {
-				Table table = (Table) iter.next();
+			Iterator itr = getTableMappings();
+			while ( itr.hasNext() ) {
+				Table table = (Table) itr.next();
 				if ( table.isPhysicalTable() ) {
-					Iterator subIter = table.getForeignKeyIterator();
-					while ( subIter.hasNext() ) {
-						ForeignKey fk = (ForeignKey) subIter.next();
+					Iterator subItr = table.getForeignKeyIterator();
+					while ( subItr.hasNext() ) {
+						ForeignKey fk = (ForeignKey) subItr.next();
 						if ( fk.isPhysicalConstraint() ) {
 							script.add(
 									fk.sqlDropString(
@@ -879,10 +1078,10 @@ public class Configuration implements Serializable {
 		}
 
 
-		Iterator iter = getTableMappings();
-		while ( iter.hasNext() ) {
+		Iterator itr = getTableMappings();
+		while ( itr.hasNext() ) {
 
-			Table table = (Table) iter.next();
+			Table table = (Table) itr.next();
 			if ( table.isPhysicalTable() ) {
 
 				/*Iterator subIter = table.getIndexIterator();
@@ -905,26 +1104,29 @@ public class Configuration implements Serializable {
 
 		}
 
-		iter = iterateGenerators( dialect );
-		while ( iter.hasNext() ) {
-			String[] lines = ( (PersistentIdentifierGenerator) iter.next() ).sqlDropStrings( dialect );
-			for ( int i = 0; i < lines.length ; i++ ) {
-				script.add( lines[i] );
-			}
+		itr = iterateGenerators( dialect );
+		while ( itr.hasNext() ) {
+			String[] lines = ( (PersistentIdentifierGenerator) itr.next() ).sqlDropStrings( dialect );
+			script.addAll( Arrays.asList( lines ) );
 		}
 
 		return ArrayHelper.toStringArray( script );
 	}
 
 	/**
-	 * Generate DDL for creating tables
+	 * @param dialect The dialect for which to generate the creation script
+	 *
+	 * @return The sequence of DDL commands to create the schema objects
+	 *
+	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
 	 *
 	 * @see org.hibernate.tool.hbm2ddl.SchemaExport
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public String[] generateSchemaCreationScript(Dialect dialect) throws HibernateException {
 		secondPassCompile();
 
-		ArrayList script = new ArrayList( 50 );
+		ArrayList<String> script = new ArrayList<String>( 50 );
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
 		String defaultSchema = properties.getProperty( Environment.DEFAULT_SCHEMA );
 
@@ -940,7 +1142,7 @@ public class Configuration implements Serializable {
 								defaultSchema
 							)
 					);
-				Iterator comments = table.sqlCommentStrings( dialect, defaultCatalog, defaultSchema );
+				Iterator<String> comments = table.sqlCommentStrings( dialect, defaultCatalog, defaultSchema );
 				while ( comments.hasNext() ) {
 					script.add( comments.next() );
 				}
@@ -997,16 +1199,12 @@ public class Configuration implements Serializable {
 		iter = iterateGenerators( dialect );
 		while ( iter.hasNext() ) {
 			String[] lines = ( (PersistentIdentifierGenerator) iter.next() ).sqlCreateStrings( dialect );
-			for ( int i = 0; i < lines.length ; i++ ) {
-				script.add( lines[i] );
-			}
+			script.addAll( Arrays.asList( lines ) );
 		}
 
-		Iterator itr = auxiliaryDatabaseObjects.iterator();
-		while ( itr.hasNext() ) {
-			AuxiliaryDatabaseObject object = (AuxiliaryDatabaseObject) itr.next();
-			if ( object.appliesToDialect( dialect ) ) {
-				script.add( object.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema ) );
+		for ( AuxiliaryDatabaseObject auxiliaryDatabaseObject : auxiliaryDatabaseObjects ) {
+			if ( auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
+				script.add( auxiliaryDatabaseObject.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema ) );
 			}
 		}
 
@@ -1014,10 +1212,17 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Generate DDL for altering tables
+	 * @param dialect The dialect for which to generate the creation script
+	 * @param databaseMetadata The database catalog information for the database to be updated; needed to work out what
+	 * should be created/altered
 	 *
-	 * @see org.hibernate.tool.hbm2ddl.SchemaUpdate
+	 * @return The sequence of DDL commands to apply the schema objects
+	 *
+	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
+	 *
+	 * @see org.hibernate.tool.hbm2ddl.SchemaExport
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public String[] generateSchemaUpdateScript(Dialect dialect, DatabaseMetadata databaseMetadata)
 			throws HibernateException {
 		secondPassCompile();
@@ -1025,7 +1230,7 @@ public class Configuration implements Serializable {
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
 		String defaultSchema = properties.getProperty( Environment.DEFAULT_SCHEMA );
 
-		ArrayList script = new ArrayList( 50 );
+		ArrayList<String> script = new ArrayList<String>( 50 );
 
 		Iterator iter = getTableMappings();
 		while ( iter.hasNext() ) {
@@ -1050,7 +1255,7 @@ public class Configuration implements Serializable {
 						);
 				}
 				else {
-					Iterator subiter = table.sqlAlterStrings(
+					Iterator<String> subiter = table.sqlAlterStrings(
 							dialect,
 							mapping,
 							tableInfo,
@@ -1062,7 +1267,7 @@ public class Configuration implements Serializable {
 					}
 				}
 
-				Iterator comments = table.sqlCommentStrings( dialect, defaultCatalog, defaultSchema );
+				Iterator<String> comments = table.sqlCommentStrings( dialect, defaultCatalog, defaultSchema );
 				while ( comments.hasNext() ) {
 					script.add( comments.next() );
 				}
@@ -1145,17 +1350,14 @@ public class Configuration implements Serializable {
 			Object key = generator.generatorKey();
 			if ( !databaseMetadata.isSequence( key ) && !databaseMetadata.isTable( key ) ) {
 				String[] lines = generator.sqlCreateStrings( dialect );
-				for ( int i = 0; i < lines.length ; i++ ) {
-					script.add( lines[i] );
-				}
+				script.addAll( Arrays.asList( lines ) );
 			}
 		}
 
 		return ArrayHelper.toStringArray( script );
 	}
 
-	public void validateSchema(Dialect dialect, DatabaseMetadata databaseMetadata)
-			throws HibernateException {
+	public void validateSchema(Dialect dialect, DatabaseMetadata databaseMetadata)throws HibernateException {
 		secondPassCompile();
 
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
@@ -1211,36 +1413,362 @@ public class Configuration implements Serializable {
 		secondPassCompile();
 	}
 
-	// This method may be called many times!!
 	protected void secondPassCompile() throws MappingException {
-		log.debug( "processing extends queue" );
+		log.trace( "Starting secondPassCompile() processing" );
 
-		processExtendsQueue();
+		//process default values first
+		{
+			if ( !isDefaultProcessed ) {
+				//use global delimiters if orm.xml declare it
+				final Object isDelimited = reflectionManager.getDefaults().get( "delimited-identifier" );
+				if ( isDelimited != null && isDelimited == Boolean.TRUE ) {
+					getProperties().put( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
+				}
 
-		log.debug( "processing collection mappings" );
+				AnnotationBinder.bindDefaults( createMappings() );
+				isDefaultProcessed = true;
+			}
+		}
 
+		// process metadata queue
+		{
+			metadataSourceQueue.syncAnnotatedClasses();
+			metadataSourceQueue.processMetadata( determineMetadataSourcePrecedence() );
+		}
+
+		// process cache queue
+		{
+			for ( CacheHolder holder : caches ) {
+				if ( holder.isClass ) {
+					applyCacheConcurrencyStrategy( holder );
+				}
+				else {
+					applyCollectionCacheConcurrencyStrategy( holder );
+				}
+			}
+			caches.clear();
+		}
+
+		try {
+			inSecondPass = true;
+			processSecondPassesOfType( PkDrivenByDefaultMapsIdSecondPass.class );
+			processSecondPassesOfType( SetSimpleValueTypeSecondPass.class );
+			processSecondPassesOfType( CopyIdentifierComponentSecondPass.class );
+			processFkSecondPassInOrder();
+			processSecondPassesOfType( CreateKeySecondPass.class );
+			processSecondPassesOfType( SecondaryTableSecondPass.class );
+
+			originalSecondPassCompile();
+
+			inSecondPass = false;
+		}
+		catch ( RecoverableException e ) {
+			//the exception was not recoverable after all
+			throw ( RuntimeException ) e.getCause();
+		}
+
+		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
+			final Table table = tableListEntry.getKey();
+			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
+			int uniqueIndexPerTable = 0;
+			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
+				uniqueIndexPerTable++;
+				final String keyName = StringHelper.isEmpty( holder.getName() )
+						? "key" + uniqueIndexPerTable
+						: holder.getName();
+				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
+			}
+		}
+
+		applyConstraintsToDDL();
+	}
+
+	private void processSecondPassesOfType(Class<? extends SecondPass> type) {
 		Iterator iter = secondPasses.iterator();
 		while ( iter.hasNext() ) {
-			SecondPass sp = (SecondPass) iter.next();
-			if ( ! (sp instanceof QuerySecondPass) ) {
+			SecondPass sp = ( SecondPass ) iter.next();
+			//do the second pass of simple value types first and remove them
+			if ( type.isInstance( sp ) ) {
 				sp.doSecondPass( classes );
 				iter.remove();
 			}
 		}
+	}
+
+	/**
+	 * Processes FKSecondPass instances trying to resolve any
+	 * graph circularity (ie PK made of a many to one linking to
+	 * an entity having a PK made of a ManyToOne ...).
+	 */
+	private void processFkSecondPassInOrder() {
+		log.debug( "processing fk mappings (*ToOne and JoinedSubclass)" );
+		List<FkSecondPass> fkSecondPasses = getFKSecondPassesOnly();
+
+		if ( fkSecondPasses.size() == 0 ) {
+			return; // nothing to do here
+		}
+
+		// split FkSecondPass instances into primary key and non primary key FKs.
+		// While doing so build a map of class names to FkSecondPass instances depending on this class.
+		Map<String, Set<FkSecondPass>> isADependencyOf = new HashMap<String, Set<FkSecondPass>>();
+		List<FkSecondPass> endOfQueueFkSecondPasses = new ArrayList<FkSecondPass>( fkSecondPasses.size() );
+		for ( FkSecondPass sp : fkSecondPasses ) {
+			if ( sp.isInPrimaryKey() ) {
+				String referenceEntityName = sp.getReferencedEntityName();
+				PersistentClass classMapping = getClassMapping( referenceEntityName );
+				String dependentTable = classMapping.getTable().getQuotedName();
+				if ( !isADependencyOf.containsKey( dependentTable ) ) {
+					isADependencyOf.put( dependentTable, new HashSet<FkSecondPass>() );
+				}
+				isADependencyOf.get( dependentTable ).add( sp );
+			}
+			else {
+				endOfQueueFkSecondPasses.add( sp );
+			}
+		}
+
+		// using the isADependencyOf map we order the FkSecondPass recursively instances into the right order for processing
+		List<FkSecondPass> orderedFkSecondPasses = new ArrayList<FkSecondPass>( fkSecondPasses.size() );
+		for ( String tableName : isADependencyOf.keySet() ) {
+			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, tableName, tableName );
+		}
+
+		// process the ordered FkSecondPasses
+		for ( FkSecondPass sp : orderedFkSecondPasses ) {
+			sp.doSecondPass( classes );
+		}
+
+		processEndOfQueue( endOfQueueFkSecondPasses );
+	}
+
+	/**
+	 * @return Returns a list of all <code>secondPasses</code> instances which are a instance of
+	 *         <code>FkSecondPass</code>.
+	 */
+	private List<FkSecondPass> getFKSecondPassesOnly() {
+		Iterator iter = secondPasses.iterator();
+		List<FkSecondPass> fkSecondPasses = new ArrayList<FkSecondPass>( secondPasses.size() );
+		while ( iter.hasNext() ) {
+			SecondPass sp = ( SecondPass ) iter.next();
+			//do the second pass of fk before the others and remove them
+			if ( sp instanceof FkSecondPass ) {
+				fkSecondPasses.add( ( FkSecondPass ) sp );
+				iter.remove();
+			}
+		}
+		return fkSecondPasses;
+	}
+
+	/**
+	 * Recursively builds a list of FkSecondPass instances ready to be processed in this order.
+	 * Checking all dependencies recursively seems quite expensive, but the original code just relied
+	 * on some sort of table name sorting which failed in certain circumstances.
+	 * <p/>
+	 * See <tt>ANN-722</tt> and <tt>ANN-730</tt>
+	 *
+	 * @param orderedFkSecondPasses The list containing the <code>FkSecondPass<code> instances ready
+	 * for processing.
+	 * @param isADependencyOf Our lookup data structure to determine dependencies between tables
+	 * @param startTable Table name to start recursive algorithm.
+	 * @param currentTable The current table name used to check for 'new' dependencies.
+	 */
+	private void buildRecursiveOrderedFkSecondPasses(
+			List<FkSecondPass> orderedFkSecondPasses,
+			Map<String, Set<FkSecondPass>> isADependencyOf,
+			String startTable,
+			String currentTable) {
+
+		Set<FkSecondPass> dependencies = isADependencyOf.get( currentTable );
+
+		// bottom out
+		if ( dependencies == null || dependencies.size() == 0 ) {
+			return;
+		}
+
+		for ( FkSecondPass sp : dependencies ) {
+			String dependentTable = sp.getValue().getTable().getQuotedName();
+			if ( dependentTable.compareTo( startTable ) == 0 ) {
+				StringBuilder sb = new StringBuilder(
+						"Foreign key circularity dependency involving the following tables: "
+				);
+				throw new AnnotationException( sb.toString() );
+			}
+			buildRecursiveOrderedFkSecondPasses( orderedFkSecondPasses, isADependencyOf, startTable, dependentTable );
+			if ( !orderedFkSecondPasses.contains( sp ) ) {
+				orderedFkSecondPasses.add( 0, sp );
+			}
+		}
+	}
+
+	private void processEndOfQueue(List<FkSecondPass> endOfQueueFkSecondPasses) {
+		/*
+		 * If a second pass raises a recoverableException, queue it for next round
+		 * stop of no pass has to be processed or if the number of pass to processes
+		 * does not diminish between two rounds.
+		 * If some failing pass remain, raise the original exception
+		 */
+		boolean stopProcess = false;
+		RuntimeException originalException = null;
+		while ( !stopProcess ) {
+			List<FkSecondPass> failingSecondPasses = new ArrayList<FkSecondPass>();
+			Iterator<FkSecondPass> it = endOfQueueFkSecondPasses.listIterator();
+			while ( it.hasNext() ) {
+				final FkSecondPass pass = it.next();
+				try {
+					pass.doSecondPass( classes );
+				}
+				catch ( RecoverableException e ) {
+					failingSecondPasses.add( pass );
+					if ( originalException == null ) {
+						originalException = ( RuntimeException ) e.getCause();
+					}
+				}
+			}
+			stopProcess = failingSecondPasses.size() == 0 || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
+			endOfQueueFkSecondPasses = failingSecondPasses;
+		}
+		if ( endOfQueueFkSecondPasses.size() > 0 ) {
+			throw originalException;
+		}
+	}
+
+	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
+		keyName = normalizer.normalizeIdentifierQuoting( keyName );
+
+		UniqueKey uc;
+		int size = columnNames.length;
+		Column[] columns = new Column[size];
+		Set<Column> unbound = new HashSet<Column>();
+		Set<Column> unboundNoLogical = new HashSet<Column>();
+		for ( int index = 0; index < size; index++ ) {
+			final String logicalColumnName = normalizer.normalizeIdentifierQuoting( columnNames[index] );
+			try {
+				final String columnName = createMappings().getPhysicalColumnName( logicalColumnName, table );
+				columns[index] = new Column( columnName );
+				unbound.add( columns[index] );
+				//column equals and hashcode is based on column name
+			}
+			catch ( MappingException e ) {
+				unboundNoLogical.add( new Column( logicalColumnName ) );
+			}
+		}
+		for ( Column column : columns ) {
+			if ( table.containsColumn( column ) ) {
+				uc = table.getOrCreateUniqueKey( keyName );
+				uc.addColumn( table.getColumn( column ) );
+				unbound.remove( column );
+			}
+		}
+		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
+			StringBuilder sb = new StringBuilder( "Unable to create unique key constraint (" );
+			for ( String columnName : columnNames ) {
+				sb.append( columnName ).append( ", " );
+			}
+			sb.setLength( sb.length() - 2 );
+			sb.append( ") on table " ).append( table.getName() ).append( ": " );
+			for ( Column column : unbound ) {
+				sb.append( column.getName() ).append( ", " );
+			}
+			for ( Column column : unboundNoLogical ) {
+				sb.append( column.getName() ).append( ", " );
+			}
+			sb.setLength( sb.length() - 2 );
+			sb.append( " not found" );
+			throw new AnnotationException( sb.toString() );
+		}
+	}
+
+	private void applyConstraintsToDDL() {
+		boolean applyOnDdl = getProperties().getProperty(
+				"hibernate.validator.apply_to_ddl",
+				"true"
+		)
+				.equalsIgnoreCase( "true" );
+
+		if ( !applyOnDdl ) {
+			return; // nothing to do in this case
+		}
+		applyHibernateValidatorLegacyConstraintsOnDDL();
+		applyBeanValidationConstraintsOnDDL();
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void applyHibernateValidatorLegacyConstraintsOnDDL() {
+		//TODO search for the method only once and cache it?
+		Constructor validatorCtr = null;
+		Method applyMethod = null;
+		try {
+			Class classValidator = ReflectHelper.classForName(
+					"org.hibernate.validator.ClassValidator", this.getClass()
+			);
+			Class messageInterpolator = ReflectHelper.classForName(
+					"org.hibernate.validator.MessageInterpolator", this.getClass()
+			);
+			validatorCtr = classValidator.getDeclaredConstructor(
+					Class.class, ResourceBundle.class, messageInterpolator, Map.class, ReflectionManager.class
+			);
+			applyMethod = classValidator.getMethod( "apply", PersistentClass.class );
+		}
+		catch ( ClassNotFoundException e ) {
+			if ( !isValidatorNotPresentLogged ) {
+				log.info( "Hibernate Validator not found: ignoring" );
+			}
+			isValidatorNotPresentLogged = true;
+		}
+		catch ( NoSuchMethodException e ) {
+			throw new AnnotationException( e );
+		}
+		if ( applyMethod != null ) {
+			for ( PersistentClass persistentClazz : classes.values() ) {
+				//integrate the validate framework
+				String className = persistentClazz.getClassName();
+				if ( StringHelper.isNotEmpty( className ) ) {
+					try {
+						Object validator = validatorCtr.newInstance(
+								ReflectHelper.classForName( className ), null, null, null, reflectionManager
+						);
+						applyMethod.invoke( validator, persistentClazz );
+					}
+					catch ( Exception e ) {
+						log.warn( "Unable to apply constraints on DDL for " + className, e );
+					}
+				}
+			}
+		}
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private void applyBeanValidationConstraintsOnDDL() {
+		BeanValidationActivator.applyDDL( classes.values(), getProperties() );
+	}
+
+	private void originalSecondPassCompile() throws MappingException {
+		log.debug( "processing extends queue" );
+		processExtendsQueue();
+
+		log.debug( "processing collection mappings" );
+		Iterator itr = secondPasses.iterator();
+		while ( itr.hasNext() ) {
+			SecondPass sp = (SecondPass) itr.next();
+			if ( ! (sp instanceof QuerySecondPass) ) {
+				sp.doSecondPass( classes );
+				itr.remove();
+			}
+		}
 
 		log.debug( "processing native query and ResultSetMapping mappings" );
-		iter = secondPasses.iterator();
-		while ( iter.hasNext() ) {
-			SecondPass sp = (SecondPass) iter.next();
+		itr = secondPasses.iterator();
+		while ( itr.hasNext() ) {
+			SecondPass sp = (SecondPass) itr.next();
 			sp.doSecondPass( classes );
-			iter.remove();
+			itr.remove();
 		}
 
 		log.debug( "processing association property references" );
 
-		iter = propertyReferences.iterator();
-		while ( iter.hasNext() ) {
-			Mappings.PropertyReference upr = (Mappings.PropertyReference) iter.next();
+		itr = propertyReferences.iterator();
+		while ( itr.hasNext() ) {
+			Mappings.PropertyReference upr = (Mappings.PropertyReference) itr.next();
 
 			PersistentClass clazz = getClassMapping( upr.referencedClass );
 			if ( clazz == null ) {
@@ -1260,32 +1788,26 @@ public class Configuration implements Serializable {
 
 		log.debug( "processing foreign key constraints" );
 
-		iter = getTableMappings();
+		itr = getTableMappings();
 		Set done = new HashSet();
-		while ( iter.hasNext() ) {
-			secondPassCompileForeignKeys( (Table) iter.next(), done );
+		while ( itr.hasNext() ) {
+			secondPassCompileForeignKeys( (Table) itr.next(), done );
 		}
 
 	}
 
-	/**
-	 * Try to empty the extends queue.
-	 */
-	private void processExtendsQueue() {
-		// todo : would love to have this work on a notification basis
-		//    where the successful binding of an entity/subclass would
-		//    emit a notification which the extendsQueue entries could
-		//    react to...
-		org.dom4j.Document document = findPossibleExtends();
-		while ( document != null ) {
-			add( document );
-			document = findPossibleExtends();
+	private int processExtendsQueue() {
+		log.debug( "processing extends queue" );
+		int added = 0;
+		ExtendsQueueEntry extendsQueueEntry = findPossibleExtends();
+		while ( extendsQueueEntry != null ) {
+			metadataSourceQueue.processHbmXml( extendsQueueEntry.getMetadataXml(), extendsQueueEntry.getEntityNames() );
+			extendsQueueEntry = findPossibleExtends();
 		}
 
 		if ( extendsQueue.size() > 0 ) {
-//			Iterator iterator = extendsQueue.iterator();
 			Iterator iterator = extendsQueue.keySet().iterator();
-			StringBuffer buf = new StringBuffer( "Following superclasses referenced in extends not found: " );
+			StringBuffer buf = new StringBuffer( "Following super classes referenced in extends not found: " );
 			while ( iterator.hasNext() ) {
 				final ExtendsQueueEntry entry = ( ExtendsQueueEntry ) iterator.next();
 				buf.append( entry.getExplicitName() );
@@ -1298,34 +1820,26 @@ public class Configuration implements Serializable {
 			}
 			throw new MappingException( buf.toString() );
 		}
+
+		return added;
 	}
 
-	/**
-	 * Find the first possible element in the queue of extends.
-	 */
-	protected org.dom4j.Document findPossibleExtends() {
-//		Iterator iter = extendsQueue.iterator();
-		Iterator iter = extendsQueue.keySet().iterator();
-		while ( iter.hasNext() ) {
-			final ExtendsQueueEntry entry = ( ExtendsQueueEntry ) iter.next();
-			if ( getClassMapping( entry.getExplicitName() ) != null ) {
-				// found
-				iter.remove();
-				return entry.getDocument();
-			}
-			else if ( getClassMapping( HbmBinder.getClassName( entry.getExplicitName(), entry.getMappingPackage() ) ) != null ) {
-				// found
-				iter.remove();
-				return entry.getDocument();
+	protected ExtendsQueueEntry findPossibleExtends() {
+		Iterator<ExtendsQueueEntry> itr = extendsQueue.keySet().iterator();
+		while ( itr.hasNext() ) {
+			final ExtendsQueueEntry entry = itr.next();
+			boolean found = getClassMapping( entry.getExplicitName() ) != null
+					|| getClassMapping( HbmBinder.getClassName( entry.getExplicitName(), entry.getMappingPackage() ) ) != null;
+			if ( found ) {
+				itr.remove();
+				return entry;
 			}
 		}
 		return null;
 	}
 
 	protected void secondPassCompileForeignKeys(Table table, Set done) throws MappingException {
-
 		table.createForeignKeys();
-
 		Iterator iter = table.getForeignKeyIterator();
 		while ( iter.hasNext() ) {
 
@@ -1343,7 +1857,7 @@ public class Configuration implements Serializable {
 				if ( log.isDebugEnabled() ) {
 					log.debug( "resolving reference to class: " + referencedEntityName );
 				}
-				PersistentClass referencedClass = (PersistentClass) classes.get( referencedEntityName );
+				PersistentClass referencedClass = classes.get( referencedEntityName );
 				if ( referencedClass == null ) {
 					throw new MappingException(
 							"An association from the table " +
@@ -1361,25 +1875,31 @@ public class Configuration implements Serializable {
 		}
 	}
 
-	/**
-	 * Get the named queries
-	 */
-	public Map getNamedQueries() {
+	public Map<String, NamedQueryDefinition> getNamedQueries() {
 		return namedQueries;
 	}
 
 	/**
-	 * Instantiate a new <tt>SessionFactory</tt>, using the properties and
-	 * mappings in this configuration. The <tt>SessionFactory</tt> will be
-	 * immutable, so changes made to the <tt>Configuration</tt> after
-	 * building the <tt>SessionFactory</tt> will not affect it.
+	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
+	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
+	 * building the {@link SessionFactory} will not affect it.
 	 *
-	 * @return a new factory for <tt>Session</tt>s
-	 * @see org.hibernate.SessionFactory
+	 * @return The build {@link SessionFactory}
+	 *
+	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		log.debug( "Preparing to build session factory with filters : " + filterDefinitions );
+
 		secondPassCompile();
+		if ( ! metadataSourceQueue.isEmpty() ) {
+			log.warn( "mapping metadata cache was not completely processed" );
+		}
+
+		enableLegacyHibernateValidator();
+		enableBeanValidation();
+		enableHibernateSearch();
+
 		validate();
 		Environment.verifyProperties( properties );
 		Properties copy = new Properties();
@@ -1396,6 +1916,133 @@ public class Configuration implements Serializable {
 			);
 	}
 
+	private static final String LEGACY_VALIDATOR_EVENT_LISTENER = "org.hibernate.validator.event.ValidateEventListener";
+
+	private void enableLegacyHibernateValidator() {
+		//add validator events if the jar is available
+		boolean enableValidatorListeners = !"false".equalsIgnoreCase(
+				getProperty(
+						"hibernate.validator.autoregister_listeners"
+				)
+		);
+		Class validateEventListenerClass = null;
+		try {
+			validateEventListenerClass = ReflectHelper.classForName( LEGACY_VALIDATOR_EVENT_LISTENER, Configuration.class );
+		}
+		catch ( ClassNotFoundException e ) {
+			//validator is not present
+			log.debug( "Legacy Validator not present in classpath, ignoring event listener registration" );
+		}
+		if ( enableValidatorListeners && validateEventListenerClass != null ) {
+			//TODO so much duplication
+			Object validateEventListener;
+			try {
+				validateEventListener = validateEventListenerClass.newInstance();
+			}
+			catch ( Exception e ) {
+				throw new AnnotationException( "Unable to load Validator event listener", e );
+			}
+			{
+				boolean present = false;
+				PreInsertEventListener[] listeners = getEventListeners().getPreInsertEventListeners();
+				if ( listeners != null ) {
+					for ( Object eventListener : listeners ) {
+						//not isAssignableFrom since the user could subclass
+						present = present || validateEventListenerClass == eventListener.getClass();
+					}
+					if ( !present ) {
+						int length = listeners.length + 1;
+						PreInsertEventListener[] newListeners = new PreInsertEventListener[length];
+						System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
+						newListeners[length - 1] = ( PreInsertEventListener ) validateEventListener;
+						getEventListeners().setPreInsertEventListeners( newListeners );
+					}
+				}
+				else {
+					getEventListeners().setPreInsertEventListeners(
+							new PreInsertEventListener[] { ( PreInsertEventListener ) validateEventListener }
+					);
+				}
+			}
+
+			//update event listener
+			{
+				boolean present = false;
+				PreUpdateEventListener[] listeners = getEventListeners().getPreUpdateEventListeners();
+				if ( listeners != null ) {
+					for ( Object eventListener : listeners ) {
+						//not isAssignableFrom since the user could subclass
+						present = present || validateEventListenerClass == eventListener.getClass();
+					}
+					if ( !present ) {
+						int length = listeners.length + 1;
+						PreUpdateEventListener[] newListeners = new PreUpdateEventListener[length];
+						System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
+						newListeners[length - 1] = ( PreUpdateEventListener ) validateEventListener;
+						getEventListeners().setPreUpdateEventListeners( newListeners );
+					}
+				}
+				else {
+					getEventListeners().setPreUpdateEventListeners(
+							new PreUpdateEventListener[] { ( PreUpdateEventListener ) validateEventListener }
+					);
+				}
+			}
+		}
+	}
+
+	private void enableBeanValidation() {
+		BeanValidationActivator.activateBeanValidation( getEventListeners(), getProperties() );
+	}
+
+	private static final String SEARCH_EVENT_LISTENER_REGISTERER_CLASS = "org.hibernate.cfg.search.HibernateSearchEventListenerRegister";
+
+	/**
+	 * Tries to automatically register Hibernate Search event listeners by locating the
+	 * appropriate bootstrap class and calling the <code>enableHibernateSearch</code> method.
+	 */
+	private void enableHibernateSearch() {
+		// load the bootstrap class
+		Class searchStartupClass;
+		try {
+			searchStartupClass = ReflectHelper.classForName( SEARCH_STARTUP_CLASS, getClass() );
+		}
+		catch ( ClassNotFoundException e ) {
+			// TODO remove this together with SearchConfiguration after 3.1.0 release of Search
+			// try loading deprecated HibernateSearchEventListenerRegister
+			try {
+				searchStartupClass = ReflectHelper.classForName( SEARCH_EVENT_LISTENER_REGISTERER_CLASS, getClass() );
+			}
+			catch ( ClassNotFoundException cnfe ) {
+				log.debug( "Search not present in classpath, ignoring event listener registration." );
+				return;
+			}
+		}
+
+		// call the method for registering the listeners
+		try {
+			Object searchStartupInstance = searchStartupClass.newInstance();
+			Method enableSearchMethod = searchStartupClass.getDeclaredMethod(
+					SEARCH_STARTUP_METHOD,
+					EventListeners.class,
+					Properties.class
+			);
+			enableSearchMethod.invoke( searchStartupInstance, getEventListeners(), getProperties() );
+		}
+		catch ( InstantiationException e ) {
+			log.debug( "Unable to instantiate {}, ignoring event listener registration.", SEARCH_STARTUP_CLASS );
+		}
+		catch ( IllegalAccessException e ) {
+			log.debug( "Unable to instantiate {}, ignoring event listener registration.", SEARCH_STARTUP_CLASS );
+		}
+		catch ( NoSuchMethodException e ) {
+			log.debug( "Method enableHibernateSearch() not found in {}.", SEARCH_STARTUP_CLASS );
+		}
+		catch ( InvocationTargetException e ) {
+			log.debug( "Unable to execute {}, ignoring event listener registration.", SEARCH_STARTUP_METHOD );
+		}
+	}
+
 	private EventListeners getInitializedEventListeners() {
 		EventListeners result = (EventListeners) eventListeners.shallowCopy();
 		result.initializeListeners( this );
@@ -1403,21 +2050,21 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Return the configured <tt>Interceptor</tt>
+	 * Rterieve the configured {@link Interceptor}.
+	 *
+	 * @return The current {@link Interceptor}
 	 */
 	public Interceptor getInterceptor() {
 		return interceptor;
 	}
 
 	/**
-	 * Get all properties
-	 */
-	public Properties getProperties() {
-		return properties;
-	}
-
-	/**
-	 * Configure an <tt>Interceptor</tt>
+	 * Set the current {@link Interceptor}
+	 *
+	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory() built}
+	 * {@link SessionFactory}.
+	 *
+	 * @return this for method chaining
 	 */
 	public Configuration setInterceptor(Interceptor interceptor) {
 		this.interceptor = interceptor;
@@ -1425,7 +2072,31 @@ public class Configuration implements Serializable {
 	}
 
 	/**
+	 * Get all properties
+	 *
+	 * @return all properties
+	 */
+	public Properties getProperties() {
+		return properties;
+	}
+
+	/**
+	 * Get a property value by name
+	 *
+	 * @param propertyName The name of the property
+	 *
+	 * @return The value curently associated with that property name; may be null.
+	 */
+	public String getProperty(String propertyName) {
+		return properties.getProperty( propertyName );
+	}
+
+	/**
 	 * Specify a completely new set of properties
+	 *
+	 * @param properties The new set of properties
+	 *
+	 * @return this for method chaining
 	 */
 	public Configuration setProperties(Properties properties) {
 		this.properties = properties;
@@ -1433,7 +2104,12 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Set the given properties
+	 * Add the given properties to ours.
+	 *
+	 * @param extraProperties The properties to add.
+	 *
+	 * @return this for method chaining
+	 *
 	 */
 	public Configuration addProperties(Properties extraProperties) {
 		this.properties.putAll( extraProperties );
@@ -1441,44 +2117,40 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Adds the incoming properties to the internap properties structure,
-	 * as long as the internal structure does not already contain an
-	 * entry for the given key.
+	 * Adds the incoming properties to the internal properties structure, as long as the internal structure does not
+	 * already contain an entry for the given key.
 	 *
-	 * @param properties
-	 * @return this
+	 * @param properties The properties to merge
+	 *
+	 * @return this for ethod chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		Iterator itr = properties.entrySet().iterator();
-		while ( itr.hasNext() ) {
-			final Map.Entry entry = ( Map.Entry ) itr.next();
+		for ( Map.Entry entry : properties.entrySet() ) {
 			if ( this.properties.containsKey( entry.getKey() ) ) {
 				continue;
 			}
-			this.properties.setProperty( ( String ) entry.getKey(), ( String ) entry.getValue() );
+			this.properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
 		}
 		return this;
 	}
 
 	/**
-	 * Set a property
+	 * Set a property value by name
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new property value
+	 *
+	 * @return this for method chaining
 	 */
 	public Configuration setProperty(String propertyName, String value) {
 		properties.setProperty( propertyName, value );
 		return this;
 	}
 
-	/**
-	 * Get a property
-	 */
-	public String getProperty(String propertyName) {
-		return properties.getProperty( propertyName );
-	}
-
 	private void addProperties(Element parent) {
-		Iterator iter = parent.elementIterator( "property" );
-		while ( iter.hasNext() ) {
-			Element node = (Element) iter.next();
+		Iterator itr = parent.elementIterator( "property" );
+		while ( itr.hasNext() ) {
+			Element node = (Element) itr.next();
 			String name = node.attributeValue( "name" );
 			String value = node.getText().trim();
 			log.debug( name + "=" + value );
@@ -1491,21 +2163,13 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Get the configuration file as an <tt>InputStream</tt>. Might be overridden
-	 * by subclasses to allow the configuration to be located by some arbitrary
-	 * mechanism.
-	 */
-	protected InputStream getConfigurationInputStream(String resource) throws HibernateException {
-
-		log.info( "Configuration resource: " + resource );
-
-		return ConfigHelper.getResourceAsStream( resource );
-
-	}
-
-	/**
-	 * Use the mappings and properties specified in an application
-	 * resource named <tt>hibernate.cfg.xml</tt>.
+	 * Use the mappings and properties specified in an application resource named <tt>hibernate.cfg.xml</tt>.
+	 *
+	 * @return this for method chaining
+	 *
+	 * @throws HibernateException Generally indicates we cannot find <tt>hibernate.cfg.xml</tt>
+	 *
+	 * @see #configure(String)
 	 */
 	public Configuration configure() throws HibernateException {
 		configure( "/hibernate.cfg.xml" );
@@ -1513,11 +2177,18 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application
-	 * resource. The format of the resource is defined in
-	 * <tt>hibernate-configuration-3.0.dtd</tt>.
+	 * Use the mappings and properties specified in the given application resource. The format of the resource is
+	 * defined in <tt>hibernate-configuration-3.0.dtd</tt>.
 	 * <p/>
-	 * The resource is found via <tt>getConfigurationInputStream(resource)</tt>.
+	 * The resource is found via {@link #getConfigurationInputStream}
+	 *
+	 * @param resource The resource to use
+	 *
+	 * @return this for method chaining
+	 *
+	 * @throws HibernateException Generally indicates we cannot find the named resource
+	 *
+	 * @see #doConfigure(java.io.InputStream, String)
 	 */
 	public Configuration configure(String resource) throws HibernateException {
 		log.info( "configuring from resource: " + resource );
@@ -1526,13 +2197,34 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given document.
-	 * The format of the document is defined in
+	 * Get the configuration file as an <tt>InputStream</tt>. Might be overridden
+	 * by subclasses to allow the configuration to be located by some arbitrary
+	 * mechanism.
+	 * <p/>
+	 * By default here we use classpath resource resolution
+	 *
+	 * @param resource The resource to locate
+	 *
+	 * @return The stream
+	 *
+	 * @throws HibernateException Generally indicates we cannot find the named resource
+	 */
+	protected InputStream getConfigurationInputStream(String resource) throws HibernateException {
+		log.info( "Configuration resource: " + resource );
+		return ConfigHelper.getResourceAsStream( resource );
+	}
+
+	/**
+	 * Use the mappings and properties specified in the given document. The format of the document is defined in
 	 * <tt>hibernate-configuration-3.0.dtd</tt>.
 	 *
 	 * @param url URL from which you wish to load the configuration
-	 * @return A configuration configured via the file
-	 * @throws HibernateException
+	 *
+	 * @return this for method chaining
+	 *
+	 * @throws HibernateException Generally indicates a problem access the url
+	 *
+	 * @see #doConfigure(java.io.InputStream, String)
 	 */
 	public Configuration configure(URL url) throws HibernateException {
 		log.info( "configuring from url: " + url.toString() );
@@ -1545,13 +2237,16 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application
-	 * file. The format of the file is defined in
+	 * Use the mappings and properties specified in the given application file. The format of the file is defined in
 	 * <tt>hibernate-configuration-3.0.dtd</tt>.
 	 *
-	 * @param configFile <tt>File</tt> from which you wish to load the configuration
-	 * @return A configuration configured via the file
-	 * @throws HibernateException
+	 * @param configFile File from which you wish to load the configuration
+	 *
+	 * @return this for method chaining
+	 *
+	 * @throws HibernateException Generally indicates a problem access the file
+	 *
+	 * @see #doConfigure(java.io.InputStream, String)
 	 */
 	public Configuration configure(File configFile) throws HibernateException {
 		log.info( "configuring from file: " + configFile.getName() );
@@ -1564,34 +2259,29 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Use the mappings and properties specified in the given application
-	 * resource. The format of the resource is defined in
-	 * <tt>hibernate-configuration-3.0.dtd</tt>.
+	 * Configure this configuration's state from the contents of the given input stream.  The expectation is that
+	 * the stream contents represent an XML document conforming to the Hibernate Configuration DTD.  See
+	 * {@link #doConfigure(Document)} for further details.
 	 *
-	 * @param stream	   Inputstream to be read from
+	 * @param stream The input stream from which to read
 	 * @param resourceName The name to use in warning/error messages
-	 * @return A configuration configured via the stream
-	 * @throws HibernateException
+	 *
+	 * @return this for method chaining
+	 *
+	 * @throws HibernateException Indicates a problem reading the stream contents.
 	 */
 	protected Configuration doConfigure(InputStream stream, String resourceName) throws HibernateException {
-
-		org.dom4j.Document doc;
 		try {
 			List errors = new ArrayList();
-			doc = xmlHelper.createSAXReader( resourceName, errors, entityResolver )
+			Document document = xmlHelper.createSAXReader( resourceName, errors, entityResolver )
 					.read( new InputSource( stream ) );
 			if ( errors.size() != 0 ) {
-				throw new MappingException(
-						"invalid configuration",
-						(Throwable) errors.get( 0 )
-					);
+				throw new MappingException( "invalid configuration", (Throwable) errors.get( 0 ) );
 			}
+			doConfigure( document );
 		}
 		catch (DocumentException e) {
-			throw new HibernateException(
-					"Could not parse configuration: " + resourceName,
-					e
-				);
+			throw new HibernateException( "Could not parse configuration: " + resourceName, e );
 		}
 		finally {
 			try {
@@ -1601,9 +2291,7 @@ public class Configuration implements Serializable {
 				log.warn( "could not close input stream for: " + resourceName, ioe );
 			}
 		}
-
-		return doConfigure( doc );
-
+		return this;
 	}
 
 	/**
@@ -1615,13 +2303,22 @@ public class Configuration implements Serializable {
 	 * @return A configuration configured via the <tt>Document</tt>
 	 * @throws HibernateException if there is problem in accessing the file.
 	 */
-	public Configuration configure(Document document) throws HibernateException {
+	public Configuration configure(org.w3c.dom.Document document) throws HibernateException {
 		log.info( "configuring from XML document" );
 		return doConfigure( xmlHelper.createDOMReader().read( document ) );
 	}
 
-	protected Configuration doConfigure(org.dom4j.Document doc) throws HibernateException {
-
+	/**
+	 * Parse a dom4j document conforming to the Hibernate Configuration DTD (<tt>hibernate-configuration-3.0.dtd</tt>)
+	 * and use its information to configure this {@link Configuration}'s state
+	 *
+	 * @param doc The dom4j document
+	 *
+	 * @return this for method chaining
+	 *
+	 * @throws HibernateException Indicates a problem performing the configuration task
+	 */
+	protected Configuration doConfigure(Document doc) throws HibernateException {
 		Element sfNode = doc.getRootElement().element( "session-factory" );
 		String name = sfNode.attributeValue( "name" );
 		if ( name != null ) {
@@ -1639,7 +2336,6 @@ public class Configuration implements Serializable {
 		log.debug( "properties: " + properties );
 
 		return this;
-
 	}
 
 
@@ -1673,40 +2369,49 @@ public class Configuration implements Serializable {
 		}
 	}
 
-	protected void parseMappingElement(Element subelement, String name) {
-		Attribute rsrc = subelement.attribute( "resource" );
-		Attribute file = subelement.attribute( "file" );
-		Attribute jar = subelement.attribute( "jar" );
-		Attribute pkg = subelement.attribute( "package" );
-		Attribute clazz = subelement.attribute( "class" );
-		if ( rsrc != null ) {
-			log.debug( name + "<-" + rsrc );
-			addResource( rsrc.getValue() );
+	private void parseMappingElement(Element mappingElement, String name) {
+		final Attribute resourceAttribute = mappingElement.attribute( "resource" );
+		final Attribute fileAttribute = mappingElement.attribute( "file" );
+		final Attribute jarAttribute = mappingElement.attribute( "jar" );
+		final Attribute packageAttribute = mappingElement.attribute( "package" );
+		final Attribute classAttribute = mappingElement.attribute( "class" );
+
+		if ( resourceAttribute != null ) {
+			final String resourceName = resourceAttribute.getValue();
+			log.debug( "session-factory config [{}] named resource [{}] for mapping", name, resourceName );
+			addResource( resourceName );
 		}
-		else if ( jar != null ) {
-			log.debug( name + "<-" + jar );
-			addJar( new File( jar.getValue() ) );
+		else if ( fileAttribute != null ) {
+			final String fileName = fileAttribute.getValue();
+			log.debug( "session-factory config [{}] named file [{}] for mapping", name, fileName );
+			addFile( fileName );
 		}
-		else if ( pkg != null ) {
-			throw new MappingException(
-					"An AnnotationConfiguration instance is required to use <mapping package=\"" +
-					pkg.getValue() + "\"/>"
+		else if ( jarAttribute != null ) {
+			final String jarFileName = jarAttribute.getValue();
+			log.debug( "session-factory config [{}] named jar file [{}] for mapping", name, jarFileName );
+			addJar( new File( jarFileName ) );
+		}
+		else if ( packageAttribute != null ) {
+			final String packageName = packageAttribute.getValue();
+			log.debug( "session-factory config [{}] named package [{}] for mapping", name, packageName );
+			addPackage( packageName );
+		}
+		else if ( classAttribute != null ) {
+			final String className = classAttribute.getValue();
+			log.debug( "session-factory config [{}] named class [{}] for mapping", name, className );
+
+			try {
+				addAnnotatedClass( ReflectHelper.classForName( className ) );
+			}
+			catch ( Exception e ) {
+				throw new MappingException(
+						"Unable to load class [ " + className + "] declared in Hibernate configuration <mapping/> entry",
+						e
 				);
-		}
-		else if ( clazz != null ) {
-			throw new MappingException(
-					"An AnnotationConfiguration instance is required to use <mapping class=\"" +
-					clazz.getValue() + "\"/>"
-				);
+			}
 		}
 		else {
-			if ( file == null ) {
-				throw new MappingException(
-						"<mapping> element in configuration specifies no attributes"
-					);
-			}
-			log.debug( name + "<-" + file );
-			addFile( file.getValue() );
+			throw new MappingException( "<mapping> element in configuration specifies no known attributes" );
 		}
 	}
 
@@ -2091,55 +2796,81 @@ public class Configuration implements Serializable {
 	/**
 	 * Set up a cache for an entity class
 	 *
-	 * @param clazz
-	 * @param concurrencyStrategy
-	 * @return Configuration
-	 * @throws MappingException
+	 * @param entityName The name of the entity to which we shoudl associate these cache settings
+	 * @param concurrencyStrategy The cache strategy to use
+	 *
+	 * @return this for method chaining
 	 */
-	public Configuration setCacheConcurrencyStrategy(String clazz, String concurrencyStrategy)
-			throws MappingException {
-		setCacheConcurrencyStrategy( clazz, concurrencyStrategy, clazz );
+	public Configuration setCacheConcurrencyStrategy(String entityName, String concurrencyStrategy) {
+		setCacheConcurrencyStrategy( entityName, concurrencyStrategy, entityName );
 		return this;
 	}
 
-	public void setCacheConcurrencyStrategy(String clazz, String concurrencyStrategy, String region)
-			throws MappingException {
-		setCacheConcurrencyStrategy( clazz, concurrencyStrategy, region, true );
+	/**
+	 * Set up a cache for an entity class, giving an explicit region name
+	 *
+	 * @param entityName The name of the entity to which we should associate these cache settings
+	 * @param concurrencyStrategy The cache strategy to use
+	 * @param region The name of the cache region to use
+	 *
+	 * @return this for method chaining
+	 */
+	public Configuration setCacheConcurrencyStrategy(String entityName, String concurrencyStrategy, String region) {
+		setCacheConcurrencyStrategy( entityName, concurrencyStrategy, region, true );
+		return this;
 	}
 
-	void setCacheConcurrencyStrategy(String clazz, String concurrencyStrategy, String region, boolean includeLazy)
-			throws MappingException {
-		RootClass rootClass = getRootClassMapping( clazz );
+	public void setCacheConcurrencyStrategy(
+			String entityName,
+			String concurrencyStrategy,
+			String region,
+			boolean cacheLazyProperty) throws MappingException {
+		caches.add( new CacheHolder( entityName, concurrencyStrategy, region, true, cacheLazyProperty ) );
+	}
+
+	private void applyCacheConcurrencyStrategy(CacheHolder holder) {
+		RootClass rootClass = getRootClassMapping( holder.role );
 		if ( rootClass == null ) {
-			throw new MappingException( "Cannot cache an unknown entity: " + clazz );
+			throw new MappingException( "Cannot cache an unknown entity: " + holder.role );
 		}
-		rootClass.setCacheConcurrencyStrategy( concurrencyStrategy );
-		rootClass.setCacheRegionName( region );
-		rootClass.setLazyPropertiesCacheable( includeLazy );
+		rootClass.setCacheConcurrencyStrategy( holder.usage );
+		rootClass.setCacheRegionName( holder.region );
+		rootClass.setLazyPropertiesCacheable( holder.cacheLazy );
 	}
 
 	/**
 	 * Set up a cache for a collection role
 	 *
-	 * @param collectionRole
-	 * @param concurrencyStrategy
-	 * @return Configuration
-	 * @throws MappingException
+	 * @param collectionRole The name of the collection to which we should associate these cache settings
+	 * @param concurrencyStrategy The cache strategy to use
+	 *
+	 * @return this for method chaining
 	 */
-	public Configuration setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy)
-			throws MappingException {
+	public Configuration setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy) {
 		setCollectionCacheConcurrencyStrategy( collectionRole, concurrencyStrategy, collectionRole );
 		return this;
 	}
 
-	public void setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy, String region)
-			throws MappingException {
-		Collection collection = getCollectionMapping( collectionRole );
+	/**
+	 * Set up a cache for a collection role, giving an explicit region name
+	 *
+	 * @param collectionRole The name of the collection to which we should associate these cache settings
+	 * @param concurrencyStrategy The cache strategy to use
+	 * @param region The name of the cache region to use
+	 *
+	 * @return this for method chaining
+	 */
+	public void setCollectionCacheConcurrencyStrategy(String collectionRole, String concurrencyStrategy, String region) {
+		caches.add( new CacheHolder( collectionRole, concurrencyStrategy, region, false, false ) );
+	}
+
+	private void applyCollectionCacheConcurrencyStrategy(CacheHolder holder) {
+		Collection collection = getCollectionMapping( holder.role );
 		if ( collection == null ) {
-			throw new MappingException( "Cannot cache an unknown collection: " + collectionRole );
+			throw new MappingException( "Cannot cache an unknown collection: " + holder.role );
 		}
-		collection.setCacheConcurrencyStrategy( concurrencyStrategy );
-		collection.setCacheRegionName( region );
+		collection.setCacheConcurrencyStrategy( holder.usage );
+		collection.setCacheRegionName( holder.region );
 	}
 
 	/**
@@ -2147,14 +2878,16 @@ public class Configuration implements Serializable {
 	 *
 	 * @return a mapping from "import" names to fully qualified class names
 	 */
-	public Map getImports() {
+	public Map<String,String> getImports() {
 		return imports;
 	}
 
 	/**
 	 * Create an object-oriented view of the configuration properties
+	 *
+	 * @return The build settings
 	 */
-	public Settings buildSettings() throws HibernateException {
+	public Settings buildSettings() {
 		Properties clone = ( Properties ) properties.clone();
 		PropertiesHelper.resolvePlaceHolders( clone );
 		return buildSettingsInternal( clone );
@@ -2179,9 +2912,6 @@ public class Configuration implements Serializable {
 		return sqlResultSetMappings;
 	}
 
-	/**
-	 * @return the NamingStrategy.
-	 */
 	public NamingStrategy getNamingStrategy() {
 		return namingStrategy;
 	}
@@ -2190,6 +2920,8 @@ public class Configuration implements Serializable {
 	 * Set a custom naming strategy
 	 *
 	 * @param namingStrategy the NamingStrategy to set
+	 *
+	 * @return this for method chaining
 	 */
 	public Configuration setNamingStrategy(NamingStrategy namingStrategy) {
 		this.namingStrategy = namingStrategy;
@@ -2214,18 +2946,18 @@ public class Configuration implements Serializable {
 			/**
 			 * Returns the identifier type of a mapped class
 			 */
-			public Type getIdentifierType(String persistentClass) throws MappingException {
-				PersistentClass pc = ( (PersistentClass) classes.get( persistentClass ) );
+			public Type getIdentifierType(String entityName) throws MappingException {
+				PersistentClass pc = classes.get( entityName );
 				if ( pc == null ) {
-					throw new MappingException( "persistent class not known: " + persistentClass );
+					throw new MappingException( "persistent class not known: " + entityName );
 				}
 				return pc.getIdentifier().getType();
 			}
 
-			public String getIdentifierPropertyName(String persistentClass) throws MappingException {
-				final PersistentClass pc = (PersistentClass) classes.get( persistentClass );
+			public String getIdentifierPropertyName(String entityName) throws MappingException {
+				final PersistentClass pc = classes.get( entityName );
 				if ( pc == null ) {
-					throw new MappingException( "persistent class not known: " + persistentClass );
+					throw new MappingException( "persistent class not known: " + entityName );
 				}
 				if ( !pc.hasIdentifierProperty() ) {
 					return null;
@@ -2233,16 +2965,16 @@ public class Configuration implements Serializable {
 				return pc.getIdentifierProperty().getName();
 			}
 
-			public Type getReferencedPropertyType(String persistentClass, String propertyName) throws MappingException {
-				final PersistentClass pc = (PersistentClass) classes.get( persistentClass );
+			public Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
+				final PersistentClass pc = classes.get( entityName );
 				if ( pc == null ) {
-					throw new MappingException( "persistent class not known: " + persistentClass );
+					throw new MappingException( "persistent class not known: " + entityName );
 				}
 				Property prop = pc.getReferencedProperty( propertyName );
 				if ( prop == null ) {
 					throw new MappingException(
 							"property not known: " +
-							persistentClass + '.' + propertyName
+							entityName + '.' + propertyName
 						);
 				}
 				return prop.getType();
@@ -2251,9 +2983,28 @@ public class Configuration implements Serializable {
 	}
 
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		ois.defaultReadObject();
+		//we need  reflectionManager before reading the other components (MetadataSourceQueue in particular)
+		final MetadataProvider metadataProvider = (MetadataProvider) ois.readObject();
 		this.mapping = buildMapping();
 		xmlHelper = new XMLHelper();
+		createReflectionManager(metadataProvider);
+		ois.defaultReadObject();
+	}
+
+	private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+		//We write MetadataProvider first as we need  reflectionManager before reading the other components
+		final MetadataProvider metadataProvider = ( ( MetadataProviderInjector ) reflectionManager ).getMetadataProvider();
+		out.writeObject( metadataProvider );
+		out.defaultWriteObject();
+	}
+
+	private void createReflectionManager() {
+		createReflectionManager( new JPAMetadataProvider() );
+	}
+
+	private void createReflectionManager(MetadataProvider metadataProvider) {
+		reflectionManager = new JavaReflectionManager();
+		( ( MetadataProviderInjector ) reflectionManager ).setMetadataProvider( metadataProvider );
 	}
 
 	public Map getFilterDefinitions() {
@@ -2289,7 +3040,7 @@ public class Configuration implements Serializable {
 	}
 
 	/**
-	 * Allows registration of a type into the type regsitry.  The phrase 'override' in the method name simply
+	 * Allows registration of a type into the type registry.  The phrase 'override' in the method name simply
 	 * reminds that registration *potentially* replaces a previously registered type .
 	 *
 	 * @param type The type to register.
@@ -2322,7 +3073,7 @@ public class Configuration implements Serializable {
 	 * Internal implementation of the Mappings interface giving access to the Configuration's internal
 	 * <tt>metadata repository</tt> state ({@link Configuration#classes}, {@link Configuration#tables}, etc).
 	 */
-	protected class MappingsImpl implements Mappings, Serializable {
+	protected class MappingsImpl implements ExtendedMappings, Serializable {
 
 		private String schemaName;
 
@@ -2413,20 +3164,20 @@ public class Configuration implements Serializable {
 			return typeResolver;
 		}
 
-		public Iterator iterateClasses() {
+		public Iterator<PersistentClass> iterateClasses() {
 			return classes.values().iterator();
 		}
 
 		public PersistentClass getClass(String entityName) {
-			return ( PersistentClass ) classes.get( entityName );
+			return classes.get( entityName );
 		}
 
 		public PersistentClass locatePersistentClassByEntityName(String entityName) {
-			PersistentClass persistentClass = ( PersistentClass ) classes.get( entityName );
+			PersistentClass persistentClass = classes.get( entityName );
 			if ( persistentClass == null ) {
-				String actualEntityName = ( String ) imports.get( entityName );
+				String actualEntityName = imports.get( entityName );
 				if ( StringHelper.isNotEmpty( actualEntityName ) ) {
-					persistentClass = ( PersistentClass ) classes.get( actualEntityName );
+					persistentClass = classes.get( actualEntityName );
 				}
 			}
 			return persistentClass;
@@ -2440,7 +3191,7 @@ public class Configuration implements Serializable {
 		}
 
 		public void addImport(String entityName, String rename) throws DuplicateMappingException {
-			String existing = ( String ) imports.put( rename, entityName );
+			String existing = imports.put( rename, entityName );
 			if ( existing != null ) {
 				if ( existing.equals( entityName ) ) {
 					log.info( "duplicate import: {} -> {}", entityName, rename );
@@ -2457,10 +3208,10 @@ public class Configuration implements Serializable {
 		}
 
 		public Collection getCollection(String role) {
-			return ( Collection ) collections.get( role );
+			return collections.get( role );
 		}
 
-		public Iterator iterateCollections() {
+		public Iterator<Collection> iterateCollections() {
 			return collections.values().iterator();
 		}
 
@@ -2473,10 +3224,10 @@ public class Configuration implements Serializable {
 
 		public Table getTable(String schema, String catalog, String name) {
 			String key = Table.qualify(catalog, schema, name);
-			return (Table) tables.get(key);
+			return tables.get(key);
 		}
 
-		public Iterator iterateTables() {
+		public Iterator<Table> iterateTables() {
 			return tables.values().iterator();
 		}
 
@@ -2491,7 +3242,7 @@ public class Configuration implements Serializable {
 			catalog = getObjectNameNormalizer().normalizeIdentifierQuoting( catalog );
 
 			String key = subselect == null ? Table.qualify( catalog, schema, name ) : subselect;
-			Table table = ( Table ) tables.get( key );
+			Table table = tables.get( key );
 
 			if ( table == null ) {
 				table = new Table();
@@ -2539,10 +3290,16 @@ public class Configuration implements Serializable {
 		}
 
 		public NamedQueryDefinition getQuery(String name) {
-			return ( NamedQueryDefinition ) namedQueries.get( name );
+			return namedQueries.get( name );
 		}
 
 		public void addQuery(String name, NamedQueryDefinition query) throws DuplicateMappingException {
+			if ( !defaultNamedQueryNames.contains( name ) ) {
+				applyQuery( name, query );
+			}
+		}
+
+		private void applyQuery(String name, NamedQueryDefinition query) {
 			checkQueryName( name );
 			namedQueries.put( name.intern(), query );
 		}
@@ -2553,24 +3310,55 @@ public class Configuration implements Serializable {
 			}
 		}
 
+		public void addDefaultQuery(String name, NamedQueryDefinition query) {
+			applyQuery( name, query );
+			defaultNamedQueryNames.add( name );
+		}
+
 		public NamedSQLQueryDefinition getSQLQuery(String name) {
-			return ( NamedSQLQueryDefinition ) namedSqlQueries.get( name );
+			return namedSqlQueries.get( name );
 		}
 
 		public void addSQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException {
+			if ( !defaultNamedNativeQueryNames.contains( name ) ) {
+				applySQLQuery( name, query );
+			}
+		}
+
+		private void applySQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException {
 			checkQueryName( name );
 			namedSqlQueries.put( name.intern(), query );
 		}
 
+		public void addDefaultSQLQuery(String name, NamedSQLQueryDefinition query) {
+			applySQLQuery( name, query );
+			defaultNamedNativeQueryNames.add( name );
+		}
+
 		public ResultSetMappingDefinition getResultSetMapping(String name) {
-			return (ResultSetMappingDefinition) sqlResultSetMappings.get(name);
+			return sqlResultSetMappings.get(name);
 		}
 
 		public void addResultSetMapping(ResultSetMappingDefinition sqlResultSetMapping) throws DuplicateMappingException {
+			if ( !defaultSqlResultSetMappingNames.contains( sqlResultSetMapping.getName() ) ) {
+				applyResultSetMapping( sqlResultSetMapping );
+			}
+		}
+
+		public void applyResultSetMapping(ResultSetMappingDefinition sqlResultSetMapping) throws DuplicateMappingException {
 			Object old = sqlResultSetMappings.put( sqlResultSetMapping.getName(), sqlResultSetMapping );
 			if ( old != null ) {
 				throw new DuplicateMappingException( "resultSet",  sqlResultSetMapping.getName() );
 			}
+		}
+
+		public void addDefaultResultSetMapping(ResultSetMappingDefinition definition) {
+			final String name = definition.getName();
+			if ( !defaultSqlResultSetMappingNames.contains( name ) && getResultSetMapping( name ) != null ) {
+				removeResultSetMapping( name );
+			}
+			applyResultSetMapping( definition );
+			defaultSqlResultSetMappingNames.add( name );
 		}
 
 		protected void removeResultSetMapping(String name) {
@@ -2578,7 +3366,7 @@ public class Configuration implements Serializable {
 		}
 
 		public TypeDef getTypeDef(String typeName) {
-			return ( TypeDef ) typeDefs.get( typeName );
+			return typeDefs.get( typeName );
 		}
 
 		public void addTypeDef(String typeName, String typeClass, Properties paramMap) {
@@ -2592,7 +3380,7 @@ public class Configuration implements Serializable {
 		}
 
 		public FilterDefinition getFilterDefinition(String name) {
-			return ( FilterDefinition ) filterDefinitions.get( name );
+			return filterDefinitions.get( name );
 		}
 
 		public void addFilterDefinition(FilterDefinition definition) {
@@ -2600,7 +3388,7 @@ public class Configuration implements Serializable {
 		}
 
 		public FetchProfile findOrCreateFetchProfile(String name, MetadataSource source) {
-			FetchProfile profile = ( FetchProfile ) fetchProfiles.get( name );
+			FetchProfile profile = fetchProfiles.get( name );
 			if ( profile == null ) {
 				profile = new FetchProfile( name, source );
 				fetchProfiles.put( name, profile );
@@ -2608,11 +3396,19 @@ public class Configuration implements Serializable {
 			return profile;
 		}
 
-		public Iterator iterateAuxliaryDatabaseObjects() {
+		public Iterator<AuxiliaryDatabaseObject> iterateAuxliaryDatabaseObjects() {
+			return iterateAuxiliaryDatabaseObjects();
+		}
+
+		public Iterator<AuxiliaryDatabaseObject> iterateAuxiliaryDatabaseObjects() {
 			return auxiliaryDatabaseObjects.iterator();
 		}
 
-		public ListIterator iterateAuxliaryDatabaseObjectsInReverse() {
+		public ListIterator<AuxiliaryDatabaseObject> iterateAuxliaryDatabaseObjectsInReverse() {
+			return iterateAuxiliaryDatabaseObjectsInReverse();
+		}
+
+		public ListIterator<AuxiliaryDatabaseObject> iterateAuxiliaryDatabaseObjectsInReverse() {
 			return auxiliaryDatabaseObjects.listIterator( auxiliaryDatabaseObjects.size() );
 		}
 
@@ -2828,11 +3624,11 @@ public class Configuration implements Serializable {
 		}
 
 		public void addMappedSuperclass(Class type, MappedSuperclass mappedSuperclass) {
-			mappedSuperclasses.put( type, mappedSuperclass );
+			mappedSuperClasses.put( type, mappedSuperclass );
 		}
 
 		public MappedSuperclass getMappedSuperclass(Class type) {
-			return (MappedSuperclass) mappedSuperclasses.get( type );
+			return mappedSuperClasses.get( type );
 		}
 
 		public ObjectNameNormalizer getObjectNameNormalizer() {
@@ -2841,6 +3637,227 @@ public class Configuration implements Serializable {
 
 		public Properties getConfigurationProperties() {
 			return properties;
+		}
+
+
+		private Boolean useNewGeneratorMappings;
+
+		public void addDefaultGenerator(IdGenerator generator) {
+			this.addGenerator( generator );
+			defaultNamedGenerators.add( generator.getName() );
+		}
+
+		public boolean isInSecondPass() {
+			return inSecondPass;
+		}
+
+		public PropertyData getPropertyAnnotatedWithMapsId(XClass entityType, String propertyName) {
+			final Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
+			return map == null ? null : map.get( propertyName );
+		}
+
+		public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property) {
+			Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
+			if ( map == null ) {
+				map = new HashMap<String, PropertyData>();
+				propertiesAnnotatedWithMapsId.put( entityType, map );
+			}
+			map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
+		}
+
+		public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName) {
+			final Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
+			return map == null ? null : map.get( propertyName );
+		}
+
+		public void addToOneAndIdProperty(XClass entityType, PropertyData property) {
+			Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );
+			if ( map == null ) {
+				map = new HashMap<String, PropertyData>();
+				propertiesAnnotatedWithIdAndToOne.put( entityType, map );
+			}
+			map.put( property.getPropertyName(), property );
+		}
+
+		@SuppressWarnings({ "UnnecessaryUnboxing" })
+		public boolean useNewGeneratorMappings() {
+			if ( useNewGeneratorMappings == null ) {
+				final String booleanName = getConfigurationProperties().getProperty( USE_NEW_ID_GENERATOR_MAPPINGS );
+				useNewGeneratorMappings = Boolean.valueOf( booleanName );
+			}
+			return useNewGeneratorMappings.booleanValue();
+		}
+
+		public IdGenerator getGenerator(String name) {
+			return getGenerator( name, null );
+		}
+
+		public IdGenerator getGenerator(String name, Map<String, IdGenerator> localGenerators) {
+			if ( localGenerators != null ) {
+				IdGenerator result = localGenerators.get( name );
+				if ( result != null ) {
+					return result;
+				}
+			}
+			return namedGenerators.get( name );
+		}
+
+		public void addGenerator(IdGenerator generator) {
+			if ( !defaultNamedGenerators.contains( generator.getName() ) ) {
+				IdGenerator old = namedGenerators.put( generator.getName(), generator );
+				if ( old != null ) {
+					log.warn( "duplicate generator name {}", old.getName() );
+				}
+			}
+		}
+
+		public void addGeneratorTable(String name, Properties params) {
+			Object old = generatorTables.put( name, params );
+			if ( old != null ) {
+				log.warn( "duplicate generator table: {}", name );
+			}
+		}
+
+		public Properties getGeneratorTableProperties(String name, Map<String, Properties> localGeneratorTables) {
+			if ( localGeneratorTables != null ) {
+				Properties result = localGeneratorTables.get( name );
+				if ( result != null ) {
+					return result;
+				}
+			}
+			return generatorTables.get( name );
+		}
+
+		public Map<String, Join> getJoins(String entityName) {
+			return joins.get( entityName );
+		}
+
+		public void addJoins(PersistentClass persistentClass, Map<String, Join> joins) {
+			Object old = Configuration.this.joins.put( persistentClass.getEntityName(), joins );
+			if ( old != null ) {
+				log.warn( "duplicate joins for class: {}", persistentClass.getEntityName() );
+			}
+		}
+
+		public AnnotatedClassType getClassType(XClass clazz) {
+			AnnotatedClassType type = classTypes.get( clazz.getName() );
+			if ( type == null ) {
+				return addClassType( clazz );
+			}
+			else {
+				return type;
+			}
+		}
+
+		//FIXME should be private but is part of the ExtendedMapping contract
+
+		public AnnotatedClassType addClassType(XClass clazz) {
+			AnnotatedClassType type;
+			if ( clazz.isAnnotationPresent( Entity.class ) ) {
+				type = AnnotatedClassType.ENTITY;
+			}
+			else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
+				type = AnnotatedClassType.EMBEDDABLE;
+			}
+			else if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+				type = AnnotatedClassType.EMBEDDABLE_SUPERCLASS;
+			}
+			else {
+				type = AnnotatedClassType.NONE;
+			}
+			classTypes.put( clazz.getName(), type );
+			return type;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public Map<Table, List<String[]>> getTableUniqueConstraints() {
+			final Map<Table, List<String[]>> deprecatedStructure = new HashMap<Table, List<String[]>>(
+					CollectionHelper.determineProperSizing( getUniqueConstraintHoldersByTable() ),
+					CollectionHelper.LOAD_FACTOR
+			);
+			for ( Map.Entry<Table, List<UniqueConstraintHolder>> entry : getUniqueConstraintHoldersByTable().entrySet() ) {
+				List<String[]> columnsPerConstraint = new ArrayList<String[]>(
+						CollectionHelper.determineProperSizing( entry.getValue().size() )
+				);
+				deprecatedStructure.put( entry.getKey(), columnsPerConstraint );
+				for ( UniqueConstraintHolder holder : entry.getValue() ) {
+					columnsPerConstraint.add( holder.getColumns() );
+				}
+			}
+			return deprecatedStructure;
+		}
+
+		public Map<Table, List<UniqueConstraintHolder>> getUniqueConstraintHoldersByTable() {
+			return uniqueConstraintHoldersByTable;
+		}
+
+		@SuppressWarnings({ "unchecked" })
+		public void addUniqueConstraints(Table table, List uniqueConstraints) {
+			List<UniqueConstraintHolder> constraintHolders = new ArrayList<UniqueConstraintHolder>(
+					CollectionHelper.determineProperSizing( uniqueConstraints.size() )
+			);
+
+			int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
+			for ( String[] columns : ( List<String[]> ) uniqueConstraints ) {
+				final String keyName = "key" + keyNameBase++;
+				constraintHolders.add(
+						new UniqueConstraintHolder().setName( keyName ).setColumns( columns )
+				);
+			}
+			addUniqueConstraintHolders( table, constraintHolders );
+		}
+
+		private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
+			List currentHolders = getUniqueConstraintHoldersByTable().get( table );
+			return currentHolders == null
+					? 0
+					: currentHolders.size();
+		}
+
+		public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders) {
+			List<UniqueConstraintHolder> holderList = getUniqueConstraintHoldersByTable().get( table );
+			if ( holderList == null ) {
+				holderList = new ArrayList<UniqueConstraintHolder>();
+				getUniqueConstraintHoldersByTable().put( table, holderList );
+			}
+			holderList.addAll( uniqueConstraintHolders );
+		}
+
+		public void addMappedBy(String entityName, String propertyName, String inversePropertyName) {
+			mappedByResolver.put( entityName + "." + propertyName, inversePropertyName );
+		}
+
+		public String getFromMappedBy(String entityName, String propertyName) {
+			return mappedByResolver.get( entityName + "." + propertyName );
+		}
+
+		public void addPropertyReferencedAssociation(String entityName, String propertyName, String propertyRef) {
+			propertyRefResolver.put( entityName + "." + propertyName, propertyRef );
+		}
+
+		public String getPropertyReferencedAssociation(String entityName, String propertyName) {
+			return propertyRefResolver.get( entityName + "." + propertyName );
+		}
+
+		public ReflectionManager getReflectionManager() {
+			return reflectionManager;
+		}
+
+		public Map getClasses() {
+			return classes;
+		}
+
+		public void addAnyMetaDef(AnyMetaDef defAnn) throws AnnotationException {
+			if ( anyMetaDefs.containsKey( defAnn.name() ) ) {
+				throw new AnnotationException( "Two @AnyMetaDef with the same name defined: " + defAnn.name() );
+			}
+			anyMetaDefs.put( defAnn.name(), defAnn );
+		}
+
+		public AnyMetaDef getAnyMetaDef(String name) {
+			return anyMetaDefs.get( name );
 		}
 	}
 
@@ -2857,5 +3874,268 @@ public class Configuration implements Serializable {
 		public NamingStrategy getNamingStrategy() {
 			return namingStrategy;
 		}
+	}
+
+	protected class MetadataSourceQueue implements Serializable {
+		private LinkedHashMap<XMLHelper.MetadataXml, Set<String>> hbmMetadataToEntityNamesMap
+				= new LinkedHashMap<XMLHelper.MetadataXml, Set<String>>();
+		private Map<String, XMLHelper.MetadataXml> hbmMetadataByEntityNameXRef = new HashMap<String, XMLHelper.MetadataXml>();
+
+		//XClass are not serializable by default
+		private transient List<XClass> annotatedClasses = new ArrayList<XClass>();
+		//only used during the secondPhaseCompile pass, hence does not need to be serialized
+		private transient Map<String, XClass> annotatedClassesByEntityNameMap = new HashMap<String, XClass>();
+
+		private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
+			ois.defaultReadObject();
+			annotatedClassesByEntityNameMap = new HashMap<String, XClass>();
+
+			//build back annotatedClasses
+			@SuppressWarnings( "unchecked" )
+			List<Class> serializableAnnotatedClasses = (List<Class>) ois.readObject();
+			annotatedClasses = new ArrayList<XClass>( serializableAnnotatedClasses.size() );
+			for ( Class clazz : serializableAnnotatedClasses ) {
+				annotatedClasses.add( reflectionManager.toXClass( clazz ) );
+			}
+		}
+
+		private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+			out.defaultWriteObject();
+			List<Class> serializableAnnotatedClasses = new ArrayList<Class>( annotatedClasses.size() );
+			for ( XClass xClass : annotatedClasses ) {
+				serializableAnnotatedClasses.add( reflectionManager.toClass( xClass ) );
+			}
+			out.writeObject( serializableAnnotatedClasses );
+		}
+
+		public void add(XMLHelper.MetadataXml metadataXml) {
+			final Document document = metadataXml.getXmlDocument();
+			final Element hmNode = document.getRootElement();
+			Attribute packNode = hmNode.attribute( "package" );
+			String defaultPackage = packNode != null ? packNode.getValue() : "";
+			Set<String> entityNames = new HashSet<String>();
+			findClassNames( defaultPackage, hmNode, entityNames );
+			for ( String entity : entityNames ) {
+				hbmMetadataByEntityNameXRef.put( entity, metadataXml );
+			}
+			this.hbmMetadataToEntityNamesMap.put( metadataXml, entityNames );
+		}
+
+		private void findClassNames(String defaultPackage, Element startNode, Set<String> names) {
+			// if we have some extends we need to check if those classes possibly could be inside the
+			// same hbm.xml file...
+			Iterator[] classes = new Iterator[4];
+			classes[0] = startNode.elementIterator( "class" );
+			classes[1] = startNode.elementIterator( "subclass" );
+			classes[2] = startNode.elementIterator( "joined-subclass" );
+			classes[3] = startNode.elementIterator( "union-subclass" );
+
+			Iterator classIterator = new JoinedIterator( classes );
+			while ( classIterator.hasNext() ) {
+				Element element = ( Element ) classIterator.next();
+				String entityName = element.attributeValue( "entity-name" );
+				if ( entityName == null ) {
+					entityName = getClassName( element.attribute( "name" ), defaultPackage );
+				}
+				names.add( entityName );
+				findClassNames( defaultPackage, element, names );
+			}
+		}
+
+		private String getClassName(Attribute name, String defaultPackage) {
+			if ( name == null ) {
+				return null;
+			}
+			String unqualifiedName = name.getValue();
+			if ( unqualifiedName == null ) {
+				return null;
+			}
+			if ( unqualifiedName.indexOf( '.' ) < 0 && defaultPackage != null ) {
+				return defaultPackage + '.' + unqualifiedName;
+			}
+			return unqualifiedName;
+		}
+
+		public void add(XClass annotatedClass) {
+			annotatedClasses.add( annotatedClass );
+		}
+
+		protected void syncAnnotatedClasses() {
+			final Iterator<XClass> itr = annotatedClasses.iterator();
+			while ( itr.hasNext() ) {
+				final XClass annotatedClass = itr.next();
+				if ( annotatedClass.isAnnotationPresent( Entity.class ) ) {
+					annotatedClassesByEntityNameMap.put( annotatedClass.getName(), annotatedClass );
+					continue;
+				}
+
+				if ( !annotatedClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+					itr.remove();
+				}
+			}
+		}
+
+		protected void processMetadata(List<MetadataSourceType> order) {
+			syncAnnotatedClasses();
+
+			for ( MetadataSourceType type : order ) {
+				if ( MetadataSourceType.HBM.equals( type ) ) {
+					processHbmXmlQueue();
+				}
+				else if ( MetadataSourceType.CLASS.equals( type ) ) {
+					processAnnotatedClassesQueue();
+				}
+			}
+		}
+
+		private void processHbmXmlQueue() {
+			log.debug( "Processing hbm.xml files" );
+			for ( Map.Entry<XMLHelper.MetadataXml, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
+				// Unfortunately we have to create a Mappings instance for each iteration here
+				processHbmXml( entry.getKey(), entry.getValue() );
+			}
+			hbmMetadataToEntityNamesMap.clear();
+			hbmMetadataByEntityNameXRef.clear();
+		}
+
+		private void processHbmXml(XMLHelper.MetadataXml metadataXml, Set<String> entityNames) {
+			try {
+				HbmBinder.bindRoot( metadataXml, createMappings(), CollectionHelper.EMPTY_MAP, entityNames );
+			}
+			catch ( MappingException me ) {
+				throw new InvalidMappingException( metadataXml.getOriginType(), metadataXml.getOriginName(), me );
+			}
+
+			for ( String entityName : entityNames ) {
+				if ( annotatedClassesByEntityNameMap.containsKey( entityName ) ) {
+					annotatedClasses.remove( annotatedClassesByEntityNameMap.get( entityName ) );
+					annotatedClassesByEntityNameMap.remove( entityName );
+				}
+			}
+		}
+
+		private void processAnnotatedClassesQueue() {
+			log.debug( "Process annotated classes" );
+			//bind classes in the correct order calculating some inheritance state
+			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
+			ExtendedMappings mappings = createMappings();
+			Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
+					orderedClasses, mappings
+			);
+
+
+			for ( XClass clazz : orderedClasses ) {
+				AnnotationBinder.bindClass( clazz, inheritanceStatePerClass, mappings );
+
+				final String entityName = clazz.getName();
+				if ( hbmMetadataByEntityNameXRef.containsKey( entityName ) ) {
+					hbmMetadataToEntityNamesMap.remove( hbmMetadataByEntityNameXRef.get( entityName ) );
+					hbmMetadataByEntityNameXRef.remove( entityName );
+				}
+			}
+			annotatedClasses.clear();
+			annotatedClassesByEntityNameMap.clear();
+		}
+
+		private List<XClass> orderAndFillHierarchy(List<XClass> original) {
+			List<XClass> copy = new ArrayList<XClass>( original );
+			insertMappedSuperclasses( original, copy );
+
+			// order the hierarchy
+			List<XClass> workingCopy = new ArrayList<XClass>( copy );
+			List<XClass> newList = new ArrayList<XClass>( copy.size() );
+			while ( workingCopy.size() > 0 ) {
+				XClass clazz = workingCopy.get( 0 );
+				orderHierarchy( workingCopy, newList, copy, clazz );
+			}
+			return newList;
+		}
+
+		private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
+			for ( XClass clazz : original ) {
+				XClass superClass = clazz.getSuperclass();
+				while ( superClass != null
+						&& !reflectionManager.equals( superClass, Object.class )
+						&& !copy.contains( superClass ) ) {
+					if ( superClass.isAnnotationPresent( Entity.class )
+							|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+						copy.add( superClass );
+					}
+					superClass = superClass.getSuperclass();
+				}
+			}
+		}
+
+		private void orderHierarchy(List<XClass> copy, List<XClass> newList, List<XClass> original, XClass clazz) {
+			if ( clazz == null || reflectionManager.equals( clazz, Object.class ) ) {
+				return;
+			}
+			//process superclass first
+			orderHierarchy( copy, newList, original, clazz.getSuperclass() );
+			if ( original.contains( clazz ) ) {
+				if ( !newList.contains( clazz ) ) {
+					newList.add( clazz );
+				}
+				copy.remove( clazz );
+			}
+		}
+
+		public boolean isEmpty() {
+			return hbmMetadataToEntityNamesMap.isEmpty() && annotatedClasses.isEmpty();
+		}
+
+	}
+
+
+	public static final MetadataSourceType[] DEFAULT_ARTEFACT_PROCESSING_ORDER = new MetadataSourceType[] {
+			MetadataSourceType.HBM,
+			MetadataSourceType.CLASS
+	};
+
+	private List<MetadataSourceType> metadataSourcePrecedence;
+
+	private List<MetadataSourceType> determineMetadataSourcePrecedence() {
+		if ( metadataSourcePrecedence.isEmpty()
+				&& StringHelper.isNotEmpty( getProperties().getProperty( ARTEFACT_PROCESSING_ORDER ) ) ) {
+			metadataSourcePrecedence = parsePrecedence( getProperties().getProperty( ARTEFACT_PROCESSING_ORDER ) );
+		}
+		if ( metadataSourcePrecedence.isEmpty() ) {
+			metadataSourcePrecedence = Arrays.asList( DEFAULT_ARTEFACT_PROCESSING_ORDER );
+		}
+		metadataSourcePrecedence = Collections.unmodifiableList( metadataSourcePrecedence );
+
+		return metadataSourcePrecedence;
+	}
+
+	public void setPrecedence(String precedence) {
+		this.metadataSourcePrecedence = parsePrecedence( precedence );
+	}
+
+	private List<MetadataSourceType> parsePrecedence(String s) {
+		if ( StringHelper.isEmpty( s ) ) {
+			return Collections.emptyList();
+		}
+		StringTokenizer precedences = new StringTokenizer( s, ",; ", false );
+		List<MetadataSourceType> tmpPrecedences = new ArrayList<MetadataSourceType>();
+		while ( precedences.hasMoreElements() ) {
+			tmpPrecedences.add( MetadataSourceType.parsePrecedence( ( String ) precedences.nextElement() ) );
+		}
+		return tmpPrecedences;
+	}
+
+	private static class CacheHolder {
+		public CacheHolder(String role, String usage, String region, boolean isClass, boolean cacheLazy) {
+			this.role = role;
+			this.usage = usage;
+			this.region = region;
+			this.isClass = isClass;
+			this.cacheLazy = cacheLazy;
+		}
+
+		public String role;
+		public String usage;
+		public String region;
+		public boolean isClass;
+		public boolean cacheLazy;
 	}
 }

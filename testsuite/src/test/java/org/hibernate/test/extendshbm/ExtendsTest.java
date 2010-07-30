@@ -29,6 +29,7 @@ public class ExtendsTest extends UnitTestCase {
 		Configuration cfg = new Configuration();
 
 		cfg.addResource( getBaseForMappings() + "extendshbm/allinone.hbm.xml" );
+		cfg.buildMappings();
 		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
 		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );

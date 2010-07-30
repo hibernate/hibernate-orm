@@ -90,10 +90,6 @@ public class ExecutionEnvironment {
 
 		settings.configure( configuration );
 
-		applyMappings( configuration );
-		applyCacheSettings( configuration );
-
-
 		if ( settings.createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		}
@@ -101,7 +97,10 @@ public class ExecutionEnvironment {
 		// make sure we use the same dialect...
 		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
 
+		applyMappings( configuration );
 		configuration.buildMappings();
+
+		applyCacheSettings( configuration );
 		settings.afterConfigurationBuilt( configuration.createMappings(), getDialect() );
 
 		SessionFactory sessionFactory = configuration.buildSessionFactory();
@@ -113,8 +112,11 @@ public class ExecutionEnvironment {
 
 	private void applyMappings(Configuration configuration) {
 		String[] mappings = settings.getMappings();
-		for ( int i = 0; i < mappings.length; i++ ) {
-			configuration.addResource( settings.getBaseForMappings() + mappings[i], ExecutionEnvironment.class.getClassLoader() );
+		for ( String mapping : mappings ) {
+			configuration.addResource(
+					settings.getBaseForMappings() + mapping,
+					ExecutionEnvironment.class.getClassLoader()
+			);
 		}
 	}
 

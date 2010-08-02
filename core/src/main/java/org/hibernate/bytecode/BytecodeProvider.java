@@ -33,8 +33,8 @@ import org.hibernate.bytecode.util.FieldFilter;
  * Bytecode requirements break down into basically 3 areas<ol>
  * <li>proxy generation (both for runtime-lazy-loading and basic proxy generation)
  * {@link #getProxyFactoryFactory()}
- * <li>bean relection optimization {@link #getReflectionOptimizer}
- * <li>field-access instumentation {@link #getTransformer}
+ * <li>bean reflection optimization {@link #getReflectionOptimizer}
+ * <li>field-access instrumentation {@link #getTransformer}
  * </ol>
  *
  * @author Steve Ebersole
@@ -44,7 +44,7 @@ public interface BytecodeProvider {
 	 * Retrieve the specific factory for this provider capable of
 	 * generating run-time proxies for lazy-loading purposes.
 	 *
-	 * @return The provider specifc factory.
+	 * @return The provider specific factory.
 	 */
 	public ProxyFactoryFactory getProxyFactoryFactory();
 

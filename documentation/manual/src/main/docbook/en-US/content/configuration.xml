@@ -835,7 +835,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
       </tgroup>
     </table>
 
-    <table frame="topbot" id="configuration-misc-properties" revision="10">
+    <table frame="topbot" id="configuration-misc-properties" revision="11">
       <title>Miscellaneous Properties</title>
 
       <tgroup cols="2">
@@ -917,15 +917,25 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
           </row>
 
           <row>
-            <entry><literal>hibernate.cglib.use_reflection_optimizer</literal></entry>
-
-            <entry>Enables the use of CGLIB instead of runtime reflection
-            (System-level property). Reflection can sometimes be useful when
-            troubleshooting. Hibernate always requires CGLIB even if you turn
-            off the optimizer. You cannot set this property in
-            <literal>hibernate.cfg.xml</literal>. <para> <emphasis
+            <entry><literal>hibernate.bytecode.use_reflection_optimizer</literal></entry>
+            
+            <entry><para>Enables the use of bytecode manipulation instead of
+            runtime reflection. This is a System-level property and cannot be set
+            in <literal>hibernate.cfg.xml</literal>.
+            Reflection can sometimes be useful when troubleshooting.
+            Hibernate always requires either CGLIB or javassist even
+            if you turn off the optimizer.</para><para> <emphasis
             role="strong">e.g.</emphasis> <literal>true</literal> |
             <literal>false</literal> </para></entry>
+          </row>
+          
+          <row>
+            <entry><literal>hibernate.bytecode.provider</literal></entry>
+          
+            <entry><para>Both javassist or cglib can be used as byte manipulation
+            engines; the default is <literal>javassist</literal>.</para><para> <emphasis
+            role="strong">e.g.</emphasis> <literal>javassist</literal> |
+            <literal>cglib</literal> </para></entry>
           </row>
         </tbody>
       </tgroup>

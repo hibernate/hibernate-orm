@@ -37,10 +37,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public abstract class TrimFunctionTemplate implements SQLFunction {
-	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
-		return Hibernate.STRING;
-	}
-
 	public boolean hasArguments() {
 		return true;
 	}
@@ -49,7 +45,11 @@ public abstract class TrimFunctionTemplate implements SQLFunction {
 		return false;
 	}
 
-	public String render(List args, SessionFactoryImplementor factory) throws QueryException {
+	public Type getReturnType(Type firstArgument, Mapping mapping) throws QueryException {
+		return Hibernate.STRING;
+	}
+
+	public String render(Type firstArgument, List args, SessionFactoryImplementor factory) throws QueryException {
 		final Options options = new Options();
 		final String trimSource;
 

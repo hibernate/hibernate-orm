@@ -37,11 +37,6 @@ import org.hibernate.type.Type;
  * @author Nathan Moon
  */
 public class CharIndexFunction implements SQLFunction {
-
-	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
-		return Hibernate.INTEGER;
-	}
-
 	public boolean hasArguments() {
 		return true;
 	}
@@ -50,7 +45,11 @@ public class CharIndexFunction implements SQLFunction {
 		return true;
 	}
 
-	public String render(List args, SessionFactoryImplementor factory) throws QueryException {
+	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
+		return Hibernate.INTEGER;
+	}
+
+	public String render(Type columnType, List args, SessionFactoryImplementor factory) throws QueryException {
 		boolean threeArgs = args.size() > 2;
 		Object pattern = args.get(0);
 		Object string = args.get(1);

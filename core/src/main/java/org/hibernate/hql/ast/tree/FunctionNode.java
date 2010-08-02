@@ -24,6 +24,7 @@
 package org.hibernate.hql.ast.tree;
 
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.type.Type;
 
 /**
  * Identifies a node which models a SQL function.
@@ -32,4 +33,5 @@ import org.hibernate.dialect.function.SQLFunction;
  */
 public interface FunctionNode {
 	public SQLFunction getSQLFunction();
+	public Type getFirstArgumentType();
 }

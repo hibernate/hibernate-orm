@@ -39,7 +39,6 @@ import java.util.List;
  * parameters with '?' followed by parameter's index (first index is 1).
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
- * @version <tt>$Revision: 6608 $</tt>
  */
 public class SQLFunctionTemplate implements SQLFunction {
 	private final Type type;
@@ -59,14 +58,14 @@ public class SQLFunctionTemplate implements SQLFunction {
 	/**
 	 * {@inheritDoc}
 	 */
-	public String render(List args, SessionFactoryImplementor factory) {
+	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {
 		return renderer.render( args, factory );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
+	public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
 		return type;
 	}
 

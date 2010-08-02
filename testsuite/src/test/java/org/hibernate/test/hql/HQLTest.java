@@ -682,7 +682,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		assertTranslation( "from Animal an where an.bodyWeight > abs(3*5)" );
 		SQLFunction concat = getSessionFactoryImplementor().getSqlFunctionRegistry().findSQLFunction( "concat");
 		List list = new ArrayList(); list.add("'fat'"); list.add("'skinny'");
-		assertTranslation( "from Animal an where an.description = " + concat.render(list, getSessionFactoryImplementor()) );
+		assertTranslation( "from Animal an where an.description = " + concat.render(Hibernate.STRING, list, getSessionFactoryImplementor()) );
 	}
 
 	public void testNotOrWhereClause() {

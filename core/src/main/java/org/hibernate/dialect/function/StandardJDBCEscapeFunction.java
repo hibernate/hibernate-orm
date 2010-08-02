@@ -45,8 +45,8 @@ public class StandardJDBCEscapeFunction extends StandardSQLFunction {
 		super( name, typeValue );
 	}
 
-	public String render(List args, SessionFactoryImplementor factory) {
-		return "{fn " + super.render( args, factory ) + "}";
+	public String render(Type argumentType, List args, SessionFactoryImplementor factory) {
+		return "{fn " + super.render( argumentType, args, factory ) + "}";
 	}
 
 	public String toString() {

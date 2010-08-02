@@ -51,15 +51,6 @@ public class DerbyConcatFunction implements SQLFunction {
 	/**
 	 * {@inheritDoc}
 	 * <p/>
-	 * Here we always return {@link Hibernate#STRING}.
-	 */
-	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
-		return Hibernate.STRING;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
 	 * Here we always return <tt>true</tt>
 	 */
 	public boolean hasArguments() {
@@ -78,14 +69,23 @@ public class DerbyConcatFunction implements SQLFunction {
 	/**
 	 * {@inheritDoc}
 	 * <p/>
+	 * Here we always return {@link Hibernate#STRING}.
+	 */
+	public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
+		return Hibernate.STRING;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Here's the meat..  The whole reason we have a separate impl for this for Derby is to re-define
 	 * this method.  The logic here says that if not all the incoming args are dynamic parameters
 	 * (i.e. <tt>?</tt>) then we simply use the Derby concat operator (<tt>||</tt>) on the unchanged
 	 * arg elements.  However, if all the args are dynamic parameters, then we need to wrap the individual
-	 * arg elements in <tt>cast</tt> function calls, use the concantenation operator on the <tt>cast</tt>
+	 * arg elements in <tt>cast</tt> function calls, use the concatenation operator on the <tt>cast</tt>
 	 * returns, and then wrap that whole thing in a call to the Derby <tt>varchar</tt> function.
 	 */
-	public String render(List args, SessionFactoryImplementor factory) throws QueryException {
+	public String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
 		boolean areAllArgsParams = true;
 		Iterator itr = args.iterator();
 		while ( itr.hasNext() ) {

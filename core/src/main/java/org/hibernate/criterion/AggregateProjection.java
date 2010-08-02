@@ -72,9 +72,9 @@ public class AggregateProjection extends SimpleProjection {
 	/**
 	 * {@inheritDoc}
 	 */
-	public String toSqlString(Criteria criteria, int loc, CriteriaQuery criteriaQuery)
-			throws HibernateException {
+	public String toSqlString(Criteria criteria, int loc, CriteriaQuery criteriaQuery) throws HibernateException {
 		final String functionFragment = getFunction( criteriaQuery ).render(
+				criteriaQuery.getType( criteria, getPropertyName() ),
 				buildFunctionParameterList( criteria, criteriaQuery ),
 				criteriaQuery.getFactory()
 		);

@@ -33,6 +33,8 @@ import antlr.RecognitionException;
 import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.tree.FunctionNode;
+import org.hibernate.hql.ast.tree.SqlNode;
+import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.dialect.function.SQLFunction;
@@ -202,10 +204,11 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			super.endFunctionTemplate( node );
 		}
 		else {
+			final Type functionType = functionNode.getFirstArgumentType();
 			// this function has a registered SQLFunction -> redirect output and catch the arguments
 			FunctionArguments functionArguments = ( FunctionArguments ) writer;
 			writer = outputStack.removeFirst();
-			out( sqlFunction.render( functionArguments.getArgs(), sessionFactory ) );
+			out( sqlFunction.render( functionType, functionArguments.getArgs(), sessionFactory ) );
 		}
 	}
 

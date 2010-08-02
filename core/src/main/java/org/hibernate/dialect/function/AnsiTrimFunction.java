@@ -26,7 +26,7 @@ package org.hibernate.dialect.function;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
- * Defines support for rendering according to ANSI SQL <tt>TRIM<//tt> function specification.
+ * Defines support for rendering according to ANSI SQL <tt>TRIM</tt> function specification.
  *
  * @author Steve Ebersole
  */

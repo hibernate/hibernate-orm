@@ -66,7 +66,7 @@ public class ComponentTest extends FunctionalTestCase {
 		else {
 			List args = new ArrayList();
 			args.add( "dob" );
-			f.setFormula( yearFunction.render( args, null ) );
+			f.setFormula( yearFunction.render( Hibernate.INTEGER, args, null ) );
 		}
 	}
 	

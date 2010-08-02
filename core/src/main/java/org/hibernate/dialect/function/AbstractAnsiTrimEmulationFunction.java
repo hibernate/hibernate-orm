@@ -44,13 +44,6 @@ import java.util.ArrayList;
  */
 public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	/**
-	 * {@inheritDoc} 
-	 */
-	public final Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
-		return Hibernate.STRING;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	public final boolean hasArguments() {
@@ -65,9 +58,16 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 	}
 
 	/**
+	 * {@inheritDoc} 
+	 */
+	public final Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
+		return Hibernate.STRING;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
-	public final String render(List args, SessionFactoryImplementor factory) throws QueryException {
+	public final String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
 		// According to both the ANSI-SQL and JPA specs, trim takes a variable number of parameters between 1 and 4.
 		// at least one paramer (trimSource) is required.  From the SQL spec:
 		//
@@ -87,12 +87,12 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 		if ( args.size() == 1 ) {
 			// we have the form: trim(trimSource)
 			//      so we trim leading and trailing spaces
-			return resolveBothSpaceTrimFunction().render( args, factory );			// EARLY EXIT!!!!
+			return resolveBothSpaceTrimFunction().render( argumentType, args, factory );			// EARLY EXIT!!!!
 		}
 		else if ( "from".equalsIgnoreCase( ( String ) args.get( 0 ) ) ) {
 			// we have the form: trim(from trimSource).
 			//      This is functionally equivalent to trim(trimSource)
-			return resolveBothSpaceTrimFromFunction().render( args, factory );  		// EARLY EXIT!!!!
+			return resolveBothSpaceTrimFromFunction().render( argumentType, args, factory );  		// EARLY EXIT!!!!
 		}
 		else {
 			// otherwise, a trim-specification and/or a trim-character
@@ -145,24 +145,24 @@ public abstract class AbstractAnsiTrimEmulationFunction implements SQLFunction {
 
 			if ( trimCharacter.equals( "' '" ) ) {
 				if ( leading && trailing ) {
-					return resolveBothSpaceTrimFunction().render( argsToUse, factory );
+					return resolveBothSpaceTrimFunction().render( argumentType, argsToUse, factory );
 				}
 				else if ( leading ) {
-					return resolveLeadingSpaceTrimFunction().render( argsToUse, factory );
+					return resolveLeadingSpaceTrimFunction().render( argumentType, argsToUse, factory );
 				}
 				else {
-					return resolveTrailingSpaceTrimFunction().render( argsToUse, factory );
+					return resolveTrailingSpaceTrimFunction().render( argumentType, argsToUse, factory );
 				}
 			}
 			else {
 				if ( leading && trailing ) {
-					return resolveBothTrimFunction().render( argsToUse, factory );
+					return resolveBothTrimFunction().render( argumentType, argsToUse, factory );
 				}
 				else if ( leading ) {
-					return resolveLeadingTrimFunction().render( argsToUse, factory );
+					return resolveLeadingTrimFunction().render( argumentType, argsToUse, factory );
 				}
 				else {
-					return resolveTrailingTrimFunction().render( argsToUse, factory );
+					return resolveTrailingTrimFunction().render( argumentType, argsToUse, factory );
 				}
 			}
 		}

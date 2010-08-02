@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.function;
 
@@ -40,6 +39,7 @@ import org.hibernate.type.Type;
  * provide details required for processing of the function.
  *
  * @author David Channon
+ * @author Steve Ebersole
  */
 public interface SQLFunction {
 	/**
@@ -50,40 +50,41 @@ public interface SQLFunction {
 	public boolean hasArguments();
 
 	/**
-	 * If there are no arguments, are parens required?
+	 * If there are no arguments, are parentheses required?
 	 *
 	 * @return True if a no-arg call of this function requires parentheses.
 	 */
 	public boolean hasParenthesesIfNoArguments();
 
 	/**
-	 * The return type of the function.  May be either a concrete type which
-	 * is preset, or variable depending upon the type of the first function
-	 * argument.
+	 * The return type of the function.  May be either a concrete type which is preset, or variable depending upon
+	 * the type of the first function argument.
+	 * <p/>
+	 * Note, the 'firstArgumentType' parameter should match the one passed into {@link #render}
 	 *
-	 * @param columnType the type of the first argument
+	 * @param firstArgumentType The type of the first argument
 	 * @param mapping The mapping source.
 	 *
 	 * @return The type to be expected as a return.
 	 *
 	 * @throws org.hibernate.QueryException Indicates an issue resolving the return type.
-	 *
-	 * @deprecated See http://opensource.atlassian.com/projects/hibernate/browse/HHH-5212
 	 */
-	public Type getReturnType(Type columnType, Mapping mapping) throws QueryException;
+	public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException;
+
 
 	/**
 	 * Render the function call as SQL fragment.
+	 * <p/>
+	 * Note, the 'firstArgumentType' parameter should match the one passed into {@link #getReturnType}
 	 *
-	 * @param args The function arguments
+	 * @param firstArgumentType The type of the first argument
+	 * @param arguments The function arguments
 	 * @param factory The SessionFactory
 	 *
 	 * @return The rendered function call
 	 *
 	 * @throws org.hibernate.QueryException Indicates a problem rendering the
 	 * function call.
-	 *
-	 * @deprecated See http://opensource.atlassian.com/projects/hibernate/browse/HHH-5212
 	 */
-	public String render(List args, SessionFactoryImplementor factory) throws QueryException;
+	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) throws QueryException;
 }

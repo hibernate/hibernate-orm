@@ -291,7 +291,10 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 			return fe.getDataType();
 		}
 		SQLFunction sf = getWalker().getSessionFactoryHelper().findSQLFunction( getText() );
-		return sf == null ? null : sf.getReturnType( null, null );
+		if ( sf != null ) {
+			return sf.getReturnType( null, getWalker().getSessionFactoryHelper().getFactory() );
+		}
+		return null;
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {

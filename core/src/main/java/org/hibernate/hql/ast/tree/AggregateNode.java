@@ -29,6 +29,7 @@ import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
 
 import antlr.SemanticException;
+import antlr.collections.AST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,20 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 			}
 		}
 		return sqlFunction;
+	}
+
+	public Type getFirstArgumentType() {
+		AST argument = getFirstChild();
+		while ( argument != null ) {
+			if ( argument instanceof SqlNode ) {
+				final Type type = ( (SqlNode) argument ).getDataType();
+				if ( type != null ) {
+					return type;
+				}
+				argument = argument.getNextSibling();
+			}
+		}
+		return null;
 	}
 
 	public Type getDataType() {

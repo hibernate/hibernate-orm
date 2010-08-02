@@ -51,19 +51,19 @@ public class NoArgSQLFunction implements SQLFunction {
         this.name = name;
     }
 
-    public Type getReturnType(Type columnType, Mapping mapping) throws QueryException {
+	public boolean hasArguments() {
+		return false;
+	}
+
+	public boolean hasParenthesesIfNoArguments() {
+		return hasParenthesesIfNoArguments;
+	}
+
+    public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
         return returnType;
     }
 
-    public boolean hasArguments() {
-        return false;
-    }
-
-    public boolean hasParenthesesIfNoArguments() {
-        return hasParenthesesIfNoArguments;
-    }
-    
-    public String render(List args, SessionFactoryImplementor factory) throws QueryException {
+    public String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
     	if ( args.size()>0 ) {
     		throw new QueryException("function takes no arguments: " + name);
     	}

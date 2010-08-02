@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import junit.framework.Test;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Mappings;
@@ -40,7 +41,7 @@ public class CompositeElementTest extends FunctionalTestCase {
 		if ( lengthFunction != null ) {
 			ArrayList args = new ArrayList();
 			args.add( "bio" );
-			f.setFormula( lengthFunction.render( args, null ) );
+			f.setFormula( lengthFunction.render( Hibernate.INTEGER, args, null ) );
 		}
 	}
 

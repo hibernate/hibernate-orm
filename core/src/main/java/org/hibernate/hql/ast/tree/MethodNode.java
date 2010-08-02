@@ -96,6 +96,20 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 		return function;
 	}
 
+	public Type getFirstArgumentType() {
+		AST argument = getFirstChild();
+		while ( argument != null ) {
+			if ( argument instanceof SqlNode ) {
+				final Type type = ( (SqlNode) argument ).getDataType();
+				if ( type != null ) {
+					return type;
+				}
+				argument = argument.getNextSibling();
+			}
+		}
+		return null;
+	}
+
 	private void dialectFunction(AST exprList) {
 		function = getSessionFactoryHelper().findSQLFunction( methodName );
 		if ( function != null ) {

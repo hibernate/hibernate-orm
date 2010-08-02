@@ -137,7 +137,7 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 				expressions.add( child.getText() );
 				child = child.getNextSibling();
 			}
-			final String text = function.render( expressions, context.getSessionFactory() );
+			final String text = function.render( null, expressions, context.getSessionFactory() );
 			return getASTFactory().create( OrderByTemplateTokenTypes.IDENT, text );
 		}
 	}

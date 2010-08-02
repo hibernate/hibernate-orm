@@ -142,9 +142,14 @@ public class SelectParser implements Parser {
 			}
 		}
 		else if ( COUNT_MODIFIERS.contains( lctoken ) ) {
-			if ( !ready || !aggregate ) throw new QueryException( token + " only allowed inside aggregate function in SELECT" );
+			if ( !ready || !aggregate ) {
+				throw new QueryException( token + " only allowed inside aggregate function in SELECT" );
+			}
 			q.appendScalarSelectToken( token );
-			if ( "*".equals( token ) ) q.addSelectScalar( getFunction( "count", q ).getReturnType( Hibernate.LONG, q.getFactory() ) ); //special case
+			if ( "*".equals( token ) ) {
+				// special case
+				q.addSelectScalar( getFunction( "count", q ).getReturnType( Hibernate.LONG, q.getFactory() ) );
+			}
 		}
 		else if ( getFunction( lctoken, q ) != null && token.equals( q.unalias( token ) ) ) {
 			// the name of an SQL function

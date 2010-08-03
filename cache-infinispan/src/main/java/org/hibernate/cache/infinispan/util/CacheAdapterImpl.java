@@ -82,7 +82,7 @@ public class CacheAdapterImpl implements CacheAdapter {
 
    public Object getAllowingTimeout(Object key) throws CacheException {
       try {
-         return cache.get(key);
+         return getFailSilentCache().get(key);
       } catch (TimeoutException ignored) {
          // ignore it
          return null;
@@ -101,7 +101,7 @@ public class CacheAdapterImpl implements CacheAdapter {
 
    public Object putAllowingTimeout(Object key, Object value) throws CacheException {
       try {
-         return cache.put(key, value);
+         return getFailSilentCache().put(key, value);
       } catch (TimeoutException allowed) {
          // ignore it
          return null;
@@ -202,4 +202,7 @@ public class CacheAdapterImpl implements CacheAdapter {
       return cache.getConfiguration();
    }
 
+   private Cache getFailSilentCache() {
+      return cache.getAdvancedCache().withFlags(Flag.FAIL_SILENTLY);
+   }
 }

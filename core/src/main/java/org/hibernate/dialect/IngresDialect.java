@@ -65,7 +65,7 @@ public class IngresDialect extends Dialect {
 		registerColumnType( Types.VARBINARY, 32000, "varbyte($l)" );
 		registerColumnType( Types.VARBINARY, "long byte" );
 		registerColumnType( Types.LONGVARBINARY, "long byte" );
-		registerColumnType( Types.CHAR, "char(1)" );
+		registerColumnType( Types.CHAR, 32000, "char($l)" );
 		registerColumnType( Types.VARCHAR, 32000, "varchar($l)" );
 		registerColumnType( Types.VARCHAR, "long varchar" );
 		registerColumnType( Types.LONGVARCHAR, "long varchar" );
@@ -160,7 +160,12 @@ public class IngresDialect extends Dialect {
         // substitions of true and false.
         getDefaultProperties().setProperty(Environment.QUERY_SUBSTITUTIONS, "true=1,false=0");
 	}
-
+	/**
+	 * Expression for created UUID string
+	 */
+	public String getSelectGUIDString() {
+		return "select uuid_to_char(uuid_create())";
+	}
 	/**
 	 * Do we need to drop constraints before dropping tables in this dialect?
 	 *

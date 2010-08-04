@@ -352,5 +352,14 @@ public class IngresDialect extends Dialect {
 	public boolean supportsExpectedLobUsagePattern () {
 		return false;
 	}
+
+	/**
+	 * Ingres does not support the syntax `count(distinct a,b)`?
+	 *
+	 * @return False, not supported.
+	 */
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
 }
 

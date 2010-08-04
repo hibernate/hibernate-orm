@@ -5,6 +5,47 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.0.Beta2 (2010.08.04)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11132
+
+** Bug
+    * [HHH-2350] - 2nd level cache broken for non-inverse bidirectional one-to-many relation
+    * [HHH-4011] - ChainedPropertyAccessor is not serializable, which breaks caching to disk and replicated caches.
+    * [HHH-5097] - Bug in ParameterizedFunctionExpression with two or more parameters: IllegalArgumentException
+    * [HHH-5296] - AbstractFromImpl::getJoin() shall return empty set, not null
+    * [HHH-5355] - org.hibernate.test.id.uuid.sqlrep.sqlchar.UUIDCharTest errors with IngresDialect
+    * [HHH-5400] - Binding BLOB values via byte[] (MaterializedBlobType) fails in 3.6 on MySQL
+    * [HHH-5408] - Revise JPA compliance wording used in documentation according to Oracle policies
+    * [HHH-5415] - org.hibernate.type.descriptor.java.DataHelper dumping "NClob not found" exception to stderr
+    * [HHH-5425] - PropertyAccessException when caching results from a Query with a ResultTransformer that as 1 value per row
+    * [HHH-5431] - Infinispan's CacheAdapterImpl.putAllowingTimeout not using silent flag
+
+** Improvement
+    * [HHH-2510] - override equals() and fix hashCode() in AliasToBeanResultTransformer
+    * [HHH-5212] - Alter SQLFunction contract to be more flexible
+    * [HHH-5283] - Add BasicType handling of java.net.URL
+    * [HHH-5295] - Rendered JPAQL query shall be the same all the times, aliases shall not have random indexes
+    * [HHH-5331] - Remove reflection calls on SessionFactory for JDK 1.5 detection in relation to Statistics
+    * [HHH-5375] - Merge AnnotationConfiguration into Configuration
+    * [HHH-5418] - Have Configuration delay parsing/binding of mappings until buildMappings() is called
+    * [HHH-5420] - introducing new dialect for ms sql server 2008 with jdbc 3.0 and above
+    * [HHH-5424] - ResultTransformer should only be set in the QueryKey if putting/getting data that is actually transformed
+
+** New Feature
+    * [HHH-3908] - Expose way to fully control fetching and result mapping on SQLQuery
+    * [HHH-5423] - Provide a JBoss TS TransactionManagerLookup implementation for standalone (non JNDI) usage
+
+** Patch
+    * [HHH-5246] - Addition of withClause for DetachedCriteria (Shawn Clowater)
+    * [HHH-5349] - CriteriaHQLAlignmentTest fails with an error running with the Ingres dialect
+    * [HHH-5401] - Update to HHH-5381  HSQLDB new dialect (Fred Toussi)
+    * [HHH-5435] - Add identity column support to the Ingres10Dialect
+
+** Task
+    * [HHH-5259] - Invalid reflection optimization configuration property name in Hibernate documentation.
+    * [HHH-5416] - upgrade to h2 1.2.140
+
 
 Changes in version 3.6.0.Beta1 (2010.07.21)
 -------------------------------------------

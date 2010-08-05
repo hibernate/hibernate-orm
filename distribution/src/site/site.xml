@@ -1,4 +1,4 @@
-<project name="Hibernate Core">
+<project name="Hibernate Core ${project.version}">
 
     <bannerLeft>
         <name>Hibernate Core Project</name>
@@ -7,7 +7,7 @@
     </bannerLeft>
     
     <version position="left"/>
-    <publishDate position="navigation-bottom" format="yyyy-MM-dd"/>
+    <publishDate position="navigation-bottom" format="yyyy.MM.dd"/>
 <!--
     <poweredBy>
         <logo name="Maven" href="http://maven.apache.org/" img="images/maven-button-4.png"/>

@@ -1,4 +1,4 @@
-<project name="Hibernate Core">
+<project name="Hibernate Core ${project.version}">
 
     <bannerLeft>
         <name>Hibernate Core Project</name>

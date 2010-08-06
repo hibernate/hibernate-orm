@@ -41,6 +41,10 @@
     <name>Hibernate QuickStart Guide</name>
     <description>A QuickStart guide for getting up and started quickly using Hibernate</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 
     <build>
         <plugins>

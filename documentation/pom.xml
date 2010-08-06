@@ -17,6 +17,11 @@
     <name>Hibernate Core Documentation</name>
     <description>Grouping of Hibernate Core Project documentation modules</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <modules>
         <module>manual</module>
         <module>envers</module>

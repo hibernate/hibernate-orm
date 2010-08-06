@@ -17,6 +17,11 @@
     <name>Hibernate Testsuite</name>
     <description>The testsuite of Hibernate functionality</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${groupId}</groupId>

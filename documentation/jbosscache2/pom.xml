@@ -41,6 +41,11 @@
     <name>Hibernate/JBoss Cache 3 Reference Manual</name>
     <description>The Hibernate / JBoss Cache 3 integration reference manual</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

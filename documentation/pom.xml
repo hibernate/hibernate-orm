@@ -20,7 +20,8 @@
     <modules>
         <module>manual</module>
         <module>envers</module>
-<!--
+        <module>quickstart</module>
+        <!--
         <module>jbosscache2</module>
 -->
     </modules>

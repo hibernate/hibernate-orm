@@ -52,6 +52,8 @@ import org.objectweb.asm.ClassWriter;
  * This interface is then used by Hibernate for some optimizations.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
 public class CglibClassTransformer extends AbstractClassTransformerImpl {
 

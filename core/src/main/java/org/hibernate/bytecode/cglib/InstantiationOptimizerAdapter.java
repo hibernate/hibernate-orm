@@ -35,9 +35,11 @@ import java.io.ObjectInputStream;
 
 /**
  * The {@link ReflectionOptimizer.InstantiationOptimizer} implementation for CGLIB
- * which simply acts as an adpater to the {@link FastClass} class.
+ * which simply acts as an adapter to the {@link FastClass} class.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
 public class InstantiationOptimizerAdapter implements ReflectionOptimizer.InstantiationOptimizer, Serializable {
 	private FastClass fastClass;

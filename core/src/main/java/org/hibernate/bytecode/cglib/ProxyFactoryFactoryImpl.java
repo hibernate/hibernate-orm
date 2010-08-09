@@ -45,6 +45,8 @@ import java.util.HashMap;
  * A factory for CGLIB-based {@link ProxyFactory} instances.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
 public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 

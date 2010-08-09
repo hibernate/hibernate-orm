@@ -33,7 +33,10 @@ import org.hibernate.type.CompositeType;
 
 /**
  * Serializable placeholder for <tt>CGLIB</tt> proxies
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
+@Deprecated
 public final class SerializableProxy extends AbstractSerializableProxy {
 
 	private Class persistentClass;

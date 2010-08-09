@@ -39,7 +39,10 @@ import java.io.ObjectInputStream;
  * which simply acts as an adpater to the {@link BulkBean} class.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
+@Deprecated
 public class AccessOptimizerAdapter implements ReflectionOptimizer.AccessOptimizer, Serializable {
 
 	public static final String PROPERTY_GET_EXCEPTION =

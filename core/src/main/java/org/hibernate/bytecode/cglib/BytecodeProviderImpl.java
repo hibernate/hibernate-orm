@@ -41,10 +41,16 @@ import org.hibernate.util.StringHelper;
  * Bytecode provider implementation for CGLIB.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
+@Deprecated
 public class BytecodeProviderImpl implements BytecodeProvider {
-
 	private static final Logger log = LoggerFactory.getLogger( BytecodeProviderImpl.class );
+
+	public BytecodeProviderImpl() {
+		log.warn( "Per HHH-5451 support for cglib as a bytecode provider has been deprecated." );
+	}
 
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();

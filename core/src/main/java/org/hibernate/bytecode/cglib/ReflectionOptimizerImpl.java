@@ -32,7 +32,10 @@ import java.io.Serializable;
  * ReflectionOptimizer implementation for CGLIB.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
+@Deprecated
 public class ReflectionOptimizerImpl implements ReflectionOptimizer, Serializable {
 	private transient InstantiationOptimizerAdapter instantiationOptimizer;
 	private transient AccessOptimizerAdapter accessOptimizer;

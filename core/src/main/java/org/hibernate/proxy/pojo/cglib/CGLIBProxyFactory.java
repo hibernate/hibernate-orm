@@ -35,7 +35,10 @@ import org.hibernate.type.CompositeType;
 
 /**
  * @author Gavin King
+ *
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated.
  */
+@Deprecated
 public class CGLIBProxyFactory implements ProxyFactory {
 
 	protected static final Class[] NO_CLASSES = new Class[0];

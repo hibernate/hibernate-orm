@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.tool.instrument.cglib;
 
@@ -34,7 +33,7 @@ import org.hibernate.tool.instrument.BasicInstrumentationTask;
  * field-level interception using CGLIB.
  * <p/>
  * In order to use this task, typically you would define a a taskdef
- * similiar to:<pre>
+ * similar to:<pre>
  * <taskdef name="instrument" classname="org.hibernate.tool.instrument.cglib.InstrumentTask">
  *     <classpath refid="lib.class.path"/>
  * </taskdef>
@@ -54,7 +53,7 @@ import org.hibernate.tool.instrument.BasicInstrumentationTask;
  * instrumented.
  * <p/>
  * Optionally you can chose to enable "Extended Instrumentation" if desired
- * by specifying the extended attriubute on the task:<pre>
+ * by specifying the extended attribute on the task:<pre>
  * <instrument extended="true">
  *     ...
  * </instrument>
@@ -63,8 +62,16 @@ import org.hibernate.tool.instrument.BasicInstrumentationTask;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * 
+ * @deprecated Per HHH-5451 support for cglib as a bytecode provider has been deprecated; use
+ * {@link org.hibernate.tool.instrument.javassist.InstrumentTask} instead
  */
+@Deprecated
 public class InstrumentTask extends BasicInstrumentationTask {
+	public InstrumentTask() {
+		System.err.println( "Per HHH-5451 support for cglib as a bytecode provider has been deprecated." );
+	}
+
 	protected Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options) {
 		return new CGLIBInstrumenter( logger, options );
 	}

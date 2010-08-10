@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="hibernate-gsg-tutorial-annotations">
+    <title>Tutorial Using Native Hibernate APIs and annotations</title>
+
+    <para>
+        This tutorial introduces some key concepts of the native Hibernate API.
+    </para>
+    <itemizedlist>
+        <listitem>
+            <para>
+
+            </para>
+        </listitem>
+    </itemizedlist>
+</chapter>

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="hibernate-gsg-community">
+    <title>Hibernate Community</title>
+
+    <para>
+        There are a number of ways to become involved in the Hibernate community, including
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Trying stuff out and reporting bugs.  See <ulink url="http://hibernate.org/issuetracker.html"/> for
+                    details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Trying your hand at fixing some bugs or implementing enhancements.  Again, see
+                    <ulink url="http://hibernate.org/issuetracker.html"/>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    <ulink url="http://hibernate.org/community.html"/> lists a number of ways to engage in the community
+                    including mailing lists, forums, IRC and others.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Helping improve or translate this documentation.  Contact us on the developer mailing list
+                    if you have interest.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Evangelizing Hibernate within your organization.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
+
+</chapter>

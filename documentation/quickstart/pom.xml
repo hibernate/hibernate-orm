@@ -67,7 +67,7 @@
                 </executions>
 
                 <configuration>
-                    <sourceDocumentName>Hibernate_QuickStart_Guide.xml</sourceDocumentName>
+                    <sourceDocumentName>Hibernate_Getting_Started_Guide.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
                     <translations>
                         <translation>de-DE</translation>

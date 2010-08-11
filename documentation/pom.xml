@@ -26,6 +26,7 @@
         <module>manual</module>
         <module>envers</module>
         <module>quickstart</module>
+        <module>devguide</module>
         <!--
         <module>jbosscache2</module>
 -->

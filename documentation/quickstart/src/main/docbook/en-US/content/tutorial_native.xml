@@ -84,7 +84,7 @@
         </step>
 
         <step id="hibernate-gsg-tutorial-native-entity">
-            <title>Write the entity Java class</title>
+            <title>Create the entity Java class</title>
 
             <para>
                 Create a file named <filename>src/main/java/org/hibernate/tutorial/native/Event.java</filename>
@@ -156,7 +156,7 @@
         </step>
 
         <step id="hibernate-gsg-tutorial-native-mapping">
-            <title>Write the entity mapping file</title>
+            <title>Create the entity mapping file</title>
 
             <para>
                 Create a file named <filename>src/main/resources/org/hibernate/tutorial/native/Event.hbm.xml</filename>
@@ -263,7 +263,7 @@
         </step>
 
         <step id="hibernate-gsg-tutorial-native-config">
-            <title>Create a Hibernate configuration file</title>
+            <title>Create the Hibernate configuration file</title>
 
             <para>
                 Create a file named <filename>src/main/resources/hibernate.cfg.xml</filename>

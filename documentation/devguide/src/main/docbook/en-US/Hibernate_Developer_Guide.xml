@@ -10,5 +10,6 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/preface.xml" />
     -->
 
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/database.xml" />
 
 </book>

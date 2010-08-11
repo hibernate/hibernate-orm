@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="hibernate-dev-database">
+    <title>Database Access</title>
+
+    <section id="hibernate-dev-database-connect">
+        <title>JDBC Connections</title>
+        <para>
+            Hibernate understands how to connect to a database through an interface
+            <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>.  While
+            <interfacename>org.hibernate.connection.ConnectionProvider</interfacename> is considered an extension SPI,
+            Hibernate comes with a number of built-in providers.
+        </para>
+
+        <section id="hibernate-dev-database-connect-pools">
+            <title>Using connection pooling</title>
+
+            <para>
+                The built-in connection pooling based providers all require the following settings
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term><property>hibernate.connection.driver_class</property></term>
+                    <listitem>
+                        <para>
+                            Names the <classname>java.sql.Driver</classname> implementation class from your JDBC
+                            provider.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><property>hibernate.connection.url</property></term>
+                    <listitem>
+                        <para>
+                            The JDBC connection url.  See your JDBC provider's documentation for details and examples.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><property>hibernate.connection.username</property></term>
+                    <listitem>
+                        <para>
+                            The name of the user to use when opening a JDBC <interfacename>java.sql.Connection</interfacename>.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><property>hibernate.connection.password</property></term>
+                    <listitem>
+                        <para>
+                            The password associated with the provided username.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+
+            <section id="hibernate-dev-database-connect-pools-hibernate">
+                <title>Using Hibernate's built-in connection pooling</title>
+
+                <caution>
+                    <para>
+                        The built-in Hibernate connection pool is not intended for production use.  It lacks several
+                        features found on any decent connection pool.  However, it can be quite useful to get started
+                        and in unit testing.
+                    </para>
+                </caution>
+
+                <para>
+                    The only additional supported setting for the built-in pooling is the
+                    <property>hibernate.connection.pool_size</property> setting which tells the pool how many
+                    connections maximum it can keep in the pool.
+                </para>
+            </section>
+
+            <section id="hibernate-dev-database-connect-pools-c3p0">
+                <title>Using c3p0 for connection pooling</title>
+            </section>
+
+            <section id="hibernate-dev-database-connect-pools-proxool">
+                <title>Using proxool for connection pooling</title>
+            </section>
+
+        </section>
+
+        <section id="hibernate-dev-database-connect-dataSource">
+            <title>Using <interfacename>javax.sql.DataSource</interfacename></title>
+            <!-- todo : centralized discussion of JNDI properties -->
+            <para>
+                Hibernate can also use a <interfacename>javax.sql.DataSource</interfacename> to obtain
+                connections.  To do so, Hibernate expects to be able to locate the
+                <interfacename>javax.sql.DataSource</interfacename> in <literal>JNDI</literal>.  The
+                <property>hibernate.connection.datasource</property> setting tells Hibernate the <literal>JNDI</literal>
+                namespace at which it can find the the <interfacename>javax.sql.DataSource</interfacename>.
+            </para>
+
+            <para>
+                Generally speaking a <interfacename>javax.sql.DataSource</interfacename> is configured to connect to
+                the database using a single set of credentials (username/password).  Sometimes, however, the
+                <interfacename>javax.sql.DataSource</interfacename> is set up so that the credentials have to be
+                used to obtain a <interfacename>java.sql.Connection</interfacename> from it.  In these cases
+                applications would specify the credentials via the <property>hibernate.connection.username</property>
+                and <property>hibernate.connection.password</property> settings, which Hibernate would pass along to the
+                <interfacename>javax.sql.DataSource</interfacename> when obtaining a
+                <interfacename>java.sql.Connection</interfacename> from it.
+            </para>
+        </section>
+
+    </section>
+
+    <section id="hibernate-dev-database-dialect">
+        <title>Database Dialects</title>
+    </section>
+
+    <section id="hiberate-dev-database-schema">
+        <title>Database Schema</title>
+    </section>
+
+</chapter>

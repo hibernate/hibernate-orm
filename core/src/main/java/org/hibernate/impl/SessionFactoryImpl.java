@@ -185,7 +185,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
 	private final transient SessionFactoryObserver observer;
 	private final transient HashMap entityNameResolvers = new HashMap();
-	private final transient QueryPlanCache queryPlanCache = new QueryPlanCache( this );
+	private final transient QueryPlanCache queryPlanCache;
 	private final transient Cache cacheAccess = new CacheImpl();
 	private transient boolean isClosed = false;
 	private final transient TypeResolver typeResolver;
@@ -234,6 +234,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 		// Caches
 		settings.getRegionFactory().start( settings, properties );
+		this.queryPlanCache = new QueryPlanCache( this );
 
 		//Generators:
 

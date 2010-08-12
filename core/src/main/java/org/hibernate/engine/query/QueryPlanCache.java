@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,14 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.query;
 
+import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.SimpleMRUCache;
 import org.hibernate.util.SoftLimitMRUCache;
 import org.hibernate.util.CollectionHelper;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.QueryException;
@@ -48,6 +49,9 @@ import java.util.Collection;
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
  *
+ * @see Environment#QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES
+ * @see Environment#QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES
+ *
  * @author Steve Ebersole
  */
 public class QueryPlanCache implements Serializable {
@@ -57,29 +61,51 @@ public class QueryPlanCache implements Serializable {
 	private SessionFactoryImplementor factory;
 
 	public QueryPlanCache(SessionFactoryImplementor factory) {
+		int maxStrongReferenceCount = PropertiesHelper.getInt(
+				Environment.QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES,
+				factory.getProperties(),
+				SoftLimitMRUCache.DEFAULT_STRONG_REF_COUNT
+		);
+		int maxSoftReferenceCount = PropertiesHelper.getInt(
+				Environment.QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES,
+				factory.getProperties(),
+				SoftLimitMRUCache.DEFAULT_SOFT_REF_COUNT
+		);
+
 		this.factory = factory;
+		this.sqlParamMetadataCache = new SimpleMRUCache( maxStrongReferenceCount );
+		this.planCache = new SoftLimitMRUCache( maxStrongReferenceCount, maxSoftReferenceCount );
 	}
 
-	// simple cache of param metadata based on query string.  Ideally, the
-	// original "user-supplied query" string should be used to retreive this
-	// metadata (i.e., not the para-list-expanded query string) to avoid
-	// unnecessary cache entries.
-	// Used solely for caching param metadata for native-sql queries, see
-	// getSQLParameterMetadata() for a discussion as to why...
-	private final SimpleMRUCache sqlParamMetadataCache = new SimpleMRUCache();
+	/**
+	 * simple cache of param metadata based on query string.  Ideally, the original "user-supplied query"
+	 * string should be used to obtain this metadata (i.e., not the para-list-expanded query string) to avoid
+	 * unnecessary cache entries.
+	 * <p>
+	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
+	 * discussion as to why...
+	 */
+	private final SimpleMRUCache sqlParamMetadataCache;
 
-	// the cache of the actual plans...
-	private final SoftLimitMRUCache planCache = new SoftLimitMRUCache( 128 );
+	/**
+	 * the cache of the actual plans...
+	 */
+	private final SoftLimitMRUCache planCache;
 
 
+	/**
+	 * Obtain the parameter metadata for given native-sql query.
+	 * <p/>
+	 * for native-sql queries, the param metadata is determined outside any relation to a query plan, because
+	 * query plan creation and/or retrieval for a native-sql query depends on all of the return types having been
+	 * set, which might not be the case up-front when param metadata would be most useful
+	 *
+	 * @param query The query
+	 * @return The parameter metadata
+	 */
 	public ParameterMetadata getSQLParameterMetadata(String query) {
 		ParameterMetadata metadata = ( ParameterMetadata ) sqlParamMetadataCache.get( query );
 		if ( metadata == null ) {
-			// for native-sql queries, the param metadata is determined outside
-			// any relation to a query plan, because query plan creation and/or
-			// retreival for a native-sql query depends on all of the return
-			// types having been set, which might not be the case up-front when
-			// param metadata would be most useful
 			metadata = buildNativeSQLParameterMetadata( query );
 			sqlParamMetadataCache.put( query, metadata );
 		}
@@ -149,6 +175,7 @@ public class QueryPlanCache implements Serializable {
 		return plan;
 	}
 
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	private ParameterMetadata buildNativeSQLParameterMetadata(String sqlString) {
 		ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( sqlString );
 
@@ -160,7 +187,7 @@ public class QueryPlanCache implements Serializable {
 		}
 
 		Iterator itr = recognizer.getNamedParameterDescriptionMap().entrySet().iterator();
-		Map namedParamDescriptorMap = new HashMap();
+		Map<String,NamedParameterDescriptor> namedParamDescriptorMap = new HashMap<String,NamedParameterDescriptor>();
 		while( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
 			final String name = ( String ) entry.getKey();
@@ -178,7 +205,7 @@ public class QueryPlanCache implements Serializable {
 	private static class HQLQueryPlanKey implements Serializable {
 		private final String query;
 		private final boolean shallow;
-		private final Set filterKeys;
+		private final Set<DynamicFilterKey> filterKeys;
 		private final int hashCode;
 
 		public HQLQueryPlanKey(String query, boolean shallow, Map enabledFilters) {
@@ -186,16 +213,15 @@ public class QueryPlanCache implements Serializable {
 			this.shallow = shallow;
 
 			if ( enabledFilters == null || enabledFilters.isEmpty() ) {
-				filterKeys = Collections.EMPTY_SET;
+				filterKeys = Collections.emptySet();
 			}
 			else {
-				Set tmp = new HashSet(
+				Set<DynamicFilterKey> tmp = new HashSet<DynamicFilterKey>(
 						CollectionHelper.determineProperSizing( enabledFilters ),
 						CollectionHelper.LOAD_FACTOR
 				);
-				Iterator itr = enabledFilters.values().iterator();
-				while ( itr.hasNext() ) {
-					tmp.add( new DynamicFilterKey( ( FilterImpl ) itr.next() ) );
+				for ( Object o : enabledFilters.values() ) {
+					tmp.add( new DynamicFilterKey( (FilterImpl) o ) );
 				}
 				this.filterKeys = Collections.unmodifiableSet( tmp );
 			}
@@ -229,30 +255,31 @@ public class QueryPlanCache implements Serializable {
 
 	private static class DynamicFilterKey implements Serializable {
 		private final String filterName;
-		private final Map parameterMetadata;
+		private final Map<String,Integer> parameterMetadata;
 		private final int hashCode;
 
+		@SuppressWarnings({ "UnnecessaryBoxing" })
 		private DynamicFilterKey(FilterImpl filter) {
 			this.filterName = filter.getName();
 			if ( filter.getParameters().isEmpty() ) {
-				parameterMetadata = Collections.EMPTY_MAP;
+				parameterMetadata = Collections.emptyMap();
 			}
 			else {
-				parameterMetadata = new HashMap(
+				parameterMetadata = new HashMap<String,Integer>(
 						CollectionHelper.determineProperSizing( filter.getParameters() ),
 						CollectionHelper.LOAD_FACTOR
 				);
-				Iterator itr = filter.getParameters().entrySet().iterator();
-				while ( itr.hasNext() ) {
+				for ( Object o : filter.getParameters().entrySet() ) {
+					final Map.Entry entry = (Map.Entry) o;
+					final String key = (String) entry.getKey();
 					final Integer valueCount;
-					final Map.Entry entry = ( Map.Entry ) itr.next();
 					if ( Collection.class.isInstance( entry.getValue() ) ) {
 						valueCount = new Integer( ( (Collection) entry.getValue() ).size() );
 					}
 					else {
-						valueCount = new Integer(1);
+						valueCount = new Integer( 1 );
 					}
-					parameterMetadata.put( entry.getKey(), valueCount );
+					parameterMetadata.put( key, valueCount );
 				}
 			}
 
@@ -285,19 +312,20 @@ public class QueryPlanCache implements Serializable {
 		private final String query;
 		private final String collectionRole;
 		private final boolean shallow;
-		private final Set filterNames;
+		private final Set<String> filterNames;
 		private final int hashCode;
 
+		@SuppressWarnings({ "unchecked" })
 		public FilterQueryPlanKey(String query, String collectionRole, boolean shallow, Map enabledFilters) {
 			this.query = query;
 			this.collectionRole = collectionRole;
 			this.shallow = shallow;
 
 			if ( enabledFilters == null || enabledFilters.isEmpty() ) {
-				filterNames = Collections.EMPTY_SET;
+				filterNames = Collections.emptySet();
 			}
 			else {
-				Set tmp = new HashSet();
+				Set<String> tmp = new HashSet<String>();
 				tmp.addAll( enabledFilters.keySet() );
 				this.filterNames = Collections.unmodifiableSet( tmp );
 			}

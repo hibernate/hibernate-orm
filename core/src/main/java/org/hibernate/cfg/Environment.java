@@ -537,6 +537,17 @@ public final class Environment {
 	 */
 	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
+	/**
+	 * The maximum number of strong references maintained by {@link org.hibernate.util.SoftLimitMRUCache}. Default is 128.
+	 */
+	public static final String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
+
+	/**
+	 * The maximum number of soft references maintained by {@link org.hibernate.util.SoftLimitMRUCache}. Default is 2048.
+	 */
+	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
+
+
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;
 	private static final boolean ENABLE_REFLECTION_OPTIMIZER;

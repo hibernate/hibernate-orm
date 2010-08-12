@@ -69,7 +69,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		this.JPA2ElementCollection = JPA2ElementCollection;
 	}
 
-	//FIXME hacky solution to get the information at property ref resolution
+	// TODO hacky solution to get the information at property ref resolution
 	public String getManyToManyOwnerSideEntityName() {
 		return manyToManyOwnerSideEntityName;
 	}
@@ -113,8 +113,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			String propertyName,
 			String mappedBy,
 			boolean isImplicit,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		super();
 		setImplicit( isImplicit );
 		setSqlType( sqlType );
@@ -137,25 +136,27 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		return referencedColumn;
 	}
 
-	
 	public static Ejb3JoinColumn[] buildJoinColumnsOrFormulas(
 			JoinColumnsOrFormulas anns,
-			String mappedBy, Map<String, Join> joins,
+			String mappedBy,
+			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
-			ExtendedMappings mappings
-	) {
-		
+			Mappings mappings) {
 		JoinColumnOrFormula [] ann = anns.value();
 		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[ann.length];
 		for (int i = 0; i < ann.length; i++) {
 			JoinColumnOrFormula join = (JoinColumnOrFormula) ann[i];
 			JoinFormula formula = join.formula();
 			if (formula.value() != null && !formula.value().equals("")) {
-				joinColumns[i] = buildJoinFormula(formula, mappedBy, joins, propertyHolder, propertyName, mappings); 
+				joinColumns[i] = buildJoinFormula(
+						formula, mappedBy, joins, propertyHolder, propertyName, mappings
+				);
 			}
 			else {
-				joinColumns[i] = buildJoinColumns(new JoinColumn[] { join.column() }, mappedBy, joins, propertyHolder, propertyName, mappings)[0];
+				joinColumns[i] = buildJoinColumns(
+						new JoinColumn[] { join.column() }, mappedBy, joins, propertyHolder, propertyName, mappings
+				)[0];
 			}
 		}
 				 
@@ -167,43 +168,42 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 */
 	public static Ejb3JoinColumn buildJoinFormula(
 			JoinFormula ann,
-			String mappedBy, Map<String, Join> joins,
+			String mappedBy,
+			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
-			ExtendedMappings mappings
-	) {
-			
-			Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn();
-			formulaColumn.setFormula( ann.value() );
-			formulaColumn.setReferencedColumn(ann.referencedColumnName());
-			formulaColumn.setMappings( mappings );
-			formulaColumn.setPropertyHolder( propertyHolder );
-			formulaColumn.setJoins( joins );
-			formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
-			
-			formulaColumn.bind();
-			return formulaColumn;
-		}
-	
-	
+			Mappings mappings) {
+		Ejb3JoinColumn formulaColumn = new Ejb3JoinColumn();
+		formulaColumn.setFormula( ann.value() );
+		formulaColumn.setReferencedColumn(ann.referencedColumnName());
+		formulaColumn.setMappings( mappings );
+		formulaColumn.setPropertyHolder( propertyHolder );
+		formulaColumn.setJoins( joins );
+		formulaColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
+		formulaColumn.bind();
+		return formulaColumn;
+	}
+
 	public static Ejb3JoinColumn[] buildJoinColumns(
 			JoinColumn[] anns,
-			String mappedBy, Map<String, Join> joins,
+			String mappedBy,
+			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
-			ExtendedMappings mappings
-	) {
-		return buildJoinColumnsWithDefaultColumnSuffix(anns, mappedBy, joins, propertyHolder, propertyName, "", mappings);
+			Mappings mappings) {
+		return buildJoinColumnsWithDefaultColumnSuffix(
+				anns, mappedBy, joins, propertyHolder, propertyName, "", mappings
+		);
 	}
 
 	public static Ejb3JoinColumn[] buildJoinColumnsWithDefaultColumnSuffix(
 			JoinColumn[] anns,
-			String mappedBy, Map<String, Join> joins,
+			String mappedBy,
+			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
 			String propertyName,
 			String suffixForDefaultColumnName,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		JoinColumn[] actualColumns = propertyHolder.getOverriddenJoinColumn(
 				StringHelper.qualify( propertyHolder.getPath(), propertyName )
 		);
@@ -247,8 +247,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			PropertyHolder propertyHolder,
 			String propertyName,
 			String suffixForDefaultColumnName,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		if ( ann != null ) {
 			if ( BinderHelper.isDefault( mappedBy ) ) {
 				throw new AnnotationException(
@@ -293,7 +292,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 
-	//FIXME default name still useful in association table
+	// TODO default name still useful in association table
 	public void setJoinAnnotation(JoinColumn annJoin, String defaultName) {
 		if ( annJoin == null ) {
 			setImplicit( true );
@@ -319,9 +318,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			JoinColumn joinAnn,
 			Value identifier,
 			Map<String, Join> joins,
-			PropertyHolder propertyHolder, ExtendedMappings mappings
-	) {
-
+			PropertyHolder propertyHolder,
+			Mappings mappings) {
 		Column col = (Column) identifier.getColumnIterator().next();
 		String defaultName = mappings.getLogicalColumnName( col.getQuotedName(), identifier.getTable() );
 		if ( pkJoinAnn != null || joinAnn != null ) {
@@ -369,10 +367,11 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 * Override persistent class on oneToMany Cases for late settings
 	 * Must only be used on second level pass binding
 	 */
-	public void setPersistentClass(PersistentClass persistentClass,
-								   Map<String, Join> joins,
-								   Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		//FIXME shouldn't we deduce the classname from the persistentclasS?
+	public void setPersistentClass(
+			PersistentClass persistentClass,
+			Map<String, Join> joins,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		// TODO shouldn't we deduce the classname from the persistentclasS?
 		this.propertyHolder = PropertyHolderBuilder.buildPropertyHolder( persistentClass, joins, getMappings(), inheritanceStatePerClass );
 	}
 
@@ -390,8 +389,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 
 	public void copyReferencedStructureAndCreateDefaultJoinColumns(
-			PersistentClass referencedEntity, Iterator columnIterator, SimpleValue value
-	) {
+			PersistentClass referencedEntity,
+			Iterator columnIterator,
+			SimpleValue value) {
 		if ( !isNameDeferred() ) {
 			throw new AssertionFailure( "Building implicit column but the column is not implicit" );
 		}
@@ -404,8 +404,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	public void linkValueUsingDefaultColumnNaming(
-			Column referencedColumn, PersistentClass referencedEntity, SimpleValue value
-	) {
+			Column referencedColumn,
+			PersistentClass referencedEntity,
+			SimpleValue value) {
 		String columnName;
 		String logicalReferencedColumn = getMappings().getLogicalColumnName(
 				referencedColumn.getQuotedName(), referencedEntity.getTable()
@@ -528,9 +529,9 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	public static final int NON_PK_REFERENCE = 2;
 
 	public static int checkReferencedColumnsType(
-			Ejb3JoinColumn[] columns, PersistentClass referencedEntity,
-			ExtendedMappings mappings
-	) {
+			Ejb3JoinColumn[] columns,
+			PersistentClass referencedEntity,
+			Mappings mappings) {
 		//convenient container to find whether a column is an id one or not
 		Set<Column> idColumns = new HashSet<Column>();
 		Iterator idColumnsIt = referencedEntity.getKey().getColumnIterator();
@@ -605,7 +606,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 * @param column the referenced column.
 	 */
 	public void overrideFromReferencedColumnIfNecessary(org.hibernate.mapping.Column column) {
-		
 		if (getMappingColumn() != null) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not
@@ -633,9 +633,12 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	}
 
 	public static Ejb3JoinColumn[] buildJoinTableJoinColumns(
-			JoinColumn[] annJoins, Map<String, Join> secondaryTables,
-			PropertyHolder propertyHolder, String propertyName, String mappedBy, ExtendedMappings mappings
-	) {
+			JoinColumn[] annJoins,
+			Map<String, Join> secondaryTables,
+			PropertyHolder propertyHolder,
+			String propertyName,
+			String mappedBy,
+			Mappings mappings) {
 		Ejb3JoinColumn[] joinColumns;
 		if ( annJoins == null ) {
 			Ejb3JoinColumn currentJoinColumn = new Ejb3JoinColumn();

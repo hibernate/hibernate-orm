@@ -36,9 +36,13 @@ import org.hibernate.mapping.SimpleValue;
 @SuppressWarnings({"serial", "unchecked"})
 public class JoinedSubclassFkSecondPass extends FkSecondPass {
 	private JoinedSubclass entity;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 
-	public JoinedSubclassFkSecondPass(JoinedSubclass entity, Ejb3JoinColumn[] inheritanceJoinedColumns, SimpleValue key, ExtendedMappings mappings) {
+	public JoinedSubclassFkSecondPass(
+			JoinedSubclass entity,
+			Ejb3JoinColumn[] inheritanceJoinedColumns,
+			SimpleValue key,
+			Mappings mappings) {
 		super( key, inheritanceJoinedColumns );
 		this.entity = entity;
 		this.mappings = mappings;

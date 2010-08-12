@@ -34,7 +34,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.WrappedInferredData;
@@ -55,10 +55,18 @@ public class IdBagBinder extends BagBinder {
 
 	@Override
 	protected boolean bindStarToManySecondPass(
-			Map persistentClasses, XClass collType, Ejb3JoinColumn[] fkJoinColumns, Ejb3JoinColumn[] keyColumns,
-			Ejb3JoinColumn[] inverseColumns, Ejb3Column[] elementColumns, boolean isEmbedded, XProperty property,
-			boolean unique, TableBinder associationTableBinder, boolean ignoreNotFound, ExtendedMappings mappings
-	) {
+			Map persistentClasses,
+			XClass collType,
+			Ejb3JoinColumn[] fkJoinColumns,
+			Ejb3JoinColumn[] keyColumns,
+			Ejb3JoinColumn[] inverseColumns,
+			Ejb3Column[] elementColumns,
+			boolean isEmbedded,
+			XProperty property,
+			boolean unique,
+			TableBinder associationTableBinder,
+			boolean ignoreNotFound,
+			Mappings mappings) {
 		boolean result = super.bindStarToManySecondPass(
 				persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns, isEmbedded,
 				property, unique, associationTableBinder, ignoreNotFound, mappings
@@ -68,9 +76,14 @@ public class IdBagBinder extends BagBinder {
 			SimpleValueBinder simpleValue = new SimpleValueBinder();
 
 			PropertyData propertyData = new WrappedInferredData(
-					new PropertyInferredData( null, property, null, //default access should not be useful
-							mappings.getReflectionManager() ),
-					"id" );
+					new PropertyInferredData(
+							null,
+							property,
+							null, //default access should not be useful
+							mappings.getReflectionManager()
+					),
+					"id"
+			);
 			Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
 					collectionIdAnn.columns(),
 					null,

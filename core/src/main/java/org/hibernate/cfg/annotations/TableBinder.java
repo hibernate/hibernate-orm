@@ -31,11 +31,11 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.ObjectNameSource;
@@ -71,7 +71,7 @@ public class TableBinder {
 //	private List<String[]> uniqueConstraints;
 	String constraints;
 	Table denormalizedSuperTable;
-	ExtendedMappings mappings;
+	Mappings mappings;
 	private String ownerEntityTable;
 	private String associatedEntityTable;
 	private String propertyName;
@@ -111,7 +111,7 @@ public class TableBinder {
 		this.denormalizedSuperTable = denormalizedSuperTable;
 	}
 
-	public void setMappings(ExtendedMappings mappings) {
+	public void setMappings(Mappings mappings) {
 		this.mappings = mappings;
 	}
 
@@ -211,7 +211,7 @@ public class TableBinder {
 			List<UniqueConstraintHolder> uniqueConstraints,
 			String constraints,
 			Table denormalizedSuperTable,
-			ExtendedMappings mappings,
+			Mappings mappings,
 			String subselect) {
 		schema = BinderHelper.isDefault( schema ) ? mappings.getSchemaName() : schema;
 		catalog = BinderHelper.isDefault( catalog ) ? mappings.getCatalogName() : catalog;
@@ -273,9 +273,15 @@ public class TableBinder {
 	 */
 	@SuppressWarnings({ "JavaDoc" })
 	public static Table fillTable(
-			String schema, String catalog, String realTableName, String logicalName, boolean isAbstract,
-			List uniqueConstraints, String constraints, Table denormalizedSuperTable, ExtendedMappings mappings
-	) {
+			String schema,
+			String catalog,
+			String realTableName,
+			String logicalName,
+			boolean isAbstract,
+			List uniqueConstraints,
+			String constraints,
+			Table denormalizedSuperTable,
+			Mappings mappings) {
 		schema = BinderHelper.isDefault( schema ) ? mappings.getSchemaName() : schema;
 		catalog = BinderHelper.isDefault( catalog ) ? mappings.getCatalogName() : catalog;
 		Table table;
@@ -310,10 +316,12 @@ public class TableBinder {
 	}
 
 	public static void bindFk(
-			PersistentClass referencedEntity, PersistentClass destinationEntity, Ejb3JoinColumn[] columns,
+			PersistentClass referencedEntity,
+			PersistentClass destinationEntity,
+			Ejb3JoinColumn[] columns,
 			SimpleValue value,
-			boolean unique, ExtendedMappings mappings
-	) {
+			boolean unique,
+			Mappings mappings) {
 		PersistentClass associatedClass;
 		if ( destinationEntity != null ) {
 			//overridden destination
@@ -478,8 +486,10 @@ public class TableBinder {
 	}
 
 	public static void linkJoinColumnWithValueOverridingNameIfImplicit(
-			PersistentClass referencedEntity, Iterator columnIterator, Ejb3JoinColumn[] columns, SimpleValue value
-	) {	
+			PersistentClass referencedEntity,
+			Iterator columnIterator,
+			Ejb3JoinColumn[] columns,
+			SimpleValue value) {
 		for (Ejb3JoinColumn joinCol : columns) {
 			Column synthCol = (Column) columnIterator.next();					
 			if ( joinCol.isNameDeferred() ) {
@@ -502,7 +512,7 @@ public class TableBinder {
 		value.getTable().createUniqueKey( cols );
 	}
 
-	public static void addIndexes(Table hibTable, Index[] indexes, ExtendedMappings mappings) {
+	public static void addIndexes(Table hibTable, Index[] indexes, Mappings mappings) {
 		for (Index index : indexes) {
 			//no need to handle inSecondPass here since it is only called from EntityBinder
 			mappings.addSecondPass(

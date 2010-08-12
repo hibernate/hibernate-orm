@@ -62,14 +62,12 @@ public class InheritanceState {
 	private boolean isEmbeddableSuperclass = false;
 	private Map<XClass, InheritanceState> inheritanceStatePerClass;
 	private List<XClass> classesToProcessForMappedSuperclass = new ArrayList<XClass>();
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private AccessType accessType;
 	private ElementsToProcess elementsToProcess;
 	private Boolean hasIdClassOrEmbeddedId;
 
-	public InheritanceState(XClass clazz,
-							Map<XClass, InheritanceState> inheritanceStatePerClass,
-							ExtendedMappings mappings) {
+	public InheritanceState(XClass clazz, Map<XClass, InheritanceState> inheritanceStatePerClass, Mappings mappings) {
 		this.setClazz( clazz );
 		this.mappings = mappings;
 		this.inheritanceStatePerClass = inheritanceStatePerClass;

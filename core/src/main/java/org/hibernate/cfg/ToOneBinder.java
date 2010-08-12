@@ -38,7 +38,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
  * @author Emmanuel Bernard
  */
 public class ToOneBinder {
-	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, ExtendedMappings mappings) {
+	public static String getReferenceEntityName(PropertyData propertyData, XClass targetEntity, Mappings mappings) {
 		if ( AnnotationBinder.isDefault( targetEntity, mappings ) ) {
 			return propertyData.getClassOrElementName();
 		}
@@ -47,7 +47,7 @@ public class ToOneBinder {
 		}
 	}
 
-	public static String getReferenceEntityName(PropertyData propertyData, ExtendedMappings mappings) {
+	public static String getReferenceEntityName(PropertyData propertyData, Mappings mappings) {
 		XClass targetEntity = getTargetEntity( propertyData, mappings );
 		if ( AnnotationBinder.isDefault( targetEntity, mappings ) ) {
 			return propertyData.getClassOrElementName();
@@ -57,7 +57,7 @@ public class ToOneBinder {
 		}
 	}
 
-	public static XClass getTargetEntity(PropertyData propertyData, ExtendedMappings mappings) {
+	public static XClass getTargetEntity(PropertyData propertyData, Mappings mappings) {
 		XProperty property = propertyData.getProperty();
 		return mappings.getReflectionManager().toXClass( getTargetEntityClass( property ) );
 	}

@@ -43,8 +43,8 @@ import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
-import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.InheritanceState;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.mapping.Component;
@@ -67,7 +67,7 @@ public class PropertyBinder {
 	private AccessType accessType;
 	private Ejb3Column[] columns;
 	private PropertyHolder holder;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private Value value;
 	private boolean insertable = true;
 	private boolean updatable = true;
@@ -145,7 +145,7 @@ public class PropertyBinder {
 		this.cascade = cascadeStrategy;
 	}
 
-	public void setMappings(ExtendedMappings mappings) {
+	public void setMappings(Mappings mappings) {
 		this.mappings = mappings;
 	}
 

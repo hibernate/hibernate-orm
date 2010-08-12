@@ -40,7 +40,7 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
 public abstract class QueryBinder {
 	private static final Logger log = LoggerFactory.getLogger( QueryBinder.class );
 
-	public static void bindQuery(NamedQuery queryAnn, ExtendedMappings mappings, boolean isDefault) {
+	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
 		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
@@ -87,7 +87,7 @@ public abstract class QueryBinder {
 	}
 
 
-	public static void bindNativeQuery(NamedNativeQuery queryAnn, ExtendedMappings mappings, boolean isDefault) {
+	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
@@ -148,7 +148,7 @@ public abstract class QueryBinder {
 		log.info( "Binding named native query: {} => {}", queryAnn.name(), queryAnn.query() );
 	}
 
-	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, ExtendedMappings mappings) {
+	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
 		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
@@ -202,14 +202,14 @@ public abstract class QueryBinder {
 		log.info( "Binding named native query: {} => {}", queryAnn.name(), queryAnn.query() );
 	}
 
-	public static void bindQueries(NamedQueries queriesAnn, ExtendedMappings mappings, boolean isDefault) {
+	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
 		if ( queriesAnn == null ) return;
 		for (NamedQuery q : queriesAnn.value()) {
 			bindQuery( q, mappings, isDefault );
 		}
 	}
 
-	public static void bindNativeQueries(NamedNativeQueries queriesAnn, ExtendedMappings mappings, boolean isDefault) {
+	public static void bindNativeQueries(NamedNativeQueries queriesAnn, Mappings mappings, boolean isDefault) {
 		if ( queriesAnn == null ) return;
 		for (NamedNativeQuery q : queriesAnn.value()) {
 			bindNativeQuery( q, mappings, isDefault );
@@ -217,7 +217,7 @@ public abstract class QueryBinder {
 	}
 
 	public static void bindNativeQueries(
-			org.hibernate.annotations.NamedNativeQueries queriesAnn, ExtendedMappings mappings
+			org.hibernate.annotations.NamedNativeQueries queriesAnn, Mappings mappings
 	) {
 		if ( queriesAnn == null ) return;
 		for (org.hibernate.annotations.NamedNativeQuery q : queriesAnn.value()) {
@@ -225,7 +225,7 @@ public abstract class QueryBinder {
 		}
 	}
 
-	public static void bindQuery(org.hibernate.annotations.NamedQuery queryAnn, ExtendedMappings mappings) {
+	public static void bindQuery(org.hibernate.annotations.NamedQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
 		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
@@ -296,14 +296,14 @@ public abstract class QueryBinder {
 	}
 
 
-	public static void bindQueries(org.hibernate.annotations.NamedQueries queriesAnn, ExtendedMappings mappings) {
+	public static void bindQueries(org.hibernate.annotations.NamedQueries queriesAnn, Mappings mappings) {
 		if ( queriesAnn == null ) return;
 		for (org.hibernate.annotations.NamedQuery q : queriesAnn.value()) {
 			bindQuery( q, mappings );
 		}
 	}
 
-	public static void bindSqlResultsetMappings(SqlResultSetMappings ann, ExtendedMappings mappings, boolean isDefault) {
+	public static void bindSqlResultsetMappings(SqlResultSetMappings ann, Mappings mappings, boolean isDefault) {
 		if ( ann == null ) return;
 		for (SqlResultSetMapping rs : ann.value()) {
 			//no need to handle inSecondPass
@@ -311,7 +311,7 @@ public abstract class QueryBinder {
 		}
 	}
 
-	public static void bindSqlResultsetMapping(SqlResultSetMapping ann, ExtendedMappings mappings, boolean isDefault) {
+	public static void bindSqlResultsetMapping(SqlResultSetMapping ann, Mappings mappings, boolean isDefault) {
 		//no need to handle inSecondPass
 		mappings.addSecondPass( new ResultsetMappingSecondPass( ann, mappings, isDefault ) );
 	}

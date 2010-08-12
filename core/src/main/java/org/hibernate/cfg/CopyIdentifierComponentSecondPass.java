@@ -42,28 +42,32 @@ import org.hibernate.mapping.SimpleValue;
 public class CopyIdentifierComponentSecondPass implements SecondPass {
 	private final String referencedEntityName;
 	private final Component component;
-	private final ExtendedMappings mappings;
+	private final Mappings mappings;
 	private final Ejb3JoinColumn[] joinColumns;
 
 	public CopyIdentifierComponentSecondPass(
-			Component comp, String referencedEntityName, Ejb3JoinColumn[] joinColumns, ExtendedMappings mappings) {
+			Component comp,
+			String referencedEntityName,
+			Ejb3JoinColumn[] joinColumns,
+			Mappings mappings) {
 		this.component = comp;
 		this.referencedEntityName = referencedEntityName;
 		this.mappings = mappings;
 		this.joinColumns = joinColumns;
 	}
 
-	//FIXME better error names
+	@SuppressWarnings({ "unchecked" })
 	public void doSecondPass(Map persistentClasses) throws MappingException {
 		PersistentClass referencedPersistentClass = (PersistentClass) persistentClasses.get( referencedEntityName );
+		// TODO better error names
 		if ( referencedPersistentClass == null ) {
-			throw new AnnotationException(
-					"Unknown entity name: " + referencedEntityName
-			);
-		};
+			throw new AnnotationException( "Unknown entity name: " + referencedEntityName );
+		}
 		if ( ! ( referencedPersistentClass.getIdentifier() instanceof Component ) ) {
-			throw new AssertionFailure( "Unexpected identifier type on the referenced entity when mapping a @MapsId: "
-					+ referencedEntityName);
+			throw new AssertionFailure(
+					"Unexpected identifier type on the referenced entity when mapping a @MapsId: "
+							+ referencedEntityName
+			);
 		}
 		Component referencedComponent = (Component) referencedPersistentClass.getIdentifier();
 		Iterator<Property> properties = referencedComponent.getPropertyIterator();

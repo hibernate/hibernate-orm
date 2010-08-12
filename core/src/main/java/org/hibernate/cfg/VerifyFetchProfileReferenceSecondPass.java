@@ -34,12 +34,14 @@ import org.hibernate.mapping.PersistentClass;
  * @author Hardy Ferentschik
  */
 public class VerifyFetchProfileReferenceSecondPass implements SecondPass {
-
 	private String fetchProfileName;
 	private FetchProfile.FetchOverride fetch;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 
-	public VerifyFetchProfileReferenceSecondPass(String fetchProfileName, FetchProfile.FetchOverride fetch, ExtendedMappings mappings) {
+	public VerifyFetchProfileReferenceSecondPass(
+			String fetchProfileName,
+			FetchProfile.FetchOverride fetch,
+			Mappings mappings) {
 		this.fetchProfileName = fetchProfileName;
 		this.fetch = fetch;
 		this.mappings = mappings;

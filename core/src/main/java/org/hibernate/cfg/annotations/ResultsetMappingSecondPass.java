@@ -38,7 +38,7 @@ import javax.persistence.SqlResultSetMapping;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.BinderHelper;
-import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
@@ -58,10 +58,10 @@ import org.slf4j.LoggerFactory;
 public class ResultsetMappingSecondPass implements QuerySecondPass {
 	private Logger log = LoggerFactory.getLogger( ResultsetMappingSecondPass.class );
 	private SqlResultSetMapping ann;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private boolean isDefault;
 
-	public ResultsetMappingSecondPass(SqlResultSetMapping ann, ExtendedMappings mappings, boolean isDefault) {
+	public ResultsetMappingSecondPass(SqlResultSetMapping ann, Mappings mappings, boolean isDefault) {
 		this.ann = ann;
 		this.mappings = mappings;
 		this.isDefault = isDefault;

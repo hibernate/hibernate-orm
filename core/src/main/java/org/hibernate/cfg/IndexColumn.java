@@ -34,12 +34,10 @@ import org.hibernate.mapping.Join;
  *
  * @author inger
  */
-public class IndexColumn
-		extends Ejb3Column {
-
+public class IndexColumn extends Ejb3Column {
 	private int base;
 
-	//FIXME move to a getter setter strategy for readeability
+	// TODO move to a getter setter strategy for readability
 	public IndexColumn(
 			boolean isImplicit,
 			String sqlType,
@@ -54,8 +52,7 @@ public class IndexColumn
 			String secondaryTableName,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		super();
 		setImplicit( isImplicit );
 		setSqlType( sqlType );
@@ -72,8 +69,6 @@ public class IndexColumn
 		setJoins( joins );
 		setMappings( mappings );
 		bind();
-		//super(isImplicit, sqlType, length, precision, scale, name, nullable, unique, insertable, updatable, secondaryTableName, joins, propertyHolder, mappings);
-
 	}
 
 	public int getBase() {
@@ -90,8 +85,7 @@ public class IndexColumn
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		IndexColumn column;
 		if ( ann != null ) {
 			String sqlType = BinderHelper.isDefault( ann.columnDefinition() ) ? null : ann.columnDefinition();
@@ -123,8 +117,7 @@ public class IndexColumn
 			org.hibernate.annotations.IndexColumn ann,
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		IndexColumn column;
 		if ( ann != null ) {
 			String sqlType = BinderHelper.isDefault( ann.columnDefinition() ) ? null : ann.columnDefinition();

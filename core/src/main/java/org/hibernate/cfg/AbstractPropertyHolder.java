@@ -54,13 +54,15 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Map<String, JoinTable> holderJoinTableOverride;
 	private Map<String, JoinTable> currentPropertyJoinTableOverride;
 	private String path;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private Boolean isInIdClass;
 
 
 	public AbstractPropertyHolder(
-			String path, PropertyHolder parent, XClass clazzToProcess, ExtendedMappings mappings
-	) {
+			String path,
+			PropertyHolder parent,
+			XClass clazzToProcess,
+			Mappings mappings) {
 		this.path = path;
 		this.parent = (AbstractPropertyHolder) parent;
 		this.mappings = mappings;
@@ -80,7 +82,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return path;
 	}
 
-	protected ExtendedMappings getMappings() {
+	protected Mappings getMappings() {
 		return mappings;
 	}
 

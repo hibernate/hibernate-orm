@@ -48,7 +48,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetSimpleValueTypeSecondPass;
@@ -72,7 +72,7 @@ public class SimpleValueBinder {
 	private String persistentClassName;
 	private String explicitType = "";
 	private Properties typeParameters = new Properties();
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private Table table;
 	private SimpleValue simpleValue;
 	private boolean isVersion;
@@ -278,7 +278,7 @@ public class SimpleValueBinder {
 		}
 	}
 
-	public void setMappings(ExtendedMappings mappings) {
+	public void setMappings(Mappings mappings) {
 		this.mappings = mappings;
 	}
 

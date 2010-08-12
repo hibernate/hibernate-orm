@@ -52,7 +52,7 @@ public class Ejb3Column {
 	private String secondaryTableName;
 	protected Map<String, Join> joins;
 	protected PropertyHolder propertyHolder;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private boolean isImplicit;
 	public static final int DEFAULT_COLUMN_LENGTH = 255;
 	public String sqlType;
@@ -96,7 +96,7 @@ public class Ejb3Column {
 	}
 
 	public boolean isFormula() {
-		return StringHelper.isNotEmpty(formulaString) ? true : false; 
+		return StringHelper.isNotEmpty( formulaString );
 	}
 		
 	public String getFormulaString() {
@@ -123,11 +123,11 @@ public class Ejb3Column {
 		this.updatable = updatable;
 	}
 
-	protected ExtendedMappings getMappings() {
+	protected Mappings getMappings() {
 		return mappings;
 	}
 
-	public void setMappings(ExtendedMappings mappings) {
+	public void setMappings(Mappings mappings) {
 		this.mappings = mappings;
 	}
 
@@ -362,23 +362,25 @@ public class Ejb3Column {
 
 	public static Ejb3Column[] buildColumnFromAnnotation(
 			javax.persistence.Column[] anns,
-			org.hibernate.annotations.Formula formulaAnn, Nullability nullability, PropertyHolder propertyHolder,
+			org.hibernate.annotations.Formula formulaAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			Map<String, Join> secondaryTables,
-			ExtendedMappings mappings
-			){
+			Mappings mappings){
 		return buildColumnFromAnnotation(
-				anns,
-				formulaAnn, nullability, propertyHolder, inferredData, null, secondaryTables, mappings);
+				anns, formulaAnn, nullability, propertyHolder, inferredData, null, secondaryTables, mappings
+		);
 	}
 	public static Ejb3Column[] buildColumnFromAnnotation(
 			javax.persistence.Column[] anns,
-			org.hibernate.annotations.Formula formulaAnn, Nullability nullability, PropertyHolder propertyHolder,
+			org.hibernate.annotations.Formula formulaAnn,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		Ejb3Column[] columns;
 		if ( formulaAnn != null ) {
 			Ejb3Column formulaColumn = new Ejb3Column();
@@ -463,7 +465,7 @@ public class Ejb3Column {
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
 			Nullability nullability,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		Ejb3Column column = new Ejb3Column();
 		Ejb3Column[] columns = new Ejb3Column[1];
 		columns[0] = column;

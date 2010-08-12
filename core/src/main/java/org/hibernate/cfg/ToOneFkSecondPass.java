@@ -47,13 +47,17 @@ import org.hibernate.util.StringHelper;
  */
 public class ToOneFkSecondPass extends FkSecondPass {
 	private boolean unique;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private String path;
 	private String entityClassName;
 
 	public ToOneFkSecondPass(
-			ToOne value, Ejb3JoinColumn[] columns, boolean unique, String entityClassName, String path, ExtendedMappings mappings
-	) {
+			ToOne value,
+			Ejb3JoinColumn[] columns,
+			boolean unique,
+			String entityClassName,
+			String path,
+			Mappings mappings) {
 		super( value, columns );
 		this.mappings = mappings;
 		this.unique = unique;

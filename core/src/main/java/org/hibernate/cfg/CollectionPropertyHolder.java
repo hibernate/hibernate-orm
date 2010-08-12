@@ -42,9 +42,12 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	Collection collection;
 
 	public CollectionPropertyHolder(
-			Collection collection, String path, XClass clazzToProcess, XProperty property,
-			PropertyHolder parentPropertyHolder, ExtendedMappings mappings
-	) {
+			Collection collection,
+			String path,
+			XClass clazzToProcess,
+			XProperty property,
+			PropertyHolder parentPropertyHolder,
+			Mappings mappings) {
 		super( path, parentPropertyHolder, clazzToProcess, mappings );
 		this.collection = collection;
 		setCurrentProperty( property );

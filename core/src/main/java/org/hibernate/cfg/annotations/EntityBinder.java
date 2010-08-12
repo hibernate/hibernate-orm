@@ -66,8 +66,8 @@ import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.InheritanceState;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.NamingStrategy;
@@ -99,7 +99,7 @@ public class EntityBinder {
 	private String name;
 	private XClass annotatedClass;
 	private PersistentClass persistentClass;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private Logger log = LoggerFactory.getLogger( EntityBinder.class );
 	private String discriminatorValue = "";
 	private boolean dynamicInsert;
@@ -136,10 +136,11 @@ public class EntityBinder {
 	}
 
 	public EntityBinder(
-			Entity ejb3Ann, org.hibernate.annotations.Entity hibAnn,
-			XClass annotatedClass, PersistentClass persistentClass,
-			ExtendedMappings mappings
-	) {
+			Entity ejb3Ann,
+			org.hibernate.annotations.Entity hibAnn,
+			XClass annotatedClass,
+			PersistentClass persistentClass,
+			Mappings mappings) {
 		this.mappings = mappings;
 		this.persistentClass = persistentClass;
 		this.annotatedClass = annotatedClass;
@@ -479,9 +480,12 @@ public class EntityBinder {
 	}
 
 	public void bindTable(
-			String schema, String catalog,
-			String tableName, List<UniqueConstraintHolder> uniqueConstraints,
-			String constraints, Table denormalizedSuperclassTable) {
+			String schema,
+			String catalog,
+			String tableName,
+			List<UniqueConstraintHolder> uniqueConstraints,
+			String constraints,
+			Table denormalizedSuperclassTable) {
 		EntityTableObjectNameSource tableNameContext = new EntityTableObjectNameSource( tableName, name );
 		EntityTableNamingStrategyHelper namingStrategyHelper = new EntityTableNamingStrategyHelper( name );
 		final Table table = TableBinder.buildAndFillTable(
@@ -589,7 +593,7 @@ public class EntityBinder {
 		bindJoinToPersistentClass( join, ejb3JoinColumns, mappings );
 	}
 
-	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, ExtendedMappings mappings) {
+	private void bindJoinToPersistentClass(Join join, Ejb3JoinColumn[] ejb3JoinColumns, Mappings mappings) {
 		SimpleValue key = new DependantValue( mappings, join.getTable(), persistentClass.getIdentifier() );
 		join.setKey( key );
 		setFKNameIfDefined( join );

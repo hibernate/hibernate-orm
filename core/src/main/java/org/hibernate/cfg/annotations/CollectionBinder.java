@@ -85,9 +85,9 @@ import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
 import org.hibernate.cfg.IndexColumn;
 import org.hibernate.cfg.InheritanceState;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
@@ -121,7 +121,6 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public abstract class CollectionBinder {
-
 	private Logger log = LoggerFactory.getLogger( CollectionBinder.class );
 
 	protected Collection collection;
@@ -131,7 +130,7 @@ public abstract class CollectionBinder {
 	private String mappedBy;
 	private XClass collectionType;
 	private XClass targetEntity;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private Ejb3JoinColumn[] inverseJoinColumns;
 	private String cascadeStrategy;
 	String cacheConcurrencyStrategy;
@@ -163,7 +162,7 @@ public abstract class CollectionBinder {
 	private AccessType accessType;
 	private boolean hibernateExtensionMapping;
 
-	protected ExtendedMappings getMappings() {
+	protected Mappings getMappings() {
 		return mappings;
 	}
 
@@ -244,9 +243,10 @@ public abstract class CollectionBinder {
 	 * collection binder factory
 	 */
 	public static CollectionBinder getCollectionBinder(
-			String entityName, XProperty property,
-			boolean isIndexed, boolean isHibernateExtensionMapping
-	) {
+			String entityName,
+			XProperty property,
+			boolean isIndexed,
+			boolean isHibernateExtensionMapping) {
 		CollectionBinder result;
 		if ( property.isArray() ) {
 			if ( property.getElementClass().isPrimitive() ) {
@@ -351,7 +351,7 @@ public abstract class CollectionBinder {
 		this.targetEntity = targetEntity;
 	}
 
-	public void setMappings(ExtendedMappings mappings) {
+	public void setMappings(Mappings mappings) {
 		this.mappings = mappings;
 	}
 
@@ -610,23 +610,25 @@ public abstract class CollectionBinder {
 	}
 
 	public SecondPass getSecondPass(
-			final Ejb3JoinColumn[] fkJoinColumns, final Ejb3JoinColumn[] keyColumns,
+			final Ejb3JoinColumn[] fkJoinColumns,
+			final Ejb3JoinColumn[] keyColumns,
 			final Ejb3JoinColumn[] inverseColumns,
 			final Ejb3Column[] elementColumns,
-			final Ejb3Column[] mapKeyColumns, final Ejb3JoinColumn[] mapKeyManyToManyColumns, final boolean isEmbedded,
-			final XProperty property, final XClass collType,
-			final boolean ignoreNotFound, final boolean unique,
-			final TableBinder assocTableBinder, final ExtendedMappings mappings
-	) {
+			final Ejb3Column[] mapKeyColumns,
+			final Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			final boolean isEmbedded,
+			final XProperty property,
+			final XClass collType,
+			final boolean ignoreNotFound,
+			final boolean unique,
+			final TableBinder assocTableBinder,
+			final Mappings mappings) {
 		return new CollectionSecondPass( mappings, collection ) {
-
-			public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas)
-					throws MappingException {
+			public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas) throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
 						isEmbedded, property, unique, assocTableBinder, ignoreNotFound, mappings
 				);
-
 			}
 		};
 	}
@@ -635,13 +637,18 @@ public abstract class CollectionBinder {
 	 * return true if it's a Fk, false if it's an association table
 	 */
 	protected boolean bindStarToManySecondPass(
-			Map persistentClasses, XClass collType, Ejb3JoinColumn[] fkJoinColumns,
-			Ejb3JoinColumn[] keyColumns, Ejb3JoinColumn[] inverseColumns, Ejb3Column[] elementColumns,
+			Map persistentClasses,
+			XClass collType,
+			Ejb3JoinColumn[] fkJoinColumns,
+			Ejb3JoinColumn[] keyColumns,
+			Ejb3JoinColumn[] inverseColumns,
+			Ejb3Column[] elementColumns,
 			boolean isEmbedded,
-			XProperty property, boolean unique,
+			XProperty property,
+			boolean unique,
 			TableBinder associationTableBinder,
-			boolean ignoreNotFound, ExtendedMappings mappings
-	) {
+			boolean ignoreNotFound,
+			Mappings mappings) {
 		PersistentClass persistentClass = (PersistentClass) persistentClasses.get( collType.getName() );
 		boolean reversePropertyInJoin = false;
 		if ( persistentClass != null && StringHelper.isNotEmpty( this.mappedBy ) ) {
@@ -699,14 +706,17 @@ public abstract class CollectionBinder {
 	}
 
 	protected void bindOneToManySecondPass(
-			Collection collection, Map persistentClasses, Ejb3JoinColumn[] fkJoinColumns,
+			Collection collection,
+			Map persistentClasses,
+			Ejb3JoinColumn[] fkJoinColumns,
 			XClass collectionType,
-			boolean cascadeDeleteEnabled, boolean ignoreNotFound, String hqlOrderBy, ExtendedMappings extendedMappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
-
+			boolean cascadeDeleteEnabled,
+			boolean ignoreNotFound,
+			String hqlOrderBy,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		log.debug("Binding a OneToMany: {}.{} through a foreign key", propertyHolder.getEntityName(), propertyName);
-		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( extendedMappings, collection.getOwner() );
+		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( mappings, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
 		oneToMany.setIgnoreNotFound( ignoreNotFound );
@@ -1076,7 +1086,7 @@ public abstract class CollectionBinder {
 
 	private static SimpleValue buildCollectionKey(
 			Collection collValue, Ejb3JoinColumn[] joinColumns, boolean cascadeDeleteEnabled,
-			XProperty property, ExtendedMappings mappings
+			XProperty property, Mappings mappings
 	) {
 		//binding key reference using column
 		KeyValue keyVal;
@@ -1127,9 +1137,11 @@ public abstract class CollectionBinder {
 			XClass collType,
 			boolean ignoreNotFound, boolean unique,
 			boolean cascadeDeleteEnabled,
-			TableBinder associationTableBinder, XProperty property, PropertyHolder parentPropertyHolder,
-			String hqlOrderBy, ExtendedMappings mappings
-	) throws MappingException {
+			TableBinder associationTableBinder,
+			XProperty property,
+			PropertyHolder parentPropertyHolder,
+			String hqlOrderBy,
+			Mappings mappings) throws MappingException {
 
 		PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( collType.getName() );
 		boolean isCollectionOfEntities = collectionEntity != null;
@@ -1415,10 +1427,12 @@ public abstract class CollectionBinder {
 	}
 
 	private static void bindCollectionSecondPass(
-			Collection collValue, PersistentClass collectionEntity, Ejb3JoinColumn[] joinColumns,
-			boolean cascadeDeleteEnabled, XProperty property,
-			ExtendedMappings mappings
-	) {
+			Collection collValue,
+			PersistentClass collectionEntity,
+			Ejb3JoinColumn[] joinColumns,
+			boolean cascadeDeleteEnabled,
+			XProperty property,
+			Mappings mappings) {
 		BinderHelper.createSyntheticPropertyReference(
 				joinColumns, collValue.getOwner(), collectionEntity, collValue, false, mappings
 		);
@@ -1450,9 +1464,11 @@ public abstract class CollectionBinder {
 	 * Otherwise delegates to the usual algorithm
 	 */
 	public static void bindManytoManyInverseFk(
-			PersistentClass referencedEntity, Ejb3JoinColumn[] columns, SimpleValue value, boolean unique,
-			ExtendedMappings mappings
-	) {
+			PersistentClass referencedEntity,
+			Ejb3JoinColumn[] columns,
+			SimpleValue value,
+			boolean unique,
+			Mappings mappings) {
 		final String mappedBy = columns[0].getMappedBy();
 		if ( StringHelper.isNotEmpty( mappedBy ) ) {
 			final Property property = referencedEntity.getRecursiveProperty( mappedBy );

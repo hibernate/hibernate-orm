@@ -46,11 +46,11 @@ public final class PropertyHolderBuilder {
 			XClass clazzToProcess,
 			PersistentClass persistentClass,
 			EntityBinder entityBinder,
-			//Map<String, Join> joins,
-			ExtendedMappings mappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
-		return new ClassPropertyHolder( persistentClass, clazzToProcess, entityBinder, mappings, inheritanceStatePerClass );
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
+		return new ClassPropertyHolder(
+				persistentClass, clazzToProcess, entityBinder, mappings, inheritanceStatePerClass
+		);
 	}
 
 	/**
@@ -62,9 +62,11 @@ public final class PropertyHolderBuilder {
 	 * @return PropertyHolder
 	 */
 	public static PropertyHolder buildPropertyHolder(
-			Component component, String path, PropertyData inferredData, PropertyHolder parent,
-			ExtendedMappings mappings
-	) {
+			Component component,
+			String path,
+			PropertyData inferredData,
+			PropertyHolder parent,
+			Mappings mappings) {
 		return new ComponentPropertyHolder( component, path, inferredData, parent, mappings );
 	}
 
@@ -72,20 +74,25 @@ public final class PropertyHolderBuilder {
 	 * buid a property holder on top of a collection
 	 */
 	public static PropertyHolder buildPropertyHolder(
-			Collection collection, String path, XClass clazzToProcess, XProperty property,
-			PropertyHolder parentPropertyHolder, ExtendedMappings mappings
-	) {
-		return new CollectionPropertyHolder( collection, path, clazzToProcess, property, parentPropertyHolder, mappings );
+			Collection collection,
+			String path,
+			XClass clazzToProcess,
+			XProperty property,
+			PropertyHolder parentPropertyHolder,
+			Mappings mappings) {
+		return new CollectionPropertyHolder(
+				collection, path, clazzToProcess, property, parentPropertyHolder, mappings
+		);
 	}
 
 	/**
 	 * must only be used on second level phases (<join> has to be settled already)
 	 */
 	public static PropertyHolder buildPropertyHolder(
-			PersistentClass persistentClass, Map<String, Join> joins,
-			ExtendedMappings mappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
+			PersistentClass persistentClass,
+			Map<String, Join> joins,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		return new ClassPropertyHolder( persistentClass, null, joins, mappings, inheritanceStatePerClass );
 	}
 }

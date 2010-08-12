@@ -84,9 +84,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public ComponentPropertyHolder(
-			Component component, String path, PropertyData inferredData, PropertyHolder parent,
-			ExtendedMappings mappings
-	) {
+			Component component,
+			String path,
+			PropertyData inferredData,
+			PropertyHolder parent,
+			Mappings mappings) {
 		super( path, parent, inferredData.getPropertyClass(), mappings );
 		final XProperty property = inferredData.getProperty();
 		setCurrentProperty( property );

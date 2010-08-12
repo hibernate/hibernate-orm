@@ -21,9 +21,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
-
 package org.hibernate.cfg;
 
 import java.lang.annotation.Annotation;
@@ -203,7 +200,7 @@ public final class AnnotationBinder {
 
 	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
 
-	public static void bindDefaults(ExtendedMappings mappings) {
+	public static void bindDefaults(Mappings mappings) {
 		Map defaults = mappings.getReflectionManager().getDefaults();
 		{
 			List<SequenceGenerator> anns = ( List<SequenceGenerator> ) defaults.get( SequenceGenerator.class );
@@ -253,7 +250,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	public static void bindPackage(String packageName, ExtendedMappings mappings) {
+	public static void bindPackage(String packageName, Mappings mappings) {
 		XPackage pckg;
 		try {
 			pckg = mappings.getReflectionManager().packageForName( packageName );
@@ -282,7 +279,7 @@ public final class AnnotationBinder {
 		BinderHelper.bindAnyMetaDefs( pckg, mappings );
 	}
 
-	private static void bindGenericGenerators(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
+	private static void bindGenericGenerators(XAnnotatedElement annotatedElement, Mappings mappings) {
 		GenericGenerator defAnn = annotatedElement.getAnnotation( GenericGenerator.class );
 		GenericGenerators defsAnn = annotatedElement.getAnnotation( GenericGenerators.class );
 		if ( defAnn != null ) {
@@ -295,12 +292,12 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindGenericGenerator(GenericGenerator def, ExtendedMappings mappings) {
+	private static void bindGenericGenerator(GenericGenerator def, Mappings mappings) {
 		IdGenerator idGen = buildIdGenerator( def, mappings );
 		mappings.addGenerator( idGen );
 	}
 
-	private static void bindQueries(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
+	private static void bindQueries(XAnnotatedElement annotatedElement, Mappings mappings) {
 		{
 			SqlResultSetMapping ann = annotatedElement.getAnnotation( SqlResultSetMapping.class );
 			QueryBinder.bindSqlResultsetMapping( ann, mappings, false );
@@ -355,7 +352,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static IdGenerator buildIdGenerator(java.lang.annotation.Annotation ann, ExtendedMappings mappings) {
+	private static IdGenerator buildIdGenerator(java.lang.annotation.Annotation ann, Mappings mappings) {
 		IdGenerator idGen = new IdGenerator();
 		if ( mappings.getSchemaName() != null ) {
 			idGen.addParam( PersistentIdentifierGenerator.SCHEMA, mappings.getSchemaName() );
@@ -470,7 +467,7 @@ public final class AnnotationBinder {
 				if ( seqGen.initialValue() != 1 ) {
 					log.warn(
 							"Hibernate does not support SequenceGenerator.initialValue() unless '{}' set",
-							AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS
+							Configuration.USE_NEW_ID_GENERATOR_MAPPINGS
 					);
 				}
 				idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
@@ -503,8 +500,9 @@ public final class AnnotationBinder {
 	 * @throws MappingException in case there is an configuration error
 	 */
 	public static void bindClass(
-			XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings
-	) throws MappingException {
+			XClass clazzToProcess,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			Mappings mappings) throws MappingException {
 		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
 		if ( clazzToProcess.isAnnotationPresent( Entity.class ) 
 				&&  clazzToProcess.isAnnotationPresent( MappedSuperclass.class ) ) {
@@ -763,7 +761,16 @@ public final class AnnotationBinder {
 
 	}
 
-	private static void processIdPropertiesIfNotAlready(Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings, PersistentClass persistentClass, EntityBinder entityBinder, PropertyHolder propertyHolder, HashMap<String, IdGenerator> classGenerators, InheritanceState.ElementsToProcess elementsToProcess, boolean subclassAndSingleTableStrategy, Set<String> idPropertiesIfIdClass) {
+	private static void processIdPropertiesIfNotAlready(
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			Mappings mappings,
+			PersistentClass persistentClass,
+			EntityBinder entityBinder,
+			PropertyHolder propertyHolder,
+			HashMap<String, IdGenerator> classGenerators,
+			InheritanceState.ElementsToProcess elementsToProcess,
+			boolean subclassAndSingleTableStrategy,
+			Set<String> idPropertiesIfIdClass) {
 		Set<String> missingIdProperties = new HashSet<String>( idPropertiesIfIdClass );
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			String propertyName = propertyAnnotatedElement.getPropertyName();
@@ -795,7 +802,15 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static boolean mapAsIdClass(Map<XClass, InheritanceState> inheritanceStatePerClass, InheritanceState inheritanceState, PersistentClass persistentClass, EntityBinder entityBinder, PropertyHolder propertyHolder, InheritanceState.ElementsToProcess elementsToProcess, Set<String> idPropertiesIfIdClass, ExtendedMappings mappings) {
+	private static boolean mapAsIdClass(
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			InheritanceState inheritanceState,
+			PersistentClass persistentClass,
+			EntityBinder entityBinder,
+			PropertyHolder propertyHolder,
+			InheritanceState.ElementsToProcess elementsToProcess,
+			Set<String> idPropertiesIfIdClass,
+			Mappings mappings) {
 		/*
 		 * We are looking for @IdClass
 		 * In general we map the id class as identifier using the mapping metadata of the main entity's properties
@@ -916,7 +931,7 @@ public final class AnnotationBinder {
 			PropertyData baseInferredData,
 			AccessType propertyAccessor,
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		if ( elementsToProcess.getIdPropertyCount() == 1 ) {
 			final PropertyData idPropertyOnBaseClass = getUniqueIdPropertyFromBaseClass(
 					inferredData, baseInferredData, propertyAccessor, mappings
@@ -946,7 +961,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static Cache determineCacheSettings(XClass clazzToProcess, ExtendedMappings mappings) {
+	private static Cache determineCacheSettings(XClass clazzToProcess, Mappings mappings) {
 		Cache cacheAnn = clazzToProcess.getAnnotation( Cache.class );
 		if ( cacheAnn != null ) {
 			return cacheAnn;
@@ -979,7 +994,7 @@ public final class AnnotationBinder {
 		return cacheAnn;
 	}
 
-	private static SharedCacheMode determineSharedCacheMode(ExtendedMappings mappings) {
+	private static SharedCacheMode determineSharedCacheMode(Mappings mappings) {
 		SharedCacheMode mode;
 		final Object value = mappings.getConfigurationProperties().get( "javax.persistence.sharedCache.mode" );
 		if ( value == null ) {
@@ -1006,7 +1021,7 @@ public final class AnnotationBinder {
 		return mode;
 	}
 
-	private static Cache buildCacheMock(String region, ExtendedMappings mappings) {
+	private static Cache buildCacheMock(String region, Mappings mappings) {
 		return new LocalCacheAnnotationImpl( region, determineCacheConcurrencyStrategy( mappings ) );
 	}
 
@@ -1018,12 +1033,12 @@ public final class AnnotationBinder {
 			return;
 		}
 
-		if ( !properties.containsKey( AnnotationConfiguration.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) ) {
+		if ( !properties.containsKey( Configuration.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) ) {
 			log.trace( "Given properties did not contain any default cache concurrency strategy setting" );
 			return;
 		}
 
-		final String strategyName = properties.getProperty( AnnotationConfiguration.DEFAULT_CACHE_CONCURRENCY_STRATEGY );
+		final String strategyName = properties.getProperty( Configuration.DEFAULT_CACHE_CONCURRENCY_STRATEGY );
 		log.trace( "Discovered default cache concurrency strategy via config [" + strategyName + "]" );
 		CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.parse( strategyName );
 		if ( strategy == null ) {
@@ -1035,7 +1050,7 @@ public final class AnnotationBinder {
 		DEFAULT_CACHE_CONCURRENCY_STRATEGY = strategy;
 	}
 
-	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(ExtendedMappings mappings) {
+	private static CacheConcurrencyStrategy determineCacheConcurrencyStrategy(Mappings mappings) {
 		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY == null ) {
 			final RegionFactory cacheRegionFactory = SettingsFactory.createRegionFactory(
 					mappings.getConfigurationProperties(), true
@@ -1094,7 +1109,11 @@ public final class AnnotationBinder {
 		return persistentClass;
 	}
 
-	private static Ejb3JoinColumn[] makeInheritanceJoinColumns(XClass clazzToProcess, ExtendedMappings mappings, InheritanceState inheritanceState, PersistentClass superEntity) {
+	private static Ejb3JoinColumn[] makeInheritanceJoinColumns(
+			XClass clazzToProcess,
+			Mappings mappings,
+			InheritanceState inheritanceState,
+			PersistentClass superEntity) {
 		Ejb3JoinColumn[] inheritanceJoinedColumns = null;
 		final boolean hasJoinedColumns = inheritanceState.hasParents()
 				&& InheritanceType.JOINED.equals( inheritanceState.getType() );
@@ -1133,7 +1152,7 @@ public final class AnnotationBinder {
 		return inheritanceJoinedColumns;
 	}
 
-	private static PersistentClass getSuperEntity(XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, ExtendedMappings mappings, InheritanceState inheritanceState) {
+	private static PersistentClass getSuperEntity(XClass clazzToProcess, Map<XClass, InheritanceState> inheritanceStatePerClass, Mappings mappings, InheritanceState inheritanceState) {
 		InheritanceState superEntityState = InheritanceState.getInheritanceStateOfSuperEntity(
 				clazzToProcess, inheritanceStatePerClass
 		);
@@ -1185,7 +1204,7 @@ public final class AnnotationBinder {
 	 */
 
 	private static void bindFilters(XClass annotatedClass, EntityBinder entityBinder,
-									ExtendedMappings mappings) {
+									Mappings mappings) {
 
 		bindFilters( annotatedClass, entityBinder );
 
@@ -1215,7 +1234,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindFilterDefs(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
+	private static void bindFilterDefs(XAnnotatedElement annotatedElement, Mappings mappings) {
 		FilterDef defAnn = annotatedElement.getAnnotation( FilterDef.class );
 		FilterDefs defsAnn = annotatedElement.getAnnotation( FilterDefs.class );
 		if ( defAnn != null ) {
@@ -1228,7 +1247,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindFilterDef(FilterDef defAnn, ExtendedMappings mappings) {
+	private static void bindFilterDef(FilterDef defAnn, Mappings mappings) {
 		Map<String, org.hibernate.type.Type> params = new HashMap<String, org.hibernate.type.Type>();
 		for ( ParamDef param : defAnn.parameters() ) {
 			params.put( param.name(), mappings.getTypeResolver().heuristicType( param.type() ) );
@@ -1238,7 +1257,7 @@ public final class AnnotationBinder {
 		mappings.addFilterDefinition( def );
 	}
 
-	private static void bindTypeDefs(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
+	private static void bindTypeDefs(XAnnotatedElement annotatedElement, Mappings mappings) {
 		TypeDef defAnn = annotatedElement.getAnnotation( TypeDef.class );
 		TypeDefs defsAnn = annotatedElement.getAnnotation( TypeDefs.class );
 		if ( defAnn != null ) {
@@ -1251,7 +1270,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindFetchProfiles(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
+	private static void bindFetchProfiles(XAnnotatedElement annotatedElement, Mappings mappings) {
 		FetchProfile fetchProfileAnnotation = annotatedElement.getAnnotation( FetchProfile.class );
 		FetchProfiles fetchProfileAnnotations = annotatedElement.getAnnotation( FetchProfiles.class );
 		if ( fetchProfileAnnotation != null ) {
@@ -1264,7 +1283,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindFetchProfile(FetchProfile fetchProfileAnnotation, ExtendedMappings mappings) {
+	private static void bindFetchProfile(FetchProfile fetchProfileAnnotation, Mappings mappings) {
 		for ( FetchProfile.FetchOverride fetch : fetchProfileAnnotation.fetchOverrides() ) {
 			org.hibernate.annotations.FetchMode mode = fetch.mode();
 			if ( !mode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
@@ -1276,7 +1295,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindTypeDef(TypeDef defAnn, ExtendedMappings mappings) {
+	private static void bindTypeDef(TypeDef defAnn, Mappings mappings) {
 		Properties params = new Properties();
 		for ( Parameter param : defAnn.parameters() ) {
 			params.setProperty( param.name(), param.value() );
@@ -1306,7 +1325,7 @@ public final class AnnotationBinder {
 			Ejb3DiscriminatorColumn discriminatorColumn,
 			Map<String, Join> secondaryTables,
 			PropertyHolder propertyHolder,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		if ( rootClass.getDiscriminator() == null ) {
 			if ( discriminatorColumn == null ) {
 				throw new AssertionFailure( "discriminator column should have been built" );
@@ -1333,8 +1352,10 @@ public final class AnnotationBinder {
 	 *         the determined access strategy, {@code false} otherwise.
 	 */
 	static int addElementsOfClass(
-			List<PropertyData> elements, AccessType defaultAccessType, PropertyContainer propertyContainer, ExtendedMappings mappings
-	) {
+			List<PropertyData> elements,
+			AccessType defaultAccessType,
+			PropertyContainer propertyContainer,
+			Mappings mappings) {
 		int idPropertyCounter = 0;
 		AccessType accessType = defaultAccessType;
 
@@ -1353,9 +1374,11 @@ public final class AnnotationBinder {
 	}
 
 	private static int addProperty(
-			PropertyContainer propertyContainer, XProperty property, List<PropertyData> annElts,
-			String propertyAccessor, ExtendedMappings mappings
-	) {
+			PropertyContainer propertyContainer,
+			XProperty property,
+			List<PropertyData> annElts,
+			String propertyAccessor,
+			Mappings mappings) {
 		final XClass declaringClass = propertyContainer.getDeclaringClass();
 		final XClass entity = propertyContainer.getEntityAtStake();
 		int idPropertyCounter = 0;
@@ -1391,12 +1414,16 @@ public final class AnnotationBinder {
 	 */
 
 	private static void processElementAnnotations(
-			PropertyHolder propertyHolder, Nullability nullability,
-			PropertyData inferredData, HashMap<String, IdGenerator> classGenerators,
-			EntityBinder entityBinder, boolean isIdentifierMapper,
-			boolean isComponentEmbedded, boolean inSecondPass, ExtendedMappings mappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) throws MappingException {
+			PropertyHolder propertyHolder,
+			Nullability nullability,
+			PropertyData inferredData,
+			HashMap<String, IdGenerator> classGenerators,
+			EntityBinder entityBinder,
+			boolean isIdentifierMapper,
+			boolean isComponentEmbedded,
+			boolean inSecondPass,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) throws MappingException {
 		/**
 		 * inSecondPass can only be used to apply right away the second pass of a composite-element
 		 * Because it's a value type, there is no bidirectional association, hence second pass
@@ -2065,7 +2092,7 @@ public final class AnnotationBinder {
 			SimpleValue idValue,
 			HashMap<String, IdGenerator> classGenerators,
 			boolean isIdentifierMapper,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		if ( isIdentifierMapper ) {
 			throw new AnnotationException(
 					"@IdClass class should not have @Id nor @EmbeddedId properties: "
@@ -2103,10 +2130,13 @@ public final class AnnotationBinder {
 	//TODO move that to collection binder?
 
 	private static void bindJoinedTableAssociation(
-			XProperty property, ExtendedMappings mappings, EntityBinder entityBinder,
-			CollectionBinder collectionBinder, PropertyHolder propertyHolder, PropertyData inferredData,
-			String mappedBy
-	) {
+			XProperty property,
+			Mappings mappings,
+			EntityBinder entityBinder,
+			CollectionBinder collectionBinder,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String mappedBy) {
 		TableBinder associationTableBinder = new TableBinder();
 		JoinColumn[] annJoins;
 		JoinColumn[] annInverseJoins;
@@ -2181,7 +2211,7 @@ public final class AnnotationBinder {
 			AccessType propertyAccessor,
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
-			ExtendedMappings mappings,
+			Mappings mappings,
 			boolean isComponentEmbedded,
 			boolean isId, //is a identifier
 			Map<XClass, InheritanceState> inheritanceStatePerClass,
@@ -2240,13 +2270,16 @@ public final class AnnotationBinder {
 	}
 
 	public static Component fillComponent(
-			PropertyHolder propertyHolder, PropertyData inferredData,
-			AccessType propertyAccessor, boolean isNullable,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			AccessType propertyAccessor,
+			boolean isNullable,
 			EntityBinder entityBinder,
-			boolean isComponentEmbedded, boolean isIdentifierMapper, boolean inSecondPass,
-			ExtendedMappings mappings, Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
-
+			boolean isComponentEmbedded,
+			boolean isIdentifierMapper,
+			boolean inSecondPass,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		return fillComponent(
 				propertyHolder, inferredData, null, propertyAccessor,
 				isNullable, entityBinder, isComponentEmbedded, isIdentifierMapper, inSecondPass, mappings,
@@ -2255,13 +2288,17 @@ public final class AnnotationBinder {
 	}
 
 	public static Component fillComponent(
-			PropertyHolder propertyHolder, PropertyData inferredData,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
 			PropertyData baseInferredData, //base inferred data correspond to the entity reproducing inferredData's properties (ie IdClass)
-			AccessType propertyAccessor, boolean isNullable, EntityBinder entityBinder,
-			boolean isComponentEmbedded, boolean isIdentifierMapper, boolean inSecondPass, ExtendedMappings mappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
-
+			AccessType propertyAccessor,
+			boolean isNullable,
+			EntityBinder entityBinder,
+			boolean isComponentEmbedded,
+			boolean isIdentifierMapper,
+			boolean inSecondPass,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		/**
 		 * inSecondPass can only be used to apply right away the second pass of a composite-element
 		 * Because it's a value type, there is no bidirectional association, hence second pass
@@ -2380,7 +2417,7 @@ public final class AnnotationBinder {
 			PropertyData inferredData,
 			boolean isComponentEmbedded,
 			boolean isIdentifierMapper,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		Component comp = new Component( mappings, propertyHolder.getPersistentClass() );
 		comp.setEmbedded( isComponentEmbedded );
 		//yuk
@@ -2397,13 +2434,19 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindIdClass(
-			String generatorType, String generatorName, PropertyData inferredData,
-			PropertyData baseInferredData, Ejb3Column[] columns, PropertyHolder propertyHolder,
+			String generatorType,
+			String generatorName,
+			PropertyData inferredData,
+			PropertyData baseInferredData,
+			Ejb3Column[] columns,
+			PropertyHolder propertyHolder,
 			boolean isComposite,
-			AccessType propertyAccessor, EntityBinder entityBinder, boolean isEmbedded,
-			boolean isIdentifierMapper, ExtendedMappings mappings,
-			Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
+			AccessType propertyAccessor,
+			EntityBinder entityBinder,
+			boolean isEmbedded,
+			boolean isIdentifierMapper,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 
 		/*
 		 * Fill simple value and property since and Id is a property
@@ -2485,7 +2528,7 @@ public final class AnnotationBinder {
 			PropertyData inferredData,
 			PropertyData baseInferredData,
 			AccessType propertyAccessor,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		List<PropertyData> baseClassElements = new ArrayList<PropertyData>();
 		XClass baseReturnedClassOrElement = baseInferredData.getClassOrElement();
 		PropertyContainer propContainer = new PropertyContainer(
@@ -2514,14 +2557,19 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindManyToOne(
-			String cascadeStrategy, Ejb3JoinColumn[] columns, boolean optional,
-			boolean ignoreNotFound, boolean cascadeOnDelete,
-			XClass targetEntity, PropertyHolder propertyHolder,
-			PropertyData inferredData, boolean unique,
-			boolean isIdentifierMapper, boolean inSecondPass,
+			String cascadeStrategy,
+			Ejb3JoinColumn[] columns,
+			boolean optional,
+			boolean ignoreNotFound,
+			boolean cascadeOnDelete,
+			XClass targetEntity,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			boolean unique,
+			boolean isIdentifierMapper,
+			boolean inSecondPass,
 			PropertyBinder propertyBinder,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		//All FK columns should be in the same table
 		org.hibernate.mapping.ManyToOne value = new org.hibernate.mapping.ManyToOne( mappings, columns[0].getTable() );
 		// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
@@ -2655,8 +2703,7 @@ public final class AnnotationBinder {
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
 			PropertyBinder propertyBinder,
-			ExtendedMappings mappings
-	) {
+			Mappings mappings) {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
 		log.trace( "Fetching {} with {}", propertyName, fetchMode );
@@ -2721,10 +2768,15 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindAny(
-			String cascadeStrategy, Ejb3JoinColumn[] columns, boolean cascadeOnDelete, Nullability nullability,
-			PropertyHolder propertyHolder, PropertyData inferredData, EntityBinder entityBinder,
-			boolean isIdentifierMapper, ExtendedMappings mappings
-	) {
+			String cascadeStrategy,
+			Ejb3JoinColumn[] columns,
+			boolean cascadeOnDelete,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			boolean isIdentifierMapper,
+			Mappings mappings) {
 		org.hibernate.annotations.Any anyAnn = inferredData.getProperty()
 				.getAnnotation( org.hibernate.annotations.Any.class );
 		if ( anyAnn == null ) {
@@ -2759,7 +2811,7 @@ public final class AnnotationBinder {
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
 	}
 
-	private static String generatorType(GenerationType generatorEnum, ExtendedMappings mappings) {
+	private static String generatorType(GenerationType generatorEnum, Mappings mappings) {
 		boolean useNewGeneratorMappings = mappings.useNewGeneratorMappings();
 		switch ( generatorEnum ) {
 			case IDENTITY:
@@ -2811,8 +2863,10 @@ public final class AnnotationBinder {
 	}
 
 	private static String getCascadeStrategy(
-			javax.persistence.CascadeType[] ejbCascades, Cascade hibernateCascadeAnnotation,
-			boolean orphanRemoval, boolean forcePersist) {
+			javax.persistence.CascadeType[] ejbCascades,
+			Cascade hibernateCascadeAnnotation,
+			boolean orphanRemoval,
+			boolean forcePersist) {
 		EnumSet<CascadeType> hibernateCascadeSet = convertToHibernateCascadeType( ejbCascades );
 		CascadeType[] hibernateCascades = hibernateCascadeAnnotation == null ?
 				null :
@@ -2883,7 +2937,7 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static HashMap<String, IdGenerator> buildLocalGenerators(XAnnotatedElement annElt, ExtendedMappings mappings) {
+	private static HashMap<String, IdGenerator> buildLocalGenerators(XAnnotatedElement annElt, Mappings mappings) {
 		HashMap<String, IdGenerator> generators = new HashMap<String, IdGenerator>();
 		TableGenerator tabGen = annElt.getAnnotation( TableGenerator.class );
 		SequenceGenerator seqGen = annElt.getAnnotation( SequenceGenerator.class );
@@ -2903,7 +2957,7 @@ public final class AnnotationBinder {
 		return generators;
 	}
 
-	public static boolean isDefault(XClass clazz, ExtendedMappings mappings) {
+	public static boolean isDefault(XClass clazz, Mappings mappings) {
 		return mappings.getReflectionManager().equals( clazz, void.class );
 	}
 
@@ -2917,7 +2971,7 @@ public final class AnnotationBinder {
 	 */
 	public static Map<XClass, InheritanceState> buildInheritanceStates(
 			List<XClass> orderedClasses,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		ReflectionManager reflectionManager = mappings.getReflectionManager();
 		Map<XClass, InheritanceState> inheritanceStatePerClass = new HashMap<XClass, InheritanceState>(
 				orderedClasses.size()

@@ -46,7 +46,7 @@ import org.hibernate.util.StringHelper;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.
- * Also hosts some convinient methods related to column processing
+ * Also hosts some convenient methods related to column processing
  *
  * @author Emmanuel Bernard
  */
@@ -56,11 +56,17 @@ class ColumnsBuilder {
 	private XProperty property;
 	private PropertyData inferredData;
 	private EntityBinder entityBinder;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private Ejb3Column[] columns;
 	private Ejb3JoinColumn[] joinColumns;
 
-	public ColumnsBuilder(PropertyHolder propertyHolder, Nullability nullability, XProperty property, PropertyData inferredData, EntityBinder entityBinder, ExtendedMappings mappings) {
+	public ColumnsBuilder(
+			PropertyHolder propertyHolder,
+			Nullability nullability,
+			XProperty property,
+			PropertyData inferredData,
+			EntityBinder entityBinder,
+			Mappings mappings) {
 		this.propertyHolder = propertyHolder;
 		this.nullability = nullability;
 		this.property = property;
@@ -214,7 +220,9 @@ class ColumnsBuilder {
 
 	Ejb3Column[] overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
 		Ejb3Column[] result = columns;
-		final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.getName(), mappings );
+		final PropertyData overridingProperty = BinderHelper.getPropertyOverriddenByMapperOrMapsId(
+				isId, propertyHolder, property.getName(), mappings
+		);
 		if ( overridingProperty != null ) {
 			result = buildExcplicitOrDefaultJoinColumn( overridingProperty );
 		}

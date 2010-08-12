@@ -975,7 +975,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @return The created mappings
 	 */
-	public ExtendedMappings createMappings() {
+	public Mappings createMappings() {
 		return new MappingsImpl();
 	}
 
@@ -4018,7 +4018,7 @@ public class Configuration implements Serializable {
 			log.debug( "Process annotated classes" );
 			//bind classes in the correct order calculating some inheritance state
 			List<XClass> orderedClasses = orderAndFillHierarchy( annotatedClasses );
-			ExtendedMappings mappings = createMappings();
+			Mappings mappings = createMappings();
 			Map<XClass, InheritanceState> inheritanceStatePerClass = AnnotationBinder.buildInheritanceStates(
 					orderedClasses, mappings
 			);

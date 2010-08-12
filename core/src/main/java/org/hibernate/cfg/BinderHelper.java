@@ -118,8 +118,8 @@ public class BinderHelper {
 			PersistentClass ownerEntity,
 			PersistentClass associatedEntity,
 			Value value,
-			boolean inverse, ExtendedMappings mappings
-	) {
+			boolean inverse,
+			Mappings mappings) {
 		//associated entity only used for more precise exception, yuk!
 		if ( columns[0].isImplicit() || StringHelper.isNotEmpty( columns[0].getMappedBy() ) ) return;
 		int fkEnum = Ejb3JoinColumn.checkReferencedColumnsType( columns, ownerEntity, mappings );
@@ -232,9 +232,9 @@ public class BinderHelper {
 
 
 	private static List<Property> findPropertiesByColumns(
-			Object columnOwner, Ejb3JoinColumn[] columns,
-			ExtendedMappings mappings
-	) {
+			Object columnOwner,
+			Ejb3JoinColumn[] columns,
+			Mappings mappings) {
 		Map<Column, Set<Property>> columnsToProperty = new HashMap<Column, Set<Property>>();
 		List<Column> orderedColumns = new ArrayList<Column>( columns.length );
 		Table referencedTable = null;
@@ -434,8 +434,9 @@ public class BinderHelper {
 	 * If columnName is null or empty, persistentClass is returned
 	 */
 	public static Object findColumnOwner(
-			PersistentClass persistentClass, String columnName, ExtendedMappings mappings
-	) {
+			PersistentClass persistentClass,
+			String columnName,
+			Mappings mappings) {
 		if ( StringHelper.isEmpty( columnName ) ) {
 			return persistentClass; //shortcut for implicit referenced column names
 		}
@@ -474,9 +475,11 @@ public class BinderHelper {
 	 * apply an id generator to a SimpleValue
 	 */
 	public static void makeIdGenerator(
-			SimpleValue id, String generatorType, String generatorName, ExtendedMappings mappings,
-			Map<String, IdGenerator> localGenerators
-	) {
+			SimpleValue id,
+			String generatorType,
+			String generatorName,
+			Mappings mappings,
+			Map<String, IdGenerator> localGenerators) {
 		Table table = id.getTable();
 		table.setIdentifierValue( id );
 		//generator settings
@@ -528,9 +531,17 @@ public class BinderHelper {
 		//equivalent to (but faster) ANNOTATION_STRING_DEFAULT.equals( annotationString );
 	}
 
-	public static Any buildAnyValue(String anyMetaDefName, Ejb3JoinColumn[] columns, javax.persistence.Column metaColumn, PropertyData inferredData,
-									boolean cascadeOnDelete, Nullability nullability, PropertyHolder propertyHolder,
-									EntityBinder entityBinder, boolean optional, ExtendedMappings mappings) {
+	public static Any buildAnyValue(
+			String anyMetaDefName,
+			Ejb3JoinColumn[] columns,
+			javax.persistence.Column metaColumn,
+			PropertyData inferredData,
+			boolean cascadeOnDelete,
+			Nullability nullability,
+			PropertyHolder propertyHolder,
+			EntityBinder entityBinder,
+			boolean optional,
+			Mappings mappings) {
 		//All FK columns should be in the same table
 		Any value = new Any( mappings, columns[0].getTable() );
 		AnyMetaDef metaAnnDef = inferredData.getProperty().getAnnotation( AnyMetaDef.class );
@@ -577,8 +588,10 @@ public class BinderHelper {
 			}
 		}
 
-		Ejb3Column[] metaColumns = Ejb3Column.buildColumnFromAnnotation( new javax.persistence.Column[] { metaColumn }, null,
-				nullability, propertyHolder, inferredData, entityBinder.getSecondaryTables(), mappings );
+		Ejb3Column[] metaColumns = Ejb3Column.buildColumnFromAnnotation(
+				new javax.persistence.Column[] { metaColumn }, null,
+				nullability, propertyHolder, inferredData, entityBinder.getSecondaryTables(), mappings 
+		);
 		//set metaColumn to the right table
 		for (Ejb3Column column : metaColumns) {
 			column.setTable( value.getTable() );
@@ -597,7 +610,7 @@ public class BinderHelper {
 		return value;
 	}
 
-	public static void bindAnyMetaDefs(XAnnotatedElement annotatedElement, ExtendedMappings mappings) {
+	public static void bindAnyMetaDefs(XAnnotatedElement annotatedElement, Mappings mappings) {
 		AnyMetaDef defAnn = annotatedElement.getAnnotation( AnyMetaDef.class );
 		AnyMetaDefs defsAnn = annotatedElement.getAnnotation( AnyMetaDefs.class );
 		boolean mustHaveName = XClass.class.isAssignableFrom( annotatedElement.getClass() )
@@ -623,15 +636,16 @@ public class BinderHelper {
 		}
 	}
 
-	private static void bindAnyMetaDef(AnyMetaDef defAnn, ExtendedMappings mappings) {
+	private static void bindAnyMetaDef(AnyMetaDef defAnn, Mappings mappings) {
 		if ( isDefault( defAnn.name() ) ) return; //don't map not named definitions
 		log.info( "Binding Any Meta definition: {}", defAnn.name() );
 		mappings.addAnyMetaDef( defAnn );
 	}
 
-	public static MappedSuperclass getMappedSuperclassOrNull(XClass declaringClass, 
-															 Map<XClass, InheritanceState> inheritanceStatePerClass,
-															 ExtendedMappings mappings) {
+	public static MappedSuperclass getMappedSuperclassOrNull(
+			XClass declaringClass,
+			Map<XClass, InheritanceState> inheritanceStatePerClass,
+			Mappings mappings) {
 		boolean retrieve = false;
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
@@ -653,7 +667,11 @@ public class BinderHelper {
 		return StringHelper.qualify( holder.getPath(), property.getPropertyName() );
 	}
 
-	static PropertyData getPropertyOverriddenByMapperOrMapsId(boolean isId, PropertyHolder propertyHolder, String propertyName, ExtendedMappings mappings) {
+	static PropertyData getPropertyOverriddenByMapperOrMapsId(
+			boolean isId,
+			PropertyHolder propertyHolder,
+			String propertyName,
+			Mappings mappings) {
 		final XClass persistentXClass;
 		try {
 			 persistentXClass = mappings.getReflectionManager()

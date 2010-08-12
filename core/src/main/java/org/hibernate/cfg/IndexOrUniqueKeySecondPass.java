@@ -37,14 +37,14 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	private Table table;
 	private final String indexName;
 	private final String[] columns;
-	private final ExtendedMappings mappings;
+	private final Mappings mappings;
 	private final Ejb3Column column;
 	private final boolean unique;
 
 	/**
 	 * Build an index
 	 */
-	public IndexOrUniqueKeySecondPass(Table table, String indexName, String[] columns, ExtendedMappings mappings) {
+	public IndexOrUniqueKeySecondPass(Table table, String indexName, String[] columns, Mappings mappings) {
 		this.table = table;
 		this.indexName = indexName;
 		this.columns = columns;
@@ -56,15 +56,14 @@ public class IndexOrUniqueKeySecondPass implements SecondPass {
 	/**
 	 * Build an index
 	 */
-	public IndexOrUniqueKeySecondPass(String indexName, Ejb3Column column, ExtendedMappings mappings) {
+	public IndexOrUniqueKeySecondPass(String indexName, Ejb3Column column, Mappings mappings) {
 		this( indexName, column, mappings, false );
 	}
 
 	/**
 	 * Build an index if unique is false or a Unique Key if unique is true
 	 */
-	public IndexOrUniqueKeySecondPass(String indexName, Ejb3Column column,
-									  ExtendedMappings mappings, boolean unique) {
+	public IndexOrUniqueKeySecondPass(String indexName, Ejb3Column column, Mappings mappings, boolean unique) {
 		this.indexName = indexName;
 		this.column = column;
 		this.columns = null;

@@ -46,7 +46,7 @@ import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
@@ -93,14 +93,19 @@ public class MapBinder extends CollectionBinder {
 
 	@Override
 	public SecondPass getSecondPass(
-			final Ejb3JoinColumn[] fkJoinColumns, final Ejb3JoinColumn[] keyColumns,
+			final Ejb3JoinColumn[] fkJoinColumns,
+			final Ejb3JoinColumn[] keyColumns,
 			final Ejb3JoinColumn[] inverseColumns,
 			final Ejb3Column[] elementColumns,
-			final Ejb3Column[] mapKeyColumns, final Ejb3JoinColumn[] mapKeyManyToManyColumns, final boolean isEmbedded,
-			final XProperty property, final XClass collType,
-			final boolean ignoreNotFound, final boolean unique,
-			final TableBinder assocTableBinder, final ExtendedMappings mappings
-	) {
+			final Ejb3Column[] mapKeyColumns,
+			final Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			final boolean isEmbedded,
+			final XProperty property,
+			final XClass collType,
+			final boolean ignoreNotFound,
+			final boolean unique,
+			final TableBinder assocTableBinder,
+			final Mappings mappings) {
 		return new CollectionSecondPass( mappings, MapBinder.this.collection ) {
 			public void secondPass(Map persistentClasses, Map inheritedMetas)
 					throws MappingException {
@@ -118,10 +123,15 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private void bindKeyFromAssociationTable(
-			XClass collType, Map persistentClasses, String mapKeyPropertyName, XProperty property,
-			boolean isEmbedded, ExtendedMappings mappings, Ejb3Column[] mapKeyColumns,
-			Ejb3JoinColumn[] mapKeyManyToManyColumns, String targetPropertyName
-	) {
+			XClass collType,
+			Map persistentClasses,
+			String mapKeyPropertyName,
+			XProperty property,
+			boolean isEmbedded,
+			Mappings mappings,
+			Ejb3Column[] mapKeyColumns,
+			Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			String targetPropertyName) {
 		if ( mapKeyPropertyName != null ) {
 			//this is an EJB3 @MapKey
 			PersistentClass associatedClass = (PersistentClass) persistentClasses.get( collType.getName() );
@@ -133,7 +143,9 @@ public class MapBinder extends CollectionBinder {
 				);
 			}
 			org.hibernate.mapping.Map map = (org.hibernate.mapping.Map) this.collection;
-			Value indexValue = createFormulatedValue( mapProperty.getValue(), map, targetPropertyName, associatedClass, mappings );
+			Value indexValue = createFormulatedValue(
+					mapProperty.getValue(), map, targetPropertyName, associatedClass, mappings
+			);
 			map.setIndex( indexValue );
 		}
 		else {
@@ -305,7 +317,7 @@ public class MapBinder extends CollectionBinder {
 			Collection collection,
 			String targetPropertyName,
 			PersistentClass associatedClass,
-			ExtendedMappings mappings) {
+			Mappings mappings) {
 		Value element = collection.getElement();
 		String fromAndWhere = null;
 		if ( !( element instanceof OneToMany ) ) {

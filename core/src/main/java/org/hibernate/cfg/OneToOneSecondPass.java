@@ -48,7 +48,7 @@ import org.hibernate.util.StringHelper;
  */
 public class OneToOneSecondPass implements SecondPass {
 	private String mappedBy;
-	private ExtendedMappings mappings;
+	private Mappings mappings;
 	private String ownerEntity;
 	private String ownerProperty;
 	private PropertyHolder propertyHolder;
@@ -62,11 +62,18 @@ public class OneToOneSecondPass implements SecondPass {
 
 	//that suck, we should read that from the property mainly
 	public OneToOneSecondPass(
-			String mappedBy, String ownerEntity, String ownerProperty,
-			PropertyHolder propertyHolder, PropertyData inferredData, XClass targetEntity, boolean ignoreNotFound,
-			boolean cascadeOnDelete, boolean optional, String cascadeStrategy, Ejb3JoinColumn[] columns,
-			ExtendedMappings mappings
-	) {
+			String mappedBy,
+			String ownerEntity,
+			String ownerProperty,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			XClass targetEntity,
+			boolean ignoreNotFound,
+			boolean cascadeOnDelete,
+			boolean optional,
+			String cascadeStrategy,
+			Ejb3JoinColumn[] columns,
+			Mappings mappings) {
 		this.ownerEntity = ownerEntity;
 		this.ownerProperty = ownerProperty;
 		this.mappedBy = mappedBy;

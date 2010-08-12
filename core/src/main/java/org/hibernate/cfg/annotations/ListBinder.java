@@ -37,7 +37,7 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.ExtendedMappings;
+import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
@@ -76,14 +76,19 @@ public class ListBinder extends CollectionBinder {
 
 	@Override
 	public SecondPass getSecondPass(
-			final Ejb3JoinColumn[] fkJoinColumns, final Ejb3JoinColumn[] keyColumns,
+			final Ejb3JoinColumn[] fkJoinColumns,
+			final Ejb3JoinColumn[] keyColumns,
 			final Ejb3JoinColumn[] inverseColumns,
 			final Ejb3Column[] elementColumns,
-			Ejb3Column[] mapKeyColumns, final Ejb3JoinColumn[] mapKeyManyToManyColumns, final boolean isEmbedded,
-			final XProperty property, final XClass collType,
-			final boolean ignoreNotFound, final boolean unique,
-			final TableBinder assocTableBinder, final ExtendedMappings mappings
-	) {
+			Ejb3Column[] mapKeyColumns,
+			final Ejb3JoinColumn[] mapKeyManyToManyColumns,
+			final boolean isEmbedded,
+			final XProperty property,
+			final XClass collType,
+			final boolean ignoreNotFound,
+			final boolean unique,
+			final TableBinder assocTableBinder,
+			final Mappings mappings) {
 		return new CollectionSecondPass( mappings, ListBinder.this.collection ) {
 			public void secondPass(Map persistentClasses, Map inheritedMetas)
 					throws MappingException {
@@ -96,7 +101,7 @@ public class ListBinder extends CollectionBinder {
 		};
 	}
 
-	private void bindIndex(final ExtendedMappings mappings) {
+	private void bindIndex(final Mappings mappings) {
 		if ( !indexColumn.isImplicit() ) {
 			PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 					this.collection,

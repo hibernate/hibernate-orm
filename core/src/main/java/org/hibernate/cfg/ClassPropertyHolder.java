@@ -49,9 +49,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
 
 	public ClassPropertyHolder(
-			PersistentClass persistentClass, XClass clazzToProcess,
-			Map<String, Join> joins, ExtendedMappings mappings, Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
+			PersistentClass persistentClass,
+			XClass clazzToProcess,
+			Map<String, Join> joins,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		super( persistentClass.getEntityName(), null, clazzToProcess, mappings );
 		this.persistentClass = persistentClass;
 		this.joins = joins;
@@ -59,9 +61,11 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public ClassPropertyHolder(
-			PersistentClass persistentClass, XClass clazzToProcess, EntityBinder entityBinder,
-			ExtendedMappings mappings, Map<XClass, InheritanceState> inheritanceStatePerClass
-	) {
+			PersistentClass persistentClass,
+			XClass clazzToProcess,
+			EntityBinder entityBinder,
+			Mappings mappings,
+			Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		this( persistentClass, clazzToProcess, entityBinder.getSecondaryTables(), mappings, inheritanceStatePerClass );
 		this.entityBinder = entityBinder;
 	}
@@ -127,7 +131,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private void addPropertyToMappedSuperclass(Property prop, XClass declaringClass) {
-		final ExtendedMappings mappings = getMappings();
+		final Mappings mappings = getMappings();
 		final Class type = mappings.getReflectionManager().toClass( declaringClass );
 		MappedSuperclass superclass = mappings.getMappedSuperclass( type );
 		superclass.addDeclaredProperty( prop );

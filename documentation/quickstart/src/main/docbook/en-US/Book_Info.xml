@@ -4,7 +4,7 @@
 %BOOK_ENTITIES;
 ]>
 
-<bookinfo id="Hibernate_Getting_Started_Guide">
+<bookinfo id="Hibernate_Getting_Started_Guide" xmlns="http://www.oasis-open.org/docbook/xml/4.5/">
     <title>Hibernate Getting Started Guide</title>
     <releaseinfo>&version;</releaseinfo>
     <edition>1.0</edition>
@@ -25,7 +25,5 @@
         <year>&copyrightYear;</year>
         <holder>&copyrightHolder;</holder>
     </copyright>
-
     <xi:include href="Author_Group.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-
 </bookinfo>

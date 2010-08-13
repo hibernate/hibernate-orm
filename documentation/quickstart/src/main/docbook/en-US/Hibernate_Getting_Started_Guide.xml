@@ -4,7 +4,7 @@
     %BOOK_ENTITIES;
 ]>
 
-<book>
+<book xmlns="http://www.oasis-open.org/docbook/xml/4.5/">
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Book_Info.xml" />
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/preface.xml" />
 
@@ -13,6 +13,4 @@
 
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_native.xml" />
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_annotations.xml" />
-
-
 </book>

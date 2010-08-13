@@ -26,6 +26,7 @@ package org.hibernate.hql.ast;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1116,7 +1117,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			eq.setFirstChild( versionPropertyNode );
 
 			AST versionIncrementNode = null;
-			if ( Date.class.isAssignableFrom( versionType.getReturnedClass() ) ) {
+			if ( isTimestampBasedVersion( versionType ) ) {
 				versionIncrementNode = getASTFactory().create( HqlSqlTokenTypes.PARAM, "?" );
 				ParameterSpecification paramSpec = new VersionTypeSeedParameterSpecification( versionType );
 				( ( ParameterNode ) versionIncrementNode ).setHqlParameterSpecification( paramSpec );
@@ -1139,6 +1140,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			setClause.setFirstChild( eq );
 			eq.setNextSibling( currentFirstSetElement );
 		}
+	}
+
+	private boolean isTimestampBasedVersion(VersionType versionType) {
+		final Class javaType = versionType.getReturnedClass();
+		return Date.class.isAssignableFrom( javaType )
+				|| Calendar.class.isAssignableFrom( javaType );
 	}
 
 	private AST generateVersionPropertyNode(Queryable persister) throws SemanticException {

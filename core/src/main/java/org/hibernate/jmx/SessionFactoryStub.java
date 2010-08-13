@@ -131,7 +131,7 @@ public class SessionFactoryStub implements SessionFactory {
 		return getImpl().getCollectionMetadata(roleName);
 	}
 
-	public Map getAllClassMetadata() throws HibernateException {
+	public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
 		return getImpl().getAllClassMetadata();
 	}
 

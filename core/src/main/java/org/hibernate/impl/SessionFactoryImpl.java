@@ -158,10 +158,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final String uuid;
 
 	private final transient Map entityPersisters;
-	private final transient Map classMetadata;
+	private final transient Map<String,ClassMetadata> classMetadata;
 	private final transient Map collectionPersisters;
 	private final transient Map collectionMetadata;
-	private final transient Map collectionRolesByEntityParticipant;
+	private final transient Map<String,Set<String>> collectionRolesByEntityParticipant;
 	private final transient Map identifierGenerators;
 	private final transient Map namedQueries;
 	private final transient Map namedSqlQueries;
@@ -263,7 +263,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 		entityPersisters = new HashMap();
 		Map entityAccessStrategies = new HashMap();
-		Map classMeta = new HashMap();
+		Map<String,ClassMetadata> classMeta = new HashMap<String,ClassMetadata>();
 		classes = cfg.getClassMappings();
 		while ( classes.hasNext() ) {
 			final PersistentClass model = (PersistentClass) classes.next();
@@ -285,9 +285,9 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			entityPersisters.put( model.getEntityName(), cp );
 			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
 		}
-		classMetadata = Collections.unmodifiableMap(classMeta);
+		this.classMetadata = Collections.unmodifiableMap(classMeta);
 
-		Map tmpEntityToCollectionRoleMap = new HashMap();
+		Map<String,Set<String>> tmpEntityToCollectionRoleMap = new HashMap<String,Set<String>>();
 		collectionPersisters = new HashMap();
 		Iterator collections = cfg.getCollectionMappings();
 		while ( collections.hasNext() ) {
@@ -726,8 +726,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return settings.getSQLExceptionConverter();
 	}
 
-	public Set getCollectionRolesByEntityParticipant(String entityName) {
-		return ( Set ) collectionRolesByEntityParticipant.get( entityName );
+	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
+		return collectionRolesByEntityParticipant.get( entityName );
 	}
 
 	// from javax.naming.Referenceable
@@ -884,7 +884,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 	}
 
-	public Map getAllClassMetadata() throws HibernateException {
+	public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
 		return classMetadata;
 	}
 

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,27 +20,25 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.action;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.hibernate.HibernateException;
-import org.hibernate.cache.access.SoftLock;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.cache.access.EntityRegionAccessStrategy;
+import org.hibernate.cache.access.SoftLock;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-
-import java.io.Serializable;
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.Arrays;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Queryable;
 
 /**
  * An {@link org.hibernate.engine.ActionQueue} {@link Executable} for ensuring
@@ -57,8 +55,8 @@ import java.util.Arrays;
 public class BulkOperationCleanupAction implements Executable, Serializable {
 	private final Serializable[] affectedTableSpaces;
 
-	private final Set entityCleanups = new HashSet();
-	private final Set collectionCleanups = new HashSet();
+	private final Set<EntityCleanup> entityCleanups = new HashSet<EntityCleanup>();
+	private final Set<CollectionCleanup> collectionCleanups = new HashSet<CollectionCleanup>();
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on the
@@ -72,17 +70,17 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 */
 	public BulkOperationCleanupAction(SessionImplementor session, Queryable[] affectedQueryables) {
 		SessionFactoryImplementor factory = session.getFactory();
-		ArrayList tmpSpaces = new ArrayList();
-		for ( int i = 0; i < affectedQueryables.length; i++ ) {
-			tmpSpaces.addAll( Arrays.asList( affectedQueryables[i].getQuerySpaces() ) );
-			if ( affectedQueryables[i].hasCache() ) {
-				entityCleanups.add( new EntityCleanup( affectedQueryables[i].getCacheAccessStrategy() ) );
+		LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
+		for ( Queryable persister : affectedQueryables ) {
+			spacesList.addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
+
+			if ( persister.hasCache() ) {
+				entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
 			}
-			Set roles = factory.getCollectionRolesByEntityParticipant( affectedQueryables[i].getEntityName() );
+
+			Set<String> roles = factory.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
-				Iterator itr = roles.iterator();
-				while ( itr.hasNext() ) {
-					String role = ( String ) itr.next();
+				for ( String role : roles ) {
 					CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add( new CollectionCleanup( collectionPersister.getCacheAccessStrategy() ) );
@@ -91,14 +89,14 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		this.affectedTableSpaces = ( Serializable[] ) tmpSpaces.toArray( new Serializable[ tmpSpaces.size() ] );
+		this.affectedTableSpaces = spacesList.toArray( new String[ spacesList.size() ] );
 	}
 
 	/**
 	 * Constructs an action to cleanup "affected cache regions" based on a
 	 * set of affected table spaces.  This differs from {@link #BulkOperationCleanupAction(SessionImplementor, Queryable[])}
 	 * in that here we have the affected <strong>table names</strong>.  From those
-	 * we deduce the entity persisters whcih are affected based on the defined
+	 * we deduce the entity persisters which are affected based on the defined
 	 * {@link EntityPersister#getQuerySpaces() table spaces}; and from there, we
 	 * determine the affected collection regions based on any collections
 	 * in which those entity persisters participate as elements/keys/etc.
@@ -106,26 +104,24 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param session The session to which this request is tied.
 	 * @param tableSpaces The table spaces.
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public BulkOperationCleanupAction(SessionImplementor session, Set tableSpaces) {
-		Set tmpSpaces = new HashSet(tableSpaces);
-		SessionFactoryImplementor factory = session.getFactory();
-		Iterator iterator = factory.getAllClassMetadata().entrySet().iterator();
-		while ( iterator.hasNext() ) {
-			Map.Entry entry = (Map.Entry) iterator.next();
-			String entityName = (String) entry.getKey();
-			EntityPersister persister = factory.getEntityPersister( entityName );
-			Serializable[] entitySpaces = persister.getQuerySpaces();
+		LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
+		spacesList.addAll( tableSpaces );
 
+		SessionFactoryImplementor factory = session.getFactory();
+		for ( String entityName : factory.getAllClassMetadata().keySet() ) {
+			final EntityPersister persister = factory.getEntityPersister( entityName );
+			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
-				tmpSpaces.addAll( Arrays.asList( entitySpaces ) );
+				spacesList.addAll( Arrays.asList( entitySpaces ) );
+
 				if ( persister.hasCache() ) {
 					entityCleanups.add( new EntityCleanup( persister.getCacheAccessStrategy() ) );
 				}
-				Set roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+				Set<String> roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
-					Iterator itr = roles.iterator();
-					while ( itr.hasNext() ) {
-						String role = ( String ) itr.next();
+					for ( String role : roles ) {
 						CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
@@ -137,7 +133,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		this.affectedTableSpaces = ( Serializable[] ) tmpSpaces.toArray( new Serializable[ tmpSpaces.size() ] );
+		this.affectedTableSpaces = spacesList.toArray( new String[ spacesList.size() ] );
 	}
 
 
@@ -158,8 +154,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			return true;
 		}
 
-		for ( int i = 0; i < checkTableSpaces.length; i++ ) {
-			if ( affectedTableSpaces.contains( checkTableSpaces[i] ) ) {
+		for ( Serializable checkTableSpace : checkTableSpaces ) {
+			if ( affectedTableSpaces.contains( checkTableSpace ) ) {
 				return true;
 			}
 		}

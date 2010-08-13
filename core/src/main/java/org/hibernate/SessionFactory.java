@@ -193,7 +193,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @since 3.0 changed key from {@link Class} to {@link String}.
 	 */
-	public Map getAllClassMetadata();
+	public Map<String,ClassMetadata> getAllClassMetadata();
 
 	/**
 	 * Get the {@link CollectionMetadata} for all mapped collections

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
 
@@ -30,17 +29,18 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.action.AfterTransactionCompletionProcess;
+import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.action.CollectionRecreateAction;
 import org.hibernate.action.CollectionRemoveAction;
@@ -50,8 +50,6 @@ import org.hibernate.action.EntityIdentityInsertAction;
 import org.hibernate.action.EntityInsertAction;
 import org.hibernate.action.EntityUpdateAction;
 import org.hibernate.action.Executable;
-import org.hibernate.action.AfterTransactionCompletionProcess;
-import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
 
@@ -121,36 +119,43 @@ public class ActionQueue {
 		collectionUpdates.clear();
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityInsertAction action) {
 		insertions.add( action );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityDeleteAction action) {
 		deletions.add( action );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityUpdateAction action) {
 		updates.add( action );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionRecreateAction action) {
 		collectionCreations.add( action );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionRemoveAction action) {
 		collectionRemovals.add( action );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionUpdateAction action) {
 		collectionUpdates.add( action );
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityIdentityInsertAction insert) {
 		insertions.add( insert );
 	}
 
 	public void addAction(BulkOperationCleanupAction cleanupAction) {
-		registerProcess( cleanupAction.getAfterTransactionCompletionProcess() );
+		registerCleanupActions( cleanupAction );
 	}
 
 	public void registerProcess(AfterTransactionCompletionProcess process) {
@@ -238,14 +243,14 @@ public class ActionQueue {
 		return ( insertions.size() > 0 || deletions.size() > 0 );
 	}
 
-	private static boolean areTablesToUpdated(List executables, Set tablespaces) {
-		int size = executables.size();
-		for ( int j = 0; j < size; j++ ) {
-			Serializable[] spaces = ( ( Executable ) executables.get( j ) ).getPropertySpaces();
-			for ( int i = 0; i < spaces.length; i++ ) {
-				if ( tablespaces.contains( spaces[i] ) ) {
+	@SuppressWarnings({ "unchecked" })
+	private static boolean areTablesToUpdated(List actions, Set tableSpaces) {
+		for ( Executable action : (List<Executable>) actions ) {
+			final Serializable[] spaces = action.getPropertySpaces();
+			for ( Serializable space : spaces ) {
+				if ( tableSpaces.contains( space ) ) {
 					if ( log.isDebugEnabled() ) {
-						log.debug( "changes must be flushed to space: " + spaces[i] );
+						log.debug( "changes must be flushed to space: " + space );
 					}
 					return true;
 				}
@@ -268,20 +273,23 @@ public class ActionQueue {
 			executable.execute();
 		}
 		finally {
-			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
-			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
-				final String[] spaces = (String[]) executable.getPropertySpaces();
-				afterTransactionProcesses.addSpacesToInvalidate( spaces );
-				session.getFactory().getUpdateTimestampsCache().preinvalidate( executable.getPropertySpaces() );
-			}
-			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
+			registerCleanupActions( executable );
 		}
 	}
 
+	private void registerCleanupActions(Executable executable) {
+		beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
+		if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+			final String[] spaces = (String[]) executable.getPropertySpaces();
+			afterTransactionProcesses.addSpacesToInvalidate( spaces );
+			session.getFactory().getUpdateTimestampsCache().preinvalidate( spaces );
+		}
+		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
+	}
+
+	@SuppressWarnings({ "unchecked" })
 	private void prepareActions(List queue) throws HibernateException {
-		int size = queue.size();
-		for ( int i = 0; i < size; i++ ) {
-			Executable executable = ( Executable ) queue.get( i );
+		for ( Executable executable : (List<Executable>) queue ) {
 			executable.beforeExecutions();
 		}
 	}
@@ -327,6 +335,7 @@ public class ActionQueue {
 		return insertions.size();
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void sortCollectionActions() {
 		if ( session.getFactory().getSettings().isOrderUpdatesEnabled() ) {
 			//sort the updates by fk
@@ -336,6 +345,7 @@ public class ActionQueue {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void sortActions() {
 		if ( session.getFactory().getSettings().isOrderUpdatesEnabled() ) {
 			//sort the updates by pk
@@ -359,6 +369,7 @@ public class ActionQueue {
 		new InsertActionSorter().sort();
 	}
 
+	@SuppressWarnings({ "UnusedDeclaration" })
 	public ArrayList cloneDeletions() {
 		return ( ArrayList ) deletions.clone();
 	}
@@ -374,6 +385,7 @@ public class ActionQueue {
 		}
 	}
 
+	@SuppressWarnings({ "UnusedDeclaration" })
 	public boolean hasAfterTransactionActions() {
 		return afterTransactionProcesses.processes.size() > 0;
 	}
@@ -457,6 +469,7 @@ public class ActionQueue {
 	 * @throws IOException indicates a problem reading from the stream
 	 * @throws ClassNotFoundException Generally means we were unable to locate user classes.
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public static ActionQueue deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
@@ -465,42 +478,42 @@ public class ActionQueue {
 
 		int queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] insertions entries" );
-		rtn.insertions = new ArrayList( queueSize );
+		rtn.insertions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.insertions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] deletions entries" );
-		rtn.deletions = new ArrayList( queueSize );
+		rtn.deletions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.deletions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] updates entries" );
-		rtn.updates = new ArrayList( queueSize );
+		rtn.updates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.updates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionUpdates entries" );
-		rtn.collectionUpdates = new ArrayList( queueSize );
+		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionUpdates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionRemovals entries" );
-		rtn.collectionRemovals = new ArrayList( queueSize );
+		rtn.collectionRemovals = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionRemovals.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionCreations entries" );
-		rtn.collectionCreations = new ArrayList( queueSize );
+		rtn.collectionCreations = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionCreations.add( ois.readObject() );
 		}
@@ -509,7 +522,7 @@ public class ActionQueue {
 
 	private static class BeforeTransactionCompletionProcessQueue {
 		private SessionImplementor session;
-		private List processes = new ArrayList();
+		private List<BeforeTransactionCompletionProcess> processes = new ArrayList<BeforeTransactionCompletionProcess>();
 
 		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;
@@ -526,7 +539,7 @@ public class ActionQueue {
 			final int size = processes.size();
 			for ( int i = 0; i < size; i++ ) {
 				try {
-					BeforeTransactionCompletionProcess process = ( BeforeTransactionCompletionProcess ) processes.get( i );
+					BeforeTransactionCompletionProcess process = processes.get( i );
 					process.doBeforeTransactionCompletion( session );
 				}
 				catch ( HibernateException he ) {
@@ -542,8 +555,9 @@ public class ActionQueue {
 
 	private static class AfterTransactionCompletionProcessQueue {
 		private SessionImplementor session;
-		private Set querySpacesToInvalidate = new HashSet();
-		private List processes = new ArrayList( INIT_QUEUE_LIST_SIZE * 3 );
+		private Set<String> querySpacesToInvalidate = new HashSet<String>();
+		private List<AfterTransactionCompletionProcess> processes
+				= new ArrayList<AfterTransactionCompletionProcess>( INIT_QUEUE_LIST_SIZE * 3 );
 
 		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;
@@ -573,7 +587,7 @@ public class ActionQueue {
 			final int size = processes.size();
 			for ( int i = 0; i < size; i++ ) {
 				try {
-					AfterTransactionCompletionProcess process = ( AfterTransactionCompletionProcess ) processes.get( i );
+					AfterTransactionCompletionProcess process = processes.get( i );
 					process.doAfterTransactionCompletion( success, session );
 				}
 				catch ( CacheException ce ) {
@@ -588,7 +602,7 @@ public class ActionQueue {
 
 			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
 				session.getFactory().getUpdateTimestampsCache().invalidate(
-						( String[] ) querySpacesToInvalidate.toArray( new String[ querySpacesToInvalidate.size()] )
+						querySpacesToInvalidate.toArray( new String[ querySpacesToInvalidate.size()] )
 				);
 			}
 			querySpacesToInvalidate.clear();
@@ -616,11 +630,10 @@ public class ActionQueue {
 		/**
 		 * Sort the insert actions.
 		 */
+		@SuppressWarnings({ "unchecked", "UnnecessaryBoxing" })
 		public void sort() {
-
 			// the list of entity names that indicate the batch number
-			for ( Iterator actionItr = insertions.iterator(); actionItr.hasNext(); ) {
-				EntityInsertAction action = ( EntityInsertAction ) actionItr.next();
+			for ( EntityInsertAction action : (List<EntityInsertAction>) insertions ) {
 				// remove the current element from insertions. It will be added back later.
 				String entityName = action.getEntityName();
 
@@ -641,7 +654,7 @@ public class ActionQueue {
 					// doing the batch number before adding the name to the list is
 					// a faster way to get an accurate number.
 
-					batchNumber = new Integer( actionBatches.size() );
+					batchNumber = Integer.valueOf( actionBatches.size() );
 					latestBatches.put( entityName, batchNumber );
 				}
 				entityBatchNumber.put( currentEntity, batchNumber );
@@ -652,8 +665,8 @@ public class ActionQueue {
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( int i = 0; i < actionBatches.size(); i++ ) {
 				List batch = ( List ) actionBatches.get( new Integer( i ) );
-				for ( Iterator batchItr = batch.iterator(); batchItr.hasNext(); ) {
-					EntityInsertAction action = ( EntityInsertAction ) batchItr.next();
+				for ( Object aBatch : batch ) {
+					EntityInsertAction action = (EntityInsertAction) aBatch;
 					insertions.add( action );
 				}
 			}
@@ -667,6 +680,7 @@ public class ActionQueue {
 		 *
 		 * @return An appropriate batch number; todo document this process better
 		 */
+		@SuppressWarnings({ "UnnecessaryBoxing", "unchecked" })
 		private Integer findBatchNumber(
 				EntityInsertAction action,
 				String entityName) {
@@ -691,7 +705,7 @@ public class ActionQueue {
 					Integer associationBatchNumber = ( Integer ) entityBatchNumber.get( value );
 					if ( associationBatchNumber != null && associationBatchNumber.compareTo( latestBatchNumberForType ) > 0 ) {
 						// create a new batch for this type. The batch number is the number of current batches.
-						latestBatchNumberForType = new Integer( actionBatches.size() );
+						latestBatchNumberForType = Integer.valueOf( actionBatches.size() );
 						latestBatches.put( entityName, latestBatchNumberForType );
 						// since this entity will now be processed in the latest possible batch,
 						// we can be assured that it will come after all other associations,
@@ -703,6 +717,7 @@ public class ActionQueue {
 			return latestBatchNumberForType;
 		}
 
+		@SuppressWarnings({ "unchecked" })
 		private void addToBatch(Integer batchNumber, EntityInsertAction action) {
 			List actions = ( List ) actionBatches.get( batchNumber );
 

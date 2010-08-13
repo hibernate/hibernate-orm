@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarbinaryTypeDescriptor;
 
 /**
- * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@code byte[]}
+ * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
  *
  * @author Gavin King
  * @author Steve Ebersole

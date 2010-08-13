@@ -106,172 +106,173 @@ public final class Hibernate {
 	private Hibernate() {
 		throw new UnsupportedOperationException();
 	}
-
-	/**
-	 * Hibernate <tt>long</tt> type.
-	 * @deprecated Use {@link LongType#INSTANCE} instead.
-	 */
-	public static final LongType LONG = LongType.INSTANCE;
-	/**
-	 * Hibernate <tt>short</tt> type.
-	 * @deprecated Use {@link ShortType#INSTANCE} instead.
-	 */
-	public static final ShortType SHORT = ShortType.INSTANCE;
-	/**
-	 * Hibernate <tt>integer</tt> type.
-	 * @deprecated Use {@link IntegerType#INSTANCE} instead.
-	 */
-	public static final IntegerType INTEGER = IntegerType.INSTANCE;
-	/**
-	 * Hibernate <tt>byte</tt> type.
-	 * @deprecated Use {@link ByteType#INSTANCE} instead.
-	 */
-	public static final ByteType BYTE = ByteType.INSTANCE;
-	/**
-	 * Hibernate <tt>float</tt> type.
-	 * @deprecated Use {@link FloatType#INSTANCE} instead.
-	 */
-	public static final FloatType FLOAT = FloatType.INSTANCE;
-	/**
-	 * Hibernate <tt>double</tt> type.
-	 * @deprecated Use {@link DoubleType#INSTANCE} instead.
-	 */
-	public static final DoubleType DOUBLE = DoubleType.INSTANCE;
-	/**
-	 * Hibernate <tt>character</tt> type.
-	 * @deprecated Use {@link CharacterType#INSTANCE} instead.
-	 */
-	public static final CharacterType CHARACTER = CharacterType.INSTANCE;
-	/**
-	 * Hibernate <tt>string</tt> type.
-	 * @deprecated Use {@link StringType#INSTANCE} instead.
-	 */
-	public static final StringType STRING = StringType.INSTANCE;
-	/**
-	 * Hibernate <tt>time</tt> type.
-	 * @deprecated Use {@link TimeType#INSTANCE} instead.
-	 */
-	public static final TimeType TIME = TimeType.INSTANCE;
-	/**
-	 * Hibernate <tt>date</tt> type.
-	 * @deprecated Use {@link DateType#INSTANCE} instead.
-	 */
-	public static final DateType DATE = DateType.INSTANCE;
-	/**
-	 * Hibernate <tt>timestamp</tt> type.
-	 * @deprecated Use {@link TimestampType#INSTANCE} instead.
-	 */
-	public static final TimestampType TIMESTAMP = TimestampType.INSTANCE;
 	/**
 	 * Hibernate <tt>boolean</tt> type.
-	 * @deprecated Use {@link BooleanType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#BOOLEAN} instead.
 	 */
 	public static final BooleanType BOOLEAN = BooleanType.INSTANCE;
 	/**
 	 * Hibernate <tt>true_false</tt> type.
-	 * @deprecated Use {@link TrueFalseType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#TRUE_FALSE} instead.
 	 */
 	public static final TrueFalseType TRUE_FALSE = TrueFalseType.INSTANCE;
 	/**
 	 * Hibernate <tt>yes_no</tt> type.
-	 * @deprecated Use {@link YesNoType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#YES_NO} instead.
 	 */
 	public static final YesNoType YES_NO = YesNoType.INSTANCE;
 	/**
-	 * Hibernate <tt>big_decimal</tt> type.
-	 * @deprecated Use {@link BigDecimalType#INSTANCE} instead.
+	 * Hibernate <tt>byte</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#BYTE} instead.
 	 */
-	public static final BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
+	public static final ByteType BYTE = ByteType.INSTANCE;
+	/**
+	 * Hibernate <tt>short</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#SHORT} instead.
+	 */
+	public static final ShortType SHORT = ShortType.INSTANCE;
+	/**
+	 * Hibernate <tt>integer</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#INTEGER} instead.
+	 */
+	public static final IntegerType INTEGER = IntegerType.INSTANCE;
+	/**
+	 * Hibernate <tt>long</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#LONG} instead.
+	 */
+	public static final LongType LONG = LongType.INSTANCE;
+	/**
+	 * Hibernate <tt>float</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#FLOAT} instead.
+	 */
+	public static final FloatType FLOAT = FloatType.INSTANCE;
+	/**
+	 * Hibernate <tt>double</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#DOUBLE} instead.
+	 */
+	public static final DoubleType DOUBLE = DoubleType.INSTANCE;
 	/**
 	 * Hibernate <tt>big_integer</tt> type.
-	 * @deprecated Use {@link BigIntegerType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#BIG_INTEGER} instead.
 	 */
 	public static final BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
 	/**
+	 * Hibernate <tt>big_decimal</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#BIG_DECIMAL} instead.
+	 */
+	public static final BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
+	/**
+	 * Hibernate <tt>character</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CHARACTER} instead.
+	 */
+	public static final CharacterType CHARACTER = CharacterType.INSTANCE;
+	/**
+	 * Hibernate <tt>string</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#STRING} instead.
+	 */
+	public static final StringType STRING = StringType.INSTANCE;
+	/**
+	 * Hibernate <tt>time</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#TIME} instead.
+	 */
+	public static final TimeType TIME = TimeType.INSTANCE;
+	/**
+	 * Hibernate <tt>date</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#DATE} instead.
+	 */
+	public static final DateType DATE = DateType.INSTANCE;
+	/**
+	 * Hibernate <tt>timestamp</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#TIMESTAMP} instead.
+	 */
+	public static final TimestampType TIMESTAMP = TimestampType.INSTANCE;
+	/**
 	 * Hibernate <tt>binary</tt> type.
-	 * @deprecated Use {@link BinaryType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#BINARY} instead.
 	 */
 	public static final BinaryType BINARY = BinaryType.INSTANCE;
 	/**
 	 * Hibernate <tt>wrapper-binary</tt> type.
-	 * @deprecated Use {@link WrapperBinaryType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#WRAPPER_BINARY} instead.
 	 */
 	public static final WrapperBinaryType WRAPPER_BINARY = WrapperBinaryType.INSTANCE;
 	/**
 	 * Hibernate char[] type.
-	 * @deprecated Use {@link CharArrayType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CHAR_ARRAY} instead.
 	 */
 	public static final CharArrayType CHAR_ARRAY = CharArrayType.INSTANCE;
 	/**
 	 * Hibernate Character[] type.
-	 * @deprecated Use {@link CharacterArrayType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CHARACTER_ARRAY} instead.
 	 */
 	public static final CharacterArrayType CHARACTER_ARRAY = CharacterArrayType.INSTANCE;
 	/**
 	 * Hibernate <tt>image</tt> type.
-	 * @deprecated Use {@link ImageType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#IMAGE} instead.
 	 */
 	public static final ImageType IMAGE = ImageType.INSTANCE;
 	/**
 	 * Hibernate <tt>text</tt> type.
-	 * @deprecated Use {@link TextType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#TEXT} instead.
 	 */
 	public static final TextType TEXT = TextType.INSTANCE;
 	/**
 	 * Hibernate <tt>materialized_blob</tt> type.
-	 * @deprecated Use {@link MaterializedBlobType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#MATERIALIZED_BLOB} instead.
 	 */
 	public static final MaterializedBlobType MATERIALIZED_BLOB = MaterializedBlobType.INSTANCE;
 	/**
 	 * Hibernate <tt>materialized_clob</tt> type.
-	 * @deprecated Use {@link MaterializedClobType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#MATERIALIZED_CLOB} instead.
 	 */
 	public static final MaterializedClobType MATERIALIZED_CLOB = MaterializedClobType.INSTANCE;
 	/**
 	 * Hibernate <tt>blob</tt> type.
-	 * @deprecated Use {@link BlobType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#BLOB} instead.
 	 */
 	public static final BlobType BLOB = BlobType.INSTANCE;
 	/**
 	 * Hibernate <tt>clob</tt> type.
-	 * @deprecated Use {@link ClobType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CLOB} instead.
 	 */
 	public static final ClobType CLOB = ClobType.INSTANCE;
 	/**
 	 * Hibernate <tt>calendar</tt> type.
-	 * @deprecated Use {@link CalendarType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CALENDAR} instead.
 	 */
 	public static final CalendarType CALENDAR = CalendarType.INSTANCE;
 	/**
 	 * Hibernate <tt>calendar_date</tt> type.
-	 * @deprecated Use {@link CalendarDateType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CALENDAR_DATE} instead.
 	 */
 	public static final CalendarDateType CALENDAR_DATE = CalendarDateType.INSTANCE;
 	/**
 	 * Hibernate <tt>locale</tt> type.
-	 * @deprecated Use {@link LocaleType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#LOCALE} instead.
 	 */
 	public static final LocaleType LOCALE = LocaleType.INSTANCE;
 	/**
 	 * Hibernate <tt>currency</tt> type.
-	 * @deprecated Use {@link CurrencyType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CURRENCY} instead.
 	 */
 	public static final CurrencyType CURRENCY = CurrencyType.INSTANCE;
 	/**
 	 * Hibernate <tt>timezone</tt> type.
-	 * @deprecated Use {@link TimeZoneType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#TIMEZONE} instead.
 	 */
 	public static final TimeZoneType TIMEZONE = TimeZoneType.INSTANCE;
 	/**
 	 * Hibernate <tt>class</tt> type.
-	 * @deprecated Use {@link ClassType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CLASS} instead.
 	 */
 	public static final ClassType CLASS = ClassType.INSTANCE;
 	/**
 	 * Hibernate <tt>serializable</tt> type.
-	 * @deprecated Use {@link SerializableType#INSTANCE} instead.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#SERIALIZABLE} instead.
 	 */
 	public static final SerializableType SERIALIZABLE = SerializableType.INSTANCE;
+
+
 	/**
 	 * Hibernate <tt>object</tt> type.
 	 * @deprecated Use {@link ObjectType#INSTANCE} instead.

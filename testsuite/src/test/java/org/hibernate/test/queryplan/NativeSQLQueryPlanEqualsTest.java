@@ -46,7 +46,7 @@ public class NativeSQLQueryPlanEqualsTest extends FunctionalTestCase {
 	}
 
 	public void testNativeSQLQuerySpecEquals() {
-		QueryPlanCache cache = new QueryPlanCache(null);
+		QueryPlanCache cache = new QueryPlanCache( sfi() );
 		NativeSQLQuerySpecification firstSpec = createSpec();
 
 		NativeSQLQuerySpecification secondSpec = createSpec();

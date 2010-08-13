@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
 
@@ -150,7 +149,7 @@ public class ActionQueue {
 	}
 
 	public void addAction(BulkOperationCleanupAction cleanupAction) {
-		registerProcess( cleanupAction.getAfterTransactionCompletionProcess() );
+		registerCleanupActions( cleanupAction );
 	}
 
 	public void registerProcess(AfterTransactionCompletionProcess process) {
@@ -268,14 +267,18 @@ public class ActionQueue {
 			executable.execute();
 		}
 		finally {
-			beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
-			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
-				final String[] spaces = (String[]) executable.getPropertySpaces();
-				afterTransactionProcesses.addSpacesToInvalidate( spaces );
-				session.getFactory().getUpdateTimestampsCache().preinvalidate( executable.getPropertySpaces() );
-			}
-			afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
+			registerCleanupActions( executable );
 		}
+	}
+
+	private void registerCleanupActions(Executable executable) {
+		beforeTransactionProcesses.register( executable.getBeforeTransactionCompletionProcess() );
+		if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+			final String[] spaces = (String[]) executable.getPropertySpaces();
+			afterTransactionProcesses.addSpacesToInvalidate( spaces );
+			session.getFactory().getUpdateTimestampsCache().preinvalidate( spaces );
+		}
+		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
 	}
 
 	private void prepareActions(List queue) throws HibernateException {

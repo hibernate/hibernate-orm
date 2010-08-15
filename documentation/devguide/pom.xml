@@ -38,6 +38,9 @@
     <artifactId>devguide</artifactId>
     <packaging>jdocbook</packaging>
 
+    <name>Hibernate Developer Guide</name>
+    <description>A guide for developers using Hibernate</description>
+
     <properties>
         <!-- Skip artifact deployment -->
         <maven.deploy.skip>true</maven.deploy.skip>
@@ -64,16 +67,18 @@
                 </executions>
 
                 <configuration>
-                    <sourceDocumentName>Hibernate_Getting_Started_Guide.xml</sourceDocumentName>
+                    <sourceDocumentName>Hibernate_Developer_Guide.xml</sourceDocumentName>
                     <masterTranslation>en-US</masterTranslation>
                     <translations>
+<!--
                         <translation>de-DE</translation>
                         <translation>es-ES</translation>
                         <translation>fr-FR</translation>
                         <translation>ja-JP</translation>
-                        <!-- <translation>ko-KR</translation> -->
+                        <translation>ko-KR</translation>
                         <translation>pt-BR</translation>
                         <translation>zh-CN</translation>
+-->
                     </translations>
                     <imageResource>
                         <directory>${basedir}/src/main/docbook/en-US</directory>

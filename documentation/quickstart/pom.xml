@@ -38,8 +38,8 @@
     <artifactId>hibernate-quickstart</artifactId>
     <packaging>jdocbook</packaging>
 
-    <name>Hibernate QuickStart Guide</name>
-    <description>A QuickStart guide for getting up and started quickly using Hibernate</description>
+    <name>Hibernate Getting Started Guide</name>
+    <description>A guide for getting started using Hibernate</description>
 
     <properties>
         <!-- Skip artifact deployment -->

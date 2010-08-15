@@ -1,0 +1,11 @@
+<hibernate-mapping package="org.hibernate.tutorial.native">
+
+    <class name="Event" table="EVENTS">
+        <id name="id" column="EVENT_ID">
+            <generator class="enhanced-sequence"/>
+        </id>
+        <property name="date" type="timestamp" column="EVENT_DATE"/>
+        <property name="title"/>
+    </class>
+
+</hibernate-mapping>

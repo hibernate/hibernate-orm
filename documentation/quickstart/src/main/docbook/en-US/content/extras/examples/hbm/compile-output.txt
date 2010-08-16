@@ -1,0 +1,17 @@
+[hibernateTutorial]$ mvn compile
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Building First Hibernate Tutorial
+[INFO] task-segment: [compile]
+[INFO] ------------------------------------------------------------------------
+[INFO] [resources:resources]
+[INFO] Using default encoding to copy filtered resources.
+[INFO] [compiler:compile]
+[INFO] Compiling 2 source file to hibernateTutorial/target/classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESSFUL
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2 seconds
+[INFO] Finished at: Tue Jun 09 12:25:25 CDT 2009
+[INFO] Final Memory: 5M/547M
+[INFO] ------------------------------------------------------------------------

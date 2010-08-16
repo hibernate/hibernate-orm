@@ -1,4 +1,4 @@
-package org.hibernate.tutorial.native;
+package org.hibernate.tutorial.hbm;
 
 import java.util.Date;
 

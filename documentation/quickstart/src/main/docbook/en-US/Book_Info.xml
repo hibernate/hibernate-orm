@@ -4,7 +4,7 @@
 %BOOK_ENTITIES;
 ]>
 
-<bookinfo id="Hibernate_Getting_Started_Guide" xmlns="http://www.oasis-open.org/docbook/xml/4.5/">
+<bookinfo id="Hibernate_Getting_Started_Guide">
     <title>Hibernate Getting Started Guide</title>
     <releaseinfo>&version;</releaseinfo>
     <edition>1.0</edition>

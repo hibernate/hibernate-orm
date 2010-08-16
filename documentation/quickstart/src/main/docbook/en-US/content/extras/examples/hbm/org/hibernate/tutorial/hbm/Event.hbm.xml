@@ -1,5 +1,5 @@
 <![CDATA[
-<hibernate-mapping package="org.hibernate.tutorial.native">
+<hibernate-mapping package="org.hibernate.tutorial.hbm">
 
     <class name="Event" table="EVENTS">
         <id name="id" column="EVENT_ID">

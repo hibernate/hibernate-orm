@@ -117,4 +117,22 @@ Error at xsl:text on line 111 of jar:file:/home/steve/.m2/repository/net/sf/docb
         </plugins>
     </build>
 
+    <dependencies>
+        <!-- For code samples -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>hibernate-envers</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

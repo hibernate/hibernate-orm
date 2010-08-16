@@ -28,7 +28,8 @@
         <!-- Drop and re-create the database schema on startup -->
         <property name="hbm2ddl.auto">update</property>
 
-        <mapping resource="org/hibernate/tutorial/hbm/Event.hbm.xml"/>
+        <!-- Names the annotated entity class -->
+        <mapping class="org.hibernate.tutorial.annotations.Event"/>
 
     </session-factory>
 

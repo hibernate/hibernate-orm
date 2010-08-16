@@ -2,13 +2,11 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="hibernate-gsg-tutorial-native">
-    <title>Tutorial Using Native Hibernate APIs and <filename>hbm.xml</filename> mappings</title>
+    <title>Tutorial Using Native Hibernate APIs and <filename>hbm.xml</filename> Mappings</title>
 
     <note>
         <para>
-            This tutorial uses the
-            <phrase>standard layout</phrase>
-            described in
+            This tutorial uses the <phrase>standard layout</phrase> described in
             <ulink url="http://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html"/>.
         </para>
     </note>

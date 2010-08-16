@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate.tutorials</groupId>
-    <artifactId>hibernate-tutorial-hbm</artifactId>
+    <artifactId>hibernate-tutorial-annotations</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>Hibernate hbm.xml Tutorial</name>
+    <name>Hibernate Annotations Tutorial</name>
 
     <dependencies>
         <dependency>

@@ -1,4 +1,3 @@
-<![CDATA[
 <hibernate-mapping package="org.hibernate.tutorial.hbm">
 
     <class name="Event" table="EVENTS">
@@ -10,4 +9,3 @@
     </class>
 
 </hibernate-mapping>
-]]>

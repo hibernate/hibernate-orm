@@ -2,16 +2,107 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 <chapter id="hibernate-gsg-tutorial-annotations">
-    <title>Tutorial Using Native Hibernate APIs and annotations</title>
+    <title>Tutorial Using Native Hibernate APIs and Annotation Mappings</title>
 
-    <para>
-        This tutorial introduces some key concepts of the native Hibernate API.
-    </para>
-    <itemizedlist>
-        <listitem>
+    <procedure>
+        <title>Steps</title>
+
+        <step id="hibernate-gsg-tutorial-annotations-pom">
+            <title>Create the Maven POM file</title>
             <para>
-
+                Create a file named <filename>pom.xml</filename> in the root of your project directory, containing
+                the text in<xref linkend="hibernate-gsg-tutorial-annotations-pom-ex1"/>.
             </para>
-        </listitem>
-    </itemizedlist>
+            <example id="hibernate-gsg-tutorial-annotations-pom-ex1">
+                <title>
+                    <filename>pom.xml</filename>
+                </title>
+                <programlisting role="XML"><xi:include href="extras/examples/annotations/pom.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
+        </step>
+
+        <step id="hibernate-gsg-tutorial-native-entity">
+            <title>Create the annotated entity Java class</title>
+
+            <para>
+                Create a file named<filename>src/main/java/org/hibernate/tutorial/annotations/Event.java</filename>,
+                containing the text in<xref linkend="hibernate-gsg-tutorial-annotations-entity-ex1"/>.
+            </para>
+
+            <example id="hibernate-gsg-tutorial-annotations-entity-ex1">
+                <title>
+                    <filename>Entity.java</filename>
+                </title>
+                <programlisting role="JAVA"><xi:include href="extras/examples/annotations/org/hibernate/tutorial/annotations/Event.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
+            <para>
+                <itemizedlist>
+                    <title>Notes About the Entity</title>
+                    <listitem>
+                        <para>
+                            The entity class is still using JavaBean conventions.  In fact the class itself is exactly
+                            the same as we saw in <xref linkend="hibernate-gsg-tutorial-native-entity-ex1"/>, the only
+                            difference being the use of annotations to provide the metadata instead of a separate
+                            <filename>hbm.xml</filename> file.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            The <interfacename>@javax.persistence.Entity</interfacename> annotation is used to mark a
+                            class as an entity.  It's function is essentially the same as the <literal>class</literal>
+                            mapping element we see in <xref linkend="hibernate-gsg-tutorial-native-hbm-xml-ex1"/>.
+                            Additionally the <interfacename>@javax.persistence.Table</interfacename> annotation is
+                            used to override the default table name annotations would have used (<literal>EVENT</literal>).
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <interfacename>@javax.persistence.Id</interfacename> marks the property defining the
+                            entity's identifier.
+                        </para>
+                        <note>
+                            <para>
+                                Property-related annotations are allowed on either the field or the getter method.
+                                However, for a given entity they cannot be mixed.  The placement of the
+                                <interfacename>@javax.persistence.Id</interfacename> indicates where Hibernate
+                                should expect to find other property-related annotations.
+                            </para>
+                        </note>
+                    </listitem>
+                    <!-- todo : example of defining the generator -->
+                    <listitem>
+                        <para>
+                            Just as in <xref linkend="hibernate-gsg-tutorial-native-hbm-xml-ex1"/>, the
+                            <literal>date</literal> property needs special handling to account for its special naming
+                            and its SQL type.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </step>
+
+        <step id="hibernate-gsg-tutorial-annotations-config">
+            <title>Create the Hibernate configuration file</title>
+
+            <para>
+                Create a file named <filename>src/main/resources/hibernate.cfg.xml</filename> with the following contents:
+            </para>
+
+            <example id="hibernate-gsg-tutorial-annotations-config-ex1">
+                <title><filename>hibernate.cfg.xml</filename></title>
+                <programlisting role="XML"><xi:include href="extras/examples/annotations/hibernate.cfg.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Most of the contents are exactly the same as in <xref linkend="hibernate-gsg-tutorial-native-config-ex1"/>.
+                The single difference is the <literal>mapping</literal> element at the very end naming the
+                annotated entity class using the <literal>class</literal> attribute.
+            </para>
+        </step>
+
+        <!-- the rest of the tutorial "here on out" is the same as from the native + hbm.xml -->
+        <!-- todo : is it enough to say that? -->
+
+    </procedure>
+
 </chapter>

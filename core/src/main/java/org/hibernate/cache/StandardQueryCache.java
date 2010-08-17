@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,8 +158,10 @@ public class StandardQueryCache implements QueryCache {
 					);
 				}
 			}
-			catch ( UnresolvableObjectException uoe ) {
-				if ( isNaturalKeyLookup ) {
+			catch ( RuntimeException ex ) {
+				if ( isNaturalKeyLookup &&
+						( UnresolvableObjectException.class.isInstance( ex ) ||
+						EntityNotFoundException.class.isInstance( ex ) ) ) {
 					//TODO: not really completely correct, since
 					//      the uoe could occur while resolving
 					//      associations, leaving the PC in an
@@ -167,7 +171,7 @@ public class StandardQueryCache implements QueryCache {
 					return null;
 				}
 				else {
-					throw uoe;
+					throw ex;
 				}
 			}
 		}

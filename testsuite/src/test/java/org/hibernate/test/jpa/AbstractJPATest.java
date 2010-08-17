@@ -16,6 +16,7 @@ import org.hibernate.util.IdentityMap;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 import java.io.Serializable;
+import javax.persistence.EntityNotFoundException;
 
 /**
  * An abstract test for all JPA spec related tests.
@@ -53,36 +54,9 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 
 	private static class JPAEntityNotFoundDelegate implements EntityNotFoundDelegate {
 		public void handleEntityNotFound(String entityName, Serializable id) {
-			throw new EntityNotFoundException( entityName, id );
+			throw new EntityNotFoundException("Unable to find " + entityName  + " with id " + id);			
 		}
 	}
-
-	/**
-	 * Mimic the JPA EntityNotFoundException.
-	 */
-	public static class EntityNotFoundException extends RuntimeException {
-		private final String entityName;
-		private final Serializable id;
-
-		public EntityNotFoundException(String entityName, Serializable id) {
-			this( "unable to locate specified entity", entityName, id );
-		}
-
-		public EntityNotFoundException(String message, String entityName, Serializable id) {
-			super( message );
-			this.entityName = entityName;
-			this.id = id;
-		}
-
-		public String getEntityName() {
-			return entityName;
-		}
-
-		public Serializable getId() {
-			return id;
-		}
-	}
-
 
 	// mimic specific event aspects of the JPA environment ~~~~~~~~~~~~~~~~~~~~
 

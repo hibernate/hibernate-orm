@@ -1,5 +1,7 @@
 package org.hibernate.test.jpa.proxy;
 
+import javax.persistence.EntityNotFoundException;
+
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 

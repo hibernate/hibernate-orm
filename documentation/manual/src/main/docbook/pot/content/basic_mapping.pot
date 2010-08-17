@@ -157,7 +157,7 @@ msgid ""
       "&lt;?xml version=\"1.0\"?&gt;\n"
       "&lt;!DOCTYPE hibernate-mapping PUBLIC\n"
       "      \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
-      "          \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\"&gt;\n"
+      "          \"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd\"&gt;\n"
       "\n"
       "&lt;hibernate-mapping package=\"eg\"&gt;\n"
       "\n"
@@ -3680,7 +3680,7 @@ msgid ""
       "&lt;?xml version=\"1.0\"?&gt;\n"
       "&lt;!DOCTYPE hibernate-mapping PUBLIC\n"
       "        \"-//Hibernate/Hibernate Mapping DTD//EN\"\n"
-      "        \"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\"&gt;\n"
+      "        \"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd\"&gt;\n"
       "\n"
       "&lt;hibernate-mapping package=\"eg\"&gt;\n"
       "\n"
@@ -5085,7 +5085,7 @@ msgstr ""
 #. Tag: para
 #: basic_mapping.xml:3718
 #, no-c-format
-msgid "a <literal>hibernate namespace</literal> is recognized whenever the resolver encounters a systemId starting with <literal>http://hibernate.sourceforge.net/</literal>. The resolver attempts to resolve these entities via the classloader which loaded the Hibernate classes."
+msgid "a <literal>hibernate namespace</literal> is recognized whenever the resolver encounters a systemId starting with <literal>http://www.hibernate.org/dtd/</literal>. The resolver attempts to resolve these entities via the classloader which loaded the Hibernate classes."
 msgstr ""
 
 #. Tag: para

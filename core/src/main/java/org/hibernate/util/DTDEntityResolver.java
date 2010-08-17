@@ -35,7 +35,7 @@ import org.xml.sax.InputSource;
 /**
  * An {@link EntityResolver} implementation which attempts to resolve
  * various systemId URLs to local classpath lookups<ol>
- * <li>Any systemId URL beginning with <tt>http://hibernate.sourceforge.net/</tt> is
+ * <li>Any systemId URL beginning with <tt>http://www.hibernate.org/dtd/</tt> is
  * searched for as a classpath resource in the classloader which loaded the
  * Hibernate classes.</li>
  * <li>Any systemId URL using <tt>classpath</tt> as the scheme (i.e. starting
@@ -56,7 +56,7 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 
 	private static final Logger log = LoggerFactory.getLogger( DTDEntityResolver.class );
 
-	private static final String HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";
+	private static final String HIBERNATE_NAMESPACE = "http://www.hibernate.org/dtd/";
 	private static final String USER_NAMESPACE = "classpath://";
 
 	public InputSource resolveEntity(String publicId, String systemId) {

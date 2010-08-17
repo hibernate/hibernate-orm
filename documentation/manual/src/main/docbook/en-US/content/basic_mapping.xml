@@ -141,7 +141,7 @@ public class Dog { ... }</programlisting>
     <programlisting role="XML">&lt;?xml version="1.0"?&gt;
 &lt;!DOCTYPE hibernate-mapping PUBLIC
       "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-          "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"&gt;
+          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd"&gt;
 
 &lt;hibernate-mapping package="eg"&gt;
 
@@ -3595,7 +3595,7 @@ public class DomesticCat extends Cat {
         <programlisting role="XML">&lt;?xml version="1.0"?&gt;
 &lt;!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD//EN"
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd"&gt;
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd"&gt;
 
 &lt;hibernate-mapping package="eg"&gt;
 
@@ -5066,7 +5066,7 @@ class Home {
             <listitem>
               <para>a <literal>hibernate namespace</literal> is recognized
               whenever the resolver encounters a systemId starting with
-              <literal>http://hibernate.sourceforge.net/</literal>. The
+              <literal>http://www.hibernate.org/dtd/</literal>. The
               resolver attempts to resolve these entities via the classloader
               which loaded the Hibernate classes.</para>
             </listitem>

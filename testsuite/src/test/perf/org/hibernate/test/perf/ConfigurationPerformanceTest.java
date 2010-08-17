@@ -169,7 +169,7 @@ public class ConfigurationPerformanceTest extends UnitTestCase {
 						"<?xml version=\"1.0\"?>\r\n" +
 								"<!DOCTYPE hibernate-mapping PUBLIC \r\n" +
 								"	\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\r\n" +
-								"	\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\r\n"
+								"	\"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd\">\r\n"
 				);
 
 				hbmWriter.println( "<hibernate-mapping package=\"" + workPackageName + "\">" );

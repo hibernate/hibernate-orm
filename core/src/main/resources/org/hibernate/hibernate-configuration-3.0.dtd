@@ -2,7 +2,7 @@
 
 <!DOCTYPE hibernate-configuration PUBLIC
 	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
-	"http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 
 An instance of this document contains property settings and references
 to mapping files for a number of SessionFactory instances to be listed

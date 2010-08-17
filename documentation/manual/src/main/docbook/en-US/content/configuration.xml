@@ -1338,7 +1338,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     <programlisting role="XML">&lt;?xml version='1.0' encoding='utf-8'?&gt;
 &lt;!DOCTYPE hibernate-configuration PUBLIC
     "-//Hibernate/Hibernate Configuration DTD//EN"
-    "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd"&gt;
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd"&gt;
 
 &lt;hibernate-configuration&gt;
 

@@ -26,7 +26,7 @@
 
 <!DOCTYPE hibernate-mapping
         SYSTEM
-        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
 
 <hibernate-mapping package="org.hibernate.test.filter.hql">
     <class name="Person" table="FILTER_HQL_PERSON">

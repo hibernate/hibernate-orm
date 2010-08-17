@@ -30,9 +30,13 @@ import java.util.Iterator;
 
 import junit.framework.Test;
 
+import org.hibernate.JDBCException;
+import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
+import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.junit.functional.FunctionalTestCase;
 import org.hibernate.junit.functional.FunctionalTestClassTestSuite;
 
@@ -88,6 +92,95 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		s.createQuery( "delete from Route" );
 	}
 	
+	public void testMergeEntityWithNonNullableTransientEntity()
+	{
+		Route route = getUpdatedDetachedEntity();
+
+		Node node = ( Node ) route.getNodes().iterator().next();
+		route.getNodes().remove( node );
+
+		Route routeNew = new Route();
+		routeNew.setName( "new route" );
+		routeNew.getNodes().add( node );
+		node.setRoute( routeNew );
+
+		Session s = openSession();
+		s.beginTransaction();
+
+		try {
+			s.merge( node );
+			fail( "should have thrown an exception" );
+		}
+		catch ( Exception ex ) {
+			if ( ( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability() ) {
+				assertTrue( ex instanceof TransientObjectException );
+			}
+			else {
+				assertTrue( ex instanceof JDBCException );
+			}
+		}
+		finally {
+			s.getTransaction().rollback();
+			s.close();
+		}
+	}
+
+	public void testMergeEntityWithNonNullableEntityNull()
+	{
+		Route route = getUpdatedDetachedEntity();
+
+		Node node = ( Node ) route.getNodes().iterator().next();
+		route.getNodes().remove( node );
+		node.setRoute( null );
+
+		Session s = openSession();
+		s.beginTransaction();
+
+		try {
+			s.merge( node );
+			fail( "should have thrown an exception" );
+		}
+		catch ( Exception ex ) {
+			if ( ( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability() ) {
+				assertTrue( ex instanceof PropertyValueException );
+			}
+			else {
+				assertTrue( ex instanceof JDBCException );
+			}
+		}
+		finally {
+			s.getTransaction().rollback();
+			s.close();
+		}
+	}
+
+	public void testMergeEntityWithNonNullablePropSetToNull()
+	{
+		Route route = getUpdatedDetachedEntity();
+		Node node = ( Node ) route.getNodes().iterator().next();
+		node.setName( null );
+
+		Session s = openSession();
+		s.beginTransaction();
+
+		try {
+			s.merge( route );
+			fail( "should have thrown an exception" );
+		}
+		catch ( Exception ex ) {
+			if ( ( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability() ) {
+				assertTrue( ex instanceof PropertyValueException );
+			}
+			else {
+				assertTrue( ex instanceof JDBCException );
+			}
+		}
+		finally {
+			s.getTransaction().rollback();
+			s.close();
+		}
+	}
+
 	public void testMergeRoute()
 	{
 

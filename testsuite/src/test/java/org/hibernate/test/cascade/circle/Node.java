@@ -122,7 +122,10 @@ public class Node {
 		
 		buffer.append( name + " id: " + nodeID );
 		if ( route != null ) {
-			buffer.append( " route name: " ).append( route.getName() ).append( " tour name: " ).append( tour.getName() );
+			buffer.append( " route name: " )
+					.append( route.getName() )
+					.append( " tour name: " )
+					.append( ( tour == null ? "null" : tour.getName() ) );
 		}
 		if ( pickupTransports != null ) {
 			for (Iterator it = pickupTransports.iterator(); it.hasNext();) {

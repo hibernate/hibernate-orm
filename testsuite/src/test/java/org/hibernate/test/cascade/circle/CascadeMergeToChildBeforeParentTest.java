@@ -66,7 +66,9 @@ public class CascadeMergeToChildBeforeParentTest extends FunctionalTestCase {
 		return new String[] {
 				"cascade/circle/CascadeMergeToChildBeforeParent.hbm.xml"
 		};
-	}@Override
+	}
+
+	@Override
 	 public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );

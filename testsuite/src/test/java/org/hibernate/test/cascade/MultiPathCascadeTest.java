@@ -198,6 +198,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		try {
 			s.merge( a );
 			s.merge( h );
+			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
 		catch ( TransientObjectException ex ) {
@@ -246,6 +247,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		try {
 			s.merge( a );
 			s.merge( g );
+			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
 		catch ( TransientObjectException ex ) {
@@ -294,6 +296,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		try {
 			s.merge( a );
 			s.merge( h );
+			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
 		catch ( TransientObjectException ex ) {

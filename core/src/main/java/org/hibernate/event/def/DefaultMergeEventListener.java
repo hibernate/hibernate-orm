@@ -89,21 +89,28 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		// For now, just retry once; throw TransientObjectException if there are still any transient entities
 		Map transientCopyCache = getTransientCopyCache(event, copyCache );
 		if ( transientCopyCache.size() > 0 ) {
-			retryMergeTransientEntities( event, transientCopyCache, copyCache );
+			retryMergeTransientEntities( event, transientCopyCache, copyCache, true );
 			// find any entities that are still transient after retry
 			transientCopyCache = getTransientCopyCache(event, copyCache );
 			if ( transientCopyCache.size() > 0 ) {
 				Set transientEntityNames = new HashSet();
-				for( Iterator it=transientCopyCache.keySet().iterator(); it.hasNext(); ) {
-					Object transientEntity = it.next();
+				for( Iterator it=transientCopyCache.entrySet().iterator(); it.hasNext(); ) {
+					Object transientEntity = ( ( Map.Entry ) it.next() ).getKey();
 					String transientEntityName = event.getSession().guessEntityName( transientEntity );
 					transientEntityNames.add( transientEntityName );
-					log.trace( "transient instance could not be processed by merge: " +
+					log.trace( "transient instance could not be processed by merge when checking nullability: " +
 							transientEntityName + "[" + transientEntity + "]" );
 				}
-				throw new TransientObjectException(
-					"one or more objects is an unsaved transient instance - save transient instance(s) before merging: " +
-					transientEntityNames );
+				if ( isNullabilityCheckedGlobal( event.getSession() ) ) {
+					throw new TransientObjectException(
+						"one or more objects is an unsaved transient instance - save transient instance(s) before merging: " +
+						transientEntityNames );
+				}
+				else {
+					log.trace( "retry saving transient instances without checking nullability" );
+					// failures will be detected later...
+					retryMergeTransientEntities( event, transientCopyCache, copyCache, false );
+				}
 			}
 		}
 		copyCache.clear();
@@ -125,10 +132,18 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				// TODO: cache the entity name somewhere so that it is available to this exception
 				log.trace( "transient instance could not be processed by merge: " +
 						event.getSession().guessEntityName( copy ) + "[" + entity + "]" );
-				throw new TransientObjectException(
-					"object is an unsaved transient instance - save the transient instance before merging: " +
-						event.getSession().guessEntityName( copy )
-				);
+				// merge did not cascade to this entity; it's in copyCache because a
+				// different entity has a non-nullable reference to this entity;
+				// this entity should not be put in transientCopyCache, because it was
+				// not included in the merge;
+				// if the global setting for checking nullability is false, the non-nullable
+				// reference to this entity will be detected later
+				if ( isNullabilityCheckedGlobal( event.getSession() ) ) {
+					throw new TransientObjectException(
+						"object is an unsaved transient instance - save the transient instance before merging: " +
+							event.getSession().guessEntityName( copy )
+					);
+				}
 			}
 			else if ( copyEntry.getStatus() == Status.SAVING ) {
 				transientCopyCache.put( entity, copy, copyCache.isOperatedOn( entity ) );
@@ -140,7 +155,11 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		return transientCopyCache;
 	}
 
-	protected void retryMergeTransientEntities(MergeEvent event, Map transientCopyCache, EventCache copyCache) {
+	protected void retryMergeTransientEntities(
+			MergeEvent event,
+			Map transientCopyCache,
+			EventCache copyCache,
+			boolean isNullabilityChecked) {
 		// TODO: The order in which entities are saved may matter (e.g., a particular transient entity
 		//       may need to be saved before other transient entities can be saved;
 		//       Keep retrying the batch of transient entities until either:
@@ -152,12 +171,14 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			Object entity = mapEntry.getKey();
 			Object copy = transientCopyCache.get( entity );
 			EntityEntry copyEntry = event.getSession().getPersistenceContext().getEntry( copy );
-			if ( entity == event.getEntity() ) {
-				mergeTransientEntity( entity, copyEntry.getEntityName(), event.getRequestedId(), event.getSession(), copyCache);
-			}
-			else {
-				mergeTransientEntity( entity, copyEntry.getEntityName(), copyEntry.getId(), event.getSession(), copyCache);
-			}
+			mergeTransientEntity(
+					entity,
+					copyEntry.getEntityName(),
+					( entity == event.getEntity() ? event.getRequestedId() : copyEntry.getId() ),
+					event.getSession(),
+					copyCache,
+					isNullabilityChecked
+			);
 		}
 	}
 
@@ -279,10 +300,20 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		final String entityName = persister.getEntityName();
 
-		event.setResult( mergeTransientEntity( entity, entityName, event.getRequestedId(), source, copyCache ) );
+		event.setResult( mergeTransientEntity( entity, entityName, event.getRequestedId(), source, copyCache, true ) );
 	}
 
 	protected Object mergeTransientEntity(Object entity, String entityName, Serializable requestedId, EventSource source, Map copyCache) {
+		return mergeTransientEntity( entity, entityName, requestedId, source, copyCache, true );
+	}
+
+	private Object mergeTransientEntity(
+			Object entity,
+			String entityName,
+			Serializable requestedId,
+			EventSource source,
+			Map copyCache,
+			boolean isNullabilityChecked) {
 
 		log.trace("merging transient instance");
 
@@ -306,15 +337,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		copyValues(persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT);
 
 		try {
-			//this bit is only *really* absolutely necessary for handling
-			//requestedId, but is also good if we merge multiple object
-			//graphs, since it helps ensure uniqueness
-			if (requestedId==null) {
-				saveWithGeneratedId( copy, entityName, copyCache, source, false );
-			}
-			else {
-				saveWithRequestedId( copy, requestedId, entityName, copyCache, source );
-			}
+			// try saving; check for non-nullable properties that are null or transient entities before saving
+			saveTransientEntity( copy, entityName, requestedId, source, copyCache, isNullabilityChecked );
 		}
 		catch (PropertyValueException ex) {
 			String propertyName = ex.getPropertyName();
@@ -325,12 +349,26 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			if ( propertyFromCopy == null || ! propertyType.isEntityType() ) {
 				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
 						"' is null or not an entity; " + propertyName + " =["+propertyFromCopy+"]");
-				throw ex;
+				if ( isNullabilityCheckedGlobal( source ) ) {
+					throw ex;
+				}
+				else {
+					// retry save w/o checking for non-nullable properties
+					// (the failure will be detected later)
+					saveTransientEntity( copy, entityName, requestedId, source, copyCache, false );
+				}
 			}
 			if ( ! copyCache.containsKey( propertyFromEntity ) ) {
 				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
 						"' from original entity is not in copyCache; " + propertyName + " =["+propertyFromEntity+"]");
-				throw ex;
+				if ( isNullabilityCheckedGlobal( source ) ) {
+					throw ex;
+				}
+				else {
+					// retry save w/o checking non-nullable properties
+					// (the failure will be detected later)
+					saveTransientEntity( copy, entityName, requestedId, source, copyCache, false );					
+				}
 			}
 			if ( ( ( EventCache ) copyCache ).isOperatedOn( propertyFromEntity ) ) {
 				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
@@ -354,6 +392,36 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 
 	}
 
+	private boolean isNullabilityCheckedGlobal(EventSource source) {
+		return source.getFactory().getSettings().isCheckNullability();
+	}
+
+	private void saveTransientEntity(
+			Object entity,
+			String entityName,
+			Serializable requestedId,
+			EventSource source,
+			Map copyCache,
+			boolean isNullabilityChecked) {
+
+		boolean isNullabilityCheckedOrig =
+			source.getFactory().getSettings().isCheckNullability();
+		try {
+			source.getFactory().getSettings().setCheckNullability( isNullabilityChecked );
+			//this bit is only *really* absolutely necessary for handling
+			//requestedId, but is also good if we merge multiple object
+			//graphs, since it helps ensure uniqueness
+			if (requestedId==null) {
+				saveWithGeneratedId( entity, entityName, copyCache, source, false );
+			}
+			else {
+				saveWithRequestedId( entity, requestedId, entityName, copyCache, source );
+			}
+		}
+		finally {
+			source.getFactory().getSettings().setCheckNullability( isNullabilityCheckedOrig );
+		}
+	}
 	protected void entityIsDetached(MergeEvent event, Map copyCache) {
 		
 		log.trace("merging detached instance");

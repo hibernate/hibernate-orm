@@ -5,12 +5,47 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.5.5 (2010.08.18)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11134
+
+** Bug
+    * [HHH-1643] - Sub-query as function parameter - either sub-query is missed from SQL or NullPointerException raised
+    * [HHH-4011] - ChainedPropertyAccessor is not serializable, which breaks caching to disk and replicated caches.
+    * [HHH-5097] - Bug in ParameterizedFunctionExpression with two or more parameters: IllegalArgumentException
+    * [HHH-5296] - AbstractFromImpl::getJoin() shall return empty set, not null
+    * [HHH-5355] - org.hibernate.test.id.uuid.sqlrep.sqlchar.UUIDCharTest errors with IngresDialect
+    * [HHH-5408] - Revise JPA compliance wording used in documentation according to Oracle policies
+    * [HHH-5425] - PropertyAccessException when caching results from a Query with a ResultTransformer that as 1 value per row
+    * [HHH-5426] - HQL update/delete does not invalidate the query cache
+    * [HHH-5431] - Infinispan's CacheAdapterImpl.putAllowingTimeout not using silent flag
+    * [HHH-5449] - Versioned HQL update might issue incorrect SQL
+    * [HHH-5469] - HHH-3659 is only half done, due to HHH-4989 (i.e. no HQL performance log when running Java 5)
+    * [HHH-5473] - Default for CHECK_NULLABILITY does not allow merge retries
+
+** Improvement
+    * [HHH-2510] - override equals() and fix hashCode() in AliasToBeanResultTransformer
+    * [HHH-5295] - Rendered JPAQL query shall be the same all the times, aliases shall not have random indexes
+    * [HHH-5420] - introducing new dialect for ms sql server 2008 with jdbc 3.0 and above
+    * [HHH-5424] - ResultTransformer should only be set in the QueryKey if putting/getting data that is actually transformed
+    * [HHH-5438] - Skip deployment of "irrelevant" modules
+    * [HHH-5439] - Deployment of site.xml
+
+** Patch
+    * [HHH-5349] - CriteriaHQLAlignmentTest fails with an error running with the Ingres dialect
+    * [HHH-5401] - Update to HHH-5381 HSQLDB new dialect (Fred Toussi)
+    * [HHH-5435] - Add identity column support to the Ingres10Dialect
+
+** Task
+    * [HHH-5259] - Invalid reflection optimization configuration property name in Hibernate documentation.
+    * [HHH-5451] - deprecate cglib as bytecode provider
+
+
 Changes in version 3.5.4 (2010.07.21)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11100
 
 ** Bug
-
     * [HHH-2269] - Many-to-one cascade fails with TransientObjectException if the inverse collection is marked CascadeType.DELETE_ORPHAN
     * [HHH-3001] - The NoopOptimizer is not thread safe
     * [HHH-3694] - ResultTransformer not used when scroll() is used on a named SQLQuery
@@ -37,12 +72,10 @@ http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/1110
     * [HHH-5402] - Revert to hsqldb 1.8.0.2 as the test version for 3.5.4
 
 ** New Feature
-
     * [HHH-3659] - statistics: Execution time of a query
     * [HHH-5260] - Allow query region name specific eviction settings
 
 ** Patch
-
     * [HHH-5213] - Add native SQL Boolean type to Ingres10Dialect
     * [HHH-5336] - a few typo fixes
     * [HHH-5381] - HSQLDB new dialect (Fred Toussi)

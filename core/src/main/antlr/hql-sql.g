@@ -582,8 +582,10 @@ collectionFunction
 	;
 
 functionCall
-	: #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (expr)* ) )? )
-		{ processFunction(#functionCall,inSelect); } {inFunctionCall=false;}
+	: #(METHOD_CALL  {inFunctionCall=true;} pathAsIdent ( #(EXPR_LIST (exprOrSubquery)* ) )? ) {
+        processFunction( #functionCall, inSelect );
+        inFunctionCall=false;
+    }
 	| #(AGGREGATE aggregateExpr )
 	;
 

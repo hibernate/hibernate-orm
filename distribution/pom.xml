@@ -41,6 +41,11 @@
     <name>Hibernate Distribution</name>
     <description>Builds the complete Hibernate distribution bundles</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

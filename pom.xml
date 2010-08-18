@@ -17,6 +17,11 @@
     <name>Hibernate Core Aggregator</name>
     <description>Aggregator of the Hibernate Core modules.</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <modules>
         <module>parent</module>
         <module>core</module>

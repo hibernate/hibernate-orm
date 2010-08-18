@@ -38,6 +38,11 @@
     <name>Hibernate JDBC3-JdbcSupport Testing</name>
     <description>Test support of JDBC3 through JdbcSupport</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>

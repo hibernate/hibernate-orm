@@ -17,6 +17,11 @@
     <name>Hibernate Manual</name>
     <description>The Hibernate reference manual</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

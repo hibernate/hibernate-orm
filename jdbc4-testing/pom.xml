@@ -36,6 +36,11 @@
     <name>Hibernate JDBC4-JdbcSupport Testing</name>
     <description>Test support of JDBC4 through JdbcSupport</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

@@ -17,6 +17,11 @@
     <name>Hibernate Envers Manual</name>
     <description>The Hibernate Envers reference manual</description>
 
+    <properties>
+        <!-- Skip artifact deployment -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>

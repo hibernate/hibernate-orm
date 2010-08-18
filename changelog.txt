@@ -5,6 +5,36 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.0.Beta2 (2010.08.18)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11133
+
+** Sub-task
+    * [HHH-5464] - Write a chapter about obtaining Hibernate
+
+** Bug
+    * [HHH-1643] - Sub-query as function parameter - either sub-query is missed from SQL or NullPointerException raised
+    * [HHH-5180] - StandardQueryCache.get() does not handle EntityNotFoundException for natural key lookups
+    * [HHH-5426] - HQL update/delete does not invalidate the query cache
+    * [HHH-5449] - Versioned HQL update might issue incorrect SQL
+    * [HHH-5469] - HHH-3659 is only half done, due to HHH-4989 (i.e. no HQL performance log when running Java 5)
+    * [HHH-5473] - Default for CHECK_NULLABILITY does not allow merge retries
+
+** Improvement
+    * [HHH-5438] - Skip deployment of "irrelevant" modules
+    * [HHH-5439] - Deployment of site.xml
+    * [HHH-5474] - Clean up usages of now deprecated ExtendedMappings
+    * [HHH-5477] - Introduce StandardBasicTypes for standard basic type constants
+
+** Patch
+    * [HHH-5300] - Configurable QueryPlanCache reference counts (Manuel Dominguez Sarmiento)
+
+** Task
+    * [HHH-5451] - deprecate cglib as bytecode provider
+    * [HHH-5479] - Upgrade jDocBook plugin to 2.3.0
+    * [HHH-5485] - Move hiberante dtd files from http://hibernate.sourceforge.net to http://www.hibernate.org/dtd
+
+
 Changes in version 3.6.0.Beta2 (2010.08.04)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11132

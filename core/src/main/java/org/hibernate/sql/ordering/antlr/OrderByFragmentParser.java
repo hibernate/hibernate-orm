@@ -103,7 +103,20 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	 * {@inheritDoc}
 	 */
 	protected boolean isFunctionName(AST ast) {
-		return context.getSqlFunctionRegistry().hasFunction( ast.getText() );
+		AST child = ast.getFirstChild();
+		// assume it is a function if it has parameters
+		if ( child != null && "{param list}".equals( child.getText() ) ) {
+			return true;
+		}
+
+		final SQLFunction function = context.getSqlFunctionRegistry().findSQLFunction( ast.getText() );
+		if ( function == null ) {
+			return false;
+		}
+
+		// if function.hasParenthesesIfNoArguments() is true, then assume
+		// ast.getText() is not a function.
+		return ! function.hasParenthesesIfNoArguments();
 	}
 
 	/**
@@ -111,8 +124,10 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	 */
 	protected AST resolveFunction(AST ast) {
 		AST child = ast.getFirstChild();
-		assert "{param list}".equals(  child.getText() );
-		child = child.getFirstChild();
+		if ( child != null ) {
+			assert "{param list}".equals(  child.getText() );
+			child = child.getFirstChild();
+		}
 
 		final String functionName = ast.getText();
 		final SQLFunction function = context.getSqlFunctionRegistry().findSQLFunction( functionName );

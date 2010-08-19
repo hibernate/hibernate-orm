@@ -118,6 +118,11 @@ public abstract class AbstractFromImpl<Z,X>
 		return getAlias();
 	}
 
+	@Override
+	public String render(CriteriaQueryCompiler.RenderingContext renderingContext) {
+		return renderProjection( renderingContext );
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

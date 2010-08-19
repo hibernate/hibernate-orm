@@ -37,6 +37,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
@@ -196,6 +198,13 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 	}
 
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() throws Exception {
+		SQLFunction function =
+				( ( SessionFactoryImplementor ) getSessions() ).getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+			reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+			return;
+		}
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		EntityWithNoArgFunctionAsColumn e1 = new EntityWithNoArgFunctionAsColumn();
@@ -235,6 +244,13 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 	}
 
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
+		SQLFunction function =
+				( ( SessionFactoryImplementor ) getSessions() ).getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+			reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+			return;
+		}
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		EntityWithNoArgFunctionAsColumn e1 = new EntityWithNoArgFunctionAsColumn();
@@ -274,6 +290,13 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 	}
 
 	public void testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL() {
+		SQLFunction function =
+				( ( SessionFactoryImplementor ) getSessions() ).getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		if ( function == null || function.hasParenthesesIfNoArguments() ) {
+			reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+			return;
+		}
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		EntityWithNoArgFunctionAsColumn e1 = new EntityWithNoArgFunctionAsColumn();

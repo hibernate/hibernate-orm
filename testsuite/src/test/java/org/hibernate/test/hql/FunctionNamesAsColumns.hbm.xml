@@ -9,11 +9,13 @@
             <generator class="increment"/>
         </id>
         <many-to-one name="nextHolder" cascade="all"/>
-        <set name="entityWithArgFunctionAsColumns" inverse="false" lazy="true" cascade="all-delete-orphan">
+        <set name="entityWithArgFunctionAsColumns" inverse="false" lazy="true" cascade="all-delete-orphan"
+             order-by="lower,lower( upper )">
             <key column="HOLDER_ID"/>
             <one-to-many class="EntityWithArgFunctionAsColumn"/>
         </set>
-        <set name="entityWithNoArgFunctionAsColumns" inverse="false" lazy="true" cascade="all-delete-orphan">
+        <set name="entityWithNoArgFunctionAsColumns" inverse="false" lazy="true" cascade="all-delete-orphan"
+                order-by="current_date, `current_date`">
             <key column="HOLDER_ID"/>
             <one-to-many class="EntityWithNoArgFunctionAsColumn"/>
         </set>
@@ -31,7 +33,7 @@
         <id name="id" column="ID" type="long">
             <generator class="increment"/>
         </id>
-        <property name="currentDate" column="`current_date`" type="string"/> 
+        <property name="currentDate" column="`current_date`" type="string"/>
     </class>
 
 </hibernate-mapping>

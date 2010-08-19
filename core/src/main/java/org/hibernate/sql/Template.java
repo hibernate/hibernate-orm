@@ -717,11 +717,9 @@ public final class Template {
 			// lcToken does not refer to a function
 			return false;
 		}
-		// if function.hasArguments() and function.hasParenthesesIfNoArguments() is true,
-		// then assume that lcToken is not a function, since it is not followed by "(";
-		// can't seem to use function.hasParenthesesIfNoArguments() alone because
-		// function definitions may return true if "()" is optional when there are no arguments.
-		return function.hasArguments() && function.hasParenthesesIfNoArguments() ? false : true;
+		// if function.hasParenthesesIfNoArguments() is true, then assume
+		// lcToken is not a function (since it is not followed by '(')
+		return ! function.hasParenthesesIfNoArguments();
 	}
 
 	private static boolean isIdentifier(String token, Dialect dialect) {

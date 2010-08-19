@@ -23,7 +23,9 @@
  */
 package org.hibernate.ejb.metamodel;
 
+import java.util.Set;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -38,10 +40,13 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "PHONE_TABLE")
 public class Phone implements java.io.Serializable {
+	public enum Type { LAND_LINE, CELL, FAX, WORK, HOME }
+
 	private String id;
 	private String area;
 	private String number;
 	private Address address;
+	private Set<Type> types;
 
 	public Phone() {
 	}
@@ -95,5 +100,14 @@ public class Phone implements java.io.Serializable {
 
 	public void setAddress(Address a) {
 		address = a;
+	}
+
+	@ElementCollection
+	public Set<Type> getTypes() {
+		return types;
+	}
+
+	public void setTypes(Set<Type> types) {
+		this.types = types;
 	}
 }

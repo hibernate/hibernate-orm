@@ -38,8 +38,10 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Query;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
+import org.hibernate.ejb.test.mapping.Phone_;
 import org.hibernate.impl.AbstractQueryImpl;
 
 /**
@@ -282,6 +284,20 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		criteria.where( from.get( Product_.partNumber ).in( from.get( Product_.partNumber ) ) );
 		List<Product> result = em.createQuery( criteria ).getResultList();
 		assertEquals( 1, result.size() );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	public void testJoinedElementCollectionValuesInTupleList() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<Phone> criteria = builder.createQuery( Phone.class );
+		Root<Phone> from = criteria.from( Phone.class );
+		criteria.where(
+				from.join( "types" )
+						.in( Collections.singletonList( Phone.Type.WORK ) )
+		);
+		em.createQuery( criteria ).getResultList();
 		em.getTransaction().commit();
 		em.close();
 	}

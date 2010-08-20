@@ -13,11 +13,9 @@
 
     <tip>
         <para>
-            The tutorials in this guide use Maven, in order to leverage its
-            transitive dependency management capabilities and its integration
-            with many development environments (IDEs). <!--This sounds like
-            marketing! -->You can use another build tool, adapting the examples
-            to fit your needs.
+            The tutorials in this guide use Maven, in order to leverage its transitive dependency management
+            capabilities and its integration with many development environments (IDEs). You can use another build
+            tool, adapting the examples to fit your needs.
         </para>
     </tip>
 
@@ -42,11 +40,8 @@
             <title>Create the entity Java class</title>
 
             <para>
-                Create a file named
-                <filename>src/main/java/org/hibernate/tutorial/hbm/Event.java</filename>,
-                containing the text in<xref
-                linkend="hibernate-gsg-tutorial-native-entity-ex1"/>.<!-- Can we
-                just include these files in an example.zip? -->
+                Create a file named<filename>src/main/java/org/hibernate/tutorial/hbm/Event.java</filename>,
+                containing the text in<xref linkend="hibernate-gsg-tutorial-native-entity-ex1"/>.
             </para>
 
             <example id="hibernate-gsg-tutorial-native-entity-ex1">
@@ -88,7 +83,7 @@
             <title>Create the entity mapping file</title>
 
             <para>
-                Create a file named <filename>src/main/resources/org/hibernate/tutorial/native/Event.hbm.xml</filename>,
+                Create a file named<filename>src/main/resources/org/hibernate/tutorial/native/Event.hbm.xml</filename>,
                 with the contents in <xref linkend="hibernate-gsg-tutorial-native-hbm-xml-ex1"/>.
             </para>
 
@@ -106,104 +101,79 @@
             </para>
 
             <orderedlist>
-                <title>Functions of the <property>class</property> element</title>
+                <title>Functions of the <literal>class</literal> element</title>
                 <listitem>
                     <para>
-                        The <literal>class</literal> attribute, combined here
-                        with the <literal>package</literal> attribute from the
-                        containing <literal>hibernate-mapping</literal> element,
-                        names the FQN of the class you want to define as an
-                        entity.
+                        The <literal>class</literal> attribute, combined here with the <literal>package</literal>
+                        attribute from the containing <literal>hibernate-mapping</literal> element, names the FQN of
+                        the class you want to define as an entity.
                     </para>
                 </listitem>
                 <listitem>
                     <para>
-                        The <literal>table</literal> attribute names the
-                        database table which contains the data for this entity.
+                        The <literal>table</literal> attribute names the database table which contains the data for
+                        this entity.
                     </para>
                 </listitem>
             </orderedlist>
 
             <para>
-                Instances of the <classname>Event</classname> class are now
-                mapped to rows in the <database class="table">EVENTS</database>
-                table. Hibernate uses the <literal>id</literal> element to
-                uniquely identify rows in the table.
+                Instances of <classname>Event</classname> are now mapped to rows in the <literal>EVENTS</literal>
+                table. Hibernate uses the <literal>id</literal> element to uniquely identify rows in the table.
             </para>
             <important>
                 <para>
-                    It is not strictly necessary for the <literal>id</literal>
-                    element to map to the table's actual primary key column(s),
-                    but this type of mapping is conventional. Tables mapped in
-                    Hibernate do not even need to define primary keys. However,
-                    the Hibernate team <emphasis>strongly</emphasis> recommends
-                    that all schemas define proper referential
-                    integrity. Therefore <literal>id</literal> and
-                    <phrase>primary key</phrase> are used interchangeably
-                    throughout Hibernate documentation.
+                    It is not strictly necessary that the <literal>id</literal> element map to the table's actual
+                    primary key column(s), but it is the normal convention. Tables mapped in Hibernate do not even
+                    need to define primary keys. However, the Hibernate team <emphasis>strongly</emphasis>
+                    recommends that all schemas define proper referential integrity. Therefore <literal>id</literal>
+                    and <phrase>primary key</phrase> are used interchangeably throughout Hibernate documentation.
                 </para>
             </important>
             <para>
-                The <literal>id</literal> element here identifies the <database
-                class="field">EVENT_ID</database> column as the primary key of
-                the <database class="table">EVENTS</database> table. It also
-                identifies the <literal>id</literal> property of the
-                <classname>Event</classname> class as the property containing
-                the identifier value.
-            </para>
-	    <para>
-	      The <literal>generator</literal> element nested inside the
-	      <literal>id</literal> element informs Hibernate about which
-	      strategy is used to generated primary key values for this
-	      entity. In this example, a sequence-like value generation is
-	      used.
-	    </para>
-            <para>
-                The two <literal>property</literal> elements declare the
-                remaining two properties of the <classname>Event</classname>
-                class: <literal>date</literal> and<literal>title</literal>. The
-                <literal>date</literal> property mapping includes the
-                <literal>column</literal> attribute, but the
-                <literal>title</literal> does not. In the absence of a
-                <literal>column</literal> attribute, Hibernate uses the property
-                name as the column name. This is appropriate for
-                <literal>title</literal>, but since <literal>date</literal> is a
-                reserved keyword in most databases, you need to specify a
-                different word for the column name.
+                The <literal>id</literal> element here identifies the <literal>EVENT_ID</literal> column as the
+                primary key of the <literal>EVENTS</literal> table. It also identifies the <literal>id</literal>
+                property of the <classname>Event</classname> class as the property to hold the identifier value.
             </para>
             <para>
-                The <literal>title</literal> mapping also lacks a
-                <literal>type</literal> attribute. The types declared and used
-                in the mapping files are neither Java data types nor SQL
-                database types. Instead, they are <firstterm><phrase>Hibernate
-                mapping types</phrase></firstterm>. Hibernate mapping types are
-                converters which translate between Java and SQL data
-                types. Hibernate attempts to determine the correct conversion
-                and mapping type autonomously if the <literal>type</literal>
-                attribute is not present in the mapping, by using Java
-                reflection to determine the Java type of the declared property
-                and using a default mapping type for that Java type. <!-- We need to decide how we mark up XML tags (elements) and parameters (attributes). -->
+                The important thing to be aware of about the <literal>generator</literal> element nested inside the
+                <literal>id</literal> element is that it informs Hibernate which strategy is used to generated primary
+                key values for this entity. In this instance, it uses a sequence-like value generation.
             </para>
             <para>
-                In some cases this automatic detection might not choose the
-                default you expect or need, as seen with the
-                <literal>date</literal> property. Hibernate cannot know if the
-                property, which is of type
-                <classname>java.util.Date</classname>, should map to a SQL
-                <literal>DATE</literal>, <literal>TIME</literal>, or
-                <literal>TIMESTAMP</literal> datatype. Full date and time
-                information is preserved by mapping the property to a
-                <literal>timestamp</literal> converter.
+                The two <literal>property</literal> elements declare the remaining two properties of the
+                <classname>Event</classname> class: <literal>date</literal> and<literal>title</literal>. The
+                <literal>date</literal> property mapping include the <literal>column</literal> attribute, but the
+                <literal>title</literal> does not. In the absence of a <literal>column</literal> attribute, Hibernate
+                uses the property name as the column name. This is appropriate for <literal>title</literal>, but since
+                <literal>date</literal> is a reserved keyword in most databases, you need to specify a non-reserved
+                word for the column name.
+            </para>
+            <para>
+                The <literal>title</literal> mapping also lacks a <literal>type</literal> attribute. The types
+                declared and used in the mapping files are neither Java data types nor SQL database types. Instead,
+                they are <firstterm><phrase>Hibernate mapping types</phrase></firstterm>. Hibernate mapping types are
+                converters which translate between Java and SQL data types. Hibernate attempts to determine the correct
+                conversion and mapping type autonomously if the <literal>type</literal> attribute is not present in the
+                mapping, by using Java reflection to determine the Java type of the declared property and using a
+                default mapping type for that Java type.
+            </para>
+            <para>
+                In some cases this automatic detection might not have the default you expect or need, as seen with the
+                <literal>date</literal> property. Hibernate cannot know if the property, which is of type
+                <classname>java.util.Date</classname>, should map to a SQL <literal>DATE</literal>,
+                <literal>TIME</literal>, or <literal>TIMESTAMP</literal> datatype. Full date and time information is
+                preserved by mapping the property to a <literal>timestamp</literal>
+                converter.
             </para>
 
-            <info>
+            <tip>
                 <para>
-                    Hibernate makes this mapping type determination using
-                    reflection when the mapping files are processed. This can
-                    take time and resources. If startup performance is
-                    important, consider explicitly defining the type to use.
+                    Hibernate makes this mapping type determination using reflection when the mapping files are
+                    processed. This can take time and resources. If startup performance is important, consider
+                    explicitly defining the type to use.
                 </para>
-            </info
+            </tip>
         </step>
 
         <step id="hibernate-gsg-tutorial-native-config">
@@ -219,87 +189,37 @@
             </example>
 
             <para>
-                The first few <property>property</property> tags define
-                information about the JDBC connection. The
-                <option>connection.url</option> contains information directing
-                Hibernate to use the <firstterm>H2 in-memory
-                database</firstterm>. The rest of the properties are explained
-                in <xref linkend="tutorial-native-config-options-explained" />.
-	    </para>
-	    
-	    <!-- <mapping resource="org/hibernate/tutorial/hbm/Event.hbm.xml"/> -->
+                The first few <literal>property</literal> are defining JDBC connection information. These tutorials
+                utilize the H2 in-memory database. So these are all specific to running H2 in its in-memory mode.
+                The 'connection.pool_size' is used to configure Hibernate's built-in connection pool how many
+                connections
+                to pool.
+            </para>
 
-	    <table id="tutorial-native-config-options-explained">
-	      <title>Configuration Options Used In the Native Configuration Example</title>
-	      <tgroup cols="2">
-		<thead>
-		  <row>
-		    <entry><p>Property Name</p></entry>
-		    <entry><p>Description</p></entry>
-		  </row>
-		</thead>
-		<tbody>
-		  <row>
-		    <entry><p><option>connection.pool_size</option></p></entry>
-		    <entry>
-		      <p>
-			configures Hibernate's built-in connection pool to
-			contain the specified number of connections.
-		      </p>
-		      <p>
-			<warning> <!-- We try to limit note levels to 'note', 'info', 'warning' -->
-			  <para>
-			    The built-in Hibernate connection pool is inappropriate for
-			    production use. It lacks several features found on any
-			    decent connection pool.
-			    <!-- What should be used instead? -->
-			  </para>
-			</warning>
-		      </p>
-		    </entry>
-		  </row>
-		  <row>
-		    <entry><p><option>dialect</option></p></entry>
-		    <entry>
-		      <p>
-			specifies the particular SQL variant Hibernate should
-			generate.
-		      </p>
-		      <p> <!-- I hate doing this but Docbook has a silly rule about putting <note>s inside table entries -->
-			<note>
-			  <para>
-			    In most cases, Hibernate can automatically determine which
-			    dialect to use. This capability is valuable for applications
-			    which target multiple databases.
-			  </para>
-			</note>
-		      </p>		      
-		    </entry>
-		  </row>
-		  <row>
-		    <entry><p><option>cache.provider_class</option></p></entry>
-		    <entry><p></p></entry><!-- Explain me -->
-		  </row>
-		  <row>
-		    <entry><p>show_sql</p></entry>
-		    <entry><p></p></entry><!-- Explain me -->
-		  </row>
-		  <row>
-		    <entry><p>hbm2ddl.auto</p></entry>
-		    <entry>
-		      <p>
-		      enables automatic generation of database schemas directly
-		      into the database.
-		      </p>
-		    </entry>
-		  </row>
-		</tbody>
-	      </tgroup>
-	    </table>
-		    
+            <caution>
+                <para>
+                    The built-in Hibernate connection pool is in no way intended for production use. It
+                    lacks several features found on any decent connection pool.
+                </para>
+            </caution>
+
             <para>
-	      Finally, the mapping files provide persistent classes to the
-	      configuration.
+                The <literal>dialect</literal> option specifies the particular SQL variant Hibernate should generate.
+            </para>
+
+            <tip>
+                <para>
+                    In most cases, Hibernate is able to properly determine which dialect to use which is invaluable if
+                    your application targets multiple databases.
+                </para>
+            </tip>
+
+            <para>
+                The <literal>hbm2ddl.auto</literal> option turns on automatic generation of database schemas directly
+                into the database.
+            </para>
+            <para>
+                Finally, add the mapping file(s) for persistent classes to the configuration.
             </para>
         </step>
 

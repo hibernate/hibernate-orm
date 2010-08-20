@@ -262,11 +262,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		boolean inTxn = source.getJDBCContext().isTransactionInProgress();
 		boolean shouldDelayIdentityInserts = !inTxn && !requiresImmediateIdAccess;
 
-		if ( useIdentityColumn && !shouldDelayIdentityInserts ) {
-			log.trace( "executing insertions" );
-			source.getActionQueue().executeInserts();
-		}
-
 		// Put a placeholder in entries, so we don't recurse back and try to save() the
 		// same object again. QUESTION: should this be done before onSave() is called?
 		// likewise, should it be done before onUpdate()?
@@ -285,6 +280,11 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		);
 
 		cascadeBeforeSave( source, persister, entity, anything );
+
+		if ( useIdentityColumn && !shouldDelayIdentityInserts ) {
+			log.trace( "executing insertions" );
+			source.getActionQueue().executeInserts();
+		}		
 
 		Object[] values = persister.getPropertyValuesToInsert( entity, getMergeMap( anything ), source );
 		Type[] types = persister.getPropertyTypes();

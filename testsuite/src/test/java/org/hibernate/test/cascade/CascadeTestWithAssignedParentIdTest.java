@@ -59,44 +59,7 @@ public class CascadeTestWithAssignedParentIdTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( CascadeTestWithAssignedParentIdTest.class );
 	}
 
-
-	/**
-	 * Saves the child object with the parent when both the one-to-many and
-	 * many-to-one associations use cascade="all"
-	 */
-	public void testSaveChildWithParentFailureExpected() {
-		if ( ! IdentityGenerator.class.isAssignableFrom( getDialect().getNativeIdentifierGeneratorClass() ) ) {
-			reportSkip( "FailureExpected test passes when native id generator is not IdentityGenerator",
-					"parent insert is assigned (delayed) when child is identity (early insert)" );
-			fail( "test is expected to fail" );
-			return;
-		}
-		Session session = openSession();
-		Transaction txn = session.beginTransaction();
-		Parent parent = new Parent();
-		Child child = new Child();
-		child.setParent( parent );
-		parent.setChildren( Collections.singleton( child ) );
-		parent.setId(new Long(123L));
-		// this should figure out that the parent needs saving first since id is assigned.
-		session.save( child );
-		txn.commit();
-		session.close();
-
-		session = openSession();
-		txn = session.beginTransaction();
-		parent = ( Parent ) session.get( Parent.class, parent.getId() );
-		assertEquals( 1, parent.getChildren().size() );
-		txn.commit();
-		session.close();
-	}
-
 	public void testSaveChildWithParent() {
-		if ( IdentityGenerator.class.isAssignableFrom( getDialect().getNativeIdentifierGeneratorClass() ) ) {
-			reportSkip( "test is known to fail when native id generator is IdentityGenerator",
-					"parent insert is assigned (delayed) when child has identity (early insert)" );
-			return;
-		}
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 		Parent parent = new Parent();

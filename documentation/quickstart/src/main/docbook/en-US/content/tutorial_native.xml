@@ -189,37 +189,87 @@
             </example>
 
             <para>
-                The first few <literal>property</literal> are defining JDBC connection information. These tutorials
-                utilize the H2 in-memory database. So these are all specific to running H2 in its in-memory mode.
-                The 'connection.pool_size' is used to configure Hibernate's built-in connection pool how many
-                connections
-                to pool.
-            </para>
+                The first few <property>property</property> tags define
+                information about the JDBC connection. The
+                <option>connection.url</option> contains information directing
+                Hibernate to use the <firstterm>H2 in-memory
+                database</firstterm>. The rest of the properties are explained
+                in <xref linkend="tutorial-native-config-options-explained" />.
+	    </para>
+	    
+	    <!-- <mapping resource="org/hibernate/tutorial/hbm/Event.hbm.xml"/> -->
 
-            <caution>
-                <para>
-                    The built-in Hibernate connection pool is in no way intended for production use. It
-                    lacks several features found on any decent connection pool.
-                </para>
-            </caution>
-
+	    <table id="tutorial-native-config-options-explained">
+	      <title>Configuration Options Used In the Native Configuration Example</title>
+	      <tgroup cols="2">
+		<thead>
+		  <row>
+		    <entry><p>Property Name</p></entry>
+		    <entry><p>Description</p></entry>
+		  </row>
+		</thead>
+		<tbody>
+		  <row>
+		    <entry><p><option>connection.pool_size</option></p></entry>
+		    <entry>
+		      <p>
+			configures Hibernate's built-in connection pool to
+			contain the specified number of connections.
+		      </p>
+		      <p>
+			<warning> <!-- We try to limit note levels to 'note', 'info', 'warning' -->
+			  <para>
+			    The built-in Hibernate connection pool is inappropriate for
+			    production use. It lacks several features found on any
+			    decent connection pool.
+			    <!-- What should be used instead? -->
+			  </para>
+			</warning>
+		      </p>
+		    </entry>
+		  </row>
+		  <row>
+		    <entry><p><option>dialect</option></p></entry>
+		    <entry>
+		      <p>
+			specifies the particular SQL variant Hibernate should
+			generate.
+		      </p>
+		      <p> <!-- I hate doing this but Docbook has a silly rule about putting <note>s inside table entries -->
+			<note>
+			  <para>
+			    In most cases, Hibernate can automatically determine which
+			    dialect to use. This capability is valuable for applications
+			    which target multiple databases.
+			  </para>
+			</note>
+		      </p>		      
+		    </entry>
+		  </row>
+		  <row>
+		    <entry><p><option>cache.provider_class</option></p></entry>
+		    <entry><p></p></entry><!-- Explain me -->
+		  </row>
+		  <row>
+		    <entry><p>show_sql</p></entry>
+		    <entry><p></p></entry><!-- Explain me -->
+		  </row>
+		  <row>
+		    <entry><p>hbm2ddl.auto</p></entry>
+		    <entry>
+		      <p>
+		      enables automatic generation of database schemas directly
+		      into the database.
+		      </p>
+		    </entry>
+		  </row>
+		</tbody>
+	      </tgroup>
+	    </table>
+		    
             <para>
-                The <literal>dialect</literal> option specifies the particular SQL variant Hibernate should generate.
-            </para>
-
-            <tip>
-                <para>
-                    In most cases, Hibernate is able to properly determine which dialect to use which is invaluable if
-                    your application targets multiple databases.
-                </para>
-            </tip>
-
-            <para>
-                The <literal>hbm2ddl.auto</literal> option turns on automatic generation of database schemas directly
-                into the database.
-            </para>
-            <para>
-                Finally, add the mapping file(s) for persistent classes to the configuration.
+	      Finally, the mapping files provide persistent classes to the
+	      configuration.
             </para>
         </step>
 

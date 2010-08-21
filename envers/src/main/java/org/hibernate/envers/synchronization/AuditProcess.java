@@ -137,7 +137,7 @@ public class AuditProcess implements BeforeTransactionCompletionProcess, Synchro
         }
 
         // see: http://www.jboss.com/index.html?module=bb&op=viewtopic&p=4178431
-        if (FlushMode.isManualFlushMode(session.getFlushMode())) {
+        if (FlushMode.isManualFlushMode(session.getFlushMode()) || session.isClosed()) {
             Session temporarySession = null;
             try {
                 temporarySession = session.getFactory().openTemporarySession();

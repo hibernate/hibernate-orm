@@ -32,8 +32,7 @@
     <title>Quickstart</title>
 
     <para>
-        When configuring your Hibernate (<literal>persistence.xml</literal> if you are using JPA,
-        <literal>hibernate.cfg.xml</literal> or other if you are using Hibernate directly), add the following event
+        If you're using JPA, when coniguring Hibernate (in <literal>persistence.xml</literal>), add the following event
         listeners: (this will allow Envers to check if any audited entities were modified)
     </para>
 
@@ -59,6 +58,24 @@
 &lt;/properties&gt;
 &lt;/persistence-unit&gt;</programlisting>
 
+    <para>
+	If you're using  Hibernate directly, add the following to <literal>hibernate.cfg.xml</literal>:
+    </para>
+    <programlisting>
+	&lt;hibernate-configuration&gt;
+	&lt;session-factory&gt;
+
+	&lt;listener class="org.hibernate.envers.event.AuditEventListener" type="post-insert"/&gt;
+	&lt;listener class="org.hibernate.envers.event.AuditEventListener" type="post-update"/&gt;
+	&lt;listener class="org.hibernate.envers.event.AuditEventListener" type="post-delete"/&gt;
+	&lt;listener class="org.hibernate.envers.event.AuditEventListener" type="pre-collection-update"/&gt;
+	&lt;listener class="org.hibernate.envers.event.AuditEventListener" type="pre-collection-remove"/&gt;
+	&lt;listener class="org.hibernate.envers.event.AuditEventListener" type="post-collection-recreate"/&gt;
+
+
+	&lt;/session-factory&gt;
+	&lt;/hibernate-configuration&gt;
+    </programlisting>
     <para>
         The <literal>EJB3Post...EvenListener</literal>s are needed, so that ejb3 entity lifecycle callback
         methods work (<literal>@PostPersist, @PostUpdate, @PostRemove</literal>.
@@ -154,4 +171,5 @@ Person oldPerson = reader.find(Person.class, personId, revision)
         at which a revision was created using the <literal>getRevisionDate</literal> method.
     </para>
 </chapter>
+
 

@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.entityNames.oneToManyNotAudited;
+package org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited;
 
 /**
  * @author Hern�n Chanfreau

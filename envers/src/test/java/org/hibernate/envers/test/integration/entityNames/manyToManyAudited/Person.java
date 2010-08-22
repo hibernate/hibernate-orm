@@ -1,10 +1,15 @@
-package org.hibernate.envers.test.entityNames.singleAssociatedNotAudited;
+package org.hibernate.envers.test.integration.entityNames.manyToManyAudited;
+
+import java.util.List;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Hern�n Chanfreau
  * 
  */
 
+@Audited
 public class Person {
 	
 	private long id;
@@ -12,6 +17,8 @@ public class Person {
 	private String name;
 	
 	private int age;
+	
+	private List<Car> cars;
 	
 	public Person(){ }
 	
@@ -43,6 +50,14 @@ public class Person {
 
 	public void setAge(int age) {
 		this.age = age;
+	}
+
+	public List<Car> getCars() {
+		return cars;
+	}
+
+	public void setCars(List<Car> cars) {
+		this.cars = cars;
 	}
 
 }

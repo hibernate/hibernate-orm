@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.entityNames.auditedEntity;
+package org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited;
 
 import org.hibernate.envers.Audited;
 

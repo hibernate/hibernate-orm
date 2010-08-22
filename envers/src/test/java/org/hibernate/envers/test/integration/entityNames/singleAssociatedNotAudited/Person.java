@@ -1,13 +1,10 @@
-package org.hibernate.envers.test.entityNames.oneToManyAudited;
-
-import org.hibernate.envers.Audited;
+package org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited;
 
 /**
  * @author Hern�n Chanfreau
  * 
  */
 
-@Audited
 public class Person {
 	
 	private long id;

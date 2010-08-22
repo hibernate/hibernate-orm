@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.entityNames.manyToManyAudited.Person"
+	<class name="org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person"
 		entity-name="Personaje">
 
 		<id name="id" column="ID_PERSON" type="long">
@@ -17,12 +17,12 @@
 		<bag name="cars" inverse="true" table="PERSON_CAR" >
 			<key column="ID_CAR" />
 			<many-to-many
-				class="org.hibernate.envers.test.entityNames.manyToManyAudited.Car" column="ID_PERSON"/>
+				class="org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car" column="ID_PERSON"/>
 		</bag>
 
 	</class>
 
-	<class name="org.hibernate.envers.test.entityNames.manyToManyAudited.Car">
+	<class name="org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car">
 
 		<id name="id" column="ID_CAR" type="long">
 			<generator class="native" />

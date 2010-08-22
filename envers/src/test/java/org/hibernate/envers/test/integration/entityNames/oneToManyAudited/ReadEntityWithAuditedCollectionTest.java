@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.entityNames.oneToManyAudited;
+package org.hibernate.envers.test.integration.entityNames.oneToManyAudited;
 
 import java.io.File;
 import java.net.URISyntaxException;

@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.entityNames.singleAssociatedAudited;
+package org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
  * 
  */
 
-public class ReadEntityAssociatedAuditedTest extends AbstractSessionTest{
+public class ReadEntityAssociatedNotAuditedTest extends AbstractSessionTest{
 
 	private long id_car1;
 	private long id_car2;
@@ -24,7 +24,7 @@ public class ReadEntityAssociatedAuditedTest extends AbstractSessionTest{
 	
 	
 	protected void initMappings() throws MappingException, URISyntaxException {
-		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/singleAssociatedAudited/mappings.hbm.xml");
+		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/singleAssociatedNotAudited/mappings.hbm.xml");
         config.addFile(new File(url.toURI()));
 	}
 	
@@ -61,16 +61,19 @@ public class ReadEntityAssociatedAuditedTest extends AbstractSessionTest{
     }
     
     @Test
-    public void testGetAssociationWithEntityName() {
-
+    public void testGetAssociationWithEntityNameAndNotAuditedMode() {
+    	// persons from "actual" model 
     	Person person1 = (Person)getSession().get("Personaje", id_pers1);
-    	Car car1 = getAuditReader().find(Car.class, id_car1, 1);
-    	Person person1_1 = car1.getOwner();
-    	assert(person1.getAge() != person1_1.getAge());
-    	
     	Person person2 = (Person)getSession().get("Personaje", id_pers2);
+    	
+    	Car car1 = getAuditReader().find(Car.class, id_car1, 1);
     	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
+    	
+    	// persons from "historic" model 
+    	Person person1_1 = car1.getOwner();
     	Person person2_1 = car2.getOwner();
+    	
+    	assert(person1.getAge() == person1_1.getAge());
     	assert(person2.getAge() == person2_1.getAge());
     }
 

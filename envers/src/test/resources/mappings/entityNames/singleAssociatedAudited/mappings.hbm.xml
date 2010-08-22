@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
 
-	<class name="org.hibernate.envers.test.entityNames.singleAssociatedAudited.Person" entity-name="Personaje">
+	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Person" entity-name="Personaje">
 		
 		<id name="id" column="ID_person" type="long" >
 			<generator class="native" />
@@ -15,7 +15,7 @@
 			
 	</class>
 	
-	<class name="org.hibernate.envers.test.entityNames.singleAssociatedAudited.Car" >
+	<class name="org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited.Car" >
 
 		<id name="id" column="ID_BED" type="long">
 			<generator class="native" />

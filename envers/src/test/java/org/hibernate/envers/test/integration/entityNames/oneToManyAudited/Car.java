@@ -1,15 +1,15 @@
-package org.hibernate.envers.test.entityNames.oneToManyNotAudited;
+package org.hibernate.envers.test.integration.entityNames.oneToManyAudited;
 
 import java.util.List;
 
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.RelationTargetAuditMode;
 
 /**
  * @author Hern�n Chanfreau
  * 
  */
 
+@Audited
 public class Car {
 	
 	private long id;
@@ -35,7 +35,6 @@ public class Car {
 		this.id = id;
 	}
 
-	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
 	public List<Person> getOwners() {
 		return owners;
 	}
@@ -44,7 +43,6 @@ public class Car {
 		this.owners = owners;
 	}	
 
-	@Audited
 	public int getNumber() {
 		return number;
 	}

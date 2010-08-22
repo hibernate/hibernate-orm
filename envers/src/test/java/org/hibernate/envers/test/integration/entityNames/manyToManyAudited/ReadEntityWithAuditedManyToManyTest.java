@@ -1,4 +1,4 @@
-package org.hibernate.envers.test.entityNames.oneToManyNotAudited;
+package org.hibernate.envers.test.integration.entityNames.manyToManyAudited;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -11,7 +11,12 @@ import org.hibernate.envers.test.AbstractSessionTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
+/**
+ * @author Hern�n Chanfreau
+ * 
+ */
+
+public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
 
 	private long id_car1;
 	private long id_car2;
@@ -19,7 +24,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 	private long id_pers1;
 	
 	protected void initMappings() throws MappingException, URISyntaxException {
-		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/oneToManyNotAudited/mappings.hbm.xml");
+		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/manyToManyAudited/mappings.hbm.xml");
         config.addFile(new File(url.toURI()));
 	}
 	
@@ -34,13 +39,14 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
         Person pers3 = new Person("Barba", 32);
         Person pers4 = new Person("Camomo", 15);
 
+        //REV 1 
+        getSession().getTransaction().begin();
         List<Person > owners = new ArrayList<Person>();
         owners.add(pers1);
         owners.add(pers2);
+        owners.add(pers3);
         Car car1 = new Car(5, owners);
 
-        //REV 1 
-        getSession().getTransaction().begin();
         getSession().persist(car1);
         getSession().getTransaction().commit();
         id_pers1 = pers1.getId();
@@ -48,6 +54,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 
         owners = new ArrayList<Person>();
         owners.add(pers2);
+        owners.add(pers3);
         owners.add(pers4);
         Car car2 = new Car(27, owners);
         //REV 2
@@ -63,7 +70,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     }
     
     @Test
-    public void testObtainCollectionWithEntityNameAndNotAuditedMode() {
+    public void testObtainManyYoManyWithEntityName() {
     	
     	Car car1 = getAuditReader().find(Car.class, id_car1, 2);
     	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
@@ -72,11 +79,19 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     	System.out.println("  > Owners:");
     	for (Person owner : car1.getOwners()) {
     		System.out.println("    > Name: " + owner.getName() + " - Age:" + owner.getAge());
+    		System.out.println("    > Cars owned:");
+    		for (Car ownedCar : owner.getCars()) {
+				System.out.println("      o Car: " + ownedCar.getNumber());
+			}
 		}
     	System.out.println("  > Car: " + car2.getNumber());
     	System.out.println("  > Owners:");
     	for (Person owner : car2.getOwners()) {
     		System.out.println("    > Name: " + owner.getName() + " - Age:" + owner.getAge());
+    		System.out.println("    > Cars owned:");
+    		for (Car ownedCar : owner.getCars()) {
+				System.out.println("      o Car: " + ownedCar.getNumber());
+			}
 		}
     }
     

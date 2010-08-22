@@ -1,13 +1,13 @@
-package org.hibernate.envers.test.entityNames.singleAssociatedAudited;
+package org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 /**
  * @author Hern�n Chanfreau
  * 
  */
 
-@Audited
 public class Car {
 	
 	private long id;
@@ -33,6 +33,7 @@ public class Car {
 		this.id = id;
 	}
 
+	@Audited(targetAuditMode=RelationTargetAuditMode.NOT_AUDITED)
 	public Person getOwner() {
 		return owner;
 	}
@@ -41,6 +42,7 @@ public class Car {
 		this.owner = owner;
 	}	
 
+	@Audited
 	public int getNumber() {
 		return number;
 	}

@@ -23,14 +23,14 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Initializes a map.
@@ -64,8 +64,10 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
     @SuppressWarnings({"unchecked"})
     protected void addToCollection(List collection, Object collectionRow) {
         Object elementData = ((List) collectionRow).get(elementComponentData.getComponentIndex());
-        Object element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
-                (Map<String, Object>) elementData, null, revision);
+        Object element = elementData instanceof Map ?
+                elementComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
+                (Map<String, Object>) elementData, null, revision)
+                : elementData ;
 
         Object indexData = ((List) collectionRow).get(indexComponentData.getComponentIndex());
         Object indexObj = indexComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,

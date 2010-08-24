@@ -5,10 +5,6 @@
 <chapter id="hibernate-gsg-obtain">
     <title>Obtaining Hibernate</title>
 
-    <para>
-        You obtain Hibernate in one of two anticipated ways.
-    </para>
-
     <section id="hibernate-gsg-setup-releaseBundle">
         <title>Release Bundle Downloads</title>
         <para>

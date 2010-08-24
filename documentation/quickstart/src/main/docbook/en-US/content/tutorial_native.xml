@@ -233,7 +233,7 @@
             <title>Do stuff</title>
             <para>
                 Create a file named <filename>src/main/java/org/hibernate/tutorial/hbm/EventManager.java</filename>
-                with the following contents:
+                containing the text in <xref linkend="hibernate-gsg-tutorial-native-working-ex1"/>.
             </para>
 
             <example id="hibernate-gsg-tutorial-native-working-ex1">
@@ -283,10 +283,10 @@
         </step>
 
         <step id="hibernate-gsg-tutorial-native-running">
-            <title>Running the code</title>
+            <title>Run the code</title>
             <para>
                 To perform a store (leveraging the maven exec plugin):
-                <command>mvn exec:java -Dexec.mainClass="org.hibernate.tutorial.native.EventManager" -Dexec.args="store"</command>
+                <command>mvn exec:java -Dexec.mainClass="org.hibernate.tutorial.hbm.EventManager" -Dexec.args="store"</command>
                 You should see Hibernate starting up and, depending on your configuration, lots of log output. Towards
                 the end, the following line will be displayed:
                 <screen>[java] Hibernate: insert into EVENTS (EVENT_DATE, title, EVENT_ID) values (?, ?, ?)</screen>
@@ -295,7 +295,7 @@
 
             <para>
                 To perform a list:
-                <command>mvn exec:java -Dexec.mainClass="org.hibernate.tutorial.native.EventManager"-Dexec.args="list"</command>
+                <command>mvn exec:java -Dexec.mainClass="org.hibernate.tutorial.hbm.EventManager"-Dexec.args="list"</command>
             </para>
 
             <note>
@@ -307,8 +307,11 @@
         </step>
     </procedure>
 
-    <para>
-        Take it further! Try the following:
+    <section id="hibernate-gsg-tutorial-annotations-further">
+        <title>Take it further!</title>
+        <para>
+            Try the following exercises:
+        </para>
         <itemizedlist>
             <listitem>
                 <para>
@@ -322,6 +325,6 @@
                 </para>
             </listitem>
         </itemizedlist>
-    </para>
+    </section>
 
 </chapter>

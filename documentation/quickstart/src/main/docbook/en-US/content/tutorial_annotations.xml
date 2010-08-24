@@ -11,12 +11,10 @@
             <title>Create the Maven POM file</title>
             <para>
                 Create a file named <filename>pom.xml</filename> in the root of your project directory, containing
-                the text in<xref linkend="hibernate-gsg-tutorial-annotations-pom-ex1"/>.
+                the text in <xref linkend="hibernate-gsg-tutorial-annotations-pom-ex1"/>.
             </para>
             <example id="hibernate-gsg-tutorial-annotations-pom-ex1">
-                <title>
-                    <filename>pom.xml</filename>
-                </title>
+                <title><filename>pom.xml</filename></title>
                 <programlisting role="XML"><xi:include href="extras/examples/annotations/pom.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
         </step>
@@ -25,14 +23,12 @@
             <title>Create the annotated entity Java class</title>
 
             <para>
-                Create a file named<filename>src/main/java/org/hibernate/tutorial/annotations/Event.java</filename>,
-                containing the text in<xref linkend="hibernate-gsg-tutorial-annotations-entity-ex1"/>.
+                Create a file named <filename>src/main/java/org/hibernate/tutorial/annotations/Event.java</filename>,
+                containing the text in <xref linkend="hibernate-gsg-tutorial-annotations-entity-ex1"/>.
             </para>
 
             <example id="hibernate-gsg-tutorial-annotations-entity-ex1">
-                <title>
-                    <filename>Entity.java</filename>
-                </title>
+                <title><filename>Entity.java</filename></title>
                 <programlisting role="JAVA"><xi:include href="extras/examples/annotations/org/hibernate/tutorial/annotations/Event.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
             </example>
             <para>
@@ -52,7 +48,8 @@
                             class as an entity.  It's function is essentially the same as the <literal>class</literal>
                             mapping element we see in <xref linkend="hibernate-gsg-tutorial-native-hbm-xml-ex1"/>.
                             Additionally the <interfacename>@javax.persistence.Table</interfacename> annotation is
-                            used to override the default table name annotations would have used (<literal>EVENT</literal>).
+                            used to explicitly specify the table name (the default table name would have been
+                            <database class="table">EVENT</database>).
                         </para>
                     </listitem>
                     <listitem>
@@ -60,14 +57,6 @@
                             <interfacename>@javax.persistence.Id</interfacename> marks the property defining the
                             entity's identifier.
                         </para>
-                        <note>
-                            <para>
-                                Property-related annotations are allowed on either the field or the getter method.
-                                However, for a given entity they cannot be mixed.  The placement of the
-                                <interfacename>@javax.persistence.Id</interfacename> indicates where Hibernate
-                                should expect to find other property-related annotations.
-                            </para>
-                        </note>
                     </listitem>
                     <!-- todo : example of defining the generator -->
                     <listitem>
@@ -100,9 +89,57 @@
             </para>
         </step>
 
-        <!-- the rest of the tutorial "here on out" is the same as from the native + hbm.xml -->
-        <!-- todo : is it enough to say that? -->
+        <step id="hibernate-gsg-tutorial-annotations-working">
+            <title>Do stuff</title>
+            <para>
+                Create a file named <filename>src/main/java/org/hibernate/tutorial/annotations/EventManager.java</filename>
+                containing the text in <xref linkend="hibernate-gsg-tutorial-native-working-ex1"/>.
+            </para>
+
+            <example id="hibernate-gsg-tutorial-native-working-ex1">
+                <title>
+                    <filename>EventManager.java</filename>
+                </title>
+                <programlisting role="JAVA"><xi:include href="extras/examples/annotations/org/hibernate/tutorial/annotations/EventManager.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
+            </example>
+
+            <para>
+                Refer back to <xref linkend="hibernate-gsg-tutorial-native-working"/> for a discussion
+            </para>
+        </step>
+
+        <step id="hibernate-gsg-tutorial-annotations-compileAndRun">
+            <title>Compile and run the code</title>
+
+            <para>
+                Follow the directions at <xref linkend="hibernate-gsg-tutorial-native-compile"/> and
+                <xref linkend="hibernate-gsg-tutorial-native-running"/> to compile and then run the code.  Be sure
+                to reference the <classname>org.hibernate.tutorial.annotations.EventManager</classname> class
+                instead of the <classname>org.hibernate.tutorial.hbm.EventManager</classname> class.
+            </para>
+        </step>
 
     </procedure>
+
+    <section id="hibernate-gsg-tutorial-annotations-further">
+        <title>Take it further!</title>
+        <para>
+            Try the following exercises:
+        </para>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    With help of the Developer Guide, add an association to the <classname>Event</classname>
+                    entity to model a message thread.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    With help of the Developer Guide, add a callback to receive notifications when an
+                    <classname>Event</classname> is created, updated or deleted.  Try the same with an event listener.
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
 
 </chapter>

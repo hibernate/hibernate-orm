@@ -1,4 +1,26 @@
-//$Id: OptimisticLockTest.java 11303 2007-03-19 22:06:14Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.optlock;
 
 import junit.framework.Test;
@@ -12,7 +34,7 @@ import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * Tests relating to the optimisitc-lock mapping option.
+ * Tests relating to the optimistic-lock mapping option.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -76,7 +98,7 @@ public class OptimisticLockTest extends FunctionalTestCase {
 		otherSession.close();
 
 		try {
-			doc.setSummary( "A machiavelian achievement of epic proportions" );
+			doc.setSummary( "A machiavellian achievement of epic proportions" );
 			mainSession.flush();
 			fail( "expecting opt lock failure" );
 		}
@@ -110,6 +132,7 @@ public class OptimisticLockTest extends FunctionalTestCase {
 		mainSession.close();
 	}
 
+	@SuppressWarnings({ "UnnecessaryBoxing" })
 	private void testDeleteOptimisticLockFailure(String entityName) {
 		if ( getDialect().doesRepeatableReadCauseReadersToBlockWriters() ) {
 			reportSkip( "deadlock", "delete optimistic locking" );
@@ -127,7 +150,7 @@ public class OptimisticLockTest extends FunctionalTestCase {
 		mainSession.flush();
 		doc.setSummary( "A modern classic" );
 		mainSession.flush();
-		doc.getPubDate().setMonth( new Integer( 3 ) );
+		doc.getPubDate().setMonth( Integer.valueOf( 3 ) );
 		mainSession.flush();
 		mainSession.getTransaction().commit();
 		mainSession.close();

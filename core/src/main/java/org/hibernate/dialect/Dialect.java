@@ -1798,7 +1798,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Does the dialect support propogating changes to LOB
+	 * Does the dialect support propagating changes to LOB
 	 * values back to the database?  Talking about mutating the
 	 * internal value of the locator as opposed to supplying a new
 	 * locator instance...
@@ -1820,7 +1820,7 @@ public abstract class Dialect {
 	 * databases which (1) are not part of the cruise control process
 	 * or (2) do not {@link #supportsExpectedLobUsagePattern}.
 	 *
-	 * @return True if the changes are propogated back to the
+	 * @return True if the changes are propagated back to the
 	 * database; false otherwise.
 	 * @since 3.2
 	 */

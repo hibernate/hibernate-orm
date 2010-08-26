@@ -156,7 +156,7 @@ public class JPALockTest extends AbstractJPATest {
 
 		myEntity = (MyEntity) s1.get( MyEntity.class, myEntity.getId() );
 		s1.lock( myEntity, LockMode.FORCE );
-		assertTrue( "LockMode.FORCE on a unversioned entity should degrade nicely to UPGRADE", true );
+		assertTrue( "LockMode.FORCE on a un-versioned entity should degrade nicely to UPGRADE", true );
 
 		s1.lock( item, LockMode.FORCE );
 		assertEquals( "subsequent LockMode.FORCE did not no-op", initialVersion + 1, item.getVersion() );
@@ -177,7 +177,7 @@ public class JPALockTest extends AbstractJPATest {
 		item2.setName( "updated" );
 		try {
 			t2.commit();
-			fail( "optimisitc lock should have failed" );
+			fail( "optimistic lock should have failed" );
 		}
 		catch (Throwable ignore) {
 			// expected behavior

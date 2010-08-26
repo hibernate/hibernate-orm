@@ -36,7 +36,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -67,6 +66,7 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 
@@ -109,53 +109,53 @@ public abstract class Dialect {
 		StandardAnsiSqlAggregationFunctions.primeFunctionMap( sqlFunctions );
 
 		// standard sql92 functions (can be overridden by subclasses)
-		registerFunction( "substring", new SQLFunctionTemplate( Hibernate.STRING, "substring(?1, ?2, ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( Hibernate.INTEGER, "locate(?1, ?2, ?3)" ) );
-		registerFunction( "trim", new SQLFunctionTemplate( Hibernate.STRING, "trim(?1 ?2 ?3 ?4)" ) );
-		registerFunction( "length", new StandardSQLFunction( "length", Hibernate.INTEGER ) );
-		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", Hibernate.INTEGER ) );
+		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1, ?2, ?3)" ) );
+		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "locate(?1, ?2, ?3)" ) );
+		registerFunction( "trim", new SQLFunctionTemplate( StandardBasicTypes.STRING, "trim(?1 ?2 ?3 ?4)" ) );
+		registerFunction( "length", new StandardSQLFunction( "length", StandardBasicTypes.INTEGER ) );
+		registerFunction( "bit_length", new StandardSQLFunction( "bit_length", StandardBasicTypes.INTEGER ) );
 		registerFunction( "coalesce", new StandardSQLFunction( "coalesce" ) );
 		registerFunction( "nullif", new StandardSQLFunction( "nullif" ) );
 		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", Hibernate.INTEGER) );
-		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", Hibernate.DOUBLE) );
+		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER) );
+		registerFunction( "sqrt", new StandardSQLFunction( "sqrt", StandardBasicTypes.DOUBLE) );
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "lower", new StandardSQLFunction("lower") );
 		registerFunction( "cast", new CastFunction() );
-		registerFunction( "extract", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(?1 ?2 ?3)") );
+		registerFunction( "extract", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(?1 ?2 ?3)") );
 
 		//map second/minute/hour/day/month/year to ANSI extract(), override on subclasses
-		registerFunction( "second", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(second from ?1)") );
-		registerFunction( "minute", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(minute from ?1)") );
-		registerFunction( "hour", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(hour from ?1)") );
-		registerFunction( "day", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(day from ?1)") );
-		registerFunction( "month", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(month from ?1)") );
-		registerFunction( "year", new SQLFunctionTemplate(Hibernate.INTEGER, "extract(year from ?1)") );
+		registerFunction( "second", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(second from ?1)") );
+		registerFunction( "minute", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(minute from ?1)") );
+		registerFunction( "hour", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(hour from ?1)") );
+		registerFunction( "day", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(day from ?1)") );
+		registerFunction( "month", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(month from ?1)") );
+		registerFunction( "year", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "extract(year from ?1)") );
 
-		registerFunction( "str", new SQLFunctionTemplate(Hibernate.STRING, "cast(?1 as char)") );
+		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as char)") );
 
         // register hibernate types for default use in scalar sqlquery type auto detection
-		registerHibernateType( Types.BIGINT, Hibernate.BIG_INTEGER.getName() );
-		registerHibernateType( Types.BINARY, Hibernate.BINARY.getName() );
-		registerHibernateType( Types.BIT, Hibernate.BOOLEAN.getName() );
-		registerHibernateType( Types.CHAR, Hibernate.CHARACTER.getName() );
-		registerHibernateType( Types.DATE, Hibernate.DATE.getName() );
-		registerHibernateType( Types.DOUBLE, Hibernate.DOUBLE.getName() );
-		registerHibernateType( Types.FLOAT, Hibernate.FLOAT.getName() );
-		registerHibernateType( Types.INTEGER, Hibernate.INTEGER.getName() );
-		registerHibernateType( Types.SMALLINT, Hibernate.SHORT.getName() );
-		registerHibernateType( Types.TINYINT, Hibernate.BYTE.getName() );
-		registerHibernateType( Types.TIME, Hibernate.TIME.getName() );
-		registerHibernateType( Types.TIMESTAMP, Hibernate.TIMESTAMP.getName() );
-		registerHibernateType( Types.VARCHAR, Hibernate.STRING.getName() );
-		registerHibernateType( Types.VARBINARY, Hibernate.BINARY.getName() );
-		registerHibernateType( Types.LONGVARCHAR, Hibernate.TEXT.getName() );
-		registerHibernateType( Types.LONGVARBINARY, Hibernate.IMAGE.getName() );
-		registerHibernateType( Types.NUMERIC, Hibernate.BIG_DECIMAL.getName() );
-		registerHibernateType( Types.DECIMAL, Hibernate.BIG_DECIMAL.getName() );
-		registerHibernateType( Types.BLOB, Hibernate.BLOB.getName() );
-		registerHibernateType( Types.CLOB, Hibernate.CLOB.getName() );
-		registerHibernateType( Types.REAL, Hibernate.FLOAT.getName() );
+		registerHibernateType( Types.BIGINT, StandardBasicTypes.BIG_INTEGER.getName() );
+		registerHibernateType( Types.BINARY, StandardBasicTypes.BINARY.getName() );
+		registerHibernateType( Types.BIT, StandardBasicTypes.BOOLEAN.getName() );
+		registerHibernateType( Types.CHAR, StandardBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
+		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getName() );
+		registerHibernateType( Types.FLOAT, StandardBasicTypes.FLOAT.getName() );
+		registerHibernateType( Types.INTEGER, StandardBasicTypes.INTEGER.getName() );
+		registerHibernateType( Types.SMALLINT, StandardBasicTypes.SHORT.getName() );
+		registerHibernateType( Types.TINYINT, StandardBasicTypes.BYTE.getName() );
+		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getName() );
+		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getName() );
+		registerHibernateType( Types.VARCHAR, StandardBasicTypes.STRING.getName() );
+		registerHibernateType( Types.VARBINARY, StandardBasicTypes.BINARY.getName() );
+		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.TEXT.getName() );
+		registerHibernateType( Types.LONGVARBINARY, StandardBasicTypes.IMAGE.getName() );
+		registerHibernateType( Types.NUMERIC, StandardBasicTypes.BIG_DECIMAL.getName() );
+		registerHibernateType( Types.DECIMAL, StandardBasicTypes.BIG_DECIMAL.getName() );
+		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getName() );
+		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
+		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
 	}
 
 	/**

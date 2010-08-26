@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.cfg.Environment;
@@ -34,10 +32,13 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.lock.*;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.MckoiCaseFragment;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * An SQL dialect compatible with McKoi SQL
- * @author Doug Currie, Gabe Hicks
+ *
+ * @author Doug Currie
+ * @author Gabe Hicks
  */
 public class MckoiDialect extends Dialect {
 	public MckoiDialect() {
@@ -61,15 +62,15 @@ public class MckoiDialect extends Dialect {
 
 		registerFunction( "upper", new StandardSQLFunction("upper") );
 		registerFunction( "lower", new StandardSQLFunction("lower") );
-		registerFunction( "sqrt", new StandardSQLFunction("sqrt", Hibernate.DOUBLE) );
+		registerFunction( "sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
 		registerFunction( "abs", new StandardSQLFunction("abs") );
-		registerFunction( "sign", new StandardSQLFunction( "sign", Hibernate.INTEGER ) );
-		registerFunction( "round", new StandardSQLFunction( "round", Hibernate.INTEGER ) );
-		registerFunction( "mod", new StandardSQLFunction( "mod", Hibernate.INTEGER ) );
+		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
+		registerFunction( "round", new StandardSQLFunction( "round", StandardBasicTypes.INTEGER ) );
+		registerFunction( "mod", new StandardSQLFunction( "mod", StandardBasicTypes.INTEGER ) );
 		registerFunction( "least", new StandardSQLFunction("least") );
 		registerFunction( "greatest", new StandardSQLFunction("greatest") );
-		registerFunction( "user", new StandardSQLFunction( "user", Hibernate.STRING ) );
-		registerFunction( "concat", new StandardSQLFunction( "concat", Hibernate.STRING ) );
+		registerFunction( "user", new StandardSQLFunction( "user", StandardBasicTypes.STRING ) );
+		registerFunction( "concat", new StandardSQLFunction( "concat", StandardBasicTypes.STRING ) );
 
 		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, NO_BATCH);
 	}

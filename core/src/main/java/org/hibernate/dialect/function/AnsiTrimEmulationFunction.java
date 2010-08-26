@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.Hibernate;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A {@link SQLFunction} implementation that emulates the ANSI SQL trim function
@@ -162,43 +161,43 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	 */
 	public AnsiTrimEmulationFunction(String ltrimFunctionName, String rtrimFunctionName, String replaceFunctionName) {
 		leadingSpaceTrim = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				LEADING_SPACE_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 		);
 
 		trailingSpaceTrim = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				TRAILING_SPACE_TRIM_TEMPLATE.replaceAll( RTRIM, rtrimFunctionName )
 		);
 
 		bothSpaceTrim = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				BOTH_SPACE_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 		);
 
 		bothSpaceTrimFrom = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				BOTH_SPACE_TRIM_FROM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 		);
 
 		leadingTrim = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				LEADING_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 						.replaceAll( REPLACE,replaceFunctionName )
 		);
 
 		trailingTrim = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				TRAILING_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 						.replaceAll( REPLACE,replaceFunctionName )
 		);
 
 		bothTrim = new SQLFunctionTemplate(
-				Hibernate.STRING,
+				StandardBasicTypes.STRING,
 				BOTH_TRIM_TEMPLATE.replaceAll( LTRIM, ltrimFunctionName )
 						.replaceAll( RTRIM, rtrimFunctionName )
 						.replaceAll( REPLACE,replaceFunctionName )

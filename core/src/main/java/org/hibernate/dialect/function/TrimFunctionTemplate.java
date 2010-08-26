@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -25,10 +25,10 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
@@ -46,7 +46,7 @@ public abstract class TrimFunctionTemplate implements SQLFunction {
 	}
 
 	public Type getReturnType(Type firstArgument, Mapping mapping) throws QueryException {
-		return Hibernate.STRING;
+		return StandardBasicTypes.STRING;
 	}
 
 	public String render(Type firstArgument, List args, SessionFactoryImplementor factory) throws QueryException {

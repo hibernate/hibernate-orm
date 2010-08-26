@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
@@ -33,7 +32,7 @@ import org.hibernate.sql.ANSICaseFragment;
 /**
  * A dialect for Oracle 9i databases.
  * <p/>
- * Unlike the older (deprecated) {@Link Oracl9Dialect), this version specifies
+ * Unlike the older (deprecated) {@link Oracle9Dialect), this version specifies
  * to not use "ANSI join syntax" because 9i does not seem to properly
  * handle it in all cases.
  *

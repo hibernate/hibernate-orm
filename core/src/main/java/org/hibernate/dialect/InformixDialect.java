@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
@@ -28,18 +27,18 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.MappingException;
-import org.hibernate.Hibernate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.StringHelper;
 
 /**
  * Informix dialect.<br>
  * <br>
- * Seems to work with Informix Dynamic Server Version 7.31.UD3,
- * Informix JDBC driver version 2.21JC3.
+ * Seems to work with Informix Dynamic Server Version 7.31.UD3,  Informix JDBC driver version 2.21JC3.
+ *
  * @author Steve Molitor
  */
 public class InformixDialect extends Dialect {
@@ -73,7 +72,7 @@ public class InformixDialect extends Dialect {
 		registerColumnType(Types.VARCHAR, 255, "varchar($l)");
 		registerColumnType(Types.VARCHAR, 32739, "lvarchar($l)");
 
-		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(", "||", ")" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 	}
 
 	public String getAddColumnString() {

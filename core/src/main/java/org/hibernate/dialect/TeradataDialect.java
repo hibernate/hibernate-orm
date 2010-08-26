@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,17 +20,16 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A dialect for the Teradata database created by MCR as part of the
@@ -67,13 +66,13 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.BLOB, "BLOB" );
 		registerColumnType( Types.CLOB, "CLOB" );
 
-		registerFunction( "year", new SQLFunctionTemplate( Hibernate.INTEGER, "extract(year from ?1)" ) );
-		registerFunction( "length", new SQLFunctionTemplate( Hibernate.INTEGER, "character_length(?1)" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(", "||", ")" ) );
-		registerFunction( "substring", new SQLFunctionTemplate( Hibernate.STRING, "substring(?1 from ?2 for ?3)" ) );
-		registerFunction( "locate", new SQLFunctionTemplate( Hibernate.STRING, "position(?1 in ?2)" ) );
-		registerFunction( "mod", new SQLFunctionTemplate( Hibernate.STRING, "?1 mod ?2" ) );
-		registerFunction( "str", new SQLFunctionTemplate( Hibernate.STRING, "cast(?1 as varchar(255))" ) );
+		registerFunction( "year", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "extract(year from ?1)" ) );
+		registerFunction( "length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "character_length(?1)" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
+		registerFunction( "substring", new SQLFunctionTemplate( StandardBasicTypes.STRING, "substring(?1 from ?2 for ?3)" ) );
+		registerFunction( "locate", new SQLFunctionTemplate( StandardBasicTypes.STRING, "position(?1 in ?2)" ) );
+		registerFunction( "mod", new SQLFunctionTemplate( StandardBasicTypes.STRING, "?1 mod ?2" ) );
+		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as varchar(255))" ) );
 
 		// bit_length feels a bit broken to me. We have to cast to char in order to
 		// pass when a numeric value is supplied. But of course the answers given will
@@ -81,16 +80,16 @@ public class TeradataDialect extends Dialect {
 		// a char string but will be 8 or 16 bytes as a true numeric.
 		// Jay Nance 2006-09-22
 		registerFunction(
-				"bit_length", new SQLFunctionTemplate( Hibernate.INTEGER, "octet_length(cast(?1 as char))*4" )
+				"bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "octet_length(cast(?1 as char))*4" )
 		);
 
 		// The preference here would be
-		//   SQLFunctionTemplate( Hibernate.TIMESTAMP, "current_timestamp(?1)", false)
+		//   SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp(?1)", false)
 		// but this appears not to work.
 		// Jay Nance 2006-09-22
-		registerFunction( "current_timestamp", new SQLFunctionTemplate( Hibernate.TIMESTAMP, "current_timestamp" ) );
-		registerFunction( "current_time", new SQLFunctionTemplate( Hibernate.TIMESTAMP, "current_time" ) );
-		registerFunction( "current_date", new SQLFunctionTemplate( Hibernate.TIMESTAMP, "current_date" ) );
+		registerFunction( "current_timestamp", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_timestamp" ) );
+		registerFunction( "current_time", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_time" ) );
+		registerFunction( "current_date", new SQLFunctionTemplate( StandardBasicTypes.TIMESTAMP, "current_date" ) );
 		// IBID for current_time and current_date
 
 		registerKeyword( "password" );

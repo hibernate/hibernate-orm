@@ -26,9 +26,9 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.Hibernate;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 /**
@@ -47,7 +47,7 @@ public class ConvertFunction implements SQLFunction {
 	}
 
 	public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-		return Hibernate.STRING;
+		return StandardBasicTypes.STRING;
 	}
 
 	public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) throws QueryException {

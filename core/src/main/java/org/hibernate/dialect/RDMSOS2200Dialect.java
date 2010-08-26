@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
@@ -35,6 +34,8 @@ import org.hibernate.LockMode;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
+import org.hibernate.type.StandardBasicTypes;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,19 +69,19 @@ public class RDMSOS2200Dialect extends Dialect {
          * string is provided, plus an optional hasParenthesesIfNoArgs flag.
          */
 		registerFunction( "abs", new StandardSQLFunction("abs") );
-		registerFunction( "sign", new StandardSQLFunction("sign", Hibernate.INTEGER) );
+		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
 
-		registerFunction("ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER) );
-		registerFunction("char_length", new StandardSQLFunction("char_length", Hibernate.INTEGER) );
-		registerFunction("character_length", new StandardSQLFunction("character_length", Hibernate.INTEGER) );
+		registerFunction("ascii", new StandardSQLFunction("ascii", StandardBasicTypes.INTEGER) );
+		registerFunction("char_length", new StandardSQLFunction("char_length", StandardBasicTypes.INTEGER) );
+		registerFunction("character_length", new StandardSQLFunction("character_length", StandardBasicTypes.INTEGER) );
 
 		// The RDMS concat() function only supports 2 parameters
-		registerFunction( "concat", new SQLFunctionTemplate(Hibernate.STRING, "concat(?1, ?2)") );
-		registerFunction( "instr", new StandardSQLFunction("instr", Hibernate.STRING) );
-		registerFunction( "lpad", new StandardSQLFunction("lpad", Hibernate.STRING) );
-		registerFunction( "replace", new StandardSQLFunction("replace", Hibernate.STRING) );
-		registerFunction( "rpad", new StandardSQLFunction("rpad", Hibernate.STRING) );
-		registerFunction( "substr", new StandardSQLFunction("substr", Hibernate.STRING) );
+		registerFunction( "concat", new SQLFunctionTemplate(StandardBasicTypes.STRING, "concat(?1, ?2)") );
+		registerFunction( "instr", new StandardSQLFunction("instr", StandardBasicTypes.STRING) );
+		registerFunction( "lpad", new StandardSQLFunction("lpad", StandardBasicTypes.STRING) );
+		registerFunction( "replace", new StandardSQLFunction("replace", StandardBasicTypes.STRING) );
+		registerFunction( "rpad", new StandardSQLFunction("rpad", StandardBasicTypes.STRING) );
+		registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
 
 		registerFunction("lcase", new StandardSQLFunction("lcase") );
 		registerFunction("lower", new StandardSQLFunction("lower") );
@@ -89,68 +90,68 @@ public class RDMSOS2200Dialect extends Dialect {
 		registerFunction("rtrim", new StandardSQLFunction("rtrim") );
 
 		// RDMS does not directly support the trim() function, we use rtrim() and ltrim()
-		registerFunction("trim", new SQLFunctionTemplate(Hibernate.INTEGER, "ltrim(rtrim(?1))" ) );
+		registerFunction("trim", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "ltrim(rtrim(?1))" ) );
 		registerFunction("soundex", new StandardSQLFunction("soundex") );
-		registerFunction("space", new StandardSQLFunction("space", Hibernate.STRING) );
+		registerFunction("space", new StandardSQLFunction("space", StandardBasicTypes.STRING) );
 		registerFunction("ucase", new StandardSQLFunction("ucase") );
 		registerFunction("upper", new StandardSQLFunction("upper") );
 
-		registerFunction("acos", new StandardSQLFunction("acos", Hibernate.DOUBLE) );
-		registerFunction("asin", new StandardSQLFunction("asin", Hibernate.DOUBLE) );
-		registerFunction("atan", new StandardSQLFunction("atan", Hibernate.DOUBLE) );
-		registerFunction("cos", new StandardSQLFunction("cos", Hibernate.DOUBLE) );
-		registerFunction("cosh", new StandardSQLFunction("cosh", Hibernate.DOUBLE) );
-		registerFunction("cot", new StandardSQLFunction("cot", Hibernate.DOUBLE) );
-		registerFunction("exp", new StandardSQLFunction("exp", Hibernate.DOUBLE) );
-		registerFunction("ln", new StandardSQLFunction("ln", Hibernate.DOUBLE) );
-		registerFunction("log", new StandardSQLFunction("log", Hibernate.DOUBLE) );
-		registerFunction("log10", new StandardSQLFunction("log10", Hibernate.DOUBLE) );
-		registerFunction("pi", new NoArgSQLFunction("pi", Hibernate.DOUBLE) );
-		registerFunction("rand", new NoArgSQLFunction("rand", Hibernate.DOUBLE) );
-		registerFunction("sin", new StandardSQLFunction("sin", Hibernate.DOUBLE) );
-		registerFunction("sinh", new StandardSQLFunction("sinh", Hibernate.DOUBLE) );
-		registerFunction("sqrt", new StandardSQLFunction("sqrt", Hibernate.DOUBLE) );
-		registerFunction("tan", new StandardSQLFunction("tan", Hibernate.DOUBLE) );
-		registerFunction("tanh", new StandardSQLFunction("tanh", Hibernate.DOUBLE) );
+		registerFunction("acos", new StandardSQLFunction("acos", StandardBasicTypes.DOUBLE) );
+		registerFunction("asin", new StandardSQLFunction("asin", StandardBasicTypes.DOUBLE) );
+		registerFunction("atan", new StandardSQLFunction("atan", StandardBasicTypes.DOUBLE) );
+		registerFunction("cos", new StandardSQLFunction("cos", StandardBasicTypes.DOUBLE) );
+		registerFunction("cosh", new StandardSQLFunction("cosh", StandardBasicTypes.DOUBLE) );
+		registerFunction("cot", new StandardSQLFunction("cot", StandardBasicTypes.DOUBLE) );
+		registerFunction("exp", new StandardSQLFunction("exp", StandardBasicTypes.DOUBLE) );
+		registerFunction("ln", new StandardSQLFunction("ln", StandardBasicTypes.DOUBLE) );
+		registerFunction("log", new StandardSQLFunction("log", StandardBasicTypes.DOUBLE) );
+		registerFunction("log10", new StandardSQLFunction("log10", StandardBasicTypes.DOUBLE) );
+		registerFunction("pi", new NoArgSQLFunction("pi", StandardBasicTypes.DOUBLE) );
+		registerFunction("rand", new NoArgSQLFunction("rand", StandardBasicTypes.DOUBLE) );
+		registerFunction("sin", new StandardSQLFunction("sin", StandardBasicTypes.DOUBLE) );
+		registerFunction("sinh", new StandardSQLFunction("sinh", StandardBasicTypes.DOUBLE) );
+		registerFunction("sqrt", new StandardSQLFunction("sqrt", StandardBasicTypes.DOUBLE) );
+		registerFunction("tan", new StandardSQLFunction("tan", StandardBasicTypes.DOUBLE) );
+		registerFunction("tanh", new StandardSQLFunction("tanh", StandardBasicTypes.DOUBLE) );
 
 		registerFunction( "round", new StandardSQLFunction("round") );
 		registerFunction( "trunc", new StandardSQLFunction("trunc") );
 		registerFunction( "ceil", new StandardSQLFunction("ceil") );
 		registerFunction( "floor", new StandardSQLFunction("floor") );
 
-		registerFunction( "chr", new StandardSQLFunction("chr", Hibernate.CHARACTER) );
+		registerFunction( "chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER) );
 		registerFunction( "initcap", new StandardSQLFunction("initcap") );
 
-		registerFunction( "user", new NoArgSQLFunction("user", Hibernate.STRING, false) );
+		registerFunction( "user", new NoArgSQLFunction("user", StandardBasicTypes.STRING, false) );
 
-		registerFunction( "current_date", new NoArgSQLFunction("current_date", Hibernate.DATE, false) );
-		registerFunction( "current_time", new NoArgSQLFunction("current_timestamp", Hibernate.TIME, false) );
-		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", Hibernate.TIMESTAMP, false) );
-		registerFunction("curdate", new NoArgSQLFunction("curdate",Hibernate.DATE) );
-		registerFunction("curtime", new NoArgSQLFunction("curtime",Hibernate.TIME) );
-		registerFunction("days", new StandardSQLFunction("days",Hibernate.INTEGER) );
-		registerFunction("dayofmonth", new StandardSQLFunction("dayofmonth",Hibernate.INTEGER) );
-		registerFunction("dayname", new StandardSQLFunction("dayname",Hibernate.STRING) );
-		registerFunction("dayofweek", new StandardSQLFunction("dayofweek",Hibernate.INTEGER) );
-		registerFunction("dayofyear", new StandardSQLFunction("dayofyear",Hibernate.INTEGER) );
-		registerFunction("hour", new StandardSQLFunction("hour",Hibernate.INTEGER) );
-		registerFunction("last_day", new StandardSQLFunction("last_day",Hibernate.DATE) );
-		registerFunction("microsecond", new StandardSQLFunction("microsecond",Hibernate.INTEGER) );
-		registerFunction("minute", new StandardSQLFunction("minute",Hibernate.INTEGER) );
-		registerFunction("month", new StandardSQLFunction("month",Hibernate.INTEGER) );
-		registerFunction("monthname", new StandardSQLFunction("monthname",Hibernate.STRING) );
-		registerFunction("now", new NoArgSQLFunction("now",Hibernate.TIMESTAMP) );
-		registerFunction("quarter", new StandardSQLFunction("quarter",Hibernate.INTEGER) );
-		registerFunction("second", new StandardSQLFunction("second",Hibernate.INTEGER) );
-		registerFunction("time", new StandardSQLFunction("time",Hibernate.TIME) );
-		registerFunction("timestamp", new StandardSQLFunction("timestamp",Hibernate.TIMESTAMP) );
-		registerFunction("week", new StandardSQLFunction("week",Hibernate.INTEGER) );
-		registerFunction("year", new StandardSQLFunction("year",Hibernate.INTEGER) );
+		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
+		registerFunction( "current_time", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIME, false) );
+		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
+		registerFunction("curdate", new NoArgSQLFunction("curdate",StandardBasicTypes.DATE) );
+		registerFunction("curtime", new NoArgSQLFunction("curtime",StandardBasicTypes.TIME) );
+		registerFunction("days", new StandardSQLFunction("days",StandardBasicTypes.INTEGER) );
+		registerFunction("dayofmonth", new StandardSQLFunction("dayofmonth",StandardBasicTypes.INTEGER) );
+		registerFunction("dayname", new StandardSQLFunction("dayname",StandardBasicTypes.STRING) );
+		registerFunction("dayofweek", new StandardSQLFunction("dayofweek",StandardBasicTypes.INTEGER) );
+		registerFunction("dayofyear", new StandardSQLFunction("dayofyear",StandardBasicTypes.INTEGER) );
+		registerFunction("hour", new StandardSQLFunction("hour",StandardBasicTypes.INTEGER) );
+		registerFunction("last_day", new StandardSQLFunction("last_day",StandardBasicTypes.DATE) );
+		registerFunction("microsecond", new StandardSQLFunction("microsecond",StandardBasicTypes.INTEGER) );
+		registerFunction("minute", new StandardSQLFunction("minute",StandardBasicTypes.INTEGER) );
+		registerFunction("month", new StandardSQLFunction("month",StandardBasicTypes.INTEGER) );
+		registerFunction("monthname", new StandardSQLFunction("monthname",StandardBasicTypes.STRING) );
+		registerFunction("now", new NoArgSQLFunction("now",StandardBasicTypes.TIMESTAMP) );
+		registerFunction("quarter", new StandardSQLFunction("quarter",StandardBasicTypes.INTEGER) );
+		registerFunction("second", new StandardSQLFunction("second",StandardBasicTypes.INTEGER) );
+		registerFunction("time", new StandardSQLFunction("time",StandardBasicTypes.TIME) );
+		registerFunction("timestamp", new StandardSQLFunction("timestamp",StandardBasicTypes.TIMESTAMP) );
+		registerFunction("week", new StandardSQLFunction("week",StandardBasicTypes.INTEGER) );
+		registerFunction("year", new StandardSQLFunction("year",StandardBasicTypes.INTEGER) );
 
-		registerFunction("atan2", new StandardSQLFunction("atan2",Hibernate.DOUBLE) );
-		registerFunction( "mod", new StandardSQLFunction("mod",Hibernate.INTEGER) );
+		registerFunction("atan2", new StandardSQLFunction("atan2",StandardBasicTypes.DOUBLE) );
+		registerFunction( "mod", new StandardSQLFunction("mod",StandardBasicTypes.INTEGER) );
 		registerFunction( "nvl", new StandardSQLFunction("nvl") );
-		registerFunction( "power", new StandardSQLFunction("power", Hibernate.DOUBLE) );
+		registerFunction( "power", new StandardSQLFunction("power", StandardBasicTypes.DOUBLE) );
 
 		/**
 		 * For a list of column types to register, see section A-1

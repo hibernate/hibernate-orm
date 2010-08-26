@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.function;
 
@@ -30,28 +29,28 @@ import java.util.Map;
 import org.hibernate.dialect.Dialect;
 
 public class SQLFunctionRegistry {
-
 	private final Dialect dialect;
-	private final Map userFunctions;
+	private final Map<String, SQLFunction> userFunctions;
 	
-	public SQLFunctionRegistry(Dialect dialect, Map userFunctions) {
+	public SQLFunctionRegistry(Dialect dialect, Map<String, SQLFunction> userFunctions) {
 		this.dialect = dialect;
-		this.userFunctions = new HashMap();
+		this.userFunctions = new HashMap<String, SQLFunction>();
 		this.userFunctions.putAll( userFunctions );
 	}
 	
 	public SQLFunction findSQLFunction(String functionName) {
+		// TODO: lower casing done here. Was done "at random" before; maybe not needed at all ?
 		String name = functionName.toLowerCase();
-		SQLFunction userFunction = (SQLFunction) userFunctions.get( name );
-		
-		return userFunction!=null?userFunction:(SQLFunction) dialect.getFunctions().get(name); // TODO: lowercasing done here. Was done "at random" before; maybe not needed at all ?
+		SQLFunction userFunction = userFunctions.get( name );
+		return userFunction != null
+				? userFunction
+				: (SQLFunction) dialect.getFunctions().get( name );
 	}
 
 	public boolean hasFunction(String functionName) {
+		// TODO: toLowerCase was not done before. Only used in Template.
 		String name = functionName.toLowerCase();
-		boolean hasUserFunction = userFunctions.containsKey ( name );
-		
-		return hasUserFunction || dialect.getFunctions().containsKey ( name ); // TODO: toLowerCase was not done before. Only used in Template.
+		return userFunctions.containsKey( name ) || dialect.getFunctions().containsKey( name );
 	}
 
 }

@@ -1,11 +1,33 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import org.hibernate.Hibernate;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A SQL dialect for Ingres 9.3 and later versions.
@@ -21,23 +43,24 @@ import org.hibernate.dialect.function.VarArgsSQLFunction;
  * <li>Modified concatination operator</li>
  * </ul>
  * 
- * @author Enrico Schenk, Raymond Fan
+ * @author Enrico Schenk
+ * @author Raymond Fan
  */
 public class Ingres9Dialect extends IngresDialect {
     public Ingres9Dialect() {
         super();
         registerDateTimeFunctions();
         registerDateTimeColumnTypes();
-        registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "(", "||", ")" ) );
+        registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
     }
 
 	/**
 	 * Register functions current_time, current_timestamp, current_date
 	 */
 	protected void registerDateTimeFunctions() {
-		registerFunction("current_time", new NoArgSQLFunction("current_time", Hibernate.TIME, false));
-		registerFunction("current_timestamp", new NoArgSQLFunction("current_timestamp", Hibernate.TIMESTAMP, false));
-		registerFunction("current_date", new NoArgSQLFunction("current_date", Hibernate.DATE, false));
+		registerFunction("current_time", new NoArgSQLFunction("current_time", StandardBasicTypes.TIME, false));
+		registerFunction("current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false));
+		registerFunction("current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false));
 	}
 
 	/**

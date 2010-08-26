@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect;
 
@@ -29,7 +28,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
@@ -50,6 +48,7 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -256,132 +255,132 @@ public class Cache71Dialect extends Dialect {
 		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
 
 		registerFunction( "abs", new StandardSQLFunction( "abs" ) );
-		registerFunction( "acos", new StandardJDBCEscapeFunction( "acos", Hibernate.DOUBLE ) );
-		registerFunction( "%alphaup", new StandardSQLFunction( "%alphaup", Hibernate.STRING ) );
-		registerFunction( "ascii", new StandardSQLFunction( "ascii", Hibernate.STRING ) );
-		registerFunction( "asin", new StandardJDBCEscapeFunction( "asin", Hibernate.DOUBLE ) );
-		registerFunction( "atan", new StandardJDBCEscapeFunction( "atan", Hibernate.DOUBLE ) );
-		registerFunction( "bit_length", new SQLFunctionTemplate( Hibernate.INTEGER, "($length(?1)*8)" ) );
+		registerFunction( "acos", new StandardJDBCEscapeFunction( "acos", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "%alphaup", new StandardSQLFunction( "%alphaup", StandardBasicTypes.STRING ) );
+		registerFunction( "ascii", new StandardSQLFunction( "ascii", StandardBasicTypes.STRING ) );
+		registerFunction( "asin", new StandardJDBCEscapeFunction( "asin", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "atan", new StandardJDBCEscapeFunction( "atan", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "bit_length", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "($length(?1)*8)" ) );
 		// hibernate impelemnts cast in Dialect.java
-		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", Hibernate.INTEGER ) );
-		registerFunction( "char", new StandardJDBCEscapeFunction( "char", Hibernate.CHARACTER ) );
-		registerFunction( "character_length", new StandardSQLFunction( "character_length", Hibernate.INTEGER ) );
-		registerFunction( "char_length", new StandardSQLFunction( "char_length", Hibernate.INTEGER ) );
-		registerFunction( "cos", new StandardJDBCEscapeFunction( "cos", Hibernate.DOUBLE ) );
-		registerFunction( "cot", new StandardJDBCEscapeFunction( "cot", Hibernate.DOUBLE ) );
+		registerFunction( "ceiling", new StandardSQLFunction( "ceiling", StandardBasicTypes.INTEGER ) );
+		registerFunction( "char", new StandardJDBCEscapeFunction( "char", StandardBasicTypes.CHARACTER ) );
+		registerFunction( "character_length", new StandardSQLFunction( "character_length", StandardBasicTypes.INTEGER ) );
+		registerFunction( "char_length", new StandardSQLFunction( "char_length", StandardBasicTypes.INTEGER ) );
+		registerFunction( "cos", new StandardJDBCEscapeFunction( "cos", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "cot", new StandardJDBCEscapeFunction( "cot", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "coalesce", new VarArgsSQLFunction( "coalesce(", ",", ")" ) );
-		registerFunction( "concat", new VarArgsSQLFunction( Hibernate.STRING, "", "||", "" ) );
+		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "||", "" ) );
 		registerFunction( "convert", new ConvertFunction() );
-		registerFunction( "curdate", new StandardJDBCEscapeFunction( "curdate", Hibernate.DATE ) );
-		registerFunction( "current_date", new NoArgSQLFunction( "current_date", Hibernate.DATE, false ) );
-		registerFunction( "current_time", new NoArgSQLFunction( "current_time", Hibernate.TIME, false ) );
+		registerFunction( "curdate", new StandardJDBCEscapeFunction( "curdate", StandardBasicTypes.DATE ) );
+		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );
+		registerFunction( "current_time", new NoArgSQLFunction( "current_time", StandardBasicTypes.TIME, false ) );
 		registerFunction(
-				"current_timestamp", new ConditionalParenthesisFunction( "current_timestamp", Hibernate.TIMESTAMP )
+				"current_timestamp", new ConditionalParenthesisFunction( "current_timestamp", StandardBasicTypes.TIMESTAMP )
 		);
-		registerFunction( "curtime", new StandardJDBCEscapeFunction( "curtime", Hibernate.TIME ) );
-		registerFunction( "database", new StandardJDBCEscapeFunction( "database", Hibernate.STRING ) );
-		registerFunction( "dateadd", new VarArgsSQLFunction( Hibernate.TIMESTAMP, "dateadd(", ",", ")" ) );
-		registerFunction( "datediff", new VarArgsSQLFunction( Hibernate.INTEGER, "datediff(", ",", ")" ) );
-		registerFunction( "datename", new VarArgsSQLFunction( Hibernate.STRING, "datename(", ",", ")" ) );
-		registerFunction( "datepart", new VarArgsSQLFunction( Hibernate.INTEGER, "datepart(", ",", ")" ) );
-		registerFunction( "day", new StandardSQLFunction( "day", Hibernate.INTEGER ) );
-		registerFunction( "dayname", new StandardJDBCEscapeFunction( "dayname", Hibernate.STRING ) );
-		registerFunction( "dayofmonth", new StandardJDBCEscapeFunction( "dayofmonth", Hibernate.INTEGER ) );
-		registerFunction( "dayofweek", new StandardJDBCEscapeFunction( "dayofweek", Hibernate.INTEGER ) );
-		registerFunction( "dayofyear", new StandardJDBCEscapeFunction( "dayofyear", Hibernate.INTEGER ) );
+		registerFunction( "curtime", new StandardJDBCEscapeFunction( "curtime", StandardBasicTypes.TIME ) );
+		registerFunction( "database", new StandardJDBCEscapeFunction( "database", StandardBasicTypes.STRING ) );
+		registerFunction( "dateadd", new VarArgsSQLFunction( StandardBasicTypes.TIMESTAMP, "dateadd(", ",", ")" ) );
+		registerFunction( "datediff", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "datediff(", ",", ")" ) );
+		registerFunction( "datename", new VarArgsSQLFunction( StandardBasicTypes.STRING, "datename(", ",", ")" ) );
+		registerFunction( "datepart", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "datepart(", ",", ")" ) );
+		registerFunction( "day", new StandardSQLFunction( "day", StandardBasicTypes.INTEGER ) );
+		registerFunction( "dayname", new StandardJDBCEscapeFunction( "dayname", StandardBasicTypes.STRING ) );
+		registerFunction( "dayofmonth", new StandardJDBCEscapeFunction( "dayofmonth", StandardBasicTypes.INTEGER ) );
+		registerFunction( "dayofweek", new StandardJDBCEscapeFunction( "dayofweek", StandardBasicTypes.INTEGER ) );
+		registerFunction( "dayofyear", new StandardJDBCEscapeFunction( "dayofyear", StandardBasicTypes.INTEGER ) );
 		// is it necessary to register %exact since it can only appear in a where clause?
-		registerFunction( "%exact", new StandardSQLFunction( "%exact", Hibernate.STRING ) );
-		registerFunction( "exp", new StandardJDBCEscapeFunction( "exp", Hibernate.DOUBLE ) );
-		registerFunction( "%external", new StandardSQLFunction( "%external", Hibernate.STRING ) );
-		registerFunction( "$extract", new VarArgsSQLFunction( Hibernate.INTEGER, "$extract(", ",", ")" ) );
-		registerFunction( "$find", new VarArgsSQLFunction( Hibernate.INTEGER, "$find(", ",", ")" ) );
-		registerFunction( "floor", new StandardSQLFunction( "floor", Hibernate.INTEGER ) );
-		registerFunction( "getdate", new StandardSQLFunction( "getdate", Hibernate.TIMESTAMP ) );
-		registerFunction( "hour", new StandardJDBCEscapeFunction( "hour", Hibernate.INTEGER ) );
+		registerFunction( "%exact", new StandardSQLFunction( "%exact", StandardBasicTypes.STRING ) );
+		registerFunction( "exp", new StandardJDBCEscapeFunction( "exp", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "%external", new StandardSQLFunction( "%external", StandardBasicTypes.STRING ) );
+		registerFunction( "$extract", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "$extract(", ",", ")" ) );
+		registerFunction( "$find", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "$find(", ",", ")" ) );
+		registerFunction( "floor", new StandardSQLFunction( "floor", StandardBasicTypes.INTEGER ) );
+		registerFunction( "getdate", new StandardSQLFunction( "getdate", StandardBasicTypes.TIMESTAMP ) );
+		registerFunction( "hour", new StandardJDBCEscapeFunction( "hour", StandardBasicTypes.INTEGER ) );
 		registerFunction( "ifnull", new VarArgsSQLFunction( "ifnull(", ",", ")" ) );
 		registerFunction( "%internal", new StandardSQLFunction( "%internal" ) );
 		registerFunction( "isnull", new VarArgsSQLFunction( "isnull(", ",", ")" ) );
-		registerFunction( "isnumeric", new StandardSQLFunction( "isnumeric", Hibernate.INTEGER ) );
-		registerFunction( "lcase", new StandardJDBCEscapeFunction( "lcase", Hibernate.STRING ) );
-		registerFunction( "left", new StandardJDBCEscapeFunction( "left", Hibernate.STRING ) );
-		registerFunction( "len", new StandardSQLFunction( "len", Hibernate.INTEGER ) );
+		registerFunction( "isnumeric", new StandardSQLFunction( "isnumeric", StandardBasicTypes.INTEGER ) );
+		registerFunction( "lcase", new StandardJDBCEscapeFunction( "lcase", StandardBasicTypes.STRING ) );
+		registerFunction( "left", new StandardJDBCEscapeFunction( "left", StandardBasicTypes.STRING ) );
+		registerFunction( "len", new StandardSQLFunction( "len", StandardBasicTypes.INTEGER ) );
 		registerFunction( "$length", new VarArgsSQLFunction( "$length(", ",", ")" ) );
 		// aggregate functions shouldn't be registered, right?
-		//registerFunction( "list", new StandardSQLFunction("list",Hibernate.STRING) );
+		//registerFunction( "list", new StandardSQLFunction("list",StandardBasicTypes.STRING) );
 		// stopped on $list
 		registerFunction( "$list", new VarArgsSQLFunction( "$list(", ",", ")" ) );
 		registerFunction( "$listdata", new VarArgsSQLFunction( "$listdata(", ",", ")" ) );
 		registerFunction( "$listfind", new VarArgsSQLFunction( "$listfind(", ",", ")" ) );
 		registerFunction( "$listget", new VarArgsSQLFunction( "$listget(", ",", ")" ) );
-		registerFunction( "$listlength", new StandardSQLFunction( "$listlength", Hibernate.INTEGER ) );
-		registerFunction( "locate", new StandardSQLFunction( "$FIND", Hibernate.INTEGER ) );
-		registerFunction( "log", new StandardJDBCEscapeFunction( "log", Hibernate.DOUBLE ) );
-		registerFunction( "log10", new StandardJDBCEscapeFunction( "log", Hibernate.DOUBLE ) );
+		registerFunction( "$listlength", new StandardSQLFunction( "$listlength", StandardBasicTypes.INTEGER ) );
+		registerFunction( "locate", new StandardSQLFunction( "$FIND", StandardBasicTypes.INTEGER ) );
+		registerFunction( "log", new StandardJDBCEscapeFunction( "log", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "log10", new StandardJDBCEscapeFunction( "log", StandardBasicTypes.DOUBLE ) );
 		registerFunction( "lower", new StandardSQLFunction( "lower" ) );
 		registerFunction( "ltrim", new StandardSQLFunction( "ltrim" ) );
-		registerFunction( "minute", new StandardJDBCEscapeFunction( "minute", Hibernate.INTEGER ) );
-		registerFunction( "mod", new StandardJDBCEscapeFunction( "mod", Hibernate.DOUBLE ) );
-		registerFunction( "month", new StandardJDBCEscapeFunction( "month", Hibernate.INTEGER ) );
-		registerFunction( "monthname", new StandardJDBCEscapeFunction( "monthname", Hibernate.STRING ) );
-		registerFunction( "now", new StandardJDBCEscapeFunction( "monthname", Hibernate.TIMESTAMP ) );
+		registerFunction( "minute", new StandardJDBCEscapeFunction( "minute", StandardBasicTypes.INTEGER ) );
+		registerFunction( "mod", new StandardJDBCEscapeFunction( "mod", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "month", new StandardJDBCEscapeFunction( "month", StandardBasicTypes.INTEGER ) );
+		registerFunction( "monthname", new StandardJDBCEscapeFunction( "monthname", StandardBasicTypes.STRING ) );
+		registerFunction( "now", new StandardJDBCEscapeFunction( "monthname", StandardBasicTypes.TIMESTAMP ) );
 		registerFunction( "nullif", new VarArgsSQLFunction( "nullif(", ",", ")" ) );
 		registerFunction( "nvl", new NvlFunction() );
 		registerFunction( "%odbcin", new StandardSQLFunction( "%odbcin" ) );
 		registerFunction( "%odbcout", new StandardSQLFunction( "%odbcin" ) );
-		registerFunction( "%pattern", new VarArgsSQLFunction( Hibernate.STRING, "", "%pattern", "" ) );
-		registerFunction( "pi", new StandardJDBCEscapeFunction( "pi", Hibernate.DOUBLE ) );
-		registerFunction( "$piece", new VarArgsSQLFunction( Hibernate.STRING, "$piece(", ",", ")" ) );
-		registerFunction( "position", new VarArgsSQLFunction( Hibernate.INTEGER, "position(", " in ", ")" ) );
-		registerFunction( "power", new VarArgsSQLFunction( Hibernate.STRING, "power(", ",", ")" ) );
-		registerFunction( "quarter", new StandardJDBCEscapeFunction( "quarter", Hibernate.INTEGER ) );
-		registerFunction( "repeat", new VarArgsSQLFunction( Hibernate.STRING, "repeat(", ",", ")" ) );
-		registerFunction( "replicate", new VarArgsSQLFunction( Hibernate.STRING, "replicate(", ",", ")" ) );
-		registerFunction( "right", new StandardJDBCEscapeFunction( "right", Hibernate.STRING ) );
-		registerFunction( "round", new VarArgsSQLFunction( Hibernate.FLOAT, "round(", ",", ")" ) );
-		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", Hibernate.STRING ) );
-		registerFunction( "second", new StandardJDBCEscapeFunction( "second", Hibernate.INTEGER ) );
-		registerFunction( "sign", new StandardSQLFunction( "sign", Hibernate.INTEGER ) );
-		registerFunction( "sin", new StandardJDBCEscapeFunction( "sin", Hibernate.DOUBLE ) );
-		registerFunction( "space", new StandardSQLFunction( "space", Hibernate.STRING ) );
-		registerFunction( "%sqlstring", new VarArgsSQLFunction( Hibernate.STRING, "%sqlstring(", ",", ")" ) );
-		registerFunction( "%sqlupper", new VarArgsSQLFunction( Hibernate.STRING, "%sqlupper(", ",", ")" ) );
-		registerFunction( "sqrt", new StandardJDBCEscapeFunction( "SQRT", Hibernate.DOUBLE ) );
-		registerFunction( "%startswith", new VarArgsSQLFunction( Hibernate.STRING, "", "%startswith", "" ) );
+		registerFunction( "%pattern", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "%pattern", "" ) );
+		registerFunction( "pi", new StandardJDBCEscapeFunction( "pi", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "$piece", new VarArgsSQLFunction( StandardBasicTypes.STRING, "$piece(", ",", ")" ) );
+		registerFunction( "position", new VarArgsSQLFunction( StandardBasicTypes.INTEGER, "position(", " in ", ")" ) );
+		registerFunction( "power", new VarArgsSQLFunction( StandardBasicTypes.STRING, "power(", ",", ")" ) );
+		registerFunction( "quarter", new StandardJDBCEscapeFunction( "quarter", StandardBasicTypes.INTEGER ) );
+		registerFunction( "repeat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "repeat(", ",", ")" ) );
+		registerFunction( "replicate", new VarArgsSQLFunction( StandardBasicTypes.STRING, "replicate(", ",", ")" ) );
+		registerFunction( "right", new StandardJDBCEscapeFunction( "right", StandardBasicTypes.STRING ) );
+		registerFunction( "round", new VarArgsSQLFunction( StandardBasicTypes.FLOAT, "round(", ",", ")" ) );
+		registerFunction( "rtrim", new StandardSQLFunction( "rtrim", StandardBasicTypes.STRING ) );
+		registerFunction( "second", new StandardJDBCEscapeFunction( "second", StandardBasicTypes.INTEGER ) );
+		registerFunction( "sign", new StandardSQLFunction( "sign", StandardBasicTypes.INTEGER ) );
+		registerFunction( "sin", new StandardJDBCEscapeFunction( "sin", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "space", new StandardSQLFunction( "space", StandardBasicTypes.STRING ) );
+		registerFunction( "%sqlstring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%sqlstring(", ",", ")" ) );
+		registerFunction( "%sqlupper", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%sqlupper(", ",", ")" ) );
+		registerFunction( "sqrt", new StandardJDBCEscapeFunction( "SQRT", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "%startswith", new VarArgsSQLFunction( StandardBasicTypes.STRING, "", "%startswith", "" ) );
 		// below is for Cache' that don't have str in 2007.1 there is str and we register str directly
-		registerFunction( "str", new SQLFunctionTemplate( Hibernate.STRING, "cast(?1 as char varying)" ) );
-		registerFunction( "string", new VarArgsSQLFunction( Hibernate.STRING, "string(", ",", ")" ) );
+		registerFunction( "str", new SQLFunctionTemplate( StandardBasicTypes.STRING, "cast(?1 as char varying)" ) );
+		registerFunction( "string", new VarArgsSQLFunction( StandardBasicTypes.STRING, "string(", ",", ")" ) );
 		// note that %string is deprecated
-		registerFunction( "%string", new VarArgsSQLFunction( Hibernate.STRING, "%string(", ",", ")" ) );
-		registerFunction( "substr", new VarArgsSQLFunction( Hibernate.STRING, "substr(", ",", ")" ) );
-		registerFunction( "substring", new VarArgsSQLFunction( Hibernate.STRING, "substring(", ",", ")" ) );
-		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", Hibernate.TIMESTAMP, false ) );
-		registerFunction( "tan", new StandardJDBCEscapeFunction( "tan", Hibernate.DOUBLE ) );
-		registerFunction( "timestampadd", new StandardJDBCEscapeFunction( "timestampadd", Hibernate.DOUBLE ) );
-		registerFunction( "timestampdiff", new StandardJDBCEscapeFunction( "timestampdiff", Hibernate.DOUBLE ) );
-		registerFunction( "tochar", new VarArgsSQLFunction( Hibernate.STRING, "tochar(", ",", ")" ) );
-		registerFunction( "to_char", new VarArgsSQLFunction( Hibernate.STRING, "to_char(", ",", ")" ) );
-		registerFunction( "todate", new VarArgsSQLFunction( Hibernate.STRING, "todate(", ",", ")" ) );
-		registerFunction( "to_date", new VarArgsSQLFunction( Hibernate.STRING, "todate(", ",", ")" ) );
+		registerFunction( "%string", new VarArgsSQLFunction( StandardBasicTypes.STRING, "%string(", ",", ")" ) );
+		registerFunction( "substr", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substr(", ",", ")" ) );
+		registerFunction( "substring", new VarArgsSQLFunction( StandardBasicTypes.STRING, "substring(", ",", ")" ) );
+		registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
+		registerFunction( "tan", new StandardJDBCEscapeFunction( "tan", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "timestampadd", new StandardJDBCEscapeFunction( "timestampadd", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "timestampdiff", new StandardJDBCEscapeFunction( "timestampdiff", StandardBasicTypes.DOUBLE ) );
+		registerFunction( "tochar", new VarArgsSQLFunction( StandardBasicTypes.STRING, "tochar(", ",", ")" ) );
+		registerFunction( "to_char", new VarArgsSQLFunction( StandardBasicTypes.STRING, "to_char(", ",", ")" ) );
+		registerFunction( "todate", new VarArgsSQLFunction( StandardBasicTypes.STRING, "todate(", ",", ")" ) );
+		registerFunction( "to_date", new VarArgsSQLFunction( StandardBasicTypes.STRING, "todate(", ",", ")" ) );
 		registerFunction( "tonumber", new StandardSQLFunction( "tonumber" ) );
 		registerFunction( "to_number", new StandardSQLFunction( "tonumber" ) );
 		// TRIM(end_keyword string-expression-1 FROM string-expression-2)
 		// use Hibernate implementation "From" is one of the parameters they pass in position ?3
-		//registerFunction( "trim", new SQLFunctionTemplate(Hibernate.STRING, "trim(?1 ?2 from ?3)") );
-		registerFunction( "truncate", new StandardJDBCEscapeFunction( "truncate", Hibernate.STRING ) );
-		registerFunction( "ucase", new StandardJDBCEscapeFunction( "ucase", Hibernate.STRING ) );
+		//registerFunction( "trim", new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1 ?2 from ?3)") );
+		registerFunction( "truncate", new StandardJDBCEscapeFunction( "truncate", StandardBasicTypes.STRING ) );
+		registerFunction( "ucase", new StandardJDBCEscapeFunction( "ucase", StandardBasicTypes.STRING ) );
 		registerFunction( "upper", new StandardSQLFunction( "upper" ) );
 		// %upper is deprecated
 		registerFunction( "%upper", new StandardSQLFunction( "%upper" ) );
-		registerFunction( "user", new StandardJDBCEscapeFunction( "user", Hibernate.STRING ) );
-		registerFunction( "week", new StandardJDBCEscapeFunction( "user", Hibernate.INTEGER ) );
-		registerFunction( "xmlconcat", new VarArgsSQLFunction( Hibernate.STRING, "xmlconcat(", ",", ")" ) );
-		registerFunction( "xmlelement", new VarArgsSQLFunction( Hibernate.STRING, "xmlelement(", ",", ")" ) );
+		registerFunction( "user", new StandardJDBCEscapeFunction( "user", StandardBasicTypes.STRING ) );
+		registerFunction( "week", new StandardJDBCEscapeFunction( "user", StandardBasicTypes.INTEGER ) );
+		registerFunction( "xmlconcat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "xmlconcat(", ",", ")" ) );
+		registerFunction( "xmlelement", new VarArgsSQLFunction( StandardBasicTypes.STRING, "xmlelement(", ",", ")" ) );
 		// xmlforest requires a new kind of function constructor
-		registerFunction( "year", new StandardJDBCEscapeFunction( "year", Hibernate.INTEGER ) );
+		registerFunction( "year", new StandardJDBCEscapeFunction( "year", StandardBasicTypes.INTEGER ) );
 	}
 
 	protected final void register71Functions() {
-		this.registerFunction( "str", new VarArgsSQLFunction( Hibernate.STRING, "str(", ",", ")" ) );
+		this.registerFunction( "str", new VarArgsSQLFunction( StandardBasicTypes.STRING, "str(", ",", ")" ) );
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

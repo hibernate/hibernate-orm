@@ -9,7 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.MapKey;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
 import org.hibernate.annotations.Type;
@@ -22,8 +22,8 @@ public class Matrix {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	
-	@MapKey(type = @Type(type="integer") )
+
+	@MapKeyType( @Type(type="integer") )
 	@ElementCollection
 	@Sort(type = SortType.NATURAL) 
 	@Type(type = "float")

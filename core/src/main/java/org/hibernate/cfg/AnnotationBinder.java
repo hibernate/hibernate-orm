@@ -112,6 +112,7 @@ import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -1682,11 +1683,12 @@ public final class AnnotationBinder {
 						!indexColumn.isImplicit(),
 						property.isAnnotationPresent( CollectionOfElements.class )
 								|| property.isAnnotationPresent( org.hibernate.annotations.MapKey.class )
+								|| property.isAnnotationPresent( MapKeyType.class )
+
 						// || property.isAnnotationPresent( ManyToAny.class )
 				);
 				collectionBinder.setIndexColumn( indexColumn );
-				MapKey mapKeyAnn = property.getAnnotation( MapKey.class );
-				collectionBinder.setMapKey( mapKeyAnn );
+				collectionBinder.setMapKey( property.getAnnotation( MapKey.class ) );
 				collectionBinder.setPropertyName( inferredData.getPropertyName() );
 				BatchSize batchAnn = property.getAnnotation( BatchSize.class );
 				collectionBinder.setBatchSize( batchAnn );

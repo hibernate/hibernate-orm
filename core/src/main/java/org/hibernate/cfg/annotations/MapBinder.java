@@ -37,6 +37,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.MapKeyManyToMany;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.AccessType;
@@ -288,7 +289,13 @@ public class MapBinder extends CollectionBinder {
 						elementBinder.setExplicitType( mapKeyAnn.type() );
 					}
 					else {
-						elementBinder.setType( property, elementClass );
+						MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
+						if ( mapKeyTypeAnnotation != null && ! BinderHelper.isDefault( mapKeyTypeAnnotation.value().type() ) ) {
+							elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
+						}
+						else {
+							elementBinder.setType( property, elementClass );
+						}
 					}
 					mapValue.setIndex( elementBinder.make() );
 				}

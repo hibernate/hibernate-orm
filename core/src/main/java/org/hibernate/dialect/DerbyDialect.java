@@ -29,9 +29,9 @@ import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
-import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.util.ReflectHelper;
@@ -57,7 +57,8 @@ public class DerbyDialect extends DB2Dialect {
 		determineDriverVersion();
 	}
 
-	/*package*/ void determineDriverVersion() {
+	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	private void determineDriverVersion() {
 		try {
 			// locate the derby sysinfo class and query its version info
 			final Class sysinfoClass = ReflectHelper.classForName( "org.apache.derby.tools.sysinfo", this.getClass() );
@@ -73,20 +74,13 @@ public class DerbyDialect extends DB2Dialect {
 		}
 	}
 
-	/*package*/ boolean isTenPointFiveReleaseOrNewer() {
+	private boolean isTenPointFiveReleaseOrNewer() {
 		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 5 );
 	}
 
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}
-
-//	/**
-//	 * This is different in Cloudscape to DB2.
-//	 */
-//	public String getIdentityColumnString() {
-//		return "not null generated always as identity"; //$NON-NLS-1
-//	}
 
 	/**
 	 * Return the case statement modified for Cloudscape.
@@ -99,12 +93,28 @@ public class DerbyDialect extends DB2Dialect {
 	      return true;
 	}
 
-//	public Class getNativeIdentifierGeneratorClass() {
-//		return TableHiLoGenerator.class;
-//	}
-
 	public boolean supportsSequences() {
-		return false;
+		// technically sequence support was added in 10.6.1.0...
+		//
+		// The problem though is that I am not exactly sure how to differentiate 10.6.1.0 from any other 10.6.x release.
+		//
+		// http://db.apache.org/derby/docs/10.0/publishedapi/org/apache/derby/tools/sysinfo.html seems incorrect.  It
+		// states that derby's versioning scheme is major.minor.maintenance, but obviously 10.6.1.0 has 4 components
+		// to it, not 3.
+		//
+		// Let alone the fact that it states that versions with the matching major.minor are 'feature
+		// compatible' which is clearly not the case here (sequence support is a new feature...)
+		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 6 );
+	}
+
+	@Override
+	public String getSequenceNextValString(String sequenceName) {
+		if ( supportsSequences() ) {
+			return "values next value for " + sequenceName;
+		}
+		else {
+			throw new MappingException( "Derby does not support sequence prior to release 10.6.1.0" );
+		}
 	}
 
 	public boolean supportsLimit() {

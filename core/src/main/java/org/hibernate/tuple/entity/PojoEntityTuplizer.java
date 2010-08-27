@@ -116,7 +116,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
         // determine all interfaces needed by the resulting proxy
-		HashSet proxyInterfaces = new HashSet();
+		HashSet<Class> proxyInterfaces = new HashSet<Class>();
 		proxyInterfaces.add( HibernateProxy.class );
 		
 		Class mappedClass = persistentClass.getMappedClass();
@@ -125,9 +125,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		if ( proxyInterface!=null && !mappedClass.equals( proxyInterface ) ) {
 			if ( !proxyInterface.isInterface() ) {
 				throw new MappingException(
-				        "proxy must be either an interface, or the class itself: " + 
-				        getEntityName()
-					);
+						"proxy must be either an interface, or the class itself: " + getEntityName()
+				);
 			}
 			proxyInterfaces.add( proxyInterface );
 		}
@@ -136,16 +135,15 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			proxyInterfaces.add( mappedClass );
 		}
 
-		Iterator iter = persistentClass.getSubclassIterator();
-		while ( iter.hasNext() ) {
-			Subclass subclass = ( Subclass ) iter.next();
-			Class subclassProxy = subclass.getProxyInterface();
-			Class subclassClass = subclass.getMappedClass();
+		Iterator subclasses = persistentClass.getSubclassIterator();
+		while ( subclasses.hasNext() ) {
+			final Subclass subclass = ( Subclass ) subclasses.next();
+			final Class subclassProxy = subclass.getProxyInterface();
+			final Class subclassClass = subclass.getMappedClass();
 			if ( subclassProxy!=null && !subclassClass.equals( subclassProxy ) ) {
-				if ( !proxyInterface.isInterface() ) {
+				if ( !subclassProxy.isInterface() ) {
 					throw new MappingException(
-					        "proxy must be either an interface, or the class itself: " + 
-					        subclass.getEntityName()
+							"proxy must be either an interface, or the class itself: " + subclass.getEntityName()
 					);
 				}
 				proxyInterfaces.add( subclassProxy );

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.subclassProxyInterface">
+	<class name="Person">
+		<id name="id" type="long">
+            <generator class="increment"/>
+		</id>
+		<discriminator column="personType" type="string" />
+		<property name="name" type="string"  />
+		<subclass name="Doctor" discriminator-value="doctor" proxy="IDoctor" />
+	</class>
+</hibernate-mapping>

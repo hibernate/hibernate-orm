@@ -4,122 +4,84 @@
 <chapter id="hibernate-gsg-tutorial-annotations">
     <title>Tutorial Using Native Hibernate APIs and Annotation Mappings</title>
 
-    <procedure>
-        <title>Steps</title>
+    <para>
+        This tutorial is located within the download bundle under <filename>basic</filename> and illustrates
+        <itemizedlist>
+            <listitem>
+                <para>
+                    using annotations to provide mapping information
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    using the <phrase>native</phrase> Hibernate APIs
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
 
-        <step id="hibernate-gsg-tutorial-annotations-pom">
-            <title>Create the Maven POM file</title>
-            <para>
-                Create a file named <filename>pom.xml</filename> in the root of your project directory, containing
-                the text in <xref linkend="hibernate-gsg-tutorial-annotations-pom-ex1"/>.
-            </para>
-            <example id="hibernate-gsg-tutorial-annotations-pom-ex1">
-                <title><filename>pom.xml</filename></title>
-                <programlisting role="XML"><xi:include href="extras/examples/annotations/pom.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            </example>
-        </step>
+    <section id="hibernate-gsg-tutorial-annotations-config">
+        <title>The Hibernate configuration file</title>
 
-        <step id="hibernate-gsg-tutorial-native-entity">
-            <title>Create the annotated entity Java class</title>
+        <para>
+            The contents are exactly the same as in <xref linkend="hibernate-gsg-tutorial-basic-config"/>.
+            The single difference is the <literal>mapping</literal> element at the very end naming the
+            annotated entity class using the <literal>class</literal> attribute.
+        </para>
+    </section>
 
-            <para>
-                Create a file named <filename>src/main/java/org/hibernate/tutorial/annotations/Event.java</filename>,
-                containing the text in <xref linkend="hibernate-gsg-tutorial-annotations-entity-ex1"/>.
-            </para>
+    <section id="hibernate-gsg-tutorial-basic-entity">
+        <title>The annotated entity Java class</title>
+        <para>
+            The entity class in this tutorial is <classname>org.hibernate.tutorial.annotations.Event</classname>
+            <itemizedlist>
+                <title>Notes About the Entity</title>
+                <listitem>
+                    <para>
+                        The entity class is still using JavaBean conventions.  In fact the class itself is exactly
+                        the same as we saw in <xref linkend="hibernate-gsg-tutorial-basic-entity"/>, the only
+                        difference being the use of annotations to provide the metadata instead of a separate
+                        <filename>hbm.xml</filename> file.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        The <interfacename>@javax.persistence.Entity</interfacename> annotation is used to mark a
+                        class as an entity.  It's function is essentially the same as the <literal>class</literal>
+                        mapping element discussed in <xref linkend="hibernate-gsg-tutorial-basic-mapping"/>.
+                        Additionally the <interfacename>@javax.persistence.Table</interfacename> annotation is
+                        used to explicitly specify the table name (the default table name would have been
+                        <database class="table">EVENT</database>).
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <interfacename>@javax.persistence.Id</interfacename> marks the property defining the
+                        entity's identifier.  <interfacename>@javax.persistence.GeneratedValue</interfacename> and
+                        <interfacename>@org.hibernate.annotations.GenericGenerator</interfacename> work in tandem
+                        to indicate that Hibernate should use Hibernate's <literal>increment</literal> generation
+                        strategy for this entity's identifier values.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Just as discussed in <xref linkend="hibernate-gsg-tutorial-basic-mapping"/>, the
+                        <literal>date</literal> property needs special handling to account for its special naming
+                        and its SQL type.
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
 
-            <example id="hibernate-gsg-tutorial-annotations-entity-ex1">
-                <title><filename>Entity.java</filename></title>
-                <programlisting role="JAVA"><xi:include href="extras/examples/annotations/org/hibernate/tutorial/annotations/Event.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            </example>
-            <para>
-                <itemizedlist>
-                    <title>Notes About the Entity</title>
-                    <listitem>
-                        <para>
-                            The entity class is still using JavaBean conventions.  In fact the class itself is exactly
-                            the same as we saw in <xref linkend="hibernate-gsg-tutorial-native-entity-ex1"/>, the only
-                            difference being the use of annotations to provide the metadata instead of a separate
-                            <filename>hbm.xml</filename> file.
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            The <interfacename>@javax.persistence.Entity</interfacename> annotation is used to mark a
-                            class as an entity.  It's function is essentially the same as the <literal>class</literal>
-                            mapping element we see in <xref linkend="hibernate-gsg-tutorial-native-hbm-xml-ex1"/>.
-                            Additionally the <interfacename>@javax.persistence.Table</interfacename> annotation is
-                            used to explicitly specify the table name (the default table name would have been
-                            <database class="table">EVENT</database>).
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <interfacename>@javax.persistence.Id</interfacename> marks the property defining the
-                            entity's identifier.
-                        </para>
-                    </listitem>
-                    <!-- todo : example of defining the generator -->
-                    <listitem>
-                        <para>
-                            Just as in <xref linkend="hibernate-gsg-tutorial-native-hbm-xml-ex1"/>, the
-                            <literal>date</literal> property needs special handling to account for its special naming
-                            and its SQL type.
-                        </para>
-                    </listitem>
-                </itemizedlist>
-            </para>
-        </step>
-
-        <step id="hibernate-gsg-tutorial-annotations-config">
-            <title>Create the Hibernate configuration file</title>
-
-            <para>
-                Create a file named <filename>src/main/resources/hibernate.cfg.xml</filename> with the following contents:
-            </para>
-
-            <example id="hibernate-gsg-tutorial-annotations-config-ex1">
-                <title><filename>hibernate.cfg.xml</filename></title>
-                <programlisting role="XML"><xi:include href="extras/examples/annotations/hibernate.cfg.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            </example>
-
-            <para>
-                Most of the contents are exactly the same as in <xref linkend="hibernate-gsg-tutorial-native-config-ex1"/>.
-                The single difference is the <literal>mapping</literal> element at the very end naming the
-                annotated entity class using the <literal>class</literal> attribute.
-            </para>
-        </step>
-
-        <step id="hibernate-gsg-tutorial-annotations-working">
-            <title>Do stuff</title>
-            <para>
-                Create a file named <filename>src/main/java/org/hibernate/tutorial/annotations/EventManager.java</filename>
-                containing the text in <xref linkend="hibernate-gsg-tutorial-native-working-ex1"/>.
-            </para>
-
-            <example id="hibernate-gsg-tutorial-native-working-ex1">
-                <title>
-                    <filename>EventManager.java</filename>
-                </title>
-                <programlisting role="JAVA"><xi:include href="extras/examples/annotations/org/hibernate/tutorial/annotations/EventManager.java" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text"/></programlisting>
-            </example>
-
-            <para>
-                Refer back to <xref linkend="hibernate-gsg-tutorial-native-working"/> for a discussion
-            </para>
-        </step>
-
-        <step id="hibernate-gsg-tutorial-annotations-compileAndRun">
-            <title>Compile and run the code</title>
-
-            <para>
-                Follow the directions at <xref linkend="hibernate-gsg-tutorial-native-compile"/> and
-                <xref linkend="hibernate-gsg-tutorial-native-running"/> to compile and then run the code.  Be sure
-                to reference the <classname>org.hibernate.tutorial.annotations.EventManager</classname> class
-                instead of the <classname>org.hibernate.tutorial.hbm.EventManager</classname> class.
-            </para>
-        </step>
-
-    </procedure>
+    <section id="hibernate-gsg-tutorial-annotations-test">
+        <title>Example code</title>
+        <para>
+            <classname>org.hibernate.tutorial.annotations.AnnotationsIllustrationTest</classname> is essentially the
+            same as <classname>org.hibernate.tutorial.hbm.NativeApiIllustrationTest</classname> discussed in
+            <xref linkend="hibernate-gsg-tutorial-basic-test"/>.
+        </para>
+    </section>
 
     <section id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>

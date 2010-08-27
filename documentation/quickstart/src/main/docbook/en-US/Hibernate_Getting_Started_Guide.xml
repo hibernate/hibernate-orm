@@ -8,9 +8,29 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="Book_Info.xml" />
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/preface.xml" />
 
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/community.xml" />
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/obtaining.xml" />
+    <part label="I">
+        <title>Basic Information</title>
+        <partintro>
+            <para>
+                The sections in Part I present basic information you will
+                likely need to get started utilizing Hibernate
+            </para>
+        </partintro>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/community.xml" />
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/obtaining.xml" />
+    </part>
 
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_native.xml" />
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_annotations.xml" />
+    <part label="II">
+        <title>Tutorials</title>
+        <partintro>
+            <para>
+                The sections in Part II dive into illustrative examples of using Hibernate in various
+                ways.  The referenced projects and code are available for download at
+                <ulink url="http://sourceforge.net/projects/hibernate/files/hibernate/&version;"/>
+            </para>
+        </partintro>
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_native.xml" />
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_annotations.xml" />
+    </part>
+
 </book>

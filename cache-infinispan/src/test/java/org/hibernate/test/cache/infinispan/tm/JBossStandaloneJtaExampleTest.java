@@ -279,6 +279,7 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
       for (String mapping : mappings) {
          cfg.addResource(mapping, Thread.currentThread().getContextClassLoader());
       }
+      cfg.buildMappings();
       Iterator iter = cfg.getClassMappings();
       while (iter.hasNext()) {
          PersistentClass clazz = (PersistentClass) iter.next();

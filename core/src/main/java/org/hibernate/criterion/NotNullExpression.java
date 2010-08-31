@@ -46,7 +46,7 @@ public class NotNullExpression implements Criterion {
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
-		String[] columns = criteriaQuery.getColumnsUsingProjection(criteria, propertyName);
+		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		String result = StringHelper.join(
 			" or ",
 			StringHelper.suffix( columns, " is not null" )

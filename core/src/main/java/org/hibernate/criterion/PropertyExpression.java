@@ -49,8 +49,8 @@ public class PropertyExpression implements Criterion {
 
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
 	throws HibernateException {
-		String[] xcols = criteriaQuery.getColumnsUsingProjection(criteria, propertyName);
-		String[] ycols = criteriaQuery.getColumnsUsingProjection(criteria, otherPropertyName);
+		String[] xcols = criteriaQuery.findColumns(propertyName, criteria);
+		String[] ycols = criteriaQuery.findColumns(otherPropertyName, criteria);
 		String result = StringHelper.join(
 			" and ",
 			StringHelper.add(xcols, getOp(), ycols)

@@ -50,7 +50,7 @@ public class BetweenExpression implements Criterion {
 	throws HibernateException {
 		return StringHelper.join(
 			" and ",
-			StringHelper.suffix( criteriaQuery.getColumnsUsingProjection(criteria, propertyName), " between ? and ?" )
+			StringHelper.suffix( criteriaQuery.findColumns(propertyName, criteria), " between ? and ?" )
 		);
 
 		//TODO: get SQL rendering out of this package!

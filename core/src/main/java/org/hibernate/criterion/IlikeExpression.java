@@ -52,7 +52,7 @@ public class IlikeExpression implements Criterion {
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
 		Dialect dialect = criteriaQuery.getFactory().getDialect();
-		String[] columns = criteriaQuery.getColumnsUsingProjection(criteria, propertyName);
+		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		if (columns.length!=1) throw new HibernateException("ilike may only be used with single-column properties");
 		if ( dialect instanceof PostgreSQLDialect ) {
 			return columns[0] + " ilike ?";

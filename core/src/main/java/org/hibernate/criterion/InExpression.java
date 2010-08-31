@@ -49,8 +49,7 @@ public class InExpression implements Criterion {
 
     public String toSqlString( Criteria criteria, CriteriaQuery criteriaQuery )
             throws HibernateException {
-        String[] columns = criteriaQuery.getColumnsUsingProjection(
-                criteria, propertyName );
+        String[] columns = criteriaQuery.findColumns(propertyName, criteria);
         if ( criteriaQuery.getFactory().getDialect()
                 .supportsRowValueConstructorSyntaxInInList() || columns.length<=1) {
 

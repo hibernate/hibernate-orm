@@ -487,6 +487,27 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				);
 	}
 
+	/**
+	 * Get the names of the columns mapped by a property path; if the
+	 * property path is not found in subcriteria, try the "outer" query.
+	 * Projection aliases are ignored.
+	 */
+	public String[] findColumns(String propertyName, Criteria subcriteria )
+	throws HibernateException {
+		try {
+			return getColumns( propertyName, subcriteria );
+		}
+		catch ( HibernateException he ) {
+			//not found in inner query, try the outer query
+			if ( outerQueryTranslator != null ) {
+				return outerQueryTranslator.findColumns( propertyName, subcriteria );
+			}
+			else {
+				throw he;
+			}
+		}
+	}
+
 	public Type getTypeUsingProjection(Criteria subcriteria, String propertyName)
 			throws HibernateException {
 

@@ -182,6 +182,17 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			.add( Subqueries.eq("Gavin King", dc3) )
 			.list();
 
+		DetachedCriteria dc4 = DetachedCriteria.forClass(Student.class, "st")
+			.setProjection( Property.forName("name").as( "stname" ) );
+
+		dc4.getExecutableCriteria( session ).list();
+
+		dc4.getExecutableCriteria( session ).addOrder( Order.asc( "stname" ) ).list();
+
+		session.createCriteria(Enrolment.class, "e")
+			.add( Subqueries.eq("Gavin King", dc4) )
+			.list();
+
 		session.delete(enrolment2);
 		session.delete(gavin);
 		session.delete(course);
@@ -539,7 +550,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		assertEquals(new Long(667),result[1]);
 		assertEquals(new Long(101),result[2]);
 		assertEquals( 384.0, ( (Double) result[3] ).doubleValue(), 0.01 );
-		
+
 		
 		List resultWithMaps = s.createCriteria(Enrolment.class)
 			.setProjection( Projections.distinct( Projections.projectionList()
@@ -740,6 +751,17 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 			}
 		}
 
+		resultList = s.createCriteria(Student.class)
+			.add(Restrictions.eq("name", "Gavin King"))
+			.setProjection( Projections.projectionList()
+					.add( Projections.id().as( "studentNumber" ))
+					.add( Property.forName( "name" ), "name" )
+					.add( Property.forName( "cityState" ), "cityState" )
+					.add( Property.forName("preferredCourse"), "preferredCourse" )
+			)
+			.list();
+		assertEquals( 1, resultList.size() );
+		
 		Object[] aResult = ( Object[] ) s.createCriteria(Student.class)
 			.add( Restrictions.idEq( new Long( 667 ) ) )
 			.setProjection( Projections.projectionList()
@@ -895,9 +917,37 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 					.add( Property.forName("year").group() )
 			)
 			.list();
-		
+
+		assertEquals( list.size(), 2 );
+
+		list = s.createCriteria(Enrolment.class)
+			.createAlias("student", "st")
+			.createAlias("course", "co")
+			.setProjection( Projections.projectionList()
+					.add( Property.forName("co.courseCode").group().as( "courseCode" ))
+					.add( Property.forName("st.studentNumber").count().setDistinct().as( "studentNumber" ))
+					.add( Property.forName("year").group())
+			)
+			.addOrder( Order.asc( "courseCode" ) )
+			.addOrder( Order.asc( "studentNumber" ) )
+			.list();
+
 		assertEquals( list.size(), 2 );
 		
+		list = s.createCriteria(Enrolment.class)
+			.createAlias("student", "st")
+			.createAlias("course", "co")
+			.setProjection( Projections.projectionList()
+					.add( Property.forName("co.courseCode").group().as( "cCode" ))
+					.add( Property.forName("st.studentNumber").count().setDistinct().as( "stNumber" ))
+					.add( Property.forName("year").group())
+			)
+			.addOrder( Order.asc( "cCode" ) )
+			.addOrder( Order.asc( "stNumber" ) )
+			.list();
+
+		assertEquals( list.size(), 2 );
+
 		s.delete(gavin);
 		s.delete(xam);
 		s.delete(course);

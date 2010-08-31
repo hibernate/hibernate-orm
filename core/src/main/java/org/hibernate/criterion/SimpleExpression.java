@@ -65,7 +65,7 @@ public class SimpleExpression implements Criterion {
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
 
-		String[] columns = criteriaQuery.getColumnsUsingProjection(criteria, propertyName);
+		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		Type type = criteriaQuery.getTypeUsingProjection(criteria, propertyName);
 		StringBuffer fragment = new StringBuffer();
 		if (columns.length>1) fragment.append('(');

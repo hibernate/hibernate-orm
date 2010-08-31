@@ -78,7 +78,7 @@ public class LikeExpression implements Criterion {
 			Criteria criteria,
 			CriteriaQuery criteriaQuery) throws HibernateException {
 		Dialect dialect = criteriaQuery.getFactory().getDialect();
-		String[] columns = criteriaQuery.getColumnsUsingProjection( criteria, propertyName );
+		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		if ( columns.length != 1 ) {
 			throw new HibernateException( "Like may only be used with single-column properties" );
 		}

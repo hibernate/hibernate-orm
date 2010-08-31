@@ -57,6 +57,14 @@ public interface CriteriaQuery {
 	throws HibernateException;
 
 	/**
+	 * Get the names of the columns mapped by a property path; if the
+	 * property path is not found in criteria, try the "outer" query.
+	 * Projection aliases are ignored.
+	 */
+	public String[] findColumns(String propertyPath, Criteria criteria)
+	throws HibernateException;
+
+	/**
 	 * Get the type of a property path, ignoring projection aliases
 	 */
 	public Type getType(Criteria criteria, String propertyPath)
@@ -67,7 +75,7 @@ public interface CriteriaQuery {
 	 */
 	public String[] getColumnsUsingProjection(Criteria criteria, String propertyPath) 
 	throws HibernateException;
-	
+
 	/**
 	 * Get the type of a property path
 	 */

@@ -138,11 +138,6 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
       super.tearDown();
 
-      if (localEntityRegion != null)
-         localEntityRegion.destroy();
-      if (remoteEntityRegion != null)
-         remoteEntityRegion.destroy();
-
       try {
          localCache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
       } catch (Exception e) {

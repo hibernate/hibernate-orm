@@ -150,7 +150,8 @@ public abstract class BaseRegion implements Region {
 
    public void destroy() throws CacheException {
       try {
-         cacheAdapter.clear();
+         cacheAdapter.stop();
+//         cacheAdapter.clear();
       } finally {
          cacheAdapter.removeListener(this);
       }

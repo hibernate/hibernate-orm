@@ -157,6 +157,11 @@ public interface CacheAdapter {
    void clear() throws CacheException;
 
    /**
+    * Stops the cache.
+    */
+   void stop();
+
+   /**
     * Add listener to this cache.
     * 
     * @param listener to be added to cache.

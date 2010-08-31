@@ -86,6 +86,10 @@ public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
               }
           }
       }
-  }
+   }
 
+   @Override
+   public void stop() {
+      // Do not attempt to stop a cache manager because it wasn't created by this region factory.
+   }
 }

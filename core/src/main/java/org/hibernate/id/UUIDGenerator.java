@@ -65,6 +65,13 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	private UUIDGenerationStrategy strategy;
 	private UUIDTypeDescriptor.ValueTransformer valueTransformer;
 
+	public static UUIDGenerator buildSessionFactoryUniqueIdentifierGenerator() {
+		final UUIDGenerator generator = new UUIDGenerator();
+		generator.strategy = StandardRandomStrategy.INSTANCE;
+		generator.valueTransformer = UUIDTypeDescriptor.ToStringTransformer.INSTANCE;
+		return generator;
+	}
+
 	public void configure(Type type, Properties params, Dialect d) throws MappingException {
 		// check first for the strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );

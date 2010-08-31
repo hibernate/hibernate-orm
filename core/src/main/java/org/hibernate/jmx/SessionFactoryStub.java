@@ -1,4 +1,26 @@
-//$Id: SessionFactoryStub.java 8754 2005-12-05 23:36:59Z steveebersole $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.jmx;
 
 import java.io.InvalidObjectException;
@@ -23,7 +45,7 @@ import org.hibernate.Cache;
 import org.hibernate.TypeHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -37,10 +59,8 @@ import org.hibernate.stat.Statistics;
  * @author Gavin King
  */
 public class SessionFactoryStub implements SessionFactory {
-
-	private static final Logger log = LoggerFactory.getLogger(SessionFactoryStub.class);
-
-	private static final IdentifierGenerator UUID_GENERATOR = new UUIDHexGenerator();
+	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
+	private static final Logger log = LoggerFactory.getLogger( SessionFactoryStub.class );
 
 	private transient SessionFactory impl;
 	private transient HibernateService service;

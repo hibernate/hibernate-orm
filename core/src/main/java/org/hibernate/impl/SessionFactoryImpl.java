@@ -95,7 +95,7 @@ import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.mapping.Collection;
@@ -128,7 +128,7 @@ import org.hibernate.util.ReflectHelper;
 
 /**
  * Concrete implementation of the <tt>SessionFactory</tt> interface. Has the following
- * responsibilites
+ * responsibilities
  * <ul>
  * <li>caches configuration settings (immutably)
  * <li>caches "compiled" mappings ie. <tt>EntityPersister</tt>s and
@@ -152,7 +152,7 @@ import org.hibernate.util.ReflectHelper;
 public final class SessionFactoryImpl implements SessionFactory, SessionFactoryImplementor {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionFactoryImpl.class);
-	private static final IdentifierGenerator UUID_GENERATOR = new UUIDHexGenerator();
+	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
 	private final String name;
 	private final String uuid;

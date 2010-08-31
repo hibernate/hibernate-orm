@@ -34,43 +34,64 @@
         <title>The annotated entity Java class</title>
         <para>
             The entity class in this tutorial is <classname>org.hibernate.tutorial.annotations.Event</classname>
-            <itemizedlist>
-                <title>Notes About the Entity</title>
-                <listitem>
-                    <para>
-                        The entity class is still using JavaBean conventions.  In fact the class itself is exactly
-                        the same as we saw in <xref linkend="hibernate-gsg-tutorial-basic-entity"/>, the only
-                        difference being the use of annotations to provide the metadata instead of a separate
-                        <filename>hbm.xml</filename> file.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        The <interfacename>@javax.persistence.Entity</interfacename> annotation is used to mark a
-                        class as an entity.  It's function is essentially the same as the <literal>class</literal>
-                        mapping element discussed in <xref linkend="hibernate-gsg-tutorial-basic-mapping"/>.
-                        Additionally the <interfacename>@javax.persistence.Table</interfacename> annotation is
-                        used to explicitly specify the table name (the default table name would have been
-                        <database class="table">EVENT</database>).
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <interfacename>@javax.persistence.Id</interfacename> marks the property defining the
-                        entity's identifier.  <interfacename>@javax.persistence.GeneratedValue</interfacename> and
-                        <interfacename>@org.hibernate.annotations.GenericGenerator</interfacename> work in tandem
-                        to indicate that Hibernate should use Hibernate's <literal>increment</literal> generation
-                        strategy for this entity's identifier values.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        Just as discussed in <xref linkend="hibernate-gsg-tutorial-basic-mapping"/>, the
-                        <literal>date</literal> property needs special handling to account for its special naming
-                        and its SQL type.
-                    </para>
-                </listitem>
-            </itemizedlist>
+            which is still following JavaBean conventions.  In fact the class itself is exactly the same as we saw
+            in <xref linkend="hibernate-gsg-tutorial-basic-entity"/>, the only difference being the use of
+            annotations to provide the metadata instead of a separate <filename>hbm.xml</filename> file.
+        </para>
+
+        <example id="hibernate-gsg-tutorial-basic-entity-entity">
+            <title>Identifying the class as an entity</title>
+            <programlisting role="JAVA">@Entity
+@Table( name = "EVENTS" )
+public class Event {
+    ...
+}</programlisting>
+        </example>
+
+        <para>
+            The <interfacename>@javax.persistence.Entity</interfacename> annotation is used to mark a
+            class as an entity.  It's function is essentially the same as the <literal>class</literal>
+            mapping element discussed in <xref linkend="hibernate-gsg-tutorial-basic-mapping"/>.
+            Additionally the <interfacename>@javax.persistence.Table</interfacename> annotation is
+            used to explicitly specify the table name (the default table name would have been
+            <database class="table">EVENT</database>).
+        </para>
+
+        <example id="hibernate-gsg-tutorial-basic-entity-id">
+            <title>Identifying the identifier property</title>
+            <programlisting role="JAVA">@Id
+@GeneratedValue(generator="increment")
+@GenericGenerator(name="increment", strategy = "increment")
+public Long getId() {
+    return id;
+}</programlisting>
+        </example>
+
+        <para>
+            <interfacename>@javax.persistence.Id</interfacename> marks the property defining the
+            entity's identifier.  <interfacename>@javax.persistence.GeneratedValue</interfacename> and
+            <interfacename>@org.hibernate.annotations.GenericGenerator</interfacename> work in tandem
+            to indicate that Hibernate should use Hibernate's <literal>increment</literal> generation
+            strategy for this entity's identifier values.
+        </para>
+
+        <example id="hibernate-gsg-tutorial-basic-entity-properties">
+            <title>Identifying basic properties</title>
+            <programlisting role="JAVA">public String getTitle() {
+    return title;
+}
+
+@Temporal(TemporalType.TIMESTAMP)
+@Column(name = "EVENT_DATE")
+public Date getDate() {
+    return date;
+}</programlisting>
+        </example>
+
+        <para>
+            Just as discussed in <xref linkend="hibernate-gsg-tutorial-basic-mapping"/>, the
+            <literal>date</literal> property needs special handling to account for its special naming
+            and its SQL type.
         </para>
     </section>
 

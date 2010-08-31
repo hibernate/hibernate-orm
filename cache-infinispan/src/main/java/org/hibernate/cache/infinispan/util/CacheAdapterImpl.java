@@ -32,6 +32,8 @@ import org.infinispan.config.Configuration;
 import org.infinispan.context.Flag;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.util.concurrent.TimeoutException;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * CacheAdapterImpl.
@@ -40,6 +42,7 @@ import org.infinispan.util.concurrent.TimeoutException;
  * @since 3.5
  */
 public class CacheAdapterImpl implements CacheAdapter {
+   private static final Log log = LogFactory.getLog(CacheAdapterImpl.class);
 
    private final Cache cache;
 
@@ -140,6 +143,12 @@ public class CacheAdapterImpl implements CacheAdapter {
       } catch (Exception e) {
          throw new CacheException(e);
       }
+   }
+
+   public void stop() {
+      if (log.isTraceEnabled())
+         log.trace("Stop " + cache); 
+      cache.stop();
    }
 
    private static boolean isClusteredInvalidation(Configuration.CacheMode cacheMode) {

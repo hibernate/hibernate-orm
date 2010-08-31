@@ -151,11 +151,6 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
       super.tearDown();
 
-      if (localCollectionRegion != null)
-         localCollectionRegion.destroy();
-      if (remoteCollectionRegion != null)
-         remoteCollectionRegion.destroy();
-
       try {
          localCache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
       } catch (Exception e) {

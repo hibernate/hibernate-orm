@@ -29,11 +29,12 @@
         </para>
 
         <para>
-            The first few <literal>property</literal> elements define JDBC connection information. These tutorials
+            The <literal>connection.driver_class</literal>, <literal>connection.url</literal>,
+            <literal>connection.username</literal> and <literal>connection.password</literal>
+            <literal>property</literal> elements define JDBC connection information. These tutorials
             utilize the H2 in-memory database. So these are all specific to running H2 in its in-memory mode.
-            The 'connection.pool_size' is used to configure Hibernate's built-in connection pool how many
-            connections
-            to pool.
+             <literal>connection.pool_size</literal> is used to configure Hibernate's built-in connection pool
+            how many connections to pool.
         </para>
 
         <important>
@@ -47,7 +48,8 @@
         </important>
 
         <para>
-            The <literal>dialect</literal> option specifies the particular SQL variant Hibernate should generate.
+            The <literal>dialect</literal> property specifies the particular SQL variant Hibernate with which
+            Hibernate will converse.
         </para>
 
         <tip>
@@ -61,7 +63,7 @@
         </tip>
 
         <para>
-            The <literal>hbm2ddl.auto</literal> option turns on automatic generation of database schemas directly
+            The <literal>hbm2ddl.auto</literal> property turns on automatic generation of database schemas directly
             into the database.
         </para>
 
@@ -118,6 +120,8 @@
             file is one choice for providing Hibernate with this metadata.
         </para>
 
+        <programlisting role="XML"><![CDATA[<class name="Event" table="EVENTS">...</class>]]></programlisting>
+
         <orderedlist>
             <title>Functions of the <literal>class</literal> element</title>
             <listitem>
@@ -137,9 +141,16 @@
 
         <para>
             Instances of the <classname>Event</classname> class are now mapped to rows in the
-            <database class="table">EVENTS</database> table.  Hibernate uses the <literal>id</literal> element to
-            uniquely identify rows in the table.
+            <database class="table">EVENTS</database> table.
         </para>
+
+        <programlisting role="XML"><![CDATA[<id name="id" column="EVENT_ID">...</id>]]></programlisting>
+
+        <para>
+            Hibernate uses the property named by the <literal>id</literal> element to uniquely identify rows
+            in the table.
+        </para>
+
         <important>
             <para>
                 It is not strictly necessary for the <literal>id</literal> element to map to the table's actual
@@ -158,8 +169,12 @@
         <para>
             The <literal>generator</literal> element nested inside the <literal>id</literal> element informs
             Hibernate about which strategy is used to generated primary key values for this entity.  In this
-            example, a simple incrementing count is used.
+            example a simple incrementing count is used.
         </para>
+
+        <programlisting role="XML"><![CDATA[<property name="date" type="timestamp" column="EVENT_DATE"/>
+<property name="title"/>]]></programlisting>
+
         <para>
             The two <literal>property</literal> elements declare the remaining two properties of the
             <classname>Event</classname> class: <literal>date</literal> and<literal>title</literal>. The
@@ -213,6 +228,13 @@
             </para>
         </note>
 
+        <programlisting role="JAVA">protected void setUp() throws Exception {
+    // A SessionFactory is set up once for an application
+    sessionFactory = new Configuration()
+            .configure() // configures settings from hibernate.cfg.xml
+            .buildSessionFactory();
+}</programlisting>
+
         <para>
             The <classname>org.hibernate.cfg.Configuration</classname> class is the first thing to notice. In this
             tutorial everything is simply configured via the <filename>hibernate.cfg.xml</filename> file
@@ -233,11 +255,27 @@
             <!-- todo : reference to a discussion in dev guide -->
         </para>
 
+        <programlisting role="JAVA">Session session = sessionFactory.openSession();
+session.beginTransaction();
+session.save( new Event( "Our very first event!", new Date() ) );
+session.save( new Event( "A follow up event", new Date() ) );
+session.getTransaction().commit();
+session.close();</programlisting>
+
         <para>
             <methodname>testBasicUsage</methodname> first creates some new <classname>Event</classname> objects
             and hands them over to Hibernate for "management" via the <methodname>save</methodname> method.  At that
             point, Hibernate takes responsibility to perform an <literal>INSERT</literal> on the database.
         </para>
+
+        <programlisting role="JAVA"><![CDATA[session = sessionFactory.openSession();
+session.beginTransaction();
+List result = session.createQuery( "from Event" ).list();
+for ( Event event : (List<Event>) result ) {
+    System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
+}
+session.getTransaction().commit();
+session.close();]]></programlisting>
 
         <para>
             <methodname>testBasicUsage</methodname> then illustrates use of the Hibernate Query Language (HQL) to

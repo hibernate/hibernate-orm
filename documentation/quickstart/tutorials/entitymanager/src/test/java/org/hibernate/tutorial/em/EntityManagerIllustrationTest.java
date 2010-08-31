@@ -42,7 +42,8 @@ public class EntityManagerIllustrationTest extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
 		// like discussed with regards to SessionFactory, an EntityManagerFactory is set up once for an application
-		entityManagerFactory = Persistence.createEntityManagerFactory( "hibernate-jpa-tutorial" );
+		// 		IMPORTANT: notice how the name here matches the name we gave the persistence-unit in persistence.xml!
+		entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
 	}
 
 	@Override

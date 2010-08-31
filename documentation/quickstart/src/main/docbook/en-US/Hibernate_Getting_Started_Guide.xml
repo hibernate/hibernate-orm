@@ -31,6 +31,7 @@
         </partintro>
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_native.xml" />
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_annotations.xml" />
+        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_jpa.xml" />
     </part>
 
 </book>

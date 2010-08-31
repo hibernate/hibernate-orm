@@ -26,7 +26,7 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0">
 
-    <persistence-unit name="hibernate-jpa-tutorial">
+    <persistence-unit name="org.hibernate.tutorial.jpa">
         <description>
             Persistence unit for the JPA tutorial of the Hibernate Getting Started Guide
         </description>

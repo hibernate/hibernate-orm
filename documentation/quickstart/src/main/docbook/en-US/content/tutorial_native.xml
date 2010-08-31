@@ -320,8 +320,8 @@ session.close();]]></programlisting>
             </listitem>
             <listitem>
                 <para>
-                    With help of the Developer Guide, add an association to the <classname>Event</classname>
-                    entity to model a message thread.
+                    With help of the <citetitle pubwork="book">Developer Guide</citetitle>, add an association to
+                    the <classname>Event</classname> entity to model a message thread.
                 </para>
             </listitem>
         </itemizedlist>

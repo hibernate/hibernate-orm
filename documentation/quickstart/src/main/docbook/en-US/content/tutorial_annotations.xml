@@ -30,7 +30,7 @@
         </para>
     </section>
 
-    <section id="hibernate-gsg-tutorial-basic-entity">
+    <section id="hibernate-gsg-tutorial-annotations-entity">
         <title>The annotated entity Java class</title>
         <para>
             The entity class in this tutorial is <classname>org.hibernate.tutorial.annotations.Event</classname>
@@ -39,7 +39,7 @@
             annotations to provide the metadata instead of a separate <filename>hbm.xml</filename> file.
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-entity-entity">
+        <example id="hibernate-gsg-tutorial-annotations-entity-entity">
             <title>Identifying the class as an entity</title>
             <programlisting role="JAVA">@Entity
 @Table( name = "EVENTS" )
@@ -57,7 +57,7 @@ public class Event {
             <database class="table">EVENT</database>).
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-entity-id">
+        <example id="hibernate-gsg-tutorial-annotations-entity-id">
             <title>Identifying the identifier property</title>
             <programlisting role="JAVA">@Id
 @GeneratedValue(generator="increment")
@@ -75,7 +75,7 @@ public Long getId() {
             strategy for this entity's identifier values.
         </para>
 
-        <example id="hibernate-gsg-tutorial-basic-entity-properties">
+        <example id="hibernate-gsg-tutorial-annotations-entity-properties">
             <title>Identifying basic properties</title>
             <programlisting role="JAVA">public String getTitle() {
     return title;
@@ -112,14 +112,15 @@ public Date getDate() {
         <itemizedlist>
             <listitem>
                 <para>
-                    With help of the Developer Guide, add an association to the <classname>Event</classname>
-                    entity to model a message thread.
+                    With help of the <citetitle pubwork="book">Developer Guide</citetitle>, add an association to
+                    the <classname>Event</classname> entity to model a message thread.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    With help of the Developer Guide, add a callback to receive notifications when an
-                    <classname>Event</classname> is created, updated or deleted.  Try the same with an event listener.
+                    With help of the <citetitle pubwork="book">Developer Guide</citetitle>, add a callback to
+                    receive notifications when an <classname>Event</classname> is created, updated or deleted.  Try 
+                    the same with an event listener.
                 </para>
             </listitem>
         </itemizedlist>

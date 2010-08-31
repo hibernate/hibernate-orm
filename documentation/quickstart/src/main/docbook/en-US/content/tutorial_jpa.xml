@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+<chapter id="hibernate-gsg-tutorial-jpa">
+    <title>Tutorial Using the <firstterm><phrase>Java Persistence API (JPA)</phrase></firstterm></title>
+
+    <para>
+        This tutorial is located within the download bundle under <filename>entitymanager</filename> and illustrates
+        <itemizedlist>
+            <listitem>
+                <para>
+                    using annotations to provide mapping information
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    using <phrase>JPA</phrase>
+                </para>
+            </listitem>
+        </itemizedlist>
+    </para>
+
+    <section id="hibernate-gsg-tutorial-jpa-config">
+        <title><filename>persistence.xml</filename></title>
+
+        <para>
+            The previous tutorials used the Hibernate-specific
+            <filename><replaceable>hibernate.cfg.xml</replaceable></filename> configuration file.  <phrase>JPA</phrase>,
+            however, defines a different <phrase>bootstrap</phrase> process that uses its own configuration file
+            named <filename>persistence.xml</filename>.  How this <phrase>bootstrapping</phrase> works is defined
+            by the <phrase>JPA</phrase> specification.  In <trademark>Java</trademark> SE environments the
+            persistence provider (Hibernate in this case) is required to locate all <phrase>JPA</phrase>
+            configuration files by classpath lookup of the <filename>META-INF/persistence.xml</filename> resource
+            name.
+        </para>
+
+        <example id="hibernate-gsg-tutorial-jpa-config-pu">
+            <title><filename>persistence.xml</filename></title>
+            <programlisting role="XML"><![CDATA[<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+        version="2.0">
+    <persistence-unit name="org.hibernate.tutorial.jpa">
+        ...
+    </persistence-unit>
+</persistence>]]></programlisting>
+        </example>
+
+        <para>
+            <filename>persistence.xml</filename> files should provide a unique name for each
+            <phrase>persistence unit</phrase>.  This name is how applications reference the configuration
+            while obtaining an <interfacename>javax.persistence.EntityManagerFactory</interfacename> reference.
+        </para>
+
+        <para>
+            The settings defined in the <literal>properties</literal> element were already discussed in
+            <xref linkend="hibernate-gsg-tutorial-basic-config"/>.  Here the <literal>javax.persistence</literal>-prefixed
+            varieties are used when possible.  For the remaining Hibernate-specific configuration setting names notice
+            that they are now prefixed with <literal>hibernate.</literal>.
+        </para>
+
+        <para>
+            Additionally, the <literal>class</literal> element functions the same as discussed in
+            <xref linkend="hibernate-gsg-tutorial-annotations-config"/>.
+        </para>
+    </section>
+
+    <section id="hibernate-gsg-tutorial-jpa-entity">
+        <title>The annotated entity Java class</title>
+        <para>
+            The entity is exactly the same as that from the annotations tutorial.  See
+            <xref linkend="hibernate-gsg-tutorial-annotations-entity"/>
+        </para>
+    </section>
+
+    <section id="hibernate-gsg-tutorial-jpa-test">
+        <title>Example code</title>
+        <para>
+            The previous tutorials used the Hibernate APIs.  This tutorial uses the <phrase>JPA</phrase> APIs.
+        </para>
+
+        <example id="hibernate-gsg-tutorial-jpa-test-setUp">
+            <title>Obtaining the <interfacename>javax.persistence.EntityManagerFactory</interfacename></title>
+            <programlisting role="JAVA">protected void setUp() throws Exception {
+    entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
+}</programlisting>
+        </example>
+
+        <para>
+            Notice again the use of <literal>org.hibernate.tutorial.jpa</literal> as the
+            <phrase>persistence unit</phrase> name, which matches from <xref linkend="hibernate-gsg-tutorial-jpa-config-pu"/>
+        </para>
+
+        <example id="hibernate-gsg-tutorial-jpa-test-saving">
+            <title>Saving (persisting) entities</title>
+            <programlisting role="JAVA">EntityManager entityManager = entityManagerFactory.createEntityManager();
+entityManager.getTransaction().begin();
+entityManager.persist( new Event( "Our very first event!", new Date() ) );
+entityManager.persist( new Event( "A follow up event", new Date() ) );
+entityManager.getTransaction().commit();
+entityManager.close();</programlisting>
+        </example>
+
+        <para>
+            The code is pretty similar to <xref linkend="hibernate-gsg-tutorial-basic-test-saving"/>.  Here
+            we use an <interfacename>javax.persistence.EntityManager</interfacename> as opposed to a
+            <interfacename>org.hibernate.Session</interfacename>.  <phrase>JPA</phrase> calls this operation
+            <literal>persist</literal> instead of <literal>save</literal>.
+        </para>
+
+        <example id="hibernate-gsg-tutorial-jpa-test-list">
+            <title>Obtaining a list of entities</title>
+            <programlisting role="JAVA"><![CDATA[entityManager = entityManagerFactory.createEntityManager();
+entityManager.getTransaction().begin();
+List<Event> result = entityManager.createQuery( "from Event", Event.class ).getResultList();
+for ( Event event : result ) {
+    System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
+}
+entityManager.getTransaction().commit();
+entityManager.close();]]></programlisting>
+        </example>
+
+        <para>
+            Again, the code is pretty similar to <xref linkend="hibernate-gsg-tutorial-basic-test-list"/>.
+        </para>
+    </section>
+
+</chapter>

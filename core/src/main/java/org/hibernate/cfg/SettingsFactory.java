@@ -24,6 +24,7 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -368,8 +369,8 @@ public class SettingsFactory implements Serializable {
 			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
 		}
 		else {
-			log.debug( "using cglib as bytecode provider by default" );
-			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
+			log.debug( "using javassist as bytecode provider by default" );
+			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 		}
 	}
 
@@ -404,9 +405,19 @@ public class SettingsFactory implements Serializable {
 		}
 		log.info( "Cache region factory : " + regionFactoryClassName );
 		try {
-			return ( RegionFactory ) ReflectHelper.classForName( regionFactoryClassName )
-					.getConstructor( new Class[] { Properties.class } )
-					.newInstance( new Object[] { properties } );
+			try {
+				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName )
+						.getConstructor( Properties.class )
+						.newInstance( properties );
+			}
+			catch ( NoSuchMethodException nsme ) {
+				// no constructor accepting Properties found, try no arg constructor
+				log.debug(
+						regionFactoryClassName + " did not provide constructor accepting java.util.Properties; " +
+								"attempting no-arg constructor."
+				);
+				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName ).newInstance();
+			}
 		}
 		catch ( Exception e ) {
 			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
@@ -429,9 +440,9 @@ public class SettingsFactory implements Serializable {
 	protected BatcherFactory createBatcherFactory(Properties properties, int batchSize) {
 		String batcherClass = properties.getProperty(Environment.BATCH_STRATEGY);
 		if (batcherClass==null) {
-			return batchSize==0 ?
-					(BatcherFactory) new NonBatchingBatcherFactory() :
-					(BatcherFactory) new BatchingBatcherFactory();
+			return batchSize == 0
+					? new NonBatchingBatcherFactory()
+					: new BatchingBatcherFactory();
 		}
 		else {
 			log.info("Batcher factory: " + batcherClass);

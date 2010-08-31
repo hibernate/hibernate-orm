@@ -120,10 +120,15 @@
             file is one choice for providing Hibernate with this metadata.
         </para>
 
-        <programlisting role="XML"><![CDATA[<class name="Event" table="EVENTS">...</class>]]></programlisting>
+        <example id="hibernate-gsg-tutorial-basic-mapping-class">
+            <title>The <literal>class</literal> mapping element</title>
+            <programlisting role="XML"><![CDATA[<class name="Event" table="EVENTS">
+    ...
+</class>]]></programlisting>
+        </example>
 
         <orderedlist>
-            <title>Functions of the <literal>class</literal> element</title>
+            <title>Functions of the <literal>class</literal> mapping element</title>
             <listitem>
                 <para>
                     The <literal>name</literal> attribute (combined here with the <literal>package</literal>
@@ -144,7 +149,12 @@
             <database class="table">EVENTS</database> table.
         </para>
 
-        <programlisting role="XML"><![CDATA[<id name="id" column="EVENT_ID">...</id>]]></programlisting>
+        <example id="hibernate-gsg-tutorial-basic-mapping-id">
+            <title>The <literal>id</literal> mapping element</title>
+            <programlisting role="XML"><![CDATA[<id name="id" column="EVENT_ID">
+    ...
+</id>]]></programlisting>
+        </example>
 
         <para>
             Hibernate uses the property named by the <literal>id</literal> element to uniquely identify rows
@@ -172,8 +182,11 @@
             example a simple incrementing count is used.
         </para>
 
-        <programlisting role="XML"><![CDATA[<property name="date" type="timestamp" column="EVENT_DATE"/>
+        <example id="hibernate-gsg-tutorial-basic-mapping-property">
+            <title>The <literal>property</literal> mapping element</title>
+            <programlisting role="XML"><![CDATA[<property name="date" type="timestamp" column="EVENT_DATE"/>
 <property name="title"/>]]></programlisting>
+        </example>
 
         <para>
             The two <literal>property</literal> elements declare the remaining two properties of the
@@ -228,12 +241,15 @@
             </para>
         </note>
 
-        <programlisting role="JAVA">protected void setUp() throws Exception {
+        <example id="hibernate-gsg-tutorial-basic-test-setUp">
+            <title>Obtaining the <interfacename>org.hibernate.SessionFactory</interfacename></title>
+            <programlisting role="JAVA">protected void setUp() throws Exception {
     // A SessionFactory is set up once for an application
     sessionFactory = new Configuration()
             .configure() // configures settings from hibernate.cfg.xml
             .buildSessionFactory();
 }</programlisting>
+        </example>
 
         <para>
             The <classname>org.hibernate.cfg.Configuration</classname> class is the first thing to notice. In this
@@ -255,12 +271,15 @@
             <!-- todo : reference to a discussion in dev guide -->
         </para>
 
-        <programlisting role="JAVA">Session session = sessionFactory.openSession();
+        <example id="hibernate-gsg-tutorial-basic-test-saving">
+            <title>Saving entities</title>
+            <programlisting role="JAVA">Session session = sessionFactory.openSession();
 session.beginTransaction();
 session.save( new Event( "Our very first event!", new Date() ) );
 session.save( new Event( "A follow up event", new Date() ) );
 session.getTransaction().commit();
 session.close();</programlisting>
+        </example>
 
         <para>
             <methodname>testBasicUsage</methodname> first creates some new <classname>Event</classname> objects
@@ -268,7 +287,9 @@ session.close();</programlisting>
             point, Hibernate takes responsibility to perform an <literal>INSERT</literal> on the database.
         </para>
 
-        <programlisting role="JAVA"><![CDATA[session = sessionFactory.openSession();
+        <example id="hibernate-gsg-tutorial-basic-test-list">
+            <title>Obtaining a list of entities</title>
+            <programlisting role="JAVA"><![CDATA[session = sessionFactory.openSession();
 session.beginTransaction();
 List result = session.createQuery( "from Event" ).list();
 for ( Event event : (List<Event>) result ) {
@@ -276,6 +297,7 @@ for ( Event event : (List<Event>) result ) {
 }
 session.getTransaction().commit();
 session.close();]]></programlisting>
+        </example>
 
         <para>
             <methodname>testBasicUsage</methodname> then illustrates use of the Hibernate Query Language (HQL) to

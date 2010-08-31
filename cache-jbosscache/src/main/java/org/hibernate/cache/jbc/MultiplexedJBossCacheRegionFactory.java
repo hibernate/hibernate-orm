@@ -41,10 +41,13 @@ import org.hibernate.cache.jbc.builder.MultiplexingCacheInstanceManager;
  * This version instantiates the factory itself. See 
  * {@link MultiplexingCacheInstanceManager} for configuration details. 
  * </p>
- * 
+ *
+ * @deprecated Favor Infinispan integration; see HHH-5489 for details.
+ *
  * @author Brian Stansberry
  * @version $Revision$
  */
+@Deprecated
 public class MultiplexedJBossCacheRegionFactory extends JBossCacheRegionFactory {
 
     /**

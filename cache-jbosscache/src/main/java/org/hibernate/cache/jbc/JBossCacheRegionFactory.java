@@ -43,6 +43,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.util.PropertiesHelper;
 import org.jboss.cache.DefaultCacheFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link RegionFactory} that uses one or more JBoss Cache instances for 
@@ -62,11 +64,15 @@ import org.jboss.cache.DefaultCacheFactory;
  * Also exposes an overloaded constructor that allows injection of different
  * <code>CacheInstanceManager</code> implementations.
  * </p>
+ *
+ * @deprecated Favor Infinispan integration; see HHH-5489 for details.
  * 
  * @author Steve Ebersole
  * @author Brian Stansberry
  */
+@Deprecated
 public class JBossCacheRegionFactory implements RegionFactory {
+	private static final Logger log = LoggerFactory.getLogger( JBossCacheRegionFactory.class );
     private CacheInstanceManager cacheInstanceManager;
 
     /**
@@ -83,6 +89,7 @@ public class JBossCacheRegionFactory implements RegionFactory {
      *  Create a new JBossCacheRegionFactory.
      */
     public JBossCacheRegionFactory() {
+		log.warn( "Integration with JBossCache is deprecated in favor of Infinispan" );
     }
 
     /**
@@ -93,6 +100,7 @@ public class JBossCacheRegionFactory implements RegionFactory {
      */
     public JBossCacheRegionFactory(CacheInstanceManager cacheInstanceManager) {
         this.cacheInstanceManager = cacheInstanceManager;
+		log.warn( "Integration with JBossCache is deprecated in favor of Infinispan" );
     }
 
     public CacheInstanceManager getCacheInstanceManager() {

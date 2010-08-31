@@ -37,10 +37,13 @@ import org.hibernate.cache.jbc.builder.JndiSharedCacheInstanceManager;
  * using the value of the {@link JndiSharedCacheInstanceManager#CACHE_RESOURCE_PROP}
  * configuration property as the name to look up. 
  * </p>
+ *
+ * @deprecated Favor Infinispan integration; see HHH-5489 for details.
  * 
  * @author Brian Stansberry
  * @version $Revision$
  */
+@Deprecated
 public class JndiSharedJBossCacheRegionFactory extends JBossCacheRegionFactory {
 
     /**

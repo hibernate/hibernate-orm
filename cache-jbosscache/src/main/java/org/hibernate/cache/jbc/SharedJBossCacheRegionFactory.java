@@ -28,6 +28,8 @@ import java.util.Properties;
 import org.hibernate.cache.jbc.builder.JndiSharedCacheInstanceManager;
 import org.hibernate.cache.jbc.builder.SharedCacheInstanceManager;
 import org.jboss.cache.DefaultCacheFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link JBossCacheRegionFactory} that uses
@@ -40,10 +42,13 @@ import org.jboss.cache.DefaultCacheFactory;
  * {@link JndiSharedCacheInstanceManager#CACHE_RESOURCE_PROP}
  * configuration property. 
  * </p>
- * 
+ *
+ * @deprecated Favor Infinispan integration; see HHH-5489 for details.
+ *
  * @author Brian Stansberry
  * @version $Revision$
  */
+@Deprecated
 public class SharedJBossCacheRegionFactory extends JBossCacheRegionFactory {
 
     /**

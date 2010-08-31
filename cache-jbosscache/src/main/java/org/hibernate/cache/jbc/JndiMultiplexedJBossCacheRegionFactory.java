@@ -25,6 +25,9 @@ package org.hibernate.cache.jbc;
 
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.cache.jbc.builder.JndiMultiplexingCacheInstanceManager;
 
 /**
@@ -41,10 +44,13 @@ import org.hibernate.cache.jbc.builder.JndiMultiplexingCacheInstanceManager;
  * This version finds the factory in JNDI. See 
  * {@link JndiMultiplexingCacheInstanceManager} for configuration details. 
  * </p>
- * 
+ *
+ * @deprecated Favor Infinispan integration; see HHH-5489 for details.
+ *
  * @author Brian Stansberry
  * @version $Revision$
  */
+@Deprecated
 public class JndiMultiplexedJBossCacheRegionFactory extends JBossCacheRegionFactory {
 
     /**

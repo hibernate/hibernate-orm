@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.sql.CharTypeDescriptor;
+import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#CHAR} (or {@link java.sql.Types#VARCHAR}) and {@link java.util.UUID}
@@ -38,7 +38,7 @@ public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> im
 	public static final UUIDCharType INSTANCE = new UUIDCharType();
 
 	public UUIDCharType() {
-		super( CharTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( VarcharTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

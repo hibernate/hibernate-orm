@@ -29,7 +29,7 @@
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-parent</artifactId>
     <packaging>pom</packaging>
-    <version>3.6.0-SNAPSHOT</version>
+    <version>3.6.0.Beta4</version>
 
     <name>Hibernate Core Parent POM</name>
     <description>The base POM for all Hibernate Core modules.</description>
@@ -938,7 +938,7 @@
                 <jdbc.url>jdbc:sybase:Tds:vmg09.mw.lab.eng.bos.redhat.com:5000/hibbrtru?DYNAMIC_PREPARE=true</jdbc.url>
                 <jdbc.user>hibbrtru</jdbc.user>
                 <jdbc.pass>hibbrtru</jdbc.pass>
-                <jdbc.isolation />
+                <jdbc.isolation/>
             </properties>
         </profile>
         <!-- The SQLServer2005 (MS JDBC) test envionment -->

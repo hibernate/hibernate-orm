@@ -5,7 +5,51 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 3.6.0.Beta2 (2010.08.18)
+Changes in version 3.6.0.Beta4 (2010.09.01)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11140
+
+** Sub-task
+    * [HHH-5442] - Write native tutorial chapter
+    * [HHH-5444] - Write annotations tutorial chapter
+    * [HHH-5445] - Write a jpa/entitymanager tutorial guide
+    * [HHH-5462] - Write preface
+    * [HHH-5463] - Write a community chapter
+
+** Bug
+    * [HHH-817] - Projection aliases should not be applied to where-clause (Milosz Tylenda)
+    * [HHH-1189] - interfaces for Proxies are not regonized as interfaces
+    * [HHH-3334] - Cascade-save breaks if parent ID is assigned (delays insert) and child has identity ID (early insert) (Wallace Wadge)
+    * [HHH-5142] - Exception when initializing lazy @ManyToMany indexed collection containing not audited entities
+    * [HHH-5225] - Cannot parse order-by fragment if it contains a registered function without parentheses
+    * [HHH-5440] - Joined collection expressions not properly "rendered" in JPA Criteria queries
+    * [HHH-5511] - Infinispan Region.destroy() impl should call cache.stop()
+    * [HHH-5512] - JndiInfinispanRegionFactory shouldn't try to stop CacheManager
+    * [HHH-5517] - Switch uuid generation in SessionFactory to org.hibernate.id.UUIDGenerator instead
+    * [HHH-5519] - VersionedItem should not extend Item, otherwise query cache results are confusing
+    * [HHH-5520] - Per org.hibernate.cache.RegionFactory javadocs, implementors should be allowed to use no-arg constructor
+
+** Deprecation
+    * [HHH-5489] - Deprecate jbosscache as a second level cache provider, in favor of infinispan
+
+** Improvement
+    * [HHH-5427] - derby 10.6.1.0 native sequence support broken
+    * [HHH-5507] - Add @MapKeyType annotation
+    * [HHH-5509] - Leverage StandardBasicTypes internaly
+    * [HHH-5515] - Upgrade to Infinispan 4.1.0.CR3
+
+** Patch
+    * [HHH-5197] - Envers documentation doesn't include the correct configuration when using Hibernate directly
+    * [HHH-5453] - ByteCodeHelper.readByteCode won't load classes bigger than a constant size
+
+** Task
+    * [HHH-5502] - Upgrade to maven-jdocbook-plugin 2.3.2
+    * [HHH-5505] - enable Sybase 15.5 in the test db profile
+    * [HHH-5506] - rollback maven-jdocbook-plugin to 2.3.0
+    * [HHH-5510] - Upgrade to maven-jdocbook-plugin 2.3.3
+
+
+Changes in version 3.6.0.Beta3 (2010.08.18)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11133
 

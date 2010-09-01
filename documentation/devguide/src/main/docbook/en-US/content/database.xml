@@ -24,7 +24,7 @@
                     <term><property>hibernate.connection.driver_class</property></term>
                     <listitem>
                         <para>
-                            Names the <classname>java.sql.Driver</classname> implementation class from your JDBC
+                            Names the <interfacename>java.sql.Driver</interfacename> implementation class from your JDBC
                             provider.
                         </para>
                     </listitem>
@@ -58,13 +58,13 @@
             <section id="hibernate-dev-database-connect-pools-hibernate">
                 <title>Using Hibernate's built-in connection pooling</title>
 
-                <caution>
+                <warning>
                     <para>
                         The built-in Hibernate connection pool is not intended for production use.  It lacks several
                         features found on any decent connection pool.  However, it can be quite useful to get started
                         and in unit testing.
                     </para>
-                </caution>
+                </warning>
 
                 <para>
                     The only additional supported setting for the built-in pooling is the

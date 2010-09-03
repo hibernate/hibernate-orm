@@ -8,40 +8,39 @@
     <section id="hibernate-gsg-setup-releaseBundle">
         <title>Release Bundle Downloads</title>
         <para>
-            The Hibernate team provides release bundles hosted on the SourceForge File Release System, both in
-            <literal>ZIP</literal> and <literal>TGZ</literal> formats. A release bundle contains <literal>JARs</literal>,
+            The Hibernate team provides release bundles hosted on the SourceForge File Release System, in
+            <literal>ZIP</literal> and <literal>TGZ</literal> formats. Each release bundle contains <literal>JARs</literal>,
             documentation, source code, and other information.
         </para>
         <para>
-            Navigate to <ulink url="http://sourceforge.net/projects/hibernate/files/hibernate3/"/> and download the
-            desired release from the list, in your format of choice.
+            You can download releases of Hibernate, in your chosen format, from the list at <ulink url="http://sourceforge.net/projects/hibernate/files/hibernate3/"/>.
         </para>
         <itemizedlist>
             <listitem>
                 <para>
                     <filename>hibernate3.jar</filename> is an aggregation of all the Hibernate Core classes.
-                    This would need to be part of your project classpath.
+                    This must be included in your project's classpath.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    The <filename>lib/required</filename> directory contains jars that are
-                    <emphasis>required</emphasis> for Hibernate to run.  All the jars in this directory would need
-                    to be part of your project classpath as well.
+		  The <filename>lib/required/</filename> directory contains JARs Hibernate requires.  All the jars in this directory must also be included in your project's classpath as well.
                 </para>
                 <important>
                     <para>
-                        The slf4j jar is special in that you still need further jar file(s) for it to work correctly.
-                        Which jar(s) depends on which logging back-end you want to use.  See the
-                        <ulink url="http://slf4j.org/">slf4j site</ulink> for details.
+		      The <filename>slf4j</filename> JAR has additional
+		      requirements for it to function properly. The exact
+		      requirements depend on your logging back-end. See <ulink
+		      url="http://slf4j.org/">slf4j site</ulink> for details.
                     </para>
                 </important>
             </listitem>
             <listitem>
                 <para>
-                    The <filename>/lib/jpa</filename> directory contains the
-                    <ulink url="http://jcp.org/en/jsr/detail?id=317">JPA</ulink> API jar.  If you want to use the
-                    JPA APIs or JPA annotations, this jar will need to be part of your project classpath too.
+		  The <filename>/lib/jpa/</filename> directory contains the
+		  <ulink url="http://jcp.org/en/jsr/detail?id=317">JPA</ulink>
+		  API JAR.  This JAR needs to be in your project's classpath if
+		  you want to use the JPA APIs or JPA annotations.
                 </para>
             </listitem>
         </itemizedlist>
@@ -49,152 +48,188 @@
 
     <section id="hibernate-gsg-setup-mavenRepoArtifacts">
         <title>Maven Repository Artifacts</title>
-        <important>
-            <para>
-                The authoritative repository for Hibernate artifacts is the JBoss
-                Maven repository.  The team responsible for the JBoss Maven repository maintains a number of wiki
-                pages that contain important information:
-                <itemizedlist>
-                    <listitem>
-                        <para>
-                            <ulink url="http://community.jboss.org/docs/DOC-14900">http://community.jboss.org/docs/DOC-14900</ulink> -
-                            contains general information about the repository
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <ulink url="http://community.jboss.org/docs/DOC-15170">http://community.jboss.org/docs/DOC-15170</ulink> -
-                            contains information about setting up access to the repository for <emphasis>developers</emphasis>
-                            (aka, developers working on Hibernate or JBoss projects).
-                        </para>
-                    </listitem>
-                    <listitem>
-                        <para>
-                            <ulink url="http://community.jboss.org/docs/DOC-15169">http://community.jboss.org/docs/DOC-15169</ulink> -
-                            contains information about setting up access to the repository for <emphasis>users</emphasis>
-                            (aka, consumers of Hibernate or JBoss projects).
-                        </para>
-                    </listitem>
-                </itemizedlist>
-            </para>
-        </important>
+	<para>
+	  The authoritative repository for Hibernate artifacts is the
+	  JBoss Maven repository.  The team responsible for the JBoss
+	  Maven repository maintains a number of Wiki pages that contain
+	  important information.
+	</para>
+	<!-- lists inside <para> don't work in Publican, and you don't lose
+	     anything by putting them outside the para. -->
+	<variablelist>
+	  <title>Maven Repository Wiki Pages</title>
+	  <varlistentry>
+	    <term><ulink url="http://community.jboss.org/docs/DOC-14900">http://community.jboss.org/docs/DOC-14900</ulink></term>
+	    <listitem>
+	      <para>
+		General information about the repository.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term><ulink url="http://community.jboss.org/docs/DOC-15170">http://community.jboss.org/docs/DOC-15170</ulink></term>
+	    <listitem>
+	      <para>
+		Information about setting up the JBoss repositories in order to do development work on JBoss projects themselves.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term><ulink url="http://community.jboss.org/docs/DOC-15169">http://community.jboss.org/docs/DOC-15169</ulink></term>
+	    <listitem>
+	      <para>
+		Information about setting up access to the repository to use JBoss projects as part of your own software.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
+	
         <para>
-            Hibernate produces a number of artifacts (all under the org.hibernate groupId):
-            <itemizedlist>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-core</emphasis> - This is the main artifact.  It contains all the
-                        Hibernate classes (<package>org.hibernate</package>) needed to build applications using
-                        the native Hibernate APIs.  It includes capabilities for using native Hibernate mapping
-                        (<filename>hbm.xml</filename>) files as well as annotations.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-entitymanager</emphasis> - Hibernate provides an implementation of
-                        <ulink url="http://jcp.org/en/jsr/detail?id=317">JPA</ulink>.  This is the artifact that
-                        represents this JPA implementation.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-envers</emphasis> - Envers is an optional module that
-                        provides historical auditing of changes to your entities.
-                    </para>
-                    <para>
-                        This artifact depends on both <emphasis>hibernate-core</emphasis> and
-                        <emphasis>hibernate-entitymanager</emphasis>.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-c3p0</emphasis> - Represents the integration between Hibernate
-                        and the <ulink url="http://sourceforge.net/projects/c3p0/">C3P0</ulink> connection pool
-                        library.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the C3P0 dependencies.
-                        be
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-proxool</emphasis> - Represents the integration between Hibernate
-                        and the <ulink url="http://proxool.sourceforge.net/">Proxool</ulink> connection pool
-                        library.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the Proxool dependencies.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-ehcache</emphasis> - Represents the integration between Hibernate
-                        and <ulink url="http://ehcache.sourceforge.net/">EhCache</ulink> as a second level cache
-                        implementation.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the Ehcache dependencies.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-infinispan</emphasis> - Represents the integration between Hibernate
-                        and <ulink url="http://jboss.org/infinispan">Infinispan</ulink> as a second level cache
-                        implementation.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the Infinispan dependencies.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-jbosscache</emphasis> - Represents the integration between Hibernate
-                        and <ulink url="http://jboss.org/jbosscache">JBossCache</ulink> as a second level cache
-                        implementation.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the JBossCache dependencies
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-oscache</emphasis> - Represents the integration between Hibernate
-                        and <ulink url="http://www.opensymphony.com/oscache/">OSCache</ulink> as a second level cache
-                        implementation.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the OSCache dependencies.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        <emphasis>hibernate-swarmcache</emphasis> - Represents the integration between Hibernate
-                        and <ulink url="http://swarmcache.sourceforge.net/">SwarmCache</ulink> as a second level cache
-                        implementation.
-                    </para>
-                    <para>
-                        This artifact depends on <emphasis>hibernate-core</emphasis>; however it would generally
-                        be included in a project as a runtime dependency (rarely would you need to bind against
-                        these classes at compile time).  It also pulls in the SwarmCache dependencies.
-                    </para>
-                </listitem>
-            </itemizedlist>
-        </para>
+	  Hibernate produces a number of artifacts (all under the org.hibernate groupId):
+	</para>
+	<variablelist>
+	  <title>Hibernate Artifacts under groupId<systemitem>org.hibernate</systemitem></title>
+	  <varlistentry>
+	    <term>hibernate-core</term>
+	    <listitem>
+	      <para>
+		The main artifact, which contains all the Hibernate classes, in
+		package <package>org.hibernate</package>. You need these to
+		build applications using the native Hibernate APIs.  It includes
+		capabilities for using native Hibernate mapping in
+		<filename>hbm.xml</filename> files, as well as annotations.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-entitymanager</term>
+	    <listitem>
+	      <para>
+		Represents Hibernate's implementation of
+		<application>JPA</application>, as specified at<ulink
+		url="http://jcp.org/en/jsr/detail?id=317" />.
+	      </para>
+	      <para>
+		This artifact depends on <systemitem>hibernate-core</systemitem>
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-envers</term>
+	    <listitem>
+	      <para>
+		An optional module that provides historical auditing of changes
+		to your entities.
+	      </para>
+	      <para>
+		This artifact depends on both
+		<systemitem>hibernate-core</systemitem> and
+		<systemitem>hibernate-entitymanager</systemitem>.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-c3p0</term>
+	    <listitem>
+	      <para>
+		Provides integration between Hibernate and the
+		<application>C3P0</application> connection pool library. See
+		<ulink url="http://sourceforge.net/projects/c3p0/" /> for
+		information about <application>C3P0</application>.
+	      </para>
+	      <para>
+		This artifact depends on <systemitem>hibernate-core</systemitem>, but is generally included in a project as a runtime dependency.  It pulls in the <application>C3P0</application> dependencies automatically.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-proxool</term>
+	    <listitem>
+	      <para>
+		Provides integration between Hibernate and the
+		<application>Proxool</application> connection pool library. See
+		<ulink url="http://proxool.sourceforge.net/" /> for more
+		information about this library.  library.
+	      </para>
+	      <para>
+		This artifact depends on
+		<systemitem>hibernate-core</systemitem>, but is generally
+		included in a project as a runtime dependency.  It pulls in the
+		<application>Proxool</application> dependencies automatically..
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-ehcache</term>
+	    <listitem>
+	      <para>
+		Privides integration between Hibernate and
+		<application>EhCache</application>, as a second-level cache. See
+		<ulink url="http://ehcache.sourceforge.net/" /> for more
+		information about <application>EhCache</application>.
+	      </para>
+	      <para>
+		This artifact depends on
+		<systemitem>hibernate-core</systemitem>, but is generally
+		included in a project as a runtime dependency. It pulls in the
+		<application>Ehcache</application> dependencies automatically.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-infinispan</term>
+	    <listitem>
+	      <para>
+		Provides integration between Hibernate
+		and <application>Infinispan</application>, as a second-level cache. See <ulink url="http://jboss.org/infinispan" /> for more information about <application>Infinispan</application>.
+	      </para>
+	      <para>
+		This artifact depends on <systemitem>hibernate-core</systemitem>, but is generally included in a project as a runtime
+		dependency.  It pulls in the <application>Infinispan</application> dependencies automatically.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-jbosscache</term>
+	    <listitem>
+	      <para>
+		Provides integration between Hibernate
+		and <application>JBossCache</application>, as a second-level cache. See <ulink url="http://jboss.org/jbosscache" /> for information about <application>JBossCache</application>.
+	      </para>
+	      <para>
+		This artifact depends on <systemitem>hibernate-core</systemitem>,
+		but is generally included in a project as a runtime dependency.
+		It pulls in the <application>JBossCache</application>
+		dependencies automatically.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-oscache</term>
+	    <listitem>
+	      <para>
+		Provides integration between Hibernate
+		and <application>OSCache</application> as a second-level cache. See <ulink url="http://www.opensymphony.com/oscache/" /> for information about <application>OSCache</application>.
+	      </para>
+	      <para>
+		This artifact depends on <systemitem>hibernate-core</systemitem>,
+		but is generally included in a project as a runtime dependency.
+		It pulls in the OSCache dependencies automatically.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	  <varlistentry>
+	    <term>hibernate-swarmcache</term>
+	    <listitem>
+	      <para>
+		Provides integration between Hibernate
+		and <application>SwarmCache</application>, as a second-level cache. See <ulink url="http://swarmcache.sourceforge.net/" /> for more information about <application>SwarmCache</application>.
+	      </para>
+	      <para>
+		This artifact depends on <systemitem>hibernate-core</systemitem>, but is generally included in a project as a runtime dependency. It pulls in the <application>SwarmCache</application> dependencies automatically.
+	      </para>
+	    </listitem>
+	  </varlistentry>
+	</variablelist>
     </section>
 </chapter>

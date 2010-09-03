@@ -11,10 +11,13 @@
     <part label="I">
         <title>Basic Information</title>
         <partintro>
+	  <!-- Don't refer to things by Part #, because things could be re-ordered later
             <para>
                 The sections in Part I present basic information you will
                 likely need to get started utilizing Hibernate
             </para>
+	    -->
+	  <para>Set up and begin using Hibernate.</para>
         </partintro>
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/community.xml" />
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/obtaining.xml" />
@@ -23,11 +26,16 @@
     <part label="II">
         <title>Tutorials</title>
         <partintro>
+	  <!--
             <para>
                 The sections in Part II dive into illustrative examples of using Hibernate in various
                 ways.  The referenced projects and code are available for download at
                 <ulink url="http://sourceforge.net/projects/hibernate/files/hibernate/&version;"/>
             </para>
+	    -->
+	  <para>
+	    Learn by doing, with guided tutorials. The referenced projects and code are available for download at <ulink url="http://sourceforge.net/projects/hibernate/files/hibernate/&version;"/>.
+	  </para>
         </partintro>
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_native.xml" />
         <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_annotations.xml" />

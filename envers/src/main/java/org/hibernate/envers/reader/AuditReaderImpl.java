@@ -23,26 +23,31 @@
  */
 package org.hibernate.envers.reader;
 
-import java.util.Date;
-import java.util.List;
-import javax.persistence.NoResultException;
-
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.exception.NotAuditedException;
-import org.hibernate.envers.exception.RevisionDoesNotExistException;
-import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.query.AuditEntity;
-import org.hibernate.envers.query.AuditQueryCreator;
 import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
 import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
-import org.hibernate.envers.synchronization.AuditProcess;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.persistence.NoResultException;
+
+import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.event.EventSource;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.exception.AuditException;
+import org.hibernate.envers.exception.NotAuditedException;
+import org.hibernate.envers.exception.RevisionDoesNotExistException;
+import org.hibernate.envers.query.AuditEntity;
+import org.hibernate.envers.query.AuditQueryCreator;
+import org.hibernate.envers.synchronization.AuditProcess;
+import org.hibernate.event.EventSource;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -190,7 +195,9 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         checkPositive(revision, "Entity revision");
         checkSession();
 
-        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionQuery(session, revision);
+        Set<Number> revisions = new HashSet<Number>(1);
+        revisions.add(revision);
+        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
 
         try {
             T revisionData = (T) query.uniqueResult();
@@ -201,6 +208,32 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 
             return revisionData;
         } catch (NonUniqueResultException e) {
+            throw new AuditException(e);
+        }
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public <T> Map<Number, T> findRevisions(Class<T> revisionEntityClass, Set<Number> revisions) throws IllegalArgumentException,
+    IllegalStateException {
+		Map<Number, T> result = new HashMap<Number, T>(revisions.size());
+
+    	for (Number revision : revisions) {
+            checkNotNull(revision, "Entity revision");
+            checkPositive(revision, "Entity revision");
+		}
+        checkSession();
+
+        Query query = verCfg.getRevisionInfoQueryCreator().getRevisionsQuery(session, revisions);
+
+        try {
+            List<T> revisionList = query.list();
+            for (T revision : revisionList) {
+            	Number revNo = verCfg.getRevisionInfoNumberReader().getRevisionNumber(revision);
+       			result.put(revNo, revision);
+			}
+
+            return result;
+        } catch (HibernateException e) {
             throw new AuditException(e);
         }
     }

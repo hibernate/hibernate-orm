@@ -25,6 +25,8 @@ package org.hibernate.envers;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
@@ -133,6 +135,25 @@ public interface AuditReader {
     <T> T findRevision(Class<T> revisionEntityClass, Number revision) throws IllegalArgumentException,
             RevisionDoesNotExistException, IllegalStateException;
 
+    /**
+	 * Find a map of revisions using the revision numbers specified.
+	 * 
+	 * @param revisionEntityClass
+	 *            Class of the revision entity. Should be annotated with
+	 *            {@link RevisionEntity}.
+	 * @param revisions
+	 *            Revision numbers of the revision for which to get the data.
+	 * @return A map of revision number and the given revision entity.
+	 * @throws IllegalArgumentException
+	 *             If a revision number is less or equal to 0 or if the class of
+	 *             the revision entity is invalid.
+	 * @throws IllegalStateException
+	 *             If the associated entity manager is closed.
+	 */
+	<T> Map<Number, T> findRevisions(Class<T> revisionEntityClass, 
+			Set<Number> revisions) throws IllegalArgumentException,
+			IllegalStateException;
+	
 	/**
 	 * Gets an instance of the current revision entity, to which any entries in the audit tables will be bound.
 	 * Please note the if {@code persist} is {@code false}, and no audited entities are modified in this session,

@@ -25,16 +25,19 @@ package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -129,6 +132,20 @@ public class Listener extends AbstractEntityTest {
         assert rev2Timestamp <= timestamp3;
 
         assert "data2".equals(rev2Data.getData());
+    }
+
+    @Test
+    public void testFindRevisions() {
+        AuditReader vr = getAuditReader();
+
+        Set<Number> revNumbers = new HashSet<Number>();
+        revNumbers.add(1);
+        revNumbers.add(2);
+        
+        Map<Number, ListenerRevEntity> revisionMap = vr.findRevisions(ListenerRevEntity.class, revNumbers);
+        assert(revisionMap.size() == 2);
+        assert(revisionMap.get(1).equals(vr.findRevision(ListenerRevEntity.class, 1)));
+        assert(revisionMap.get(2).equals(vr.findRevision(ListenerRevEntity.class, 2)));
     }
 
     @Test

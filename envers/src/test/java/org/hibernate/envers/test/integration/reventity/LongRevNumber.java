@@ -24,15 +24,18 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -68,6 +71,20 @@ public class LongRevNumber extends AbstractEntityTest {
 
         assert vr.findRevision(LongRevNumberRevEntity.class, 1l).getCustomId() == 1l;
         assert vr.findRevision(LongRevNumberRevEntity.class, 2l).getCustomId() == 2l;
+    }
+
+    @Test
+    public void testFindRevisions() {
+        AuditReader vr = getAuditReader();
+
+        Set<Number> revNumbers = new HashSet<Number>();
+        revNumbers.add(1l);
+        revNumbers.add(2l);
+        
+        Map<Number, LongRevNumberRevEntity> revisionMap = vr.findRevisions(LongRevNumberRevEntity.class, revNumbers);
+        assert(revisionMap.size() == 2);
+        assert(revisionMap.get(1l).equals(vr.findRevision(LongRevNumberRevEntity.class, 1l)));
+        assert(revisionMap.get(2l).equals(vr.findRevision(LongRevNumberRevEntity.class, 2l)));
     }
 
     @Test

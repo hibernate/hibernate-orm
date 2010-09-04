@@ -24,6 +24,7 @@
 package org.hibernate.envers.revisioninfo;
 
 import java.util.Date;
+import java.util.Set;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -34,7 +35,7 @@ import org.hibernate.Session;
 public class RevisionInfoQueryCreator {
     private final String revisionDateQuery;
     private final String revisionNumberForDateQuery;
-    private final String revisionQuery;
+    private final String revisionsQuery;
     private final boolean timestampAsDate;
 
     public RevisionInfoQueryCreator(String revisionInfoEntityName, String revisionInfoIdName,
@@ -53,10 +54,10 @@ public class RevisionInfoQueryCreator {
                 .append(" rev where ").append(revisionInfoTimestampName).append(" <= :_revision_date")
                 .toString();
 
-        revisionQuery = new StringBuilder()
+        revisionsQuery = new StringBuilder()
                 .append("select rev from ").append(revisionInfoEntityName)
                 .append(" rev where ").append(revisionInfoIdName)
-                .append(" = :_revision_number")
+                .append(" in (:_revision_numbers)")
                 .toString();
     }
 
@@ -68,7 +69,7 @@ public class RevisionInfoQueryCreator {
         return session.createQuery(revisionNumberForDateQuery).setParameter("_revision_date", timestampAsDate ? date : date.getTime());
     }
 
-    public Query getRevisionQuery(Session session, Number revision) {
-        return session.createQuery(revisionQuery).setParameter("_revision_number", revision);
+    public Query getRevisionsQuery(Session session, Set<Number> revisions) {
+        return session.createQuery(revisionsQuery).setParameterList("_revision_numbers", revisions);
     }
 }

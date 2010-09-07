@@ -25,17 +25,16 @@ package org.hibernate.envers.entities.mapper.relation.query;
 
 import java.util.Collections;
 
+import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
-import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
-
-import org.hibernate.Query;
 
 /**
  * Selects data from an audit entity.
@@ -45,9 +44,10 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
     private final String queryString;
     private final MiddleIdData referencingIdData;
 
-    public OneAuditEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
-                                           MiddleIdData referencingIdData, String referencedEntityName,
-                                           IdMapper referencedIdMapper) {
+    public OneAuditEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg, 
+                                        AuditStrategy auditStrategy,
+                                        MiddleIdData referencingIdData,
+                                        String referencedEntityName, MiddleIdData referencedIdData) {
         this.referencingIdData = referencingIdData;
 
         /*
@@ -57,8 +57,14 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
          * (only entities referenced by the association; id_ref_ing = id of the referencing entity)
          *     e.id_ref_ing = :id_ref_ing AND
          * (selecting e entities at revision :revision)
+         *   --> for DefaultAuditStrategy:
          *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
-         *       WHERE e2.revision <= :revision AND e2.id = e.id) AND
+         *       WHERE e2.revision <= :revision AND e2.id = e.id) 
+         *     
+         *   --> for ValidTimeAuditStrategy:
+         *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
+         *     
+         *     AND
          * (only non-deleted entities)
          *     e.revision_type != DEL
          */
@@ -75,19 +81,11 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
         // e.id_ref_ed = :id_ref_ed
         referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(rootParameters, null, true);
 
-        // SELECT max(e.revision) FROM versionsReferencedEntity e2
-        QueryBuilder maxERevQb = qb.newSubQueryBuilder(versionsReferencedEntityName, "e2");
-        maxERevQb.addProjection("max", revisionPropertyPath, false);
-        // WHERE
-        Parameters maxERevQbParameters = maxERevQb.getRootParameters();
-        // e2.revision <= :revision
-        maxERevQbParameters.addWhereWithNamedParam(revisionPropertyPath, "<=", "revision");
-        // e2.id = e.id
-        referencedIdMapper.addIdsEqualToQuery(maxERevQbParameters,
-                "e." + originalIdPropertyName, "e2." + originalIdPropertyName);
-
-        // e.revision = (SELECT max(...) ...)
-        rootParameters.addWhere(revisionPropertyPath, false, globalCfg.getCorrelatedSubqueryOperator(), maxERevQb);
+        // (selecting e entities at revision :revision)
+        // --> based on auditStrategy (see above)
+        auditStrategy.addEntityAtRevisionRestriction(globalCfg, qb, revisionPropertyPath,
+        		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
+				revisionPropertyPath, originalIdPropertyName, "e", "e2");
 
         // e.revision_type != DEL
         rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), false, "!=", "delrevisiontype");

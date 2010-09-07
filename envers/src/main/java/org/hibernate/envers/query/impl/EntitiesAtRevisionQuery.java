@@ -24,14 +24,16 @@
 package org.hibernate.envers.query.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -56,39 +58,50 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
     @SuppressWarnings({"unchecked"})
     public List list() {
         /*
-        The query that should be executed in the versions table:
-        SELECT e FROM ent_ver e WHERE
-          (all specified conditions, transformed, on the "e" entity) AND
-          e.revision_type != DEL AND
-          e.revision = (SELECT max(e2.revision) FROM ent_ver e2 WHERE
-            e2.revision <= :revision AND e2.originalId.id = e.originalId.id)
+         * The query that we need to create:
+         *   SELECT new list(e) FROM versionsReferencedEntity e
+         *   WHERE
+         * (all specified conditions, transformed, on the "e" entity) AND
+         * (selecting e entities at revision :revision)
+         *   --> for DefaultAuditStrategy:
+         *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
+         *       WHERE e2.revision <= :revision AND e2.id = e.id) 
+         *     
+         *   --> for ValidTimeAuditStrategy:
+         *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
+         *     
+         *     AND
+         * (only non-deleted entities)
+         *     e.revision_type != DEL
          */
-
-        QueryBuilder maxRevQb = qb.newSubQueryBuilder(versionsEntityName, "e2");
-
         AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
-
         String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
-        // SELECT max(e2.revision)
-        maxRevQb.addProjection("max", revisionPropertyPath, false);
-        // e2.revision <= :revision
-        maxRevQb.getRootParameters().addWhereWithParam(revisionPropertyPath, "<=", revision);
-        // e2.id = e.id
-        verCfg.getEntCfg().get(entityName).getIdMapper().addIdsEqualToQuery(maxRevQb.getRootParameters(),
-                "e." + originalIdPropertyName, "e2." + originalIdPropertyName);
+        MiddleIdData referencedIdData = new MiddleIdData(verEntCfg, verCfg.getEntCfg().get(entityName).getIdMappingData(), 
+        		null, entityName, verCfg.getEntCfg().isVersioned(entityName));
 
-        // e.revision_type != DEL AND
-        qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
-        // e.revision = (SELECT max(...) ...)
-        qb.getRootParameters().addWhere(revisionPropertyPath, verCfg.getGlobalCfg().getCorrelatedSubqueryOperator(), maxRevQb);
+        // (selecting e entities at revision :revision)
+        // --> based on auditStrategy (see above)
+        verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, revisionPropertyPath, 
+        		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
+				revisionPropertyPath, originalIdPropertyName, "e", "e2");
+        
+         // e.revision_type != DEL
+         qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+
         // all specified conditions
         for (AuditCriterion criterion : criterions) {
             criterion.addToQuery(verCfg, entityName, qb, qb.getRootParameters());
         }
-
-        List queryResult = buildAndExecuteQuery();
+        
+        Query query = buildQuery();
+        // add named parameter (only used for ValidAuditTimeStrategy) 
+        List<String> params = Arrays.asList(query.getNamedParameters());
+        if (params.contains("revision")) {
+            query.setParameter("revision", revision);
+        }
+        List queryResult = query.list();
 
         if (hasProjection) {
             return queryResult;

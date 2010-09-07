@@ -32,9 +32,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import javax.persistence.JoinColumn;
 
 import org.dom4j.Element;
+import org.hibernate.MappingException;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
@@ -45,8 +47,19 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.SinglePropertyMapper;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
-import org.hibernate.envers.entities.mapper.relation.*;
-import org.hibernate.envers.entities.mapper.relation.component.*;
+import org.hibernate.envers.entities.mapper.relation.BasicCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.CommonCollectionMapperData;
+import org.hibernate.envers.entities.mapper.relation.ListCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.MapCollectionMapper;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.entities.mapper.relation.ToOneIdMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleDummyComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyIdComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleMapKeyPropertyComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleRelatedComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleSimpleComponentMapper;
+import org.hibernate.envers.entities.mapper.relation.component.MiddleStraightComponentMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.ListProxy;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.MapProxy;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SetProxy;
@@ -54,11 +67,9 @@ import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedMapProxy;
 import org.hibernate.envers.entities.mapper.relation.lazy.proxy.SortedSetProxy;
 import org.hibernate.envers.entities.mapper.relation.query.OneAuditEntityQueryGenerator;
 import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
+import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Tools;
-import org.hibernate.envers.tools.MappingTools;
-
-import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
@@ -184,8 +195,8 @@ public final class CollectionMetadataGenerator {
 
         // Generating the query generator - it should read directly from the related entity.
         RelationQueryGenerator queryGenerator = new OneAuditEntityQueryGenerator(mainGenerator.getGlobalCfg(),
-                mainGenerator.getVerEntCfg(), referencingIdData, referencedEntityName,
-                referencedIdMapping.getIdMapper());
+                mainGenerator.getVerEntCfg(), mainGenerator.getAuditStrategy(),
+                referencingIdData, referencedEntityName, referencedIdData);
 
         // Creating common mapper data.
         CommonCollectionMapperData commonCollectionMapperData = new CommonCollectionMapperData(
@@ -332,8 +343,9 @@ public final class CollectionMetadataGenerator {
         // Creating a query generator builder, to which additional id data will be added, in case this collection
         // references some entities (either from the element or index). At the end, this will be used to build
         // a query generator to read the raw data collection from the middle table.
-        QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(mainGenerator.getGlobalCfg(),
-                mainGenerator.getVerEntCfg(), referencingIdData, auditMiddleEntityName);
+		QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(mainGenerator.getGlobalCfg(),
+                mainGenerator.getVerEntCfg(), mainGenerator.getAuditStrategy(), referencingIdData,
+				auditMiddleEntityName);
 
         // Adding the XML mapping for the referencing entity, if the relation isn't inverse.
         if (middleEntityXml != null) {

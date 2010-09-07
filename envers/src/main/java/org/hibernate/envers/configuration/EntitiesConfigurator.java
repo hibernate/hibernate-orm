@@ -43,6 +43,7 @@ import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
 import org.hibernate.envers.configuration.metadata.AuditEntityNameRegister;
 import org.hibernate.envers.entities.EntitiesConfigurations;
+import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.graph.GraphTopologicalSort;
 
@@ -57,6 +58,7 @@ import org.hibernate.mapping.PersistentClass;
 public class EntitiesConfigurator {
     public EntitiesConfigurations configure(Configuration cfg, ReflectionManager reflectionManager,
                                             GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
+                                            AuditStrategy auditStrategy,
                                             Document revisionInfoXmlMapping, Element revisionInfoRelationMapping) {
         // Creating a name register to capture all audit entity names created.
         AuditEntityNameRegister auditEntityNameRegister = new AuditEntityNameRegister();
@@ -83,7 +85,7 @@ public class EntitiesConfigurator {
         // Now that all information is read we can update the calculated fields.
         classesAuditingData.updateCalculatedFields();
 
-        AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg,
+        AuditMetadataGenerator auditMetaGen = new AuditMetadataGenerator(cfg, globalCfg, verEntCfg, auditStrategy,
                 revisionInfoRelationMapping, auditEntityNameRegister);
 
         // First pass

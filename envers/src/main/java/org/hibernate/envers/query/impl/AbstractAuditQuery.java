@@ -86,10 +86,14 @@ public abstract class AbstractAuditQuery implements AuditQuery {
 		qb = new QueryBuilder(versionsEntityName, "e");
 	}
     
-    protected List buildAndExecuteQuery() {
+    protected Query buildQuery() {
         Query query = qb.toQuery(versionsReader.getSession());
-
         setQueryProperties(query);
+        return query;
+    }
+    
+	protected List buildAndExecuteQuery() {
+        Query query = buildQuery();
 
         return query.list();
     }

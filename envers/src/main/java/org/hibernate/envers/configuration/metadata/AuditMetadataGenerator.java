@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.dom4j.Element;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
@@ -38,6 +39,7 @@ import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
+import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidTimeAuditStrategy;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
@@ -63,6 +65,7 @@ public final class AuditMetadataGenerator {
     private final Configuration cfg;
     private final GlobalConfiguration globalCfg;
     private final AuditEntitiesConfiguration verEntCfg;
+    private final AuditStrategy auditStrategy;
     private final Element revisionInfoRelationMapping;
 
     /*
@@ -86,11 +89,13 @@ public final class AuditMetadataGenerator {
 
     public AuditMetadataGenerator(Configuration cfg, GlobalConfiguration globalCfg,
                                   AuditEntitiesConfiguration verEntCfg,
+                                  AuditStrategy auditStrategy,
                                   Element revisionInfoRelationMapping,
                                   AuditEntityNameRegister auditEntityNameRegister) {
         this.cfg = cfg;
         this.globalCfg = globalCfg;
         this.verEntCfg = verEntCfg;
+        this.auditStrategy = auditStrategy;
         this.revisionInfoRelationMapping = revisionInfoRelationMapping;
 
         this.basicMetadataGenerator = new BasicMetadataGenerator();
@@ -488,6 +493,10 @@ public final class AuditMetadataGenerator {
 
     AuditEntitiesConfiguration getVerEntCfg() {
         return verEntCfg;
+    }
+
+    AuditStrategy getAuditStrategy() {
+        return auditStrategy;
     }
 
     AuditEntityNameRegister getAuditEntityNameRegister() {

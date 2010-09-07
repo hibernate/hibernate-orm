@@ -83,7 +83,7 @@ public class AuditConfiguration {
     public AuditConfiguration(Configuration cfg) {
         Properties properties = cfg.getProperties();
 
-        ReflectionManager reflectionManager = ((AnnotationConfiguration) cfg).getReflectionManager();
+        ReflectionManager reflectionManager = cfg.getReflectionManager();
         RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration();
         RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure(cfg, reflectionManager);
         auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
@@ -99,7 +99,7 @@ public class AuditConfiguration {
         
         revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
         revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-        entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg,
+        entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
                 revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping());
     }
 

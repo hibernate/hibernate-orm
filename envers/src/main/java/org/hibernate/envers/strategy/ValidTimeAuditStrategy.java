@@ -8,8 +8,12 @@ import org.hibernate.Session;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
+import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
 
 /**
@@ -74,6 +78,32 @@ public class ValidTimeAuditStrategy implements AuditStrategy {
         // Save the audit data
         session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
     }
+
+	public void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder,
+			String revisionProperty,String revisionEndProperty, boolean addAlias,
+            MiddleIdData idData, String revisionPropertyPath, String originalIdPropertyName,
+            String alias1, String alias2) {
+		Parameters rootParameters = rootQueryBuilder.getRootParameters();
+		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
+	}
+	
+	public void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 
+		    String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData, 
+		    String versionsMiddleEntityName, String eeOriginalIdPropertyPath, String revisionPropertyPath,
+		    String originalIdPropertyName, MiddleComponentData... componentDatas) {
+		Parameters rootParameters = rootQueryBuilder.getRootParameters();
+		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
+	}
+    
+    private void addRevisionRestriction(Parameters rootParameters,  
+			String revisionProperty, String revisionEndProperty, boolean addAlias) {
+    	
+		// e.revision <= _revision and (e.endRevision > _revision or e.endRevision is null)
+		Parameters subParm = rootParameters.addSubParameters("or");
+		rootParameters.addWhereWithNamedParam(revisionProperty, addAlias, "<=", "revision");
+		subParm.addWhereWithNamedParam(revisionEndProperty + ".id", addAlias, ">", "revision");
+		subParm.addWhere(revisionEndProperty, addAlias, "is", "null", false);
+	}
 
     @SuppressWarnings({"unchecked"})
     private RevisionType getRevisionType(AuditConfiguration auditCfg, Object data) {

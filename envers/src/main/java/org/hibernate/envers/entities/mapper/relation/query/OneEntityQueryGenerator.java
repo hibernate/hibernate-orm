@@ -25,16 +25,16 @@ package org.hibernate.envers.entities.mapper.relation.query;
 
 import java.util.Collections;
 
+import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.reader.AuditReaderImplementor;
+import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
-
-import org.hibernate.Query;
 
 /**
  * Selects data from a relation middle-table only.
@@ -45,6 +45,7 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
     private final MiddleIdData referencingIdData;
 
     public OneEntityQueryGenerator(AuditEntitiesConfiguration verEntCfg,
+                                   AuditStrategy auditStrategy,
                                    String versionsMiddleEntityName,
                                    MiddleIdData referencingIdData,
                                    MiddleComponentData... componentDatas) {
@@ -55,9 +56,17 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
          *   SELECT new list(ee) FROM middleEntity ee WHERE
          * (only entities referenced by the association; id_ref_ing = id of the referencing entity)
          *     ee.originalId.id_ref_ing = :id_ref_ing AND
+         *     
          * (the association at revision :revision)
+         *   --> for DefaultAuditStrategy:
          *     ee.revision = (SELECT max(ee2.revision) FROM middleEntity ee2
-         *       WHERE ee2.revision <= :revision AND ee2.originalId.* = ee.originalId.*) AND
+         *       WHERE ee2.revision <= :revision AND ee2.originalId.* = ee.originalId.*)
+         *       
+         *   --> for ValidTimeAuditStrategy:
+         *     ee.revision <= :revision and (ee.endRevision > :revision or ee.endRevision is null)
+         * 
+         *     AND
+         *     
          * (only non-deleted entities and associations)
          *     ee.revision_type != DEL
          */
@@ -71,22 +80,15 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
         Parameters rootParameters = qb.getRootParameters();
         // ee.originalId.id_ref_ing = :id_ref_ing
         referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(rootParameters, originalIdPropertyName, true);
-        // SELECT max(ee2.revision) FROM middleEntity ee2
-        QueryBuilder maxRevQb = qb.newSubQueryBuilder(versionsMiddleEntityName, "ee2");
-        maxRevQb.addProjection("max", revisionPropertyPath, false);
-        // WHERE
-        Parameters maxRevQbParameters = maxRevQb.getRootParameters();
-        // ee2.revision <= :revision
-        maxRevQbParameters.addWhereWithNamedParam(revisionPropertyPath, "<=", "revision");
-        // ee2.originalId.* = ee.originalId.*        
+        
         String eeOriginalIdPropertyPath = "ee." + originalIdPropertyName;
-        String ee2OriginalIdPropertyPath = "ee2." + originalIdPropertyName;
-        referencingIdData.getPrefixedMapper().addIdsEqualToQuery(maxRevQbParameters, eeOriginalIdPropertyPath, ee2OriginalIdPropertyPath);
-        for (MiddleComponentData componentData : componentDatas) {
-            componentData.getComponentMapper().addMiddleEqualToQuery(maxRevQbParameters, eeOriginalIdPropertyPath, ee2OriginalIdPropertyPath);
-        }
-        // ee.revision = (SELECT max(...) ...)
-        rootParameters.addWhere(revisionPropertyPath, "=", maxRevQb);       
+
+        // (with ee association at revision :revision)
+        // --> based on auditStrategy (see above)
+        auditStrategy.addAssociationAtRevisionRestriction(qb, revisionPropertyPath,
+         		verEntCfg.getRevisionEndFieldName(), true,referencingIdData, versionsMiddleEntityName, 
+         		eeOriginalIdPropertyPath, revisionPropertyPath, originalIdPropertyName, componentDatas);
+         
         // ee.revision_type != DEL
         rootParameters.addWhereWithNamedParam(verEntCfg.getRevisionTypePropName(), "!=", "delrevisiontype");
 

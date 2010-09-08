@@ -169,6 +169,11 @@ import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.SerializationHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.XMLHelper;
+import org.hibernate.util.xml.MappingReader;
+import org.hibernate.util.xml.Origin;
+import org.hibernate.util.xml.OriginImpl;
+import org.hibernate.util.xml.XmlDocument;
+import org.hibernate.util.xml.XmlDocumentImpl;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -483,7 +488,6 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration addFile(final File xmlFile) throws MappingException {
 		log.info( "Reading mappings from file: " + xmlFile.getPath() );
-
 		final String name =  xmlFile.getAbsolutePath();
 		final InputSource inputSource;
 		try {
@@ -492,45 +496,28 @@ public class Configuration implements Serializable {
 		catch ( FileNotFoundException e ) {
 			throw new MappingNotFoundException( "file", xmlFile.toString() );
 		}
-
-		add(
-				new XMLHelper.MetadataXmlSource() {
-					private final Origin origin = new Origin() {
-						public String getType() {
-							return "file";
-						}
-
-						public String getName() {
-							return name;
-						}
-					};
-
-					public Origin getOrigin() {
-						return origin;
-					}
-
-					public InputSource getInputSource() {
-						return inputSource;
-					}
-				}
-		);
+		add( inputSource, "file", name );
 		return this;
 	}
 
-	private XMLHelper.MetadataXml add(XMLHelper.MetadataXmlSource metadataXmlSource) {
-		XMLHelper.MetadataXml metadataXml = xmlHelper.readMappingDocument( entityResolver, metadataXmlSource );
+	private XmlDocument add(InputSource inputSource, String originType, String originName) {
+		return add( inputSource, new OriginImpl( originType, originName ) );
+	}
+
+	private XmlDocument add(InputSource inputSource, Origin origin) {
+		XmlDocument metadataXml = MappingReader.INSTANCE.readMappingDocument( entityResolver, inputSource, origin );
 		add( metadataXml );
 		return metadataXml;
 	}
 
-	private void add(XMLHelper.MetadataXml metadataXml) {
-		if ( inSecondPass || !metadataXml.isOrmXml() ) {
+	private void add(XmlDocument metadataXml) {
+		if ( inSecondPass || !isOrmXml( metadataXml ) ) {
 			metadataSourceQueue.add( metadataXml );
 		}
 		else {
 			final MetadataProvider metadataProvider = ( (MetadataProviderInjector) reflectionManager ).getMetadataProvider();
 			JPAMetadataProvider jpaMetadataProvider = ( JPAMetadataProvider ) metadataProvider;
-			List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( metadataXml.getXmlDocument() );
+			List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( metadataXml.getDocumentTree() );
 			for ( String className : classNames ) {
 				try {
 					metadataSourceQueue.add( reflectionManager.classForName( className, this.getClass() ) );
@@ -540,6 +527,10 @@ public class Configuration implements Serializable {
 				}
 			}
 		}
+	}
+
+	private static boolean isOrmXml(XmlDocument xmlDocument) {
+		return "entity-mappings".equals( xmlDocument.getDocumentTree().getRootElement().getName() );
 	}
 
 	/**
@@ -581,31 +572,11 @@ public class Configuration implements Serializable {
 		}
 
 		log.info( "Reading mappings from file: " + xmlFile );
-		XMLHelper.MetadataXml metadataXml = add(
-				new XMLHelper.MetadataXmlSource() {
-					private final Origin origin = new Origin() {
-						public String getType() {
-							return "file";
-						}
-
-						public String getName() {
-							return name;
-						}
-					};
-					public Origin getOrigin() {
-						return origin;
-					}
-
-					public InputSource getInputSource() {
-						return inputSource;
-					}
-				}
-		);
-
+		XmlDocument metadataXml = add( inputSource, "file", name );
 
 		try {
 			log.debug( "Writing cache file for: " + xmlFile + " to: " + cachedFile );
-			SerializationHelper.serialize( ( Serializable ) metadataXml.getXmlDocument(), new FileOutputStream( cachedFile ) );
+			SerializationHelper.serialize( ( Serializable ) metadataXml.getDocumentTree(), new FileOutputStream( cachedFile ) );
 		}
 		catch ( SerializationException e ) {
 			log.warn( "Could not write cached file: " + cachedFile, e );
@@ -647,7 +618,7 @@ public class Configuration implements Serializable {
 
 		log.info( "Reading mappings from cache file: " + cachedFile );
 		Document document = ( Document ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) );
-		add( xmlHelper.buildMetadataXml( document, "file", xmlFile.getAbsolutePath() ) );
+		add( new XmlDocumentImpl( document, "file", xmlFile.getAbsolutePath() ) );
 		return this;
 	}
 
@@ -678,30 +649,8 @@ public class Configuration implements Serializable {
 		if ( log.isDebugEnabled() ) {
 			log.debug( "Mapping XML:\n" + xml );
 		}
-
 		final InputSource inputSource = new InputSource( new StringReader( xml ) );
-
-		add(
-				new XMLHelper.MetadataXmlSource() {
-					final Origin origin = new Origin() {
-						public String getType() {
-							return "string";
-						}
-
-						public String getName() {
-							return "XML String";
-						}
-					};
-
-					public Origin getOrigin() {
-						return origin;
-					}
-
-					public InputSource getInputSource() {
-						return inputSource;
-					}
-				}
-		);
+		add( inputSource, "string", "XML String" );
 		return this;
 	}
 
@@ -729,30 +678,10 @@ public class Configuration implements Serializable {
 		return this;
 	}
 
-	private XMLHelper.MetadataXml add(InputStream inputStream, final String type, final String name) {
-		final XMLHelper.MetadataXmlSource.Origin origin = new XMLHelper.MetadataXmlSource.Origin() {
-			public String getType() {
-				return type;
-			}
-
-			public String getName() {
-				return name;
-			}
-		};
+	private XmlDocument add(InputStream inputStream, final String type, final String name) {
 		final InputSource inputSource = new InputSource( inputStream );
-
 		try {
-			return add(
-					new XMLHelper.MetadataXmlSource() {
-						public Origin getOrigin() {
-							return origin;
-						}
-
-						public InputSource getInputSource() {
-							return inputSource;
-						}
-					}
-			);
+			return add( inputSource, type, name );
 		}
 		finally {
 			try {
@@ -763,6 +692,7 @@ public class Configuration implements Serializable {
 			}
 		}
 	}
+
 	/**
 	 * Read mappings from a DOM <tt>Document</tt>
 	 *
@@ -777,7 +707,7 @@ public class Configuration implements Serializable {
 		}
 
 		final Document document = xmlHelper.createDOMReader().read( doc );
-		add( xmlHelper.buildMetadataXml( document, "unknown", null ) );
+		add( new XmlDocumentImpl( document, "unknown", null ) );
 
 		return this;
 	}
@@ -3877,9 +3807,9 @@ public class Configuration implements Serializable {
 	}
 
 	protected class MetadataSourceQueue implements Serializable {
-		private LinkedHashMap<XMLHelper.MetadataXml, Set<String>> hbmMetadataToEntityNamesMap
-				= new LinkedHashMap<XMLHelper.MetadataXml, Set<String>>();
-		private Map<String, XMLHelper.MetadataXml> hbmMetadataByEntityNameXRef = new HashMap<String, XMLHelper.MetadataXml>();
+		private LinkedHashMap<XmlDocument, Set<String>> hbmMetadataToEntityNamesMap
+				= new LinkedHashMap<XmlDocument, Set<String>>();
+		private Map<String, XmlDocument> hbmMetadataByEntityNameXRef = new HashMap<String, XmlDocument>();
 
 		//XClass are not serializable by default
 		private transient List<XClass> annotatedClasses = new ArrayList<XClass>();
@@ -3908,8 +3838,8 @@ public class Configuration implements Serializable {
 			out.writeObject( serializableAnnotatedClasses );
 		}
 
-		public void add(XMLHelper.MetadataXml metadataXml) {
-			final Document document = metadataXml.getXmlDocument();
+		public void add(XmlDocument metadataXml) {
+			final Document document = metadataXml.getDocumentTree();
 			final Element hmNode = document.getRootElement();
 			Attribute packNode = hmNode.attribute( "package" );
 			String defaultPackage = packNode != null ? packNode.getValue() : "";
@@ -3990,7 +3920,7 @@ public class Configuration implements Serializable {
 
 		private void processHbmXmlQueue() {
 			log.debug( "Processing hbm.xml files" );
-			for ( Map.Entry<XMLHelper.MetadataXml, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
+			for ( Map.Entry<XmlDocument, Set<String>> entry : hbmMetadataToEntityNamesMap.entrySet() ) {
 				// Unfortunately we have to create a Mappings instance for each iteration here
 				processHbmXml( entry.getKey(), entry.getValue() );
 			}
@@ -3998,12 +3928,16 @@ public class Configuration implements Serializable {
 			hbmMetadataByEntityNameXRef.clear();
 		}
 
-		private void processHbmXml(XMLHelper.MetadataXml metadataXml, Set<String> entityNames) {
+		private void processHbmXml(XmlDocument metadataXml, Set<String> entityNames) {
 			try {
 				HbmBinder.bindRoot( metadataXml, createMappings(), CollectionHelper.EMPTY_MAP, entityNames );
 			}
 			catch ( MappingException me ) {
-				throw new InvalidMappingException( metadataXml.getOriginType(), metadataXml.getOriginName(), me );
+				throw new InvalidMappingException(
+						metadataXml.getOrigin().getType(),
+						metadataXml.getOrigin().getName(), 
+						me
+				);
 			}
 
 			for ( String entityName : entityNames ) {

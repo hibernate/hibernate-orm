@@ -72,20 +72,26 @@ public final class LogHelper {
 				.append( "\n\t" );
 		sb.append( "Jar files URLs [" );
 		List<URL> jarFileUrls = unitInfo.getJarFileUrls();
-		for ( URL url : jarFileUrls ) {
-			sb.append( "\n\t\t" ).append( url );
+		if ( jarFileUrls != null ) {
+			for ( URL url : jarFileUrls ) {
+				sb.append( "\n\t\t" ).append( url );
+			}
 		}
 		sb.append( "]\n\t" );
 		sb.append( "Managed classes names [" );
-		List<String> classesNames = unitInfo.getManagedClassNames();
-		for ( String clazz : classesNames ) {
-			sb.append( "\n\t\t" ).append( clazz );
+		List<String> classNames = unitInfo.getManagedClassNames();
+		if ( classNames != null ) {
+			for ( String className : classNames ) {
+				sb.append( "\n\t\t" ).append( className );
+			}
 		}
 		sb.append( "]\n\t" );
 		sb.append( "Mapping files names [" );
 		List<String> mappingFiles = unitInfo.getMappingFileNames();
-		for ( String file : mappingFiles ) {
-			sb.append( "\n\t\t" ).append( file );
+		if ( mappingFiles != null ) {
+			for ( String file : mappingFiles ) {
+				sb.append( "\n\t\t" ).append( file );
+			}
 		}
 		sb.append( "]\n\t" );
 		sb.append( "Properties [" );

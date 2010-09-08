@@ -21,44 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg;
+package org.hibernate.util.xml;
 
-import java.util.Set;
+import java.io.Serializable;
 
-import org.hibernate.util.xml.XmlDocument;
+import org.dom4j.Document;
 
 /**
- * Represents a mapping queued for delayed processing to await
- * processing of an extends entity upon which it depends.
+ * Basic implemementation of {@link XmlDocument}
  *
  * @author Steve Ebersole
  */
-public class ExtendsQueueEntry {
-	private final String explicitName;
-	private final String mappingPackage;
-	private final XmlDocument metadataXml;
-	private final Set<String> entityNames;
+public class XmlDocumentImpl implements XmlDocument, Serializable {
+	private final Document documentTree;
+	private final Origin origin;
 
-	public ExtendsQueueEntry(String explicitName, String mappingPackage, XmlDocument metadataXml, Set<String> entityNames) {
-		this.explicitName = explicitName;
-		this.mappingPackage = mappingPackage;
-		this.metadataXml = metadataXml;
-		this.entityNames = entityNames;
+	public XmlDocumentImpl(Document documentTree, String originType, String originName) {
+		this( documentTree, new OriginImpl( originType, originName ) );
 	}
 
-	public String getExplicitName() {
-		return explicitName;
+	public XmlDocumentImpl(Document documentTree, Origin origin) {
+		this.documentTree = documentTree;
+		this.origin = origin;
 	}
 
-	public String getMappingPackage() {
-		return mappingPackage;
+	/**
+	 * {@inheritDoc}
+	 */
+	public Document getDocumentTree() {
+		return documentTree;
 	}
 
-	public XmlDocument getMetadataXml() {
-		return metadataXml;
-	}
-
-	public Set<String> getEntityNames() {
-		return entityNames;
+	/**
+	 * {@inheritDoc}
+	 */
+	public Origin getOrigin() {
+		return origin;
 	}
 }

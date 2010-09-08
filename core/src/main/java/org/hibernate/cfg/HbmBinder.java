@@ -93,11 +93,10 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.hibernate.util.XMLHelper;
+import org.hibernate.util.xml.XmlDocument;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,12 +129,12 @@ public final class HbmBinder {
 	 * @throws MappingException
 	 */
 	public static void bindRoot(
-			XMLHelper.MetadataXml metadataXml,
+			XmlDocument metadataXml,
 			Mappings mappings,
 			java.util.Map inheritedMetas,
 			java.util.Set<String> entityNames) throws MappingException {
 
-		final Document doc = metadataXml.getXmlDocument();
+		final Document doc = metadataXml.getDocumentTree();
 		final Element hibernateMappingElement = doc.getRootElement();
 
 		java.util.List<String> names = HbmBinder.getExtendsNeeded( metadataXml, mappings );
@@ -3076,10 +3075,10 @@ public final class HbmBinder {
 	 * @param mappings The already processed mappings.
 	 * @return The list of unresolved extends names.
 	 */
-	public static java.util.List<String> getExtendsNeeded(XMLHelper.MetadataXml metadataXml, Mappings mappings) {
+	public static java.util.List<String> getExtendsNeeded(XmlDocument metadataXml, Mappings mappings) {
 		java.util.List<String> extendz = new ArrayList<String>();
 		Iterator[] subclasses = new Iterator[3];
-		final Element hmNode = metadataXml.getXmlDocument().getRootElement();
+		final Element hmNode = metadataXml.getDocumentTree().getRootElement();
 
 		Attribute packNode = hmNode.attribute( "package" );
 		final String packageName = packNode == null ? null : packNode.getValue();

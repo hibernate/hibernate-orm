@@ -58,13 +58,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
-import org.dom4j.DocumentException;
 import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -101,6 +99,10 @@ import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.XMLHelper;
+import org.hibernate.util.xml.MappingReader;
+import org.hibernate.util.xml.Origin;
+import org.hibernate.util.xml.OriginImpl;
+import org.hibernate.util.xml.XmlDocument;
 
 /**
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
@@ -687,37 +689,29 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	private void addXMLEntities(List<String> xmlFiles, PersistenceUnitInfo info, List<String> entities) {
 		//TODO handle inputstream related hbm files
-		ClassLoader newTempClassLoader = info.getNewTempClassLoader();
-		if (newTempClassLoader == null) {
-			log.warn( "Persistence provider caller does not implement the EJB3 spec correctly. PersistenceUnitInfo.getNewTempClassLoader() is null." );
+		ClassLoader classLoaderToUse = info.getNewTempClassLoader();
+		if ( classLoaderToUse == null ) {
+			log.warn(
+					"Persistence provider caller does not implement the EJB3 spec correctly." +
+							"PersistenceUnitInfo.getNewTempClassLoader() is null."
+			);
 			return;
 		}
-		XMLHelper xmlHelper = new XMLHelper();
-		List errors = new ArrayList();
-		SAXReader saxReader = xmlHelper.createSAXReader( "XML InputStream", errors, cfg.getEntityResolver() );
-		try {
-			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
-			//saxReader.setFeature( "http://apache.org/xml/features/validation/dynamic", true );
-			//set the default schema locators
-			saxReader.setProperty( "http://apache.org/xml/properties/schema/external-schemaLocation",
-					"http://java.sun.com/xml/ns/persistence/orm orm_1_0.xsd");
-		}
-		catch (SAXException e) {
-			saxReader.setValidation( false );
-		}
+		for ( final String xmlFile : xmlFiles ) {
+			final InputStream fileInputStream = classLoaderToUse.getResourceAsStream( xmlFile );
+			if ( fileInputStream == null ) {
+				log.info( "Unable to resolve mapping file [{}]", xmlFile );
+				continue;
+			}
+			final InputSource inputSource = new InputSource( fileInputStream );
 
-		for ( String xmlFile : xmlFiles ) {
-
-			InputStream resourceAsStream = newTempClassLoader.getResourceAsStream( xmlFile );
-			if (resourceAsStream == null) continue;
-			BufferedInputStream is = new BufferedInputStream( resourceAsStream );
+			XmlDocument metadataXml = MappingReader.INSTANCE.readMappingDocument(
+					cfg.getEntityResolver(),
+					inputSource,
+					new OriginImpl( "persistence-unit-info", xmlFile )
+			);
 			try {
-				errors.clear();
-				org.dom4j.Document doc = saxReader.read( is );
-				if ( errors.size() != 0 ) {
-					throw new MappingException( "invalid mapping: " + xmlFile, (Throwable) errors.get( 0 ) );
-				}
-				Element rootElement = doc.getRootElement();
+				final Element rootElement = metadataXml.getDocumentTree().getRootElement();
 				if ( rootElement != null && "entity-mappings".equals( rootElement.getName() ) ) {
 					Element element = rootElement.element( "package" );
 					String defaultPackage = element != null ? element.getTextTrim() : null;
@@ -747,12 +741,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					//FIXME include hbm xml entities to enhance them but entities is also used to collect annotated entities
 				}
 			}
-			catch (DocumentException e) {
-				throw new MappingException( "Could not parse mapping document in input stream", e );
-			}
 			finally {
 				try {
-					is.close();
+					fileInputStream.close();
 				}
 				catch (IOException ioe) {
 					log.warn( "Could not close input stream", ioe );

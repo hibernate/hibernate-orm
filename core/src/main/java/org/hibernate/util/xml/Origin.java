@@ -21,44 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg;
+package org.hibernate.util.xml;
 
-import java.util.Set;
-
-import org.hibernate.util.xml.XmlDocument;
+import java.io.Serializable;
 
 /**
- * Represents a mapping queued for delayed processing to await
- * processing of an extends entity upon which it depends.
+ * Describes the origin of an xml document
  *
  * @author Steve Ebersole
  */
-public class ExtendsQueueEntry {
-	private final String explicitName;
-	private final String mappingPackage;
-	private final XmlDocument metadataXml;
-	private final Set<String> entityNames;
+public interface Origin extends Serializable {
+	/**
+	 * Retrieve the type of origin.  This is not a discrete set, but might be somethign like
+	 * {@code file} for file protocol URLs, or {@code resource} for classpath resource lookups.
+	 *
+	 * @return The origin type.
+	 */
+	public String getType();
 
-	public ExtendsQueueEntry(String explicitName, String mappingPackage, XmlDocument metadataXml, Set<String> entityNames) {
-		this.explicitName = explicitName;
-		this.mappingPackage = mappingPackage;
-		this.metadataXml = metadataXml;
-		this.entityNames = entityNames;
-	}
-
-	public String getExplicitName() {
-		return explicitName;
-	}
-
-	public String getMappingPackage() {
-		return mappingPackage;
-	}
-
-	public XmlDocument getMetadataXml() {
-		return metadataXml;
-	}
-
-	public Set<String> getEntityNames() {
-		return entityNames;
-	}
+	/**
+	 * The name of the document origin.  Interpretation is relative to the type, but might be the
+	 * resource name or file URL.
+	 *
+	 * @return The name.
+	 */
+	public String getName();
 }

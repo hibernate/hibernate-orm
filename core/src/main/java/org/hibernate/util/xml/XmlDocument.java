@@ -21,44 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg;
+package org.hibernate.util.xml;
 
-import java.util.Set;
+import java.io.Serializable;
 
-import org.hibernate.util.xml.XmlDocument;
+import org.dom4j.Document;
 
 /**
- * Represents a mapping queued for delayed processing to await
- * processing of an extends entity upon which it depends.
+ * Describes a parsed xml document.
  *
  * @author Steve Ebersole
  */
-public class ExtendsQueueEntry {
-	private final String explicitName;
-	private final String mappingPackage;
-	private final XmlDocument metadataXml;
-	private final Set<String> entityNames;
+public interface XmlDocument extends Serializable {
+	/**
+	 * Retrieve the parsed DOM tree.
+	 *
+	 * @return the DOM tree
+	 */
+	public Document getDocumentTree();
 
-	public ExtendsQueueEntry(String explicitName, String mappingPackage, XmlDocument metadataXml, Set<String> entityNames) {
-		this.explicitName = explicitName;
-		this.mappingPackage = mappingPackage;
-		this.metadataXml = metadataXml;
-		this.entityNames = entityNames;
-	}
-
-	public String getExplicitName() {
-		return explicitName;
-	}
-
-	public String getMappingPackage() {
-		return mappingPackage;
-	}
-
-	public XmlDocument getMetadataXml() {
-		return metadataXml;
-	}
-
-	public Set<String> getEntityNames() {
-		return entityNames;
-	}
+	/**
+	 * Retrieve the document's origin.
+	 *
+	 * @return The origin
+	 */
+	public Origin getOrigin();
 }

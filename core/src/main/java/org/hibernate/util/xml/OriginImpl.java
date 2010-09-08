@@ -21,44 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg;
+package org.hibernate.util.xml;
 
-import java.util.Set;
-
-import org.hibernate.util.xml.XmlDocument;
+import java.io.Serializable;
 
 /**
- * Represents a mapping queued for delayed processing to await
- * processing of an extends entity upon which it depends.
+ * Basic implementation of {@link Origin}
  *
  * @author Steve Ebersole
  */
-public class ExtendsQueueEntry {
-	private final String explicitName;
-	private final String mappingPackage;
-	private final XmlDocument metadataXml;
-	private final Set<String> entityNames;
+public class OriginImpl implements Origin, Serializable {
+	private final String type;
+	private final String name;
 
-	public ExtendsQueueEntry(String explicitName, String mappingPackage, XmlDocument metadataXml, Set<String> entityNames) {
-		this.explicitName = explicitName;
-		this.mappingPackage = mappingPackage;
-		this.metadataXml = metadataXml;
-		this.entityNames = entityNames;
+	public OriginImpl(String type, String name) {
+		this.type = type;
+		this.name = name;
 	}
 
-	public String getExplicitName() {
-		return explicitName;
+	/**
+	 * {@inheritDoc}
+	 */
+	public String getType() {
+		return type;
 	}
 
-	public String getMappingPackage() {
-		return mappingPackage;
-	}
-
-	public XmlDocument getMetadataXml() {
-		return metadataXml;
-	}
-
-	public Set<String> getEntityNames() {
-		return entityNames;
+	/**
+	 * {@inheritDoc}
+	 */
+	public String getName() {
+		return name;
 	}
 }

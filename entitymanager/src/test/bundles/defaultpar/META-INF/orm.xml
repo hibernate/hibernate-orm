@@ -12,6 +12,7 @@
                     <pre-persist method-name="increment"/>
                 </entity-listener>
             </entity-listeners>
+            <delimited-identifiers>false</delimited-identifiers>
         </persistence-unit-defaults>
     </persistence-unit-metadata>
     <package>org.hibernate.ejb.test.pack.defaultpar</package>

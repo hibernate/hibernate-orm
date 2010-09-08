@@ -76,4 +76,7 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}
+	public String getCrossJoinSeparator() {
+		return ", ";
+	}
 }

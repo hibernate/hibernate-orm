@@ -98,9 +98,7 @@ import org.hibernate.transaction.JDBCTransactionFactory;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.hibernate.util.XMLHelper;
 import org.hibernate.util.xml.MappingReader;
-import org.hibernate.util.xml.Origin;
 import org.hibernate.util.xml.OriginImpl;
 import org.hibernate.util.xml.XmlDocument;
 
@@ -122,13 +120,13 @@ import org.hibernate.util.xml.XmlDocument;
  * @author Emmanuel Bernard
  */
 public class Ejb3Configuration implements Serializable, Referenceable {
+	private final Logger log = LoggerFactory.getLogger( Ejb3Configuration.class );
 	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();
 	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
-	private final Logger log = LoggerFactory.getLogger( Ejb3Configuration.class );
+	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";
+
 	private static EntityNotFoundDelegate ejb3EntityNotFoundDelegate = new Ejb3EntityNotFoundDelegate();
 	private static Configuration DEFAULT_CONFIGURATION = new AnnotationConfiguration();
-	private String persistenceUnitName;
-	private String cfgXmlResource;
 
 	private static class Ejb3EntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -139,6 +137,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	static {
 		Version.touch();
 	}
+
+	private String persistenceUnitName;
+	private String cfgXmlResource;
 
 	private AnnotationConfiguration cfg;
 	private SettingsFactory settingsFactory;
@@ -562,6 +563,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			List<NamedInputStream> hbmFiles = new ArrayList<NamedInputStream>();
 			List<String> packages = new ArrayList<String>();
 			List<String> xmlFiles = new ArrayList<String>( 50 );
+			List<XmlDocument> xmlDocuments = new ArrayList<XmlDocument>( 50 );
 			if ( info.getMappingFileNames() != null ) {
 				xmlFiles.addAll( info.getMappingFileNames() );
 			}
@@ -592,7 +594,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 			//FIXME entities is used to enhance classes and to collect annotated entities this should not be mixed
 			//fill up entities with the on found in xml files
-			addXMLEntities( xmlFiles, info, entities );
+			addXMLEntities( xmlFiles, info, entities, xmlDocuments );
 
 			//FIXME send the appropriate entites.
 			if ( "true".equalsIgnoreCase( properties.getProperty( AvailableSettings.USE_CLASS_ENHANCER ) ) ) {
@@ -602,7 +604,11 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			workingVars.put( AvailableSettings.CLASS_NAMES, entities );
 			workingVars.put( AvailableSettings.PACKAGE_NAMES, packages );
 			workingVars.put( AvailableSettings.XML_FILE_NAMES, xmlFiles );
-			if ( hbmFiles.size() > 0 ) workingVars.put( AvailableSettings.HBXML_FILES, hbmFiles );
+			workingVars.put( PARSED_MAPPING_DOMS, xmlDocuments );
+
+			if ( hbmFiles.size() > 0 ) {
+				workingVars.put( AvailableSettings.HBXML_FILES, hbmFiles );
+			}
 
 			// validation factory
 			final Object validationFactory = integration.get( AvailableSettings.VALIDATION_FACTORY );
@@ -687,7 +693,23 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return this;
 	}
 
-	private void addXMLEntities(List<String> xmlFiles, PersistenceUnitInfo info, List<String> entities) {
+	/**
+	 * Processes {@code xmlFiles} argument and populates:<ul>
+	 * <li>the {@code entities} list with encountered classnames</li>
+	 * <li>the {@code xmlDocuments} list with parsed/validated {@link XmlDocument} corrolary to each xml file</li>
+	 * </ul>
+	 *
+	 * @param xmlFiles The XML resource names; these will be resolved by classpath lookup and parsed/validated.
+	 * @param info The PUI
+	 * @param entities (output) The names of all encountered "mapped" classes
+	 * @param xmlDocuments (output) The list of {@link XmlDocument} instances of each entry in {@code xmlFiles}
+	 */
+	@SuppressWarnings({ "unchecked" })
+	private void addXMLEntities(
+			List<String> xmlFiles,
+			PersistenceUnitInfo info,
+			List<String> entities,
+			List<XmlDocument> xmlDocuments) {
 		//TODO handle inputstream related hbm files
 		ClassLoader classLoaderToUse = info.getNewTempClassLoader();
 		if ( classLoaderToUse == null ) {
@@ -710,6 +732,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					inputSource,
 					new OriginImpl( "persistence-unit-info", xmlFile )
 			);
+			xmlDocuments.add( metadataXml );
 			try {
 				final Element rootElement = metadataXml.getDocumentTree().getRootElement();
 				if ( rootElement != null && "entity-mappings".equals( rootElement.getName() ) ) {
@@ -750,6 +773,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				}
 			}
 		}
+		xmlFiles.clear();
 	}
 
 	private void defineTransactionType(Object overridenTxType, Map workingVars) {
@@ -1081,6 +1105,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return this;
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	private void addClassesToSessionFactory(Map workingVars) {
 		if ( workingVars.containsKey( AvailableSettings.CLASS_NAMES ) ) {
 			Collection<String> classNames = (Collection<String>) workingVars.get(
@@ -1088,6 +1113,14 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			);
 			addNamedAnnotatedClasses( this, classNames, workingVars );
 		}
+
+		if ( workingVars.containsKey( PARSED_MAPPING_DOMS ) ) {
+			Collection<XmlDocument> xmlDocuments = (Collection<XmlDocument>) workingVars.get( PARSED_MAPPING_DOMS );
+			for ( XmlDocument xmlDocument : xmlDocuments ) {
+				cfg.add( xmlDocument );
+			}
+		}
+
 		//TODO apparently only used for Tests, get rid of it?
 		if ( workingVars.containsKey( AvailableSettings.LOADED_CLASSES ) ) {
 			Collection<Class> classes = (Collection<Class>) workingVars.get( AvailableSettings.LOADED_CLASSES );

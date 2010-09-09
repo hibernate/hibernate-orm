@@ -510,7 +510,7 @@ public class Configuration implements Serializable {
 		return metadataXml;
 	}
 
-	private void add(XmlDocument metadataXml) {
+	public void add(XmlDocument metadataXml) {
 		if ( inSecondPass || !isOrmXml( metadataXml ) ) {
 			metadataSourceQueue.add( metadataXml );
 		}

@@ -262,6 +262,11 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
          commitOrRollbackTx();
       }
 
+      // Delay added to guarantee that query cache results won't be considered
+      // as not up to date due to persist session and query results from first
+      // query happening within same 100ms gap.
+      Thread.sleep(100);
+
       beginTx();
       try {
          s = openSession();
@@ -304,6 +309,11 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
       } finally {
          commitOrRollbackTx();
       }
+
+      // Delay added to guarantee that query cache results won't be considered
+      // as not up to date due to persist session and query results from first
+      // query happening within same 100ms gap.
+      Thread.sleep(100);
 
       beginTx();
       try {

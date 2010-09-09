@@ -757,7 +757,7 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	@Override
-	protected void add(org.dom4j.Document doc) throws MappingException {
+	public void add(org.dom4j.Document doc) throws MappingException {
 		boolean ejb3Xml = "entity-mappings".equals( doc.getRootElement().getName() );
 		if ( inSecondPass ) {
 			//if in second pass bypass the queueing, getExtendedQueue reuse this method

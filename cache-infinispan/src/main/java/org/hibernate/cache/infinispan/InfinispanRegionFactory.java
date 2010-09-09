@@ -201,8 +201,8 @@ public class InfinispanRegionFactory implements RegionFactory {
    public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
             throws CacheException {
       if (log.isDebugEnabled()) log.debug("Building timestamps cache region [" + regionName + "]");
-      String cacheName = typeOverrides.get(TIMESTAMPS_KEY).getCacheName();
-      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(manager.getCache(cacheName));
+      Cache cache = getCache(regionName, TIMESTAMPS_KEY, properties);
+      CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
       TimestampsRegionImpl region = new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager, this);
       region.start();
       return region;

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tutorial.em;
+package org.hibernate.tutorial.envers;
 
 import java.util.Date;
 import java.util.List;
@@ -31,19 +31,25 @@ import javax.persistence.Persistence;
 
 import junit.framework.TestCase;
 
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+
 /**
- * Illustrates basic use of Hibernate as a JPA provider.
+ * Illustrates the set up and use of Envers.
+ * <p>
+ * This example is different from the others in that we really need to save multiple revisions to the entity in
+ * order to get a good look at Envers in action.
  *
  * @author Steve Ebersole
  */
-public class EntityManagerIllustrationTest extends TestCase {
+public class EnversIllustrationTest extends TestCase {
 	private EntityManagerFactory entityManagerFactory;
 
 	@Override
 	protected void setUp() throws Exception {
 		// like discussed with regards to SessionFactory, an EntityManagerFactory is set up once for an application
 		// 		IMPORTANT: notice how the name here matches the name we gave the persistence-unit in persistence.xml!
-		entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.jpa" );
+		entityManagerFactory = Persistence.createEntityManagerFactory( "org.hibernate.tutorial.envers" );
 	}
 
 	@Override
@@ -52,7 +58,7 @@ public class EntityManagerIllustrationTest extends TestCase {
 	}
 
 	public void testBasicUsage() {
-		// create a couple of events...
+		// create a couple of events
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
 		entityManager.getTransaction().begin();
 		entityManager.persist( new Event( "Our very first event!", new Date() ) );
@@ -68,6 +74,32 @@ public class EntityManagerIllustrationTest extends TestCase {
 			System.out.println( "Event (" + event.getDate() + ") : " + event.getTitle() );
 		}
         entityManager.getTransaction().commit();
+        entityManager.close();
+
+		// so far the code is the same as we have seen in previous tutorials.  Now lets leverage Envers...
+
+		// first lets create some revisions
+		entityManager = entityManagerFactory.createEntityManager();
+		entityManager.getTransaction().begin();
+		Event myEvent = entityManager.find( Event.class, 2L ); // we are using the increment generator, so we know 2 is a valid id
+		myEvent.setDate( new Date() );
+		myEvent.setTitle( myEvent.getTitle() + " (rescheduled)" );
+        entityManager.getTransaction().commit();
+        entityManager.close();
+
+		// and then use an AuditReader to look back through history
+		entityManager = entityManagerFactory.createEntityManager();
+		entityManager.getTransaction().begin();
+		myEvent = entityManager.find( Event.class, 2L );
+		assertEquals( "A follow up event (rescheduled)", myEvent.getTitle() );
+		AuditReader reader = AuditReaderFactory.get( entityManager );
+		Event firstRevision = reader.find( Event.class, 2L, 1 );
+		assertFalse( firstRevision.getTitle().equals( myEvent.getTitle() ) );
+		assertFalse( firstRevision.getDate().equals( myEvent.getDate() ) );
+		Event secondRevision = reader.find( Event.class, 2L, 2 );
+		assertTrue( secondRevision.getTitle().equals( myEvent.getTitle() ) );
+		assertTrue( secondRevision.getDate().equals( myEvent.getDate() ) );
+		entityManager.getTransaction().commit();
         entityManager.close();
 	}
 }

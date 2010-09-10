@@ -85,4 +85,47 @@
         representation to a graph of objects.
     </para>
 
+    <section>
+        <title>Get Involved</title>
+        <itemizedlist>
+            <listitem>
+                <para>
+                    Use Hibernate and report any bugs or issues you find. See
+                    <ulink url="http://hibernate.org/issuetracker.html"/> for details.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Try your hand at fixing some bugs or implementing enhancements. Again, see
+                    <ulink url="http://hibernate.org/issuetracker.html"/>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Engage with the community using mailing lists, forums, IRC, or other ways listed at
+                    <ulink url="http://hibernate.org/community.html"/>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Help improve or translate this documentation. Contact us on
+                    the developer mailing list if you have interest.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Spread the word. Let the rest of your organization know about the benefits of
+                    Hibernate.<!-- I didn't like 'evangelize'. Too many religious overtones. I'd like something stronger than this though. I'll have a think. -->
+                </para>
+            </listitem>
+        </itemizedlist>
+    </section>
+
+    <section>
+        <title>Tutorial code</title>
+        <para>
+            The referenced projects and code for the tutorials in this guide are available at
+            <ulink url="files/hibernate-tutorials.zip"/>.
+        </para>
+    </section>
 </preface>

@@ -33,7 +33,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 /**
- * TODO : javadoc
+ * Illustrates the use of Hibernate native APIs.  The code here is unchanged from the {@code basic} example, the
+ * only difference being the use of annotations to supply the metadata instead of Hibernate mapping files.
  *
  * @author Steve Ebersole
  */
@@ -55,6 +56,7 @@ public class AnnotationsIllustrationTest extends TestCase {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked" })
 	public void testBasicUsage() {
 		// create a couple of events...
 		Session session = sessionFactory.openSession();

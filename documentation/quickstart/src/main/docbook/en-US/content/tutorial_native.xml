@@ -40,9 +40,7 @@
         <important>
             <para>
                 The built-in Hibernate connection pool is in no way intended for production use. It
-                lacks several features found on any decent connection pool.  See the section
-                <citetitle pubwork="section">JDBC Connections</citetitle> in the
-                <citetitle pubwork="chapter">Database Access</citetitle> chapter of the
+                lacks several features found on any decent connection pool.  See the section discussion in 
                 <citetitle pubwork="book">Hibernate Developer Guide</citetitle> for further information.
             </para>
         </important>
@@ -55,10 +53,8 @@
         <tip>
             <para>
                 In most cases, Hibernate is able to properly determine which dialect to use which is invaluable if
-                your application targets multiple databases.  See the section
-                <citetitle pubwork="section">Database Dialects</citetitle> in the
-                <citetitle pubwork="chapter">Database Access</citetitle> chapter of the
-                <citetitle pubwork="book">Hibernate Developer Guide</citetitle> for further information.
+                your application targets multiple databases.  This is discussed in detail in the
+                <citetitle pubwork="book">Hibernate Developer Guide</citetitle>
             </para>
         </tip>
 
@@ -162,6 +158,7 @@
         </para>
 
         <important>
+            <!-- Again, perhaps more sense moving this to the Dev Guide -->
             <para>
                 It is not strictly necessary for the <literal>id</literal> element to map to the table's actual
                 primary key column(s), but it is the normal convention.  Tables mapped in Hibernate do not even
@@ -217,6 +214,7 @@
         </para>
 
         <tip>
+            <!-- This tip probably makes more sense in the Dev Guide -->
             <para>
                 Hibernate makes this mapping type determination using reflection when the mapping files are
                 processed. This process can take time and resources. If startup performance is important, consider

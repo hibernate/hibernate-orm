@@ -43,6 +43,7 @@
         <module>basic</module>
         <module>annotations</module>
         <module>entitymanager</module>
+        <module>envers</module>
     </modules>
 
     <dependencies>

@@ -75,10 +75,18 @@
 
             <section id="hibernate-dev-database-connect-pools-c3p0">
                 <title>Using c3p0 for connection pooling</title>
+                <para>
+                    <!-- todo : what exactly needs discussed here? -->
+                    To be continued...
+                </para>
             </section>
 
             <section id="hibernate-dev-database-connect-pools-proxool">
                 <title>Using proxool for connection pooling</title>
+                <para>
+                    <!-- todo : what exactly needs discussed here? -->
+                    To be continued...
+                </para>
             </section>
 
         </section>
@@ -110,10 +118,74 @@
 
     <section id="hibernate-dev-database-dialect">
         <title>Database Dialects</title>
+        <para>
+            A <firstterm><phrase>Dialect</phrase></firstterm> informs Hibernate of the capabilities of the
+            underlying database.  This role is fulfilled by an instance of a
+            <classname>org.hibernate.dialect.Dialect</classname> subclass.  The Dialect is one of the most important
+            pieces of information given to the Hibernate <interfacename>org.hibernate.Sessionfactory</interfacename>
+            during startup as it allows Hibernate to properly plan how it needs to communicate with the database.
+        </para>
+
+        <section id="hibernate-dev-database-dialect-config">
+            <title>Specifying the Dialect to use</title>
+            <para>
+                The developer may manually specify the Dialect to use by setting the
+                <property>hibernate.dialect</property> configuration property to the name of the specific
+                <classname>org.hibernate.dialect.Dialect</classname> class to use.
+            </para>
+        </section>
+
+        <section id="hibernate-dev-database-dialect-resolution">
+            <title>Dialect resolution</title>
+            <para>
+                Assuming a <interfacename>org.hibernate.connection.ConnectionProvider</interfacename> has been
+                set up according to <xref linkend="hibernate-dev-database-connect"/> then Hibernate will attempt
+                to automatically determine the Dialect to use based on the
+                <interfacename>java.sql.DatabaseMetaData</interfacename> reported by a
+                <interfacename>java.sql.Connection</interfacename> obtained from that
+                <interfacename>org.hibernate.connection.ConnectionProvider</interfacename>.
+            </para>
+            <para>
+                This functionality is provided by a series of
+                <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> instances registered
+                with Hibernate internally.  Hibernate comes with a standard set of recognitions.  If your application
+                requires extra Dialect resolution capabilities, it would simply register a custom implementation
+                of <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> as follows
+            </para>
+            <example id="hibernate-dev-database-dialect-resolution-registration">
+                <title>Registering a custom <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename></title>
+                <programlisting role="JAVA"><![CDATA[
+    org.hibernate.dialect.resolver.DialectFactory.registerDialectResolver( "org.hibernate.example.CustomDialectResolver" );
+]]></programlisting>
+            </example>
+            <para>
+                Registered <interfacename>org.hibernate.dialect.resolver.DialectResolver</interfacename> are
+                <emphasis>prepended</emphasis> to an internal list of resolvers, so they take precedence
+                before any already registered resolvers including the standard one. 
+            </para>
+        </section>
+
+        <section id="hibernate-dev-database-dialect-custom">
+            <title>Custom Dialects</title>
+            <para>
+                It is sometimes necessary for developers to write a custom Dialect for Hibernate to use.  Generally
+                this is as simple as selecting a particular <classname>org.hibernate.dialect.Dialect</classname>
+                implementation that is closest to your needs and subclassing it and overriding where necessary.
+            </para>
+            <para>
+                Custom dialects may be manually specified as outlined in
+                <xref linkend="hibernate-dev-database-dialect-config"/> as well as registered through a resolver as
+                outlined in <xref linkend="hibernate-dev-database-dialect-resolution-registration"/>.
+            </para>
+        </section>
     </section>
 
     <section id="hiberate-dev-database-schema">
         <title>Database Schema</title>
+        <para>
+            <!-- todo : what exactly needs discussed here? -->
+            To be continued...
+        </para>
     </section>
 
 </chapter>

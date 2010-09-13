@@ -57,7 +57,9 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public boolean supportsCascadeDelete() {
 		return false;
 	}
-
+	public int getMaxAliasLength() {
+		return 30;
+	}
     /**
      * By default, Sybase string comparisons are case-insensitive.
 	 * <p/>

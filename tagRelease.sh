@@ -68,7 +68,7 @@ if [ -Z "$projectName" ]; then
     exit;
 fi
 projectUrl=`svn info $projectDir | grep URL | awk '{print $2}'`
-tagUrl=`echo $projectUrl | sed 's|\(.*\)/trunk.*|\1/tags/|'`$projectName-$releaseVersion
+tagUrl=`echo $projectUrl | sed 's|\(.*\)/.*$|\1/tags/|'`$projectName-$releaseVersion
 
 
 ################################################################################

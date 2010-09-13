@@ -30,7 +30,7 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * An SQL dialect targetting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
+ * An SQL dialect targeting Sybase Adaptive Server Enterprise (ASE) 15 and higher.
  * <p/>
  * TODO : verify if this also works with 12/12.5
  * 
@@ -80,5 +80,8 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	}
 	public String getCrossJoinSeparator() {
 		return ", ";
+	}
+	public boolean dropTemporaryTableAfterUse() {
+		return false;
 	}
 }

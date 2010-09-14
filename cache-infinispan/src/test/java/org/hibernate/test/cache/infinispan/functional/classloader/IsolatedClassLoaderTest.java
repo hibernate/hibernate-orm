@@ -34,7 +34,8 @@ import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.infinispan.Cache;
-import org.infinispan.manager.CacheManager;
+import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,11 +121,11 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
    public void testIsolatedSetup() throws Exception {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
+      CacheContainer localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       Cache localReplicatedCache = localManager.getCache("replicated-entity");
 
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
+      CacheContainer remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
       Cache remoteReplicatedCache = remoteManager.getCache("replicated-entity");
 
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -164,9 +165,9 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
    protected void queryTest(boolean useNamedRegion) throws Exception {
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
+      EmbeddedCacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
+      EmbeddedCacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
       String cacheName;
       if (useNamedRegion) {
          cacheName = "AccountRegion"; // As defined by ClassLoaderTestDAO via calls to query.setCacheRegion

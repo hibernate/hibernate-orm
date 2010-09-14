@@ -34,7 +34,7 @@ import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
 import org.infinispan.Cache;
-import org.infinispan.manager.CacheManager;
+import org.infinispan.manager.CacheContainer;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
@@ -67,7 +67,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 
       // Bind a listener to the "local" cache
       // Our region factory makes its CacheManager available to us
-      CacheManager localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
+      CacheContainer localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
       // Cache localCache = localManager.getCache("entity");
       Cache localCustomerCache = localManager.getCache(Customer.class.getName());
       Cache localContactCache = localManager.getCache(Contact.class.getName());
@@ -79,7 +79,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
       TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
 
       // Bind a listener to the "remote" cache
-      CacheManager remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
+      CacheContainer remoteManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE);
       Cache remoteCustomerCache = remoteManager.getCache(Customer.class.getName());
       Cache remoteContactCache = remoteManager.getCache(Contact.class.getName());
       Cache remoteCollectionCache = remoteManager.getCache(Customer.class.getName() + ".contacts");

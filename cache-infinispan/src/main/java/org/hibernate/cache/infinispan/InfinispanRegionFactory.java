@@ -31,8 +31,8 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.util.PropertiesHelper;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
-import org.infinispan.manager.CacheManager;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -132,7 +132,7 @@ public class InfinispanRegionFactory implements RegionFactory {
     */
    public static final String DEF_QUERY_RESOURCE = "local-query";
 
-   private CacheManager manager;
+   private EmbeddedCacheManager manager;
 
    private final Map<String, TypeOverrides> typeOverrides = new HashMap<String, TypeOverrides>();
 
@@ -227,11 +227,11 @@ public class InfinispanRegionFactory implements RegionFactory {
       return System.currentTimeMillis() / 100;
    }
    
-   public void setCacheManager(CacheManager manager) {
+   public void setCacheManager(EmbeddedCacheManager manager) {
       this.manager = manager;
    }
 
-   public CacheManager getCacheManager() {
+   public EmbeddedCacheManager getCacheManager() {
       return manager;
    }
 
@@ -283,10 +283,10 @@ public class InfinispanRegionFactory implements RegionFactory {
       return Collections.unmodifiableSet(definedConfigurations);
    }
 
-   protected CacheManager createCacheManager(Properties properties) throws CacheException {
+   protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
       try {
          String configLoc = PropertiesHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         CacheManager manager = new DefaultCacheManager(configLoc, false);
+         EmbeddedCacheManager manager = new DefaultCacheManager(configLoc, false);
          String globalStats = PropertiesHelper.extractPropertyValue(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
          if (globalStats != null) {
             manager.getGlobalConfiguration().setExposeGlobalJmxStatistics(Boolean.parseBoolean(globalStats));

@@ -28,7 +28,7 @@
 
     <groupId>org.hibernate.tutorials</groupId>
     <artifactId>hibernate-tutorials</artifactId>
-    <version>3.6.0-SNAPSHOT</version>
+    <version>3.6.0.CR1</version>
     <packaging>pom</packaging>
 
     <name>Hibernate Getting Started Guide Tutorials</name>

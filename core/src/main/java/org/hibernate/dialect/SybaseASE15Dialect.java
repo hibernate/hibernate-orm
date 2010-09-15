@@ -81,7 +81,4 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
 	public String getCrossJoinSeparator() {
 		return ", ";
 	}
-	public boolean dropTemporaryTableAfterUse() {
-		return false;
-	}
 }

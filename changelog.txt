@@ -5,6 +5,31 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.5.6 (2010.09.15)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11142
+
+** Bug
+    * [HHH-3334] - Cascade-save breaks if parent ID is assigned (delays insert) and child has identity ID (early insert) (Wallace Wadge)
+    * [HHH-5142] - Exception when initializing lazy @ManyToMany indexed collection containing not audited entities
+    * [HHH-5225] - Cannot parse order-by fragment if it contains a registered function without parentheses
+    * [HHH-5310] - orm_2_0.xsd compliant mapping files break in JEE use cases
+    * [HHH-5440] - Joined collection expressions not properly "rendered" in JPA Criteria queries
+    * [HHH-5511] - Infinispan Region.destroy() impl should call cache.stop()
+    * [HHH-5512] - JndiInfinispanRegionFactory shouldn't try to stop CacheManager
+    * [HHH-5519] - VersionedItem should not extend Item, otherwise query cache results are confusing
+    * [HHH-5542] - Infinispan region factory uses same cache instance for all timestamp regions
+    * [HHH-5545] - Resolve query cache results not up to date testsuite failures
+
+** Improvement
+    * [HHH-5564] - Upgrade to Infinispan 4.2.x
+
+** Task
+    * [HHH-5505] - enable Sybase 15.5 in the test db profile
+    * [HHH-5524] - Move tagRelease.sh into svn
+    * [HHH-5547] - Remove "old" docbook sources and cleanup all HEAD references to simhei.ttf
+
+
 Changes in version 3.5.5 (2010.08.18)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11134

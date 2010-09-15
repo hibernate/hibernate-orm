@@ -46,6 +46,51 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>org.codehaus.groovy.maven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <!-- we need to zip up the tutorial code -->
+                            <source>
+                                <![CDATA[
+                                        zipName = 'hibernate-tutorials.zip'
+                                        baseDocBookDir = "${pom.basedir}/target/docbook/publish/en-US"
+                                        htmlDir = "${baseDocBookDir}/html/files"
+                                        ant.mkdir( dir: htmlDir )
+
+                                        zipFile = "${htmlDir}/${zipName}"
+                                        ant.zip( destfile: zipFile ) {
+                                            zipfileset( dir: "${pom.basedir}/tutorials" ) {
+                                                exclude( name: "**/*.ipr" )
+                                                exclude( name: "**/*.iml" )
+                                                exclude( name: "**/*.iws" )
+                                                exclude( name: "**/.idea" )
+                                                exclude( name: "**/.classpath" )
+                                                exclude( name: "**/.project" )
+                                                exclude( name: "**/.settings" )
+                                                exclude( name: "target/**" )
+                                                exclude( name: "?*/target/**" )
+                                            }
+                                        }
+
+                                        htmlSingleDir = "${baseDocBookDir}/html_single/files"
+                                        ant.mkdir( dir: htmlSingleDir )
+                                        ant.copy( toDir: htmlSingleDir, file: zipFile )
+                                ]]>
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-plugin</artifactId>

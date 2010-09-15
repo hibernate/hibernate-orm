@@ -5,6 +5,34 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.0.CR1 (2010.09.15)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11141
+
+** Sub-task
+    * [HHH-3766] - Modify the queries executed to use the "end-revision" column, when available
+    * [HHH-5446] - Write an envers tutorial guide
+    * [HHH-5499] - Extend AuditReader interface with findRevisions() method
+
+** Bug
+    * [HHH-5310] - orm_2_0.xsd compliant mapping files break in JEE use cases
+    * [HHH-5356] - Sybase 15 does not support cross join
+    * [HHH-5484] - org.hibernate.type.UUIDCharType incorrectly mapped to char and causes test fail due to the padding space
+    * [HHH-5542] - Infinispan region factory uses same cache instance for all timestamp regions
+    * [HHH-5545] - Resolve query cache results not up to date testsuite failures
+
+** Improvement
+    * [HHH-3709] - Add StartRevision/EndRevison fileds to audit tables
+    * [HHH-5372] - Improve envers query performance by using new REVEND column
+    * [HHH-5441] - Create "Getting Started Guide"
+    * [HHH-5543] - JEE bootstrapping should only parse and validate mapping files once
+    * [HHH-5557] - Sybase supports alias length upto 30 characters
+    * [HHH-5564] - Upgrade to Infinispan 4.2.x
+
+** Task
+    * [HHH-5524] - Move tagRelease.sh into svn
+
+
 Changes in version 3.6.0.Beta4 (2010.09.01)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11140

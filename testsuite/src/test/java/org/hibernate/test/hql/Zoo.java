@@ -61,4 +61,32 @@ public class Zoo {
 	public void setClassification(Classification classification) {
 		this.classification = classification;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !( o instanceof Zoo ) ) {
+			return false;
+		}
+
+		Zoo zoo = ( Zoo ) o;
+
+		if ( address != null ? !address.equals( zoo.address ) : zoo.address != null ) {
+			return false;
+		}
+		if ( name != null ? !name.equals( zoo.name ) : zoo.name != null ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = name != null ? name.hashCode() : 0;
+		result = 31 * result + ( address != null ? address.hashCode() : 0 );
+		return result;
+	}
 }

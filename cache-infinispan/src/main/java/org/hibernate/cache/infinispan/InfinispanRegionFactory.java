@@ -21,6 +21,7 @@ import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
@@ -29,6 +30,7 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Settings;
 import org.hibernate.util.PropertiesHelper;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
 import org.infinispan.manager.DefaultCacheManager;
@@ -203,9 +205,17 @@ public class InfinispanRegionFactory implements RegionFactory {
       if (log.isDebugEnabled()) log.debug("Building timestamps cache region [" + regionName + "]");
       Cache cache = getCache(regionName, TIMESTAMPS_KEY, properties);
       CacheAdapter cacheAdapter = CacheAdapterImpl.newInstance(cache);
-      TimestampsRegionImpl region = new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager, this);
+      TimestampsRegionImpl region = createTimestampsRegion(cacheAdapter, regionName);
       region.start();
       return region;
+   }
+
+   protected TimestampsRegionImpl createTimestampsRegion(CacheAdapter cacheAdapter, String regionName) {
+      return new TimestampsRegionImpl(cacheAdapter, regionName, transactionManager, this);
+   }
+
+   protected TransactionManager getTransactionManager() {
+      return transactionManager;
    }
 
    /**
@@ -393,7 +403,15 @@ public class InfinispanRegionFactory implements RegionFactory {
          manager.defineConfiguration(regionName, templateCacheName, regionCacheCfg);
          definedConfigurations.add(regionName);
       }
-      return manager.getCache(regionName);
+      Cache cache = manager.getCache(regionName);
+      if (!cache.getStatus().allowInvocations()) {
+         cache.start();
+      }
+      return createCacheWrapper(cache.getAdvancedCache());
+   }
+
+   protected ClassLoaderAwareCache createCacheWrapper(AdvancedCache cache) {
+      return new ClassLoaderAwareCache(cache, Thread.currentThread().getContextClassLoader());
    }
 
    private Configuration configureTransactionManager(Configuration regionOverrides, String templateCacheName, Properties properties) {

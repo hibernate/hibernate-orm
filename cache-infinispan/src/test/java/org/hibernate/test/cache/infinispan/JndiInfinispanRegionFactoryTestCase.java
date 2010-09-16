@@ -9,7 +9,7 @@ import java.util.Properties;
  * // TODO: Document this
  *
  * @author Galder Zamarreño
- * @since // TODO
+ * @since 3.5
  */
 public class JndiInfinispanRegionFactoryTestCase extends TestCase {
 

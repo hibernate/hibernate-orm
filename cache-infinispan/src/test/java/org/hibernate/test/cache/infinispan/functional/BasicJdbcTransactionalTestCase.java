@@ -107,4 +107,14 @@ public class BasicJdbcTransactionalTestCase extends SingleNodeTestCase {
          s.close();
       }
    }
+
+   public void testEmptySecondLevelCacheEntry() throws Exception {
+      getSessions().getCache().evictEntityRegion(Item.class.getName());
+      Statistics stats = getSessions().getStatistics();
+      stats.clear();
+      SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics(Item.class.getName() + ".items");
+      Map cacheEntries = statistics.getEntries();
+      assertEquals(0, cacheEntries.size());
+   }
+   
 }

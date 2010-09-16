@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -590,6 +591,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
 		log.trace( "after transaction completion" );
+		cleanUpInsertedKeysAfterTransaction();
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion(success);
 		if ( rootSession == null && tx != null ) {
@@ -2005,6 +2007,50 @@ public final class SessionImpl extends AbstractSessionImpl
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
 	}
+
+	private HashMap insertedKeysMap;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void registerInsertedKey(EntityPersister persister, Serializable id) {
+		// we only are about regsitering these if the persister defines caching
+		if ( persister.hasCache() ) {
+			if ( insertedKeysMap == null ) {
+				insertedKeysMap = new HashMap();
+			}
+			final String rootEntityName = persister.getRootEntityName();
+			List insertedEntityIds = (List) insertedKeysMap.get( rootEntityName );
+			if ( insertedEntityIds == null ) {
+				insertedEntityIds = new ArrayList();
+				insertedKeysMap.put( rootEntityName, insertedEntityIds );
+			}
+			insertedEntityIds.add( id );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
+		// again, we only really care if the entity is cached
+		if ( persister.hasCache() ) {
+			if ( insertedKeysMap != null ) {
+				List insertedEntityIds = (List) insertedKeysMap.get( persister.getRootEntityName() );
+				if ( insertedEntityIds != null ) {
+					return insertedEntityIds.contains( id );
+				}
+			}
+		}
+		return false;
+	}
+
+	private void cleanUpInsertedKeysAfterTransaction() {
+		if ( insertedKeysMap != null ) {
+			insertedKeysMap.clear();
+		}
+	}
+
 
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -32,6 +32,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.cache.access.SoftLock;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CacheEntry;
@@ -177,16 +178,31 @@ public final class TwoPhaseLoad {
 					session.getEntityMode(), 
 					session.getFactory() 
 			);
-			boolean put = persister.getCacheAccessStrategy().putFromLoad(
-					cacheKey,
-					persister.getCacheEntryStructure().structure( entry ),
-					session.getTimestamp(),
-					version,
-					useMinimalPuts( session, entityEntry )
-			);
 
-			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-				factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+			// explicit handling of caching for rows just inserted and then somehow forced to be read
+			// from the database.  usually this is done by
+			// 		1) Session#refresh, or
+			// 		2) Session#clear + some form of load
+			if ( session.wasInsertedDuringTransaction( persister, id ) ) {
+				persister.getCacheAccessStrategy().update(
+						cacheKey,
+						persister.getCacheEntryStructure().structure( entry ),
+						version,
+						version
+				);
+			}
+			else {
+				boolean put = persister.getCacheAccessStrategy().putFromLoad(
+						cacheKey,
+						persister.getCacheEntryStructure().structure( entry ),
+						session.getTimestamp(),
+						version,
+						useMinimalPuts( session, entityEntry )
+				);
+
+				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+					factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+				}
 			}
 		}
 

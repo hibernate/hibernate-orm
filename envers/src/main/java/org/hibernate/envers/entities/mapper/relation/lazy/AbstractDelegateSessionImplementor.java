@@ -77,6 +77,14 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 		return delegate.getLoadQueryInfluencers();
 	}
 
+	public void registerInsertedKey(EntityPersister persister, Serializable id) {
+		delegate.registerInsertedKey( persister, id );
+	}
+
+	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
+		return delegate.wasInsertedDuringTransaction( persister, id );
+	}
+
 	public Interceptor getInterceptor() {
         return delegate.getInterceptor();
     }

@@ -660,6 +660,17 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		return LoadQueryInfluencers.NONE;
 	}
 
+	public void registerInsertedKey(EntityPersister persister, Serializable id) {
+		errorIfClosed();
+		// nothing to do
+	}
+
+	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
+		errorIfClosed();
+		// not in any meaning we need to worry about here.
+		return false;
+	}
+
 	public void setFetchProfile(String name) {}
 
 	public void afterTransactionBegin(Transaction tx) {}

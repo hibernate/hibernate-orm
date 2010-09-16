@@ -5777,13 +5777,15 @@ class LineItem {
     the values of columns mapped to <link
     linkend="mapping-declaration-property">simple properties</link>. For
     example, if your database provides a set of data encryption functions, you
-    can invoke them for individual columns like this: <programlisting
+    can invoke them for individual columns like this: 
+</para>
+<programlisting
     role="XML">&lt;property name="creditCardNumber"&gt;
         &lt;column 
           name="credit_card_num"
           read="decrypt(credit_card_num)"
           write="encrypt(?)"/&gt;
-&lt;/property&gt;</programlisting></para>
+&lt;/property&gt;</programlisting>
 
     <para>Hibernate applies the custom expressions automatically whenever the
     property is referenced in a query. This functionality is similar to a

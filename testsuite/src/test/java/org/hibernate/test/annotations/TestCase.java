@@ -55,18 +55,16 @@ public abstract class TestCase extends HibernateTestCase {
 	}
 
 	public Session openSession() throws HibernateException {
-		rebuildSessionFactory();
 		session = getSessions().openSession();
 		return session;
 	}
 
 	public Session openSession(Interceptor interceptor) throws HibernateException {
-		rebuildSessionFactory();
 		session = getSessions().openSession( interceptor );
 		return session;
 	}
 
-	private void rebuildSessionFactory() {
+	protected SessionFactory getSessions() {
 		if ( sessions == null ) {
 			try {
 				buildConfiguration();
@@ -75,13 +73,6 @@ public abstract class TestCase extends HibernateTestCase {
 				throw new HibernateException( e );
 			}
 		}
-	}	
-
-	protected void setSessions(SessionFactory sessions) {
-		TestCase.sessions = sessions;
-	}
-
-	protected SessionFactory getSessions() {
 		return sessions;
 	}
 
@@ -91,8 +82,8 @@ public abstract class TestCase extends HibernateTestCase {
 
 	@Override	
 	protected void buildConfiguration() throws Exception {
-		if ( getSessions() != null ) {
-			getSessions().close();
+		if ( sessions != null ) {
+			sessions.close();
 		}
 		try {
 			setCfg( new AnnotationConfiguration() );
@@ -112,7 +103,7 @@ public abstract class TestCase extends HibernateTestCase {
 				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
 				getCfg().addInputStream( is );
 			}
-			setSessions( getCfg().buildSessionFactory( /* new TestInterceptor() */ ) );
+			sessions = getCfg().buildSessionFactory();
 		}
 		catch ( Exception e ) {
 			e.printStackTrace();

@@ -1,10 +1,32 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.propertyref.component.complete;
 
 import junit.framework.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
@@ -26,6 +48,8 @@ public class CompleteComponentPropertyRefTest extends FunctionalTestCase {
 	}
 
 	public void testComponentPropertyRef() {
+		Session s = openSession();
+		s.beginTransaction();
 		Person p = new Person();
 		p.setIdentity( new Identity() );
 		Account a = new Account();
@@ -33,13 +57,13 @@ public class CompleteComponentPropertyRefTest extends FunctionalTestCase {
 		a.setOwner(p);
 		p.getIdentity().setName("Gavin");
 		p.getIdentity().setSsn("123-12-1234");
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
 		s.persist(p);
 		s.persist(a);
-		s.flush();
-		s.clear();
+		s.getTransaction().commit();
+		s.close();
 
+		s = openSession();
+		s.beginTransaction();
 		a = (Account) s.createQuery("from Account a left join fetch a.owner").uniqueResult();
 		assertTrue( Hibernate.isInitialized( a.getOwner() ) );
 		assertNotNull( a.getOwner() );
@@ -65,7 +89,7 @@ public class CompleteComponentPropertyRefTest extends FunctionalTestCase {
 
 		s.delete( a );
 		s.delete( a.getOwner() );
-		tx.commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 }

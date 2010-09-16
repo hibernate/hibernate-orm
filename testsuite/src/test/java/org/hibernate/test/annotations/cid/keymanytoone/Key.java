@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.cid.keymanytoone;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * TODO : javadoc
@@ -33,6 +34,7 @@ import javax.persistence.Id;
  * @author Steve Ebersole
  */
 @Entity
+@Table(name="`key`")
 public class Key implements Serializable {
 	@Id
 	private String id;

@@ -17,6 +17,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
@@ -102,6 +103,7 @@ public class Boy {
 	}
 
 	@ElementCollection	
+	@MapKeyColumn(nullable=false)
 	public Map<String, Integer> getScorePerPreferredName() {
 		return scorePerPreferredName;
 	}
@@ -113,6 +115,7 @@ public class Boy {
 	@ElementCollection
 	@CollectionTable(name = "ScorePerNickName", joinColumns = @JoinColumn(name = "BoyId"))
 	@Column(name = "score", nullable = false)
+	@MapKeyColumn(nullable=false)
 	public Map<String, Integer> getScorePerNickName() {
 		return scorePerNickName;
 	}
@@ -158,6 +161,7 @@ public class Boy {
 
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
+	@MapKeyColumn(nullable=false)
 	public Map<String, FavoriteFood> getFavoriteFood() {
 		return foods;
 	}

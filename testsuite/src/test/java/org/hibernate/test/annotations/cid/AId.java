@@ -14,11 +14,11 @@ import javax.persistence.OneToOne;
 public class AId implements Serializable {
 
 	@OneToOne
-	@JoinColumn( name = "bid" )
+	@JoinColumn( name = "bid", nullable = false )
 	private B b;
 
 	@OneToOne
-	@JoinColumn( name = "cid" )
+	@JoinColumn( name = "cid", nullable = false )
 	private C c;
 
 

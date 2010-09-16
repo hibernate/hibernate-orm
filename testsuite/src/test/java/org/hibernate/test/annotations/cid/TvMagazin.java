@@ -3,6 +3,7 @@ package org.hibernate.test.annotations.cid;
 
 import java.util.Date;
 import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
@@ -13,7 +14,9 @@ import javax.persistence.TemporalType;
  * @author Emmanuel Bernard
  */
 @Entity
-@AssociationOverride(name = "id.channel", joinColumns = @JoinColumn(name = "chan_id"))
+@AssociationOverrides({
+@AssociationOverride(name = "id.channel", joinColumns = @JoinColumn(name = "chan_id", nullable = false)),
+@AssociationOverride(name = "id.presenter", joinColumns = @JoinColumn(name = "presenter_name", nullable = false))})
 public class TvMagazin {
 	@EmbeddedId
 	public TvMagazinPk id;

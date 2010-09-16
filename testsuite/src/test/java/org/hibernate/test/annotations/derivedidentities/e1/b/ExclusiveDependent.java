@@ -14,7 +14,7 @@ public class ExclusiveDependent {
 	@EmbeddedId
 	DependentId id;
 
-	@JoinColumn(name = "FK")
+	@JoinColumn(name = "FK", nullable = false)
 	// id attribute mapped by join column default
 	@MapsId("empPK")
 	// maps empPK attribute of embedded id

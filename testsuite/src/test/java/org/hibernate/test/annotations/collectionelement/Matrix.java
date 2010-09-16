@@ -8,6 +8,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.MapKeyColumn;
 
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Sort;
@@ -27,6 +28,7 @@ public class Matrix {
 	@ElementCollection
 	@Sort(type = SortType.NATURAL) 
 	@Type(type = "float")
+	@MapKeyColumn(nullable = false)
 	private SortedMap<Integer, Float> mvalues = new TreeMap<Integer, Float>();
 
 	public Integer getId() {

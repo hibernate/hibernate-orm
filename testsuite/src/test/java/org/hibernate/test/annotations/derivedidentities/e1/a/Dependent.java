@@ -4,6 +4,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.annotations.Cascade;
@@ -39,6 +40,7 @@ public class Dependent {
 	@Id
 	@ManyToOne( cascade = CascadeType.PERSIST )
 	@Cascade( org.hibernate.annotations.CascadeType.SAVE_UPDATE )
+	@JoinColumn(nullable=false)
 	public Employee getEmp() {
 		return emp;
 	}

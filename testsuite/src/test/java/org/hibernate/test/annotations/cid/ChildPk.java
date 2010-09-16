@@ -17,8 +17,8 @@ public class ChildPk implements Serializable {
 	public int nthChild;
 	@ManyToOne()
 	@JoinColumns({
-	@JoinColumn(name = "parentLastName", referencedColumnName = "p_lname"),
-	@JoinColumn(name = "parentFirstName", referencedColumnName = "firstName")
+	@JoinColumn(name = "parentLastName", referencedColumnName = "p_lname", nullable = false),
+	@JoinColumn(name = "parentFirstName", referencedColumnName = "firstName", nullable = false)
 			})
 	public Parent parent;
 

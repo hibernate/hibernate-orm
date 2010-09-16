@@ -8,8 +8,8 @@ import java.util.Properties;
 /**
  * // TODO: Document this
  *
- * @author Galder Zamarre�o
- * @since // TODO
+ * @author Galder Zamarreño
+ * @since 3.5
  */
 public class JndiInfinispanRegionFactoryTestCase extends TestCase {
 

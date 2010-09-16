@@ -34,7 +34,8 @@ import org.infinispan.context.Flag;
 public enum FlagAdapter {
    ZERO_LOCK_ACQUISITION_TIMEOUT,
    CACHE_MODE_LOCAL,
-   FORCE_ASYNCHRONOUS;
+   FORCE_ASYNCHRONOUS,
+   FORCE_SYNCHRONOUS;
    
    Flag toFlag() {
       switch(this) {
@@ -44,6 +45,8 @@ public enum FlagAdapter {
             return Flag.CACHE_MODE_LOCAL;
          case FORCE_ASYNCHRONOUS:
             return Flag.FORCE_ASYNCHRONOUS;
+         case FORCE_SYNCHRONOUS:
+            return Flag.FORCE_SYNCHRONOUS;
          default:
             throw new CacheException("Unmatched Infinispan flag " + this);
       }

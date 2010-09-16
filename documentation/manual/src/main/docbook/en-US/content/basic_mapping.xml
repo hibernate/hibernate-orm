@@ -3553,14 +3553,14 @@ public class Customer implements Serializable {
             Hibernate allows you to customize the SQL it uses to read and write the values
             of columns mapped to <link linkend="mapping-declaration-property">simple properties</link>.
             For example, if your database provides a set of data encryption functions, you can
-            invoke them for individual columns like this:
+            invoke them for individual columns like this:</para>
             <programlisting role="XML"><![CDATA[<property name="creditCardNumber">
         <column 
           name="credit_card_num"
           read="decrypt(credit_card_num)"
           write="encrypt(?)"/>
 </property>]]></programlisting>
-        </para>
+        
         <para>
             Hibernate applies the custom expressions automatically whenever the property is
             referenced in a query. This functionality is similar to a derived-property

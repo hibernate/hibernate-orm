@@ -9,7 +9,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.junit.functional.ExecutionEnvironment;
+import org.hibernate.testing.junit.functional.ExecutionEnvironment;
 import org.hibernate.stat.Statistics;
 import org.infinispan.Cache;
 import org.infinispan.lifecycle.ComponentStatus;

@@ -916,7 +916,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.SybaseASE15Dialect</db.dialect>
                 <jdbc.driver>com.sybase.jdbc3.jdbc.SybDriver</jdbc.driver>
-                <jdbc.url>jdbc:sybase:Tds:vmg07.mw.lab.eng.bos.redhat.com:5000/hibbrtru?SQLINITSTRING=set quoted_identifier on</jdbc.url>
+                <jdbc.url>jdbc:sybase:Tds:vmg07.mw.lab.eng.bos.redhat.com:5000/hibbrtru?SQLINITSTRING=set quoted_identifier on&DYNAMIC_PREPARE=true</jdbc.url>
                 <jdbc.user>hibbrtru</jdbc.user>
                 <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation/>
@@ -935,7 +935,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.SybaseASE15Dialect</db.dialect>
                 <jdbc.driver>com.sybase.jdbc3.jdbc.SybDriver</jdbc.driver>
-                <jdbc.url>jdbc:sybase:Tds:vmg09.mw.lab.eng.bos.redhat.com:5000/hibbrtru?SQLINITSTRING=set quoted_identifier on</jdbc.url>
+                <jdbc.url>jdbc:sybase:Tds:vmg09.mw.lab.eng.bos.redhat.com:5000/hibbrtru?SQLINITSTRING=set quoted_identifier on&DYNAMIC_PREPARE=true</jdbc.url>
                 <jdbc.user>hibbrtru</jdbc.user>
                 <jdbc.pass>hibbrtru</jdbc.pass>
                 <jdbc.isolation/>

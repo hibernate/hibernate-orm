@@ -73,7 +73,6 @@ public class Atmosphere {
 	@ManyToMany(cascade = CascadeType.ALL)
 	@MapKey
 	@JoinTable(name="Atm_Gas_DefLeg")
-	@MapKeyColumn(nullable=false)
 	public Map<String, Gas> gasesDefLeg = new HashMap<String, Gas>();
 
 	@ManyToMany(cascade = CascadeType.ALL)

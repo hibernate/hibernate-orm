@@ -25,7 +25,7 @@
         <para>
             This file was discussed in the <phrase>JPA</phrase> tutorial, and is largely the same here.  The major
             difference is the set of properties defining <firstterm><phrase>listeners</phrase></firstterm>.
-            Essentially this enables envers to recieve notfications from Hibernate processing of certain
+            Essentially this enables Envers to recieve notfications from Hibernate processing of certain
             <firstterm><phrase>events</phrase></firstterm> such as an entity being saved or updated.
         </para>
     </section>
@@ -43,7 +43,7 @@
         <title>Example code</title>
         <para>
             Again, this tutorial makes use of the <phrase>JPA</phrase> APIs.  However, the code also makes a
-            revision to one of the entites and then uses the Envers API to pull back the initial revision
+            change to one of the entites and then uses the Envers API to pull back the initial revision (version)
             as well as the updated revision.
         </para>
         <example id="hibernate-gsg-tutorial-envers-test-api">
@@ -63,7 +63,7 @@
             <interfacename>javax.persistence.EntityManager</interfacename>.
         </para>
         <para>
-            Then the <methodname>find</methodname> methid is used to retrieve specific revisions of the entity.  The
+            Then the <methodname>find</methodname> method is used to retrieve specific revisions of the entity.  The
             first call reads "find revision number 1 of Event with id 2".  The second call reads "find revision
             number 2 of Event with id 2".
         </para>

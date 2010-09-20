@@ -1199,7 +1199,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		IndexNode n = new IndexNode();
 		Exception ex = null;
 		try {
-			n.setScalarColumnText( 0 );
+			n.setScalarColumn( 0 );
 		}
 		catch ( UnsupportedOperationException e ) {
 			ex = e;

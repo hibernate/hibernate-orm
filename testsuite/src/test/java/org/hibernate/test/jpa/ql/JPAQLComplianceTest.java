@@ -52,4 +52,11 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		s.createQuery( "select c FROM Item c WHERE c.parts IS EMPTY" ).list();
 		s.close();
 	}
+
+	public void testOrderByAlias() {
+		Session s = openSession();
+		s.createQuery( "select c.name as myname FROM Item c ORDER BY myname" ).list();
+		s.createQuery( "select p.name as name, p.stockNumber as stockNo, p.unitPrice as uPrice FROM Part p ORDER BY name, abs( p.unitPrice ), stockNo" ).list();
+		s.close();
+	}	
 }

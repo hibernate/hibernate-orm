@@ -46,6 +46,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 	private static final Logger log = LoggerFactory.getLogger( QueryNode.class );
 
 	private OrderByClause orderByClause;
+	private int scalarColumnIndex = -1;
 
 	/**
 	 * @see Statement#getStatementType() 
@@ -143,6 +144,15 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 
 	public void setAlias(String alias) {
 		this.alias = alias;
+	}
+
+	public void setScalarColumn(int i) throws SemanticException {
+		scalarColumnIndex = i;
+		setScalarColumnText( i );
+	}
+
+	public int getScalarColumnIndex() {
+		return scalarColumnIndex;
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {

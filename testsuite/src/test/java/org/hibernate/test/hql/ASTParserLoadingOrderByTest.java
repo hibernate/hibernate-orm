@@ -100,6 +100,10 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 	private Zoo zoo4;
 	Set<Zoo> zoosWithSameName;
 	Set<Zoo> zoosWithSameAddress;
+	Mammal zoo1Mammal1;
+	Mammal zoo1Mammal2;
+	Human zoo2Director1;
+	Human zoo2Director2;
 
 	public ASTParserLoadingOrderByTest(String name) {
 		super( name );
@@ -138,6 +142,14 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		address1.setStateProvince( stateProvince );
 		address1.setCountry( "USA" );
 		zoo1.setAddress( address1 );
+		zoo1Mammal1 = new Mammal();
+		zoo1Mammal1.setDescription( "zoo1Mammal1" );
+		zoo1Mammal1.setZoo( zoo1 );
+		zoo1.getMammals().put( "type1", zoo1Mammal1);
+		zoo1Mammal2 = new Mammal();
+		zoo1Mammal2.setDescription( "zoo1Mammal2" );
+		zoo1Mammal2.setZoo( zoo1 );
+		zoo1.getMammals().put( "type1", zoo1Mammal2);
 
 		zoo2 = new Zoo();
 		zoo2.setName( "A Zoo" );
@@ -147,7 +159,12 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		address2.setStateProvince( stateProvince );
 		address2.setCountry( "USA" );
 		zoo2.setAddress( address2 );
-
+		zoo2Director1 = new Human();
+		zoo2Director1.setName( new Name( "Duh", 'A', "Man" ) );
+		zoo2Director2 = new Human();
+		zoo2Director2.setName( new Name( "Fat", 'A', "Cat" ) );
+		zoo2.getDirectors().put( "Head Honcho", zoo2Director1 );
+		zoo2.getDirectors().put( "Asst. Head Honcho", zoo2Director2 );		
 
 		zoo3 = new Zoo();
 		zoo3.setName( "Zoo" );
@@ -170,7 +187,11 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		s.save( stateProvince );
+		s.save( zoo1Mammal1 );
+		s.save( zoo1Mammal2 );
 		s.save( zoo1 );
+		s.save( zoo2Director1 );
+		s.save( zoo2Director2 );
 		s.save( zoo2 );
 		s.save( zoo3 );
 		s.save( zoo4 );
@@ -203,6 +224,25 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		if ( zoo4 != null ) {
 			s.delete( zoo4 );
 			zoo4 = null;
+		}
+		if ( zoo1Mammal1 != null ) {
+			s.delete( zoo1Mammal1 );
+			zoo1Mammal1 = null;
+		}
+		if ( zoo1Mammal2 != null ) {
+			s.delete( zoo1Mammal2 );
+			zoo1Mammal2 = null;
+		}
+		if ( zoo2Director1 != null ) {
+			s.delete( zoo2Director1 );
+			zoo2Director1 = null;
+		}
+		if ( zoo2Director2 != null ) {
+			s.delete( zoo2Director2 );
+			zoo2Director2 = null;			
+		}
+		if ( stateProvince != null ) {
+			s.delete( stateProvince );
 		}
 		t.commit();
 		s.close();
@@ -346,7 +386,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
-	public void testOrderBySelectAliasRefFailureExpected() {
+	public void testOrderBySelectAliasRef() {
 		createData();
 
 		Session s = openSession();
@@ -492,22 +532,6 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
-		t = s.beginTransaction();
-		try {
-			s.createQuery(
-					"select z2.name as zname, z2.address as zooAddress from Zoo z2 where z2.name in ( select name as zname from Zoo order by zname ) order by zooAddress"
-			).list();
-			fail( "Exception should have been thrown because subquery has ORDER BY" );
-		}
-		catch ( QuerySyntaxException ex ) {
-			// expected
-		}
-		finally {
-			t.rollback();
-			s.close();
-		}
-
 		cleanupData();
 	}
 
@@ -533,6 +557,143 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
+		cleanupData();
+	}
+
+	public void testOrderByEntityWithFetchJoinedCollection() {
+		createData();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		// ordered by address desc, name desc:
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		// using DESC
+		List list = s.createQuery( "from Zoo z join fetch z.mammals" ).list();
+
+		t.commit();
+		s.close();
+
+		cleanupData();
+	}
+
+	public void testOrderBySelectNewArgAliasRef() {
+		createData();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		// ordered by name, address:
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		List list =
+				s.createQuery(
+						"select new Zoo( z.name as zname, z.address as zaddress) from Zoo z order by zname, zaddress"
+				).list();
+		assertEquals( 4, list.size() );
+		assertEquals( zoo2, list.get( 0 ) );
+		assertEquals( zoo4, list.get( 1 ) );
+		assertEquals( zoo3, list.get( 2 ) );
+		assertEquals( zoo1, list.get( 3 ) );
+
+		// ordered by address, name:
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		list =
+				s.createQuery(
+						"select new Zoo( z.name as zname, z.address as zaddress) from Zoo z order by zaddress, zname"
+				).list();
+		assertEquals( 4, list.size() );
+		assertEquals( zoo3, list.get( 0 ) );
+		assertEquals( zoo4, list.get( 1 ) );
+		assertEquals( zoo2, list.get( 2 ) );
+		assertEquals( zoo1, list.get( 3 ) );
+
+
+		t.commit();
+		s.close();
+
+		cleanupData();
+	}
+
+	public void testOrderBySelectNewMapArgAliasRef() {
+		createData();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		// ordered by name, address:
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		List list =
+				s.createQuery(
+						"select new map( z.name as zname, z.address as zaddress ) from Zoo z left join z.mammals m order by zname, zaddress"
+				).list();
+		assertEquals( 4, list.size() );
+		assertEquals( zoo2.getName(), ( ( Map ) list.get( 0 ) ).get( "zname" ) );
+		assertEquals( zoo2.getAddress(), ( ( Map ) list.get( 0 ) ).get( "zaddress" ) );
+		assertEquals( zoo4.getName(), ( ( Map ) list.get( 1 ) ).get( "zname" ) );
+		assertEquals( zoo4.getAddress(), ( ( Map ) list.get( 1 ) ).get( "zaddress" ) );
+		assertEquals( zoo3.getName(), ( ( Map ) list.get( 2 ) ).get( "zname" ) );
+		assertEquals( zoo3.getAddress(), ( ( Map ) list.get( 2 ) ).get( "zaddress" ) );
+		assertEquals( zoo1.getName(), ( ( Map ) list.get( 3 ) ).get( "zname" ) );
+		assertEquals( zoo1.getAddress(), ( ( Map ) list.get( 3 ) ).get( "zaddress" ) );
+
+		// ordered by address, name:
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		list =
+				s.createQuery(
+						"select new map( z.name as zname, z.address as zaddress ) from Zoo z left join z.mammals m order by zaddress, zname"
+				).list();
+		assertEquals( 4, list.size() );
+		assertEquals( zoo3.getName(), ( ( Map ) list.get( 0 ) ).get( "zname" ) );
+		assertEquals( zoo3.getAddress(), ( ( Map ) list.get( 0 ) ).get( "zaddress" ) );
+		assertEquals( zoo4.getName(), ( ( Map ) list.get( 1 ) ).get( "zname" ) );
+		assertEquals( zoo4.getAddress(), ( ( Map ) list.get( 1 ) ).get( "zaddress" ) );
+		assertEquals( zoo2.getName(), ( ( Map ) list.get( 2 ) ).get( "zname" ) );
+		assertEquals( zoo2.getAddress(), ( ( Map ) list.get( 2 ) ).get( "zaddress" ) );
+		assertEquals( zoo1.getName(), ( ( Map ) list.get( 3 ) ).get( "zname" ) );
+		assertEquals( zoo1.getAddress(), ( ( Map ) list.get( 3 ) ).get( "zaddress" ) );
+		t.commit();
+		s.close();
+
+		cleanupData();
+	}
+
+	public void testOrderByAggregatedArgAliasRef() {
+		createData();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		// ordered by name, address:
+		//   zoo2  A Zoo       1313 Mockingbird Lane, Anywhere, IL USA
+		//   zoo4  Duh Zoo     1312 Mockingbird Lane, Nowhere, IL USA
+		//   zoo3  Zoo         1312 Mockingbird Lane, Anywhere, IL USA
+		//   zoo1  Zoo         1313 Mockingbird Lane, Anywhere, IL USA
+		List list =
+				s.createQuery(
+						"select z.name as zname, count(*) as cnt from Zoo z group by z.name order by cnt desc, zname"
+				).list();
+		assertEquals( 3, list.size() );
+		assertEquals( zoo3.getName(), ( ( Object[] ) list.get( 0 ) )[ 0 ] );
+		assertEquals( Long.valueOf( 2 ), ( ( Object[] ) list.get( 0 ) )[ 1 ] );
+		assertEquals( zoo2.getName(), ( ( Object[] ) list.get( 1 ) )[ 0 ] );
+		assertEquals( Long.valueOf( 1 ), ( ( Object[] ) list.get( 1 ) )[ 1 ] );
+		assertEquals( zoo4.getName(), ( ( Object[] ) list.get( 2 ) )[ 0 ] );
+		assertEquals( Long.valueOf( 1 ), ( ( Object[] ) list.get( 2 ) )[ 1 ] );
 		cleanupData();
 	}
 

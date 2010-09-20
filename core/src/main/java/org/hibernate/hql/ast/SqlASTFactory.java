@@ -51,6 +51,7 @@ import org.hibernate.hql.ast.tree.MethodNode;
 import org.hibernate.hql.ast.tree.OrderByClause;
 import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.tree.QueryNode;
+import org.hibernate.hql.ast.tree.ResultVariableRefNode;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.tree.SelectExpressionImpl;
 import org.hibernate.hql.ast.tree.SqlFragment;
@@ -124,6 +125,8 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 			case ALIAS_REF:
 			case IDENT:
 				return IdentNode.class;
+			case RESULT_VARIABLE_REF:
+				return ResultVariableRefNode.class;
 			case SQL_TOKEN:
 				return SqlFragment.class;
 			case METHOD_CALL:

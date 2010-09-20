@@ -25,6 +25,7 @@
 package org.hibernate.hql.ast.tree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -54,6 +55,7 @@ public class SelectClause extends SelectExpressionList {
 	private String[][] columnNames;
 	private List collectionFromElements;
 	private String[] aliases;
+	private int[] columnNamesStartPositions;
 
 	// Currently we can only have one...
 	private AggregatedSelectExpression aggregatedSelectExpression;
@@ -253,6 +255,16 @@ public class SelectClause extends SelectExpressionList {
 
 		// todo: we should really just collect these from the various SelectExpressions, rather than regenerating here
 		columnNames = getSessionFactoryHelper().generateColumnNames( queryReturnTypes );
+		columnNamesStartPositions = new int[ columnNames.length ];
+		int startPosition = 1;
+		for ( int i = 0 ; i < columnNames.length ; i ++ ) {
+			columnNamesStartPositions[ i ] = startPosition;
+			startPosition += columnNames[ i ].length;
+		}
+	}
+
+	public int getColumnNamesStartPosition(int i) {
+		return columnNamesStartPositions[ i ];
 	}
 
 	/**
@@ -356,7 +368,7 @@ public class SelectClause extends SelectExpressionList {
 		if ( !currentFromClause.isSubQuery() ) {
 			for ( int i = 0; i < se.length; i++ ) {
 				SelectExpression expr = se[i];
-				expr.setScalarColumnText( i );	// Create SQL_TOKEN nodes for the columns.
+				expr.setScalarColumn( i );	// Create SQL_TOKEN nodes for the columns.
 			}
 		}
 	}

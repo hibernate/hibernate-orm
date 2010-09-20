@@ -60,6 +60,8 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		}
 	}
 
+	private int scalarColumnIndex = -1;
+
 	protected String expressionDescription() {
 		return "entry(*)";
 	}
@@ -188,6 +190,14 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 			return;
 		}
 		super.setText( s );
+	}
+
+	public void setScalarColumn(int i) throws SemanticException {
+		this.scalarColumnIndex = i;
+	}
+
+	public int getScalarColumnIndex() {
+		return scalarColumnIndex;
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {

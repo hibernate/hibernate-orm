@@ -51,6 +51,7 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 	private Type[] constructorArgumentTypes;
 	private boolean isMap;
 	private boolean isList;
+	private int scalarColumnIndex = -1;
 
 	public ResultTransformer getResultTransformer() {
 		if ( constructor != null ) {
@@ -90,6 +91,19 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 			aliases[i] = alias==null ? Integer.toString(i) : alias;
 		}
 		return aliases;
+	}
+
+	public void setScalarColumn(int i) throws SemanticException {
+		SelectExpression[] selectExpressions = collectSelectExpressions();
+		// Invoke setScalarColumnText on each constructor argument.
+		for ( int j = 0; j < selectExpressions.length; j++ ) {
+			SelectExpression selectExpression = selectExpressions[j];
+			selectExpression.setScalarColumn( j );
+		}
+	}
+
+	public int getScalarColumnIndex() {
+		return scalarColumnIndex;
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {

@@ -1724,6 +1724,20 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * Does this dialect require that references to result variables
+	 * (i.e, select expresssion aliases) in an ORDER BY clause be
+	 * replaced by column positions (1-origin) as defined
+	 * by the select clause?
+
+	 * @return true if result variable references in the ORDER BY
+	 *              clause should be replaced by column positions;
+	 *         false otherwise.
+	 */
+	public boolean replaceResultVariableInOrderByClauseWithPosition() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect require that parameters appearing in the <tt>SELECT</tt> clause be wrapped in <tt>cast()</tt>
 	 * calls to tell the db parser the expected type.
 	 *

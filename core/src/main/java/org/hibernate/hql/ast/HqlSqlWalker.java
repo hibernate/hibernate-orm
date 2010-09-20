@@ -66,6 +66,7 @@ import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.ResolvableNode;
 import org.hibernate.hql.ast.tree.RestrictableStatement;
+import org.hibernate.hql.ast.tree.ResultVariableRefNode;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.tree.SelectExpression;
 import org.hibernate.hql.ast.tree.UpdateStatement;
@@ -131,6 +132,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	private FromClause currentFromClause = null;
 	private SelectClause selectClause;
+
+	/**
+	 * Maps each top-level result variable to its SelectExpression;
+	 * (excludes result variables defined in subqueries)
+	 **/
+	private Map<String, SelectExpression> selectExpressionsByResultVariable = new HashMap();
 
 	private Set querySpaces = new HashSet();
 
@@ -991,8 +998,35 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
     protected void setAlias(AST selectExpr, AST ident) {
         ((SelectExpression) selectExpr).setAlias(ident.getText());
+		// only put the alias (i.e., result variable) in selectExpressionsByResultVariable
+		// if is not defined in a subquery.
+		if ( ! isSubQuery() ) {
+			selectExpressionsByResultVariable.put( ident.getText(), ( SelectExpression ) selectExpr );
+		}
     }
 
+	protected boolean isOrderExpressionResultVariableRef(AST orderExpressionNode) throws SemanticException {
+		// ORDER BY is not supported in a subquery
+		// TODO: should an exception be thrown if an ORDER BY is in a subquery?
+		if ( ! isSubQuery() &&
+				orderExpressionNode.getType() == IDENT &&
+				selectExpressionsByResultVariable.containsKey( orderExpressionNode.getText() ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
+		if ( isSubQuery() ) {
+			throw new SemanticException(
+					"References to result variables in subqueries are not supported."
+			);
+		}
+		( ( ResultVariableRefNode ) resultVariableRef ).setSelectExpression(
+				selectExpressionsByResultVariable.get( resultVariableRef.getText() )
+		);
+	}
+	
 	/**
 	 * Returns the locations of all occurrences of the named parameter.
 	 */

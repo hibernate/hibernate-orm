@@ -50,6 +50,8 @@ tokens
 	METHOD_NAME;    // An IDENT that is a method name.
 	NAMED_PARAM;    // A named parameter (:foo).
 	BOGUS;          // Used for error state detection, etc.
+	RESULT_VARIABLE_REF;   // An IDENT that refers to result variable
+	                       // (i.e, an alias for a select expression) 
 }
 
 // -- Declarations --
@@ -211,7 +213,14 @@ tokens
 
 	protected void lookupAlias(AST ident) throws SemanticException { }
 
-    protected void setAlias(AST selectExpr, AST ident) { }
+	protected void setAlias(AST selectExpr, AST ident) { }
+
+	protected boolean isOrderExpressionResultVariableRef(AST ident) throws SemanticException {
+		return false;
+	}
+
+	protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
+	}
 
 	protected AST lookupProperty(AST dot,boolean root,boolean inSelect) throws SemanticException {
 		return dot;
@@ -334,7 +343,20 @@ orderClause
 	;
 
 orderExprs
-	: expr ( ASCENDING | DESCENDING )? (orderExprs)?
+	: orderExpr ( ASCENDING | DESCENDING )? (orderExprs)?
+	;
+
+orderExpr
+	: { isOrderExpressionResultVariableRef( _t ) }? resultVariableRef
+	| expr
+	;
+
+resultVariableRef!
+	: i:identifier {
+		// Create a RESULT_VARIABLE_REF node instead of an IDENT node.
+		#resultVariableRef = #([RESULT_VARIABLE_REF, i.getText()]);
+		handleResultVariableRef(#resultVariableRef);
+	}
 	;
 
 groupClause
@@ -358,7 +380,7 @@ selectExprList {
 
 aliasedSelectExpr!
 	: #(AS se:selectExpr i:identifier) {
-	    setAlias(#se,#i);
+		setAlias(#se,#i);
 		#aliasedSelectExpr = #se;
 	}
 	;

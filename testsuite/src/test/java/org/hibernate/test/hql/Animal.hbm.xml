@@ -112,6 +112,11 @@
 		<discriminator column="zooType" type="character"/>
 		<property name="name" type="string"/>
         <property name="classification" type="org.hibernate.test.hql.ClassificationType"/>
+        <map name="directors">
+			<key column="directorZoo_id"/>
+			<index type="string" column="title"/>
+			<many-to-many class="Human"/>
+		</map>
         <map name="mammals">
 			<key column="mammalZoo_id"/>
 			<index type="string" column="name"/>

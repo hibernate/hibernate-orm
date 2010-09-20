@@ -36,6 +36,7 @@ import antlr.SemanticException;
 public abstract class AbstractSelectExpression extends HqlSqlWalkerNode implements SelectExpression {
 	
 	private String alias;
+	private int scalarColumnIndex = -1;
 	
 	public final void setAlias(String alias) {
 		this.alias = alias;
@@ -62,5 +63,14 @@ public abstract class AbstractSelectExpression extends HqlSqlWalkerNode implemen
 		// If this node has a data type, and that data type is not an association, then this is scalar.
 		Type type = getDataType();
 		return type != null && !type.isAssociationType();	// Moved here from SelectClause [jsd]
+	}
+
+	public void setScalarColumn(int i) throws SemanticException {
+		this.scalarColumnIndex = i;
+		setScalarColumnText( i );
+	}
+
+	public int getScalarColumnIndex() {
+		return scalarColumnIndex;
 	}
 }

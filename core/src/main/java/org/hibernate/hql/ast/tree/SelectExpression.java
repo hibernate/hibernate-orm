@@ -50,6 +50,21 @@ public interface SelectExpression {
 	void setScalarColumnText(int i) throws SemanticException;
 
 	/**
+	 * Sets the index and text for select expression in the projection list.
+	 *  
+	 * @param i The index of the select expression in the projection list.
+	 * @throws SemanticException
+	 */
+	void setScalarColumn(int i) throws SemanticException;
+
+	/**
+	 * Gets index of the select expression in the projection list.
+	 *
+	 * @returns The index of the select expression in the projection list.
+	 */
+	int getScalarColumnIndex();
+	
+	/**
 	 * Returns the FROM element that this expression refers to.
 	 *
 	 * @return The FROM element.

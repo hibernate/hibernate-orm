@@ -1,6 +1,7 @@
 //$Id: Zoo.java 10653 2006-10-26 13:38:50Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -10,9 +11,17 @@ public class Zoo {
 	private Long id;
 	private String name;
 	private Classification classification;
-	private Map animals;
-	private Map mammals;
+	private Map directors = new HashMap();
+	private Map animals = new HashMap();
+	private Map mammals = new HashMap();
 	private Address address;
+
+	public Zoo() {
+	}
+	public Zoo(String name, Address address) {
+		this.name = name;
+		this.address = address;
+	}
 
 	public Long getId() {
 		return id;
@@ -28,6 +37,14 @@ public class Zoo {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Map getDirectors() {
+		return directors;
+	}
+
+	public void setDirectors(Map directors) {
+		this.directors = directors;
 	}
 
 	public Map getMammals() {

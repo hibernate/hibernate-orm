@@ -37,4 +37,14 @@ public class MySQL5Dialect extends MySQLDialect {
 		registerColumnType( Types.VARCHAR, 65535, "varchar($l)" );
 		registerColumnType( Types.LONGVARCHAR, "longtext" );
 	}
+	
+	/**
+	 * Does this dialect support column-level check constraints?
+	 *
+	 * @return True if column-level CHECK constraints are supported; false
+	 * otherwise.
+	 */
+	public boolean supportsColumnCheck() {
+		return false;
+	}
 }

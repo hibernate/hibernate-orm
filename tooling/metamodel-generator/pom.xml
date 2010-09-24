@@ -127,7 +127,7 @@
                 <configuration>
                     <bytecodeInjections>
                         <bytecodeInjection>
-                            <expression>${pom.version}</expression>
+                            <expression>${project.version}</expression>
                             <targetMembers>
                                 <methodBodyReturn>
                                     <className>org.hibernate.jpamodelgen.Version</className>
@@ -226,27 +226,14 @@
                     <archive>
                         <manifestEntries>
                             <Created-By>${java.version} (${java.vendor})</Created-By>
-                            <Implementation-Title>${pom.name}</Implementation-Title>
+                            <Implementation-Title>${project.name}</Implementation-Title>
                             <Implementation-URL>http://www.jboss.org/</Implementation-URL>
-                            <Implementation-Version>${pom.version}</Implementation-Version>
+                            <Implementation-Version>${project.version}</Implementation-Version>
                             <Implementation-Vendor>JBoss by Red Hat, Inc.</Implementation-Vendor>
                             <Implementation-Vendor-Id>http://www.jboss.org/</Implementation-Vendor-Id>
                         </manifestEntries>
                     </archive>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>2.0.4</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -369,63 +356,4 @@
             <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
-
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.0.1</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <reportSets>
-                    <reportSet>
-                        <id>html</id>
-                        <configuration>
-                            <tags>
-                                <tag>
-                                    <name>todo</name>
-                                    <placement>a</placement>
-                                    <head>ToDo:</head>
-                                </tag>
-                            </tags>
-                        </configuration>
-                        <reports>
-                            <report>javadoc</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>jxr-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-clover-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <configuration>
-                    <targetJdk>1.5</targetJdk>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>taglist-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>changelog-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>changes-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </reporting>
 </project>

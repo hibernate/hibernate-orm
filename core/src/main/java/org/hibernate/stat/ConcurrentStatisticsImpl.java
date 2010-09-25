@@ -320,7 +320,7 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 		queryExecutionCount.getAndIncrement();
 		boolean isLongestQuery = false;
 		for ( long old = queryExecutionMaxTime.get();
-			  ( time > old ) && ( isLongestQuery = !queryExecutionMaxTime.compareAndSet( old, time ) );
+			  ( isLongestQuery = time > old ) && ( !queryExecutionMaxTime.compareAndSet( old, time ) );
 			  old = queryExecutionMaxTime.get() ) {
 			// nothing to do here given the odd loop structure...
 		}

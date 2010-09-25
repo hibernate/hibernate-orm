@@ -333,7 +333,9 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
 
 		getSessions().getStatistics().clear();
-
+		s.getTransaction().commit();
+		s.close();
+		
 		s = openSession();
 		s.beginTransaction();
 		u = ( User ) s.createCriteria( User.class )

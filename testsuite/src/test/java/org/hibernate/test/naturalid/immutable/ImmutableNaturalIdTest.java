@@ -233,7 +233,7 @@ public class ImmutableNaturalIdTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
 
 		getSessions().getStatistics().clear();
-
+		s.getTransaction().commit();
 		s = openSession();
 		s.beginTransaction();
 		u = ( User ) s.createCriteria( User.class )

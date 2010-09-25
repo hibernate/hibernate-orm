@@ -464,7 +464,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	/**
-	 * Different behaviour for GLOBAL TEMPORARY (1.8) and LOCAL TEMPORARY (2.0)
+	 * Different behavior for GLOBAL TEMPORARY (1.8) and LOCAL TEMPORARY (2.0)
 	 * <p/>
 	 * Possible return values and their meanings:<ul>
 	 * <li>{@link Boolean#TRUE} - Unequivocally, perform the temporary table DDL
@@ -653,7 +653,7 @@ public class HSQLDialect extends Dialect {
 	}
 
     public String toBooleanValueString(boolean bool) {
-        return bool ? "true" : "false";
+        return String.valueOf( bool );
     }
 
 	public boolean supportsTupleDistinctCounts() {

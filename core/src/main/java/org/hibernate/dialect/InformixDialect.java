@@ -86,8 +86,8 @@ public class InformixDialect extends Dialect {
 	public String getIdentitySelectString(String table, String column, int type) 
 	throws MappingException {
 		return type==Types.BIGINT ?
-			"select dbinfo('serial8') from systables where tabid=1" :
-			"select dbinfo('sqlca.sqlerrd1') from systables where tabid=1";
+			"select dbinfo('serial8') from informix.systables where tabid=1" :
+			"select dbinfo('sqlca.sqlerrd1') from informix.systables where tabid=1";
 	}
 
 	public String getIdentityColumnString(int type) throws MappingException {
@@ -146,7 +146,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName ) + " from systables where tabid=1";
+		return "select " + getSelectSequenceNextValString( sequenceName ) + " from informix.systables where tabid=1";
 	}
 
 	public String getSelectSequenceNextValString(String sequenceName) {
@@ -155,6 +155,14 @@ public class InformixDialect extends Dialect {
 
 	public boolean supportsSequences() {
 		return true;
+	}
+
+	public boolean supportsPooledSequences() {
+		return true;
+	}
+
+	public String getQuerySequencesString() {
+		return "select tabname from informix.systables where tabtype='Q'";
 	}
 
 	public boolean supportsLimit() {

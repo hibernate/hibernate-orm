@@ -104,7 +104,7 @@
 			<element column="map_value" type="date"/>
 		</map>
 	
-		<array name="fooArray" element-class="org.hibernate.test.legacy.FooProxy" where="i&lt;8" check="i>=0">
+		<array name="fooArray" table="FOO_ARRAY" element-class="org.hibernate.test.legacy.FooProxy" where="i&lt;8" check="i>=0">
 			<!--cache-->
 			<key column="id_"/>
 			<index column="i"/>

@@ -2038,7 +2038,7 @@ public class FooBarTest extends LegacyTestCase {
 		String bazid = baz.getCode();
 		s.delete(baz);
 		int rows=s.connection().createStatement().executeUpdate(
-			"delete from fooArray where id_='" + bazid + "' and i>=8"
+			"delete from FOO_ARRAY where id_='" + bazid + "' and i>=8"
 		);
 		assertTrue(rows==1);
 		s.getTransaction().commit();

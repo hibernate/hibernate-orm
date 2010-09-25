@@ -354,9 +354,8 @@ class JoinCounter extends EmptyInterceptor {
 	}
 
 	public String onPrepareStatement(String sql) {
-				
 		int numberOfJoins = 0;
-		if (sql.startsWith("select")) {
+		if (sql.startsWith("select") & !sql.contains("nextval")) {
 			 numberOfJoins = count(sql, "join");
 			 TestCase.assertEquals(expectedNumberOfJoins, numberOfJoins);
 		}

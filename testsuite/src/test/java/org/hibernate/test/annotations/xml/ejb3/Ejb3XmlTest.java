@@ -6,12 +6,15 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.SkipForDialect;
 
 /**
  * @author Emmanuel Bernard
  */
 public class Ejb3XmlTest extends TestCase {
+	@SkipForDialect(value = {PostgreSQLDialect.class}, comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testEjb3Xml() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

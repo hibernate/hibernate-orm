@@ -5,10 +5,12 @@ import junit.framework.Test;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.MyEntity;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * Tests specifically relating to section 3.3.5.3 [Lock Modes] of the
@@ -61,7 +63,24 @@ public class JPALockTest extends AbstractJPATest {
 			reportSkip( "deadlock", "jpa read locking" );
 			return;
 		}
+		if ( getDialect() instanceof HSQLDialect ) {
+			int hsqldbVersion = 18;
+			try {
+				Class props = ReflectHelper
+						.classForName( "org.hsqldb.persist.HsqlDatabaseProperties" );
+				String versionString = (String) props.getDeclaredField(
+						"THIS_VERSION").get(null);
 
+				hsqldbVersion = Integer.parseInt( versionString.substring( 0, 1 ) ) * 10;
+				hsqldbVersion += Integer
+						.parseInt( versionString.substring( 2, 3 ) );
+			} catch ( Throwable e ) {
+				// must be a very old version
+			}
+			if ( hsqldbVersion < 20 )
+				reportSkip( "hsqldb 1.8.x only supports read uncommitted", "lock doesn't work on hsqldb 1.8.x");
+			return;
+		}
 		final String initialName = "lock test";
 		// set up some test data
 		Session s1 = getSessions().openSession();

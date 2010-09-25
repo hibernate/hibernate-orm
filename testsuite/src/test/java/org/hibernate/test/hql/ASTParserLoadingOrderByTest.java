@@ -694,6 +694,8 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		assertEquals( Long.valueOf( 1 ), ( ( Object[] ) list.get( 1 ) )[ 1 ] );
 		assertEquals( zoo4.getName(), ( ( Object[] ) list.get( 2 ) )[ 0 ] );
 		assertEquals( Long.valueOf( 1 ), ( ( Object[] ) list.get( 2 ) )[ 1 ] );
+		t.commit();
+		s.close();
 		cleanupData();
 	}
 

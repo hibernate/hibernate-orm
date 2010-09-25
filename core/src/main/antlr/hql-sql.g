@@ -579,11 +579,11 @@ expr
 	;
 
 arithmeticExpr
-	: #(PLUS expr expr)         { prepareArithmeticOperator( #arithmeticExpr ); }
-	| #(MINUS expr expr)        { prepareArithmeticOperator( #arithmeticExpr ); }
-	| #(DIV expr expr)          { prepareArithmeticOperator( #arithmeticExpr ); }
-	| #(MOD expr expr)          { prepareArithmeticOperator( #arithmeticExpr ); }
-	| #(STAR expr expr)         { prepareArithmeticOperator( #arithmeticExpr ); }
+    : #(PLUS exprOrSubquery exprOrSubquery)         { prepareArithmeticOperator( #arithmeticExpr ); }
+    | #(MINUS exprOrSubquery exprOrSubquery)        { prepareArithmeticOperator( #arithmeticExpr ); }
+    | #(DIV exprOrSubquery exprOrSubquery)          { prepareArithmeticOperator( #arithmeticExpr ); }
+    | #(MOD exprOrSubquery exprOrSubquery)          { prepareArithmeticOperator( #arithmeticExpr ); }
+    | #(STAR exprOrSubquery exprOrSubquery)         { prepareArithmeticOperator( #arithmeticExpr ); }
 //	| #(CONCAT expr (expr)+ )   { prepareArithmeticOperator( #arithmeticExpr ); }
 	| #(UNARY_MINUS expr)       { prepareArithmeticOperator( #arithmeticExpr ); }
 	| caseExpr

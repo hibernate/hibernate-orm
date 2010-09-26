@@ -69,7 +69,9 @@ public class SybaseASE15Dialect extends AbstractTransactSQLDialect {
     public boolean areStringComparisonsCaseInsensitive() {
         return true;
     }
-
+    public String getCurrentTimestampSQLFunctionName() {
+    	return "getdate()";
+    }
 	/**
 	 * Actually Sybase does not support LOB locators at al.
 	 *

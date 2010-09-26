@@ -248,6 +248,10 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return false;
 	}
 
+	public boolean supportsUnionAll() {
+		return true;
+	}
+
 	public boolean supportsExistsInSelect() {
 		return false;
 	}

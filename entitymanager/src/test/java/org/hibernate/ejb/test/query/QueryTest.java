@@ -55,7 +55,7 @@ public class QueryTest extends TestCase {
 
 	public void testParameterList() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
-		final Item item2 = new Item( "Computer", "D�ll computer" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
 
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -127,7 +127,7 @@ public class QueryTest extends TestCase {
 
 	public void testEscapeCharacter() throws Exception {
 		final Item item = new Item( "Mouse", "Micro_oft mouse" );
-		final Item item2 = new Item( "Computer", "D�ll computer" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
 
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

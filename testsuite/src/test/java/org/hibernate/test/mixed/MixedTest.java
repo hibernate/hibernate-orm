@@ -27,6 +27,8 @@ import junit.framework.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
@@ -49,6 +51,11 @@ public class MixedTest extends FunctionalTestCase {
 
 	public static Test suite() {
 		return new FunctionalTestClassTestSuite( MixedTest.class );
+	}
+
+	@Override
+	public boolean appliesTo(Dialect dialect) {
+		return !(dialect instanceof SybaseASE15Dialect);
 	}
 
 	public void testMixedInheritance() {

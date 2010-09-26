@@ -30,21 +30,66 @@
 
 <chapter id="configuration">
 
-    <title>Configuration</title>
+  <title>Configuration</title>
 
-    <para>
+  <section id="config-basics">
+     <title>Basic configuration</title>
+
+     <para>
         To start working with Envers, all configuration that you must do is add the event
         listeners to persistence.xml, as described in the <xref linkend="quickstart"/>.
-    </para>
+     </para>
 
-    <para>
+     <para>
         However, as Envers generates some entities, and maps them to tables, it is possible to set the prefix and suffix
         that is added to the entity name to create an audit table for an entity, as well
         as set the names of the fields that are generated.
-    </para>
+     </para>
+
+  </section>
+
+  <section id="config-audit-strategy">
+
+     <title>Choosing an audit strategy</title>
+
+     <para>
+        After the basic configuration it is important to choose the audit strategy that will be used to persist and 
+        retrieve audit information. There is a trade-off is between the performance of persisting and the performance  
+        of querying the audit information. Currently there two audit strategies:
+
+        <orderedlist>
+          <listitem>
+             <para>
+                   The default audit strategy persists the audit data together with a start revision. For each row 
+                   inserted, updated or deleted in an audited table, one or more rows are inserted in the audit tables,
+                   together with the start revision of its validity. Rows in the audit tables are never updated after insertion. 
+                   Queries of audit information use subqueries to select the applicable rows in the audit tables.
+                   These subqueries are notoriously slow and difficult to index. 
+             </para>
+          </listitem>
+          <listitem>
+             <para>
+                   The alternative is a validity audit strategy. This strategy stores the start-revision and the end-revision 
+                   of audit information. For each row inserted, updated or deleted in an audited table, one or more rows
+                   are inserted in the audit tables, together with the start revision of its validity. But at the same time 
+                   the end-revision field of the previous audit rows (if available) are set to this revision. 
+                   Queries on the audit information can then use 'between start and end revision' instead of subqueries 
+                   as used by the default audit strategy. 
+                   The consequence of this strategy is that persisting audit information will be a bit slower, because of the  
+                   extra updates involved, but retrieving audit information will be a lot faster. This can be improved by
+                   adding extra indexes.
+             </para>
+          </listitem>
+        </orderedlist>
+     </para>
+
+  </section>
+
+  <section id="config-reference">
+    <title>Reference</title>
 
     <para>
-        In more detail, here are the properites that you can set:
+        In more detail, here are the properties that you can set:
     </para>
 
     <table frame="topbot">
@@ -186,21 +231,22 @@
                     </entry>
                     <entry>
                         The audit strategy that should be used when persisting audit data. The default stores only the
-                        revision, at which an entity was modified. An alternative,
-                        <literal>org.hibernate.envers.strategy.ValidTimeAuditStrategy</literal> stores additionaly the
-                        end revision, until which the data was valid.
+                        revision, at which an entity was modified. An alternative, the
+                        <literal>org.hibernate.envers.strategy.ValidityAuditStrategy</literal> stores both the
+                        start revision and the end revision. Together these define when an audit row was valid, hence 
+                        the name ValidityAuditStrategy. 
                     </entry>
                 </row>
                 <row>
                     <entry>
-                        <property>org.hibernate.envers.audit_strategy_valid_time_end_name</property>
+                        <property>org.hibernate.envers.audit_strategy_validity_end_rev_field_name</property>
                     </entry>
                     <entry>
                         REVEND
                     </entry>
                     <entry>
-                        Only valid if the audit strategy is valid-time. Name of the column that will hold the end
-                        revision number in audit entities.
+                        The column name that will hold the end revision number in audit entities. This property is only 
+                        valid if the validity audit strategy is used.
                     </entry>
                 </row>
             </tbody>
@@ -280,4 +326,7 @@
         <literal>@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)</literal>. Then, when reading historic
         versions of your entity, the relation will always point to the "current" related entity.
     </para>
+
+  </section>
+
 </chapter>

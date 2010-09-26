@@ -32,6 +32,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer;
 import org.hibernate.ejb.metamodel.Customer_;
@@ -39,6 +40,7 @@ import org.hibernate.ejb.metamodel.LineItem;
 import org.hibernate.ejb.metamodel.LineItem_;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Order_;
+import org.hibernate.testing.junit.SkipForDialect;
 
 /**
  * TODO : javadoc
@@ -86,6 +88,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@SkipForDialect(value=SybaseASE15Dialect.class, jiraKey="HHH-3032")
 	public void testCorrelationExplicitSelectionCorrelation() {
 		CriteriaBuilder builder = factory.getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

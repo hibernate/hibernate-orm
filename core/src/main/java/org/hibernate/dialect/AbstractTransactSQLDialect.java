@@ -265,4 +265,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
 		return true;
 	}
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
 }

@@ -160,7 +160,4 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return false; // here assume SQLServer2005 using snapshot isolation, which does not have this problem
 	}
 
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
 }

@@ -84,8 +84,8 @@
             &packages;
         </packages>
     </test>
-    <test name="ValidTimeAuditStrategy">
-        <parameter name="auditStrategy" value="org.hibernate.envers.strategy.ValidTimeAuditStrategy" />
+    <test name="ValidityAuditStrategy">
+        <parameter name="auditStrategy" value="org.hibernate.envers.strategy.ValidityAuditStrategy" />
         <packages>
             &packages;
         </packages>

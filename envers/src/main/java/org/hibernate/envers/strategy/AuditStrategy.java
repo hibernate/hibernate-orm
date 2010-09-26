@@ -49,7 +49,7 @@ public interface AuditStrategy {
 	 * <li>For {@link DefaultAuditStrategy} a subquery is created: 
 	 * <p><code>e.revision = (SELECT max(...) ...)</code></p>
 	 * </li>
-	 * <li>for {@link ValidTimeAuditStrategy} the revision-end column is used: 
+	 * <li>for {@link ValidityAuditStrategy} the revision-end column is used: 
 	 * <p><code>e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)</code></p>
 	 * </li>
 	 * </ul>
@@ -57,13 +57,13 @@ public interface AuditStrategy {
 	 * @param globalCfg the {@link GlobalConfiguration}
      * @param rootQueryBuilder the {@link QueryBuilder} that will be updated
      * @param revisionProperty property of the revision column
-     * @param revisionEndProperty property of the revisionEnd column (only used for {@link ValidTimeAuditStrategy})
+     * @param revisionEndProperty property of the revisionEnd column (only used for {@link ValidityAuditStrategy})
      * @param addAlias {@code boolean} indicator if a left alias is needed
      * @param idData id-information for the two-entity relation (only used for {@link DefaultAuditStrategy})
-     * @param revisionPropertyPath path of the revision property (only used for {@link ValidTimeAuditStrategy})
-     * @param originalIdPropertyName name of the id property (only used for {@link ValidTimeAuditStrategy})
-     * @param alias1 an alias used for subquery (only used for {@link ValidTimeAuditStrategy})
-     * @param alias2 an alias used for subquery (only used for {@link ValidTimeAuditStrategy})
+     * @param revisionPropertyPath path of the revision property (only used for {@link ValidityAuditStrategy})
+     * @param originalIdPropertyName name of the id property (only used for {@link ValidityAuditStrategy})
+     * @param alias1 an alias used for subquery (only used for {@link ValidityAuditStrategy})
+     * @param alias2 an alias used for subquery (only used for {@link ValidityAuditStrategy})
      */
 	void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder,
 			String revisionProperty, String revisionEndProperty, boolean addAlias, MiddleIdData idData, 
@@ -76,20 +76,20 @@ public interface AuditStrategy {
 	 * <li>For {@link DefaultAuditStrategy} a subquery is created: 
 	 * <p><code>e.revision = (SELECT max(...) ...)</code></p>
 	 * </li>
-	 * <li>for {@link ValidTimeAuditStrategy} the revision-end column is used: 
+	 * <li>for {@link ValidityAuditStrategy} the revision-end column is used: 
 	 * <p><code>e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)</code></p>
 	 * </li>
 	 * </ul>
 	 * 
 	 * @param rootQueryBuilder the {@link QueryBuilder} that will be updated
      * @param revisionProperty property of the revision column
-     * @param revisionEndProperty property of the revisionEnd column (only used for {@link ValidTimeAuditStrategy})
+     * @param revisionEndProperty property of the revisionEnd column (only used for {@link ValidityAuditStrategy})
      * @param addAlias {@code boolean} indicator if a left alias is needed
      * @param referencingIdData id-information for the middle-entity association (only used for {@link DefaultAuditStrategy})
 	 * @param versionsMiddleEntityName name of the middle-entity
-	 * @param eeOriginalIdPropertyPath name of the id property (only used for {@link ValidTimeAuditStrategy})
-	 * @param revisionPropertyPath path of the revision property (only used for {@link ValidTimeAuditStrategy})
-	 * @param originalIdPropertyName name of the id property (only used for {@link ValidTimeAuditStrategy})
+	 * @param eeOriginalIdPropertyPath name of the id property (only used for {@link ValidityAuditStrategy})
+	 * @param revisionPropertyPath path of the revision property (only used for {@link ValidityAuditStrategy})
+	 * @param originalIdPropertyName name of the id property (only used for {@link ValidityAuditStrategy})
 	 * @param componentDatas information about the middle-entity relation
 	 */
 	void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 

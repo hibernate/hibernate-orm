@@ -35,7 +35,7 @@ import java.util.Properties;
 
 import org.hibernate.MappingException;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
-import org.hibernate.envers.strategy.ValidTimeAuditStrategy;
+import org.hibernate.envers.strategy.ValidityAuditStrategy;
 
 /**
  * Configuration of versions entities - names of fields, entities and tables created to store versioning information.
@@ -93,7 +93,7 @@ public class AuditEntitiesConfiguration {
         revisionTypePropType = "byte";
 
         revisionEndFieldName = getProperty(properties,
-                "org.hibernate.envers.audit_strategy_valid_time_end_name",
+                "org.hibernate.envers.audit_strategy_validity_end_rev_field_name",
                 "org.hibernate.envers.audit_strategy_valid_time_end_name",
                 "REVEND");
 

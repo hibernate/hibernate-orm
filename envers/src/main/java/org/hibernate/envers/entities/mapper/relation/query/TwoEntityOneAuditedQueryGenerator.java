@@ -68,7 +68,7 @@ public final class TwoEntityOneAuditedQueryGenerator implements RelationQueryGen
          *     ee.revision = (SELECT max(ee2.revision) FROM middleEntity ee2
          *       WHERE ee2.revision <= :revision AND ee2.originalId.* = ee.originalId.*)
          *       
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     ee.revision <= :revision and (ee.endRevision > :revision or ee.endRevision is null)
          *
          *     AND

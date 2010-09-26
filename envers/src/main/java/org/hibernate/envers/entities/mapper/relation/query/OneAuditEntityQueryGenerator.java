@@ -61,7 +61,7 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
          *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
          *       WHERE e2.revision <= :revision AND e2.id = e.id) 
          *     
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
          *     
          *     AND

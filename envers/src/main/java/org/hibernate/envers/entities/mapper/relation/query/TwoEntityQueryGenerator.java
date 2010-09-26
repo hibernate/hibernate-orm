@@ -68,7 +68,7 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
          *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
          *       WHERE e2.revision <= :revision AND e2.id = e.id) 
          *     
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
          *     
          *     AND
@@ -78,7 +78,7 @@ public final class TwoEntityQueryGenerator implements RelationQueryGenerator {
          *     ee.revision = (SELECT max(ee2.revision) FROM middleEntity ee2
          *       WHERE ee2.revision <= :revision AND ee2.originalId.* = ee.originalId.*)
          *       
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     ee.revision <= :revision and (ee.endRevision > :revision or ee.endRevision is null)
          *     
          * (only non-deleted entities and associations)

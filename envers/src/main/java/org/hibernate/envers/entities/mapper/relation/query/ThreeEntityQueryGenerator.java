@@ -70,7 +70,7 @@ public final class ThreeEntityQueryGenerator implements RelationQueryGenerator {
          *     e.revision = (SELECT max(e2.revision) FROM versionsReferencedEntity e2
          *       WHERE e2.revision <= :revision AND e2.id = e.id) 
          *     
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     e.revision <= :revision and (e.endRevision > :revision or e.endRevision is null)
          *     
          *     AND
@@ -80,7 +80,7 @@ public final class ThreeEntityQueryGenerator implements RelationQueryGenerator {
          *     f.revision = (SELECT max(f2.revision) FROM versionsIndexEntity f2
          *       WHERE f2.revision <= :revision AND f2.id_ref_ed = f.id_ref_ed)
          *     
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     f.revision <= :revision and (f.endRevision > :revision or f.endRevision is null)
          *     
          *     AND
@@ -90,7 +90,7 @@ public final class ThreeEntityQueryGenerator implements RelationQueryGenerator {
          *     ee.revision = (SELECT max(ee2.revision) FROM middleEntity ee2
          *       WHERE ee2.revision <= :revision AND ee2.originalId.* = ee.originalId.*)
          *       
-         *   --> for ValidTimeAuditStrategy:
+         *   --> for ValidityAuditStrategy:
          *     ee.revision <= :revision and (ee.endRevision > :revision or ee.endRevision is null)
          *     
         and (

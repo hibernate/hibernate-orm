@@ -28,9 +28,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.dom4j.Element;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.MappingException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.EntityConfiguration;
@@ -40,15 +42,20 @@ import org.hibernate.envers.entities.mapper.ExtendedPropertyMapper;
 import org.hibernate.envers.entities.mapper.MultiPropertyMapper;
 import org.hibernate.envers.entities.mapper.SubclassPropertyMapper;
 import org.hibernate.envers.strategy.AuditStrategy;
-import org.hibernate.envers.strategy.ValidTimeAuditStrategy;
+import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.Triple;
-import org.hibernate.envers.RelationTargetAuditMode;
-
-import org.hibernate.MappingException;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.*;
-import org.hibernate.type.*;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Join;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
+import org.hibernate.mapping.Value;
+import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +146,7 @@ public final class AuditMetadataGenerator {
 
     private void addEndRevision(Element any_mapping) {
         // Add the end-revision field, if the appropriate strategy is used.
-        if (ValidTimeAuditStrategy.class.getName().equals(verEntCfg.getAuditStrategyName())) {
+        if (auditStrategy instanceof ValidityAuditStrategy) {
             Element end_rev_mapping = (Element) revisionInfoRelationMapping.clone();
             end_rev_mapping.setName("many-to-one");
             end_rev_mapping.addAttribute("name", verEntCfg.getRevisionEndFieldName());

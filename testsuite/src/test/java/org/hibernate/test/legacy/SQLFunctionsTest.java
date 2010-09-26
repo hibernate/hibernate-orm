@@ -537,7 +537,10 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	}
 
 	public void testBlobClob() throws Exception {
-
+		// Sybase does not support ResultSet.getBlob(String)
+		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
+			return;
+		}
 		Session s = openSession();
 		Blobber b = new Blobber();
 		b.setBlob( s.getLobHelper().createBlob( "foo/bar/baz".getBytes() ) );
@@ -546,13 +549,6 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		//s.refresh(b);
 		//assertTrue( b.getClob() instanceof ClobImpl );
 		s.flush();
-
-		// Sybase does not support ResultSet.getBlob(String)
-		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
-			s.connection().rollback();
-			s.close();
-			return;
-		}
 
 		s.refresh(b);
 		//b.getBlob().setBytes( 2, "abc".getBytes() );

@@ -124,10 +124,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 	}
 
-	public String getSelectGUIDString() {
-		return "select newid()";
-	}
-
 	// The current_timestamp is more accurate, but only known to be supported
 	// in SQL Server 7.0 and later (i.e., Sybase not known to support it at all)
 	public String getCurrentTimestampSelectString() {

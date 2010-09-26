@@ -240,7 +240,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public boolean dropTemporaryTableAfterUse() {
 		return true;  // sql-server, at least needed this dropped after use; strange!
 	}
-
+	public String getSelectGUIDString() {
+		return "select newid()";
+	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

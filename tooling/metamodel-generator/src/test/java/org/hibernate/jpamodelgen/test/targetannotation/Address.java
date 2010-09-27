@@ -15,21 +15,16 @@
  * limitations under the License.
  */
 
-// $Id$
+// $Id:$
+package org.hibernate.jpamodelgen.test.targetannotation;
 
-package org.hibernate.jpamodelgen.model;
+import javax.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik
  */
-public interface MetaAttribute {
-	String getDeclarationString();
-
-	String getMetaType();
-
-	String getPropertyName();
-
-	String getTypeDeclaration();
-
-	MetaEntity getParent();
+@Embeddable
+public interface Address {
 }
+
+

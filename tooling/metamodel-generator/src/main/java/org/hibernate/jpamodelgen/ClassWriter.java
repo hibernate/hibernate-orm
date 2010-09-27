@@ -41,6 +41,9 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
  */
 public class ClassWriter {
 
+	private ClassWriter(){		
+	}
+
 	public static void writeFile(MetaEntity entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();

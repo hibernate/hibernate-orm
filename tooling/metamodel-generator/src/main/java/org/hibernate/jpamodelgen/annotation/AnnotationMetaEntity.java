@@ -63,6 +63,8 @@ import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
+ * Class used to collect meta information about an annotated entity.
+ *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
@@ -185,6 +187,13 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	class TypeVisitor extends SimpleTypeVisitor6<AnnotationMetaAttribute, Element> {
+
+		/**
+		 * FQCN of the Hibernate specific @Target annotation. We do not use the class directly to avoid depending on Hibernate
+		 * Core.
+		 */
+		private static final String ORG_HIBERNATE_ANNOTATIONS_TARGET = "org.hibernate.annotations.Target";
+
 		AnnotationMetaEntity parent;
 
 		TypeVisitor(AnnotationMetaEntity parent) {
@@ -229,55 +238,57 @@ public class AnnotationMetaEntity implements MetaEntity {
 
 		@Override
 		public AnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
+			AnnotationMetaAttribute metaAttribute = null;
 			TypeElement returnedElement = ( TypeElement ) context.getTypeUtils().asElement( declaredType );
 			// WARNING: .toString() is necessary here since Name equals does not compare to String
 			String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
 			String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
 			String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 			if ( collection != null ) {
-				if ( TypeUtils.containsAnnotation( element, ElementCollection.class ) ) {
-					String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
-					TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
-							declaredType, fqNameOfReturnType, explicitTargetEntity, context
+				return createMetaCollectionAttribute(
+						declaredType, element, fqNameOfReturnType, collection, targetEntity
+				);
+			}
+			else if ( isBasicAttribute( element, returnedElement ) ) {
+				String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
+				return new AnnotationMetaSingleAttribute( parent, element, type );
+			}
+			return metaAttribute;
+		}
+
+		private AnnotationMetaAttribute createMetaCollectionAttribute(DeclaredType declaredType, Element element, String fqNameOfReturnType, String collection, String targetEntity) {
+			if ( TypeUtils.containsAnnotation( element, ElementCollection.class ) ) {
+				String explicitTargetEntity = getTargetEntity( element.getAnnotationMirrors() );
+				TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
+						declaredType, fqNameOfReturnType, explicitTargetEntity, context
+				);
+				final TypeElement collectionElement = ( TypeElement ) context.getTypeUtils()
+						.asElement( collectionElementType );
+				AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( collectionElement.getQualifiedName().toString() );
+				if ( accessTypeInfo == null ) {
+					AccessType explicitAccessType = TypeUtils.determineAnnotationSpecifiedAccessType(
+							collectionElement
 					);
-					final TypeElement collectionElement = ( TypeElement ) context.getTypeUtils()
-							.asElement( collectionElementType );
-					AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( collectionElement.getQualifiedName().toString() );
-					if ( accessTypeInfo == null ) {
-						AccessType explicitAccessType = TypeUtils.determineAnnotationSpecifiedAccessType(
-								collectionElement
-						);
-						accessTypeInfo = new AccessTypeInformation(
-								collectionElement.getQualifiedName().toString(),
-								explicitAccessType,
-								entityAccessTypeInfo.getAccessType()
-						);
-						context.addAccessTypeInformation(
-								collectionElement.getQualifiedName().toString(), accessTypeInfo
-						);
-					}
-					else {
-						accessTypeInfo.setDefaultAccessType( entityAccessTypeInfo.getAccessType() );
-					}
-				}
-				if ( collection.equals( "javax.persistence.metamodel.MapAttribute" ) ) {
-					return createAnnotationMetaAttributeForMap( declaredType, element, collection, targetEntity );
+					accessTypeInfo = new AccessTypeInformation(
+							collectionElement.getQualifiedName().toString(),
+							explicitAccessType,
+							entityAccessTypeInfo.getAccessType()
+					);
+					context.addAccessTypeInformation(
+							collectionElement.getQualifiedName().toString(), accessTypeInfo
+					);
 				}
 				else {
-					return new AnnotationMetaCollection(
-							parent, element, collection, getElementType( declaredType, targetEntity )
-					);
+					accessTypeInfo.setDefaultAccessType( entityAccessTypeInfo.getAccessType() );
 				}
 			}
+			if ( collection.equals( "javax.persistence.metamodel.MapAttribute" ) ) {
+				return createAnnotationMetaAttributeForMap( declaredType, element, collection, targetEntity );
+			}
 			else {
-				if ( isBasicAttribute( element, returnedElement ) ) {
-					return new AnnotationMetaSingleAttribute(
-							parent, element, returnedElement.getQualifiedName().toString()
-					);
-				}
-				else {
-					return null;
-				}
+				return new AnnotationMetaCollection(
+						parent, element, collection, getElementType( declaredType, targetEntity )
+				);
 			}
 		}
 
@@ -359,7 +370,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 		 * @return target entity class name as string or {@code null} if no targetEntity is here or if equals to void
 		 */
 		private String getTargetEntity(List<? extends AnnotationMirror> annotations) {
-
 			String fullyQualifiedTargetEntityName = null;
 			for ( AnnotationMirror mirror : annotations ) {
 				if ( TypeUtils.isAnnotationMirrorOfType( mirror, ElementCollection.class ) ) {
@@ -370,6 +380,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 						|| TypeUtils.isAnnotationMirrorOfType( mirror, ManyToOne.class )
 						|| TypeUtils.isAnnotationMirrorOfType( mirror, OneToOne.class ) ) {
 					fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
+				}
+				else if ( TypeUtils.isAnnotationMirrorOfType( mirror, ORG_HIBERNATE_ANNOTATIONS_TARGET ) ) {
+					fullyQualifiedTargetEntityName = getFullyQualifiedClassNameOfTargetEntity( mirror, "value" );
 				}
 			}
 			return fullyQualifiedTargetEntityName;
@@ -415,7 +428,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 				return Boolean.TRUE;
 			}
 
-			if ( ElementKind.CLASS.equals( element.getKind() ) || ElementKind.INTERFACE.equals( element.getKind() )) {
+			if ( ElementKind.CLASS.equals( element.getKind() ) || ElementKind.INTERFACE.equals( element.getKind() ) ) {
 				TypeElement typeElement = ( ( TypeElement ) element );
 				String typeName = typeElement.getQualifiedName().toString();
 				if ( Constants.BASIC_TYPES.contains( typeName ) ) {

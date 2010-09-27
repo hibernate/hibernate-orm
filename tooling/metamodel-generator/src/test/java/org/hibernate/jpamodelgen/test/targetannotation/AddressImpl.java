@@ -15,21 +15,13 @@
  * limitations under the License.
  */
 
-// $Id$
-
-package org.hibernate.jpamodelgen.model;
+// $Id:$
+package org.hibernate.jpamodelgen.test.targetannotation;
 
 /**
  * @author Hardy Ferentschik
  */
-public interface MetaAttribute {
-	String getDeclarationString();
-
-	String getMetaType();
-
-	String getPropertyName();
-
-	String getTypeDeclaration();
-
-	MetaEntity getParent();
+public class AddressImpl implements Address {
 }
+
+

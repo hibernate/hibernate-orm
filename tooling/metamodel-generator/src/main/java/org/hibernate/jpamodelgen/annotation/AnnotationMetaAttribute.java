@@ -25,16 +25,19 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.util.Elements;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
+import org.hibernate.jpamodelgen.model.MetaEntity;
 
 /**
+ * Captures all information about an annotated persistent attribute.
+ *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
 public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
-	final protected Element element;
-	final protected AnnotationMetaEntity parent;
+	private final Element element;
+	private final AnnotationMetaEntity parent;
 	private final String type;
 
 	public AnnotationMetaAttribute(AnnotationMetaEntity parent, Element element, String type) {
@@ -44,8 +47,16 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	}
 
 	public String getDeclarationString() {
-		return "public static volatile " + parent.importType( getMetaType() ) + "<" + parent.importType( parent.getQualifiedName() ) + ", " + parent
-				.importType( getTypeDeclaration() ) + "> " + getPropertyName() + ";";
+		return new StringBuilder().append( "public static volatile " )
+				.append( parent.importType( getMetaType() ) )
+				.append( "<" )
+				.append( parent.importType( parent.getQualifiedName() ) )
+				.append( ", " )
+				.append( parent.importType( getTypeDeclaration() ) )
+				.append( "> " )
+				.append( getPropertyName() )
+				.append( ";" )
+				.toString();
 	}
 
 	public String getPropertyName() {
@@ -66,6 +77,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		else {
 			return elementsUtil.getName( element.getSimpleName() + "/* " + element.getKind() + " */" ).toString();
 		}
+	}
+
+	public MetaEntity getParent() {
+		return parent;
 	}
 
 	abstract public String getMetaType();

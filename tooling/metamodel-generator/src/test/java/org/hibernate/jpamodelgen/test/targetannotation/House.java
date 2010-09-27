@@ -15,21 +15,33 @@
  * limitations under the License.
  */
 
-// $Id$
+// $Id:$
+package org.hibernate.jpamodelgen.test.targetannotation;
 
-package org.hibernate.jpamodelgen.model;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+import org.hibernate.annotations.Target;
 
 /**
  * @author Hardy Ferentschik
  */
-public interface MetaAttribute {
-	String getDeclarationString();
+@Entity
+class House {
+	@Id
+	long id;
 
-	String getMetaType();
+	@Embedded
+	@Target(AddressImpl.class)
+	private Address address;
 
-	String getPropertyName();
+	public Address getAddress() {
+		return address;
+	}
 
-	String getTypeDeclaration();
-
-	MetaEntity getParent();
+	public void setAddress(Address address) {
+		this.address = address;
+	}
 }
+

@@ -17,35 +17,30 @@
 
 // $Id$
 
-package org.hibernate.jpamodelgen.test.mixedmode;
+package org.hibernate.jpamodelgen.test.blob;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import org.testng.annotations.Test;
+
+import org.hibernate.jpamodelgen.test.util.CompilationTest;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
  * @author Hardy Ferentschik
  */
-@Entity
-public class Person {
-	@Id
-	@GeneratedValue
-	private long id;
-	private String name;
-
-	public long getId() {
-		return id;
+public class BlobTest extends CompilationTest {
+	/**
+	 * METAGEN-38
+	 */
+	@Test
+	public void testBlobField() {
+		assertMetamodelClassGeneratedFor( BlobEntity.class );
+		assertPresenceOfFieldInMetamodelFor( BlobEntity.class, "blob", "the metamodel should have a member 'blob'" );
 	}
 
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	@Override
+	protected String getPackageNameOfTestSources() {
+		return BlobTest.class.getPackage().getName();
 	}
 }

@@ -15,37 +15,27 @@
  * limitations under the License.
  */
 
-// $Id$
+// $Id: User.java 17903 2009-11-04 13:22:37Z hardy.ferentschik $
 
-package org.hibernate.jpamodelgen.test.mixedmode;
+package org.hibernate.jpamodelgen.test.blob;
 
+import java.sql.Blob;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.Table;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-public class Person {
+@Table
+public class BlobEntity {
 	@Id
-	@GeneratedValue
-	private long id;
-	private String name;
+	private String id;
 
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
+	@Lob
+	private Blob blob;
 }
+
+

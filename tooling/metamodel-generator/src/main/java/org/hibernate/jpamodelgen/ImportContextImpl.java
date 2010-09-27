@@ -34,11 +34,11 @@ import org.hibernate.jpamodelgen.model.ImportContext;
  */
 public class ImportContextImpl implements ImportContext {
 
-	Set<String> imports = new TreeSet<String>();
-	Set<String> staticImports = new TreeSet<String>();
-	Map<String, String> simpleNames = new HashMap<String, String>();
+	private Set<String> imports = new TreeSet<String>();
+	private Set<String> staticImports = new TreeSet<String>();
+	private Map<String, String> simpleNames = new HashMap<String, String>();
 
-	String basePackage = "";
+	private String basePackage = "";
 
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
 
@@ -161,15 +161,13 @@ public class ImportContextImpl implements ImportContext {
 		StringBuffer buf = new StringBuffer();
 
 		for ( String next : imports ) {
-			if ( isPrimitive( next ) || inDefaultPackage( next ) || inJavaLang( next ) || inSamePackage( next ) ) {
-				// dont add automatically "imported" stuff
-			}
-			else {
+			// don't add automatically "imported" stuff
+			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
-					buf.append( "import static " + next + ";\r\n" );
+					buf.append( "import static " ).append( next ).append( ";\r\n" );
 				}
 				else {
-					buf.append( "import " + next + ";\r\n" );
+					buf.append( "import " ).append( next ).append( ";\r\n" );
 				}
 			}
 		}
@@ -180,9 +178,13 @@ public class ImportContextImpl implements ImportContext {
 		return buf.toString();
 	}
 
+	private boolean isAutoImported(String next) {
+		return isPrimitive( next ) || inDefaultPackage( next ) || inJavaLang( next ) || inSamePackage( next );
+	}
+
 	public static String unqualify(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( "." );
-		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( qualifiedName.lastIndexOf( "." ) + 1 );
+		int loc = qualifiedName.lastIndexOf( '.' );
+		return ( loc < 0 ) ? qualifiedName : qualifiedName.substring( qualifiedName.lastIndexOf( '.' ) + 1 );
 	}
 
 	public static String qualifier(String qualifiedName) {

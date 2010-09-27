@@ -79,14 +79,17 @@ public class TypeUtils {
 
 	}
 
-	static public String toTypeString(TypeMirror type) {
+	private TypeUtils() {
+	}
+
+	public static String toTypeString(TypeMirror type) {
 		if ( type.getKind().isPrimitive() ) {
 			return PRIMITIVES.get( type.toString() );
 		}
 		return type.toString();
 	}
 
-	static public TypeElement getSuperclassTypeElement(TypeElement element) {
+	public static TypeElement getSuperclassTypeElement(TypeElement element) {
 		final TypeMirror superClass = element.getSuperclass();
 		//superclass of Object is of NoType which returns some other kind
 		if ( superClass.getKind() == TypeKind.DECLARED ) {
@@ -140,17 +143,30 @@ public class TypeUtils {
 	 * This method uses the string class names for comparison. See also {@link http://www.retep.org/2009/02/getting-class-values-from-annotations.html}.
 	 *
 	 * @param annotationMirror The annotation mirror
-	 * @param clazz the class name to check again
+	 * @param clazz the class name to check against
 	 *
 	 * @return {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
 	 */
 	public static boolean isAnnotationMirrorOfType(AnnotationMirror annotationMirror, Class<? extends Annotation> clazz) {
-		assert annotationMirror != null;
 		assert clazz != null;
-		String annotationClassName = annotationMirror.getAnnotationType().toString();
-		String className = clazz.getName();
+		return isAnnotationMirrorOfType( annotationMirror, clazz.getName() );
+	}
 
-		return annotationClassName.equals( className );
+	/**
+	 * Returns {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
+	 * This method uses the string class names for comparison. See also {@link http://www.retep.org/2009/02/getting-class-values-from-annotations.html}.
+	 *
+	 * @param annotationMirror The annotation mirror
+	 * @param fqcn the fully qualified class name to check against
+	 *
+	 * @return {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
+	 */
+	public static boolean isAnnotationMirrorOfType(AnnotationMirror annotationMirror, String fqcn) {
+		assert annotationMirror != null;
+		assert fqcn != null;
+		String annotationClassName = annotationMirror.getAnnotationType().toString();
+
+		return annotationClassName.equals( fqcn );
 	}
 
 	public static boolean isTypeElementOfType(TypeElement element, Class<?> clazz) {

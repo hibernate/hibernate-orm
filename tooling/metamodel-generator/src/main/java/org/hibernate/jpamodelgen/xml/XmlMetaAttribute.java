@@ -21,6 +21,7 @@
 package org.hibernate.jpamodelgen.xml;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
+import org.hibernate.jpamodelgen.model.MetaEntity;
 
 /**
  * @author Hardy Ferentschik
@@ -51,6 +52,10 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 
 	public String getTypeDeclaration() {
 		return type;
+	}
+
+	public MetaEntity getParent() {
+		return parentEntity;
 	}
 
 	@Override

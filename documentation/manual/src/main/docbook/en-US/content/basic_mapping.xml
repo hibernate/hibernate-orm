@@ -5066,9 +5066,9 @@ class Home {
             <listitem>
               <para>a <literal>hibernate namespace</literal> is recognized
               whenever the resolver encounters a systemId starting with
-              <literal>http://www.hibernate.org/dtd/</literal>. The
-              resolver attempts to resolve these entities via the classloader
-              which loaded the Hibernate classes.</para>
+              <literal>http://www.hibernate.org/dtd/</literal>. The resolver
+              attempts to resolve these entities via the classloader which
+              loaded the Hibernate classes.</para>
             </listitem>
 
             <listitem>
@@ -5777,15 +5777,36 @@ class LineItem {
     the values of columns mapped to <link
     linkend="mapping-declaration-property">simple properties</link>. For
     example, if your database provides a set of data encryption functions, you
-    can invoke them for individual columns like this: 
-</para>
-<programlisting
-    role="XML">&lt;property name="creditCardNumber"&gt;
+    can invoke them for individual columns like this:</para>
+
+    <programlisting role="JAVA">@Entity
+class CreditCard {
+   @Column(name="credit_card_num")
+   @ReadExpression(
+      forColumn="credit_card_num", 
+      expression="decrypt(credit_card_num)")
+   @WriteExpression(
+      forColumn="credit_card_num", 
+      expression="encrypt(?)")
+   public String getCreditCardNumber() { return creditCardNumber; }
+   public void setCreditCardNumber(String number) { this.creditCardNumber = number; }
+   private String creditCardNumber;
+}</programlisting>
+
+    <para>or in XML</para>
+
+    <programlisting role="XML">&lt;property name="creditCardNumber"&gt;
         &lt;column 
           name="credit_card_num"
           read="decrypt(credit_card_num)"
           write="encrypt(?)"/&gt;
 &lt;/property&gt;</programlisting>
+
+    <note>
+      <para>When using <classname>@ReadExpression</classname> /
+      <classname>@WriteExpression</classname> annotations, you must explicitly
+      declare the <literal>@Column.name</literal> property.</para>
+    </note>
 
     <para>Hibernate applies the custom expressions automatically whenever the
     property is referenced in a query. This functionality is similar to a
@@ -5803,10 +5824,6 @@ class LineItem {
 
     <para>The <literal>write</literal> expression, if specified, must contain
     exactly one '?' placeholder for the value.</para>
-
-    <note>
-      <para>This feature is not supported in Annotations</para>
-    </note>
   </section>
 
   <section id="mapping-database-object">

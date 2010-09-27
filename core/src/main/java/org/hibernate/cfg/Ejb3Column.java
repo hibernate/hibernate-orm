@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat, Inc. and/or its affiliates or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
+ * distributed under license by Red Hat, Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -28,6 +28,11 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.ReadExpression;
+import org.hibernate.annotations.ReadExpressions;
+import org.hibernate.annotations.WriteExpression;
+import org.hibernate.annotations.WriteExpressions;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -66,6 +71,8 @@ public class Ejb3Column {
 	private String formulaString;
 	private Formula formula;
 	private Table table;
+	private String readExpression;
+	private String writeExpression;
 
 	public void setTable(Table table) {
 		this.table = table;
@@ -213,6 +220,19 @@ public class Ejb3Column {
 			this.mappingColumn.setNullable( nullable );
 			this.mappingColumn.setSqlType( sqlType );
 			this.mappingColumn.setUnique( unique );
+			
+			if(writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*")) {
+				throw new AnnotationException(
+						"@WriteExpression must contain exactly one value placeholder ('?') character: property ["
+								+ propertyName + "] and column [" + logicalColumnName + "]"
+				);
+			}
+			if ( readExpression != null) {
+				this.mappingColumn.setCustomRead( readExpression );
+			}
+			if ( writeExpression != null) {
+				this.mappingColumn.setCustomWrite( writeExpression );
+			}
 		}
 	}
 
@@ -451,12 +471,52 @@ public class Ejb3Column {
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
 					column.setMappings( mappings );
+					column.extractDataFromPropertyData(inferredData);
 					column.bind();
 					columns[index] = column;
 				}
 			}
 		}
 		return columns;
+	}
+
+	//must only be called after all setters are defined and before bind
+	private void extractDataFromPropertyData(PropertyData inferredData) {
+		if ( inferredData != null ) {
+			XProperty property = inferredData.getProperty();
+			if ( property != null ) {
+				{
+					processReadExpression( property.getAnnotation( ReadExpression.class ) );
+					ReadExpressions annotations = property.getAnnotation( ReadExpressions.class );
+					if (annotations != null) {
+						for ( ReadExpression annotation : annotations.value() ) {
+							processReadExpression( annotation );
+						}
+					}
+				}
+				{
+					processWriteExpression( property.getAnnotation( WriteExpression.class ) );
+					WriteExpressions annotations = property.getAnnotation( WriteExpressions.class );
+					if (annotations != null) {
+						for ( WriteExpression annotation : annotations.value() ) {
+							processWriteExpression( annotation );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void processReadExpression(ReadExpression annotation) {
+		if ( annotation != null && annotation.forColumn().equals( logicalColumnName ) ) {
+			readExpression = annotation.expression();
+		}
+	}
+
+	private void processWriteExpression(WriteExpression annotation) {
+		if ( annotation != null && annotation.forColumn().equals( logicalColumnName ) ) {
+			writeExpression = annotation.expression();
+		}
 	}
 
 	private static Ejb3Column[] buildImplicitColumn(
@@ -493,6 +553,7 @@ public class Ejb3Column {
 		else {
 			column.setImplicit( true );
 		}
+		column.extractDataFromPropertyData( inferredData );
 		column.bind();
 		return columns;
 	}

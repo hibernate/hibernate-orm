@@ -28,10 +28,8 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
-import org.hibernate.annotations.ReadExpression;
-import org.hibernate.annotations.ReadExpressions;
-import org.hibernate.annotations.WriteExpression;
-import org.hibernate.annotations.WriteExpressions;
+import org.hibernate.annotations.ReadWriteExpression;
+import org.hibernate.annotations.ReadWriteExpressions;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.mapping.Column;
@@ -485,37 +483,27 @@ public class Ejb3Column {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();
 			if ( property != null ) {
-				{
-					processReadExpression( property.getAnnotation( ReadExpression.class ) );
-					ReadExpressions annotations = property.getAnnotation( ReadExpressions.class );
-					if (annotations != null) {
-						for ( ReadExpression annotation : annotations.value() ) {
-							processReadExpression( annotation );
-						}
-					}
-				}
-				{
-					processWriteExpression( property.getAnnotation( WriteExpression.class ) );
-					WriteExpressions annotations = property.getAnnotation( WriteExpressions.class );
-					if (annotations != null) {
-						for ( WriteExpression annotation : annotations.value() ) {
-							processWriteExpression( annotation );
-						}
+				processExpression( property.getAnnotation( ReadWriteExpression.class ) );
+				ReadWriteExpressions annotations = property.getAnnotation( ReadWriteExpressions.class );
+				if (annotations != null) {
+					for ( ReadWriteExpression annotation : annotations.value() ) {
+						processExpression( annotation );
 					}
 				}
 			}
 		}
 	}
 
-	private void processReadExpression(ReadExpression annotation) {
+	private void processExpression(ReadWriteExpression annotation) {
 		if ( annotation != null && annotation.forColumn().equals( logicalColumnName ) ) {
-			readExpression = annotation.expression();
-		}
-	}
-
-	private void processWriteExpression(WriteExpression annotation) {
-		if ( annotation != null && annotation.forColumn().equals( logicalColumnName ) ) {
-			writeExpression = annotation.expression();
+			readExpression = annotation.read();
+			if ( StringHelper.isEmpty( readExpression ) ) {
+				readExpression = null;
+			}
+			writeExpression = annotation.write();
+			if ( StringHelper.isEmpty( writeExpression ) ) {
+				writeExpression = null;
+			}
 		}
 	}
 

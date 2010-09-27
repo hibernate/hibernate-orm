@@ -30,26 +30,13 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Custom SQL expression used to write the value to a column. True for direct object saving as well as insert queries.
- * The write expression must contain exactly one '?' placeholder for the value.
- *
- * For example: <code>encrypt(?)</code>
- *
- *
- *
+ * Plural annotation for @ReadWriteExpressions.
+ * Useful when more than one column is using this behavior.
+ *  
  * @author Emmanuel Bernard
  */
 @java.lang.annotation.Target({FIELD,METHOD})
 @Retention(RUNTIME)
-public @interface WriteExpression {
-	/**
-	 * (Logical) column name for which the expression is used
-	 */
-	String forColumn();
-
-	/**
-	 * Custom SQL expression used to write to the column.
-	 * The write expression must contain exactly one '?' placeholder for the value.
-	 */
-	String expression();
+public @interface ReadWriteExpressions {
+	ReadWriteExpression[] value();
 }

@@ -28,8 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ReadExpression;
-import org.hibernate.annotations.WriteExpression;
+import org.hibernate.annotations.ReadWriteExpression;
 
 /**
  * @author Emmanuel Bernard
@@ -50,15 +49,19 @@ public class Staff {
 	private Integer id;
 
 	@Column(name="size_in_cm")
-	@ReadExpression( forColumn = "size_in_cm", expression = "size_in_cm / 2.54" )
-	@WriteExpression( forColumn = "size_in_cm", expression = "? * 2.54" )
+	@ReadWriteExpression(
+			forColumn = "size_in_cm",
+			read = "size_in_cm / 2.54",
+			write = "? * 2.54" )
 	public double getSizeInInches() { return sizeInInches; }
 	public void setSizeInInches(double sizeInInches) {  this.sizeInInches = sizeInInches; }
 	private double sizeInInches;
 
 	@Column(name="radiusS")
-	@ReadExpression( forColumn = "radiusS", expression = "radiusS / 2.54" )
-	@WriteExpression( forColumn = "radiusS", expression = "? * 2.54" )
+	@ReadWriteExpression(
+			forColumn = "radiusS",
+			read = "radiusS / 2.54",
+			write = "? * 2.54" )
 	public double getRadiusS() { return radiusS; }
 	public void setRadiusS(double radiusS) {  this.radiusS = radiusS; }
 	private double radiusS;

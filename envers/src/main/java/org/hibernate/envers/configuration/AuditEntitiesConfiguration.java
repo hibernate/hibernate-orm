@@ -25,11 +25,17 @@ package org.hibernate.envers.configuration;
 
 import static org.hibernate.envers.tools.Tools.getProperty;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.hibernate.MappingException;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
+import org.hibernate.envers.strategy.ValidityAuditStrategy;
 
 /**
  * Configuration of versions entities - names of fields, entities and tables created to store versioning information.
@@ -55,9 +61,6 @@ public class AuditEntitiesConfiguration {
     private final Map<String, String> customAuditTablesNames;
 
     private final String revisionEndFieldName;
-    
-    private final boolean revisionEndTimestampEnabled;
-    private final String revisionEndTimestampFieldName;
 
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
@@ -94,21 +97,6 @@ public class AuditEntitiesConfiguration {
                 "org.hibernate.envers.audit_strategy_valid_time_end_name",
                 "REVEND");
 
-        String revisionEndTimestampEnabledStr = getProperty(properties,
-        		"org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
-        		"org.hibernate.envers.audit_strategy_validity_store_revend_timestamp",
-        		"false");
-        revisionEndTimestampEnabled = Boolean.parseBoolean(revisionEndTimestampEnabledStr);
-                
-        if (revisionEndTimestampEnabled) {
-            revisionEndTimestampFieldName = getProperty(properties,
-            		"org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
-            		"org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name",
-            		"REVEND_TSTMP");
-        } else {
-            revisionEndTimestampFieldName = null;
-        }
-        
         customAuditTablesNames = new HashMap<String, String>();
 
         revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
@@ -123,14 +111,6 @@ public class AuditEntitiesConfiguration {
         return revisionFieldName;
     }
 
-	public boolean isRevisionEndTimestampEnabled() {
-		return revisionEndTimestampEnabled;
-	}
-
-	public String getRevisionEndTimestampFieldName() {
-		return revisionEndTimestampFieldName;
-	}
-    
     public String getRevisionNumberPath() {
         return revisionNumberPath;
     }

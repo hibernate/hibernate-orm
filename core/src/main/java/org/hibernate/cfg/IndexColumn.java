@@ -88,8 +88,8 @@ public class IndexColumn extends Ejb3Column {
 			Mappings mappings) {
 		IndexColumn column;
 		if ( ann != null ) {
-			String sqlType = BinderHelper.isDefault( ann.columnDefinition() ) ? null : ann.columnDefinition();
-			String name = BinderHelper.isDefault( ann.name() ) ? inferredData.getPropertyName() + "_ORDER" : ann.name();
+			String sqlType = BinderHelper.isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
+			String name = BinderHelper.isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() + "_ORDER" : ann.name();
 			//TODO move it to a getter based system and remove the constructor
 // The JPA OrderColumn annotation defines no table element...
 //			column = new IndexColumn(
@@ -120,8 +120,8 @@ public class IndexColumn extends Ejb3Column {
 			Mappings mappings) {
 		IndexColumn column;
 		if ( ann != null ) {
-			String sqlType = BinderHelper.isDefault( ann.columnDefinition() ) ? null : ann.columnDefinition();
-			String name = BinderHelper.isDefault( ann.name() ) ? inferredData.getPropertyName() : ann.name();
+			String sqlType = BinderHelper.isEmptyAnnotationValue( ann.columnDefinition() ) ? null : ann.columnDefinition();
+			String name = BinderHelper.isEmptyAnnotationValue( ann.name() ) ? inferredData.getPropertyName() : ann.name();
 			//TODO move it to a getter based system and remove the constructor
 			column = new IndexColumn(
 					false, sqlType, 0, 0, 0, name, ann.nullable(),

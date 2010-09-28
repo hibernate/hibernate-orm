@@ -285,12 +285,12 @@ public class MapBinder extends CollectionBinder {
 					//the algorithm generally does not apply for map key anyway
 					MapKey mapKeyAnn = property.getAnnotation( org.hibernate.annotations.MapKey.class );
 					elementBinder.setKey(true);
-					if (mapKeyAnn != null && ! BinderHelper.isDefault( mapKeyAnn.type().type() ) ) {
+					if (mapKeyAnn != null && ! BinderHelper.isEmptyAnnotationValue( mapKeyAnn.type().type() ) ) {
 						elementBinder.setExplicitType( mapKeyAnn.type() );
 					}
 					else {
 						MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
-						if ( mapKeyTypeAnnotation != null && ! BinderHelper.isDefault( mapKeyTypeAnnotation.value().type() ) ) {
+						if ( mapKeyTypeAnnotation != null && ! BinderHelper.isEmptyAnnotationValue( mapKeyTypeAnnotation.value().type() ) ) {
 							elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
 						}
 						else {

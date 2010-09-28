@@ -114,7 +114,7 @@ public class OneToOneSecondPass implements SecondPass {
 		binder.setCascade( cascadeStrategy );
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		Property prop = binder.makeProperty();
-		if ( BinderHelper.isDefault( mappedBy ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
 			/*
 			 * we need to check if the columns are in the right order
 			 * if not, then we need to create a many to one and formula
@@ -236,7 +236,7 @@ public class OneToOneSecondPass implements SecondPass {
 		}
 		ForeignKey fk = inferredData.getProperty().getAnnotation( ForeignKey.class );
 		String fkName = fk != null ? fk.name() : "";
-		if ( !BinderHelper.isDefault( fkName ) ) value.setForeignKeyName( fkName );
+		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) value.setForeignKeyName( fkName );
 	}
 
 	/**

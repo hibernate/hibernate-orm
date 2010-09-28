@@ -59,7 +59,7 @@ public abstract class QueryBinder {
 
 	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
-		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 		//EJBQL Query
@@ -90,14 +90,14 @@ public abstract class QueryBinder {
 	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
-		if ( !BinderHelper.isDefault( resultSetMapping ) ) {
+		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
 			query = new NamedSQLQueryDefinition(
 					queryName,
@@ -151,25 +151,25 @@ public abstract class QueryBinder {
 	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
-		if ( !BinderHelper.isDefault( resultSetMapping ) ) {
+		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
 			query = new NamedSQLQueryDefinition(
 					queryAnn.query(),
 					resultSetMapping,
 					null,
 					queryAnn.cacheable(),
-					BinderHelper.isDefault( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
+					BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
 					queryAnn.timeout() < 0 ? null : queryAnn.timeout(),
 					queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize(),
 					getFlushMode( queryAnn.flushMode() ),
 					getCacheMode( queryAnn.cacheMode() ),
 					queryAnn.readOnly(),
-					BinderHelper.isDefault( queryAnn.comment() ) ? null : queryAnn.comment(),
+					BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment(),
 					null,
 					queryAnn.callable()
 			);
@@ -184,13 +184,13 @@ public abstract class QueryBinder {
 					new NativeSQLQueryReturn[] { entityQueryReturn },
 					null,
 					queryAnn.cacheable(),
-					BinderHelper.isDefault( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
+					BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
 					queryAnn.timeout() < 0 ? null : queryAnn.timeout(),
 					queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize(),
 					getFlushMode( queryAnn.flushMode() ),
 					getCacheMode( queryAnn.cacheMode() ),
 					queryAnn.readOnly(),
-					BinderHelper.isDefault( queryAnn.comment() ) ? null : queryAnn.comment(),
+					BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment(),
 					null,
 					queryAnn.callable()
 			);
@@ -227,7 +227,7 @@ public abstract class QueryBinder {
 
 	public static void bindQuery(org.hibernate.annotations.NamedQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
-		if ( BinderHelper.isDefault( queryAnn.name() ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 
@@ -237,13 +237,13 @@ public abstract class QueryBinder {
 		NamedQueryDefinition query = new NamedQueryDefinition(
 				queryAnn.query(),
 				queryAnn.cacheable(),
-				BinderHelper.isDefault( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
+				BinderHelper.isEmptyAnnotationValue( queryAnn.cacheRegion() ) ? null : queryAnn.cacheRegion(),
 				queryAnn.timeout() < 0 ? null : queryAnn.timeout(),
 				queryAnn.fetchSize() < 0 ? null : queryAnn.fetchSize(),
 				flushMode,
 				getCacheMode( queryAnn.cacheMode() ),
 				queryAnn.readOnly(),
-				BinderHelper.isDefault( queryAnn.comment() ) ? null : queryAnn.comment(),
+				BinderHelper.isEmptyAnnotationValue( queryAnn.comment() ) ? null : queryAnn.comment(),
 				null
 		);
 

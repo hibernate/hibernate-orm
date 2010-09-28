@@ -101,7 +101,7 @@ public class IdBagBinder extends BagBinder {
 			simpleValue.setTable( table );
 			simpleValue.setColumns( idColumns );
 			Type typeAnn = collectionIdAnn.type();
-			if ( typeAnn != null && !BinderHelper.isDefault( typeAnn.type() ) ) {
+			if ( typeAnn != null && !BinderHelper.isEmptyAnnotationValue( typeAnn.type() ) ) {
 				simpleValue.setExplicitType( typeAnn );
 			}
 			else {

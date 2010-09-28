@@ -170,7 +170,7 @@ public class EntityBinder {
 
 	private void bindEjb3Annotation(Entity ejb3Ann) {
 		if ( ejb3Ann == null ) throw new AssertionFailure( "@Entity should always be not null" );
-		if ( BinderHelper.isDefault( ejb3Ann.name() ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( ejb3Ann.name() ) ) {
 			name = StringHelper.unqualify( annotatedClass.getName() );
 		}
 		else {
@@ -243,7 +243,7 @@ public class EntityBinder {
 		}
 		else {
 			org.hibernate.annotations.Entity entityAnn = annotatedClass.getAnnotation( org.hibernate.annotations.Entity.class );
-			if ( entityAnn != null && !BinderHelper.isDefault( entityAnn.persister() ) ) {
+			if ( entityAnn != null && !BinderHelper.isEmptyAnnotationValue( entityAnn.persister() ) ) {
 				try {
 					persister = ReflectHelper.classForName( entityAnn.persister() );
 				}
@@ -319,7 +319,7 @@ public class EntityBinder {
 			for ( Map.Entry<String, String> filter : filters.entrySet() ) {
 				String filterName = filter.getKey();
 				String cond = filter.getValue();
-				if ( BinderHelper.isDefault( cond ) ) {
+				if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
 					FilterDefinition definition = mappings.getFilterDefinition( filterName );
 					cond = definition == null ? null : definition.getDefaultFilterCondition();
 					if ( StringHelper.isEmpty( cond ) ) {
@@ -606,7 +606,7 @@ public class EntityBinder {
 
 	private void setFKNameIfDefined(Join join) {
 		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
-		if ( matchingTable != null && !BinderHelper.isDefault( matchingTable.foreignKey().name() ) ) {
+		if ( matchingTable != null && !BinderHelper.isEmptyAnnotationValue( matchingTable.foreignKey().name() ) ) {
 			( (SimpleValue) join.getKey() ).setForeignKeyName( matchingTable.foreignKey().name() );
 		}
 	}
@@ -740,19 +740,19 @@ public class EntityBinder {
 			join.setSequentialSelect( FetchMode.JOIN != matchingTable.fetch() );
 			join.setInverse( matchingTable.inverse() );
 			join.setOptional( matchingTable.optional() );
-			if ( !BinderHelper.isDefault( matchingTable.sqlInsert().sql() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( matchingTable.sqlInsert().sql() ) ) {
 				join.setCustomSQLInsert( matchingTable.sqlInsert().sql().trim(),
 						matchingTable.sqlInsert().callable(),
 						ExecuteUpdateResultCheckStyle.parse( matchingTable.sqlInsert().check().toString().toLowerCase() )
 				);
 			}
-			if ( !BinderHelper.isDefault( matchingTable.sqlUpdate().sql() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( matchingTable.sqlUpdate().sql() ) ) {
 				join.setCustomSQLUpdate( matchingTable.sqlUpdate().sql().trim(),
 						matchingTable.sqlUpdate().callable(),
 						ExecuteUpdateResultCheckStyle.parse( matchingTable.sqlUpdate().check().toString().toLowerCase() )
 				);
 			}
-			if ( !BinderHelper.isDefault( matchingTable.sqlDelete().sql() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( matchingTable.sqlDelete().sql() ) ) {
 				join.setCustomSQLDelete( matchingTable.sqlDelete().sql().trim(),
 						matchingTable.sqlDelete().callable(),
 						ExecuteUpdateResultCheckStyle.parse( matchingTable.sqlDelete().check().toString().toLowerCase() )
@@ -782,7 +782,7 @@ public class EntityBinder {
 
 	public void setCache(Cache cacheAnn) {
 		if ( cacheAnn != null ) {
-			cacheRegion = BinderHelper.isDefault( cacheAnn.region() ) ?
+			cacheRegion = BinderHelper.isEmptyAnnotationValue( cacheAnn.region() ) ?
 					null :
 					cacheAnn.region();
 			cacheConcurrentStrategy = getCacheConcurrencyStrategy( cacheAnn.usage() );
@@ -853,7 +853,7 @@ public class EntityBinder {
 					"@org.hibernate.annotations.Table references an unknown table: " + appliedTable
 			);
 		}
-		if ( !BinderHelper.isDefault( table.comment() ) ) hibTable.setComment( table.comment() );
+		if ( !BinderHelper.isEmptyAnnotationValue( table.comment() ) ) hibTable.setComment( table.comment() );
 		TableBinder.addIndexes( hibTable, table.indexes(), mappings );
 	}
 

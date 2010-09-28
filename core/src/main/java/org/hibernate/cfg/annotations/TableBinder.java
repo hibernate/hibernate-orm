@@ -213,8 +213,8 @@ public class TableBinder {
 			Table denormalizedSuperTable,
 			Mappings mappings,
 			String subselect) {
-		schema = BinderHelper.isDefault( schema ) ? mappings.getSchemaName() : schema;
-		catalog = BinderHelper.isDefault( catalog ) ? mappings.getCatalogName() : catalog;
+		schema = BinderHelper.isEmptyAnnotationValue( schema ) ? mappings.getSchemaName() : schema;
+		catalog = BinderHelper.isEmptyAnnotationValue( catalog ) ? mappings.getCatalogName() : catalog;
 
 		String realTableName = mappings.getObjectNameNormalizer().normalizeDatabaseIdentifier(
 				nameSource.getExplicitName(),
@@ -282,8 +282,8 @@ public class TableBinder {
 			String constraints,
 			Table denormalizedSuperTable,
 			Mappings mappings) {
-		schema = BinderHelper.isDefault( schema ) ? mappings.getSchemaName() : schema;
-		catalog = BinderHelper.isDefault( catalog ) ? mappings.getCatalogName() : catalog;
+		schema = BinderHelper.isEmptyAnnotationValue( schema ) ? mappings.getSchemaName() : schema;
+		catalog = BinderHelper.isEmptyAnnotationValue( catalog ) ? mappings.getCatalogName() : catalog;
 		Table table;
 		if ( denormalizedSuperTable != null ) {
 			table = mappings.addDenormalizedTable(

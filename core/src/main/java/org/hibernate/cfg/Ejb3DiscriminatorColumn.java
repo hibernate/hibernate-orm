@@ -71,12 +71,12 @@ public class Ejb3DiscriminatorColumn extends Ejb3Column {
 		}
 		else if ( discAnn != null ) {
 			discriminatorColumn.setImplicit( false );
-			if ( !BinderHelper.isDefault( discAnn.columnDefinition() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( discAnn.columnDefinition() ) ) {
 				discriminatorColumn.setSqlType(
 						discAnn.columnDefinition()
 				);
 			}
-			if ( !BinderHelper.isDefault( discAnn.name() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( discAnn.name() ) ) {
 				discriminatorColumn.setLogicalColumnName( discAnn.name() );
 			}
 			discriminatorColumn.setNullable( false );

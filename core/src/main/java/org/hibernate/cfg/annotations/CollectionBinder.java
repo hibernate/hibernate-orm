@@ -224,7 +224,7 @@ public abstract class CollectionBinder {
 
 	public void setSqlOrderBy(OrderBy orderByAnn) {
 		if ( orderByAnn != null ) {
-			if ( !BinderHelper.isDefault( orderByAnn.clause() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( orderByAnn.clause() ) ) {
 				orderBy = orderByAnn.clause();
 			}
 		}
@@ -471,7 +471,7 @@ public abstract class CollectionBinder {
 		}
 
 		//work on association
-		boolean isMappedBy = !BinderHelper.isDefault( mappedBy );
+		boolean isMappedBy = !BinderHelper.isEmptyAnnotationValue( mappedBy );
 
 		if (isMappedBy
 				&& (property.isAnnotationPresent( JoinColumn.class )
@@ -672,7 +672,7 @@ public abstract class CollectionBinder {
 				&& !reversePropertyInJoin
 				&& oneToMany
 				&& !this.isExplicitAssociationTable
-				&& ( joinColumns[0].isImplicit() && !BinderHelper.isDefault( this.mappedBy ) //implicit @JoinColumn
+				&& ( joinColumns[0].isImplicit() && !BinderHelper.isEmptyAnnotationValue( this.mappedBy ) //implicit @JoinColumn
 				|| !fkJoinColumns[0].isImplicit() ) //this is an explicit @JoinColumn
 				) {
 			//this is a Foreign key
@@ -865,7 +865,7 @@ public abstract class CollectionBinder {
 	}
 
 	private String getCondition(String cond, String name) {
-		if ( BinderHelper.isDefault( cond ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( cond ) ) {
 			cond = mappings.getFilterDefinition( name ).getDefaultFilterCondition();
 			if ( StringHelper.isEmpty( cond ) ) {
 				throw new AnnotationException(
@@ -879,7 +879,7 @@ public abstract class CollectionBinder {
 
 	public void setCache(Cache cacheAnn) {
 		if ( cacheAnn != null ) {
-			cacheRegionName = BinderHelper.isDefault( cacheAnn.region() ) ? null : cacheAnn.region();
+			cacheRegionName = BinderHelper.isEmptyAnnotationValue( cacheAnn.region() ) ? null : cacheAnn.region();
 			cacheConcurrencyStrategy = EntityBinder.getCacheConcurrencyStrategy( cacheAnn.usage() );
 		}
 		else {
@@ -1123,7 +1123,7 @@ public abstract class CollectionBinder {
 		collValue.setKey( key );
 		ForeignKey fk = property != null ? property.getAnnotation( ForeignKey.class ) : null;
 		String fkName = fk != null ? fk.name() : "";
-		if ( !BinderHelper.isDefault( fkName ) ) key.setForeignKeyName( fkName );
+		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) key.setForeignKeyName( fkName );
 		return key;
 	}
 
@@ -1188,7 +1188,7 @@ public abstract class CollectionBinder {
 			}
 		}
 
-		boolean mappedBy = !BinderHelper.isDefault( joinColumns[0].getMappedBy() );
+		boolean mappedBy = !BinderHelper.isEmptyAnnotationValue( joinColumns[0].getMappedBy() );
 		if ( mappedBy ) {
 			if ( !isCollectionOfEntities ) {
 				StringBuilder error = new StringBuilder( 80 )
@@ -1281,7 +1281,7 @@ public abstract class CollectionBinder {
 			}
 			ForeignKey fk = property != null ? property.getAnnotation( ForeignKey.class ) : null;
 			String fkName = fk != null ? fk.inverseName() : "";
-			if ( !BinderHelper.isDefault( fkName ) ) element.setForeignKeyName( fkName );
+			if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) element.setForeignKeyName( fkName );
 		}
 		else if ( anyAnn != null ) {
 			//@ManyToAny

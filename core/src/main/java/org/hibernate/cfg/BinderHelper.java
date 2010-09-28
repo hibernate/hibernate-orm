@@ -499,7 +499,7 @@ public class BinderHelper {
 		// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 		params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, mappings.getObjectNameNormalizer() );
 
-		if ( !isDefault( generatorName ) ) {
+		if ( !isEmptyAnnotationValue( generatorName ) ) {
 			//we have a named generator
 			IdGenerator gen = mappings.getGenerator( generatorName, localGenerators );
 			if ( gen == null ) {
@@ -526,7 +526,7 @@ public class BinderHelper {
 		id.setIdentifierGeneratorProperties( params );
 	}
 
-	public static boolean isDefault(String annotationString) {
+	public static boolean isEmptyAnnotationValue(String annotationString) {
 		return annotationString != null && annotationString.length() == 0;
 		//equivalent to (but faster) ANNOTATION_STRING_DEFAULT.equals( annotationString );
 	}
@@ -628,7 +628,7 @@ public class BinderHelper {
 	}
 
 	private static void checkAnyMetaDefValidity(boolean mustHaveName, AnyMetaDef defAnn, XAnnotatedElement annotatedElement) {
-		if ( mustHaveName && isDefault( defAnn.name() ) ) {
+		if ( mustHaveName && isEmptyAnnotationValue( defAnn.name() ) ) {
 			String name = XClass.class.isAssignableFrom( annotatedElement.getClass() ) ?
 					( (XClass) annotatedElement ).getName() :
 					( (XPackage) annotatedElement ).getName();
@@ -637,7 +637,7 @@ public class BinderHelper {
 	}
 
 	private static void bindAnyMetaDef(AnyMetaDef defAnn, Mappings mappings) {
-		if ( isDefault( defAnn.name() ) ) return; //don't map not named definitions
+		if ( isEmptyAnnotationValue( defAnn.name() ) ) return; //don't map not named definitions
 		log.info( "Binding Any Meta definition: {}", defAnn.name() );
 		mappings.addAnyMetaDef( defAnn );
 	}

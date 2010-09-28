@@ -157,7 +157,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 				);
 			}
 
-			if ( !BinderHelper.isDefault( entity.discriminatorColumn() ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( entity.discriminatorColumn() ) ) {
 				final String quotingNormalizedName = mappings.getObjectNameNormalizer().normalizeIdentifierQuoting(
 						entity.discriminatorColumn()
 				);

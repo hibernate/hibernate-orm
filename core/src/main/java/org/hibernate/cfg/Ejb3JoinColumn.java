@@ -249,7 +249,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			String suffixForDefaultColumnName,
 			Mappings mappings) {
 		if ( ann != null ) {
-			if ( BinderHelper.isDefault( mappedBy ) ) {
+			if ( BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
 				throw new AnnotationException(
 						"Illegal attempt to define a @JoinColumn with a mappedBy association: "
 								+ BinderHelper.getRelativePath( propertyHolder, propertyName )
@@ -299,8 +299,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		}
 		else {
 			setImplicit( false );
-			if ( !BinderHelper.isDefault( annJoin.columnDefinition() ) ) setSqlType( annJoin.columnDefinition() );
-			if ( !BinderHelper.isDefault( annJoin.name() ) ) setLogicalColumnName( annJoin.name() );
+			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.columnDefinition() ) ) setSqlType( annJoin.columnDefinition() );
+			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.name() ) ) setLogicalColumnName( annJoin.name() );
 			setNullable( annJoin.nullable() );
 			setUnique( annJoin.unique() );
 			setInsertable( annJoin.insertable() );

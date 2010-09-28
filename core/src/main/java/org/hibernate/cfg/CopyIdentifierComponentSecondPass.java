@@ -78,7 +78,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		Map<String, Ejb3JoinColumn> columnByReferencedName = new HashMap<String, Ejb3JoinColumn>(joinColumns.length);
 		for (Ejb3JoinColumn joinColumn : joinColumns) {
 			final String referencedColumnName = joinColumn.getReferencedColumn();
-			if ( referencedColumnName == null || BinderHelper.isDefault( referencedColumnName ) ) {
+			if ( referencedColumnName == null || BinderHelper.isEmptyAnnotationValue( referencedColumnName ) ) {
 				break;
 			}
 			//JPA 2 requires referencedColumnNames to be case insensitive

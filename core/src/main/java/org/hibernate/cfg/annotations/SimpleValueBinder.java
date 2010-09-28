@@ -76,6 +76,7 @@ public class SimpleValueBinder {
 	private Table table;
 	private SimpleValue simpleValue;
 	private boolean isVersion;
+	private String timeStampVersionType;
 	//is a Map key
 	private boolean key;
 	private String referencedEntityName;
@@ -90,6 +91,10 @@ public class SimpleValueBinder {
 
 	public void setVersion(boolean isVersion) {
 		this.isVersion = isVersion;
+	}
+
+	public void setTimestampVersionType(String versionType) {
+		this.timeStampVersionType = versionType;
 	}
 
 	public void setPropertyName(String propertyName) {
@@ -114,8 +119,11 @@ public class SimpleValueBinder {
 	}
 
 	//TODO execute it lazily to be order safe
+
 	public void setType(XProperty property, XClass returnedClass) {
-		if ( returnedClass == null ) return; //we cannot guess anything
+		if ( returnedClass == null ) {
+			return;
+		} //we cannot guess anything
 		XClass returnedClassOrElement = returnedClass;
 		boolean isArray = false;
 		if ( property.isArray() ) {
@@ -125,8 +133,8 @@ public class SimpleValueBinder {
 		Properties typeParameters = this.typeParameters;
 		typeParameters.clear();
 		String type = BinderHelper.ANNOTATION_STRING_DEFAULT;
-		if ( (!key && property.isAnnotationPresent( Temporal.class ) ) 
-				|| (key && property.isAnnotationPresent( MapKeyTemporal.class ) )) {
+		if ( ( !key && property.isAnnotationPresent( Temporal.class ) )
+				|| ( key && property.isAnnotationPresent( MapKeyTemporal.class ) ) ) {
 
 			boolean isDate;
 			if ( mappings.getReflectionManager().equals( returnedClassOrElement, Date.class ) ) {
@@ -154,7 +162,8 @@ public class SimpleValueBinder {
 										+ StringHelper.qualify( persistentClassName, propertyName )
 						);
 					}
-					break;				case TIMESTAMP:
+					break;
+				case TIMESTAMP:
 					type = isDate ? "timestamp" : "calendar";
 					break;
 				default:
@@ -237,7 +246,7 @@ public class SimpleValueBinder {
 
 	private javax.persistence.EnumType getEnumType(XProperty property) {
 		javax.persistence.EnumType enumType = null;
-		if (key) {
+		if ( key ) {
 			MapKeyEnumerated enumAnn = property.getAnnotation( MapKeyEnumerated.class );
 			if ( enumAnn != null ) {
 				enumType = enumAnn.value();
@@ -253,7 +262,7 @@ public class SimpleValueBinder {
 	}
 
 	private TemporalType getTemporalType(XProperty property) {
-		if (key) {
+		if ( key ) {
 			MapKeyTemporal ann = property.getAnnotation( MapKeyTemporal.class );
 			return ann.value();
 		}
@@ -266,13 +275,14 @@ public class SimpleValueBinder {
 	public void setExplicitType(String explicitType) {
 		this.explicitType = explicitType;
 	}
-	
+
 	//FIXME raise an assertion failure  if setExplicitType(String) and setExplicitType(Type) are use at the same time
+
 	public void setExplicitType(Type typeAnn) {
 		if ( typeAnn != null ) {
 			explicitType = typeAnn.type();
 			typeParameters.clear();
-			for (Parameter param : typeAnn.parameters()) {
+			for ( Parameter param : typeAnn.parameters() ) {
 				typeParameters.setProperty( param.name(), param.value() );
 			}
 		}
@@ -288,7 +298,7 @@ public class SimpleValueBinder {
 	}
 
 	public SimpleValue make() {
-				
+
 		validate();
 		log.debug( "building SimpleValue for {}", propertyName );
 		if ( table == null ) {
@@ -299,10 +309,10 @@ public class SimpleValueBinder {
 		linkWithValue();
 
 		boolean isInSecondPass = mappings.isInSecondPass();
-		SetSimpleValueTypeSecondPass secondPass = new SetSimpleValueTypeSecondPass(this);
-		if (!isInSecondPass) {
+		SetSimpleValueTypeSecondPass secondPass = new SetSimpleValueTypeSecondPass( this );
+		if ( !isInSecondPass ) {
 			//Defer this to the second pass
-			mappings.addSecondPass(secondPass);
+			mappings.addSecondPass( secondPass );
 		}
 		else {
 			//We are already in second pass
@@ -312,23 +322,25 @@ public class SimpleValueBinder {
 	}
 
 	public void linkWithValue() {
-		if ( columns[0].isNameDeferred() && ! mappings.isInSecondPass() && referencedEntityName != null) {
+		if ( columns[0].isNameDeferred() && !mappings.isInSecondPass() && referencedEntityName != null ) {
 			mappings.addSecondPass(
-					new PkDrivenByDefaultMapsIdSecondPass( referencedEntityName, ( Ejb3JoinColumn[]) columns, simpleValue)
+					new PkDrivenByDefaultMapsIdSecondPass(
+							referencedEntityName, ( Ejb3JoinColumn[] ) columns, simpleValue
+					)
 			);
 		}
 		else {
-			for ( Ejb3Column column : columns) {
+			for ( Ejb3Column column : columns ) {
 				column.linkWithValue( simpleValue );
 			}
 		}
 	}
 
 	public void fillSimpleValue() {
-				
-		log.debug( "setting SimpleValue typeName for {}", propertyName );
-				
-		String type = BinderHelper.isDefault( explicitType ) ? returnedClassName : explicitType;
+
+		log.debug( "Setting SimpleValue typeName for {}", propertyName );
+
+		String type = BinderHelper.isEmptyAnnotationValue( explicitType ) ? returnedClassName : explicitType;
 		org.hibernate.mapping.TypeDef typeDef = mappings.getTypeDef( type );
 		if ( typeDef != null ) {
 			type = typeDef.getTypeClass();
@@ -342,11 +354,15 @@ public class SimpleValueBinder {
 		if ( persistentClassName != null ) {
 			simpleValue.setTypeUsingReflection( persistentClassName, propertyName );
 		}
-		
-		if ( !simpleValue.isTypeSpecified() && isVersion()) {
+
+		if ( !simpleValue.isTypeSpecified() && isVersion() ) {
 			simpleValue.setTypeName( "integer" );
 		}
-				
+
+		// HHH-5205
+		if ( timeStampVersionType != null ) {
+			simpleValue.setTypeName( timeStampVersionType );
+		}
 	}
 
 	public void setKey(boolean key) {

@@ -124,6 +124,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.Sort;
+import org.hibernate.annotations.Source;
 import org.hibernate.annotations.Tuplizer;
 import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
@@ -372,26 +373,26 @@ public final class AnnotationBinder {
 				idGen.setIdentifierGeneratorStrategy( org.hibernate.id.enhanced.TableGenerator.class.getName() );
 				idGen.addParam( org.hibernate.id.enhanced.TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 
-				if ( !BinderHelper.isDefault( tabGen.catalog() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.catalog() ) ) {
 					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.CATALOG, tabGen.catalog() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.schema() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.schema() ) ) {
 					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.SCHEMA, tabGen.schema() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.table() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.table() ) ) {
 					idGen.addParam( org.hibernate.id.enhanced.TableGenerator.TABLE_PARAM, tabGen.table() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.pkColumnName() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnName() ) ) {
 					idGen.addParam(
 							org.hibernate.id.enhanced.TableGenerator.SEGMENT_COLUMN_PARAM, tabGen.pkColumnName()
 					);
 				}
-				if ( !BinderHelper.isDefault( tabGen.pkColumnValue() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnValue() ) ) {
 					idGen.addParam(
 							org.hibernate.id.enhanced.TableGenerator.SEGMENT_VALUE_PARAM, tabGen.pkColumnValue()
 					);
 				}
-				if ( !BinderHelper.isDefault( tabGen.valueColumnName() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.valueColumnName() ) ) {
 					idGen.addParam(
 							org.hibernate.id.enhanced.TableGenerator.VALUE_COLUMN_PARAM, tabGen.valueColumnName()
 					);
@@ -412,13 +413,13 @@ public final class AnnotationBinder {
 			else {
 				idGen.setIdentifierGeneratorStrategy( MultipleHiLoPerTableGenerator.class.getName() );
 
-				if ( !BinderHelper.isDefault( tabGen.table() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.table() ) ) {
 					idGen.addParam( MultipleHiLoPerTableGenerator.ID_TABLE, tabGen.table() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.catalog() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.catalog() ) ) {
 					idGen.addParam( MultipleHiLoPerTableGenerator.CATALOG, tabGen.catalog() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.schema() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.schema() ) ) {
 					idGen.addParam( MultipleHiLoPerTableGenerator.SCHEMA, tabGen.schema() );
 				}
 				//FIXME implement uniqueconstrains
@@ -426,13 +427,13 @@ public final class AnnotationBinder {
 					log.warn( "Ignoring unique constraints specified on table generator [{}]", tabGen.name() );
 				}
 
-				if ( !BinderHelper.isDefault( tabGen.pkColumnName() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnName() ) ) {
 					idGen.addParam( MultipleHiLoPerTableGenerator.PK_COLUMN_NAME, tabGen.pkColumnName() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.valueColumnName() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.valueColumnName() ) ) {
 					idGen.addParam( MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME, tabGen.valueColumnName() );
 				}
-				if ( !BinderHelper.isDefault( tabGen.pkColumnValue() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( tabGen.pkColumnValue() ) ) {
 					idGen.addParam( MultipleHiLoPerTableGenerator.PK_VALUE_NAME, tabGen.pkColumnValue() );
 				}
 				idGen.addParam( TableHiLoGenerator.MAX_LO, String.valueOf( tabGen.allocationSize() - 1 ) );
@@ -445,13 +446,13 @@ public final class AnnotationBinder {
 			if ( useNewGeneratorMappings ) {
 				idGen.setIdentifierGeneratorStrategy( SequenceStyleGenerator.class.getName() );
 
-				if ( !BinderHelper.isDefault( seqGen.catalog() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.catalog() ) ) {
 					idGen.addParam( SequenceStyleGenerator.CATALOG, seqGen.catalog() );
 				}
-				if ( !BinderHelper.isDefault( seqGen.schema() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.schema() ) ) {
 					idGen.addParam( SequenceStyleGenerator.SCHEMA, seqGen.schema() );
 				}
-				if ( !BinderHelper.isDefault( seqGen.sequenceName() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.sequenceName() ) ) {
 					idGen.addParam( SequenceStyleGenerator.SEQUENCE_PARAM, seqGen.sequenceName() );
 				}
 				idGen.addParam( SequenceStyleGenerator.INCREMENT_PARAM, String.valueOf( seqGen.allocationSize() ) );
@@ -460,7 +461,7 @@ public final class AnnotationBinder {
 			else {
 				idGen.setIdentifierGeneratorStrategy( "seqhilo" );
 
-				if ( !BinderHelper.isDefault( seqGen.sequenceName() ) ) {
+				if ( !BinderHelper.isEmptyAnnotationValue( seqGen.sequenceName() ) ) {
 					idGen.addParam( org.hibernate.id.SequenceGenerator.SEQUENCE, seqGen.sequenceName() );
 				}
 				//FIXME: work on initialValue() through SequenceGenerator.PARAMETERS
@@ -658,7 +659,7 @@ public final class AnnotationBinder {
 			SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
 			jsc.setKey( key );
 			ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
-			if ( fk != null && !BinderHelper.isDefault( fk.name() ) ) {
+			if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
 				key.setForeignKeyName( fk.name() );
 			}
 			if ( onDeleteAnn != null ) {
@@ -1302,14 +1303,14 @@ public final class AnnotationBinder {
 			params.setProperty( param.name(), param.value() );
 		}
 
-		if ( BinderHelper.isDefault( defAnn.name() ) && defAnn.defaultForType().equals( void.class ) ) {
+		if ( BinderHelper.isEmptyAnnotationValue( defAnn.name() ) && defAnn.defaultForType().equals( void.class ) ) {
 			throw new AnnotationException(
 					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass " +
 							defAnn.typeClass().getName()
 			);
 		}
 
-		if ( !BinderHelper.isDefault( defAnn.name() ) ) {
+		if ( !BinderHelper.isEmptyAnnotationValue( defAnn.name() ) ) {
 			log.info( "Binding type definition: {}", defAnn.name() );
 			mappings.addTypeDef( defAnn.name(), defAnn.typeClass().getName(), params );
 		}
@@ -1501,7 +1502,7 @@ public final class AnnotationBinder {
 			RootClass rootClass = ( RootClass ) propertyHolder.getPersistentClass();
 			propertyBinder.setColumns( columns );
 			Property prop = propertyBinder.makePropertyValueAndBind();
-			propertyBinder.getSimpleValueBinder().setVersion( true );
+			setVersionInformation( property, propertyBinder );
 			rootClass.setVersion( prop );
 
 			//If version is on a mapped superclass, update the mapping
@@ -2088,6 +2089,14 @@ public final class AnnotationBinder {
 		}
 	}
 
+	private static void setVersionInformation(XProperty property, PropertyBinder propertyBinder) {
+		propertyBinder.getSimpleValueBinder().setVersion( true );		
+		if(property.isAnnotationPresent( Source.class )) {
+			Source source = property.getAnnotation( Source.class );
+			propertyBinder.getSimpleValueBinder().setTimestampVersionType( source.value().typeName() );
+		}
+	}
+
 	private static void processId(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
@@ -2174,13 +2183,13 @@ public final class AnnotationBinder {
 
 			collectionBinder.setExplicitAssociationTable( true );
 
-			if ( !BinderHelper.isDefault( schema ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( schema ) ) {
 				associationTableBinder.setSchema( schema );
 			}
-			if ( !BinderHelper.isDefault( catalog ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( catalog ) ) {
 				associationTableBinder.setCatalog( catalog );
 			}
-			if ( !BinderHelper.isDefault( tableName ) ) {
+			if ( !BinderHelper.isEmptyAnnotationValue( tableName ) ) {
 				associationTableBinder.setName( tableName );
 			}
 			associationTableBinder.setUniqueConstraints( uniqueConstraints );
@@ -2605,7 +2614,7 @@ public final class AnnotationBinder {
 		String fkName = fk != null ?
 				fk.name() :
 				"";
-		if ( !BinderHelper.isDefault( fkName ) ) {
+		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) {
 			value.setForeignKeyName( fkName );
 		}
 
@@ -2739,7 +2748,7 @@ public final class AnnotationBinder {
 				}
 			}
 		}
-		if ( trueOneToOne || mapToPK || !BinderHelper.isDefault( mappedBy ) ) {
+		if ( trueOneToOne || mapToPK || !BinderHelper.isEmptyAnnotationValue( mappedBy ) ) {
 			//is a true one-to-one
 			//FIXME referencedColumnName ignored => ordering may fail.
 			OneToOneSecondPass secondPass = new OneToOneSecondPass(
@@ -2754,7 +2763,7 @@ public final class AnnotationBinder {
 			}
 			else {
 				mappings.addSecondPass(
-						secondPass, BinderHelper.isDefault( mappedBy )
+						secondPass, BinderHelper.isEmptyAnnotationValue( mappedBy )
 				);
 			}
 		}

@@ -68,6 +68,7 @@
             <package name="org.hibernate.envers.test.integration.secondary" />
             <package name="org.hibernate.envers.test.integration.secondary.ids" />
             <package name="org.hibernate.envers.test.integration.serialization" />
+            <package name="org.hibernate.envers.test.integration.strategy" />
             <package name="org.hibernate.envers.test.integration.superclass" /> 
             <package name="org.hibernate.envers.test.integration.entityNames.auditedEntity" />
             <package name="org.hibernate.envers.test.integration.entityNames.manyToManyAudited" />

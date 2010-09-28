@@ -55,6 +55,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
+import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ import org.slf4j.LoggerFactory;
  * @author Sebastian Komander
  * @author Tomasz Bech
  * @author Stephanie Pau at Markit Group Plc
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  */
 public final class AuditMetadataGenerator {
     private static final Logger log = LoggerFactory.getLogger(AuditMetadataGenerator.class);
@@ -144,7 +145,7 @@ public final class AuditMetadataGenerator {
         addEndRevision(any_mapping);
     }
 
-    private void addEndRevision(Element any_mapping) {
+    private void addEndRevision(Element any_mapping ) {
         // Add the end-revision field, if the appropriate strategy is used.
         if (auditStrategy instanceof ValidityAuditStrategy) {
             Element end_rev_mapping = (Element) revisionInfoRelationMapping.clone();
@@ -153,10 +154,16 @@ public final class AuditMetadataGenerator {
             MetadataTools.addOrModifyColumn(end_rev_mapping, verEntCfg.getRevisionEndFieldName());
 
             any_mapping.add(end_rev_mapping);
+            
+            if (verEntCfg.isRevisionEndTimestampEnabled()) {
+            	// add a column for the timestamp of the end revision
+            	String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
+            	Element timestampProperty = MetadataTools.addProperty(any_mapping, verEntCfg.getRevisionEndTimestampFieldName(), revisionInfoTimestampSqlType, true, true, false);
+            	MetadataTools.addColumn(timestampProperty, verEntCfg.getRevisionEndTimestampFieldName(), 0, 0, 0, null);
+            }
         }
     }
 
-    @SuppressWarnings({"unchecked"})
     void addValue(Element parent, Value value, CompositeMapperBuilder currentMapper, String entityName,
                   EntityXmlMappingData xmlMappingData, PropertyAuditingData propertyAuditingData,
                   boolean insertable, boolean firstPass) {
@@ -204,7 +211,6 @@ public final class AuditMetadataGenerator {
         }
     }
 
-    @SuppressWarnings({"unchecked"})
     private void addProperties(Element parent, Iterator<Property> properties, CompositeMapperBuilder currentMapper,
                                ClassAuditingData auditingData, String entityName, EntityXmlMappingData xmlMappingData,
                                boolean firstPass) {

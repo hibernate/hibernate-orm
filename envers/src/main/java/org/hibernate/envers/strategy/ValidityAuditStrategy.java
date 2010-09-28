@@ -1,6 +1,7 @@
 package org.hibernate.envers.strategy;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.property.Getter;
 
 /**
  *  Audit strategy which persists and retrieves audit information using a validity algorithm, based on the 
@@ -39,7 +41,11 @@ import org.hibernate.envers.tools.query.QueryBuilder;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ValidityAuditStrategy implements AuditStrategy {
-    public void perform(Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
+	
+	/** getter for the revision entity field annotated with @RevisionTimestamp */ 
+	private Getter revisionTimestampGetter = null;
+	
+	public void perform(Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
                         Object revision) {
         AuditEntitiesConfiguration audEntCfg = auditCfg.getAuditEntCfg();
         String auditedEntityName = audEntCfg.getAuditEntityName(entityName);
@@ -68,27 +74,22 @@ public class ValidityAuditStrategy implements AuditStrategy {
     public void performCollectionChange(Session session, AuditConfiguration auditCfg,
                                         PersistentCollectionChangeData persistentCollectionChangeData, Object revision) {
         // Update the end date of the previous row if this operation is expected to have a previous row
-        if (getRevisionType(auditCfg, persistentCollectionChangeData.getData()) != RevisionType.ADD) {
-            /*
-             Constructing a query (there are multiple id fields):
-             select e from audited_middle_ent e where e.end_rev is null and e.id1 = :id1 and e.id2 = :id2 ...
-             */
+        // Constructing a query (there are multiple id fields):
+        // select e from audited_middle_ent e where e.end_rev is null and e.id1 = :id1 and e.id2 = :id2 ...
 
-            QueryBuilder qb = new QueryBuilder(persistentCollectionChangeData.getEntityName(), "e");
+        QueryBuilder qb = new QueryBuilder(persistentCollectionChangeData.getEntityName(), "e");
 
-            // Adding a parameter for each id component, except the rev number
-            String originalIdPropName = auditCfg.getAuditEntCfg().getOriginalIdPropName();
-            Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData.getData().get(
+        // Adding a parameter for each id component, except the rev number
+        String originalIdPropName = auditCfg.getAuditEntCfg().getOriginalIdPropName();
+        Map<String, Object> originalId = (Map<String, Object>) persistentCollectionChangeData.getData().get(
                     originalIdPropName);
-            for (Map.Entry<String, Object> originalIdEntry : originalId.entrySet()) {
-                if (!auditCfg.getAuditEntCfg().getRevisionFieldName().equals(originalIdEntry.getKey())) {
-                    qb.getRootParameters().addWhereWithParam(originalIdPropName + "." + originalIdEntry.getKey(),
-                            true, "=", originalIdEntry.getValue());
-                }
-            }
-
-            updateLastRevision(session, auditCfg, qb, originalId, persistentCollectionChangeData.getEntityName(), revision);
+        for (Map.Entry<String, Object> originalIdEntry : originalId.entrySet()) {
+           if (!auditCfg.getAuditEntCfg().getRevisionFieldName().equals(originalIdEntry.getKey())) {
+              qb.getRootParameters().addWhereWithParam(originalIdPropName + "." + originalIdEntry.getKey(),
+              true, "=", originalIdEntry.getValue());
+           }
         }
+        updateLastRevision(session, auditCfg, qb, originalId, persistentCollectionChangeData.getEntityName(), revision);
 
         // Save the audit data
         session.save(persistentCollectionChangeData.getEntityName(), persistentCollectionChangeData.getData());
@@ -110,7 +111,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
 	}
     
-    private void addRevisionRestriction(Parameters rootParameters,  
+	public void setRevisionTimestampGetter(Getter revisionTimestampGetter) {
+		this.revisionTimestampGetter = revisionTimestampGetter;
+	}
+
+	private void addRevisionRestriction(Parameters rootParameters,  
 			String revisionProperty, String revisionEndProperty, boolean addAlias) {
     	
 		// e.revision <= _revision and (e.endRevision > _revision or e.endRevision is null)
@@ -129,7 +134,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
     private void updateLastRevision(Session session, AuditConfiguration auditCfg, QueryBuilder qb,
                                     Object id, String auditedEntityName, Object revision) {
         String revisionEndFieldName = auditCfg.getAuditEntCfg().getRevisionEndFieldName();
-
+        
         // e.end_rev is null
         qb.getRootParameters().addWhere(revisionEndFieldName, true, "is", "null", false);
 
@@ -141,10 +146,28 @@ public class ValidityAuditStrategy implements AuditStrategy {
             Object previousData = l.get(0);
             ((Map<String, Object>) previousData).put(revisionEndFieldName, revision);
 
+            if (auditCfg.getAuditEntCfg().isRevisionEndTimestampEnabled()) {
+                // Determine the value of the revision property annotated with @RevisionTimestamp
+            	Date revisionEndTimestamp;
+            	String revEndTimestampFieldName = auditCfg.getAuditEntCfg().getRevisionEndTimestampFieldName();
+            	Object revEndTimestampObj = this.revisionTimestampGetter.get(revision);
+
+            	// convert to a java.util.Date
+            	if (revEndTimestampObj instanceof Date) {
+            		revisionEndTimestamp = (Date) revEndTimestampObj;
+            	} else {
+            		revisionEndTimestamp = new Date((Long) revEndTimestampObj);
+            	}
+
+            	// Setting the end revision timestamp
+            	((Map<String, Object>) previousData).put(revEndTimestampFieldName, revisionEndTimestamp);
+            }
+            
             // Saving the previous version
             session.save(auditedEntityName, previousData);
-        } else {
-            throw new RuntimeException("Cannot find previous revision for entity " + auditedEntityName + " and id " + id);
+
+        } else if(l.size() > 1) {
+            throw new RuntimeException("Cannot find previous revision for entity " + auditedEntityName + " and id " + id + " received " + l.size() + " rows back");
         }
     }
 }

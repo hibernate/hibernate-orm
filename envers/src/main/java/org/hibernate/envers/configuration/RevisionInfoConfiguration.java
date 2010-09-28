@@ -29,7 +29,6 @@ import java.util.Iterator;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.hibernate.envers.Audited;
 import org.hibernate.envers.*;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.configuration.metadata.MetadataTools;
@@ -176,7 +175,6 @@ public class RevisionInfoConfiguration {
                 "property");
     }
 
-    @SuppressWarnings({"unchecked"})
     public RevisionInfoConfigurationResult configure(Configuration cfg, ReflectionManager reflectionManager) {
         Iterator<PersistentClass> classes = (Iterator<PersistentClass>) cfg.getClassMappings();
         boolean revisionEntityFound = false;
@@ -245,7 +243,8 @@ public class RevisionInfoConfiguration {
                 new RevisionInfoQueryCreator(revisionInfoEntityName, revisionInfoIdData.getName(),
                         revisionInfoTimestampData.getName(), isTimestampAsDate()),
                 generateRevisionInfoRelationMapping(),
-                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName);
+                new RevisionInfoNumberReader(revisionInfoClass, revisionInfoIdData), revisionInfoEntityName, 
+                revisionInfoClass, revisionInfoTimestampData);
     }
     
     private boolean isTimestampAsDate() {
@@ -261,17 +260,22 @@ class RevisionInfoConfigurationResult {
     private final Element revisionInfoRelationMapping;
     private final RevisionInfoNumberReader revisionInfoNumberReader;
     private final String revisionInfoEntityName;
+    private final Class<?> revisionInfoClass;
+    private final PropertyData revisionInfoTimestampData;
 
     RevisionInfoConfigurationResult(RevisionInfoGenerator revisionInfoGenerator,
                                     Document revisionInfoXmlMapping, RevisionInfoQueryCreator revisionInfoQueryCreator,
                                     Element revisionInfoRelationMapping,
-                                    RevisionInfoNumberReader revisionInfoNumberReader, String revisionInfoEntityName) {
+                                    RevisionInfoNumberReader revisionInfoNumberReader, String revisionInfoEntityName,  Class<?> revisionInfoClass,
+                                    PropertyData revisionInfoTimestampData) {
         this.revisionInfoGenerator = revisionInfoGenerator;
         this.revisionInfoXmlMapping = revisionInfoXmlMapping;
         this.revisionInfoQueryCreator = revisionInfoQueryCreator;
         this.revisionInfoRelationMapping = revisionInfoRelationMapping;
         this.revisionInfoNumberReader = revisionInfoNumberReader;
         this.revisionInfoEntityName = revisionInfoEntityName;
+        this.revisionInfoClass = revisionInfoClass;
+        this.revisionInfoTimestampData = revisionInfoTimestampData;
     }
 
     public RevisionInfoGenerator getRevisionInfoGenerator() {
@@ -297,4 +301,13 @@ class RevisionInfoConfigurationResult {
     public String getRevisionInfoEntityName() {
         return revisionInfoEntityName;
     }
+
+	public Class<?> getRevisionInfoClass() {
+		return revisionInfoClass;
+	}
+
+	public PropertyData getRevisionInfoTimestampData() {
+		return revisionInfoTimestampData;
+	}
+    
 }

@@ -49,7 +49,7 @@ public class MetadataTools {
         return id_mapping;
     }
 
-    public static Element addProperty(Element parent, String name, String type, boolean insertable, boolean key) {
+    public static Element addProperty(Element parent, String name, String type, boolean insertable, boolean updateable, boolean key) {
         Element prop_mapping;
         if (key) {
             prop_mapping = parent.addElement("key-property");
@@ -59,13 +59,17 @@ public class MetadataTools {
 
         prop_mapping.addAttribute("name", name);
         prop_mapping.addAttribute("insert", Boolean.toString(insertable));
-        prop_mapping.addAttribute("update", "false");
+        prop_mapping.addAttribute("update", Boolean.toString(updateable));
 
         if (type != null) {
             prop_mapping.addAttribute("type", type);
         }
 
         return prop_mapping;
+    }
+
+    public static Element addProperty(Element parent, String name, String type, boolean insertable, boolean key) {
+        return addProperty(parent, name, type, insertable, false, key);
     }
 
     private static void addOrModifyAttribute(Element parent, String name, String value) {

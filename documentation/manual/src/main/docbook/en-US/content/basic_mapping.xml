@@ -3385,22 +3385,52 @@ public class A320 extends Plane { ... }          </programlisting>
           the table-per-class-hierarchy mapping strategy. It declares a
           discriminator column of the table. The discriminator column contains
           marker values that tell the persistence layer what subclass to
-          instantiate for a particular row. A restricted set of types can be
-          used: <literal>string</literal>, <literal>character</literal>,
+          instantiate for a particular row. Hibernate Core supports the
+          follwoing restricted set of types as discriminator column:
+          <literal>string</literal>, <literal>character</literal>,
           <literal>integer</literal>, <literal>byte</literal>,
           <literal>short</literal>, <literal>boolean</literal>,
           <literal>yes_no</literal>, <literal>true_false</literal>.</para>
 
           <para>Use the <classname>@DiscriminatorColumn</classname> to define
-          the discriminator column as well as the discriminator type.
-          Alternatively, you can also use
-          <classname>@DiscriminatorFormula</classname> to express in SQL what
-          would be in a virtual discriminator column. This is particularly
-          handy when the discriminator value can be extracted from one or more
-          columns of the table. Both
-          <classname>@DiscriminatorColumn</classname> and
+          the discriminator column as well as the discriminator type. <note>
+              <para><classname>The enum DiscriminatorType</classname> used in
+              <classname>javax.persitence.DiscriminatorColumn</classname> only
+              contains the values <constant>STRING</constant>,
+              <constant>CHAR</constant> and <constant>INTEGER</constant> which
+              means that not all Hibernate supported types are available via
+              the <classname>@DiscriminatorColumn</classname>
+              annotation.</para>
+            </note>You can also use
+          <classname>@DiscriminatorFormula</classname> to express in SQL a
+          virtual discriminator column. This is particularly useful when the
+          discriminator value can be extracted from one or more columns of the
+          table. Both <classname>@DiscriminatorColumn</classname> and
           <classname>@DiscriminatorFormula</classname> are to be set on the
           root entity (once per persisted hierarchy).</para>
+
+          <para><classname>@org.hibernate.annotations.DiscriminatorOptions</classname>
+          allows to optionally specify Hibernate specific discriminator
+          options which are not standardized in JPA. The available options are
+          <literal>force</literal> and <literal>insert</literal>. The
+          <literal>force</literal> attribute is useful if the table contains
+          rows with "extra" discriminator values that are not mapped to a
+          persistent class. This could for example occur when working with a
+          legacy database. If <literal>force</literal> is set to
+          <constant>true</constant> Hibernate will specify the allowed
+          discriminator values in the <literal>SELECT</literal> query, even
+          when retrieving all instances of the root class. The second option -
+          <literal>insert</literal> - tells Hibernate whether or not to
+          include the discriminator column in SQL <literal>INSERTs</literal>.
+          Usually the column should be part of the <literal>INSERT</literal>
+          statement, but if your discriminator column is also part of a mapped
+          composite identifier you have to set this option to
+          <constant>false</constant>.<tip>
+              <para>There is also a
+              <classname>@org.hibernate.annotations.ForceDiscriminator</classname>
+              annotation which is deprecated since version 3.6. Use
+              <classname>@DiscriminatorOptions</classname> instead.</para>
+            </tip></para>
 
           <para>Finally, use <classname>@DiscriminatorValue</classname> on
           each class of the hierarchy to specify the value stored in the
@@ -3486,11 +3516,6 @@ public class A320 extends Plane { ... }          </programlisting>
           <literal>discriminator-value</literal> attribute of the
           <literal>&lt;class&gt;</literal> and
           <literal>&lt;subclass&gt;</literal> elements.</para>
-
-          <para>The <literal>force</literal> attribute is only useful if the
-          table contains rows with "extra" discriminator values that are not
-          mapped to a persistent class. This will not usually be the
-          case.</para>
 
           <para>The <literal>formula</literal> attribute allows you to declare
           an arbitrary SQL expression that will be used to evaluate the type

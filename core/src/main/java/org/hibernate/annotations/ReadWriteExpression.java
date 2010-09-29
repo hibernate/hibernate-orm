@@ -44,7 +44,7 @@ public @interface ReadWriteExpression {
 	/**
 	 * (Logical) column name for which the expression is used
 	 */
-	String forColumn();
+	String forColumn() default "";
 
 	/**
 	 * Custom SQL expression used to read from the column

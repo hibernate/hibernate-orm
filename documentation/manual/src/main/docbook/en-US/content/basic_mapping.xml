@@ -5794,7 +5794,6 @@ class LineItem {
 class CreditCard {
    @Column(name="credit_card_num")
    @ReadWriteExpression(
-      forColumn="credit_card_num", 
       read="decrypt(credit_card_num)", 
       write="encrypt(?)")
    public String getCreditCardNumber() { return creditCardNumber; }
@@ -5812,11 +5811,29 @@ class CreditCard {
 &lt;/property&gt;</programlisting>
 
     <note>
-      <para>When using <classname>@ReadWriteExpression</classname>, you must
-      explicitly declare the <literal>@Column.name</literal> property. You can
-      use the plural form <classname>@ReadWriteExpressions</classname> if more
-      than one columns need to define either of these rules.</para>
+      <para>You can use the plural form
+      <classname>@ReadWriteExpressions</classname> if more than one columns
+      need to define either of these rules.</para>
     </note>
+
+    <para>If a property uses more that one column, you must use the
+    <literal>forColumn</literal> attribute to specify which column, the
+    expressions are targeting.</para>
+
+    <programlisting role="JAVA">@Entity
+class User {
+   @Type(type="com.acme.type.CreditCardType")
+   @Columns( {
+      @Column(name="credit_card_num"),
+      @Column(name="exp_date") } )
+   @ReadWriteExpression(
+      forColumn="credit_card_num", 
+      read="decrypt(credit_card_num)", 
+      write="encrypt(?)")
+   public CreditCard getCreditCard() { return creditCard; }
+   public void setCreditCard(CreditCard card) { this.creditCard = card; }
+   private CreditCard creditCard;
+}</programlisting>
 
     <para>Hibernate applies the custom expressions automatically whenever the
     property is referenced in a query. This functionality is similar to a

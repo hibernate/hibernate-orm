@@ -57,9 +57,7 @@ public class Staff {
 	public void setSizeInInches(double sizeInInches) {  this.sizeInInches = sizeInInches; }
 	private double sizeInInches;
 
-	@Column(name="radiusS")
 	@ReadWriteExpression(
-			forColumn = "radiusS",
 			read = "radiusS / 2.54",
 			write = "? * 2.54" )
 	public double getRadiusS() { return radiusS; }

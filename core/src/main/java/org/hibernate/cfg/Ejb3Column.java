@@ -495,7 +495,8 @@ public class Ejb3Column {
 	}
 
 	private void processExpression(ReadWriteExpression annotation) {
-		if ( annotation != null && annotation.forColumn().equals( logicalColumnName ) ) {
+		String nonNullLogicalColumnName = logicalColumnName != null ? logicalColumnName : ""; //use the default for annotations 
+		if ( annotation != null && annotation.forColumn().equals( nonNullLogicalColumnName ) ) {
 			readExpression = annotation.read();
 			if ( StringHelper.isEmpty( readExpression ) ) {
 				readExpression = null;

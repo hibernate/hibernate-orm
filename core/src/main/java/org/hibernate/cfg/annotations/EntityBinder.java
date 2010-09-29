@@ -43,7 +43,6 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.ForceDiscriminator;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.OptimisticLockType;
@@ -102,6 +101,8 @@ public class EntityBinder {
 	private Mappings mappings;
 	private Logger log = LoggerFactory.getLogger( EntityBinder.class );
 	private String discriminatorValue = "";
+	private Boolean forceDiscriminator;
+	private Boolean insertableDiscriminator;
 	private boolean dynamicInsert;
 	private boolean dynamicUpdate;
 	private boolean explicitHibernateEntityAnnotation;
@@ -182,6 +183,14 @@ public class EntityBinder {
 		this.discriminatorValue = discriminatorValue;
 	}
 
+	public void setForceDiscriminator(boolean forceDiscriminator) {
+		this.forceDiscriminator = forceDiscriminator;
+	}
+
+	public void setInsertableDiscriminator(boolean insertableDiscriminator) {
+		this.insertableDiscriminator = insertableDiscriminator;
+	}
+
 	public void bindEntity() {
 		persistentClass.setAbstract( annotatedClass.isAbstract() );
 		persistentClass.setClassName( annotatedClass.getName() );
@@ -219,7 +228,12 @@ public class EntityBinder {
 				rootClass.setCacheRegionName( cacheRegion );
 				rootClass.setLazyPropertiesCacheable( cacheLazyProperty );
 			}
-			rootClass.setForceDiscriminator( annotatedClass.isAnnotationPresent( ForceDiscriminator.class ) );
+			if(forceDiscriminator != null) {
+				rootClass.setForceDiscriminator( forceDiscriminator );
+			}
+			if( insertableDiscriminator != null) {
+				rootClass.setDiscriminatorInsertable( insertableDiscriminator );
+			}
 		}
 		else {
 			if ( explicitHibernateEntityAnnotation ) {

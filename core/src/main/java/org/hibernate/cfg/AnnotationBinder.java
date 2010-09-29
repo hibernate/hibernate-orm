@@ -97,6 +97,7 @@ import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
@@ -104,6 +105,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ForceDiscriminator;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
@@ -533,6 +535,16 @@ public final class AnnotationBinder {
 				clazzToProcess, inheritanceStatePerClass, mappings, inheritanceState
 		);
 
+		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
+		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );
+		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
+				org.hibernate.annotations.Entity.class
+		);
+		EntityBinder entityBinder = new EntityBinder(
+				entityAnn, hibEntityAnn, clazzToProcess, persistentClass, mappings
+		);
+		entityBinder.setInheritanceState( inheritanceState );
+
 		bindQueries( clazzToProcess, mappings );
 		bindFilterDefs( clazzToProcess, mappings );
 		bindTypeDefs( clazzToProcess, mappings );
@@ -555,56 +567,16 @@ public final class AnnotationBinder {
 				clazzToProcess, mappings, inheritanceState, superEntity
 		);
 		Ejb3DiscriminatorColumn discriminatorColumn = null;
-		String discrimValue = null;
 		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-			javax.persistence.DiscriminatorColumn discAnn = clazzToProcess.getAnnotation(
-					javax.persistence.DiscriminatorColumn.class
+			discriminatorColumn = processDiscriminatorProperties(
+					clazzToProcess, mappings, inheritanceState, entityBinder
 			);
-			DiscriminatorType discriminatorType = discAnn != null ?
-					discAnn.discriminatorType() :
-					DiscriminatorType.STRING;
-
-			org.hibernate.annotations.DiscriminatorFormula discFormulaAnn = clazzToProcess.getAnnotation(
-					org.hibernate.annotations.DiscriminatorFormula.class
-			);
-			if ( !inheritanceState.hasParents() ) {
-				discriminatorColumn = Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
-						discriminatorType, discAnn, discFormulaAnn, mappings
-				);
-			}
-			if ( discAnn != null && inheritanceState.hasParents() ) {
-				log.warn(
-						"Discriminator column has to be defined in the root entity, it will be ignored in subclass: {}",
-						clazzToProcess.getName()
-				);
-			}
-
-			discrimValue = clazzToProcess.isAnnotationPresent( DiscriminatorValue.class ) ?
-					clazzToProcess.getAnnotation( DiscriminatorValue.class ).value() :
-					null;
 		}
 
-		PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity );
-
-		Proxy proxyAnn = clazzToProcess.getAnnotation( Proxy.class );
-		BatchSize sizeAnn = clazzToProcess.getAnnotation( BatchSize.class );
-		Where whereAnn = clazzToProcess.getAnnotation( Where.class );
-		Entity entityAnn = clazzToProcess.getAnnotation( Entity.class );
-		org.hibernate.annotations.Entity hibEntityAnn = clazzToProcess.getAnnotation(
-				org.hibernate.annotations.Entity.class
-		);
-
-		Cache cacheAnn = determineCacheSettings( clazzToProcess, mappings );
-
-		EntityBinder entityBinder = new EntityBinder(
-				entityAnn, hibEntityAnn, clazzToProcess, persistentClass, mappings
-		);
-		entityBinder.setDiscriminatorValue( discrimValue );
-		entityBinder.setBatchSize( sizeAnn );
-		entityBinder.setProxy( proxyAnn );
-		entityBinder.setWhere( whereAnn );
-		entityBinder.setCache( cacheAnn );
-		entityBinder.setInheritanceState( inheritanceState );
+		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
+		entityBinder.setBatchSize( clazzToProcess.getAnnotation( BatchSize.class ) );
+		entityBinder.setWhere( clazzToProcess.getAnnotation( Where.class ) );
+	    entityBinder.setCache( determineCacheSettings( clazzToProcess, mappings ) );
 
 		//Filters are not allowed on subclasses
 		if ( !inheritanceState.hasParents() ) {
@@ -761,6 +733,50 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 
+	}
+
+	// parse everything discriminator column relevant in case of single table inheritance
+	private static Ejb3DiscriminatorColumn processDiscriminatorProperties(XClass clazzToProcess, Mappings mappings, InheritanceState inheritanceState, EntityBinder entityBinder) {
+		Ejb3DiscriminatorColumn discriminatorColumn = null;
+		javax.persistence.DiscriminatorColumn discAnn = clazzToProcess.getAnnotation(
+				javax.persistence.DiscriminatorColumn.class
+		);
+		DiscriminatorType discriminatorType = discAnn != null ?
+				discAnn.discriminatorType() :
+				DiscriminatorType.STRING;
+
+		org.hibernate.annotations.DiscriminatorFormula discFormulaAnn = clazzToProcess.getAnnotation(
+				org.hibernate.annotations.DiscriminatorFormula.class
+		);
+		if ( !inheritanceState.hasParents() ) {
+			discriminatorColumn = Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
+					discriminatorType, discAnn, discFormulaAnn, mappings
+			);
+		}
+		if ( discAnn != null && inheritanceState.hasParents() ) {
+			log.warn(
+					"Discriminator column has to be defined in the root entity, it will be ignored in subclass: {}",
+					clazzToProcess.getName()
+			);
+		}
+
+		String discrimValue = clazzToProcess.isAnnotationPresent( DiscriminatorValue.class ) ?
+				clazzToProcess.getAnnotation( DiscriminatorValue.class ).value() :
+				null;
+		entityBinder.setDiscriminatorValue( discrimValue );
+
+		if ( clazzToProcess.isAnnotationPresent( ForceDiscriminator.class ) ) {
+			log.warn( "@ForceDiscriminator is deprecated use @DiscriminatorOptions instead." );
+			entityBinder.setForceDiscriminator( true );
+		}
+
+		DiscriminatorOptions discriminatorOptions = clazzToProcess.getAnnotation( DiscriminatorOptions.class );
+		if ( discriminatorOptions != null) {
+			entityBinder.setForceDiscriminator( discriminatorOptions.force() );
+			entityBinder.setInsertableDiscriminator( discriminatorOptions.insert() );
+		}
+
+		return discriminatorColumn;
 	}
 
 	private static void processIdPropertiesIfNotAlready(

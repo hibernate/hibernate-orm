@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.annotations.various.readwriteexpression;
 
-import java.util.Date;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
@@ -41,7 +39,7 @@ public class ReadWriteExpressionTest extends TestCase {
 		final double HEIGHT_INCHES = 73;
 		final double HEIGHT_CENTIMETERS = HEIGHT_INCHES * 2.54d;
 
-		Staff staff = new Staff(HEIGHT_INCHES, HEIGHT_INCHES, 1);
+		Staff staff = new Staff(HEIGHT_INCHES, HEIGHT_INCHES, HEIGHT_INCHES*2, 1);
 		s.persist( staff );
 		s.flush();
 
@@ -51,6 +49,9 @@ public class ReadWriteExpressionTest extends TestCase {
 
 		heightViaSql = (Double)s.createSQLQuery("select radiusS from t_staff where t_staff.id=1").uniqueResult();
 		assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
+
+		heightViaSql = (Double)s.createSQLQuery("select diamet from t_staff where t_staff.id=1").uniqueResult();
+		assertEquals(HEIGHT_CENTIMETERS*2, heightViaSql, 0.01d);
 
 		// Test projection
 		Double heightViaHql = (Double)s.createQuery("select s.sizeInInches from Staff s where s.id = 1").uniqueResult();

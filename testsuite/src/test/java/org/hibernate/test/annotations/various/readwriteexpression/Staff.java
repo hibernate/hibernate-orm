@@ -37,9 +37,10 @@ import org.hibernate.annotations.ReadWriteExpression;
 @Table(name="t_staff")
 public class Staff {
 
-	public Staff(double sizeInInches, double radius, Integer id) {
+	public Staff(double sizeInInches, double radius, double diameter, Integer id) {
 		this.sizeInInches = sizeInInches;
 		this.radiusS = radius;
+		this.diameter = diameter;
 		this.id = id;
 	}
 
@@ -57,10 +58,19 @@ public class Staff {
 	public void setSizeInInches(double sizeInInches) {  this.sizeInInches = sizeInInches; }
 	private double sizeInInches;
 
+	//Weird extra S to avoid potential SQL keywords
 	@ReadWriteExpression(
 			read = "radiusS / 2.54",
 			write = "? * 2.54" )
 	public double getRadiusS() { return radiusS; }
 	public void setRadiusS(double radiusS) {  this.radiusS = radiusS; }
 	private double radiusS;
+
+	@Column(name="diamet")
+	@ReadWriteExpression(
+			read = "diamet / 2.54",
+			write = "? * 2.54" )
+	public double getDiameter() { return diameter; }
+	public void setDiameter(double diameter) {  this.diameter = diameter; }
+	private double diameter;
 }

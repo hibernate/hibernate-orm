@@ -31,7 +31,7 @@ import org.hibernate.test.annotations.TestCase;
 /**
  * @author Emmanuel Bernard
  */
-public class ReadWriteExpressionTest extends TestCase {
+public class ColumnTransformerTest extends TestCase {
 
 	public void testCustomColumnReadAndWrite() throws Exception{
 		Session s = openSession();

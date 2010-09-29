@@ -28,7 +28,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.ReadWriteExpression;
+import org.hibernate.annotations.ColumnTransformer;
 
 /**
  * @author Emmanuel Bernard
@@ -50,7 +50,7 @@ public class Staff {
 	private Integer id;
 
 	@Column(name="size_in_cm")
-	@ReadWriteExpression(
+	@ColumnTransformer(
 			forColumn = "size_in_cm",
 			read = "size_in_cm / 2.54",
 			write = "? * 2.54" )
@@ -59,7 +59,7 @@ public class Staff {
 	private double sizeInInches;
 
 	//Weird extra S to avoid potential SQL keywords
-	@ReadWriteExpression(
+	@ColumnTransformer(
 			read = "radiusS / 2.54",
 			write = "? * 2.54" )
 	public double getRadiusS() { return radiusS; }
@@ -67,7 +67,7 @@ public class Staff {
 	private double radiusS;
 
 	@Column(name="diamet")
-	@ReadWriteExpression(
+	@ColumnTransformer(
 			read = "diamet / 2.54",
 			write = "? * 2.54" )
 	public double getDiameter() { return diameter; }

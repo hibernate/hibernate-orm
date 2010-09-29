@@ -27,9 +27,9 @@ import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.ColumnTransformer;
+import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
-import org.hibernate.annotations.ReadWriteExpression;
-import org.hibernate.annotations.ReadWriteExpressions;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.mapping.Column;
@@ -483,10 +483,10 @@ public class Ejb3Column {
 		if ( inferredData != null ) {
 			XProperty property = inferredData.getProperty();
 			if ( property != null ) {
-				processExpression( property.getAnnotation( ReadWriteExpression.class ) );
-				ReadWriteExpressions annotations = property.getAnnotation( ReadWriteExpressions.class );
+				processExpression( property.getAnnotation( ColumnTransformer.class ) );
+				ColumnTransformers annotations = property.getAnnotation( ColumnTransformers.class );
 				if (annotations != null) {
-					for ( ReadWriteExpression annotation : annotations.value() ) {
+					for ( ColumnTransformer annotation : annotations.value() ) {
 						processExpression( annotation );
 					}
 				}
@@ -494,7 +494,7 @@ public class Ejb3Column {
 		}
 	}
 
-	private void processExpression(ReadWriteExpression annotation) {
+	private void processExpression(ColumnTransformer annotation) {
 		String nonNullLogicalColumnName = logicalColumnName != null ? logicalColumnName : ""; //use the default for annotations 
 		if ( annotation != null &&
 				( StringHelper.isEmpty( annotation.forColumn() )

@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-// $Id:$
+// $Id$
 package org.hibernate.test.annotations.inheritance.discriminatoroptions;
 
 import javax.persistence.DiscriminatorValue;

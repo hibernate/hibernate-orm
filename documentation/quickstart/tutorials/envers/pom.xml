@@ -29,7 +29,7 @@
     <parent>
         <artifactId>hibernate-tutorials</artifactId>
         <groupId>org.hibernate.tutorials</groupId>
-        <version>3.6.0-SNAPSHOT</version>
+        <version>3.6.0.CR2</version>
     </parent>
 
     <artifactId>hibernate-tutorial-envers</artifactId>

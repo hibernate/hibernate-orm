@@ -5,6 +5,40 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.0.CR2 (2010.09.29)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11131
+
+** Bug
+    * [HHH-892] - HQL parser does not resolve alias in ORDER BY clause
+    * [HHH-2917] - Using subselects as operands for arithmetic operations causes NullPointerException
+    * [HHH-4510] - Add column-level read/write support (HHH-4440) to annotations
+    * [HHH-5490] - dirty data be inserted into 2L cache
+    * [HHH-5552] - Infinispan listener implementations need to load entities and keys using application classloader.
+    * [HHH-5563] - JndiInfinispanRegionFactory creates region with a stopped cache, if region previously existed
+    * [HHH-5568] - correct wrong format in document
+    * [HHH-5573] - Change TestCase to rebuildSessionFactory() whenever sessions var is accessed
+    * [HHH-5590] - Don't log and rethrow exceptions in AbstractFlushingEventListener
+    * [HHH-5591] - ConcurrentStatisticsImpl#queryExecuted() does not update queryExecutionMaxTimeQueryString
+    * [HHH-5592] - org.hibernate.test.hql.ASTParserLoadingOrderByTest hangs on postgresql
+    * [HHH-5593] - org.hibernate.test.legacy.FooBarTest.testCollectionWhere fails on hsqldb
+    * [HHH-5594] - org.hibernate.test.jpa.lock.JPALockTest fails on hsqldb
+    * [HHH-5595] - postgresql jdbc driver does not implement the setQueryTimeout method
+    * [HHH-5596] - org.hibernate.test.annotations.onetoone.OneToOneTest.testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() fails on postgresql
+    * [HHH-5597] - org.hibernate.test.criteria.LikeTest.testLike fails on postgresql because of the default escape charactor
+
+** Improvement
+    * [HHH-5560] - Envers ValidAuditTimeStrategy needs a better name
+    * [HHH-5589] - mysql does not support column check
+
+** New Feature
+    * [HHH-5190] - Provide annotation support for <discriminator>'s force and insert
+    * [HHH-5205] - Add support for source="db" for timestamp versions
+
+** Patch
+    * [HHH-5581] - Improve InformixDialect sequence support
+
+
 Changes in version 3.6.0.CR1 (2010.09.15)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11141

@@ -50,9 +50,17 @@ public class TimeType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public String[] getRegistrationKeys() {
+		return new String[] {
+				getName(),
+				java.sql.Time.class.getName()
+		};
 	}
+
+	//	@Override
+//	protected boolean registerUnderJavaType() {
+//		return true;
+//	}
 
 	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
 		Time jdbcTime = Time.class.isInstance( value )

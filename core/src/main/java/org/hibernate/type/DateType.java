@@ -49,9 +49,17 @@ public class DateType
 	}
 
 	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public String[] getRegistrationKeys() {
+		return new String[] {
+				getName(),
+				java.sql.Date.class.getName()
+		};
 	}
+
+//	@Override
+//	protected boolean registerUnderJavaType() {
+//		return true;
+//	}
 
 	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
 		final java.sql.Date jdbcDate = java.sql.Date.class.isInstance( value )

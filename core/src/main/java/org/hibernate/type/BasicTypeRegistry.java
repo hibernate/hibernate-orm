@@ -144,7 +144,7 @@ public class BasicTypeRegistry implements Serializable {
 			log.debug( "Adding type registration {} -> {}", key, type );
 			final Type old = registry.put( key, type );
 			if ( old != null && old != type ) {
-				log.debug( "   Overrides previous {}", old );
+				log.info( "Type registration [{}] overrides previous : {}", key, old );
 			}
 		}
 	}

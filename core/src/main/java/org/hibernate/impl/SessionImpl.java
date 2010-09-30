@@ -598,7 +598,6 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
 		log.trace( "after transaction completion" );
-		cleanUpInsertedKeysAfterTransaction();
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion(success);
 		if ( rootSession == null && tx != null ) {
@@ -2015,49 +2014,6 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
-	}
-
-	private HashMap<String,List<Serializable>> insertedKeysMap;
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void registerInsertedKey(EntityPersister persister, Serializable id) {
-		// we only are about regsitering these if the persister defines caching
-		if ( persister.hasCache() ) {
-			if ( insertedKeysMap == null ) {
-				insertedKeysMap = new HashMap<String, List<Serializable>>();
-			}
-			final String rootEntityName = persister.getRootEntityName();
-			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
-			if ( insertedEntityIds == null ) {
-				insertedEntityIds = new ArrayList<Serializable>();
-				insertedKeysMap.put( rootEntityName, insertedEntityIds );
-			}
-			insertedEntityIds.add( id );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
-		// again, we only really care if the entity is cached
-		if ( persister.hasCache() ) {
-			if ( insertedKeysMap != null ) {
-				List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
-				if ( insertedEntityIds != null ) {
-					return insertedEntityIds.contains( id );
-				}
-			}
-		}
-		return false;
-	}
-
-	private void cleanUpInsertedKeysAfterTransaction() {
-		if ( insertedKeysMap != null ) {
-			insertedKeysMap.clear();
-		}
 	}
 
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

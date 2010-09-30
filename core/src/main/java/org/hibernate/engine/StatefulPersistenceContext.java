@@ -269,6 +269,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	public void afterTransactionCompletion() {
+		cleanUpInsertedKeysAfterTransaction();
 		// Downgrade locks
 		Iterator iter = entityEntries.values().iterator();
 		while ( iter.hasNext() ) {
@@ -1622,4 +1623,49 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void removeChildParent(Object child) {
 	   parentsByChild.remove(child);
 	}
+
+
+	private HashMap<String,List<Serializable>> insertedKeysMap;
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public void registerInsertedKey(EntityPersister persister, Serializable id) {
+		// we only are about regsitering these if the persister defines caching
+		if ( persister.hasCache() ) {
+			if ( insertedKeysMap == null ) {
+				insertedKeysMap = new HashMap<String, List<Serializable>>();
+			}
+			final String rootEntityName = persister.getRootEntityName();
+			List<Serializable> insertedEntityIds = insertedKeysMap.get( rootEntityName );
+			if ( insertedEntityIds == null ) {
+				insertedEntityIds = new ArrayList<Serializable>();
+				insertedKeysMap.put( rootEntityName, insertedEntityIds );
+			}
+			insertedEntityIds.add( id );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id) {
+		// again, we only really care if the entity is cached
+		if ( persister.hasCache() ) {
+			if ( insertedKeysMap != null ) {
+				List<Serializable> insertedEntityIds = insertedKeysMap.get( persister.getRootEntityName() );
+				if ( insertedEntityIds != null ) {
+					return insertedEntityIds.contains( id );
+				}
+			}
+		}
+		return false;
+	}
+
+	private void cleanUpInsertedKeysAfterTransaction() {
+		if ( insertedKeysMap != null ) {
+			insertedKeysMap.clear();
+		}
+	}
+
 }

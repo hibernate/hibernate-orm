@@ -93,7 +93,7 @@ public final class EntityInsertAction extends EntityAction {
 				entry.postUpdate(instance, state, version);
 			}
 
-			getSession().registerInsertedKey( getPersister(), getId() );
+			getSession().getPersistenceContext().registerInsertedKey( getPersister(), getId() );
 		}
 
 		final SessionFactoryImplementor factory = getSession().getFactory();

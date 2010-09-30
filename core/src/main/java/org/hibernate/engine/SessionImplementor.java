@@ -365,22 +365,4 @@ public interface SessionImplementor extends Serializable {
 	 * should never be null.
 	 */
 	public LoadQueryInfluencers getLoadQueryInfluencers();
-
-	/**
-	 * Register keys inserted during the current transaction
-	 *
-	 * @param persister The entity persister
-	 * @param id The id
-	 */
-	public void registerInsertedKey(EntityPersister persister, Serializable id);
-
-	/**
-	 * Allows callers to check to see if the identified entity was inserted during the current transaction.
-	 *
-	 * @param persister The entity persister
-	 * @param id The id
-	 *
-	 * @return True if inserted during this transaction, false otherwise.
-	 */
-	public boolean wasInsertedDuringTransaction(EntityPersister persister, Serializable id);
 }

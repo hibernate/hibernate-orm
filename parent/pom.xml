@@ -613,6 +613,28 @@
                 <jdbc.isolation/>
             </properties>
         </profile>
+
+        <profile>
+            <id>derby</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.derby</groupId>
+                    <artifactId>derby</artifactId>
+                    <!-- 10.5.3.0 has a bad pom -->
+                    <version>10.5.3.0_1</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <properties>
+                <db.dialect>org.hibernate.dialect.DerbyDialect</db.dialect>
+                <jdbc.driver>org.apache.derby.jdbc.EmbeddedDriver</jdbc.driver>
+                <jdbc.url>jdbc:derby:${pom.build.outputDirectory}/test/derby;create=true</jdbc.url>
+                <jdbc.user>sa</jdbc.user>
+                <jdbc.pass/>
+                <jdbc.isolation/>
+            </properties>
+        </profile>
+
         <!--
             ###################################################################
             Profiles naming db instances in the Red Hat QA/QE lab

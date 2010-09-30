@@ -63,7 +63,7 @@ if [ -z $devVersion ]; then
 fi
 
 projectName=`xmlstarlet sel -N x=http://maven.apache.org/POM/4.0.0 -t -v "/x:project/x:artifactId" pom.xml`
-if [ -Z "$projectName" ]; then
+if [ -z "$projectName" ]; then
     echo "Could not determine propject name (misasing/incomplete pom?)."
     exit;
 fi

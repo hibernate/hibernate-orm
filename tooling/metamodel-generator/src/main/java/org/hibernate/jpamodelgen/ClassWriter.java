@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import javax.annotation.Generated;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -39,9 +40,9 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
 /**
  * @author Emmanuel Bernard
  */
-public class ClassWriter {
+public final class ClassWriter {
 
-	private ClassWriter(){		
+	private ClassWriter() {
 	}
 
 	public static void writeFile(MetaEntity entity, Context context) {
@@ -91,8 +92,9 @@ public class ClassWriter {
 		PrintWriter pw = null;
 		try {
 			pw = new PrintWriter( sw );
-			// we cannot use add @Generated into the metamodel class since this would not work in a JDK 5 environment
-			//pw.println( "@" + entity.importType( Generated.class.getName() ) + "(\"JPA MetaModel for " + entity.getQualifiedName() + "\")" );
+			if ( context.isAddGeneratedAnnotation() ) {
+				pw.println( "@" + entity.importType( Generated.class.getName() ) + "(\"JPA MetaModel for " + entity.getQualifiedName() + "\")" );
+			}
 			pw.println( "@" + entity.importType( "javax.persistence.metamodel.StaticMetamodel" ) + "(" + entity.getSimpleName() + ".class)" );
 			printClassDeclaration( entity, pw, context );
 			pw.println();

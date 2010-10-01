@@ -19,8 +19,11 @@
 
 package org.hibernate.jpamodelgen.test.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -76,6 +79,18 @@ public class TestUtil {
 		}
 	}
 
+	public static Class<?> getMetamodelClassFor(Class<?> entityClass) {
+		String entityModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
+
+		try {
+			return Class.forName( entityModelClassName );
+		}
+		catch ( ClassNotFoundException e ) {
+			fail( "Unable to load class " + entityModelClassName );
+			return null;
+		}
+	}
+
 	/**
 	 * Asserts that a metamodel class for the specified class got generated.
 	 *
@@ -92,14 +107,48 @@ public class TestUtil {
 		}
 	}
 
-	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
-		assertNotNull( clazz, "Class parameter cannot be null" );
+	public static File getMetaModelSourceFileFor(Class<?> clazz) {
 		String metaModelClassName = clazz.getName() + META_MODEL_CLASS_POSTFIX;
 		// generate the file name
 		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 		fileName = fileName.concat( ".java" );
-		File sourceFile = new File( outBaseDir + PATH_SEPARATOR + fileName );
-		assertFalse( sourceFile.exists(), "There should be no source file: " + fileName );
+		return new File( outBaseDir + PATH_SEPARATOR + fileName );
+	}
+
+	public static String getMetaModelSourceAsString(Class<?> clazz) {
+		File sourceFile = getMetaModelSourceFileFor( clazz );
+		StringBuilder contents = new StringBuilder();
+
+		try {
+			BufferedReader input = new BufferedReader( new FileReader( sourceFile ) );
+			try {
+				String line = null; //not declared within while loop
+				/*
+						* readLine is a bit quirky :
+						* it returns the content of a line MINUS the newline.
+						* it returns null only for the END of the stream.
+						* it returns an empty String if two newlines appear in a row.
+						*/
+				while ( ( line = input.readLine() ) != null ) {
+					contents.append( line );
+					contents.append( System.getProperty( "line.separator" ) );
+				}
+			}
+			finally {
+				input.close();
+			}
+		}
+		catch ( IOException ex ) {
+			ex.printStackTrace();
+		}
+
+		return contents.toString();
+	}
+
+	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
+		assertNotNull( clazz, "Class parameter cannot be null" );
+		File sourceFile = getMetaModelSourceFileFor( clazz );
+		assertFalse( sourceFile.exists(), "There should be no source file: " + sourceFile.getName() );
 	}
 
 	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
@@ -165,14 +214,10 @@ public class TestUtil {
 	}
 
 	public static Field getFieldFromMetamodelFor(Class<?> entityClass, String fieldName) {
-		String entityModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
-		Field field = null;
+		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
+		Field field;
 		try {
-			Class<?> clazz = Class.forName( entityModelClassName );
-			field = clazz.getField( fieldName );
-		}
-		catch ( ClassNotFoundException e ) {
-			fail( "Unable to load class " + entityModelClassName );
+			field = metaModelClass.getField( fieldName );
 		}
 		catch ( NoSuchFieldException e ) {
 			field = null;

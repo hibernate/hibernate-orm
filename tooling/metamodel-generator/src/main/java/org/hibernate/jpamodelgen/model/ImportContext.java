@@ -38,10 +38,9 @@ public interface ImportContext {
 	 *
 	 * @return import string
 	 */
-	public abstract String importType(String fqcn);
+	String importType(String fqcn);
 
-	public abstract String staticImport(String fqcn, String member);
+	String staticImport(String fqcn, String member);
 
-	public abstract String generateImports();
-
+	String generateImports();
 }

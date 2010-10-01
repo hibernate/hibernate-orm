@@ -61,7 +61,9 @@ import static javax.lang.model.SourceVersion.RELEASE_6;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-@SupportedAnnotationTypes("*")
+@SupportedAnnotationTypes({
+		"javax.persistence.Entity", "javax.persistence.MappedSuperclass", "javax.persistence.Embeddable"
+})
 @SupportedSourceVersion(RELEASE_6)
 @SupportedOptions({
 		JPAMetaModelEntityProcessor.DEBUG_OPTION,
@@ -79,9 +81,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
 
-	private boolean xmlProcessed = false;
 	private Context context;
-	private boolean fullyAnnotationConfigured = false;
 
 	public void init(ProcessingEnvironment env) {
 		super.init( env );
@@ -91,22 +91,26 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		);
 
 		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION );
-		fullyAnnotationConfigured = Boolean.parseBoolean( tmp );
+		boolean fullyAnnotationConfigured = Boolean.parseBoolean( tmp );
+
+		if ( !fullyAnnotationConfigured ) {
+			XmlParser parser = new XmlParser( context );
+			parser.parseXml();
+			if ( context.isPersistenceUnitCompletelyXmlConfigured() ) {
+				createMetaModelClasses();
+			}
+		}
 	}
 
 	@Override
 	public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
 		if ( roundEnvironment.processingOver() ) {
-			context.logMessage( Diagnostic.Kind.OTHER, "Last processing round." );
-			createMetaModelClasses();
-			context.logMessage( Diagnostic.Kind.OTHER, "Finished processing" );
+			if ( !context.isPersistenceUnitCompletelyXmlConfigured() ) {
+				context.logMessage( Diagnostic.Kind.OTHER, "Last processing round." );
+				createMetaModelClasses();
+				context.logMessage( Diagnostic.Kind.OTHER, "Finished processing" );
+			}
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
-		}
-
-		if ( !fullyAnnotationConfigured && !xmlProcessed ) {
-			XmlParser parser = new XmlParser( context );
-			parser.parseXml();
-			xmlProcessed = true;
 		}
 
 		if ( context.isPersistenceUnitCompletelyXmlConfigured() ) {

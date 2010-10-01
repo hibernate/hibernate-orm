@@ -551,6 +551,17 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
                 ignore <filename>orm.xml</filename> and
                 <filename>persistence.xml.</filename></entry>
               </row>
+
+              <row>
+                <entry>addGeneratedAnnotation</entry>
+
+                <entry>if set to <literal>true</literal> the processor will
+                add the <classname>@Generated</classname> to the generated
+                Java source file. Per default this annotation is not
+                generated, because the code would not compile under JDK 5. If
+                you are using a JDK 6 you can force the generation of this
+                annotation using this flag.</entry>
+              </row>
             </tbody>
           </tgroup>
         </table></para>

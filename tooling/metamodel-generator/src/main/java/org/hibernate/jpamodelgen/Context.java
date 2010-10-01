@@ -60,9 +60,10 @@ public class Context {
 	private final boolean logDebug;
 	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
-
 	private final List<String> ormXmlFiles;
+
 	private boolean isPersistenceUnitCompletelyXmlConfigured;
+	private boolean addGeneratedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 
 	public Context(ProcessingEnvironment pe) {
@@ -99,6 +100,14 @@ public class Context {
 
 	public ProcessingEnvironment getProcessingEnvironment() {
 		return pe;
+	}
+
+	public boolean isAddGeneratedAnnotation() {
+		return addGeneratedAnnotation;
+	}
+
+	public void setAddGeneratedAnnotation(boolean addGeneratedAnnotation) {
+		this.addGeneratedAnnotation = addGeneratedAnnotation;
 	}
 
 	public Elements getElementUtils() {

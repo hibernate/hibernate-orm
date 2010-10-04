@@ -3594,15 +3594,15 @@ public class Configuration implements Serializable {
 			}
 			map.put( property.getProperty().getAnnotation( MapsId.class ).value(), property );
 		}
-		
+
 		public void addPropertyAnnotatedWithMapsIdSpecj(XClass entityType, PropertyData property, String mapsIdValue) {
-           Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
-           if ( map == null ) {
-               map = new HashMap<String, PropertyData>();
-               propertiesAnnotatedWithMapsId.put( entityType, map );
-           }
-           map.put( mapsIdValue, property );
-       }
+			Map<String, PropertyData> map = propertiesAnnotatedWithMapsId.get( entityType );
+			if ( map == null ) {
+				map = new HashMap<String, PropertyData>();
+				propertiesAnnotatedWithMapsId.put( entityType, map );
+			}
+			map.put( mapsIdValue, property );
+		}
 
 		public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName) {
 			final Map<String, PropertyData> map = propertiesAnnotatedWithIdAndToOne.get( entityType );

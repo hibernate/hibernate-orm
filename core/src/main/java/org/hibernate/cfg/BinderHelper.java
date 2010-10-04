@@ -681,7 +681,14 @@ public class BinderHelper {
 			throw new AssertionFailure( "PersistentClass name cannot be converted into a Class", e);
 		}
 		if ( propertyHolder.isInIdClass() ) {
-			return mappings.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
+			PropertyData pd = mappings.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
+			if ( pd == null ) {
+				String propertyPath = isId ? "" : propertyName;
+				return mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
+			}
+			else {
+				return pd;
+			}
 		}
 		else {
 			String propertyPath = isId ? "" : propertyName;

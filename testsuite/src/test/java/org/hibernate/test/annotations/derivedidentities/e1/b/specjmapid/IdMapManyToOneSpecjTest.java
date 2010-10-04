@@ -43,6 +43,7 @@ public class IdMapManyToOneSpecjTest extends TestCase {
 
 	public void testComplexIdClass() {
 
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -79,16 +80,17 @@ public class IdMapManyToOneSpecjTest extends TestCase {
 
 		c1.addInventory( house, 100, new BigDecimal( 50000 ) );
 		s.merge( c1 );
-		s.flush();
-		s.clear();
+		tx.commit();
+		
 
+		tx = s.beginTransaction();
 		Customer c12 = ( Customer ) s.createQuery( "select c from Customer c" ).uniqueResult();
 
-//		c12.getBalance();
 		List<CustomerInventory> inventory = c12.getInventories();
 
 		assertEquals( 2, inventory.size() );
 		assertEquals( 10, inventory.get( 0 ).getQuantity() );
+		assertEquals( "2", inventory.get(1).getVehicle().getId());
 
 
 		Item house2 = new Item();
@@ -112,6 +114,20 @@ public class IdMapManyToOneSpecjTest extends TestCase {
 				.uniqueResult();
 		assertEquals( 3, c13.getInventories().size() );
 
+		
+		
+		Customer customer2 = new Customer(
+                "foo2", "bar2", "contact12", "1002", new BigDecimal( 10002 ), new BigDecimal( 10002 ), new BigDecimal( 1000 ));
+		customer2.setId(2);
+		s.persist(customer2);
+		
+		customer2.addInventory(boat, 10, new BigDecimal(400));
+		customer2.addInventory(house2, 3, new BigDecimal(4000));
+		s.merge(customer2);
+		
+		Customer c23 = ( Customer ) s.createQuery( "select c from Customer c where c.id = 2" ).uniqueResult();
+		assertEquals( 2, c23.getInventories().size() );
+	
 		tx.rollback();
 		s.close();
 	}

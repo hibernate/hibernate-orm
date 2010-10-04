@@ -133,7 +133,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 		sb.append( '}' );
 		return sb.toString();
 	}
-
+	
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
 		for ( Element memberOfClass : membersOfClass ) {
 			AccessType forcedAccessType = TypeUtils.determineAnnotationSpecifiedAccessType( memberOfClass );

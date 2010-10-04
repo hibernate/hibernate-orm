@@ -19,6 +19,7 @@
 
 package org.hibernate.jpamodelgen;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -139,19 +140,28 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private void createMetaModelClasses() {
+		// keep track of all classes for which model have been generated
+		Collection<String> generatedModelClasses = new ArrayList<String>();
+
 		for ( MetaEntity entity : context.getMetaEntities() ) {
 			context.logMessage( Diagnostic.Kind.OTHER, "Writing meta model for entity " + entity );
 			ClassWriter.writeFile( entity, context );
+			generatedModelClasses.add( entity.getQualifiedName() );
 		}
 
 		// we cannot process the delayed entities in any order. There might be dependencies between them.
 		// we need to process the top level entities first
-		// TODO make sure that we don't run into circular dependencies here
 		Collection<MetaEntity> toProcessEntities = context.getMetaEmbeddables();
 		while ( !toProcessEntities.isEmpty() ) {
 			Set<MetaEntity> processedEntities = new HashSet<MetaEntity>();
+			int toProcessCountBeforeLoop = toProcessEntities.size();
 			for ( MetaEntity entity : toProcessEntities ) {
-				if ( containedInEntity( toProcessEntities, entity ) ) {
+				// see METAGEN-36
+				if ( generatedModelClasses.contains( entity.getQualifiedName() ) ) {
+					toProcessEntities.remove( entity );
+					continue;
+				}
+				if ( modelGenerationNeedsToBeDeferred( toProcessEntities, entity ) ) {
 					continue;
 				}
 				context.logMessage(
@@ -161,10 +171,15 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				processedEntities.add( entity );
 			}
 			toProcessEntities.removeAll( processedEntities );
+			if ( toProcessEntities.size() >= toProcessCountBeforeLoop ) {
+				context.logMessage(
+						Diagnostic.Kind.ERROR, "Potential endless loop in generation of entities."
+				);
+			}
 		}
 	}
 
-	private boolean containedInEntity(Collection<MetaEntity> entities, MetaEntity containedEntity) {
+	private boolean modelGenerationNeedsToBeDeferred(Collection<MetaEntity> entities, MetaEntity containedEntity) {
 		ContainsAttributeTypeVisitor visitor = new ContainsAttributeTypeVisitor(
 				containedEntity.getTypeElement(), context
 		);
@@ -207,7 +222,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				continue;
 			}
 
-			String fqn = ( ( TypeElement ) element ).getQualifiedName().toString();
+			String fqn = ( (TypeElement) element ).getQualifiedName().toString();
 			MetaEntity alreadyExistingMetaEntity = tryGettingExistingEntityFromContext( mirror, fqn );
 			if ( alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete() ) {
 				String msg = "Skipping processing of annotations for " + fqn + " since xml configuration is metadata complete.";
@@ -217,10 +232,10 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 			AnnotationMetaEntity metaEntity;
 			if ( TypeUtils.containsAnnotation( element, Embeddable.class ) ) {
-				metaEntity = new AnnotationEmbeddable( ( TypeElement ) element, context );
+				metaEntity = new AnnotationEmbeddable( (TypeElement) element, context );
 			}
 			else {
-				metaEntity = new AnnotationMetaEntity( ( TypeElement ) element, context );
+				metaEntity = new AnnotationMetaEntity( (TypeElement) element, context );
 			}
 
 			if ( alreadyExistingMetaEntity != null ) {
@@ -267,7 +282,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 		@Override
 		public Boolean visitDeclared(DeclaredType declaredType, Element element) {
-			TypeElement returnedElement = ( TypeElement ) context.getTypeUtils().asElement( declaredType );
+			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 
 			String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
 			String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
@@ -275,7 +290,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
 						declaredType, fqNameOfReturnType, null, context
 				);
-				returnedElement = ( TypeElement ) context.getTypeUtils().asElement( collectionElementType );
+				returnedElement = (TypeElement) context.getTypeUtils().asElement( collectionElementType );
 			}
 
 			if ( type.getQualifiedName().toString().equals( returnedElement.getQualifiedName().toString() ) ) {

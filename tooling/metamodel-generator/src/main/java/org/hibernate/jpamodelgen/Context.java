@@ -40,7 +40,7 @@ import org.hibernate.jpamodelgen.util.Constants;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-public class Context {
+public final class Context {
 	private static final String DEFAULT_PERSISTENCE_XML_LOCATION = "/META-INF/persistence.xml";
 
 	/**

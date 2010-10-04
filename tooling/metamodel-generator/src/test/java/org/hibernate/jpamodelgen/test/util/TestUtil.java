@@ -28,6 +28,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
+import javax.tools.Diagnostic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -209,10 +211,6 @@ public class TestUtil {
 		}
 	}
 
-	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {
-		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
-	}
-
 	public static Field getFieldFromMetamodelFor(Class<?> entityClass, String fieldName) {
 		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
 		Field field;
@@ -227,6 +225,18 @@ public class TestUtil {
 
 	public static String fcnToPath(String fcn) {
 		return fcn.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
+	}
+
+	public static void assertNoCompilationError(List<Diagnostic> diagnostics) {
+		for ( Diagnostic diagnostic : diagnostics ) {
+			if ( diagnostic.getKind().equals( Diagnostic.Kind.ERROR ) ) {
+				fail( "There was a compilation error. " + diagnostic.getMessage( null ) );
+			}
+		}
+	}
+
+	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {
+		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
 	}
 
 	private static class MetaModelFilenameFilter implements FileFilter {

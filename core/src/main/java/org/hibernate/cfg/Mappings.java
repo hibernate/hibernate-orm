@@ -735,6 +735,8 @@ public interface Mappings {
 
 	public void addPropertyAnnotatedWithMapsIdSpecj(XClass entityType, PropertyData property, String mapsIdValue);
 
+	public boolean isSpecjProprietarySyntaxEnabled();
+
 	/**
 	 * Should we use the new generator strategy mappings.  This is controlled by the
 	 * {@link Configuration#USE_NEW_ID_GENERATOR_MAPPINGS} setting.

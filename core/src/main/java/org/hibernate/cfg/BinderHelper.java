@@ -682,7 +682,7 @@ public class BinderHelper {
 		}
 		if ( propertyHolder.isInIdClass() ) {
 			PropertyData pd = mappings.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
-			if ( pd == null && System.getProperty( "hibernate.enable_specj_proprietary_syntax" ) != null ) {
+			if ( pd == null && mappings.isSpecjProprietarySyntaxEnabled() ) {
 				pd = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyName );
 			}
 			return pd;

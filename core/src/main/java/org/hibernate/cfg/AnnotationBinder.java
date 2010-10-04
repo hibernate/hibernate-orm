@@ -1418,7 +1418,7 @@ public final class AnnotationBinder {
 			 * TODO is @Column mandatory?
 			 * TODO add method support
 			 */
-			if ( System.getProperty( "hibernate.enable_specj_proprietary_syntax" ) != null ) {
+			if ( mappings.isSpecjProprietarySyntaxEnabled() ) {
 				if ( element.isAnnotationPresent( Id.class ) && element.isAnnotationPresent( Column.class ) ) {
 					String columnName = element.getAnnotation( Column.class ).name();
 					for ( XProperty prop : declaringClass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
@@ -2651,7 +2651,7 @@ public final class AnnotationBinder {
 
 		//Make sure that JPA1 key-many-to-one columns are read only tooj
 		boolean hasSpecjManyToOne=false;
-		if ( System.getProperty( "hibernate.enable_specj_proprietary_syntax" ) != null ) {
+		if ( mappings.isSpecjProprietarySyntaxEnabled() ) {
 			String columnName = "";
 			for ( XProperty prop : inferredData.getDeclaringClass()
 					.getDeclaredProperties( AccessType.FIELD.getType() ) ) {

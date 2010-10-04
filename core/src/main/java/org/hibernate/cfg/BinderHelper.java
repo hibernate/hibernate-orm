@@ -682,13 +682,10 @@ public class BinderHelper {
 		}
 		if ( propertyHolder.isInIdClass() ) {
 			PropertyData pd = mappings.getPropertyAnnotatedWithIdAndToOne( persistentXClass, propertyName );
-			if ( pd == null ) {
-				String propertyPath = isId ? "" : propertyName;
-				return mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
+			if ( pd == null && System.getProperty( "hibernate.enable_specj_proprietary_syntax" ) != null ) {
+				pd = mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyName );
 			}
-			else {
-				return pd;
-			}
+			return pd;
 		}
 		else {
 			String propertyPath = isId ? "" : propertyName;

@@ -2661,7 +2661,7 @@ public final class AnnotationBinder {
 
 				final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 				if ( property.isAnnotationPresent( ManyToOne.class ) && joinColumn != null
-						&& !joinColumn.name().isEmpty()
+						&& ! BinderHelper.isEmptyAnnotationValue( joinColumn.name() )
 						&& joinColumn.name().equals( columnName )
 						&& !property.isAnnotationPresent( MapsId.class ) ) {
 				   hasSpecjManyToOne = true;

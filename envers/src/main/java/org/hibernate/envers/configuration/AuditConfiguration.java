@@ -28,15 +28,17 @@ import java.util.Properties;
 import java.util.WeakHashMap;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.entities.EntitiesConfigurations;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
-import org.hibernate.envers.synchronization.AuditProcessManager;
 import org.hibernate.envers.strategy.AuditStrategy;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.envers.strategy.ValidityAuditStrategy;
+import org.hibernate.envers.synchronization.AuditProcessManager;
+import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.property.Getter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -79,7 +81,6 @@ public class AuditConfiguration {
         return auditStrategy;
     }
 
-    @SuppressWarnings({ "unchecked" })
     public AuditConfiguration(Configuration cfg) {
         Properties properties = cfg.getProperties();
 
@@ -89,19 +90,32 @@ public class AuditConfiguration {
         auditEntCfg = new AuditEntitiesConfiguration(properties, revInfoCfgResult.getRevisionInfoEntityName());
         globalCfg = new GlobalConfiguration(properties);
         auditProcessManager = new AuditProcessManager(revInfoCfgResult.getRevisionInfoGenerator());
+        revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
+        revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
+        auditStrategy = initializeAuditStrategy(revInfoCfgResult.getRevisionInfoClass(), 
+        		revInfoCfgResult.getRevisionInfoTimestampData());
+        entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
+                revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping());
+    }
 
-        try {
-            Class auditStrategyClass = Thread.currentThread().getContextClassLoader().loadClass(auditEntCfg.getAuditStrategyName());
-            auditStrategy = (AuditStrategy) auditStrategyClass.newInstance();
+	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
+		AuditStrategy strategy;
+		
+		try {
+            Class<?> auditStrategyClass = Thread.currentThread().getContextClassLoader().loadClass(auditEntCfg.getAuditStrategyName());
+            strategy = (AuditStrategy) auditStrategyClass.newInstance();
         } catch (Exception e) {
            throw new MappingException(String.format("Unable to create AuditStrategy[%s] instance." , auditEntCfg.getAuditStrategyName()));
         }
         
-        revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
-        revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-        entCfg = new EntitiesConfigurator().configure(cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
-                revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping());
-    }
+        if (strategy instanceof ValidityAuditStrategy) {
+        	// further initialization required
+        	Getter revisionTimestampGetter = ReflectionTools.getGetter(revisionInfoClass, revisionInfoTimestampData);
+        	((ValidityAuditStrategy) strategy).setRevisionTimestampGetter(revisionTimestampGetter);
+        }
+
+        return strategy;
+	}
 
     //
 

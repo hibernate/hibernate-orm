@@ -1,6 +1,7 @@
 package org.hibernate.envers.strategy;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.property.Getter;
 
 /**
  *  Audit strategy which persists and retrieves audit information using a validity algorithm, based on the 
@@ -39,6 +41,10 @@ import org.hibernate.envers.tools.query.QueryBuilder;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ValidityAuditStrategy implements AuditStrategy {
+
+    /** getter for the revision entity field annotated with @RevisionTimestamp */
+    private Getter revisionTimestampGetter = null;
+
     public void perform(Session session, String entityName, AuditConfiguration auditCfg, Serializable id, Object data,
                         Object revision) {
         AuditEntitiesConfiguration audEntCfg = auditCfg.getAuditEntCfg();
@@ -110,6 +116,10 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
 	}
     
+	public void setRevisionTimestampGetter(Getter revisionTimestampGetter) {
+		this.revisionTimestampGetter = revisionTimestampGetter;
+	}
+
     private void addRevisionRestriction(Parameters rootParameters,  
 			String revisionProperty, String revisionEndProperty, boolean addAlias) {
     	
@@ -129,7 +139,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
     private void updateLastRevision(Session session, AuditConfiguration auditCfg, QueryBuilder qb,
                                     Object id, String auditedEntityName, Object revision) {
         String revisionEndFieldName = auditCfg.getAuditEntCfg().getRevisionEndFieldName();
-
+        
         // e.end_rev is null
         qb.getRootParameters().addWhere(revisionEndFieldName, true, "is", "null", false);
 
@@ -141,10 +151,29 @@ public class ValidityAuditStrategy implements AuditStrategy {
             Object previousData = l.get(0);
             ((Map<String, Object>) previousData).put(revisionEndFieldName, revision);
 
+            if (auditCfg.getAuditEntCfg().isRevisionEndTimestampEnabled()) {
+                // Determine the value of the revision property annotated with @RevisionTimestamp
+            	Date revisionEndTimestamp;
+            	String revEndTimestampFieldName = auditCfg.getAuditEntCfg().getRevisionEndTimestampFieldName();
+            	Object revEndTimestampObj = this.revisionTimestampGetter.get(revision);
+
+            	// convert to a java.util.Date
+            	if (revEndTimestampObj instanceof Date) {
+            		revisionEndTimestamp = (Date) revEndTimestampObj;
+            	} else {
+            		revisionEndTimestamp = new Date((Long) revEndTimestampObj);
+            	}
+
+            	// Setting the end revision timestamp
+            	((Map<String, Object>) previousData).put(revEndTimestampFieldName, revisionEndTimestamp);
+            }
+            
             // Saving the previous version
             session.save(auditedEntityName, previousData);
+
         } else {
             throw new RuntimeException("Cannot find previous revision for entity " + auditedEntityName + " and id " + id);
         }
     }
 }
+

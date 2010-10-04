@@ -249,6 +249,33 @@
                         valid if the validity audit strategy is used.
                     </entry>
                 </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.audit_strategy_validity_store_revend_timestamp</property>
+                    </entry>
+                    <entry>
+                        false
+                    </entry>
+                    <entry>
+                        Should the timestamp of the end revision be stored, until which the data was valid, in addition to the end revision itself. 
+                        This is useful to be able to purge old Audit records out of a relational database by using table partitioning. 
+                        Partitioning requires a column that exists within the table.
+                        This property is only evaluated if the ValidityAuditStrategy is used.
+                    </entry>
+                </row>
+                <row>
+                    <entry>
+                        <property>org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name</property>
+                    </entry>
+                    <entry>
+                        REVEND_TSTMP
+                    </entry>
+                    <entry>
+                        Column name of the timestamp of the end revision until which the data was valid.
+                        Only used if the ValidityAuditStrategy is used, and 
+                        org.hibernate.envers.audit_strategy_validity_store_revend_timestamp evaluates to true
+                    </entry>
+                </row>
             </tbody>
         </tgroup>
     </table>

@@ -43,16 +43,21 @@ import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import static org.testng.FileAssert.fail;
 
 /**
+ * Base class for annotation processor tests.
+ *
  * @author Hardy Ferentschik
  */
 public abstract class CompilationTest {
 	private static final Logger log = LoggerFactory.getLogger( CompilationTest.class );
 	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
+	private static final String PROC_NONE = "-proc:none";
 	private static final String SOURCE_BASE_DIR_PROPERTY = "sourceBaseDir";
 	private static final String OUT_BASE_DIR_PROPERTY = "outBaseDir";
 	private static final String sourceBaseDir;
 	private static final String outBaseDir;
+
+	private List<Diagnostic> compilationDiagnostics;
 
 	static {
 		String tmp = System.getProperty( SOURCE_BASE_DIR_PROPERTY );
@@ -69,6 +74,11 @@ public abstract class CompilationTest {
 	}
 
 	public CompilationTest() {
+		compilationDiagnostics = new ArrayList<Diagnostic>();
+	}
+
+	public final List<Diagnostic> getCompilationDiagnostics() {
+		return compilationDiagnostics;
 	}
 
 	@BeforeClass
@@ -91,8 +101,9 @@ public abstract class CompilationTest {
 		compilationUnits = fileManager.getJavaFileObjectsFromFiles(
 				getCompilationUnits( outBaseDir )
 		);
-		options.add( "-proc:none" ); // for the second compile skip the processor
+		options.add( PROC_NONE ); // for the second compile skip the processor
 		compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
+		compilationDiagnostics.addAll( diagnostics.getDiagnostics() );
 		fileManager.close();
 	}
 

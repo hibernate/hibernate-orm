@@ -1412,6 +1412,33 @@ public final class AnnotationBinder {
 		final XAnnotatedElement element = propertyAnnotatedElement.getProperty();
 		if ( element.isAnnotationPresent( Id.class ) || element.isAnnotationPresent( EmbeddedId.class ) ) {
 			annElts.add( 0, propertyAnnotatedElement );
+			/**
+			 * The property must be put in hibernate.properties as it's a system wide property. Fixable?
+			 * TODO support true/false/default on the property instead of present / not present
+			 * TODO is @Column mandatory?
+			 * TODO add method support
+			 * TODO avoid custId hardcoded
+			 */
+			if ( System.getProperty( "hibernate.enable_specj_proprietary_syntax" ) != null ) {
+				if ( element.isAnnotationPresent( Id.class ) && element.isAnnotationPresent( Column.class ) ) {
+					String columnName = element.getAnnotation( Column.class ).name();
+					for ( XProperty prop : declaringClass.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
+						if ( prop.isAnnotationPresent( JoinColumn.class )
+								&& prop.getAnnotation( JoinColumn.class ).name().equals( columnName )
+								&& !prop.isAnnotationPresent( MapsId.class ) ) {
+							//create a PropertyData fpr the specJ property holding the mapping
+							PropertyData specJPropertyData = new PropertyInferredData(
+									declaringClass,  //same dec
+									prop, // the actual @XToOne property
+									propertyAccessor, //TODO we should get the right accessor but the same as id would do
+									mappings.getReflectionManager()
+							);
+							mappings.addPropertyAnnotatedWithMapsIdSpecj( entity, specJPropertyData, "custId" );
+						}
+					}
+				}
+			}
+
 			if ( element.isAnnotationPresent( ManyToOne.class ) || element.isAnnotationPresent( OneToOne.class ) ) {
 				mappings.addToOneAndIdProperty( entity, propertyAnnotatedElement );
 			}
@@ -2621,6 +2648,31 @@ public final class AnnotationBinder {
 				column.setInsertable( false );
 				column.setUpdatable( false );
 			}
+		}
+
+		//Make sure that JPA1 key-many-to-one columns are read only too
+		if ( System.getProperty( "hibernate.enable_specj_proprietary_syntax" ) != null ) {
+			String columnName = "";
+			for ( XProperty prop : inferredData.getDeclaringClass()
+					.getDeclaredProperties( AccessType.FIELD.getType() ) ) {
+				if ( prop.isAnnotationPresent( Id.class ) && prop.isAnnotationPresent( Column.class ) ) {
+					columnName = prop.getAnnotation( Column.class ).name();
+				}
+
+				final JoinColumn joinColumn = prop.getAnnotation( JoinColumn.class );
+				if ( prop.isAnnotationPresent( ManyToOne.class ) && joinColumn != null
+						&& !joinColumn.name().isEmpty()
+						&& joinColumn.name().equals( columnName )
+						&& !prop.isAnnotationPresent( MapsId.class ) )
+
+				{
+					for ( Ejb3JoinColumn column : columns ) {
+						column.setInsertable( false );
+						column.setUpdatable( false );
+					}
+				}
+			}
+
 		}
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();

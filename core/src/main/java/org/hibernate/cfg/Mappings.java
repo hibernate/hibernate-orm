@@ -733,6 +733,8 @@ public interface Mappings {
 
 	public void addPropertyAnnotatedWithMapsId(XClass entityType, PropertyData property);
 
+	public void addPropertyAnnotatedWithMapsIdSpecj(XClass entityType, PropertyData property, String mapsIdValue);
+
 	/**
 	 * Should we use the new generator strategy mappings.  This is controlled by the
 	 * {@link Configuration#USE_NEW_ID_GENERATOR_MAPPINGS} setting.
@@ -748,7 +750,4 @@ public interface Mappings {
 	public PropertyData getPropertyAnnotatedWithIdAndToOne(XClass entityType, String propertyName);
 
 	void addToOneAndIdProperty(XClass entity, PropertyData property);
-
-
-
 }

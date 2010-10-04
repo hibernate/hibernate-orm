@@ -1,0 +1,128 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010, Red Hat, Inc. and/or its affiliates or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat, Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.test.annotations.TestCase;
+
+/**
+ * A test.
+ *
+ * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
+ */
+public class IdMapManyToOneSpecjTest extends TestCase {
+
+	public IdMapManyToOneSpecjTest() {
+		System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
+	}
+
+	public void testComplexIdClass() {
+
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+
+		Customer c1 = new Customer(
+				"foo", "bar", "contact1", "100", new BigDecimal( 1000 ), new BigDecimal( 1000 ), new BigDecimal( 1000 )
+		);
+
+		s.persist( c1 );
+		s.flush();
+		s.clear();
+
+		Item boat = new Item();
+		boat.setId( "1" );
+		boat.setName( "cruiser" );
+		boat.setPrice( new BigDecimal( 500 ) );
+		boat.setDescription( "a boat" );
+		boat.setCategory( 42 );
+
+		s.persist( boat );
+
+
+		Item house = new Item();
+		house.setId( "2" );
+		house.setName( "blada" );
+		house.setPrice( new BigDecimal( 5000 ) );
+		house.setDescription( "a house" );
+		house.setCategory( 74 );
+
+		s.persist( house );
+		s.flush();
+		s.clear();
+
+		c1.addInventory( boat, 10, new BigDecimal( 5000 ) );
+
+		c1.addInventory( house, 100, new BigDecimal( 50000 ) );
+		s.merge( c1 );
+		s.flush();
+		s.clear();
+
+		Customer c12 = ( Customer ) s.createQuery( "select c from Customer c" ).uniqueResult();
+
+//		c12.getBalance();
+		List<CustomerInventory> inventory = c12.getInventories();
+
+		assertEquals( 2, inventory.size() );
+		assertEquals( 10, inventory.get( 0 ).getQuantity() );
+
+
+		Item house2 = new Item();
+		house2.setId( "3" );
+		house2.setName( "blada" );
+		house2.setPrice( new BigDecimal( 5000 ) );
+		house2.setDescription( "a house" );
+		house2.setCategory( 74 );
+
+		s.persist( house2 );
+		s.flush();
+		s.clear();
+
+		c12.addInventory( house2, 200, new BigDecimal( 500000 ) );
+		s.merge( c12 );
+
+		s.flush();
+		s.clear();
+
+		Customer c13 = ( Customer ) s.createQuery( "select c from Customer c where c.id = " + c12.getId() )
+				.uniqueResult();
+		assertEquals( 3, c13.getInventories().size() );
+
+		tx.rollback();
+		s.close();
+	}
+
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Customer.class,
+				CustomerInventory.class,
+				CustomerInventoryPK.class,
+				Item.class
+
+		};
+	}
+}

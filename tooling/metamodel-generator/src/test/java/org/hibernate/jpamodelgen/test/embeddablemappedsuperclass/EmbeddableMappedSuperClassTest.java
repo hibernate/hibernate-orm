@@ -40,7 +40,7 @@ public class EmbeddableMappedSuperClassTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return EmbeddableMappedSuperClassTest.class.getPackage().getName();
 	}
 }

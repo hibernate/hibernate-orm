@@ -37,7 +37,7 @@ public class GenericsTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return GenericsTest.class.getPackage().getName();
 	}
 }

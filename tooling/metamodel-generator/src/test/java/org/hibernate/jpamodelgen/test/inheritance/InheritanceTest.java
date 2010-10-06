@@ -52,7 +52,7 @@ public class InheritanceTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return InheritanceTest.class.getPackage().getName();
 	}
 }

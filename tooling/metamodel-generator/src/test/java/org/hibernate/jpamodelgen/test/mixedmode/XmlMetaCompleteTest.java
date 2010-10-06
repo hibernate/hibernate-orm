@@ -42,7 +42,7 @@ public class XmlMetaCompleteTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return XmlMetaCompleteTest.class.getPackage().getName();
 	}
 

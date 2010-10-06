@@ -49,13 +49,14 @@ import static org.testng.FileAssert.fail;
  */
 public abstract class CompilationTest {
 	private static final Logger log = LoggerFactory.getLogger( CompilationTest.class );
-	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
 	private static final String PROC_NONE = "-proc:none";
 	private static final String SOURCE_BASE_DIR_PROPERTY = "sourceBaseDir";
 	private static final String OUT_BASE_DIR_PROPERTY = "outBaseDir";
 	private static final String sourceBaseDir;
 	private static final String outBaseDir;
+
+	public static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
 
 	private List<Diagnostic> compilationDiagnostics;
 
@@ -81,16 +82,34 @@ public abstract class CompilationTest {
 		return compilationDiagnostics;
 	}
 
+	public static String getSourceBaseDir() {
+		return sourceBaseDir;
+	}
+
 	@BeforeClass
-	protected void compile() throws Exception {
+	protected void compileAllTestEntities() throws Exception {
+		List<File> sourceFiles = getCompilationUnits( sourceBaseDir, getPackageNameOfCurrentTest() );
+		// make sure there are no relics from previous runs
 		TestUtil.deleteGeneratedSourceFiles( new File( outBaseDir ) );
+		compile( sourceFiles, getPackageNameOfCurrentTest() );
+	}
+
+	/**
+	 * Compiles the specified Java classes and generated the meta model java files which in turn get also compiled.
+	 *
+	 * @param sourceFiles the files containing the java source files to compile.
+	 * @param packageName the package name of the source files
+	 *
+	 * @throws Exception in case the compilation fails
+	 */
+	protected void compile(List<File> sourceFiles, String packageName) throws Exception {
 		List<String> options = createJavaOptions();
 
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 		StandardJavaFileManager fileManager = compiler.getStandardFileManager( diagnostics, null, null );
 		Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(
-				getCompilationUnits( sourceBaseDir )
+				sourceFiles
 		);
 
 		// TODO - need to call the compiler twice. Once to compile the test classes and generate the java files
@@ -99,12 +118,40 @@ public abstract class CompilationTest {
 		compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
 
 		compilationUnits = fileManager.getJavaFileObjectsFromFiles(
-				getCompilationUnits( outBaseDir )
+				getCompilationUnits( outBaseDir, packageName )
 		);
 		options.add( PROC_NONE ); // for the second compile skip the processor
 		compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
 		compilationDiagnostics.addAll( diagnostics.getDiagnostics() );
 		fileManager.close();
+	}
+
+	protected List<File> getCompilationUnits(String baseDir, String packageName) {
+		List<File> javaFiles = new ArrayList<File>();
+		String packageDirName = baseDir + PATH_SEPARATOR + packageName.replace( ".", PATH_SEPARATOR );
+		File packageDir = new File( packageDirName );
+		FilenameFilter javaFileFilter = new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith( ".java" ) && !name.endsWith( "Test.java" );
+			}
+		};
+		final File[] files = packageDir.listFiles( javaFileFilter );
+		if ( files == null ) {
+			throw new RuntimeException( "Cannot find package directory (is your base dir correct?): " + packageDirName );
+		}
+		javaFiles.addAll( Arrays.asList( files ) );
+		return javaFiles;
+	}
+
+	abstract protected String getPackageNameOfCurrentTest();
+
+	protected Map<String, String> getProcessorOptions() {
+		return Collections.emptyMap();
+	}
+
+	protected Collection<String> getOrmFiles() {
+		return Collections.emptyList();
 	}
 
 	private void compileSources(List<String> options, JavaCompiler compiler, DiagnosticCollector<JavaFileObject> diagnostics, StandardJavaFileManager fileManager, Iterable<? extends JavaFileObject> compilationUnits) {
@@ -146,34 +193,6 @@ public abstract class CompilationTest {
 			options.add( builder.toString() );
 		}
 		return options;
-	}
-
-	private List<File> getCompilationUnits(String baseDir) {
-		List<File> javaFiles = new ArrayList<File>();
-		String packageDirName = baseDir + PATH_SEPARATOR + getPackageNameOfTestSources().replace( ".", PATH_SEPARATOR );
-		File packageDir = new File( packageDirName );
-		FilenameFilter javaFileFilter = new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith( ".java" ) && !name.endsWith( "Test.java" );
-			}
-		};
-		final File[] files = packageDir.listFiles( javaFileFilter );
-		if ( files == null ) {
-			throw new RuntimeException( "Cannot find package directory (is your base dir correct?): " + packageDirName );
-		}
-		javaFiles.addAll( Arrays.asList( files ) );
-		return javaFiles;
-	}
-
-	abstract protected String getPackageNameOfTestSources();
-
-	protected Map<String, String> getProcessorOptions() {
-		return Collections.emptyMap();
-	}
-
-	protected Collection<String> getOrmFiles() {
-		return Collections.emptyList();
 	}
 }
 

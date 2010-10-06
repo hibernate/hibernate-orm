@@ -22,7 +22,7 @@ package org.hibernate.jpamodelgen.util;
 /**
  * @author Hardy Ferentschik
  */
-public class StringUtil {
+public final class StringUtil {
 	private static final String NAME_SEPARATOR = ".";
 	private static final String PROPERTY_PREFIX_GET = "get";
 	private static final String PROPERTY_PREFIX_IS = "is";
@@ -63,16 +63,17 @@ public class StringUtil {
 			return null;
 		}
 
+		String tmp = name;
 		if ( name.startsWith( PROPERTY_PREFIX_GET ) ) {
-			name = name.replaceFirst( PROPERTY_PREFIX_GET, "" );
+			tmp = name.replaceFirst( PROPERTY_PREFIX_GET, "" );
 		}
 		else if ( name.startsWith( PROPERTY_PREFIX_IS ) ) {
-			name = name.replaceFirst( PROPERTY_PREFIX_IS, "" );
+			tmp = name.replaceFirst( PROPERTY_PREFIX_IS, "" );
 		}
 		else if ( name.startsWith( PROPERTY_PREFIX_HAS ) ) {
-			name = name.replaceFirst( PROPERTY_PREFIX_HAS, "" );
+			tmp = name.replaceFirst( PROPERTY_PREFIX_HAS, "" );
 		}
-		return name.substring(0,1).toLowerCase() + name.substring(1);
+		return tmp.substring(0,1).toLowerCase() + tmp.substring(1);
 	}
 }
 

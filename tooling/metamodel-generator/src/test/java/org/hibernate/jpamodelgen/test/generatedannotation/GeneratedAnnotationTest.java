@@ -42,7 +42,7 @@ public class GeneratedAnnotationTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return GeneratedAnnotationTest.class.getPackage().getName();
 	}
 }

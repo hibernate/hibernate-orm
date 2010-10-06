@@ -99,7 +99,7 @@ public class AccessTypeTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return AccessTypeTest.class.getPackage().getName();
 	}
 

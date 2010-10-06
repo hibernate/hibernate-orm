@@ -96,7 +96,7 @@ public class MixedConfigurationTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return MixedConfigurationTest.class.getPackage().getName();
 	}
 

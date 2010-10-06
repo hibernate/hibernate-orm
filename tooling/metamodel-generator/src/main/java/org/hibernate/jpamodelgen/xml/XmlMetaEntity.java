@@ -124,7 +124,7 @@ public class XmlMetaEntity implements MetaEntity {
 		this.isMetaComplete = initIsMetaComplete( metaComplete );
 	}
 
-	protected void init() {
+	protected final void init() {
 		this.accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
 		if ( attributes != null ) {
 			parseAttributes( attributes );

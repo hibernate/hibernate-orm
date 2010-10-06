@@ -40,7 +40,7 @@ public class XmlOnlyTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return XmlOnlyTest.class.getPackage().getName();
 	}
 

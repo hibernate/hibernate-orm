@@ -42,7 +42,7 @@ public class IgnoreInvalidXmlTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return IgnoreInvalidXmlTest.class.getPackage().getName();
 	}
 

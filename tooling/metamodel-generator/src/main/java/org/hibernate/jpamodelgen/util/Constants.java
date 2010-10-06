@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * @author Hardy Ferentschik
  */
-public class Constants {
+public final class Constants {
 	public static Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {

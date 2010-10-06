@@ -49,7 +49,7 @@ public class ArrayTest extends CompilationTest {
 	}
 
 	@Override
-	protected String getPackageNameOfTestSources() {
+	protected String getPackageNameOfCurrentTest() {
 		return Image.class.getPackage().getName();
 	}
 }

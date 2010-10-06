@@ -15,29 +15,18 @@
  * limitations under the License.
  */
 
-// $Id$
+// $Id:$
+package org.hibernate.jpamodelgen.test.separatecompilationunits.superclass;
 
-package org.hibernate.jpamodelgen.test.rawtypes;
-
-import org.testng.annotations.Test;
-
-import org.hibernate.jpamodelgen.test.util.CompilationTest;
-
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import javax.persistence.Id;
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-public class RawTypesTest extends CompilationTest {
-
-	@Test
-	public void testGenerics() {
-		assertMetamodelClassGeneratedFor( DeskWithRawType.class );
-		assertMetamodelClassGeneratedFor( EmployeeWithRawType.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return DeskWithRawType.class.getPackage().getName();
-	}
+@javax.persistence.MappedSuperclass
+public class MappedSuperclass {
+	@Id
+	private long id;
 }
+
+

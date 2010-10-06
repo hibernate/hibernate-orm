@@ -99,13 +99,13 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				);
 		}
 
+		final Class idClass = persister.getIdentifierType().getReturnedClass();
 		if ( persister.getIdentifierType().isComponentType() && EntityMode.DOM4J == event.getSession().getEntityMode() ) {
 			// skip this check for composite-ids relating to dom4j entity-mode;
 			// alternatively, we could add a check to make sure the incoming id value is
 			// an instance of Element...
 		}
 		else {
-			Class idClass = persister.getIdentifierType().getReturnedClass();
 			if ( idClass != null && ! idClass.isInstance( event.getEntityId() ) ) {
 				// we may have the kooky jpa requirement of allowing find-by-id where
 				// "id" is the "simple pk value" of a dependent objects parent.  This
@@ -542,7 +542,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				}
 			}
 			if ( options.isAllowNulls() ) {
-				EntityPersister persister = event.getSession().getFactory().getEntityPersister( event.getEntityClassName() );
+//				EntityPersister persister = event.getSession().getFactory().getEntityPersister( event.getEntityClassName() );
+				EntityPersister persister = event.getSession().getFactory().getEntityPersister( keyToLoad.getEntityName() );
 				if ( ! persister.isInstance( old, event.getSession().getEntityMode() ) ) {
 					return INCONSISTENT_RTN_CLASS_MARKER;
 				}

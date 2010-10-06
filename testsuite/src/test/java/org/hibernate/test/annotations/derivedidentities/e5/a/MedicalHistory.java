@@ -21,4 +21,11 @@ public class MedicalHistory implements Serializable {
 	})
 	@OneToOne
 	Person patient;
+
+	public MedicalHistory() {
+	}
+
+	public MedicalHistory(Person patient) {
+		this.patient = patient;
+	}
 }

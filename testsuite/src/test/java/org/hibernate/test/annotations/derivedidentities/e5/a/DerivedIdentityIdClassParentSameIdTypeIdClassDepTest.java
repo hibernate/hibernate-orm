@@ -8,30 +8,64 @@ import org.hibernate.test.util.SchemaUtil;
  * @author Emmanuel Bernard
  */
 public class DerivedIdentityIdClassParentSameIdTypeIdClassDepTest extends TestCase {
-	
+	private static final String FIRST_NAME = "Emmanuel";
+	private static final String LAST_NAME = "Bernard";
+
 	public void testOneToOneExplicitJoinColumn() throws Exception {
 		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", getCfg() ) );
 		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", getCfg() ) );
 		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", getCfg() ) );
-		Person e = new Person();
-		e.firstName = "Emmanuel";
-		e.lastName = "Bernard";
-		Session s = openSession(  );
+
+		Session s = openSession();
 		s.getTransaction().begin();
+		Person e = new Person( FIRST_NAME, LAST_NAME );
 		s.persist( e );
-		MedicalHistory d = new MedicalHistory();
-		d.patient = e;
+		MedicalHistory d = new MedicalHistory( e );
 		s.persist( d );
 		s.flush();
-		s.clear();
-		PersonId pId = new PersonId();
-		pId.firstName = e.firstName;
-		pId.lastName = e.lastName;
-		d = (MedicalHistory) s.get( MedicalHistory.class, pId);
-		assertEquals( pId.firstName, d.patient.firstName );
-		s.delete( d );
-		s.delete( d.patient );
-		s.getTransaction().rollback();
+		s.refresh( d );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.getTransaction().begin();
+		PersonId pId = new PersonId( FIRST_NAME, LAST_NAME );
+		MedicalHistory d2 = (MedicalHistory) s.get( MedicalHistory.class, pId );
+		Person p2 = (Person) s.get( Person.class, pId );
+		assertEquals( pId.firstName, d2.patient.firstName );
+		assertEquals( pId.firstName, p2.firstName );
+		s.delete( d2 );
+		s.delete( p2 );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	public void testTckLikeBehavior() throws Exception {
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK1", getCfg() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "MedicalHistory", "FK2", getCfg() ) );
+		assertTrue( ! SchemaUtil.isColumnPresent( "MedicalHistory", "firstname", getCfg() ) );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		Person e = new Person( FIRST_NAME, LAST_NAME );
+		s.persist( e );
+		MedicalHistory d = new MedicalHistory( e );
+		s.persist( d );
+		s.flush();
+		s.refresh( d );
+		s.getTransaction().commit();
+
+		// NOTE THAT WE LEAVE THE SESSION OPEN!
+
+		s.getTransaction().begin();
+		PersonId pId = new PersonId( FIRST_NAME, LAST_NAME );
+		MedicalHistory d2 = (MedicalHistory) s.get( MedicalHistory.class, pId );
+		Person p2 = (Person) s.get( Person.class, pId );
+		assertEquals( pId.firstName, d2.patient.firstName );
+		assertEquals( pId.firstName, p2.firstName );
+		s.delete( d2 );
+		s.delete( p2 );
+		s.getTransaction().commit();
 		s.close();
 	}
 

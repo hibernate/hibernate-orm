@@ -25,7 +25,7 @@ package org.hibernate.cache;
 
 import java.util.Properties;
 
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.StringHelper;
 
 import com.opensymphony.oscache.base.CacheEntry;
@@ -66,7 +66,7 @@ public class OSCacheProvider implements CacheProvider {
 	 */
 	public Cache buildCache(String region, Properties properties) throws CacheException {
 
-		int refreshPeriod = PropertiesHelper.getInt(
+		int refreshPeriod = ConfigurationHelper.getInt(
 			StringHelper.qualify(region, OSCACHE_REFRESH_PERIOD),
 			OSCACHE_PROPERTIES,
 			CacheEntry.INDEFINITE_EXPIRY
@@ -76,7 +76,7 @@ public class OSCacheProvider implements CacheProvider {
 		// construct the cache
 		final OSCache cache = new OSCache(refreshPeriod, cron, region);
 
-		Integer capacity = PropertiesHelper.getInteger( StringHelper.qualify(region, OSCACHE_CAPACITY), OSCACHE_PROPERTIES );
+		Integer capacity = ConfigurationHelper.getInteger( StringHelper.qualify(region, OSCACHE_CAPACITY), OSCACHE_PROPERTIES );
 		if ( capacity!=null ) cache.setCacheCapacity( capacity.intValue() );
 
 		return cache;

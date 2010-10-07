@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -60,14 +60,14 @@ public class DriverManagerConnectionProvider implements ConnectionProvider {
 
 		String driverClass = props.getProperty(Environment.DRIVER);
 
-		poolSize = PropertiesHelper.getInt(Environment.POOL_SIZE, props, 20); //default pool size 20
+		poolSize = ConfigurationHelper.getInt(Environment.POOL_SIZE, props, 20); //default pool size 20
 		log.info("Using Hibernate built-in connection pool (not for production use!)");
 		log.info("Hibernate connection pool size: " + poolSize);
 		
-		autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
+		autocommit = ConfigurationHelper.getBoolean(Environment.AUTOCOMMIT, props);
 		log.info("autocommit mode: " + autocommit);
 
-		isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
+		isolation = ConfigurationHelper.getInteger(Environment.ISOLATION, props);
 		if (isolation!=null)
 		log.info( "JDBC isolation level: " + Environment.isolationLevelToString( isolation.intValue() ) );
 
@@ -106,7 +106,7 @@ public class DriverManagerConnectionProvider implements ConnectionProvider {
 			log.info( "connection properties: " + connectionProps );
 		} 
 		else if ( log.isInfoEnabled() ) {
-			log.info( "connection properties: " + PropertiesHelper.maskOut(connectionProps, "password") );
+			log.info( "connection properties: " + ConfigurationHelper.maskOut(connectionProps, "password") );
 		}
 
 	}

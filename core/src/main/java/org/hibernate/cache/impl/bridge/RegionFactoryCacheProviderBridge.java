@@ -38,7 +38,7 @@ import org.hibernate.cache.NoCacheProvider;
 import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.access.AccessType;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
@@ -57,7 +57,7 @@ public class RegionFactoryCacheProviderBridge implements RegionFactory {
 	private Settings settings;
 
 	public RegionFactoryCacheProviderBridge(Properties properties) {
-		String providerClassName = PropertiesHelper.getString( Environment.CACHE_PROVIDER, properties, DEF_PROVIDER );
+		String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, DEF_PROVIDER );
 		log.info( "Cache provider: " + providerClassName );
 		try {
 			cacheProvider = ( CacheProvider ) ReflectHelper.classForName( providerClassName ).newInstance();

@@ -32,7 +32,7 @@ import javax.naming.NamingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.util.NamingHelper;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.jboss.cache.CacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +65,7 @@ public class JndiMultiplexingCacheInstanceManager extends MultiplexingCacheInsta
     @Override
     public void start(Settings settings, Properties properties) throws CacheException {
         
-        String name = PropertiesHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, null);
+        String name = ConfigurationHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, null);
         if (name == null)
             throw new CacheException("Configuration property " + CACHE_FACTORY_RESOURCE_PROP + " not set");
         

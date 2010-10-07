@@ -40,8 +40,8 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jbc.CacheInstanceManager;
 import org.hibernate.cache.jbc.util.CacheHelper;
 import org.hibernate.cfg.Settings;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.transaction.TransactionManagerLookup;
-import org.hibernate.util.PropertiesHelper;
 
 /**
  * Allows building separate {@link Cache} instances for each type of region,
@@ -317,9 +317,9 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
             if (buildCaches && jbcFactory == null) {
                 // See if the user configured a multiplexer stack
                 if (channelFactory == null) {
-                    String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, null);
+                    String muxStacks = ConfigurationHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, null);
                     if (muxStacks == null) {
-                    	muxStacks = PropertiesHelper.getString(LEGACY_CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
+                    	muxStacks = ConfigurationHelper.getString(LEGACY_CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
                     }
                     if (muxStacks != null) {
                         channelFactory = new JChannelFactory();
@@ -327,9 +327,9 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                     }
                 }
                 
-                String factoryRes = PropertiesHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, null);
+                String factoryRes = ConfigurationHelper.getString(CACHE_FACTORY_RESOURCE_PROP, properties, null);
                 if (factoryRes == null) {
-                	factoryRes = PropertiesHelper.getString(LEGACY_CACHE_FACTORY_RESOURCE_PROP, properties, DEF_CACHE_FACTORY_RESOURCE);
+                	factoryRes = ConfigurationHelper.getString(LEGACY_CACHE_FACTORY_RESOURCE_PROP, properties, DEF_CACHE_FACTORY_RESOURCE);
                 }
                 jbcFactory = new CacheManagerImpl(factoryRes, channelFactory);
                 ((CacheManagerImpl) jbcFactory).start();
@@ -339,18 +339,18 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
             if (settings.isSecondLevelCacheEnabled()) {
 
                 if (buildCaches) {
-                    entityConfig = PropertiesHelper
+                    entityConfig = ConfigurationHelper
                             .getString(ENTITY_CACHE_RESOURCE_PROP, properties, null);
                     if (entityConfig == null) {
-                    	entityConfig = PropertiesHelper.getString(LEGACY_ENTITY_CACHE_RESOURCE_PROP, 
+                    	entityConfig = ConfigurationHelper.getString(LEGACY_ENTITY_CACHE_RESOURCE_PROP,
                     			properties, DEF_ENTITY_RESOURCE);
                     }
                     jbcEntityCache = jbcFactory.getCache(entityConfig, true);
                 
                     // Default to collections sharing entity cache if there is one
-                    collectionConfig = PropertiesHelper.getString(COLLECTION_CACHE_RESOURCE_PROP, properties, null);
+                    collectionConfig = ConfigurationHelper.getString(COLLECTION_CACHE_RESOURCE_PROP, properties, null);
                     if (collectionConfig == null) {
-                    	collectionConfig = PropertiesHelper.getString(LEGACY_COLLECTION_CACHE_RESOURCE_PROP, properties, entityConfig);
+                    	collectionConfig = ConfigurationHelper.getString(LEGACY_COLLECTION_CACHE_RESOURCE_PROP, properties, entityConfig);
                     }
                     if (entityConfig.equals(collectionConfig)) {
                         jbcCollectionCache = jbcEntityCache;
@@ -380,9 +380,9 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                 if (buildCaches) {
                     // Default to sharing the entity cache if there is one
                     String dfltQueryResource = (entityConfig == null ? DEF_QUERY_RESOURCE : entityConfig);
-                    queryConfig = PropertiesHelper.getString(QUERY_CACHE_RESOURCE_PROP, properties, null);
+                    queryConfig = ConfigurationHelper.getString(QUERY_CACHE_RESOURCE_PROP, properties, null);
                     if (queryConfig == null) {
-                    	queryConfig = PropertiesHelper.getString(LEGACY_QUERY_CACHE_RESOURCE_PROP, properties, dfltQueryResource);
+                    	queryConfig = ConfigurationHelper.getString(LEGACY_QUERY_CACHE_RESOURCE_PROP, properties, dfltQueryResource);
                     }
                     if (queryConfig.equals(entityConfig)) {
                         jbcQueryCache = jbcEntityCache;
@@ -393,9 +393,9 @@ public class MultiplexingCacheInstanceManager implements CacheInstanceManager {
                     }
     
                     // For Timestamps, we default to a separate config
-                    tsConfig = PropertiesHelper.getString(TIMESTAMP_CACHE_RESOURCE_PROP, properties, null);
+                    tsConfig = ConfigurationHelper.getString(TIMESTAMP_CACHE_RESOURCE_PROP, properties, null);
                     if (tsConfig == null) {
-                    	tsConfig = PropertiesHelper.getString(LEGACY_TIMESTAMP_CACHE_RESOURCE_PROP, properties, DEF_TS_RESOURCE);
+                    	tsConfig = ConfigurationHelper.getString(LEGACY_TIMESTAMP_CACHE_RESOURCE_PROP, properties, DEF_TS_RESOURCE);
                     }
                     if (tsConfig.equals(queryConfig)) {
                         jbcTsCache = jbcQueryCache;

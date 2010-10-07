@@ -39,7 +39,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.jbc.CacheInstanceManager;
 import org.hibernate.cache.jbc.util.CacheHelper;
 import org.hibernate.cfg.Settings;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * A {@link CacheInstanceManager} implementation where we use a single JBoss Cache
@@ -149,9 +149,9 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
         if (cache == null) {
             
             if (channelFactory == null) {
-                String muxStacks = PropertiesHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, null);
+                String muxStacks = ConfigurationHelper.getString(CHANNEL_FACTORY_RESOURCE_PROP, properties, null);
                 if (muxStacks == null) {
-                	PropertiesHelper.getString(LEGACY_CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
+                	ConfigurationHelper.getString(LEGACY_CHANNEL_FACTORY_RESOURCE_PROP, properties, DEF_JGROUPS_RESOURCE);
                 }
                 if (muxStacks != null) {
                     channelFactory = new JChannelFactory();
@@ -205,9 +205,9 @@ public class SharedCacheInstanceManager implements CacheInstanceManager {
      */
     protected Cache createSharedCache(Settings settings, Properties properties)
     {
-        String configResource = PropertiesHelper.getString(CACHE_RESOURCE_PROP, properties, null);
+        String configResource = ConfigurationHelper.getString(CACHE_RESOURCE_PROP, properties, null);
         if (configResource == null) {
-        	configResource = PropertiesHelper.getString(LEGACY_CACHE_RESOURCE_PROP, properties, DEFAULT_CACHE_RESOURCE);
+        	configResource = ConfigurationHelper.getString(LEGACY_CACHE_RESOURCE_PROP, properties, DEFAULT_CACHE_RESOURCE);
         }
         return new DefaultCacheFactory().createCache(configResource, false);
     }

@@ -51,12 +51,12 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JDBCExceptionReporter;
-import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -130,9 +130,9 @@ public class SchemaExport {
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
 
-		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		formatter = ( ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 
-		importFiles = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILES, props, DEFAULT_IMPORT_FILE );
+		importFiles = ConfigurationHelper.getString( Environment.HBM2DDL_IMPORT_FILES, props, DEFAULT_IMPORT_FILE );
 	}
 
 	/**
@@ -147,8 +147,8 @@ public class SchemaExport {
 		dialect = Dialect.getDialect( cfg.getProperties() );
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
-		formatter = ( PropertiesHelper.getBoolean( Environment.FORMAT_SQL, cfg.getProperties() ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		importFiles = PropertiesHelper.getString( Environment.HBM2DDL_IMPORT_FILES, cfg.getProperties(),
+		formatter = ( ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, cfg.getProperties() ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		importFiles = ConfigurationHelper.getString( Environment.HBM2DDL_IMPORT_FILES, cfg.getProperties(),
 				DEFAULT_IMPORT_FILE
 		);
 	}

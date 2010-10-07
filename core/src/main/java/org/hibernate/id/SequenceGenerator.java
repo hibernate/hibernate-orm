@@ -39,7 +39,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * <b>sequence</b><br>
@@ -79,7 +79,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 		sequenceName = normalizer.normalizeIdentifierQuoting(
-				PropertiesHelper.getString( SEQUENCE, params, "hibernate_sequence" )
+				ConfigurationHelper.getString( SEQUENCE, params, "hibernate_sequence" )
 		);
 		parameters = params.getProperty( PARAMETERS );
 

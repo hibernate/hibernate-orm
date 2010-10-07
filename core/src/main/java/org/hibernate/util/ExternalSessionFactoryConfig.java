@@ -26,6 +26,7 @@ package org.hibernate.util;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import java.util.Properties;
 import java.util.Iterator;
@@ -268,7 +269,7 @@ public abstract class ExternalSessionFactoryConfig {
 		//          ({sep}type=listenerClass)*
 		// where {sep} is any whitespace or comma
 		if ( StringHelper.isNotEmpty( customListenersString) ) {
-			String[] listenerEntries = PropertiesHelper.toStringArray( customListenersString, " ,\n\t\r\f" );
+			String[] listenerEntries = ConfigurationHelper.toStringArray( customListenersString, " ,\n\t\r\f" );
 			for ( int i = 0; i < listenerEntries.length; i++ ) {
 				final int keyValueSepPosition = listenerEntries[i].indexOf( '=' );
 				final String type = listenerEntries[i].substring( 0, keyValueSepPosition );
@@ -299,7 +300,7 @@ public abstract class ExternalSessionFactoryConfig {
 		Configuration cfg = new Configuration().setProperties( buildProperties() );
 
 
-		String[] mappingFiles = PropertiesHelper.toStringArray( mapResources, " ,\n\t\r\f" );
+		String[] mappingFiles = ConfigurationHelper.toStringArray( mapResources, " ,\n\t\r\f" );
 		for ( int i = 0; i < mappingFiles.length; i++ ) {
 			cfg.addResource( mappingFiles[i] );
 		}

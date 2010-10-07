@@ -23,7 +23,7 @@
  */
 package org.hibernate.engine.query;
 
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.SimpleMRUCache;
 import org.hibernate.util.SoftLimitMRUCache;
 import org.hibernate.util.CollectionHelper;
@@ -61,12 +61,12 @@ public class QueryPlanCache implements Serializable {
 	private SessionFactoryImplementor factory;
 
 	public QueryPlanCache(SessionFactoryImplementor factory) {
-		int maxStrongReferenceCount = PropertiesHelper.getInt(
+		int maxStrongReferenceCount = ConfigurationHelper.getInt(
 				Environment.QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES,
 				factory.getProperties(),
 				SoftLimitMRUCache.DEFAULT_STRONG_REF_COUNT
 		);
-		int maxSoftReferenceCount = PropertiesHelper.getInt(
+		int maxSoftReferenceCount = ConfigurationHelper.getInt(
 				Environment.QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES,
 				factory.getProperties(),
 				SoftLimitMRUCache.DEFAULT_SOFT_REF_COUNT

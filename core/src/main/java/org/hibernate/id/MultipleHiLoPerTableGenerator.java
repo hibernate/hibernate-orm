@@ -39,13 +39,13 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.util.PropertiesHelper;
 
 /**
  *
@@ -222,7 +222,7 @@ public class MultipleHiLoPerTableGenerator
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 
-		tableName = normalizer.normalizeIdentifierQuoting( PropertiesHelper.getString( ID_TABLE, params, DEFAULT_TABLE ) );
+		tableName = normalizer.normalizeIdentifierQuoting( ConfigurationHelper.getString( ID_TABLE, params, DEFAULT_TABLE ) );
 		if ( tableName.indexOf( '.' ) < 0 ) {
 			tableName = dialect.quote( tableName );
 			final String schemaName = dialect.quote(
@@ -240,16 +240,16 @@ public class MultipleHiLoPerTableGenerator
 
 		pkColumnName = dialect.quote(
 				normalizer.normalizeIdentifierQuoting(
-						PropertiesHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
+						ConfigurationHelper.getString( PK_COLUMN_NAME, params, DEFAULT_PK_COLUMN )
 				)
 		);
 		valueColumnName = dialect.quote(
 				normalizer.normalizeIdentifierQuoting(
-						PropertiesHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN )
+						ConfigurationHelper.getString( VALUE_COLUMN_NAME, params, DEFAULT_VALUE_COLUMN )
 				)
 		);
-		keySize = PropertiesHelper.getInt(PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH);
-		String keyValue = PropertiesHelper.getString(PK_VALUE_NAME, params, params.getProperty(TABLE) );
+		keySize = ConfigurationHelper.getInt(PK_LENGTH_NAME, params, DEFAULT_PK_LENGTH);
+		String keyValue = ConfigurationHelper.getString(PK_VALUE_NAME, params, params.getProperty(TABLE) );
 
 		query = "select " +
 			valueColumnName +
@@ -276,7 +276,7 @@ public class MultipleHiLoPerTableGenerator
 
 
 		//hilo config
-		maxLo = PropertiesHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
+		maxLo = ConfigurationHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
 		returnClass = type.getReturnedClass();
 
 		if ( maxLo >= 1 ) {

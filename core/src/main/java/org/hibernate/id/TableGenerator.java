@@ -37,13 +37,13 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.util.PropertiesHelper;
 
 /**
  * An <tt>IdentifierGenerator</tt> that uses a database
@@ -98,7 +98,7 @@ public class TableGenerator extends TransactionHelper
 
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
 
-		tableName = PropertiesHelper.getString( TABLE, params, DEFAULT_TABLE_NAME );
+		tableName = ConfigurationHelper.getString( TABLE, params, DEFAULT_TABLE_NAME );
 		if ( tableName.indexOf( '.' ) < 0 ) {
 			final String schemaName = normalizer.normalizeIdentifierQuoting( params.getProperty( SCHEMA ) );
 			final String catalogName = normalizer.normalizeIdentifierQuoting( params.getProperty( CATALOG ) );
@@ -115,7 +115,7 @@ public class TableGenerator extends TransactionHelper
 
 		columnName = dialect.quote(
 				normalizer.normalizeIdentifierQuoting(
-						PropertiesHelper.getString( COLUMN, params, DEFAULT_COLUMN_NAME )
+						ConfigurationHelper.getString( COLUMN, params, DEFAULT_COLUMN_NAME )
 				)
 		);
 

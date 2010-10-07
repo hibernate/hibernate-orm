@@ -31,7 +31,8 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.jbc.TransactionalDataRegionAdapter;
 import org.hibernate.cache.jbc.util.CacheHelper;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import org.jboss.cache.Cache;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.config.Option;
@@ -76,10 +77,10 @@ public class QueryResultsRegionImpl extends TransactionalDataRegionAdapter imple
         	// if they passed an config option to disable query replication
         	if (CacheHelper.isClusteredReplication(jbcCache)) {
         		if (properties.containsKey(QUERY_CACHE_LOCAL_ONLY_PROP)) {
-        			localOnly = PropertiesHelper.getBoolean(QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
+        			localOnly = ConfigurationHelper.getBoolean(QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
         		}
         		else {
-        			localOnly = PropertiesHelper.getBoolean(LEGACY_QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
+        			localOnly = ConfigurationHelper.getBoolean(LEGACY_QUERY_CACHE_LOCAL_ONLY_PROP, properties, false);
         		}
         	}
         }

@@ -37,7 +37,7 @@ import com.mchange.v2.c3p0.DataSources;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -101,9 +101,9 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 		Properties connectionProps = ConnectionProviderFactory.getConnectionProperties( props );
 
 		log.info( "C3P0 using driver: " + jdbcDriverClass + " at URL: " + jdbcUrl );
-		log.info( "Connection properties: " + PropertiesHelper.maskOut( connectionProps, "password" ) );
+		log.info( "Connection properties: " + ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
-		autocommit = PropertiesHelper.getBoolean( Environment.AUTOCOMMIT, props );
+		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
 		log.info( "autocommit mode: " + autocommit );
 
 		if ( jdbcDriverClass == null ) {
@@ -128,12 +128,12 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 		try {
 
 			//swaldman 2004-02-07: modify to allow null values to signify fall through to c3p0 PoolConfig defaults
-			Integer minPoolSize = PropertiesHelper.getInteger( Environment.C3P0_MIN_SIZE, props );
-			Integer maxPoolSize = PropertiesHelper.getInteger( Environment.C3P0_MAX_SIZE, props );
-			Integer maxIdleTime = PropertiesHelper.getInteger( Environment.C3P0_TIMEOUT, props );
-			Integer maxStatements = PropertiesHelper.getInteger( Environment.C3P0_MAX_STATEMENTS, props );
-			Integer acquireIncrement = PropertiesHelper.getInteger( Environment.C3P0_ACQUIRE_INCREMENT, props );
-			Integer idleTestPeriod = PropertiesHelper.getInteger( Environment.C3P0_IDLE_TEST_PERIOD, props );
+			Integer minPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MIN_SIZE, props );
+			Integer maxPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MAX_SIZE, props );
+			Integer maxIdleTime = ConfigurationHelper.getInteger( Environment.C3P0_TIMEOUT, props );
+			Integer maxStatements = ConfigurationHelper.getInteger( Environment.C3P0_MAX_STATEMENTS, props );
+			Integer acquireIncrement = ConfigurationHelper.getInteger( Environment.C3P0_ACQUIRE_INCREMENT, props );
+			Integer idleTestPeriod = ConfigurationHelper.getInteger( Environment.C3P0_IDLE_TEST_PERIOD, props );
 
 			Properties c3props = new Properties();
 
@@ -165,7 +165,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 
 			// revert to traditional hibernate behavior of setting initialPoolSize to minPoolSize
 			// unless otherwise specified with a c3p0.*-style parameter.
-			Integer initialPoolSize = PropertiesHelper.getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
+			Integer initialPoolSize = ConfigurationHelper.getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
 			if ( initialPoolSize == null && minPoolSize != null ) {
 				c3props.put( C3P0_STYLE_INITIAL_POOL_SIZE, String.valueOf( minPoolSize ).trim() );
 			}

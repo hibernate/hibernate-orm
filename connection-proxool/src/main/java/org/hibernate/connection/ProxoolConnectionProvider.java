@@ -30,7 +30,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.ConfigHelper;
 
@@ -179,12 +179,12 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 		}
 
 		// Remember Isolation level
-		isolation = PropertiesHelper.getInteger(Environment.ISOLATION, props);
+		isolation = ConfigurationHelper.getInteger(Environment.ISOLATION, props);
 		if (isolation!=null) {
 		    log.info("JDBC isolation level: " + Environment.isolationLevelToString( isolation.intValue() ) );
 		}
 		
-		autocommit = PropertiesHelper.getBoolean(Environment.AUTOCOMMIT, props);
+		autocommit = ConfigurationHelper.getBoolean(Environment.AUTOCOMMIT, props);
 		log.info("autocommit mode: " + autocommit);
 	}
 

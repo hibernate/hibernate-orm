@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * <b>uuid</b><br>
@@ -67,7 +67,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 	 * {@inheritDoc}
 	 */
 	public void configure(Type type, Properties params, Dialect d) {
-		sep = PropertiesHelper.getString( "separator", params, "" );
+		sep = ConfigurationHelper.getString( "separator", params, "" );
 	}
 
 	/**

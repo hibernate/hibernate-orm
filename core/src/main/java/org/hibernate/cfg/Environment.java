@@ -39,8 +39,8 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ConfigHelper;
-import org.hibernate.util.PropertiesHelper;
 
 
 /**
@@ -613,7 +613,7 @@ public final class Environment {
 			InputStream stream = ConfigHelper.getResourceAsStream("/hibernate.properties");
 			try {
 				GLOBAL_PROPERTIES.load(stream);
-				log.info( "loaded properties from resource hibernate.properties: " + PropertiesHelper.maskOut(GLOBAL_PROPERTIES, PASS) );
+				log.info( "loaded properties from resource hibernate.properties: " + ConfigurationHelper.maskOut(GLOBAL_PROPERTIES, PASS) );
 			}
 			catch (Exception e) {
 				log.error("problem loading properties from hibernate.properties");
@@ -640,8 +640,8 @@ public final class Environment {
 
 		verifyProperties(GLOBAL_PROPERTIES);
 
-		ENABLE_BINARY_STREAMS = PropertiesHelper.getBoolean(USE_STREAMS_FOR_BINARY, GLOBAL_PROPERTIES);
-		ENABLE_REFLECTION_OPTIMIZER = PropertiesHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
+		ENABLE_BINARY_STREAMS = ConfigurationHelper.getBoolean(USE_STREAMS_FOR_BINARY, GLOBAL_PROPERTIES);
+		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
 
 		if (ENABLE_BINARY_STREAMS) {
 			log.info("using java.io streams to persist binary types");
@@ -805,7 +805,7 @@ public final class Environment {
 	}
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
-		String provider = PropertiesHelper.getString( BYTECODE_PROVIDER, properties, "javassist" );
+		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, "javassist" );
 		log.info( "Bytecode provider name : " + provider );
 		return buildBytecodeProvider( provider );
 	}

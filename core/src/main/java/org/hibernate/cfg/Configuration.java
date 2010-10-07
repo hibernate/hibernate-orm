@@ -129,6 +129,7 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.impl.SessionFactoryImpl;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -164,7 +165,6 @@ import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.PropertiesHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.SerializationHelper;
 import org.hibernate.util.StringHelper;
@@ -1836,7 +1836,7 @@ public class Configuration implements Serializable {
 		Environment.verifyProperties( properties );
 		Properties copy = new Properties();
 		copy.putAll( properties );
-		PropertiesHelper.resolvePlaceHolders( copy );
+		ConfigurationHelper.resolvePlaceHolders( copy );
 		Settings settings = buildSettings( copy );
 
 		return new SessionFactoryImpl(
@@ -2821,7 +2821,7 @@ public class Configuration implements Serializable {
 	 */
 	public Settings buildSettings() {
 		Properties clone = ( Properties ) properties.clone();
-		PropertiesHelper.resolvePlaceHolders( clone );
+		ConfigurationHelper.resolvePlaceHolders( clone );
 		return buildSettingsInternal( clone );
 	}
 

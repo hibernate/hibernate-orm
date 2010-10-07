@@ -5,8 +5,8 @@ import java.util.Properties;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.PropertiesHelper;
 
 /**
  * @author Steve Ebersole
@@ -49,36 +49,36 @@ public class PropertiesHelperTest extends UnitTestCase {
 	}
 
 	public void testPlaceholderReplacement() {
-		PropertiesHelper.resolvePlaceHolders( props );
+		ConfigurationHelper.resolvePlaceHolders( props );
 
-		String str = PropertiesHelper.getString( "my.nonexistent.prop", props, "did.not.exist" );
+		String str = ConfigurationHelper.getString( "my.nonexistent.prop", props, "did.not.exist" );
 		assertEquals( "did.not.exist", str );
-		str = PropertiesHelper.getString( "my.nonexistent.prop", props, null );
+		str = ConfigurationHelper.getString( "my.nonexistent.prop", props, null );
 		assertNull( str );
-		str = PropertiesHelper.getString( "my.string.prop", props, "na" );
+		str = ConfigurationHelper.getString( "my.string.prop", props, "na" );
 		assertEquals( "replacement did not occur", "string", str );
-		str = PropertiesHelper.getString( "my.string.prop", props, "did.not.exist" );
+		str = ConfigurationHelper.getString( "my.string.prop", props, "did.not.exist" );
 		assertEquals( "replacement did not occur", "string", str );
 
-		boolean bool = PropertiesHelper.getBoolean( "my.nonexistent.prop", props );
+		boolean bool = ConfigurationHelper.getBoolean( "my.nonexistent.prop", props );
 		assertFalse( "non-exists as boolean", bool );
-		bool = PropertiesHelper.getBoolean( "my.nonexistent.prop", props, false );
+		bool = ConfigurationHelper.getBoolean( "my.nonexistent.prop", props, false );
 		assertFalse( "non-exists as boolean", bool );
-		bool = PropertiesHelper.getBoolean( "my.nonexistent.prop", props, true );
+		bool = ConfigurationHelper.getBoolean( "my.nonexistent.prop", props, true );
 		assertTrue( "non-exists as boolean", bool );
-		bool = PropertiesHelper.getBoolean( "my.boolean.prop", props );
+		bool = ConfigurationHelper.getBoolean( "my.boolean.prop", props );
 		assertTrue( "boolean replacement did not occur", bool );
-		bool = PropertiesHelper.getBoolean( "my.boolean.prop", props, false );
+		bool = ConfigurationHelper.getBoolean( "my.boolean.prop", props, false );
 		assertTrue( "boolean replacement did not occur", bool );
 
-		int i = PropertiesHelper.getInt( "my.nonexistent.prop", props, -1 );
+		int i = ConfigurationHelper.getInt( "my.nonexistent.prop", props, -1 );
 		assertEquals( -1, i );
-		i = PropertiesHelper.getInt( "my.int.prop", props, 100 );
+		i = ConfigurationHelper.getInt( "my.int.prop", props, 100 );
 		assertEquals( 1, i );
 
-		Integer I = PropertiesHelper.getInteger( "my.nonexistent.prop", props );
+		Integer I = ConfigurationHelper.getInteger( "my.nonexistent.prop", props );
 		assertNull( I );
-		I = PropertiesHelper.getInteger( "my.integer.prop", props );
+		I = ConfigurationHelper.getInteger( "my.integer.prop", props );
 		assertEquals( I, new Integer( 1 ) );
 
 		str = props.getProperty( "partial.prop1" );
@@ -89,18 +89,18 @@ public class PropertiesHelperTest extends UnitTestCase {
 	}
 
 	public void testParseExceptions() {
-		boolean b = PropertiesHelper.getBoolean( "parse.error", props );
+		boolean b = ConfigurationHelper.getBoolean( "parse.error", props );
 		assertFalse( "parse exception case - boolean", b );
 
 		try {
-			PropertiesHelper.getInt( "parse.error", props, 20 );
+			ConfigurationHelper.getInt( "parse.error", props, 20 );
 			fail( "parse exception case - int" );
 		}
 		catch( NumberFormatException expected ) {
 		}
 
 		try {
-			PropertiesHelper.getInteger( "parse.error", props );
+			ConfigurationHelper.getInteger( "parse.error", props );
 			fail( "parse exception case - Integer" );
 		}
 		catch( NumberFormatException expected ) {

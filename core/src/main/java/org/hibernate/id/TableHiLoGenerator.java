@@ -30,8 +30,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.PropertiesHelper;
 
 /**
  * <b>hilo</b><br>
@@ -61,7 +61,7 @@ public class TableHiLoGenerator extends TableGenerator {
 
 	public void configure(Type type, Properties params, Dialect d) {
 		super.configure(type, params, d);
-		maxLo = PropertiesHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
+		maxLo = ConfigurationHelper.getInt(MAX_LO, params, Short.MAX_VALUE);
 
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( type.getReturnedClass(), maxLo );

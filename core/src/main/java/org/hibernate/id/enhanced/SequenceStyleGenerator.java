@@ -36,8 +36,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
-import org.hibernate.util.PropertiesHelper;
 import org.hibernate.type.Type;
 import org.hibernate.dialect.Dialect;
 
@@ -159,7 +159,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 */
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		this.identifierType = type;
-		boolean forceTableUse = PropertiesHelper.getBoolean( FORCE_TBL_PARAM, params, false );
+		boolean forceTableUse = ConfigurationHelper.getBoolean( FORCE_TBL_PARAM, params, false );
 
 		final String sequenceName = determineSequenceName( params, dialect );
 
@@ -191,7 +191,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 				optimizationStrategy,
 				identifierType.getReturnedClass(),
 				incrementSize,
-				PropertiesHelper.getInt( INITIAL_PARAM, params, -1 )
+				ConfigurationHelper.getInt( INITIAL_PARAM, params, -1 )
 		);
 		this.databaseStructure.prepare( optimizer );
 	}
@@ -208,7 +208,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 */
 	protected String determineSequenceName(Properties params, Dialect dialect) {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-		String sequenceName = PropertiesHelper.getString( SEQUENCE_PARAM, params, DEF_SEQUENCE_NAME );
+		String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, DEF_SEQUENCE_NAME );
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
 			sequenceName = normalizer.normalizeIdentifierQuoting( sequenceName );
 			String schemaName = params.getProperty( SCHEMA );
@@ -239,7 +239,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 */
 	protected String determineValueColumnName(Properties params, Dialect dialect) {
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-		String name = PropertiesHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+		String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
 	}
 
@@ -254,7 +254,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 * @return The initial value
 	 */
 	protected int determineInitialValue(Properties params) {
-		return PropertiesHelper.getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
+		return ConfigurationHelper.getInt( INITIAL_PARAM, params, DEFAULT_INITIAL_VALUE );
 	}
 
 	/**
@@ -267,7 +267,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 * @return The increment size
 	 */
 	protected int determineIncrementSize(Properties params) {
-		return PropertiesHelper.getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
+		return ConfigurationHelper.getInt( INCREMENT_PARAM, params, DEFAULT_INCREMENT_SIZE );
 	}
 
 	/**
@@ -282,11 +282,11 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
 		// if the increment size is greater than one, we prefer pooled optimization; but we
 		// need to see if the user prefers POOL or POOL_LO...
-		String defaultPooledOptimizerStrategy = PropertiesHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
+		String defaultPooledOptimizerStrategy = ConfigurationHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
 				? OptimizerFactory.POOL_LO
 				: OptimizerFactory.POOL;
 		String defaultOptimizerStrategy = incrementSize <= 1 ? OptimizerFactory.NONE : defaultPooledOptimizerStrategy;
-		return PropertiesHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
+		return ConfigurationHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
 	}
 
 	/**

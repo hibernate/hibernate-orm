@@ -29,7 +29,8 @@ import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Settings;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
@@ -295,9 +296,9 @@ public class InfinispanRegionFactory implements RegionFactory {
 
    protected EmbeddedCacheManager createCacheManager(Properties properties) throws CacheException {
       try {
-         String configLoc = PropertiesHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
+         String configLoc = ConfigurationHelper.getString(INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
          EmbeddedCacheManager manager = new DefaultCacheManager(configLoc, false);
-         String globalStats = PropertiesHelper.extractPropertyValue(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
+         String globalStats = ConfigurationHelper.extractPropertyValue(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
          if (globalStats != null) {
             manager.getGlobalConfiguration().setExposeGlobalJmxStatistics(Boolean.parseBoolean(globalStats));
          }
@@ -329,22 +330,22 @@ public class InfinispanRegionFactory implements RegionFactory {
       int suffixLoc = -1;
       if (!key.equals(INFINISPAN_CONFIG_RESOURCE_PROP) && (suffixLoc = key.indexOf(CONFIG_SUFFIX)) != -1) {
          cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
-         cfgOverride.setCacheName(PropertiesHelper.extractPropertyValue(key, properties));
+         cfgOverride.setCacheName( ConfigurationHelper.extractPropertyValue(key, properties));
       } else if ((suffixLoc = key.indexOf(STRATEGY_SUFFIX)) != -1) {
          cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
-         cfgOverride.setEvictionStrategy(PropertiesHelper.extractPropertyValue(key, properties));
+         cfgOverride.setEvictionStrategy( ConfigurationHelper.extractPropertyValue(key, properties));
       } else if ((suffixLoc = key.indexOf(WAKE_UP_INTERVAL_SUFFIX)) != -1) {
          cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
-         cfgOverride.setEvictionWakeUpInterval(Long.parseLong(PropertiesHelper.extractPropertyValue(key, properties)));
+         cfgOverride.setEvictionWakeUpInterval(Long.parseLong( ConfigurationHelper.extractPropertyValue(key, properties)));
       } else if ((suffixLoc = key.indexOf(MAX_ENTRIES_SUFFIX)) != -1) {
          cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
-         cfgOverride.setEvictionMaxEntries(PropertiesHelper.getInt(key, properties, -1));
+         cfgOverride.setEvictionMaxEntries( ConfigurationHelper.getInt(key, properties, -1));
       } else if ((suffixLoc = key.indexOf(LIFESPAN_SUFFIX)) != -1) {
          cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
-         cfgOverride.setExpirationLifespan(Long.parseLong(PropertiesHelper.extractPropertyValue(key, properties)));
+         cfgOverride.setExpirationLifespan(Long.parseLong( ConfigurationHelper.extractPropertyValue(key, properties)));
       } else if ((suffixLoc = key.indexOf(MAX_IDLE_SUFFIX)) != -1) {
          cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
-         cfgOverride.setExpirationMaxIdle(Long.parseLong(PropertiesHelper.extractPropertyValue(key, properties)));
+         cfgOverride.setExpirationMaxIdle(Long.parseLong( ConfigurationHelper.extractPropertyValue(key, properties)));
       }
 //      else if ((suffixLoc = key.indexOf(STATISTICS_SUFFIX)) != -1) {
 //         cfgOverride = getOrCreateConfig(prefixLoc, key, suffixLoc);
@@ -429,7 +430,7 @@ public class InfinispanRegionFactory implements RegionFactory {
    }
 
    private TypeOverrides overrideStatisticsIfPresent(TypeOverrides override, Properties properties) {
-      String globalStats = PropertiesHelper.extractPropertyValue(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
+      String globalStats = ConfigurationHelper.extractPropertyValue(INFINISPAN_GLOBAL_STATISTICS_PROP, properties);
       if (globalStats != null) {
          override.setExposeStatistics(Boolean.parseBoolean(globalStats));
       }

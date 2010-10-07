@@ -41,7 +41,7 @@ import org.hibernate.cache.jbc.query.QueryResultsRegionImpl;
 import org.hibernate.cache.jbc.timestamp.TimestampsRegionImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.util.PropertiesHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.jboss.cache.DefaultCacheFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,7 +158,7 @@ public class JBossCacheRegionFactory implements RegionFactory {
     }
 
     public static String getRegionPrefix(Properties properties) {
-        return PropertiesHelper.getString(Environment.CACHE_REGION_PREFIX, properties, null);
+        return ConfigurationHelper.getString(Environment.CACHE_REGION_PREFIX, properties, null);
     }
 
 }

@@ -31,8 +31,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.PropertiesHelper;
 
 /**
  * <b>seqhilo</b><br>
@@ -59,7 +59,7 @@ public class SequenceHiLoGenerator extends SequenceGenerator {
 	public void configure(Type type, Properties params, Dialect d) throws MappingException {
 		super.configure(type, params, d);
 
-		maxLo = PropertiesHelper.getInt( MAX_LO, params, 9 );
+		maxLo = ConfigurationHelper.getInt( MAX_LO, params, 9 );
 
 		if ( maxLo >= 1 ) {
 			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer(

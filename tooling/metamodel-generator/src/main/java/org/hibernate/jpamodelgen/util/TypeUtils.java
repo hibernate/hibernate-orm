@@ -38,7 +38,6 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor6;
-import javax.lang.model.util.Types;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Embeddable;
@@ -59,7 +58,7 @@ import org.hibernate.jpamodelgen.MetaModelGenerationException;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-public class TypeUtils {
+public final class TypeUtils {
 
 	public static final String DEFAULT_ANNOTATION_PARAMETER_NAME = "value";
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
@@ -94,8 +93,8 @@ public class TypeUtils {
 		//superclass of Object is of NoType which returns some other kind
 		if ( superClass.getKind() == TypeKind.DECLARED ) {
 			//F..king Ch...t Have those people used their horrible APIs even once?
-			final Element superClassElement = ( ( DeclaredType ) superClass ).asElement();
-			return ( TypeElement ) superClassElement;
+			final Element superClassElement = ( (DeclaredType) superClass ).asElement();
+			return (TypeElement) superClassElement;
 		}
 		else {
 			return null;
@@ -104,19 +103,11 @@ public class TypeUtils {
 
 	public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
 		if ( type instanceof TypeVariable ) {
-			final TypeMirror compositeUpperBound = ( ( TypeVariable ) type ).getUpperBound();
-			final Types types = context.getTypeUtils();
-			final List<? extends TypeMirror> upperBounds = types.directSupertypes( compositeUpperBound );
-			if ( upperBounds.size() == 0 ) {
-				return compositeUpperBound.toString();
-			}
-			else {
-				//take the first one
-				return extractClosestRealTypeAsString( upperBounds.get( 0 ), context );
-			}
+			final TypeMirror compositeUpperBound = ( (TypeVariable) type ).getUpperBound();
+			return extractClosestRealTypeAsString( compositeUpperBound, context );
 		}
 		else {
-			return type.toString();
+			return context.getTypeUtils().erasure( type ).toString();
 		}
 	}
 
@@ -345,7 +336,7 @@ public class TypeUtils {
 			List<? extends AnnotationMirror> entityAnnotations =
 					context.getElementUtils().getAllAnnotationMirrors( subElement );
 			for ( Object entityAnnotation : entityAnnotations ) {
-				AnnotationMirror annotationMirror = ( AnnotationMirror ) entityAnnotation;
+				AnnotationMirror annotationMirror = (AnnotationMirror) entityAnnotation;
 				if ( isIdAnnotation( annotationMirror ) ) {
 					defaultAccessType = getAccessTypeOfIdAnnotation( subElement );
 					break;
@@ -373,7 +364,7 @@ public class TypeUtils {
 		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Access.class );
 		AccessType forcedAccessType = null;
 		if ( accessAnnotationMirror != null ) {
-			Element accessElement = ( Element ) TypeUtils.getAnnotationValue(
+			Element accessElement = (Element) TypeUtils.getAnnotationValue(
 					accessAnnotationMirror,
 					DEFAULT_ANNOTATION_PARAMETER_NAME
 			);
@@ -415,7 +406,7 @@ public class TypeUtils {
 
 		@Override
 		public String visitDeclared(DeclaredType declaredType, Element element) {
-			TypeElement returnedElement = ( TypeElement ) context.getTypeUtils().asElement( declaredType );
+			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 			String fqNameOfReturnType = null;
 			if ( containsAnnotation( returnedElement, Embeddable.class ) ) {
 				fqNameOfReturnType = returnedElement.getQualifiedName().toString();

@@ -17,20 +17,26 @@
 
 // $Id$
 
-package org.hibernate.jpamodelgen;
+package org.hibernate.jpamodelgen.test.typedmappedsuperclass;
+
+import org.testng.annotations.Test;
+
+import org.hibernate.jpamodelgen.test.util.CompilationTest;
+
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
- * Information about the Meta Model Generator version.
- *
  * @author Hardy Ferentschik
+ * @see METAGEN-37
  */
-public final class Version {
-	private Version() {
+public class TypesMappedSuperclassTest extends CompilationTest {
+	@Test
+	public void testExtractClosestRealType() {
+		assertMetamodelClassGeneratedFor( AttachmentGroup.class );
 	}
 
-	public static String getVersionString() {
-		return "[WORKING]";
+	@Override
+	protected String getPackageNameOfCurrentTest() {
+		return TypesMappedSuperclassTest.class.getPackage().getName();
 	}
 }
-
-

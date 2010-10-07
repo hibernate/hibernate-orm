@@ -15,22 +15,11 @@
  * limitations under the License.
  */
 
-// $Id$
+package org.hibernate.jpamodelgen.test.typedmappedsuperclass;
 
-package org.hibernate.jpamodelgen;
+import javax.persistence.MappedSuperclass;
 
-/**
- * Information about the Meta Model Generator version.
- *
- * @author Hardy Ferentschik
- */
-public final class Version {
-	private Version() {
-	}
-
-	public static String getVersionString() {
-		return "[WORKING]";
-	}
+@MappedSuperclass
+public abstract class Post<UserRoleType extends UserRole> {
 }
-
 

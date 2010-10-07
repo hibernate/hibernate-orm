@@ -37,9 +37,6 @@
         <module>jdbc3-testing</module>
         <module>cache-infinispan</module>
 <!--
-        <module>tutorials</module>
--->
-<!--
     Need to scope bytecode providers first...
         <module>bytecode-cglib</module>
         <module>bytecode-javassist</module>

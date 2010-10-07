@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.util;
+package org.hibernate.internal.util.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,37 +30,191 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Iterator;
 
+import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.StringHelper;
+
 /**
- * Collection of helper methods for dealing with {@link java.util.Properties}
- * objects.
+ * Collection of helper methods for dealing with configuration settings.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public final class PropertiesHelper {
+public final class ConfigurationHelper {
 
 	private static final String PLACEHOLDER_START = "${";
 
 	/**
 	 * Disallow instantiation
 	 */
-	private PropertiesHelper() {
+	private ConfigurationHelper() {
 	}
 
 	/**
-	 * Get a property value as a string.
+	 * Get the config value as a {@link String}
 	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
+	 * @param name The config setting name.
+	 * @param values The map of config values
 	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param properties The properties object
-	 * @param defaultValue The default property value to use.
-	 * @return The property value; may be null.
+	 * @return The value, or null if not found
 	 */
-	public static String getString(String propertyName, Properties properties, String defaultValue) {
-		String value = extractPropertyValue( propertyName, properties );
+	public static String getString(String name, Map values) {
+		Object value = values.get( name );
+		if ( value == null ) {
+			return null;
+		}
+		if ( String.class.isInstance( value ) ) {
+			return (String) value;
+		}
+		return value.toString();
+	}
+
+	/**
+	 * Get the config value as a {@link String}
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 * @param defaultValue The default value to use if not found
+	 *
+	 * @return The value.
+	 */
+	public static String getString(String name, Map values, String defaultValue) {
+		final String value = getString( name, values );
 		return value == null ? defaultValue : value;
 	}
+
+	/**
+	 * Get the config value as a boolean (default of false)
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 *
+	 * @return The value.
+	 */
+	public static boolean getBoolean(String name, Map values) {
+		return getBoolean( name, values, false );
+	}
+
+	/**
+	 * Get the config value as a boolean.
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 * @param defaultValue The default value to use if not found
+	 *
+	 * @return The value.
+	 */
+	public static boolean getBoolean(String name, Map values, boolean defaultValue) {
+		Object value = values.get( name );
+		if ( value == null ) {
+			return defaultValue;
+		}
+		if ( Boolean.class.isInstance( value ) ) {
+			return ( (Boolean) value ).booleanValue();
+		}
+		if ( String.class.isInstance( value ) ) {
+			return Boolean.parseBoolean( (String) value );
+		}
+		throw new ConfigurationException(
+				"Could not determine how to handle configuration value [name=" + name + ", value=" + value + "] as boolean"
+		);
+	}
+
+	/**
+	 * Get the config value as an int
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 * @param defaultValue The default value to use if not found
+	 *
+	 * @return The value.
+	 */
+	public static int getInt(String name, Map values, int defaultValue) {
+		Object value = values.get( name );
+		if ( value == null ) {
+			return defaultValue;
+		}
+		if ( Integer.class.isInstance( value ) ) {
+			return ( (Integer) value ).intValue();
+		}
+		if ( String.class.isInstance( value ) ) {
+			return Integer.parseInt( (String) value );
+		}
+		throw new ConfigurationException(
+				"Could not determine how to handle configuration value [name=" + name +
+						", value=" + value + "(" + value.getClass().getName() + ")] as int"
+		);
+	}
+
+	/**
+	 * Get the config value as an {@link Integer}
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 *
+	 * @return The value, or null if not found
+	 */
+	public static Integer getInteger(String name, Map values) {
+		Object value = values.get( name );
+		if ( value == null ) {
+			return null;
+		}
+		if ( Integer.class.isInstance( value ) ) {
+			return (Integer) value;
+		}
+		if ( String.class.isInstance( value ) ) {
+			return Integer.valueOf( (String) value );
+		}
+		throw new ConfigurationException(
+				"Could not determine how to handle configuration value [name=" + name +
+						", value=" + value + "(" + value.getClass().getName() + ")] as Integer"
+		);
+	}
+
+	/**
+	 * Make a clone of the configuration values.
+	 *
+	 * @param configurationValues The config values to clone
+	 *
+	 * @return The clone
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public static Map clone(Map<?,?> configurationValues) {
+		if ( configurationValues == null ) {
+			return null;
+		}
+		// If a Properties object, leverage its clone() impl
+		if ( Properties.class.isInstance( configurationValues ) ) {
+			return (Properties) ( (Properties) configurationValues ).clone();
+		}
+		// Otherwise make a manual copy
+		HashMap clone = new HashMap();
+		for ( Map.Entry entry : configurationValues.entrySet() ) {
+			clone.put( entry.getKey(), entry.getValue() );
+		}
+		return clone;
+	}
+
+
+
+	/**
+	 * replace a property by a starred version
+	 *
+	 * @param props properties to check
+	 * @param key proeprty to mask
+	 *
+	 * @return cloned and masked properties
+	 */
+	public static Properties maskOut(Properties props, String key) {
+		Properties clone = ( Properties ) props.clone();
+		if ( clone.get( key ) != null ) {
+			clone.setProperty( key, "****" );
+		}
+		return clone;
+	}
+
+
+
+
 
 	/**
 	 * Extract a property value by name from the given properties object.
@@ -81,72 +235,6 @@ public final class PropertiesHelper {
 			return null;
 		}
 		return value;
-	}
-
-	/**
-	 * Get a property value as a boolean.  Shorthand for calling
-	 * {@link #getBoolean(String, java.util.Properties, boolean)} with <tt>false</tt>
-	 * as the default value.
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param properties The properties object
-	 * @return The property value.
-	 */
-	public static boolean getBoolean(String propertyName, Properties properties) {
-		return getBoolean( propertyName, properties, false );
-	}
-
-	/**
-	 * Get a property value as a boolean.
-	 * <p/>
-	 * First, the string value is extracted, and then {@link Boolean#valueOf(String)} is
-	 * used to determine the correct boolean value.
-	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param properties The properties object
-	 * @param defaultValue The default property value to use.
-	 * @return The property value.
-	 */
-	public static boolean getBoolean(String propertyName, Properties properties, boolean defaultValue) {
-		String value = extractPropertyValue( propertyName, properties );
-		return value == null ? defaultValue : Boolean.valueOf( value ).booleanValue();
-	}
-
-	/**
-	 * Get a property value as an int.
-	 * <p/>
-	 * First, the string value is extracted, and then {@link Integer#parseInt(String)} is
-	 * used to determine the correct int value for any non-null property values.
-	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param properties The properties object
-	 * @param defaultValue The default property value to use.
-	 * @return The property value.
-	 */
-	public static int getInt(String propertyName, Properties properties, int defaultValue) {
-		String value = extractPropertyValue( propertyName, properties );
-		return value == null ? defaultValue : Integer.parseInt( value );
-	}
-
-	/**
-	 * Get a property value as an Integer.
-	 * <p/>
-	 * First, the string value is extracted, and then {@link Integer#valueOf(String)} is
-	 * used to determine the correct boolean value for any non-null property values.
-	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
-	 *
-	 * @param propertyName The name of the property for which to retrieve value
-	 * @param properties The properties object
-	 * @return The property value; may be null.
-	 */
-	public static Integer getInteger(String propertyName, Properties properties) {
-		String value = extractPropertyValue( propertyName, properties );
-		return value == null ? null : Integer.valueOf( value );
 	}
 
 	/**
@@ -206,21 +294,6 @@ public final class PropertiesHelper {
 		else {
 			return ArrayHelper.EMPTY_STRING_ARRAY;
 		}
-	}
-
-	/**
-	 * replace a property by a starred version
-	 *
-	 * @param props properties to check
-	 * @param key proeprty to mask
-	 * @return cloned and masked properties
-	 */
-	public static Properties maskOut(Properties props, String key) {
-		Properties clone = ( Properties ) props.clone();
-		if ( clone.get( key ) != null ) {
-			clone.setProperty( key, "****" );
-		}
-		return clone;
 	}
 
 	/**

@@ -25,6 +25,7 @@
 package org.hibernate.loader.criteria;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -59,10 +60,14 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	private final CriteriaQueryTranslator translator;
 	private final Set querySpaces;
 	private final Type[] resultTypes;
+	private final boolean[] includeInResultRow;
+
 	//the user visible aliases, which are unknown to the superclass,
 	//these are not the actual "physical" SQL aliases
 	private final String[] userAliases;
 	private final List userAliasList = new ArrayList();
+	private final List resultTypeList = new ArrayList();
+	private final List includeInResultRowList = new ArrayList();
 
 	public Type[] getResultTypes() {
 		return resultTypes;
@@ -70,6 +75,10 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 	public String[] getUserAliases() {
 		return userAliases;
+	}
+
+	public boolean[] includeInResultRow() {
+		return includeInResultRow;
 	}
 
 	public CriteriaJoinWalker(
@@ -96,26 +105,29 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 		querySpaces = translator.getQuerySpaces();
 
-		if ( translator.hasProjection() ) {
-			resultTypes = translator.getProjectedTypes();
-			
-			initProjection( 
+		if ( translator.hasProjection() ) {			
+			initProjection(
 					translator.getSelect(), 
 					translator.getWhereCondition(), 
 					translator.getOrderBy(),
 					translator.getGroupBy(),
 					LockOptions.NONE  
 				);
+			resultTypes = translator.getProjectedTypes();
+			userAliases = translator.getProjectedAliases();
+			includeInResultRow = new boolean[ resultTypes.length ];
+			Arrays.fill( includeInResultRow, true );
 		}
 		else {
-			resultTypes = new Type[] { factory.getTypeResolver().getTypeFactory().manyToOne( persister.getEntityName() ) };
-
 			initAll( translator.getWhereCondition(), translator.getOrderBy(), LockOptions.NONE );
+			// root entity comes last
+			userAliasList.add( criteria.getAlias() ); //root entity comes *last*
+			resultTypeList.add( translator.getResultType( criteria ) );
+			includeInResultRowList.add( true );
+			userAliases = ArrayHelper.toStringArray( userAliasList );
+			resultTypes = ArrayHelper.toTypeArray( resultTypeList );
+			includeInResultRow = ArrayHelper.toBooleanArray( includeInResultRowList );
 		}
-		
-		userAliasList.add( criteria.getAlias() ); //root entity comes *last*
-		userAliases = ArrayHelper.toStringArray(userAliasList);
-
 	}
 
 	protected int getJoinType(
@@ -208,15 +220,24 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	}
 	
 	protected String generateTableAlias(int n, PropertyPath path, Joinable joinable) {
+		// TODO: deal with side-effects (changes to includeInSelectList, userAliasList, resultTypeList)!!!
 		if ( joinable.consumesEntityAlias() ) {
 			final Criteria subcriteria = translator.getCriteria( path.getFullPath() );
 			String sqlAlias = subcriteria==null ? null : translator.getSQLAlias(subcriteria);
 			if (sqlAlias!=null) {
-				userAliasList.add( subcriteria.getAlias() ); //alias may be null
+				if ( ! translator.hasProjection() ) {
+					includeInResultRowList.add( subcriteria.getAlias() != null );
+					if ( subcriteria.getAlias() != null ) {
+						userAliasList.add( subcriteria.getAlias() ); //alias may be null
+						resultTypeList.add( translator.getResultType( subcriteria ) );
+					}
+				}
 				return sqlAlias; //EARLY EXIT
 			}
 			else {
-				userAliasList.add(null);
+				if ( ! translator.hasProjection() ) {
+					includeInResultRowList.add( false );
+				}
 			}
 		}
 		return super.generateTableAlias( n + translator.getSQLAliasCount(), path, joinable );

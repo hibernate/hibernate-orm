@@ -71,6 +71,8 @@ public class CriteriaLoader extends OuterJoinLoader {
 	//the user visible aliases, which are unknown to the superclass,
 	//these are not the actual "physical" SQL aliases
 	private final String[] userAliases;
+	private final boolean[] includeInResultRow;
+	private final int resultRowLength;
 
 	public CriteriaLoader(
 			final OuterJoinLoadable persister, 
@@ -102,6 +104,8 @@ public class CriteriaLoader extends OuterJoinLoader {
 		
 		userAliases = walker.getUserAliases();
 		resultTypes = walker.getResultTypes();
+		includeInResultRow = walker.includeInResultRow();
+		resultRowLength = ArrayHelper.countTrue( includeInResultRow );
 
 		postInstantiate();
 
@@ -120,20 +124,33 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 	}
 
+	protected String[] getResultRowAliases() {
+		return userAliases;
+	}
+
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return translator.getRootCriteria().getResultTransformer();
 	}
 
-	protected boolean areResultSetRowsTransformedImmediately( ResultTransformer transformer ) {
-		// comparing to null just in case there is no transformer
-		// (there should always be a result transformer; 
-		return resolveResultTransformer( transformer ) != null;
+	protected boolean areResultSetRowsTransformedImmediately() {
+		return true;
+	}
+
+	protected boolean[] includeInResultRow() {
+		return includeInResultRow;
 	}
 
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 	throws SQLException, HibernateException {
+		return resolveResultTransformer( transformer ).transformTuple(
+				getResultRow( row, rs, session),
+				getResultRowAliases()
+		);
+	}
+			
+	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+			throws SQLException, HibernateException {
 		final Object[] result;
-		final String[] aliases;
 		if ( translator.hasProjection() ) {
 			Type[] types = translator.getProjectedTypes();
 			result = new Object[types.length];
@@ -149,13 +166,25 @@ public class CriteriaLoader extends OuterJoinLoader {
 				}
 				pos += numColumns;
 			}
-			aliases = translator.getProjectedAliases();
 		}
 		else {
-			result = row;
-			aliases = userAliases;
+			result = toResultRow( row );
 		}
-		return resolveResultTransformer( transformer ).transformTuple(result, aliases);
+		return result;
+	}
+
+	private Object[] toResultRow(Object[] row) {
+		if ( resultRowLength == row.length ) {
+			return row;
+		}
+		else {
+			Object[] result = new Object[ resultRowLength ];
+			int j = 0;
+			for ( int i = 0; i < row.length; i++ ) {
+				if ( includeInResultRow[i] ) result[j++] = row[i];
+			}
+			return result;
+		}
 	}
 
 	public Set getQuerySpaces() {

@@ -55,6 +55,8 @@ import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.transform.CacheableResultTransformer;
+import org.hibernate.transform.TupleSubsetResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
@@ -356,6 +358,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		        0,
 		        this
 		);
+	}
+
+	/* package-protected */
+	Type getResultType(Criteria criteria) {
+		return getFactory().getTypeResolver().getTypeFactory().manyToOne( getEntityName( criteria ) );
 	}
 
 	public Type[] getProjectedTypes() {

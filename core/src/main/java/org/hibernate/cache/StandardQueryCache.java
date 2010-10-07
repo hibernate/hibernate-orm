@@ -97,6 +97,9 @@ public class StandardQueryCache implements QueryCache {
 			}
 
 			List cacheable = new ArrayList( result.size() + 1 );
+			if ( log.isTraceEnabled() ) {
+				logCachedResultDetails( key, null, returnTypes, cacheable );
+			}
 			cacheable.add( ts );
 			for ( Object aResult : result ) {
 				if ( returnTypes.length == 1 ) {
@@ -106,6 +109,9 @@ public class StandardQueryCache implements QueryCache {
 					cacheable.add(
 							TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null )
 					);
+				}
+				if ( log.isTraceEnabled() ) {
+					logCachedResultRowDetails( returnTypes, aResult );
 				}
 			}
 
@@ -126,6 +132,10 @@ public class StandardQueryCache implements QueryCache {
 		}
 
 		List cacheable = ( List ) cacheRegion.get( key );
+		if ( log.isTraceEnabled() ) {
+			logCachedResultDetails( key, spaces, returnTypes, cacheable );
+		}
+
 		if ( cacheable == null ) {
 			log.debug( "query results were not found in cache" );
 			return null;
@@ -156,6 +166,9 @@ public class StandardQueryCache implements QueryCache {
 					result.add(
 							TypeHelper.assemble( ( Serializable[] ) cacheable.get( i ), returnTypes, session, null )
 					);
+				}
+				if ( log.isTraceEnabled() ) {
+					logCachedResultRowDetails( returnTypes, result.get( i - 1 ));
 				}
 			}
 			catch ( RuntimeException ex ) {
@@ -202,4 +215,70 @@ public class StandardQueryCache implements QueryCache {
 		return "StandardQueryCache(" + cacheRegion.getName() + ')';
 	}
 
+	private static void logCachedResultDetails(QueryKey key, Set querySpaces, Type[] returnTypes, List result) {
+		if ( ! log.isTraceEnabled() ) {
+			return;
+		}
+		log.trace( "key.hashCode="+key.hashCode() );
+		log.trace( "querySpaces="+querySpaces );
+		if ( returnTypes == null || returnTypes.length == 0 ) {
+				log.trace( "unexpected returnTypes is "+( returnTypes == null ? "null" : "empty" )+
+						"! result"+( result == null ? " is null": ".size()=" + result.size() ) );
+		}
+		else {
+			StringBuffer returnTypeInfo = new StringBuffer();
+			for ( int i=0; i<returnTypes.length; i++ ) {
+				returnTypeInfo.append( "typename=" )
+						.append( returnTypes[ i ].getName() )
+						.append(" class=" )
+						.append( returnTypes[ i ].getReturnedClass().getName() ).append(' ');
+			}
+			log.trace( " returnTypeInfo="+returnTypeInfo );
+		}
+	}
+
+	private static void logCachedResultRowDetails(Type[] returnTypes, Object result) {
+		if ( ! log.isTraceEnabled() ) {
+			return;
+		}
+		logCachedResultRowDetails(
+				returnTypes,
+				( result instanceof Object[] ? ( Object[] ) result : new Object[] { result } )
+		);
+	}
+
+	private static void logCachedResultRowDetails(Type[] returnTypes, Object[] tuple) {
+		if ( ! log.isTraceEnabled() ) {
+			return;
+		}
+		if ( tuple == null ) {
+			log.trace( " tuple is null; returnTypes is "+( returnTypes == null ? "null" : "Type["+returnTypes.length+"]" ) );
+			if ( returnTypes != null && returnTypes.length > 1 ) {
+				log.trace( "unexpected result tuple! "+
+						"tuple is null; should be Object["+returnTypes.length+"]!" );
+			}
+		}
+		else {
+			if ( returnTypes == null || returnTypes.length == 0 ) {
+				log.trace( "unexpected result tuple! "+
+						"tuple is non-null; returnTypes is "+( returnTypes == null ? "null" : "empty" ) );
+			}
+			log.trace( " tuple is Object["+tuple.length+
+					"]; returnTypes is Type["+returnTypes.length+"]" );
+			if ( tuple.length != returnTypes.length ) {
+				log.trace( "unexpected tuple length! transformer="+
+					" expected="+returnTypes.length+
+					" got="+tuple.length );
+			}
+			else {
+				for ( int j = 0; j < tuple.length; j++ ) {
+					if ( tuple[ j ] != null && ! returnTypes[ j ].getReturnedClass().isInstance( tuple[ j ] ) ) {
+						log.trace( "unexpected tuple value type! transformer="+
+								" expected="+returnTypes[ j ].getReturnedClass().getName()+
+								" got="+tuple[ j ].getClass().getName() );
+					}
+				}
+			}
+		}
+	}
 }

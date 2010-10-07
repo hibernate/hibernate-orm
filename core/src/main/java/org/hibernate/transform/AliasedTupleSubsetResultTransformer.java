@@ -22,40 +22,37 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.test.querycache;
-
-import junit.framework.Test;
-
-import org.hibernate.CacheMode;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+package org.hibernate.transform;
 
 /**
+ * An implementation of TupleSubsetResultTransformer that ignores a
+ * tuple element if its corresponding alias is null.
+ *
  * @author Gail Badner
  */
-public class CriteriaQueryCacheIgnoreResultTransformerTest extends AbstractQueryCacheResultTransformerTest {
+public abstract class AliasedTupleSubsetResultTransformer
+		extends BasicTransformerAdapter
+		implements TupleSubsetResultTransformer {
 
-	public CriteriaQueryCacheIgnoreResultTransformerTest(String str) {
-		super( str );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CriteriaQueryCacheIgnoreResultTransformerTest.class );
-	}
-
-	protected CacheMode getQueryCacheMode() {
-		return CacheMode.IGNORE;
-	}
-
-	protected void runTest(HqlExecutor hqlExecutor, CriteriaExecutor criteriaExecutor, ResultChecker checker, boolean isSingleResult)
-		throws Exception {
-		createData();
-		try {
-			if ( criteriaExecutor != null ) {
-				runTest( criteriaExecutor, checker, isSingleResult );
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
+		if ( aliases == null ) {
+			throw new IllegalArgumentException( "aliases cannot be null" );
+		}
+		if ( aliases.length != tupleLength ) {
+			throw new IllegalArgumentException(
+					"aliases and tupleLength must have the same length; " +
+							"aliases.length=" + aliases.length + "tupleLength=" + tupleLength
+			);
+		}
+		boolean[] includeInTransform = new boolean[tupleLength];
+		for ( int i = 0 ; i < aliases.length ; i++ ) {
+			if ( aliases[ i ] != null ) {
+				includeInTransform[ i ] = true;
 			}
 		}
-		finally {
-			deleteData();
-		}
+		return includeInTransform;
 	}
 }

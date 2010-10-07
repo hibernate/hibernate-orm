@@ -24,7 +24,7 @@
  */
 package org.hibernate.transform;
 
-import java.io.Serializable;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * {@link ResultTransformer} implementation which limits the result tuple
@@ -36,7 +36,7 @@ import java.io.Serializable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public final class RootEntityResultTransformer extends BasicTransformerAdapter implements Serializable {
+public final class RootEntityResultTransformer extends BasicTransformerAdapter implements TupleSubsetResultTransformer {
 
 	public static final RootEntityResultTransformer INSTANCE = new RootEntityResultTransformer();
 
@@ -51,6 +51,29 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 	 */
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return tuple[ tuple.length-1 ];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
+		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
+
+		boolean[] includeInTransform;
+		if ( tupleLength == 1 ) {
+			includeInTransform = ArrayHelper.TRUE;
+		}
+		else {
+			includeInTransform = new boolean[tupleLength];
+			includeInTransform[ tupleLength - 1 ] = true;
+		}
+		return includeInTransform;
 	}
 
 	/**

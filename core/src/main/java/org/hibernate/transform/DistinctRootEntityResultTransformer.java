@@ -25,7 +25,6 @@
 package org.hibernate.transform;
 
 import java.util.List;
-import java.io.Serializable;
 
 /**
  * Much like {@link RootEntityResultTransformer}, but we also distinct
@@ -37,7 +36,7 @@ import java.io.Serializable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DistinctRootEntityResultTransformer implements ResultTransformer, Serializable {
+public class DistinctRootEntityResultTransformer implements TupleSubsetResultTransformer {
 
 	public static final DistinctRootEntityResultTransformer INSTANCE = new DistinctRootEntityResultTransformer();
 
@@ -66,6 +65,20 @@ public class DistinctRootEntityResultTransformer implements ResultTransformer, S
 	 */
 	public List transformList(List list) {
 		return DistinctResultTransformer.INSTANCE.transformList( list );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
+		return RootEntityResultTransformer.INSTANCE.includeInTransform( aliases, tupleLength );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
+		return RootEntityResultTransformer.INSTANCE.isTransformedValueATupleElement( null, tupleLength );
 	}
 
 	/**

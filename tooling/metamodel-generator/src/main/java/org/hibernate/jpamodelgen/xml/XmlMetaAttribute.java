@@ -28,21 +28,21 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
  */
 public abstract class XmlMetaAttribute implements MetaAttribute {
 
-	protected final XmlMetaEntity parentEntity;
+	private final XmlMetaEntity hostingEntity;
 	private final String propertyName;
 	private final String type;
 
 	XmlMetaAttribute(XmlMetaEntity parent, String propertyName, String type) {
-		this.parentEntity = parent;
+		this.hostingEntity = parent;
 		this.propertyName = propertyName;
 		this.type = type;
 	}
 
 	@Override
 	public String getDeclarationString() {
-		return "public static volatile " + parentEntity.importType( getMetaType() )
-				+ "<" + parentEntity.importType( parentEntity.getQualifiedName() )
-				+ ", " + parentEntity.importType( getTypeDeclaration() )
+		return "public static volatile " + hostingEntity.importType( getMetaType() )
+				+ "<" + hostingEntity.importType( hostingEntity.getQualifiedName() )
+				+ ", " + hostingEntity.importType( getTypeDeclaration() )
 				+ "> " + getPropertyName() + ";";
 	}
 
@@ -54,8 +54,8 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 		return type;
 	}
 
-	public MetaEntity getParent() {
-		return parentEntity;
+	public MetaEntity getHostingEntity() {
+		return hostingEntity;
 	}
 
 	@Override

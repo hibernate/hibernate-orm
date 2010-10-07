@@ -31,5 +31,5 @@ public interface MetaAttribute {
 
 	String getTypeDeclaration();
 
-	MetaEntity getParent();
+	MetaEntity getHostingEntity();
 }

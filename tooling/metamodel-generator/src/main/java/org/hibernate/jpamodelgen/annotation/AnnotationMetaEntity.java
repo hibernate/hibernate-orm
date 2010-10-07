@@ -50,10 +50,10 @@ import org.hibernate.jpamodelgen.util.TypeUtils;
  */
 public class AnnotationMetaEntity implements MetaEntity {
 
-	protected final ImportContext importContext;
-	protected final TypeElement element;
-	protected final Map<String, MetaAttribute> members;
-	protected Context context;
+	private final ImportContext importContext;
+	private final TypeElement element;
+	private final Map<String, MetaAttribute> members;
+	private Context context;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
@@ -75,19 +75,19 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return entityAccessTypeInfo;
 	}
 
-	public Context getContext() {
+	public final Context getContext() {
 		return context;
 	}
 
-	public String getSimpleName() {
+	public final String getSimpleName() {
 		return element.getSimpleName().toString();
 	}
 
-	public String getQualifiedName() {
+	public final String getQualifiedName() {
 		return element.getQualifiedName().toString();
 	}
 
-	public String getPackageName() {
+	public final String getPackageName() {
 		PackageElement packageOf = context.getElementUtils().getPackageOf( element );
 		return context.getElementUtils().getName( packageOf.getQualifiedName() ).toString();
 	}
@@ -115,6 +115,10 @@ public class AnnotationMetaEntity implements MetaEntity {
 		sb.append( ", members=" ).append( members );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	protected TypeElement getElement() {
+		return element;
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {

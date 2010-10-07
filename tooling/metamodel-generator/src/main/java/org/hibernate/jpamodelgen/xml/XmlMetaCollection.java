@@ -26,7 +26,7 @@ import org.hibernate.jpamodelgen.model.MetaCollection;
  */
 public class XmlMetaCollection extends XmlMetaAttribute implements MetaCollection {
 
-    String collectionType;
+    private String collectionType;
 
     public XmlMetaCollection(XmlMetaEntity parent, String propertyName, String type, String collectionType) {
         super(parent, propertyName, type);

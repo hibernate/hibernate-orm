@@ -28,8 +28,7 @@ import java.util.Map;
  */
 public class FileTimeStampChecker implements Serializable {
 
-
-	Map<String, Long> lastModifiedCache;
+	private Map<String, Long> lastModifiedCache;
 
 	public FileTimeStampChecker() {
 		lastModifiedCache = new HashMap<String, Long>();

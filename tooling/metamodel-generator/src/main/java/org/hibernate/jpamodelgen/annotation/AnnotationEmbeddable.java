@@ -46,7 +46,7 @@ public class AnnotationEmbeddable extends AnnotationMetaEntity {
 
 	public List<MetaAttribute> getMembers() {
 		if ( !initialized ) {
-			context.logMessage( Diagnostic.Kind.OTHER, "Entity " + getQualifiedName() + " was lazily initialised." );
+			getContext().logMessage( Diagnostic.Kind.OTHER, "Entity " + getQualifiedName() + " was lazily initialised." );
 			init();
 			initialized = true;
 		}
@@ -57,10 +57,10 @@ public class AnnotationEmbeddable extends AnnotationMetaEntity {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( "AnnotationEmbeddable" );
-		sb.append( "{element=" ).append( element );
+		sb.append( "{element=" ).append( getElement() );
 		sb.append( ", members=" );
 		if ( initialized ) {
-			sb.append( members );
+			sb.append( getMembers() );
 		}
 		else {
 			sb.append( "[un-initalized]" );

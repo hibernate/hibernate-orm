@@ -79,7 +79,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		}
 	}
 
-	public MetaEntity getParent() {
+	public MetaEntity getHostingEntity() {
 		return parent;
 	}
 

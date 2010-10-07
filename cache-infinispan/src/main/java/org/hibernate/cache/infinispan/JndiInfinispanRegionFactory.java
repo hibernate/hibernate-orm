@@ -29,7 +29,7 @@ import javax.naming.NamingException;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.RegionFactory;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.util.logging.Log;
@@ -65,7 +65,7 @@ public class JndiInfinispanRegionFactory extends InfinispanRegionFactory {
       String name = ConfigurationHelper.getString(CACHE_MANAGER_RESOURCE_PROP, properties, null);
       if (name == null)
          throw new CacheException("Configuration property " + CACHE_MANAGER_RESOURCE_PROP + " not set");
-      return locateCacheManager(name, NamingHelper.getJndiProperties(properties));
+      return locateCacheManager(name, JndiHelper.extractJndiProperties(properties));
    }
 
    private EmbeddedCacheManager locateCacheManager(String jndiNamespace, Properties jndiProperties) {

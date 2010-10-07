@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 
 /**
  * Resolves {@link SessionFactory} instances during <tt>JNDI<tt> look-ups as well as during deserialization
@@ -109,8 +109,8 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 			log.info("Factory name: " + name);
 
 			try {
-				Context ctx = NamingHelper.getInitialContext(properties);
-				NamingHelper.bind(ctx, name, instance);
+				Context ctx = JndiHelper.getInitialContext(properties);
+				JndiHelper.bind(ctx, name, instance);
 				log.info("Bound factory to JNDI name: " + name);
 				( (EventContext) ctx ).addNamingListener(name, EventContext.OBJECT_SCOPE, LISTENER);
 			}
@@ -135,7 +135,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 			log.info("Unbinding factory from JNDI name: " + name);
 
 			try {
-				Context ctx = NamingHelper.getInitialContext(properties);
+				Context ctx = JndiHelper.getInitialContext(properties);
 				ctx.unbind(name);
 				log.info("Unbound factory from JNDI name: " + name);
 			}

@@ -31,7 +31,7 @@ import javax.naming.NamingException;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.jboss.cache.CacheManager;
 import org.slf4j.Logger;
@@ -69,7 +69,7 @@ public class JndiMultiplexingCacheInstanceManager extends MultiplexingCacheInsta
         if (name == null)
             throw new CacheException("Configuration property " + CACHE_FACTORY_RESOURCE_PROP + " not set");
         
-        CacheManager cf = locateCacheFactory( name, NamingHelper.getJndiProperties( properties ) );
+        CacheManager cf = locateCacheFactory( name, JndiHelper.extractJndiProperties( properties ) );
         setCacheFactory( cf );        
         
         super.start(settings, properties);

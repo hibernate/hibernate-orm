@@ -38,9 +38,9 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.NamingHelper;
 import org.hibernate.util.JTAHelper;
 
 /**
@@ -109,7 +109,7 @@ public class JTATransactionFactory implements TransactionFactory {
 	 */
 	protected final InitialContext resolveInitialContext(Properties properties) {
 		try {
-			return NamingHelper.getInitialContext( properties );
+			return JndiHelper.getInitialContext( properties );
 		}
 		catch ( NamingException ne ) {
 			throw new HibernateException( "Could not obtain initial context", ne );

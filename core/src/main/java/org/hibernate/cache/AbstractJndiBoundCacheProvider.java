@@ -33,7 +33,7 @@ import javax.naming.NamingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -66,7 +66,7 @@ public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 		if ( StringHelper.isEmpty( jndiNamespace ) ) {
 			throw new CacheException( "No JNDI namespace specified for cache" );
 		}
-		cache = locateCache( jndiNamespace, NamingHelper.getJndiProperties( properties ) );
+		cache = locateCache( jndiNamespace, JndiHelper.extractJndiProperties( properties ) );
 		prepare( properties );
 	}
 

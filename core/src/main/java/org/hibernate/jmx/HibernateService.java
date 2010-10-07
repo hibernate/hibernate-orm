@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.ExternalSessionFactoryConfig;
 
 
@@ -49,7 +49,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	public void stop() {
 		log.info("stopping service");
 		try {
-			InitialContext context = NamingHelper.getInitialContext( buildProperties() );
+			InitialContext context = JndiHelper.getInitialContext( buildProperties() );
 			( (SessionFactory) context.lookup(boundName) ).close();
 			//context.unbind(boundName);
 		}

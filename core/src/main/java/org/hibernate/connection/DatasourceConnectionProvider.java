@@ -32,7 +32,7 @@ import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class DatasourceConnectionProvider implements ConnectionProvider {
 		pass = props.getProperty( Environment.PASS );
 
 		try {
-			ds = ( DataSource ) NamingHelper.getInitialContext( props ).lookup( jndiName );
+			ds = ( DataSource ) JndiHelper.getInitialContext( props ).lookup( jndiName );
 		}
 		catch ( Exception e ) {
 			log.error( "Could not find datasource: " + jndiName, e );

@@ -31,7 +31,7 @@ import javax.transaction.TransactionManager;
 import javax.transaction.Transaction;
 
 import org.hibernate.HibernateException;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 
 /**
  * Template implementation of {@link TransactionManagerLookup} where the
@@ -54,7 +54,7 @@ public abstract class JNDITransactionManagerLookup implements TransactionManager
 	 */
 	public TransactionManager getTransactionManager(Properties props) throws HibernateException {
 		try {
-			return (TransactionManager) NamingHelper.getInitialContext(props).lookup( getName() );
+			return (TransactionManager) JndiHelper.getInitialContext(props).lookup( getName() );
 		}
 		catch (NamingException ne) {
 			throw new HibernateException( "Could not locate TransactionManager", ne );

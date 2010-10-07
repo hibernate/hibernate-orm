@@ -34,6 +34,7 @@ import javax.naming.event.NamingListener;
 
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.internal.util.jndi.JndiHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,8 @@ public class NamingHelper {
 			log.info( "Ejb3Configuration name: {}", name );
 
 			try {
-				Context ctx = org.hibernate.util.NamingHelper.getInitialContext( cfg.getProperties() );
-				org.hibernate.util.NamingHelper.bind( ctx, name, cfg );
+				Context ctx = JndiHelper.getInitialContext( cfg.getProperties() );
+				JndiHelper.bind( ctx, name, cfg );
 				log.info( "Bound Ejb3Configuration to JNDI name: {}", name );
 				( (EventContext) ctx ).addNamingListener( name, EventContext.OBJECT_SCOPE, LISTENER );
 			}

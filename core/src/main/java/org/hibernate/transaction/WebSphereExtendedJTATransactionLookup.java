@@ -40,7 +40,7 @@ import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 
 import org.hibernate.HibernateException;
-import org.hibernate.util.NamingHelper;
+import org.hibernate.internal.util.jndi.JndiHelper;
 
 /**
  * TransactionManagerLookup implementation intended for use with WebSphere
@@ -180,7 +180,7 @@ public class WebSphereExtendedJTATransactionLookup implements TransactionManager
 			private TransactionAdapter(Properties props) {
 				try {
 					if ( extendedJTATransaction == null ) {
-						extendedJTATransaction = NamingHelper.getInitialContext( props )
+						extendedJTATransaction = JndiHelper.getInitialContext( props )
 								.lookup( "java:comp/websphere/ExtendedJTATransaction" );
 					}
 				}

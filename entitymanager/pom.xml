@@ -122,7 +122,6 @@
                     <tasks>
                         <property name="target.dir" value="${project.build.directory}/generated-src/jpamodelgen"/>
                         <property name="src.dir" value="${project.build.testSourceDirectory}"/>
-                        <property name="jdk16_home" value="${jdk16_home}"/>
                         <property name="classpath" refid="maven.test.classpath"/>
                         <ant antfile="${basedir}/build.xml">
                             <target name="generate-metamodel"/>
@@ -142,14 +141,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

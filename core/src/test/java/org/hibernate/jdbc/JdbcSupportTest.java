@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.jdbc4;
+package org.hibernate.jdbc;
 
 import java.sql.*;
 import java.lang.reflect.InvocationHandler;
@@ -34,9 +34,9 @@ import java.io.Writer;
 
 import junit.framework.TestCase;
 
+import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.JdbcSupportLoader;
 import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.ClobImplementer;
@@ -51,6 +51,8 @@ import org.hibernate.engine.jdbc.WrappedClob;
  * @author Steve Ebersole
  */
 public class JdbcSupportTest extends TestCase {
+	private static JdbcSupport jdbcSupport = new JdbcSupport();
+
 	public void testConnectedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy(
 				4,
@@ -79,7 +81,7 @@ public class JdbcSupportTest extends TestCase {
 			}
 		};
 
-		LobCreator lobCreator = JdbcSupportLoader.loadJdbcSupport( connection ).getLobCreator( lobCreationContext );
+		LobCreator lobCreator = jdbcSupport.getLobCreator( lobCreationContext );
 		assertTrue( lobCreator instanceof ContextualLobCreator );
 
 		Blob blob = lobCreator.createBlob( new byte[] {} );
@@ -103,61 +105,8 @@ public class JdbcSupportTest extends TestCase {
 		connection.close();
 	}
 
-	public void testConnectedLobCreatorWithUnSupportedCreations() throws SQLException {
-		final Connection connection = createConnectionProxy(
-				3,
-				new JdbcLobBuilder() {
-					public Blob createBlob() {
-						throw new UnsupportedOperationException();
-					}
-
-					public Clob createClob() {
-						throw new UnsupportedOperationException();
-					}
-
-					public NClob createNClob() {
-						throw new UnsupportedOperationException();
-					}
-				}
-		);
-		final LobCreationContext lobCreationContext = new LobCreationContext() {
-			public Object execute(Callback callback) {
-				try {
-					return callback.executeOnConnection( connection );
-				}
-				catch ( SQLException e ) {
-					throw new RuntimeException( "Unexpected SQLException", e );
-				}
-			}
-		};
-
-		LobCreator lobCreator = JdbcSupportLoader.loadJdbcSupport( connection ).getLobCreator( lobCreationContext );
-		assertTrue( lobCreator instanceof NonContextualLobCreator );
-
-		Blob blob = lobCreator.createBlob( new byte[] {} );
-		assertTrue( blob instanceof BlobImplementer );
-		blob = lobCreator.wrap( blob );
-		assertTrue( blob instanceof WrappedBlob );
-
-		Clob clob = lobCreator.createClob( "Hi" );
-		assertTrue( clob instanceof ClobImplementer );
-		clob = lobCreator.wrap( clob );
-		assertTrue( clob instanceof WrappedClob );
-
-		Clob nclob = lobCreator.createNClob( "Hi" );
-		assertTrue( nclob instanceof ClobImplementer );
-		assertTrue( nclob instanceof NClobImplementer );
-		nclob = lobCreator.wrap( nclob );
-		assertTrue( nclob instanceof WrappedClob );
-
-		blob.free();
-		clob.free();
-		nclob.free();
-		connection.close();
-	}
-
 	public void testLegacyLobCreator() throws SQLException {
-		LobCreator lobCreator = JdbcSupportLoader.loadJdbcSupport( null ).getLobCreator();
+		LobCreator lobCreator = jdbcSupport.getLobCreator();
 
 		Blob blob = lobCreator.createBlob( new byte[] {} );
 		assertTrue( blob instanceof BlobImplementer );

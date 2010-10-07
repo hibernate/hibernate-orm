@@ -27,10 +27,13 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.io.InputStream;
 import java.io.Reader;
+import java.sql.NClob;
 
 /**
  * Contract for creating various LOB references.
  *
+ * @todo LobCreator really needs to be an api since we expose it to users.
+ * 
  * @author Steve Ebersole
  * @author Gail Badner
  */
@@ -92,7 +95,7 @@ public interface LobCreator {
 	 * @return The created NCLOB, castable as {@link Clob} as well as {@link NClobImplementer}.  In JDK 1.6
 	 * environments, also castable to java.sql.NClob
 	 */
-	public Clob createNClob(String string);
+	public NClob createNClob(String string);
 
 	/**
 	 * Create a NCLOB reference encapsulating the given character data.
@@ -102,5 +105,5 @@ public interface LobCreator {
 	 * @return The created NCLOB, castable as {@link Clob} as well as {@link NClobImplementer}.  In JDK 1.6
 	 * environments, also castable to java.sql.NClob
 	 */
-	public Clob createNClob(Reader reader, long length);
+	public NClob createNClob(Reader reader, long length);
 }

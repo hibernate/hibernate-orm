@@ -23,12 +23,6 @@
  */
 package org.hibernate;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.ByteArrayOutputStream;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -36,13 +30,10 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.StreamUtils;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
-import org.hibernate.mapping.ManyToOne;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.AnyType;
@@ -54,6 +45,8 @@ import org.hibernate.type.BooleanType;
 import org.hibernate.type.ByteType;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarType;
+import org.hibernate.type.CharArrayType;
+import org.hibernate.type.CharacterArrayType;
 import org.hibernate.type.CharacterType;
 import org.hibernate.type.ClassType;
 import org.hibernate.type.ClobType;
@@ -61,10 +54,13 @@ import org.hibernate.type.CurrencyType;
 import org.hibernate.type.DateType;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.FloatType;
+import org.hibernate.type.ImageType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LocaleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.MaterializedBlobType;
+import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.ObjectType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.ShortType;
@@ -76,13 +72,8 @@ import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
-import org.hibernate.type.YesNoType;
-import org.hibernate.type.CharArrayType;
 import org.hibernate.type.WrapperBinaryType;
-import org.hibernate.type.CharacterArrayType;
-import org.hibernate.type.MaterializedBlobType;
-import org.hibernate.type.ImageType;
-import org.hibernate.type.MaterializedClobType;
+import org.hibernate.type.YesNoType;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -434,31 +425,6 @@ public final class Hibernate {
 		}
 	}
 
-	/**
-	 * Create a new {@link Blob}. The returned object will be initially immutable.
-	 *
-	 * @param bytes a byte array
-	 * @return the Blob
-	 * @deprecated Use {@link LobHelper#createBlob(byte[])} instead.
-	 */
-	public static Blob createBlob(byte[] bytes) {
-		return NonContextualLobCreator.INSTANCE.wrap(
-				NonContextualLobCreator.INSTANCE.createBlob( bytes )
-		);
-	}
-
-	/**
-	 * Create a new {@link Blob}.
-	 *
-	 * @param bytes a byte array
-	 * @param session The session in which the {@link Blob} will be used.
-	 * @return the Blob
-	 * @deprecated Use {@link LobHelper#createBlob(byte[])} instead.
-	 */
-	public static Blob createBlob(byte[] bytes, Session session) {
-		return getLobCreator( session ).createBlob( bytes );
-	}
-
 	public static LobCreator getLobCreator(Session session) {
 		return getLobCreator( ( SessionImplementor ) session );
 	}
@@ -468,140 +434,6 @@ public final class Hibernate {
 				.getSettings()
 				.getJdbcSupport()
 				.getLobCreator( ( LobCreationContext ) session );
-	}
-
-	/**
-	 * Create a new {@link Blob}. The returned object will be initially immutable.
-	 *
-	 * @param stream a binary stream
-	 * @param length the number of bytes in the stream
-	 * @return the Blob
-	 * @deprecated Use {@link LobHelper#createBlob(InputStream, long)} instead.
-	 */
-	@Deprecated
-	public static Blob createBlob(InputStream stream, int length) {
-		return NonContextualLobCreator.INSTANCE.wrap(
-				NonContextualLobCreator.INSTANCE.createBlob( stream, length )
-		);
-	}
-
-	/**
-	 * Create a new {@link Blob}. The returned object will be initially immutable.
-	 *
-	 * @param stream a binary stream
-	 * @param length the number of bytes in the stream
-	 * @return the Blob
-	 * @deprecated Use {@link LobHelper#createBlob(InputStream, long)} instead.
-	 */
-	@Deprecated
-	public static Blob createBlob(InputStream stream, long length) {
-		return NonContextualLobCreator.INSTANCE.wrap(
-				NonContextualLobCreator.INSTANCE.createBlob( stream, length )
-		);
-	}
-
-	/**
-	 * Create a new {@link Blob}.
-	 *
-	 * @param stream a binary stream
-	 * @param length the number of bytes in the stream
-	 * @param session The session in which the {@link Blob} will be used.
-	 * @return the Blob
-	 * @deprecated Use {@link LobHelper#createBlob(InputStream, long)} instead.
-	 */
-	@Deprecated
-	public static Blob createBlob(InputStream stream, long length, Session session) {
-		return getLobCreator( session ).createBlob( stream, length );
-	}
-
-	/**
-	 * Create a new {@link Blob}. The returned object will be initially immutable.
-	 * <p/>
-	 * NOTE: this method will read the entire contents of the incoming stream in order to properly
-	 * handle the {@link Blob#length()} method.  If you do not want the stream read, use the
-	 * {@link #createBlob(InputStream,long)} version instead.
-	 *
-	 * @param stream a binary stream
-	 * @return the Blob
-	 * @throws IOException Indicates an I/O problem accessing the stream
-	 * @deprecated With no direct replacement.  Use {@link #createBlob(InputStream,long)} instead, passing in the length
-	 */
-	@Deprecated
-	public static Blob createBlob(InputStream stream) throws IOException {
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream( stream.available() );
-		StreamUtils.copy( stream, buffer );
-		return createBlob( buffer.toByteArray() );
-	}
-
-	/**
-	 * Create a new {@link Clob}. The returned object will be initially immutable.
-	 *
-	 * @param string The string data
-	 * @return The created {@link Clob}
-	 * @deprecated Use {@link LobHelper#createClob(String)} instead
-	 */
-	@Deprecated
-	public static Clob createClob(String string) {
-		return NonContextualLobCreator.INSTANCE.wrap(
-				NonContextualLobCreator.INSTANCE.createClob( string )
-		);
-	}
-
-	/**
-	 * Create a new {@link Clob}.
-	 *
-	 * @param string The string data
-	 * @param session The session in which the {@link Clob} will be used.
-	 * @return The created {@link Clob}
-	 * @deprecated Use {@link LobHelper#createClob(String)} instead
-	 */
-	@Deprecated
-	public static Clob createClob(String string, Session session) {
-		return getLobCreator( session ).createClob( string );
-	}
-
-	/**
-	 * Create a new {@link Clob}. The returned object will be initially immutable.
-	 *
-	 * @param reader a character stream
-	 * @param length the number of characters in the stream
-	 * @return The created {@link Clob}
-	 * @deprecated Use {@link LobHelper#createClob(Reader, long)} instead
-	 */
-	@Deprecated
-	public static Clob createClob(Reader reader, int length) {
-		return NonContextualLobCreator.INSTANCE.wrap(
-				NonContextualLobCreator.INSTANCE.createClob( reader, length )
-		);
-	}
-
-	/**
-	 * Create a new {@link Clob}. The returned object will be initially immutable.
-	 *
-	 * @param reader a character stream
-	 * @param length the number of characters in the stream
-	 * @return The created {@link Clob}
-	 * @deprecated Use {@link LobHelper#createClob(Reader, long)} instead
-	 */
-	@Deprecated
-	public static Clob createClob(Reader reader, long length) {
-		return NonContextualLobCreator.INSTANCE.wrap(
-				NonContextualLobCreator.INSTANCE.createClob( reader, length ) 
-		);
-	}
-
-	/**
-	 * Create a new {@link Clob}.
-	 *
-	 * @param reader a character stream
-	 * @param length the number of characters in the stream
-	 * @param session The session in which the {@link Clob} will be used.
-	 * @return The created {@link Clob}
-	 * @deprecated Use {@link LobHelper#createClob(Reader, long)} instead
-	 */
-	@Deprecated
-	public static Clob createClob(Reader reader, long length, Session session) {
-		return getLobCreator( session ).createClob( reader, length );
 	}
 
 	/**

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -27,6 +27,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.io.InputStream;
 import java.io.Reader;
+import java.sql.NClob;
 
 /**
  * {@link LobCreator} implementation using non-contextual or local creation, meaning that we generate the LOB
@@ -72,14 +73,14 @@ public class NonContextualLobCreator extends AbstractLobCreator implements LobCr
 	/**
 	 * {@inheritDoc}
 	 */
-	public Clob createNClob(String string) {
+	public NClob createNClob(String string) {
 		return NClobProxy.generateProxy( string );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Clob createNClob(Reader reader, long length) {
+	public NClob createNClob(Reader reader, long length) {
 		return NClobProxy.generateProxy( reader, length );
 	}
 }

@@ -115,10 +115,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <compilerVersion>1.6</compilerVersion>
-                    <executable>${jdk16_home}/bin/javac</executable>
                     <fork>true</fork>
                     <verbose>true</verbose>
                 </configuration>
@@ -127,7 +123,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <jvm>${jdk16_home}/bin/java</jvm>
                     <excludes>
                         <!-- Skip a long-running test of a prototype class -->
                         <exclude>**/ClusteredConcurrentTimestampRegionTestCase.java</exclude>

@@ -26,6 +26,7 @@ package org.hibernate.engine.jdbc;
 import java.sql.Clob;
 import java.io.Reader;
 import java.lang.reflect.Proxy;
+import java.sql.NClob;
 
 /**
  * Manages aspects of proxying java.sql.NClobs for non-contextual creation, including proxy creation and
@@ -37,18 +38,7 @@ import java.lang.reflect.Proxy;
  * @author Steve Ebersole
  */
 public class NClobProxy extends ClobProxy {
-	public static final Class[] PROXY_INTERFACES = new Class[] { determineNClobInterface(), NClobImplementer.class };
-
-	private static Class determineNClobInterface() {
-		// java.sql.NClob is a simple marker interface extending java.sql.Clob.  So if java.sql.NClob is not available
-		// on the classloader, just use java.sql.Clob
-		try {
-			return getProxyClassLoader().loadClass( "java.sql.NClob" );
-		}
-		catch ( ClassNotFoundException e ) {
-			return Clob.class;
-		}
-	}
+	public static final Class[] PROXY_INTERFACES = new Class[] { NClob.class, NClobImplementer.class };
 
 	protected NClobProxy(String string) {
 		super( string );
@@ -65,8 +55,8 @@ public class NClobProxy extends ClobProxy {
 	 *
 	 * @return The generated proxy.
 	 */
-	public static Clob generateProxy(String string) {
-		return ( Clob ) Proxy.newProxyInstance(
+	public static NClob generateProxy(String string) {
+		return ( NClob ) Proxy.newProxyInstance(
 				getProxyClassLoader(),
 				PROXY_INTERFACES,
 				new ClobProxy( string )
@@ -81,8 +71,8 @@ public class NClobProxy extends ClobProxy {
 	 *
 	 * @return The generated proxy.
 	 */
-	public static Clob generateProxy(Reader reader, long length) {
-		return ( Clob ) Proxy.newProxyInstance(
+	public static NClob generateProxy(Reader reader, long length) {
+		return ( NClob ) Proxy.newProxyInstance(
 				getProxyClassLoader(),
 				PROXY_INTERFACES,
 				new ClobProxy( reader, length )

@@ -12,7 +12,6 @@
                destdir="${target.dir}"
                failonerror="false"
                fork="true"
-               executable="${jdk16_home}/bin/javac"
                target="1.5"
                classpath="${classpath}">
             <compilerarg value="-proc:only"/>

@@ -24,6 +24,7 @@
 package org.hibernate.engine.jdbc;
 
 import java.sql.Blob;
+import java.sql.NClob;
 import java.sql.SQLException;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -32,8 +33,6 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
@@ -58,7 +57,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	 * @return The created BLOB reference.
 	 */
 	public Blob createBlob() {
-		return ( Blob ) lobCreationContext.execute( CREATE_BLOB_CALLBACK );
+		return lobCreationContext.execute( CREATE_BLOB_CALLBACK );
 	}
 
 	/**
@@ -102,7 +101,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	 * @return The created CLOB reference.
 	 */
 	public Clob createClob() {
-		return ( Clob ) lobCreationContext.execute( CREATE_CLOB_CALLBACK );
+		return lobCreationContext.execute( CREATE_CLOB_CALLBACK );
 	}
 
 	/**
@@ -144,18 +143,18 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	 *
 	 * @return The created NCLOB reference.
 	 */
-	public Clob createNClob() {
-		return ( Clob ) lobCreationContext.execute( CREATE_NCLOB_CALLBACK );
+	public NClob createNClob() {
+		return lobCreationContext.execute( CREATE_NCLOB_CALLBACK );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Clob createNClob(String string) {
+	public NClob createNClob(String string) {
 		try {
-			Clob clob = createNClob();
-			clob.setString( 1, string );
-			return clob;
+			NClob nclob = createNClob();
+			nclob.setString( 1, string );
+			return nclob;
 		}
 		catch ( SQLException e ) {
 			throw new JDBCException( "Unable to set NCLOB string after creation", e );
@@ -165,14 +164,14 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	/**
 	 * {@inheritDoc}
 	 */
-	public Clob createNClob(Reader reader, long length) {
+	public NClob createNClob(Reader reader, long length) {
 		try {
-			Clob clob = createNClob();
-			Writer writer = clob.setCharacterStream( 1 );
+			NClob nclob = createNClob();
+			Writer writer = nclob.setCharacterStream( 1 );
 			StreamUtils.copy( reader, writer );
 			writer.flush();
 			writer.close();
-			return clob;
+			return nclob;
 		}
 		catch ( SQLException e ) {
 			throw new JDBCException( "Unable to prepare NCLOB stream for writing", e );
@@ -182,57 +181,21 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		}
 	}
 
-
-	private static final Class[] CREATION_METHOD_SIG = new Class[0];
-	private static final Object[] CREATION_METHOD_ARGS = new Object[0];
-
-	private static final LobCreationContext.Callback CREATE_BLOB_CALLBACK;
-	private static final LobCreationContext.Callback CREATE_CLOB_CALLBACK;
-	private static final LobCreationContext.Callback CREATE_NCLOB_CALLBACK;
-
-	static {
-		CREATE_BLOB_CALLBACK = new CallbackImpl( getConnectionlobCreationMethod( "createBlob" ) );
-		CREATE_CLOB_CALLBACK = new CallbackImpl( getConnectionlobCreationMethod( "createClob" ) );
-		CREATE_NCLOB_CALLBACK = new CallbackImpl( getConnectionlobCreationMethod( "createNClob" ) );
-	}
-
-	private static class CallbackImpl implements LobCreationContext.Callback {
-		private final Method creationMethod;
-
-		private CallbackImpl(Method creationMethod) {
-			this.creationMethod = creationMethod;
+	public static final LobCreationContext.Callback<Blob> CREATE_BLOB_CALLBACK = new LobCreationContext.Callback<Blob>() {
+		public Blob executeOnConnection(Connection connection) throws SQLException {
+			return connection.createBlob();
 		}
+	};
 
-		public Object executeOnConnection(Connection connection) throws SQLException {
-			try {
-				return creationMethod.invoke( connection, CREATION_METHOD_ARGS );
-			}
-			catch ( InvocationTargetException e ) {
-				if ( e.getTargetException() instanceof SQLException ) {
-					throw ( SQLException ) e.getTargetException();
-				}
-				else {
-					throw new HibernateException( "Exception invoking " + creationMethod.getName(), e.getTargetException() );
-				}
-			}
-			catch ( AbstractMethodError e ) {
-				// this again is a big big error...
-				throw new IllegalStateException( "Useable implementation of " + creationMethod.getName() + " not found." );
-			}
-			catch ( IllegalAccessException e ) {
-				// this again is a big big error...
-				throw new IllegalStateException( "Illegal access attempt on JDBC method " + creationMethod.getName() );
-			}
+	public static final LobCreationContext.Callback<Clob> CREATE_CLOB_CALLBACK = new LobCreationContext.Callback<Clob>() {
+		public Clob executeOnConnection(Connection connection) throws SQLException {
+			return connection.createClob();
 		}
-	}
+	};
 
-	private static Method getConnectionlobCreationMethod(String methodName) {
-		try {
-			return Connection.class.getMethod( methodName, CREATION_METHOD_SIG );
+	public static final LobCreationContext.Callback<NClob> CREATE_NCLOB_CALLBACK = new LobCreationContext.Callback<NClob>() {
+		public NClob executeOnConnection(Connection connection) throws SQLException {
+			return connection.createNClob();
 		}
-		catch ( NoSuchMethodException e ) {
-			// this is a big big error if we get here and these methods are not part of the Connection interface...
-			throw new IllegalStateException( "JDBC driver did not implement " + methodName);
-		}
-	}
+	};
 }

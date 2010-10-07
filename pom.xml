@@ -27,14 +27,14 @@
         <module>core</module>
         <module>testing</module>
         <module>testsuite</module>
+        <module>entitymanager</module>
+        <module>envers</module>
         <module>cache-ehcache</module>
         <module>cache-jbosscache</module>
         <module>cache-oscache</module>
         <module>cache-swarmcache</module>
         <module>connection-c3p0</module>
         <module>connection-proxool</module>
-        <module>envers</module>
-        <module>jdbc3-testing</module>
         <module>cache-infinispan</module>
 <!--
     Need to scope bytecode providers first...
@@ -71,20 +71,7 @@
         </pluginManagement>
     </build>
 
-    <profiles>       
-        <profile>
-            <id>jdk6-modules</id>
-            <activation>
-                <property>
-                    <name>disableJDK6Modules</name>
-                    <value>!true</value>
-                </property>
-            </activation>
-            <modules>
-                <module>entitymanager</module>
-                <module>jdbc4-testing</module>
-            </modules>
-        </profile>            
+    <profiles>
         <profile>
             <id>docs</id>
             <activation>

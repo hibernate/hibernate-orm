@@ -24,7 +24,6 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -39,7 +38,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.JdbcSupport;
-import org.hibernate.engine.jdbc.JdbcSupportLoader;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
@@ -99,7 +97,6 @@ public class SettingsFactory implements Serializable {
 		boolean metaReportsDDLCausesTxnCommit = false;
 		boolean metaReportsDDLInTxnSupported = true;
 		Dialect dialect = null;
-		JdbcSupport jdbcSupport = null;
 
 		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
 		// The need for it is intended to be alleviated with future development, thus it is
@@ -128,7 +125,6 @@ public class SettingsFactory implements Serializable {
 					);
 
 					dialect = DialectFactory.buildDialect( props, conn );
-					jdbcSupport = JdbcSupportLoader.loadJdbcSupport( conn );
 
 					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
@@ -159,10 +155,7 @@ public class SettingsFactory implements Serializable {
 		settings.setDataDefinitionImplicitCommit( metaReportsDDLCausesTxnCommit );
 		settings.setDataDefinitionInTransactionSupported( metaReportsDDLInTxnSupported );
 		settings.setDialect( dialect );
-		if ( jdbcSupport == null ) {
-			jdbcSupport = JdbcSupportLoader.loadJdbcSupport( null );
-		}
-		settings.setJdbcSupport( jdbcSupport );
+		settings.setJdbcSupport( new JdbcSupport() );
 
 		//use dialect default properties
 		final Properties properties = new Properties();

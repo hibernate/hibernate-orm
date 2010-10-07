@@ -31,7 +31,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.engine.basic.spi.JmxService;
+import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Manageable;

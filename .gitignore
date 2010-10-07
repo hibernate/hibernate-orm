@@ -1,0 +1,15 @@
+target
+local
+.idea
+.idea/*
+*.ipr
+*.iws
+*.iml
+atlassian-ide-plugin.xml
+.classpath
+.project
+.settings
+.nbattrs
+*.log
+*.properties
+.clover

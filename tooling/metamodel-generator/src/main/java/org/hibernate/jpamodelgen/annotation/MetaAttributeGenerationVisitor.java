@@ -59,6 +59,12 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	 */
 	private static final String ORG_HIBERNATE_ANNOTATIONS_TARGET = "org.hibernate.annotations.Target";
 
+	/**
+	 * FQCN of the Hibernate specific @Type annotation. We do not use the class directly to avoid depending on Hibernate
+	 * Core.
+	 */
+	private static final String ORG_HIBERNATE_ANNOTATIONS_TYPE = "org.hibernate.annotations.Type";
+
 	private final AnnotationMetaEntity entity;
 	private final Context context;
 
@@ -162,7 +168,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	@Override
 	public AnnotationMetaAttribute visitExecutable(ExecutableType t, Element p) {
 		if ( !p.getKind().equals( ElementKind.METHOD ) ) {
-			return null;
+			return null;                                                                                       
 		}
 
 		String string = p.getSimpleName().toString();
@@ -178,6 +184,11 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		if ( TypeUtils.containsAnnotation( element, Basic.class )
 				|| TypeUtils.containsAnnotation( element, OneToOne.class )
 				|| TypeUtils.containsAnnotation( element, ManyToOne.class ) ) {
+			return true;
+		}
+
+		// METAGEN-28
+		if ( TypeUtils.getAnnotationMirror( element, ORG_HIBERNATE_ANNOTATIONS_TYPE ) != null ) {
 			return true;
 		}
 

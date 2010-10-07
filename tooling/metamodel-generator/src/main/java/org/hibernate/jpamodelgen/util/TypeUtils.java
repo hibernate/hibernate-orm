@@ -170,7 +170,30 @@ public final class TypeUtils {
 	}
 
 	/**
-	 * Returns the annotation mirror for the specified annotation class from the {@code Element}.
+	 * Checks whether the {@code Element} hosts the annotation with the given fully qualified class name.
+	 *
+	 * @param element the element to check for the hosted annotation
+	 * @param fqcn the fully qualified class name of the annotation to check for
+	 *
+	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
+	 *         the {@code TypeElement} does not host the specified annotation.
+	 */
+	public static AnnotationMirror getAnnotationMirror(Element element, String fqcn) {
+		assert element != null;
+		assert fqcn != null;
+
+		AnnotationMirror mirror = null;
+		for ( AnnotationMirror am : element.getAnnotationMirrors() ) {
+			if ( isAnnotationMirrorOfType( am, fqcn ) ) {
+				mirror = am;
+				break;
+			}
+		}
+		return mirror;
+	}
+
+	/**
+	 * Checks whether the {@code Element} hosts an annotation of the specified class.
 	 *
 	 * @param element the element to check for the hosted annotation
 	 * @param clazz the annotation class to check for
@@ -179,17 +202,8 @@ public final class TypeUtils {
 	 *         the {@code TypeElement} does not host the specified annotation.
 	 */
 	public static AnnotationMirror getAnnotationMirror(Element element, Class<? extends Annotation> clazz) {
-		assert element != null;
 		assert clazz != null;
-
-		AnnotationMirror mirror = null;
-		for ( AnnotationMirror am : element.getAnnotationMirrors() ) {
-			if ( isAnnotationMirrorOfType( am, clazz ) ) {
-				mirror = am;
-				break;
-			}
-		}
-		return mirror;
+		return getAnnotationMirror( element, clazz.getName() );
 	}
 
 	public static Object getAnnotationValue(AnnotationMirror annotationMirror, String parameterValue) {

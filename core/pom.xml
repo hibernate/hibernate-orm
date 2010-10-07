@@ -166,7 +166,7 @@
                 <configuration>
                     <bytecodeInjections>
                         <bytecodeInjection>
-                            <expression>${pom.version}</expression>
+                            <expression>${project.version}</expression>
                             <targetMembers>
                             	<methodBodyReturn>
                             	    <className>org.hibernate.Version</className>
@@ -204,6 +204,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.7</version>
                 <configuration>
                     <!-- 
                     for the time being, gonna ignore the custom stylesheet (what did it do anyway???) 

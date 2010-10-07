@@ -275,7 +275,7 @@
                         <packagesheader>Hibernate Packages</packagesheader>
                         <doctitle>Hibernate Core ${project.version}</doctitle>
                         <windowtitle>Hibernate Core ${project.version}</windowtitle>
-                        <bottom><![CDATA[Copyright &copy; ${inceptionYear}-{currentYear} <a href="http://redhat.com">Red Hat Middleware, LLC.</a>  All Rights Reserved]]></bottom>
+                        <bottom><![CDATA[Copyright &copy; ${project.inceptionYear}-{currentYear} <a href="http://redhat.com">Red Hat Middleware, LLC.</a>  All Rights Reserved]]></bottom>
                         <excludePackageNames>orh.hibernate.tutorial*</excludePackageNames>
                         <groups>
                             <group>
@@ -628,7 +628,7 @@
             <properties>
                 <db.dialect>org.hibernate.dialect.DerbyDialect</db.dialect>
                 <jdbc.driver>org.apache.derby.jdbc.EmbeddedDriver</jdbc.driver>
-                <jdbc.url>jdbc:derby:${pom.build.outputDirectory}/test/derby;create=true</jdbc.url>
+                <jdbc.url>jdbc:derby:${project.build.outputDirectory}/test/derby;create=true</jdbc.url>
                 <jdbc.user>sa</jdbc.user>
                 <jdbc.pass/>
                 <jdbc.isolation/>

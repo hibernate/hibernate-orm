@@ -36,9 +36,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>${groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>${version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
@@ -48,9 +48,9 @@
         
         <!-- test dependencies -->
         <dependency>
-            <groupId>${groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>hibernate-testing</artifactId>
-            <version>${version}</version>
+            <version>${project.version}</version>
             <!-- <scope>test</scope> TODO fix this -->
         </dependency>
         <dependency>

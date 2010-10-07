@@ -15,22 +15,19 @@
  * limitations under the License.
  */
 
-// $Id$
+package org.hibernate.jpamodelgen.test.typedmappedsuperclass;
 
-package org.hibernate.jpamodelgen;
+import java.util.Set;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToMany;
 
-/**
- * Information about the Meta Model Generator version.
- *
- * @author Hardy Ferentschik
- */
-public final class Version {
-	private Version() {
-	}
+@MappedSuperclass
+public abstract class AttachmentGroup<GroupType extends AttachmentGroup, PostType extends AttachmentGroupPost<UserRoleType, GroupType>, UserRoleType extends UserRole> {
+	@OneToMany(mappedBy = "parentGroup")
+	protected Set<PostType> posts;
 
-	public static String getVersionString() {
-		return "[WORKING]";
-	}
+	@Id
+	long id;
 }
-
 

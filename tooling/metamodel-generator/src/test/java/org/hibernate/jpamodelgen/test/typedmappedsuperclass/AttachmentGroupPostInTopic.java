@@ -15,22 +15,10 @@
  * limitations under the License.
  */
 
-// $Id$
+package org.hibernate.jpamodelgen.test.typedmappedsuperclass;
 
-package org.hibernate.jpamodelgen;
+import javax.persistence.Entity;
 
-/**
- * Information about the Meta Model Generator version.
- *
- * @author Hardy Ferentschik
- */
-public final class Version {
-	private Version() {
-	}
-
-	public static String getVersionString() {
-		return "[WORKING]";
-	}
+@Entity
+public class AttachmentGroupPostInTopic extends AttachmentGroupPost<UserRole, AttachmentGroupInTopic> {
 }
-
-

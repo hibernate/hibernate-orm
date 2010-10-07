@@ -37,7 +37,7 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 	}
 
 	public String getDeclarationString() {
-		return "public static volatile " + getParent().importType( getMetaType() ) + "<" + getParent().importType( getParent().getQualifiedName() ) + ", " + getParent()
-				.importType( keyType ) + ", " + getParent().importType( getTypeDeclaration() ) + "> " + getPropertyName() + ";";
+		return "public static volatile " + getHostingEntity().importType( getMetaType() ) + "<" + getHostingEntity().importType( getHostingEntity().getQualifiedName() ) + ", " + getHostingEntity()
+				.importType( keyType ) + ", " + getHostingEntity().importType( getTypeDeclaration() ) + "> " + getPropertyName() + ";";
 	}
 }

@@ -161,7 +161,7 @@ public class SettingsFactory implements Serializable {
 		properties.putAll( dialect.getDefaultProperties() );
 		properties.putAll( props );
 
-		settings.setJdbcSupport( new JdbcSupport( ! PropertiesHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, properties ) ) );
+		settings.setJdbcSupport( new JdbcSupport( ! ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, properties ) ) );
 
 		// Transaction settings:
 

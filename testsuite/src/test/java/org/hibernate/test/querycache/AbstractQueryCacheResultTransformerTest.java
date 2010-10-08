@@ -44,6 +44,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
+import org.hibernate.test.fetchprofiles.join.Enrollment;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
@@ -101,9 +102,18 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		public Object execute(boolean isSingleResult) throws Exception{
 			Session s = openSession();
 			Transaction t = s.beginTransaction();
-			Object result = getResults( s, isSingleResult );
-			t.commit();
-			s.close();
+			Object result = null;
+			try {
+				result = getResults( s, isSingleResult );
+				t.commit();
+			}
+			catch ( Exception ex ) {
+				t.rollback();
+				throw ex;
+			}
+			finally {
+				s.close();
+			}
 			return result;
 		}
 		protected abstract Object getResults(Session s, boolean isSingleResult) throws Exception;
@@ -203,7 +213,130 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		t.commit();
 		s.close();
 	}
-	
+
+
+	public void testAliasToEntityMapNoProjectionList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
+						.createAlias( "e.course", "c", Criteria.LEFT_JOIN )
+								.setResultTransformer( Criteria.ALIAS_TO_ENTITY_MAP )
+						.addOrder( Order.asc( "s.studentNumber") );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "from Student s left join s.enrolments e left join e.course c order by s.studentNumber" )
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Map yogiMap = ( Map ) resultList.get( 0 );
+				assertEquals( 3, yogiMap.size() );
+				Map shermanMap = ( Map ) resultList.get( 1 );
+				assertEquals( 3, shermanMap.size() );
+				assertEquals( yogiExpected, yogiMap.get( "s" ) );
+				assertEquals( yogiEnrolmentExpected, yogiMap.get( "e" ) );
+				assertEquals( courseExpected, yogiMap.get( "c" ) );
+				assertEquals( shermanExpected, shermanMap.get( "s" ) );
+				assertEquals( shermanEnrolmentExpected, shermanMap.get( "e" ) );
+				assertEquals( courseExpected, shermanMap.get( "c" ) );
+				assertSame( ( ( Map ) resultList.get( 0 ) ).get( "c" ), shermanMap.get( "c" ) );
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}
+
+	public void testAliasToEntityMapNoProjectionMultiAndNullList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+						.createAlias( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
+						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
+								.setResultTransformer( Criteria.ALIAS_TO_ENTITY_MAP )
+						.addOrder( Order.asc( "s.studentNumber") );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "from Student s left join s.preferredCourse p left join s.addresses a order by s.studentNumber" )
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 3, resultList.size() );
+				Map yogiMap1 = ( Map ) resultList.get( 0 );
+				assertEquals( 3, yogiMap1.size() );
+				Map yogiMap2 = ( Map ) resultList.get( 1 );
+				assertEquals( 3, yogiMap2.size() );
+				Map shermanMap = ( Map ) resultList.get( 2 );
+				assertEquals( 3, shermanMap.size() );
+				assertEquals( yogiExpected, yogiMap1.get( "s" ) );
+				assertEquals( courseExpected, yogiMap1.get( "p" ) );
+				Address yogiAddress1 = ( Address ) yogiMap1.get( "a" );
+				assertEquals( yogiExpected.getAddresses().get( yogiAddress1.getAddressType() ),
+						yogiMap1.get( "a" ));
+				assertEquals( yogiExpected, yogiMap2.get( "s" ) );
+				assertEquals( courseExpected, yogiMap2.get( "p" ) );
+				Address yogiAddress2 = ( Address ) yogiMap2.get( "a" );
+				assertEquals( yogiExpected.getAddresses().get( yogiAddress2.getAddressType() ),
+						yogiMap2.get( "a" ));
+				assertSame( yogiMap1.get( "s" ), yogiMap2.get( "s" ) );
+				assertSame( yogiMap1.get( "p" ), yogiMap2.get( "p" ) );
+				assertFalse( yogiAddress1.getAddressType().equals( yogiAddress2.getAddressType() ) );
+				assertEquals( shermanExpected, shermanMap.get( "s" ) );
+				assertEquals( shermanExpected.getPreferredCourse(), shermanMap.get( "p" ) );
+				assertNull( shermanMap.get( "a") );
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}	
+
+	public void testAliasToEntityMapNoProjectionNullAndNonNullAliasList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
+								.setResultTransformer( Criteria.ALIAS_TO_ENTITY_MAP )
+						.createCriteria( "s.preferredCourse", Criteria.INNER_JOIN )
+						.addOrder( Order.asc( "s.studentNumber") );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "from Student s left join s.addresses a left join s.preferredCourse order by s.studentNumber" )
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Map yogiMap1 = ( Map ) resultList.get( 0 );
+				assertEquals( 2, yogiMap1.size() );
+				Map yogiMap2 = ( Map ) resultList.get( 1 );
+				assertEquals( 2, yogiMap2.size() );
+				assertEquals( yogiExpected, yogiMap1.get( "s" ) );
+				Address yogiAddress1 = ( Address ) yogiMap1.get( "a" );
+				assertEquals( yogiExpected.getAddresses().get( yogiAddress1.getAddressType() ),
+						yogiMap1.get( "a" ));
+				assertEquals( yogiExpected, yogiMap2.get( "s" ) );
+				Address yogiAddress2 = ( Address ) yogiMap2.get( "a" );
+				assertEquals( yogiExpected.getAddresses().get( yogiAddress2.getAddressType() ),
+						yogiMap2.get( "a" ));
+				assertSame( yogiMap1.get( "s" ), yogiMap2.get( "s" ) );
+				assertFalse( yogiAddress1.getAddressType().equals( yogiAddress2.getAddressType() ) );
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}
+
 	public void testEntityWithNonLazyOneToManyUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -273,6 +406,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 			public void check(Object results) {
 				assertTrue( results instanceof Student );
 				assertEquals( shermanExpected, results );
+				assertNotNull(  ( ( Student ) results ).getEnrolments() );
 				assertFalse( Hibernate.isInitialized( ( ( Student ) results ).getEnrolments() ) );
 				assertNull( ( ( Student ) results ).getPreferredCourse() );				
 			}
@@ -300,6 +434,10 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( 2, resultList.size() );
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertEquals( shermanExpected, resultList.get( 1 ) );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getPreferredCourse() );
+				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getEnrolments() );
+				assertNull( ( ( Student ) resultList.get( 1 ) ).getPreferredCourse() );
 				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
 				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getPreferredCourse() ) );
 				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
@@ -309,7 +447,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
-	public void testEntityWithJoinFetchedLazyOneToManySingleElementList() throws Exception {
+	public void testEntityWithUnaliasedJoinFetchedLazyOneToManySingleElementList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -325,54 +463,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 			}
 		};
 
-		// aliased
-		CriteriaExecutor criteriaExecutorAliased1 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased2 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.setFetchMode( "e", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased3 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		CriteriaExecutor criteriaExecutorAliased4 = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
-				// should use RootEntityTransformer by default
-				return s.createCriteria( Student.class, "s" )
-						.createCriteria( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.setFetchMode( "e", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		HqlExecutor hqlExecutorAliased = new HqlExecutor() {
-			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join fetch s.enrolments e order by s.studentNumber" );
-			}
-		};
 		ResultChecker checker = new ResultChecker() {
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertEquals( shermanExpected, resultList.get( 1 ) );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getEnrolments() );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
 					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
@@ -383,11 +481,236 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		};
 
 		runTest( hqlExecutorUnaliased, criteriaExecutorUnaliased, checker, false);
-		runTest( hqlExecutorAliased, criteriaExecutorAliased1, checker, false);
-		runTest( null, criteriaExecutorAliased2, checker, false);
-		runTest( null, criteriaExecutorAliased3, checker, false);
-		runTest( null, criteriaExecutorAliased4, checker, false);
+	}
 
+	public void testJoinWithFetchJoinListCriteria() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
+						.setFetchMode( "enrolments", FetchMode.JOIN )
+						.addOrder( Order.asc( "s.studentNumber") );						
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				assertEquals( yogiExpected, resultList.get( 0 ) );
+				// The following fails for criteria due to HHH-3524
+				//assertEquals( yogiExpected.getPreferredCourse(), ( ( Student ) resultList.get( 0 ) ).getPreferredCourse() );
+				assertEquals( yogiExpected.getPreferredCourse().getCourseCode(),
+						( ( Student ) resultList.get( 0 ) ).getPreferredCourse().getCourseCode() );				
+				assertEquals( shermanExpected, resultList.get( 1 ) );
+				assertNull( ( ( Student ) resultList.get( 1 ) ).getPreferredCourse() );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( null, criteriaExecutor, checker, false );
+	}
+
+	public void testJoinWithFetchJoinListHql() throws Exception {
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiObjects[ 0 ] );
+				assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 1 ] );
+				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanObjects[ 0 ] );
+				assertNull( shermanObjects[ 1 ] );
+				assertNull( ( ( Student ) shermanObjects[ 0 ] ).getPreferredCourse() );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student )  yogiObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanObjects[ 0 ] ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlExecutor, null, checker, false );
+	}
+
+	public void testJoinWithFetchJoinWithOwnerAndPropProjectedList() throws Exception {
+		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select s, s.name from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiObjects[ 0 ] );
+				assertEquals( yogiExpected.getName(), yogiObjects[ 1 ] );
+				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanObjects[ 0 ] );
+				assertEquals( shermanExpected.getName(), shermanObjects[ 1 ] );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student )  yogiObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanObjects[ 0 ] ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlSelectNewMapExecutor, null, checker, false );
+	}
+
+	public void testJoinWithFetchJoinWithPropAndOwnerProjectedList() throws Exception {
+		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select s.name, s from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				assertEquals( yogiExpected.getName(), yogiObjects[ 0 ] );
+				assertEquals( yogiExpected, yogiObjects[ 1 ] );
+				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
+				assertEquals( shermanExpected.getName(), shermanObjects[ 0 ] );
+				assertEquals( shermanExpected, shermanObjects[ 1 ] );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student )  yogiObjects[ 1 ] ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 1 ] ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanObjects[ 1 ] ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanObjects[ 1 ] ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlSelectNewMapExecutor, null, checker, false );
+	}
+
+	public void testJoinWithFetchJoinWithOwnerAndAliasedJoinedProjectedListHql() throws Exception {
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select s, pc from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiObjects[ 0 ] );
+				assertEquals(
+						yogiExpected.getPreferredCourse().getCourseCode(),
+						( ( Course ) yogiObjects[ 1 ] ).getCourseCode()
+				);
+				Object[] shermanObjects = ( Object[]  ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanObjects[ 0 ] );
+				assertNull( shermanObjects[ 1 ] );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 1 ] );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanObjects[ 0 ] ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlExecutor, null, checker, false );
+	}
+
+	public void testJoinWithFetchJoinWithAliasedJoinedAndOwnerProjectedListHql() throws Exception {
+		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select pc, s from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiObjects[ 1 ] );
+				assertEquals(
+						yogiExpected.getPreferredCourse().getCourseCode(),
+						( ( Course ) yogiObjects[ 0 ] ).getCourseCode()
+				);
+				Object[] shermanObjects = ( Object[]  ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanObjects[ 1 ] );
+				assertNull( shermanObjects[ 0 ] );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 0 ] );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiObjects[ 1 ] ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 1 ] ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanObjects[ 1 ] ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanObjects[ 1 ] ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlSelectNewMapExecutor, null, checker, false );
+	}
+
+	public void testEntityWithAliasedJoinFetchedLazyOneToManySingleElementListHql() throws Exception {
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "from Student s left join fetch s.enrolments e order by s.studentNumber" );
+			}
+		};
+
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				assertEquals( yogiExpected, resultList.get( 0 ) );
+				assertEquals(
+						yogiExpected.getPreferredCourse().getCourseCode(),
+						( ( Student ) resultList.get( 0 ) ).getPreferredCourse().getCourseCode()
+				);
+				assertEquals( shermanExpected, resultList.get( 1 ) );
+				assertNull( ( ( Student ) resultList.get( 1 ) ).getPreferredCourse() );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
+				}
+			}
+		};
+
+		runTest( hqlExecutor, null, checker, false);
+	}
+
+	public void testEntityWithSelectFetchedLazyOneToManySingleElementListCriteria() throws Exception {
+		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				// should use RootEntityTransformer by default
+				return s.createCriteria( Student.class, "s" )
+						.setFetchMode( "enrolments", FetchMode.SELECT )
+						.addOrder( Order.asc( "s.studentNumber") );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				assertEquals( yogiExpected, resultList.get( 0 ) );
+				assertEquals( shermanExpected, resultList.get( 1 ) );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
+				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getEnrolments() );
+				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
+			}
+		};
+
+		runTest( null, criteriaExecutorUnaliased, checker, false);
 	}
 
 	public void testEntityWithJoinFetchedLazyOneToManyMultiAndNullElementList() throws Exception {
@@ -456,6 +779,9 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertSame( resultList.get( 0 ), resultList.get( 1 ) );
 				assertEquals( shermanExpected, resultList.get( 2 ) );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getAddresses() );
+				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getAddresses() );
+				assertNotNull( ( ( Student ) resultList.get( 2 ) ).getAddresses() );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getAddresses() ) );
 					assertEquals( yogiExpected.getAddresses(), ( ( Student ) resultList.get( 0 ) ).getAddresses() );
@@ -547,6 +873,53 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorAliased4, checker, false );
 	}
 
+	public void testEntityWithJoinFetchedLazyManyToOneUsingProjectionList() throws Exception {
+		// unaliased
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				// should use RootEntityTransformer by default
+				return s.createCriteria( Enrolment.class, "e" )
+						.createAlias( "e.student", "s", Criteria.LEFT_JOIN )
+						.setFetchMode( "student", FetchMode.JOIN )
+						.setFetchMode( "student.preferredCourse", FetchMode.JOIN )
+						.setProjection(
+								Projections.projectionList()
+										.add( Projections.property( "s.name" ) )
+										.add( Projections.property( "e.student" ) )
+						)
+						.addOrder( Order.asc( "s.studentNumber") );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select s.name, s from Enrolment e left join e.student s left join fetch s.preferredCourse order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
+				assertEquals( yogiExpected.getName(), yogiObjects[ 0 ] );
+				assertEquals( shermanExpected.getName(), shermanObjects[ 0 ] );
+				// The following fails for criteria due to HHH-1425
+				// assertEquals( yogiExpected, yogiObjects[ 1 ] );
+				// assertEquals( shermanExpected, shermanObjects[ 1 ] );
+				assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiObjects[ 1 ] ).getStudentNumber() );
+				assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanObjects[ 1 ] ).getStudentNumber() );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					// The following fails for criteria due to HHH-1425
+					//assertTrue( Hibernate.isInitialized( ( ( Student ) yogiObjects[ 1 ] ).getPreferredCourse() ) );
+					//assertEquals( yogiExpected.getPreferredCourse(),  ( ( Student ) yogiObjects[ 1 ] ).getPreferredCourse() );
+					//assertTrue( Hibernate.isInitialized( ( ( Student ) shermanObjects[ 1 ] ).getPreferredCourse() ) );
+					//assertEquals( shermanExpected.getPreferredCourse(),  ( ( Student ) shermanObjects[ 1 ] ).getPreferredCourse() );
+				}
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}	
+
 	public void testEntityWithJoinedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -578,6 +951,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( 2, resultList.size() );
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertEquals( shermanExpected, resultList.get( 1 ) );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getEnrolments() );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
 					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
@@ -623,6 +998,9 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertSame( resultList.get( 0 ), resultList.get( 1 ) );
 				assertEquals( shermanExpected, resultList.get( 2 ) );
+				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getAddresses() );
+				assertNotNull( ( ( Student ) resultList.get( 2 ) ).getAddresses() );
+				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getAddresses() );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getAddresses() ) );
 					assertEquals( yogiExpected.getAddresses(), ( ( Student ) resultList.get( 0 ) ).getAddresses() );
@@ -768,89 +1146,6 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutorAliased, null, checker, false );
 	}
 
-	public void testAliasToEntityMapNoProjectionList() throws Exception {
-		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.enrolments", "e", Criteria.LEFT_JOIN )
-						.createAlias( "e.course", "c", Criteria.LEFT_JOIN )						
-								.setResultTransformer( Criteria.ALIAS_TO_ENTITY_MAP )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		HqlExecutor hqlExecutor = new HqlExecutor() {
-			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join s.enrolments e left join e.course c order by s.studentNumber" )
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
-			}
-		};
-		ResultChecker checker = new ResultChecker() {
-			public void check(Object results) {
-				List resultList = ( List ) results;
-				assertEquals( 2, resultList.size() );
-				Map yogiMap = ( Map ) resultList.get( 0 );
-				assertEquals( 3, yogiMap.size() );
-				Map shermanMap = ( Map ) resultList.get( 1 );
-				assertEquals( 3, shermanMap.size() );
-				assertEquals( yogiExpected, yogiMap.get( "s" ) );
-				assertEquals( yogiEnrolmentExpected, yogiMap.get( "e" ) );
-				assertEquals( courseExpected, yogiMap.get( "c" ) );
-				assertEquals( shermanExpected, shermanMap.get( "s" ) );
-				assertEquals( shermanEnrolmentExpected, shermanMap.get( "e" ) );
-				assertEquals( courseExpected, shermanMap.get( "c" ) );
-				assertSame( ( ( Map ) resultList.get( 0 ) ).get( "c" ), shermanMap.get( "c" ) );
-			}
-		};
-		runTest( hqlExecutor, criteriaExecutor, checker, false );
-	}
-
-	public void testAliasToEntityMapNoProjectionMultiAndNullList() throws Exception {
-		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
-			protected Criteria getCriteria(Session s) {
-				return s.createCriteria( Student.class, "s" )
-						.createAlias( "s.preferredCourse", "p", Criteria.LEFT_JOIN )
-						.createAlias( "s.addresses", "a", Criteria.LEFT_JOIN )
-								.setResultTransformer( Criteria.ALIAS_TO_ENTITY_MAP )
-						.addOrder( Order.asc( "s.studentNumber") );
-			}
-		};
-		HqlExecutor hqlExecutor = new HqlExecutor() {
-			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join s.preferredCourse p left join s.addresses a order by s.studentNumber" )
-						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
-			}
-		};
-		ResultChecker checker = new ResultChecker() {
-			public void check(Object results) {
-				List resultList = ( List ) results;
-				assertEquals( 3, resultList.size() );
-				Map yogiMap1 = ( Map ) resultList.get( 0 );
-				assertEquals( 3, yogiMap1.size() );
-				Map yogiMap2 = ( Map ) resultList.get( 1 );
-				assertEquals( 3, yogiMap2.size() );
-				Map shermanMap = ( Map ) resultList.get( 2 );
-				assertEquals( 3, shermanMap.size() );
-				assertEquals( yogiExpected, yogiMap1.get( "s" ) );
-				assertEquals( courseExpected, yogiMap1.get( "p" ) );
-				Address yogiAddress1 = ( Address ) yogiMap1.get( "a" );
-				assertEquals( yogiExpected.getAddresses().get( yogiAddress1.getAddressType() ),
-						yogiMap1.get( "a" ));
-				assertEquals( yogiExpected, yogiMap2.get( "s" ) );
-				assertEquals( courseExpected, yogiMap2.get( "p" ) );
-				Address yogiAddress2 = ( Address ) yogiMap2.get( "a" );
-				assertEquals( yogiExpected.getAddresses().get( yogiAddress2.getAddressType() ),
-						yogiMap2.get( "a" ));
-				assertSame( yogiMap1.get( "s" ), yogiMap2.get( "s" ) );
-				assertSame( yogiMap1.get( "p" ), yogiMap2.get( "p" ) );
-				assertFalse( yogiAddress1.getAddressType().equals( yogiAddress2.getAddressType() ) );
-				assertEquals( shermanExpected, shermanMap.get( "s" ) );
-				assertEquals( shermanExpected.getPreferredCourse(), shermanMap.get( "p" ) );
-				assertNull( shermanMap.get( "a") );
-			}
-		};
-		runTest( hqlExecutor, criteriaExecutor, checker, false );
-	}
-
 	public void testAliasToEntityMapOneProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -873,23 +1168,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				Map yogiMap = ( Map ) resultList.get( 0 );
 				Map shermanMap = ( Map ) resultList.get( 1 );
 				assertEquals( 1, yogiMap.size() );
-				//assertTrue( yogiMap[ 0 ] instanceof HibernateProxy );
-				assertTrue( yogiMap.get( "student" ) instanceof Student );
-				if( Hibernate.isInitialized( yogiMap.get( "student" ) ) ) {
-					assertEquals( yogiExpected, yogiMap.get( "student" ) );
-				}
-				else {
-					assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiMap.get( "student" ) ).getStudentNumber() );
-				}
 				assertEquals( 1, shermanMap.size() );
-				//assertTrue( shermanMap[ 0 ] instanceof HibernateProxy );
+				// TODO: following are initialized for hql and uninitialied for criteria; why?
+				// assertFalse( Hibernate.isInitialized( yogiMap.get( "student" ) ) );
+				// assertFalse( Hibernate.isInitialized( shermanMap.get( "student" ) ) );
+				assertTrue( yogiMap.get( "student" ) instanceof Student );
 				assertTrue( shermanMap.get( "student" ) instanceof Student );
-				if( Hibernate.isInitialized( shermanMap.get( "student" ) ) ) {
-					assertEquals( shermanExpected, shermanMap.get( "student" ) );
-				}
-				else {
-					assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanMap.get( "student" ) ).getStudentNumber() );
-				}
+				assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiMap.get( "student" ) ).getStudentNumber() );
+				assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanMap.get( "student" ) ).getStudentNumber() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, false);
@@ -923,26 +1209,17 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				Map yogiMap = ( Map ) resultList.get( 0 );
 				Map shermanMap = ( Map ) resultList.get( 1 );
 				assertEquals( 4, yogiMap.size() );
-				//assertTrue( yogiMap[ 0 ] instanceof HibernateProxy );
+				assertEquals( 4, shermanMap.size() );
 				assertTrue( yogiMap.get( "student" ) instanceof Student );
-				if( Hibernate.isInitialized( yogiMap.get( "student" ) ) ) {
-					assertEquals( yogiExpected, yogiMap.get( "student" ) );
-				}
-				else {
-					assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiMap.get( "student" ) ).getStudentNumber() );
-				}
+				assertTrue( shermanMap.get( "student" ) instanceof Student );
+				// TODO: following are initialized for hql and uninitialied for criteria; why?
+				// assertFalse( Hibernate.isInitialized( yogiMap.get( "student" ) ) );
+				// assertFalse( Hibernate.isInitialized( shermanMap.get( "student" ) ) );
+				assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiMap.get( "student" ) ).getStudentNumber() );
+				assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanMap.get( "student" ) ).getStudentNumber() );
 				assertEquals( yogiEnrolmentExpected.getSemester(), yogiMap.get( "semester" ) );
 				assertEquals( yogiEnrolmentExpected.getYear(), yogiMap.get( "year" )  );
 				assertEquals( courseExpected, yogiMap.get( "course" ) );
-				assertEquals( 4, shermanMap.size() );
-				//assertTrue( shermanMap[ 0 ] instanceof HibernateProxy );
-				assertTrue( shermanMap.get( "student" ) instanceof Student );
-				if( Hibernate.isInitialized( shermanMap.get( "student" ) ) ) {
-					assertEquals( shermanExpected, shermanMap.get( "student" ) );
-				}
-				else {
-					assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanMap.get( "student" ) ).getStudentNumber() );
-				}
 				assertEquals( shermanEnrolmentExpected.getSemester(), shermanMap.get( "semester" ) );
 				assertEquals( shermanEnrolmentExpected.getYear(), shermanMap.get( "year" )  );
 				assertEquals( courseExpected, shermanMap.get( "course" ) );
@@ -978,27 +1255,15 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( 2, resultList.size() );
 				Map yogiMap = ( Map ) resultList.get( 0 );
 				Map shermanMap = ( Map ) resultList.get( 1 );
-				//assertEquals( 2, yogiMap.size() );
-				//assertTrue( yogiMap[ 0 ] instanceof HibernateProxy );
+				// TODO: following are initialized for hql and uninitialied for criteria; why?
+				// assertFalse( Hibernate.isInitialized( yogiMap.get( "student" ) ) );
+				// assertFalse( Hibernate.isInitialized( shermanMap.get( "student" ) ) );
 				assertTrue( yogiMap.get( "student" ) instanceof Student );
-				if( Hibernate.isInitialized( yogiMap.get( "student" ) ) ) {
-					assertEquals( yogiExpected, yogiMap.get( "student" ) );
-				}
-				else {
-					assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiMap.get( "student" ) ).getStudentNumber() );
-				}
+				assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) yogiMap.get( "student" ) ).getStudentNumber() );
+				assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanMap.get( "student" ) ).getStudentNumber() );
 				assertNull( yogiMap.get( "semester" ) );
 				assertNull( yogiMap.get( "year" )  );
 				assertEquals( courseExpected, yogiMap.get( "course" ) );
-				//assertEquals( 2, shermanMap.size() );
-				//assertTrue( shermanMap[ 0 ] instanceof HibernateProxy );
-				assertTrue( shermanMap.get( "student" ) instanceof Student );
-				if( Hibernate.isInitialized( shermanMap.get( "student" ) ) ) {
-					assertEquals( shermanExpected, shermanMap.get( "student" ) );
-				}
-				else {
-					assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) shermanMap.get( "student" ) ).getStudentNumber() );
-				}
 				assertNull( shermanMap.get( "semester" ) );
 				assertNull( shermanMap.get( "year" )  );
 				assertEquals( courseExpected, shermanMap.get( "course" ) );
@@ -1135,12 +1400,9 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 			public void check(Object results) {
 				assertTrue( results instanceof Student );
 				Student student = ( Student ) results;
-				if ( Hibernate.isInitialized( student ) ) {
-					assertEquals( yogiExpected, student );
-				}
-				else {
-					assertEquals( yogiExpected.getStudentNumber(), student.getStudentNumber() );
-				}
+				// TODO: following is initialized for hql and uninitialied for criteria; why?
+				//assertFalse( Hibernate.isInitialized( student ) );
+				assertEquals( yogiExpected.getStudentNumber(), student.getStudentNumber() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
@@ -1164,18 +1426,11 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 			public void check(Object results) {
 				List resultList = ( List ) results;
 				assertEquals( 2, resultList.size() );
-				if ( Hibernate.isInitialized( resultList.get( 0 ) ) ) {
-					assertEquals( yogiExpected, resultList.get( 0 ) );
-				}
-				else {
-					assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) resultList.get( 0 ) ).getStudentNumber() );
-				}
-				if ( Hibernate.isInitialized( resultList.get( 1 ) ) ) {
-					assertEquals( shermanExpected, resultList.get( 1 ) );
-				}
-				else {
-					assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) resultList.get( 1 ) ).getStudentNumber() );
-				}
+				// TODO: following is initialized for hql and uninitialied for criteria; why?
+				//assertFalse( Hibernate.isInitialized( resultList.get( 0 ) ) );
+				//assertFalse( Hibernate.isInitialized( resultList.get( 1 ) ) );
+				assertEquals( yogiExpected.getStudentNumber(), ( ( Student ) resultList.get( 0 ) ).getStudentNumber() );
+				assertEquals( shermanExpected.getStudentNumber(), ( ( Student ) resultList.get( 1 ) ).getStudentNumber() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
@@ -1208,11 +1463,10 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertTrue( results instanceof Object[] );
 				Object shermanObjects[] = ( Object [] ) results;
 				assertEquals( 4, shermanObjects.length );
-				//assertTrue( shermanObjects[ 0 ] instanceof HibernateProxy );
+				assertNotNull( shermanObjects[ 0 ] );
 				assertTrue( shermanObjects[ 0 ] instanceof Student );
-				if ( Hibernate.isInitialized( shermanObjects[ 0 ] ) ) {
-					assertEquals( shermanExpected, shermanObjects[ 0 ] );
-				}
+				// TODO: following is initialized for hql and uninitialied for criteria; why?
+				//assertFalse( Hibernate.isInitialized( shermanObjects[ 0 ] ) );
 				assertEquals( shermanEnrolmentExpected.getSemester(), ( (Short) shermanObjects[ 1 ] ).shortValue() );
 				assertEquals( shermanEnrolmentExpected.getYear(), ( (Short) shermanObjects[ 2 ] ).shortValue() );
 				assertTrue( ! ( shermanObjects[ 3 ] instanceof HibernateProxy ) );
@@ -1250,22 +1504,60 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
 				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
 				assertEquals( 4, yogiObjects.length );
-				//assertTrue( yogiObjects[ 0 ] instanceof HibernateProxy );
+				// TODO: following is initialized for hql and uninitialied for criteria; why?
+				//assertFalse( Hibernate.isInitialized( yogiObjects[ 0 ] ) );
+				//assertFalse( Hibernate.isInitialized( shermanObjects[ 0 ] ) );
 				assertTrue( yogiObjects[ 0 ] instanceof Student );
-				if( Hibernate.isInitialized( yogiObjects[ 0 ] ) ) {
-					assertEquals( yogiExpected, yogiObjects[ 0 ] );
-				}
+				assertTrue( shermanObjects[ 0 ] instanceof Student );
 				assertEquals( yogiEnrolmentExpected.getSemester(), ( (Short) yogiObjects[ 1 ] ).shortValue() );
 				assertEquals( yogiEnrolmentExpected.getYear(), ( (Short) yogiObjects[ 2 ] ).shortValue() );
 				assertEquals( courseExpected, yogiObjects[ 3 ] );
-				//assertTrue( shermanObjects[ 0 ] instanceof HibernateProxy );
-				assertTrue( shermanObjects[ 0 ] instanceof Student );
-				if ( Hibernate.isInitialized( shermanObjects[ 0 ] ) ) {
-					assertEquals( shermanExpected, shermanObjects[ 0 ] );
-				}
 				assertEquals( shermanEnrolmentExpected.getSemester(), ( (Short) shermanObjects[ 1 ] ).shortValue() );
 				assertEquals( shermanEnrolmentExpected.getYear(), ( (Short) shermanObjects[ 2 ] ).shortValue() );
-				//assertTrue( ! ( shermanObjects[ 3 ] instanceof HibernateProxy ) );
+				assertTrue( shermanObjects[ 3 ] instanceof Course );
+				assertEquals( courseExpected, shermanObjects[ 3 ] );
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}
+
+	public void testMultiEntityProjectionAliasedList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				// should use PassThroughTransformer by default
+				return s.createCriteria( Enrolment.class, "e" )
+						.setProjection(
+								Projections.projectionList()
+										.add( Property.forName( "e.student" ).as( "st" ) )
+										.add( Property.forName( "e.semester" ).as("sem" ) )
+										.add( Property.forName( "e.year" ).as( "yr" ) )
+										.add( Property.forName( "e.course" ).as( "c" ) )
+						)
+						.addOrder( Order.asc( "e.studentNumber") );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select e.student as st, e.semester as sem, e.year as yr, e.course as c from Enrolment e order by e.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Object[] yogiObjects = ( Object[] ) resultList.get( 0 );
+				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
+				assertEquals( 4, yogiObjects.length );
+				// TODO: following is initialized for hql and uninitialied for criteria; why?
+				//assertFalse( Hibernate.isInitialized( yogiObjects[ 0 ] ) );
+				//assertFalse( Hibernate.isInitialized( shermanObjects[ 0 ] ) );
+				assertTrue( yogiObjects[ 0 ] instanceof Student );
+				assertTrue( shermanObjects[ 0 ] instanceof Student );
+				assertEquals( yogiEnrolmentExpected.getSemester(), ( (Short) yogiObjects[ 1 ] ).shortValue() );
+				assertEquals( yogiEnrolmentExpected.getYear(), ( (Short) yogiObjects[ 2 ] ).shortValue() );
+				assertEquals( courseExpected, yogiObjects[ 3 ] );
+				assertEquals( shermanEnrolmentExpected.getSemester(), ( (Short) shermanObjects[ 1 ] ).shortValue() );
+				assertEquals( shermanEnrolmentExpected.getYear(), ( (Short) shermanObjects[ 2 ] ).shortValue() );
 				assertTrue( shermanObjects[ 3 ] instanceof Course );
 				assertEquals( courseExpected, shermanObjects[ 3 ] );
 			}
@@ -1516,11 +1808,43 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
-	public void testOneSelectNewList() throws Exception {
+	public void testOneSelectNewNoAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) throws Exception {
 				return s.createCriteria( Student.class, "s" )
 				.setProjection( Projections.property( "s.name" ) )
+				.addOrder( Order.asc( "s.studentNumber" ) )
+				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
+			}
+			private Constructor getConstructor() throws NoSuchMethodException {
+				return StudentDTO.class.getConstructor( PersonName.class );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select new org.hibernate.test.querycache.StudentDTO(s.name) from Student s order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				StudentDTO yogi = ( StudentDTO ) resultList.get( 0 );
+				assertNull( yogi.getDescription() );
+				assertEquals( yogiExpected.getName(), yogi.getName() );
+				StudentDTO sherman = ( StudentDTO ) resultList.get( 1 );
+				assertEquals( shermanExpected.getName(), sherman.getName() );
+				assertNull( sherman.getDescription() );
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}
+
+	public void testOneSelectNewAliasesList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) throws Exception {
+				return s.createCriteria( Student.class, "s" )
+				.setProjection( Projections.property( "s.name" ).as( "name" ))
 				.addOrder( Order.asc( "s.studentNumber" ) )
 				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
 			}
@@ -1554,8 +1878,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ) )
-								.add( Property.forName( "s.name" ) )
+								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ))
+								.add( Property.forName( "s.name" ).as( "name" ))
 				)
 				.addOrder( Order.asc( "s.studentNumber" ) )
 				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
@@ -1590,8 +1914,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
-								.add( Projections.sqlProjection( "555 as sCode", new String[]{ "sCode" }, new Type[] { Hibernate.LONG } ) )
-								.add( Property.forName( "s.name" ) )
+								.add( Projections.sqlProjection( "555 as studentNumber", new String[]{ "studentNumber" }, new Type[] { Hibernate.LONG } ) )
+								.add( Property.forName( "s.name" ).as( "name" ) )
 				)
 				.addOrder( Order.asc( "s.studentNumber" ) )
 				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
@@ -1627,8 +1951,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ) )
-								.add( Property.forName( "s.name" ) )
+								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ))
+								.add( Property.forName( "s.name" ).as( "name" ) )
 				)
 				.addOrder( Order.asc( "s.studentNumber" ) )
 				.setResultTransformer( Transformers.TO_LIST );
@@ -1654,7 +1978,142 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
-	public void testMultiSelectNewMapList() throws Exception {
+	public void testMultiSelectNewMapUsingAliasesList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+				.setProjection(
+						Projections.projectionList()
+								.add( Property.forName( "s.studentNumber" ).as( "sNumber" ) )
+								.add( Property.forName( "s.name" ).as( "sName" ) )
+				)
+				.addOrder( Order.asc( "s.studentNumber" ) )
+				.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select new map(s.studentNumber as sNumber, s.name as sName) from Student s order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Map yogiMap = ( Map ) resultList.get( 0 );
+				assertEquals( yogiExpected.getStudentNumber(), yogiMap.get( "sNumber" ) );
+				assertEquals( yogiExpected.getName(), yogiMap.get( "sName" ) );
+				Map shermanMap = ( Map ) resultList.get( 1 );
+				assertEquals( shermanExpected.getStudentNumber(), shermanMap.get( "sNumber" ) );
+				assertEquals( shermanExpected.getName(), shermanMap.get( "sName" ) );
+			}
+		};
+		runTest( hqlExecutor, criteriaExecutor, checker, false );
+	}
+
+	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
+						.setFetchMode( "enrolments", FetchMode.JOIN )
+						.addOrder( Order.asc( "s.studentNumber" ))
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select new map(s as s, pc as pc) from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Map yogiMap = ( Map ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiMap.get( "s" ) );
+				assertEquals( yogiExpected.getPreferredCourse(), yogiMap.get( "pc" ) );
+				Map shermanMap = ( Map ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanMap.get( "s" ) );
+				assertNull( shermanMap.get( "pc" ) );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiMap.get( "s" ) ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiMap.get( "s" ) ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanMap.get( "s" ) ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanMap.get( "s" ) ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlSelectNewMapExecutor, criteriaExecutor, checker, false );
+	}
+
+	public void testMultiSelectAliasToEntityMapUsingAliasesWithFetchJoinList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, "s" )
+						.createAlias( "s.preferredCourse", "pc", Criteria.LEFT_JOIN  )
+						.setFetchMode( "enrolments", FetchMode.JOIN )
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		HqlExecutor hqlAliasToEntityMapExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select s as s, pc as pc from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber" )
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Map yogiMap = ( Map ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiMap.get( "s" ) );
+				assertEquals(
+						yogiExpected.getPreferredCourse().getCourseCode(),
+						( ( Course ) yogiMap.get( "pc" ) ).getCourseCode()
+				);
+				Map shermanMap = ( Map ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanMap.get( "s" ) );
+				assertNull( shermanMap.get( "pc" ) );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertEquals( yogiExpected.getPreferredCourse(), yogiMap.get( "pc" ) );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiMap.get( "s" ) ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiMap.get( "s" ) ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanMap.get( "s" ) ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanMap.get( "s" ) ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlAliasToEntityMapExecutor, null, checker, false );
+	}
+
+	public void testMultiSelectUsingImplicitJoinWithFetchJoinListHql() throws Exception {
+		HqlExecutor hqlExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( "select s as s, s.preferredCourse as pc from Student s left join fetch s.enrolments" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				assertTrue( results instanceof Object[] );
+				Object[] yogiObjects = ( Object[] ) results;
+				assertEquals( 2, yogiObjects.length );
+				assertEquals( yogiExpected, yogiObjects[ 0 ] );
+				assertEquals(
+						yogiExpected.getPreferredCourse().getCourseCode(),
+						( ( Course ) yogiObjects[ 1 ] ).getCourseCode()
+				);
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 1 ] );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() );
+				}
+			}
+		};
+		runTest( hqlExecutor, null, checker, true );
+	}
+
+	public void testSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Student.class, "s" )
@@ -1693,8 +2152,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				return s.createCriteria( Student.class, "s" )
 				.setProjection(
 						Projections.projectionList()
-								.add( Property.forName( "s.studentNumber" ) )
-								.add( Property.forName( "s.name" ) )
+								.add( Property.forName( "s.studentNumber" ).as( "studentNumber" ) )
+								.add( Property.forName( "s.name" ).as( "name" ) )
 				)
 				.addOrder( Order.asc( "s.studentNumber" ) )
 				.setResultTransformer( new AliasToBeanConstructorResultTransformer( getConstructor() ) );
@@ -1848,13 +2307,17 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 	protected void runTest(HqlExecutor hqlExecutor, CriteriaExecutor criteriaExecutor, ResultChecker checker, boolean isSingleResult)
 		throws Exception {
 		createData();
-		if ( criteriaExecutor != null ) {
-			runTest( criteriaExecutor, checker, isSingleResult );
+		try {
+			if ( criteriaExecutor != null ) {
+				runTest( criteriaExecutor, checker, isSingleResult );
+			}
+			if ( hqlExecutor != null ) {
+				runTest( hqlExecutor, checker, isSingleResult );
+			}
 		}
-		if ( hqlExecutor != null ) {
-			runTest( hqlExecutor, checker, isSingleResult );
+		finally {
+			deleteData();
 		}
-		deleteData();
 	}
 
 	private boolean isQueryCacheGetEnabled() {

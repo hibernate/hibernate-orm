@@ -34,6 +34,7 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.EqualsHelper;
@@ -58,7 +59,7 @@ public class QueryKey implements Serializable {
 	
 	// the user provided resulttransformer, not the one used with "select new". Here to avoid mangling
 	// transformed/non-transformed results.
-	private final ResultTransformer customTransformer;
+	private final CacheableResultTransformer customTransformer;
 
 	/**
 	 * For performance reasons, the hashCode is cached; however, it is marked transient so that it can be
@@ -83,7 +84,7 @@ public class QueryKey implements Serializable {
 			QueryParameters queryParameters,
 			Set filterKeys,
 			SessionImplementor session,
-			ResultTransformer customTransformer) {
+			CacheableResultTransformer customTransformer) {
 		// disassemble positional parameters
 		final int positionalParameterCount = queryParameters.getPositionalParameterTypes().length;
 		final Type[] types = new Type[positionalParameterCount];
@@ -163,7 +164,7 @@ public class QueryKey implements Serializable {
 			Integer maxRows, 
 			Set filterKeys,
 			EntityMode entityMode,
-			ResultTransformer customTransformer) {
+			CacheableResultTransformer customTransformer) {
 		this.sqlQueryString = sqlQueryString;
 		this.positionalParameterTypes = positionalParameterTypes;
 		this.positionalParameterValues = positionalParameterValues;
@@ -176,7 +177,7 @@ public class QueryKey implements Serializable {
 		this.hashCode = generateHashCode();
 	}
 
-	public ResultTransformer getResultTransformer() {
+	public CacheableResultTransformer getResultTransformer() {
 		return customTransformer;
 	}
 

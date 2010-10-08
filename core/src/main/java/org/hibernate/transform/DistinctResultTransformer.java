@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Steve Ebersole
  */
-public class DistinctResultTransformer extends BasicTransformerAdapter implements Serializable {
+public class DistinctResultTransformer extends BasicTransformerAdapter {
 
 	public static final DistinctResultTransformer INSTANCE = new DistinctResultTransformer();
 

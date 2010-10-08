@@ -27,8 +27,8 @@ package org.hibernate.loader.hql;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +39,6 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -382,36 +381,49 @@ public class QueryLoader extends BasicLoader {
 		return implicitResultTransformer != null;
 	}
 
+	protected String[] getResultRowAliases() {
+		return queryReturnAliases;
+	}
+	
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return HolderInstantiator.resolveResultTransformer( implicitResultTransformer, resultTransformer );
 	}
-	
+
+	protected boolean[] includeInResultRow() {
+		boolean[] includeInResultTuple = includeInSelect;
+		if ( hasScalars ) {
+			includeInResultTuple = new boolean[ queryReturnTypes.length ];
+			Arrays.fill( includeInResultTuple, true );
+		}
+		return includeInResultTuple;
+	}
+
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 
-		row = toResultRow( row );
+		Object[] resultRow = getResultRow( row, rs, session );
 		boolean hasTransform = hasSelectNew() || transformer!=null;
+		return ( ! hasTransform && resultRow.length == 1 ?
+				resultRow[ 0 ] :
+				resultRow
+		);
+	}
+
+	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+			throws SQLException, HibernateException {
+		Object[] resultRow;
 		if ( hasScalars ) {
 			String[][] scalarColumns = scalarColumnNames;
 			int queryCols = queryReturnTypes.length;
-			if ( !hasTransform && queryCols == 1 ) {
-				return queryReturnTypes[0].nullSafeGet( rs, scalarColumns[0], session, null );
+			resultRow = new Object[queryCols];
+			for ( int i = 0; i < queryCols; i++ ) {
+				resultRow[i] = queryReturnTypes[i].nullSafeGet( rs, scalarColumns[i], session, null );
 			}
-			else {
-				row = new Object[queryCols];
-				for ( int i = 0; i < queryCols; i++ ) {
-					row[i] = queryReturnTypes[i].nullSafeGet( rs, scalarColumns[i], session, null );
-				}
-				return row;
-			}
-		}
-		else if ( !hasTransform ) {
-			return row.length == 1 ? row[0] : row;
 		}
 		else {
-			return row;
+			resultRow = toResultRow( row );
 		}
-
+		return resultRow;
 	}
 
 	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {

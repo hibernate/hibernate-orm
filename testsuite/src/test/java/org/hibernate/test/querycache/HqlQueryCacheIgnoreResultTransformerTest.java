@@ -58,7 +58,6 @@ public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCache
 	public void testAliasToEntityMapNoProjectionList() throws Exception {
 		reportSkip( "known to fail using HQL", "HQL query using Transformers.ALIAS_TO_ENTITY_MAP with no projection" );
 	}
-
 	public void testAliasToEntityMapNoProjectionListFailureExpected() throws Exception {
 		super.testAliasToEntityMapNoProjectionList();
 	}
@@ -66,8 +65,23 @@ public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCache
 	public void testAliasToEntityMapNoProjectionMultiAndNullList() throws Exception {
 		reportSkip( "known to fail using HQL", "HQL query using Transformers.ALIAS_TO_ENTITY_MAP with no projection" );
 	}
-
 	public void testAliasToEntityMapNoProjectionMultiAndNullListFailureExpected() throws Exception {
 		super.testAliasToEntityMapNoProjectionMultiAndNullList();
 	}
+
+	public void testAliasToEntityMapNoProjectionNullAndNonNullAliasList() throws Exception {
+		reportSkip( "known to fail using HQL", "HQL query using Transformers.ALIAS_TO_ENTITY_MAP with no projection" );
+	}
+	public void testAliasToEntityMapNoProjectionNullAndNonNullAliasListFailureExpected() throws Exception {
+		super.testAliasToEntityMapNoProjectionNullAndNonNullAliasList();
+	}
+
+	// fails due to HHH-3345
+	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
+		reportSkip( "known to fail using HQL", "HQL query using 'select new' and 'join fetch'" );
+	}
+	public void testMultiSelectNewMapUsingAliasesWithFetchJoinListFailureExpected() throws Exception {
+		super.testMultiSelectNewMapUsingAliasesWithFetchJoinList();
+	}
+
 }

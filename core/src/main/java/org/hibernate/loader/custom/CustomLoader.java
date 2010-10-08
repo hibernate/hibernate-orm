@@ -52,7 +52,6 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.util.ArrayHelper;
@@ -83,6 +82,8 @@ public class CustomLoader extends Loader {
 
 	private final LockMode[] lockModes;
 
+	private boolean[] includeInResultRow;
+
 //	private final String[] sqlAliases;
 //	private final String[] sqlAliasSuffixes;
 	private final ResultRowProcessor rowProcessor;
@@ -93,7 +94,6 @@ public class CustomLoader extends Loader {
 
 	// this is only needed (afaict) for ResultTransformer processing...
 	private String[] transformerAliases;
-
 
 	public CustomLoader(CustomQuery customQuery, SessionFactoryImplementor factory) {
 		super( factory );
@@ -118,6 +118,8 @@ public class CustomLoader extends Loader {
 		int returnableCounter = 0;
 		boolean hasScalars = false;
 
+		List includeInResultRowList = new ArrayList();
+
 		Iterator itr = customQuery.getCustomQueryReturns().iterator();
 		while ( itr.hasNext() ) {
 			final Return rtn = ( Return ) itr.next();
@@ -131,6 +133,7 @@ public class CustomLoader extends Loader {
 								scalarRtn.getType()
 						)
 				);
+				includeInResultRowList.add( true );
 				hasScalars = true;
 			}
 			else if ( rtn instanceof RootReturn ) {
@@ -145,6 +148,7 @@ public class CustomLoader extends Loader {
 				specifiedAliases.add( rootRtn.getAlias() );
 				entityAliases.add( rootRtn.getEntityAliases() );
 				ArrayHelper.addAll( querySpaces, persister.getQuerySpaces() );
+				includeInResultRowList.add( true );
 			}
 			else if ( rtn instanceof CollectionReturn ) {
 				CollectionReturn collRtn = ( CollectionReturn ) rtn;
@@ -167,6 +171,7 @@ public class CustomLoader extends Loader {
 					entityAliases.add( collRtn.getElementEntityAliases() );
 					ArrayHelper.addAll( querySpaces, elementPersister.getQuerySpaces() );
 				}
+				includeInResultRowList.add( true );
 			}
 			else if ( rtn instanceof EntityFetchReturn ) {
 				EntityFetchReturn fetchRtn = ( EntityFetchReturn ) rtn;
@@ -183,6 +188,7 @@ public class CustomLoader extends Loader {
 				specifiedAliases.add( fetchRtn.getAlias() );
 				entityAliases.add( fetchRtn.getEntityAliases() );
 				ArrayHelper.addAll( querySpaces, persister.getQuerySpaces() );
+				includeInResultRowList.add( false );
 			}
 			else if ( rtn instanceof CollectionFetchReturn ) {
 				CollectionFetchReturn fetchRtn = ( CollectionFetchReturn ) rtn;
@@ -206,6 +212,7 @@ public class CustomLoader extends Loader {
 					entityAliases.add( fetchRtn.getElementEntityAliases() );
 					ArrayHelper.addAll( querySpaces, elementPersister.getQuerySpaces() );
 				}
+				includeInResultRowList.add( false );
 			}
 			else {
 				throw new HibernateException( "unexpected custom query return type : " + rtn.getClass().getName() );
@@ -244,6 +251,8 @@ public class CustomLoader extends Loader {
 				hasScalars,
 		        ( ResultColumnProcessor[] ) resultColumnProcessors.toArray( new ResultColumnProcessor[ resultColumnProcessors.size() ] )
 		);
+
+		this.includeInResultRow = ArrayHelper.toBooleanArray( includeInResultRowList );
 	}
 
 	private Queryable determineAppropriateOwnerPersister(NonScalarReturn ownerDescriptor) {
@@ -336,16 +345,29 @@ public class CustomLoader extends Loader {
 		}
 	}
 
+	protected String[] getResultRowAliases() {
+		return transformerAliases;
+	}
+
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return HolderInstantiator.resolveResultTransformer( null, resultTransformer );
 	}
-	
+
+	protected boolean[] includeInResultRow() {
+		return includeInResultRow;
+	}
+
 	protected Object getResultColumnOrRow(
 			Object[] row,
 	        ResultTransformer transformer,
 	        ResultSet rs,
 	        SessionImplementor session) throws SQLException, HibernateException {
 		return rowProcessor.buildResultRow( row, rs, transformer != null, session );
+	}
+
+	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+			throws SQLException, HibernateException {
+		return rowProcessor.buildResultRow( row, rs, session );
 	}
 
 	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
@@ -438,6 +460,17 @@ public class CustomLoader extends Loader {
 				ResultSet resultSet,
 				boolean hasTransformer,
 				SessionImplementor session) throws SQLException, HibernateException {
+			Object[] resultRow = buildResultRow( data, resultSet, session );
+			return ( hasTransformer )
+			       ? resultRow
+			       : ( resultRow.length == 1 )
+			         ? resultRow[0]
+			         : resultRow;
+		}
+		public Object[] buildResultRow(
+				Object[] data,
+				ResultSet resultSet,
+				SessionImplementor session) throws SQLException, HibernateException {
 			Object[] resultRow;
 			if ( !hasScalars ) {
 				resultRow = data;
@@ -452,11 +485,7 @@ public class CustomLoader extends Loader {
 				}
 			}
 
-			return ( hasTransformer )
-			       ? resultRow
-			       : ( resultRow.length == 1 )
-			         ? resultRow[0]
-			         : resultRow;
+			return resultRow;
 		}
 	}
 

@@ -24,9 +24,7 @@
  */
 package org.hibernate.transform;
 
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.property.ChainedPropertyAccessor;
@@ -54,7 +52,7 @@ import org.hibernate.property.Setter;
  *
  * @author max
  */
-public class AliasToBeanResultTransformer implements ResultTransformer, Serializable {
+public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransformer {
 
 	// IMPL NOTE : due to the delayed population of setters (setters cached
 	// 		for performance), we really cannot properly define equality for
@@ -72,6 +70,13 @@ public class AliasToBeanResultTransformer implements ResultTransformer, Serializ
 		isInitialized = false;
 		this.resultClass = resultClass;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
+		return false;
+	}	
 
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		Object result;
@@ -127,10 +132,6 @@ public class AliasToBeanResultTransformer implements ResultTransformer, Serializ
 					"aliases are different from what is cached; aliases=" + Arrays.asList( aliases ) +
 							" cached=" + Arrays.asList( this.aliases ) );
 		}
-	}
-
-	public List transformList(List collection) {
-		return collection;
 	}
 
 	public boolean equals(Object o) {

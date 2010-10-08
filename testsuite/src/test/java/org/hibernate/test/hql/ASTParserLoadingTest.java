@@ -2307,6 +2307,96 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		destroyTestBaseData();
 	}
 
+	public void testCachedJoinedAndJoinFetchedManyToOne() throws Exception {
+
+		Animal a = new Animal();
+		a.setDescription( "an animal" );
+		Animal mother = new Animal();
+		mother.setDescription( "a mother" );
+		mother.addOffspring( a );
+		a.setMother( mother );
+		Animal offspring1 = new Animal();
+		offspring1.setDescription( "offspring1" );
+		Animal offspring2 = new Animal();
+		offspring1.setDescription( "offspring2" );
+		a.addOffspring( offspring1 );
+		offspring1.setMother( a );
+		a.addOffspring( offspring2 );
+		offspring2.setMother( a );
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.save( mother );
+		s.save( a );
+		s.save( offspring1 );
+		s.save( offspring2 );
+		t.commit();
+		s.close();
+
+		getSessions().getCache().evictQueryRegions();
+		getSessions().getStatistics().clear();
+
+		s = openSession();
+		t = s.beginTransaction();
+		List list = s.createQuery( "from Animal a left join fetch a.mother" ).setCacheable( true ).list();
+		assertEquals( 0, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		list = s.createQuery( "select a from Animal a left join fetch a.mother" ).setCacheable( true ).list();
+		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		list = s.createQuery( "select a, m from Animal a left join a.mother m" ).setCacheable( true ).list();
+		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, getSessions().getStatistics().getQueryCachePutCount() );
+		s.createQuery( "delete from Animal" ).executeUpdate();
+		t.commit();
+		s.close();
+	}
+
+	public void testCachedJoinedAndJoinFetchedOneToMany() throws Exception {
+
+		Animal a = new Animal();
+		a.setDescription( "an animal" );
+		Animal mother = new Animal();
+		mother.setDescription( "a mother" );
+		mother.addOffspring( a );
+		a.setMother( mother );
+		Animal offspring1 = new Animal();
+		offspring1.setDescription( "offspring1" );
+		Animal offspring2 = new Animal();
+		offspring1.setDescription( "offspring2" );
+		a.addOffspring( offspring1 );
+		offspring1.setMother( a );
+		a.addOffspring( offspring2 );
+		offspring2.setMother( a );
+
+		getSessions().getCache().evictQueryRegions();
+		getSessions().getStatistics().clear();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		s.save( mother );
+		s.save( a );
+		s.save( offspring1 );
+		s.save( offspring2 );
+		t.commit();
+		s.close();
+
+		s = openSession();
+		t = s.beginTransaction();
+		List list = s.createQuery( "from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
+		assertEquals( 0, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		list = s.createQuery( "select a from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
+		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		list = s.createQuery( "select a, o from Animal a left join a.offspring o" ).setCacheable( true ).list();
+		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, getSessions().getStatistics().getQueryCachePutCount() );
+		s.createQuery( "delete from Animal" ).executeUpdate();
+		t.commit();
+		s.close();
+	}
+
 	public void testIllegalMixedTransformerQueries() {
 		Session session = openSession();
 

@@ -30,6 +30,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -71,7 +72,6 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
@@ -983,6 +983,16 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		throw new UnsupportedOperationException( "Not supported!  Use the AST translator...");
 	}
 
+	protected boolean[] includeInResultRow() {
+		boolean[] isResultReturned = includeInSelect;
+		if ( hasScalars ) {
+			isResultReturned = new boolean[ returnedTypes.size() ];
+			Arrays.fill( isResultReturned, true );
+		}
+		return isResultReturned;
+	}
+
+
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return HolderInstantiator.resolveClassicResultTransformer(
 				holderConstructor,
@@ -992,27 +1002,28 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
-		row = toResultRow( row );
+		Object[] resultRow = getResultRow( row, rs, session );
+		return ( holderClass == null && resultRow.length == 1 ?
+				resultRow[ 0 ] :
+				resultRow
+		);
+	}
+
+	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+			throws SQLException, HibernateException {
+		Object[] resultRow;
 		if ( hasScalars ) {
 			String[][] scalarColumns = getColumnNames();
 			int queryCols = returnTypes.length;
-			if ( holderClass == null && queryCols == 1 ) {
-				return returnTypes[0].nullSafeGet( rs, scalarColumns[0], session, null );
+			resultRow = new Object[queryCols];
+			for ( int i = 0; i < queryCols; i++ ) {
+				resultRow[i] = returnTypes[i].nullSafeGet( rs, scalarColumns[i], session, null );
 			}
-			else {
-				row = new Object[queryCols];
-				for ( int i = 0; i < queryCols; i++ )
-					row[i] = returnTypes[i].nullSafeGet( rs, scalarColumns[i], session, null );
-				return row;
-			}
-		}
-		else if ( holderClass == null ) {
-			return row.length == 1 ? row[0] : row;
 		}
 		else {
-			return row;
+			resultRow = toResultRow( row );
 		}
-
+		return resultRow;
 	}
 
 	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {

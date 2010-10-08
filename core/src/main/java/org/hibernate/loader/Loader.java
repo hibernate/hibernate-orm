@@ -77,6 +77,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
@@ -255,6 +256,20 @@ public abstract class Loader {
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
 			final boolean returnProxies) throws HibernateException, SQLException {
+		return doQueryAndInitializeNonLazyCollections(
+				session,
+				queryParameters,
+				returnProxies,
+				null
+		);
+	}
+
+	private List doQueryAndInitializeNonLazyCollections(
+			final SessionImplementor session,
+			final QueryParameters queryParameters,
+			final boolean returnProxies,
+			final ResultTransformer forcedResultTransformer)
+			throws HibernateException, SQLException {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 		if ( queryParameters.isReadOnlyInitialized() ) {
@@ -271,7 +286,7 @@ public abstract class Loader {
 		List result;
 		try {
 			try {
-				result = doQuery( session, queryParameters, returnProxies );
+				result = doQuery( session, queryParameters, returnProxies, forcedResultTransformer );
 			}
 			finally {
 				persistenceContext.afterLoad();
@@ -600,7 +615,29 @@ public abstract class Loader {
 	        final List hydratedObjects,
 	        final EntityKey[] keys,
 	        boolean returnProxies) throws SQLException, HibernateException {
+		return getRowFromResultSet(
+				resultSet,
+				session,
+				queryParameters,
+				lockModesArray,
+				optionalObjectKey,
+				hydratedObjects,
+				keys,
+				returnProxies,
+				null
+		);
+	}
 
+	private Object getRowFromResultSet(
+	        final ResultSet resultSet,
+	        final SessionImplementor session,
+	        final QueryParameters queryParameters,
+	        final LockMode[] lockModesArray,
+	        final EntityKey optionalObjectKey,
+	        final List hydratedObjects,
+	        final EntityKey[] keys,
+	        boolean returnProxies,
+	        ResultTransformer forcedResultTransformer) throws SQLException, HibernateException {
 		final Loadable[] persisters = getEntityPersisters();
 		final int entitySpan = persisters.length;
 		extractKeysFromResultSet( persisters, queryParameters, resultSet, session, keys, lockModesArray, hydratedObjects );
@@ -636,8 +673,13 @@ public abstract class Loader {
 
 		applyPostLoadLocks( row, lockModesArray, session );
 
-		return getResultColumnOrRow( row, queryParameters.getResultTransformer(), resultSet, session );
-
+		return forcedResultTransformer == null ?
+				getResultColumnOrRow( row, queryParameters.getResultTransformer(), resultSet, session ) :
+				forcedResultTransformer.transformTuple(
+						getResultRow( row, resultSet, session ),
+						getResultRowAliases()
+				)
+		;
 	}
 
 	protected void extractKeysFromResultSet(
@@ -788,7 +830,8 @@ public abstract class Loader {
 	private List doQuery(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
-			final boolean returnProxies) throws SQLException, HibernateException {
+			final boolean returnProxies,
+			final ResultTransformer forcedResultTransformer) throws SQLException, HibernateException {
 
 		final RowSelection selection = queryParameters.getRowSelection();
 		final int maxRows = hasMaxRows( selection ) ?
@@ -834,7 +877,8 @@ public abstract class Loader {
 						optionalObjectKey,
 						hydratedObjects,
 						keys,
-						returnProxies 
+						returnProxies,
+						forcedResultTransformer
 				);
 				results.add( result );
 
@@ -1018,18 +1062,25 @@ public abstract class Loader {
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return resultTransformer;
 	}
-	
+
 	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
 		return results;
 	}
 
 	/**
 	 * Are rows transformed immediately after being read from the ResultSet?
-	 * @param transformer, the specified transformer
 	 * @return true, if getResultColumnOrRow() transforms the results; false, otherwise
 	 */
-	protected boolean areResultSetRowsTransformedImmediately(ResultTransformer transformer) {
+	protected boolean areResultSetRowsTransformedImmediately() {
 		return false;
+	}
+
+	/**
+	 * Returns the aliases that corresponding to a result row.
+	 * @return Returns the aliases that corresponding to a result row.
+	 */
+	protected String[] getResultRowAliases() {
+		 return null;
 	}
 
 	/**
@@ -1042,6 +1093,17 @@ public abstract class Loader {
 		return row;
 	}
 
+	protected boolean[] includeInResultRow() {
+		return null;
+	}
+
+	protected Object[] getResultRow(Object[] row,
+														 ResultSet rs,
+														 SessionImplementor session)
+			throws SQLException, HibernateException {
+		return row;
+	}
+	
 	/**
 	 * For missing objects associated by one-to-one with another object in the
 	 * result set, register the fact that the the object is missing with the
@@ -2284,21 +2346,8 @@ public abstract class Loader {
 	
 		QueryCache queryCache = factory.getQueryCache( queryParameters.getCacheRegion() );
 		
-		Set filterKeys = FilterKey.createFilterKeys( 
-				session.getLoadQueryInfluencers().getEnabledFilters(),
-				session.getEntityMode() 
-		);
-		QueryKey key = QueryKey.generateQueryKey(
-				getSQLString(), 
-				queryParameters, 
-				filterKeys, 
-				session,
-				( areResultSetRowsTransformedImmediately( queryParameters.getResultTransformer() ) ?
-						queryParameters.getResultTransformer() :
-						null
-				)
-		);
-		
+		QueryKey key = generateQueryKey( session, queryParameters );
+
 		if ( querySpaces == null || querySpaces.size() == 0 ) {
 			log.trace( "unexpected querySpaces is "+( querySpaces == null ? "null" : "empty" ) );
 		}
@@ -2309,14 +2358,14 @@ public abstract class Loader {
 		List result = getResultFromQueryCache(
 				session, 
 				queryParameters, 
-				querySpaces, 
+				querySpaces,
 				resultTypes, 
 				queryCache, 
 				key 
 			);
 
 		if ( result == null ) {
-			result = doList( session, queryParameters );
+			result = doList( session, queryParameters, key.getResultTransformer() );
 
 			putResultInQueryCache(
 					session, 
@@ -2328,8 +2377,46 @@ public abstract class Loader {
 			);
 		}
 
+		ResultTransformer resolvedTransformer = resolveResultTransformer( queryParameters.getResultTransformer() );
+		if ( resolvedTransformer != null ) {
+			result = (
+					areResultSetRowsTransformedImmediately() ?
+							key.getResultTransformer().retransformResults(
+									result,
+									getResultRowAliases(),
+									queryParameters.getResultTransformer(),
+									includeInResultRow()
+							) :
+							key.getResultTransformer().untransformToTuples(
+									result
+							)
+			);
+		}
 
 		return getResultList( result, queryParameters.getResultTransformer() );
+	}
+
+	private QueryKey generateQueryKey(
+			SessionImplementor session,
+			QueryParameters queryParameters) {
+		return QueryKey.generateQueryKey(
+				getSQLString(),
+				queryParameters,
+				FilterKey.createFilterKeys(
+						session.getLoadQueryInfluencers().getEnabledFilters(),
+						session.getEntityMode()
+				),
+				session,
+				createCacheableResultTransformer( queryParameters )
+		);
+	}
+
+	private CacheableResultTransformer createCacheableResultTransformer(QueryParameters queryParameters) {
+		return CacheableResultTransformer.create(
+				queryParameters.getResultTransformer(),
+				getResultRowAliases(),
+				includeInResultRow()
+		);
 	}
 
 	private List getResultFromQueryCache(
@@ -2358,31 +2445,16 @@ public abstract class Loader {
 				queryParameters.setReadOnly( persistenceContext.isDefaultReadOnly() );
 			}
 			try {
-				result = queryCache.get( key, resultTypes, isImmutableNaturalKeyLookup, querySpaces, session );
-				logCachedResultDetails(
-						key.getResultTransformer(),
-						resultTypes,
-						result
+				result = queryCache.get(
+						key,
+						key.getResultTransformer().getCachedResultTypes( resultTypes ),
+						isImmutableNaturalKeyLookup,
+						querySpaces,
+						session
 				);
 			}
 			finally {
 				persistenceContext.setDefaultReadOnly( defaultReadOnlyOrig );
-			}
-
-			// If there is a result transformer, but the loader is not expecting the data to be
-			// transformed yet, then the loader expects result elements that are Object[].
-			// The problem is that StandardQueryCache.get(...) does not return a tuple when
-			// resultTypes.length == 1. The following changes the data returned from the cache
-			// to be a tuple.
-			// TODO: this really doesn't belong here, but only Loader has the information
-			// to be able to do this.
-			if ( result != null &&
-					resultTypes.length == 1 &&
-					key.getResultTransformer() == null &&
-					resolveResultTransformer( queryParameters.getResultTransformer() ) != null ) {
-				for ( int i = 0 ; i < result.size() ; i++ ) {
-					result.set( i, new Object[] { result.get( i ) } );
-				}
 			}
 
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -2408,30 +2480,13 @@ public abstract class Loader {
 			final QueryKey key,
 			final List result) {
 		if ( session.getCacheMode().isPutEnabled() ) {
-			if ( log.isTraceEnabled() ) {
-				logCachedResultDetails(
-						key.getResultTransformer(),
-						resultTypes,
-						result
-				);
-			}
-			// If there is a result transformer, but the data has not been transformed yet,
-			// then result elements are Object[]. The problem is that StandardQueryCache.put(...)
-			// does not expect a tuple when resultTypes.length == 1. The following changes the
-			// data being cached to what StandardQueryCache.put(...) expects.
-			// TODO: this really doesn't belong here, but only Loader has the information
-			// to be able to do this.
-			List cachedResult = result;
-			if ( resultTypes.length == 1 &&
-					key.getResultTransformer() == null &&
-					resolveResultTransformer( queryParameters.getResultTransformer() ) != null ) {
-				cachedResult = new ArrayList( result.size() );
-				for ( int i = 0 ; i < result.size() ; i++ ) {
-					cachedResult.add( ( ( Object[] ) result.get( i ) )[ 0 ] );
-				}
-			}
-
-			boolean put = queryCache.put( key, resultTypes, cachedResult, queryParameters.isNaturalKeyLookup(), session );
+			boolean put = queryCache.put(
+					key,
+					key.getResultTransformer().getCachedResultTypes( resultTypes ),
+					result, 
+					queryParameters.isNaturalKeyLookup(),
+					session
+			);
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor()
 						.queryCachePut( getQueryIdentifier(), queryCache.getRegion().getName() );
@@ -2439,89 +2494,18 @@ public abstract class Loader {
 		}
 	}
 
-	private void logCachedResultDetails(ResultTransformer resultTransformer, Type[] returnTypes, List result) {
-		if ( ! log.isTraceEnabled() ) {
-			return;
-		}
-		if ( returnTypes == null || returnTypes.length == 0 ) {
-				log.trace( "unexpected returnTypes is "+( returnTypes == null ? "null" : "empty" )+
-						"! transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-						" result"+( result == null ? " is null": ".size()=" + result.size() ) );
-		}
-		else {
-			StringBuffer returnTypeNames = new StringBuffer();
-			StringBuffer returnClassNames = new StringBuffer();
-			for ( int i=0; i<returnTypes.length; i++ ) {
-				returnTypeNames.append( returnTypes[ i ].getName() ).append(' ');
-				returnClassNames.append( returnTypes[ i ].getReturnedClass() ).append(' ');
-			}
-			log.trace( "transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-					" returnTypes=[ "+returnTypeNames+"]"+" returnClasses=[ "+returnClassNames+"]" );
-		}
-		if ( result != null && result.size() != 0 ) {
-			for ( Iterator it = result.iterator(); it.hasNext(); ) {
-			 	Object value = it.next();
-				if ( value == null ) {
-					log.trace( "transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-							" value is null; returnTypes is "+( returnTypes == null ? "null" : "Type["+returnTypes.length+"]" ) );
-					if ( returnTypes != null && returnTypes.length > 1 ) {
-						log.trace( "unexpected result value! "+
-								"transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-								"value is null; should be Object["+returnTypes.length+"]!" );
-					}
-				}
-				else {
-					if ( returnTypes == null || returnTypes.length == 0 ) {
-						log.trace( "unexpected result value! "+
-								"transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-								"value is non-null; returnTypes is "+( returnTypes == null ? "null" : "empty" ) );
-					}
-					else if ( Object[].class.isInstance( value ) ) {
-						Object[] tuple = ( Object[] ) value;
-						log.trace( "transformer="+( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-								" value is Object["+tuple.length+
-								"]; returnTypes is Type["+returnTypes.length+"]" );
-						if ( tuple.length != returnTypes.length ) {
-							log.trace( "unexpected tuple length! transformer="+
-								( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-								" expected="+returnTypes.length+
-								" got="+tuple.length );
-						}
-						else {
-							for ( int j = 0; j < tuple.length; j++ ) {
-								if ( tuple[ j ] != null && ! returnTypes[ j ].getReturnedClass().isInstance( tuple[ j ] ) ) {
-									log.trace( "unexpected tuple value type! transformer="+
-											( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-											" expected="+returnTypes[ j ].getReturnedClass().getName()+
-											" got="+tuple[ j ].getClass().getName() );
-								}
-							}
-						}
-					}
-					else {
-						if ( returnTypes.length != 1 ) {
-							log.trace( "unexpected number of result columns! should be Object["+returnTypes.length+"]! transformer="+
-									( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-									" value type="+value.getClass().getName()+
-									" returnTypes is Type["+returnTypes.length+"]" );
-						}
-						else if ( ! returnTypes[ 0 ].getReturnedClass().isInstance( value ) ) {
-							log.trace( "unexpected value type! transformer="+
-									( resultTransformer == null ? "null" : resultTransformer.getClass().getName() )+
-									" expected="+returnTypes[ 0 ].getReturnedClass().getName()+
-									" got="+ value.getClass().getName() );
-						}
-					}
-				}
-			}
-		}
-	}
-
-
 	/**
 	 * Actually execute a query, ignoring the query cache
 	 */
+
 	protected List doList(final SessionImplementor session, final QueryParameters queryParameters)
+			throws HibernateException {
+		return doList( session, queryParameters, null);
+	}
+
+	private List doList(final SessionImplementor session,
+						final QueryParameters queryParameters,
+						final ResultTransformer forcedResultTransformer)
 			throws HibernateException {
 
 		final boolean stats = getFactory().getStatistics().isStatisticsEnabled();
@@ -2530,7 +2514,7 @@ public abstract class Loader {
 
 		List result;
 		try {
-			result = doQueryAndInitializeNonLazyCollections( session, queryParameters, true );
+			result = doQueryAndInitializeNonLazyCollections( session, queryParameters, true, forcedResultTransformer );
 		}
 		catch ( SQLException sqle ) {
 			throw JDBCExceptionHelper.convert(

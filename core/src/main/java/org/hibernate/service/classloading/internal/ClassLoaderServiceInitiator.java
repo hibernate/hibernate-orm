@@ -38,16 +38,12 @@ import org.hibernate.service.spi.ServicesRegistry;
 public class ClassLoaderServiceInitiator implements ServiceInitiator<ClassLoaderService> {
 	public static final ClassLoaderServiceInitiator INSTANCE = new ClassLoaderServiceInitiator();
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<ClassLoaderService> getServiceInitiated() {
 		return ClassLoaderService.class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public ClassLoaderService initiateService(Map configurationValues, ServicesRegistry registry) {
 		return new ClassLoaderServiceImpl( configurationValues );
 	}

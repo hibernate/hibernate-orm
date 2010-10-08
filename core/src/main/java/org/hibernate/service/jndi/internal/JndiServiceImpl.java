@@ -50,6 +50,7 @@ public class JndiServiceImpl implements JndiService {
 		this.initialContextSettings = JndiHelper.extractJndiProperties( configurationValues );
 	}
 
+	@Override
 	public Object locate(String jndiName) {
 		InitialContext initialContext = buildInitialContext();
 		try {
@@ -74,6 +75,7 @@ public class JndiServiceImpl implements JndiService {
 		}
 	}
 
+	@Override
 	public void bind(String jndiName, Object value) {
 		InitialContext initialContext = buildInitialContext();
 		try {

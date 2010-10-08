@@ -3,24 +3,17 @@ package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Hernán Chanfreau
+ * @author Hernï¿½n Chanfreau
  *
  */
-
 @Audited
 public class AuditedImplementor implements SimpleInterface {
-
 	private long id;
-
 	private String data;
-
 	private String auditedImplementorData;
-
 	private int numerito;
 
-	
 	protected AuditedImplementor() {
-
 	}
 
 	public long getId() {

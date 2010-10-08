@@ -8,12 +8,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
- * @author Hernán Chanfreau
+ * @author Hernï¿½n Chanfreau
  * 
  */
-
 public abstract class AbstractPropertiesAudited2Test extends AbstractEntityTest {
-
 	private long ai_id;
 	private long nai_id;
 
@@ -60,7 +58,7 @@ public abstract class AbstractPropertiesAudited2Test extends AbstractEntityTest 
 				ai_id);
 		assert si != null;
 
-		// levanto las de la revisión 1, ninguna debe ser null
+		// levanto las de la revisiï¿½n 1, ninguna debe ser null
 		AuditedImplementor ai_rev1 = getAuditReader().find(
 				AuditedImplementor.class, ai_id, 1);
 		assert ai_rev1 != null;
@@ -71,10 +69,10 @@ public abstract class AbstractPropertiesAudited2Test extends AbstractEntityTest 
 		// data de las actuales no debe ser null
 		assert ai.getData() != null;
 		assert si.getData() != null;
-		// data de las revisiones está auditada
+		// data de las revisiones estï¿½ auditada
 		assert ai_rev1.getData() != null;
 		assert si_rev1.getData() != null;
-		// numerito de las revisiones está auditada, debe ser igual a NUMERITO
+		// numerito de las revisiones estï¿½ auditada, debe ser igual a NUMERITO
 		assert ai_rev1.getNumerito() == NUMERITO;
 		assert si_rev1.getNumerito() == NUMERITO;
 	}

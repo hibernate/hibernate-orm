@@ -184,6 +184,7 @@ public class H2Dialect extends Dialect {
 		registerFunction( "user", new NoArgSQLFunction( "user", StandardBasicTypes.STRING ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );  // http://code.google.com/p/h2database/issues/detail?id=235
 	}
 
 	public String getAddColumnString() {

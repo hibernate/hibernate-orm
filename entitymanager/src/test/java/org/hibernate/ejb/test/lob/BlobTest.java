@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.test.TestCase;
 
@@ -28,7 +29,7 @@ public class BlobTest extends TestCase {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream( baos );
 		oos.writeObject( image );
-		reader.setImage( (Blob) Hibernate.createBlob( baos.toByteArray() ) );
+		reader.setImage( em.unwrap( Session.class ).getLobHelper().createBlob( baos.toByteArray() ) );
 		em.persist( reader );
 		em.getTransaction().commit();
 		em.close(); //useless but y'a know

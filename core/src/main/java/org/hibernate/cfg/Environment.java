@@ -547,6 +547,11 @@ public final class Environment {
 	 */
 	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
 
+	/**
+	 * Should we not use contextual LOB creation (aka based on {@link java.sql.Connection#createBlob()} et al).
+	 */
+	public static final String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
+
 
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;

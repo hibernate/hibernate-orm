@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -41,7 +41,6 @@ import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.NClobImplementer;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.WrappedClob;
 
@@ -51,7 +50,7 @@ import org.hibernate.engine.jdbc.WrappedClob;
  * @author Steve Ebersole
  */
 public class JdbcSupportTest extends TestCase {
-	private static JdbcSupport jdbcSupport = new JdbcSupport();
+	private static JdbcSupport jdbcSupport = new JdbcSupport( true );
 
 	public void testConnectedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy(

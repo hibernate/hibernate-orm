@@ -31,14 +31,48 @@ import java.sql.ResultSet;
  * @author Steve Ebersole
  */
 public class JdbcSupport {
+	public final boolean userContextualLobCreator;
+
+	/**
+	 * Create a support object
+	 *
+	 * @param userContextualLobCreator Should we use contextual (using the JDBC {@link java.sql.Connection}) to
+	 * create LOB instances.  In almost all instances this should be the case.  However if the underlying driver
+	 * does not support the {@link java.sql.Connection#createBlob()}, {@link java.sql.Connection#createClob()} or
+	 * {@link java.sql.Connection#createNClob()} methods this will need to be set to false.
+	 */
+	public JdbcSupport(boolean userContextualLobCreator) {
+		this.userContextualLobCreator = userContextualLobCreator;
+	}
+
+	/**
+	 * Get an explcitly non-contextual LOB creator.
+	 *
+	 * @return The LOB creator
+	 */
 	public LobCreator getLobCreator() {
 		return NonContextualLobCreator.INSTANCE;
 	}
 
+	/**
+	 * Get a LOB creator, based on the given context
+	 *
+	 * @return The LOB creator
+	 */
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
-		return new ContextualLobCreator( lobCreationContext );
+		return userContextualLobCreator
+				? new ContextualLobCreator( lobCreationContext )
+				: NonContextualLobCreator.INSTANCE;
 	}
 
+	/**
+	 * Wrap a result set in a "colun name cache" wrapper.
+	 *
+	 * @param resultSet The result set to wrap
+	 * @param columnNameCache The column name cache.
+	 *
+	 * @return The wrapped result set.
+	 */
 	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache) {
 		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache );
 	}

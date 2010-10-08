@@ -155,12 +155,13 @@ public class SettingsFactory implements Serializable {
 		settings.setDataDefinitionImplicitCommit( metaReportsDDLCausesTxnCommit );
 		settings.setDataDefinitionInTransactionSupported( metaReportsDDLInTxnSupported );
 		settings.setDialect( dialect );
-		settings.setJdbcSupport( new JdbcSupport() );
 
 		//use dialect default properties
 		final Properties properties = new Properties();
 		properties.putAll( dialect.getDefaultProperties() );
 		properties.putAll( props );
+
+		settings.setJdbcSupport( new JdbcSupport( ! PropertiesHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, properties ) ) );
 
 		// Transaction settings:
 

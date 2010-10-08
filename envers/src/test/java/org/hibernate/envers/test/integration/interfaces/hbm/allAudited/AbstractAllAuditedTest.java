@@ -11,11 +11,10 @@ import org.testng.Assert;
 import java.util.Arrays;
 
 /**
- * @author Hernán Chanfreau
+ * @author Hernï¿½n Chanfreau
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractAllAuditedTest extends AbstractEntityTest {
-
 	private long ai_id;
 	private long nai_id;
 	
@@ -73,7 +72,7 @@ public abstract class AbstractAllAuditedTest extends AbstractEntityTest {
     	SimpleInterface si = getEntityManager().find(SimpleInterface.class, ai_id);
     	assert si != null;
 
-    	// levanto las de la revisión 1, ninguna debe ser null
+    	// levanto las de la revisiï¿½n 1, ninguna debe ser null
     	AuditedImplementor ai_rev1 = getAuditReader().find(AuditedImplementor.class, ai_id, 1);
     	assert ai_rev1 != null;
     	SimpleInterface si_rev1 = getAuditReader().find(SimpleInterface.class, ai_id, 1);

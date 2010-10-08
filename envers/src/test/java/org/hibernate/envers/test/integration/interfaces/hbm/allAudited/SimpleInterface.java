@@ -3,7 +3,7 @@ package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Hernán Chanfreau
+ * @author Hernï¿½n Chanfreau
  *
  */
 @Audited

@@ -1,23 +1,16 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2;
 
 /**
- * @author Hernán Chanfreau
+ * @author Hernï¿½n Chanfreau
  *
  */
-
 public class NonAuditedImplementor implements SimpleInterface {
-
 	private long id;
-
 	private String data;
-
 	private String nonAuditedImplementorData;
-	
 	private int numerito;
 
-	
 	protected NonAuditedImplementor() {
-
 	}
 
 	public long getId() {

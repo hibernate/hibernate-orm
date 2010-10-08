@@ -9,8 +9,7 @@ import org.hibernate.envers.test.integration.interfaces.hbm.allAudited.AbstractA
 import org.testng.annotations.Test;
 
 /**
- * @author Hernán Chanfreau
- *
+ * @author Hernï¿½n Chanfreau
  */
 public class UnionAllAuditedTest extends AbstractAllAuditedTest {
 

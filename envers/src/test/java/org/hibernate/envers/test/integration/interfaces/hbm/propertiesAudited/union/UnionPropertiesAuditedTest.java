@@ -9,10 +9,9 @@ import org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited.Ab
 import org.testng.annotations.Test;
 
 /**
- * @author Hernán Chanfreau
+ * @author Hernï¿½n Chanfreau
  *
  */
-
 public class UnionPropertiesAuditedTest extends AbstractPropertiesAuditedTest {
 
     public void configure(Ejb3Configuration cfg) {

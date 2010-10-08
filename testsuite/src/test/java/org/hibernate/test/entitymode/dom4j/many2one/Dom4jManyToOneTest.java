@@ -17,7 +17,6 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Paco Hern�ndez
  */
 public class Dom4jManyToOneTest extends FunctionalTestCase {
-
 	public Dom4jManyToOneTest(String str) {
 		super( str );
 	}

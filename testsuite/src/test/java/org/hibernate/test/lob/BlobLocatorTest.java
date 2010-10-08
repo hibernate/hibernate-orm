@@ -146,7 +146,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		LobHolder entity = new LobHolder();
-		entity.setBlobLocator( Hibernate.createBlob( original ) );
+		entity.setBlobLocator( Hibernate.getLobCreator( s ).createBlob( original ) );
 		s.save( entity );
 		s.getTransaction().commit();
 		s.close();

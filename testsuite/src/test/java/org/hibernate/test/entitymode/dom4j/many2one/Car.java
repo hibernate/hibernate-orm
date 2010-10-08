@@ -4,10 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author Paco Hernández
+ * @author Paco Hernï¿½ndez
  */
 public class Car implements java.io.Serializable {
-
 	private long id;
 	private String model;
 	private CarType carType;

@@ -111,12 +111,13 @@
 
     <build>
         <plugins>
+<!--
             <plugin>
-                <!-- Needed in order to load the proper 'artifact handler' for the 'jdocbook-style' packaging -->
                 <groupId>org.jboss.maven.plugins</groupId>
                 <artifactId>maven-jdocbook-style-plugin</artifactId>
                 <extensions>true</extensions>
             </plugin>
+-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -191,6 +192,7 @@
         </plugins>
         <pluginManagement>
             <plugins>
+<!--
                 <plugin>
                     <groupId>org.jboss.maven.plugins</groupId>
                     <artifactId>maven-jdocbook-plugin</artifactId>
@@ -228,8 +230,10 @@
                         <options>
                             <xincludeSupported>true</xincludeSupported>
                             <xmlTransformerType>saxon</xmlTransformerType>
+-->
                             <!-- needed for uri-resolvers; can be ommitted if using 'current' uri scheme -->
                             <!--     could also locate the docbook dependency and inspect its version... -->
+<!--
                             <docbookVersion>1.72.0</docbookVersion>
                             <localeSeparator>-</localeSeparator>
                         </options>
@@ -240,6 +244,7 @@
                     <artifactId>maven-jdocbook-style-plugin</artifactId>
                     <version>2.0.0</version>
                 </plugin>
+-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>

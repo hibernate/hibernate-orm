@@ -1,10 +1,9 @@
 package org.hibernate.test.entitymode.dom4j.many2one;
 
 /**
- * @author Paco Hernández
+ * @author Paco Hernï¿½ndez
  */
 public class CarType implements java.io.Serializable {
-
 	private long id;
 	private String typeName;
 

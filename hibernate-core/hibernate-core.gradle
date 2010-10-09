@@ -1,6 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'antlr'
 
+// todo : we need to jar up hibernate-testing.jar from here
+
 dependencies {
     compile( libraries.commons_collections )
     compile( libraries.jta )
@@ -28,7 +30,6 @@ dependencies {
         transitive = true
     }
 }
-
 
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'

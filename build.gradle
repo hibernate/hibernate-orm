@@ -1,0 +1,155 @@
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+allprojects {
+    repositories {
+        mavenCentral()
+        mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
+        mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
+        mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
+    }
+}
+
+ideaProject {
+    javaVersion = "1.6"
+}
+
+
+// build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
+// use.  In that respect it serves a role similar to <dependencyManagement> in Maven
+slf4jVersion = '1.5.8'
+libraries = [
+        // Ant
+        ant:            'ant:ant:1.6.5',
+
+        // Antlr
+        antlr:          'antlr:antlr:2.7.7',
+
+        // Annotations
+        commons_annotations:
+                        'org.hibernate:hibernate-commons-annotations:3.2.0.Final',
+
+        // CGLIB
+        cglib:          'cglib:cglib:2.2',
+
+        // Jakarta commons-collections  todo : get rid of commons-collections dependency
+        commons_collections:
+                        'commons-collections:commons-collections:3.1',
+
+        // Dom4J
+        dom4j:          'dom4j:dom4j:1.6.1@jar',
+
+        // h2
+        h2:             'com.h2database:h2:1.2.134',
+
+        // Javassist
+        javassist:      'javassist:javassist:3.12.0.GA',
+
+        // javax
+        jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.0.Final',
+        jta:            'javax.transaction:jta:1.1',
+        validation:     'javax.validation:validation-api:1.0.0.GA',
+        validator:      'org.hibernate:hibernate-validator:4.0.2.GA',
+        jacc:           'org.jboss.javaee:jboss-jacc-api:1.1.0.GA',
+
+        // logging
+        slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
+        slf4j_simple:   'org.slf4j:slf4j-simple:' + slf4jVersion,
+        jcl_slf4j:      'org.slf4j:jcl-over-slf4j:' + slf4jVersion,
+        jcl_api:        'commons-logging:commons-logging-api:99.0-does-not-exist',
+        jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
+
+        // testing
+        junit:          'junit:junit:3.8.2',
+        testng:         'org.testng:testng:5.8:jdk15',
+        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.0.0.Final',
+        shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-alpha-6',
+        shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-alpha-6'
+]
+
+
+subprojects { subProject ->
+    group = 'org.hibernate'
+    version = '4.0.0-SNAPSHOT'
+
+    // minimize changes, at least for now (gradle uses 'build' by default)..
+    buildDirName = "target"
+
+    if ( 'hibernate-release' == subProject.name ) {
+        apply plugin : 'base'
+    }
+    else {
+        apply plugin: 'java'
+        apply plugin: 'maven' // for install task as well as deploy dependencies
+
+        defaultTasks 'build'
+
+        configurations {
+            provided {
+                // todo : need to make sure these are non-exported
+                description = 'Non-exported compile-time dependencies.'
+            }
+        }
+
+        // appropriately inject the common dependencies into each sub-project
+        dependencies {
+            compile( libraries.slf4j_api )
+            testCompile( libraries.junit )
+            testRuntime( libraries.slf4j_simple )
+            testRuntime( libraries.jcl_slf4j )
+            testRuntime( libraries.jcl_api )
+            testRuntime( libraries.jcl )
+            testRuntime( libraries.h2 )
+        }
+
+        sourceSets {
+            main {
+                compileClasspath += configurations.provided
+            }
+        }
+
+        manifest.mainAttributes(
+                provider: 'gradle',
+                'Implementation-Url': 'http://hibernate.org',
+                'Implementation-Version': version,
+                'Implementation-Vendor': 'Hibernate.org',
+                'Implementation-Vendor-Id': 'org.hibernate'
+        )
+
+        test {
+//            ignoreFailures = true
+            environment['hibernate.test.validatefailureexpected'] = true
+            maxHeapSize = "1024m"
+        }
+
+        processTestResources.doLast(
+                {
+                    copy {
+                        from( sourceSets.test.java.srcDirs ) {
+                            include '**/*.properties'
+                            include '**/*.xml'
+                        }
+                        into sourceSets.test.classesDir
+                    }
+                }
+        )
+
+        assemble.doLast( { install } )
+        uploadArchives.dependsOn install
+
+        targetCompatibility = "1.6"
+        sourceCompatibility = "1.6"
+
+        ideaModule {
+            downloadJavadoc = false
+            scopes.COMPILE.plus.add( configurations.provided )
+            outputDir = subProject.sourceSets.main.classesDir
+            testOutputDir = subProject.sourceSets.test.classesDir
+            whenConfigured { module ->
+                module.dependencies*.exported = true
+            }
+        }
+    }
+}
+
+dependsOnChildren()

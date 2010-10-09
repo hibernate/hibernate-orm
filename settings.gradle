@@ -1,5 +1,6 @@
 include 'hibernate-core'
 include 'hibernate-entitymanager'
+include 'hibernate-envers'
 
 
 rootProject.children.each { project ->

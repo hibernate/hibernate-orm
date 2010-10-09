@@ -1,0 +1,27 @@
+apply plugin: 'java'
+
+dependencies {
+    compile( project( ':hibernate-core' ) )
+    compile( project( ':hibernate-entitymanager' ) )
+    compile( libraries.commons_annotations )
+    compile( [group: 'org.hibernate', name: 'hibernate-tools', version: '3.2.0.ga'] ) {
+        trasitive = false
+    }
+    compile( libraries.dom4j ) {
+        trasitive = false
+    }
+    compile( libraries.ant )
+    testCompile( libraries.testng )
+    testCompile( project(':hibernate-core').sourceSets.test.classes )    
+    testCompile( libraries.jpa )
+    testRuntime( libraries.h2 )
+    testRuntime( libraries.javassist )
+}
+
+// todo : align testing with other modules
+
+test {
+    useTestNG() {
+         suites 'src/test/resources/testng.xml'
+    }
+}

@@ -82,6 +82,7 @@ subprojects { subProject ->
 //    }
 //    else {
     if ( 'hibernate-release' != subProject.name ) {
+        apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
 
         configurations {

@@ -4,7 +4,6 @@ package org.hibernate.test.legacy;
 import java.util.ArrayList;
 
 import junit.framework.Test;
-import junit.textui.TestRunner;
 
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;

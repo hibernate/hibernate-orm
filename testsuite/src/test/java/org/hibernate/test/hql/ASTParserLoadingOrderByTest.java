@@ -23,16 +23,7 @@
  */
 package org.hibernate.test.hql;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,15 +57,6 @@ import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.ast.QuerySyntaxException;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
-import org.hibernate.test.any.IntegerPropertyValue;
-import org.hibernate.test.any.PropertySet;
-import org.hibernate.test.any.PropertyValue;
-import org.hibernate.test.any.StringPropertyValue;
-import org.hibernate.test.cid.Customer;
-import org.hibernate.test.cid.LineItem;
-import org.hibernate.test.cid.LineItem.Id;
-import org.hibernate.test.cid.Order;
-import org.hibernate.test.cid.Product;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;

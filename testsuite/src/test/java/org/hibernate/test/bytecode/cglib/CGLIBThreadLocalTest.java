@@ -1,8 +1,5 @@
 package org.hibernate.test.bytecode.cglib;
 
-import org.hibernate.cfg.*;
-import org.hibernate.*;
-import org.hibernate.proxy.*;
 import org.hibernate.test.bytecode.*;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

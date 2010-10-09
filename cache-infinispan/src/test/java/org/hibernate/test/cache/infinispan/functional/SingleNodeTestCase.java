@@ -1,7 +1,5 @@
 package org.hibernate.test.cache.infinispan.functional;
 
-import java.util.Map;
-
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 

@@ -37,7 +37,6 @@ import org.hibernate.testing.tm.TransactionManagerLookupImpl;
 import org.testng.annotations.*;
 
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.event.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)

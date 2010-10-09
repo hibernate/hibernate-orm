@@ -44,7 +44,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
-import org.hibernate.test.fetchprofiles.join.Enrollment;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;

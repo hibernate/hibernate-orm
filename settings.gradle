@@ -5,6 +5,8 @@ include 'hibernate-envers'
 include 'hibernate-c3p0'
 include 'hibernate-proxool'
 
+include 'hibernate-ehcache'
+
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

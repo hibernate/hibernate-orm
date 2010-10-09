@@ -1,0 +1,7 @@
+apply plugin: 'java'
+
+dependencies {
+    compile( project( ':hibernate-core' ) )
+    compile( [group: 'net.sf.ehcache', name: 'ehcache', version: '1.5.0'] )
+    testCompile( project(':hibernate-core').sourceSets.test.classes )
+}

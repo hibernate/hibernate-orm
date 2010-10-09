@@ -1,0 +1,51 @@
+apply plugin: 'java'
+apply plugin: 'antlr'
+
+dependencies {
+    compile( libraries.commons_collections )
+    compile( libraries.jta )
+    compile( libraries.dom4j ) {
+        transitive = false
+    }
+    compile( libraries.commons_annotations )
+    compile( libraries.jpa )
+    antlr( libraries.antlr )
+    provided( libraries.javassist )
+    provided( libraries.cglib ) {
+        transitive = true
+    }
+    provided( libraries.ant )
+    provided( libraries.jacc )
+    provided( libraries.validation )
+    testCompile( libraries.validation )
+    testCompile( libraries.validator ) {
+        // for test runtime
+        transitive = true
+    }
+    testRuntime( 'jaxen:jaxen:1.1' )
+    testRuntime( libraries.javassist )
+    testRuntime( libraries.cglib ) {
+        transitive = true
+    }
+}
+
+
+manifest.mainAttributes(
+        'Main-Class': 'org.hibernate.Version'
+)
+
+sourceSets {
+    test {
+        // resources inherently exclude sources
+        resources {
+            setSrcDirs( ['src/test/java','src/test/resources'] )
+        }
+    }
+}
+
+//ideaModule {
+//    sourceDirs.add( file( buildDirName + '/generated-src/antlr/main' ) )
+//    testSourceDirs.addAll( sourceSets.matrix.java.srcDirs )
+//    testSourceDirs.addAll( sourceSets.matrix.resources.srcDirs )
+//}
+

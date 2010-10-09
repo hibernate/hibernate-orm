@@ -142,9 +142,9 @@ subprojects { subProject ->
 
         ideaModule {
             downloadJavadoc = false
-            scopes.COMPILE.plus.add( configurations.provided )
-            outputDir = subProject.sourceSets.main.classesDir
-            testOutputDir = subProject.sourceSets.test.classesDir
+//            scopes.COMPILE.plus.add( configurations.provided )
+//            outputDir = subProject.sourceSets.main.classesDir
+//            testOutputDir = subProject.sourceSets.test.classesDir
             whenConfigured { module ->
                 module.dependencies*.exported = true
             }

@@ -6,6 +6,7 @@ include 'hibernate-c3p0'
 include 'hibernate-proxool'
 
 include 'hibernate-ehcache'
+include 'hibernate-infinispan'
 
 
 rootProject.children.each { project ->

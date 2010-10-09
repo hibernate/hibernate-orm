@@ -1,4 +1,5 @@
 include 'hibernate-core'
+include 'hibernate-entitymanager'
 
 
 rootProject.children.each { project ->

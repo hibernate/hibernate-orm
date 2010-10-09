@@ -72,17 +72,17 @@ subprojects { subProject ->
     group = 'org.hibernate'
     version = '4.0.0-SNAPSHOT'
 
+    defaultTasks 'build'
+
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDirName = "target"
 
-    if ( 'hibernate-release' == subProject.name ) {
-        apply plugin : 'base'
-    }
-    else {
-        apply plugin: 'java'
+//    if ( 'hibernate-release' == subProject.name ) {
+//        apply plugin : 'base'
+//    }
+//    else {
+    if ( 'hibernate-release' != subProject.name ) {
         apply plugin: 'maven' // for install task as well as deploy dependencies
-
-        defaultTasks 'build'
 
         configurations {
             provided {

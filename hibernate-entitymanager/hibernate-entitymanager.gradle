@@ -1,0 +1,58 @@
+apply plugin: 'java'
+
+// todo : there are test failures due to issues with how 'bundles' are handled.
+//      My guess is using TCCL as the tests try to is not valid in Gradle.
+
+
+// not needed if we rename the directories to match the sourceSet name
+sourceSets {
+    test {
+        // resources inherently exclude sources
+        resources {
+            setSrcDirs( ['src/test/java','src/test/resources'] )
+        }
+    }
+}
+
+dependencies {
+    shrinkwrapVersion = '1.0.0-alpha-6'
+
+    compile( project(':hibernate-core') )
+    compile( libraries.dom4j )
+    compile( libraries.commons_annotations )
+    compile( libraries.jpa )
+    compile( libraries.jta )
+    compile( libraries.javassist )
+    testCompile( project(':hibernate-core').sourceSets.test.classes )
+    testCompile( libraries.junit )
+    testCompile( libraries.jpa_modelgen )
+    testCompile( libraries.shrinkwrap_api )
+    testCompile( libraries.shrinkwrap )
+    testCompile( libraries.validation )
+    testCompile( libraries.slf4j_api )
+    testRuntime( libraries.validator )
+}
+
+procTargetDirName = buildDirName + "/generated-src/jpamodelgen"
+procTargetDir = dir( procTargetDirName )
+compileJava {
+    configure( options ) {
+        compilerArgs = [ "-s", "$procTargetDir.dir.absolutePath" ]
+    }
+}
+compileJava.dependsOn procTargetDir
+
+bundlesTargetDirName = "$buildDirName/bundles"
+bundlesTargetDir = dir( bundlesTargetDirName )
+task processBundleResources {
+    copy {
+        from 'src/test/bundles'
+        into bundlesTargetDir.dir
+    }
+}
+processBundleResources.dependsOn bundlesTargetDir
+
+//ideaModule {
+//    testSourceDirs.add( file( procTargetDirName ) )
+//}
+

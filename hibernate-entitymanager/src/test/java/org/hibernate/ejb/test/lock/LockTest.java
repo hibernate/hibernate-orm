@@ -8,8 +8,6 @@ import javax.persistence.OptimisticLockException;
 import javax.persistence.Query;
 import javax.persistence.QueryTimeoutException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.ejb.AvailableSettings;
@@ -23,11 +21,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author Emmanuel Bernard
  */
 public class LockTest extends TestCase {
-	private static final Log log = LogFactory.getLog( LockTest.class );
+	private static final Logger log = LoggerFactory.getLogger( LockTest.class );
 
 	public void testFindWithTimeoutHint() {
 		EntityManager em = getOrCreateEntityManager();

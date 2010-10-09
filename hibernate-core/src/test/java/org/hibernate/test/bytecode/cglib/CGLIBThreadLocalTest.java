@@ -1,12 +1,15 @@
 package org.hibernate.test.bytecode.cglib;
 
-import org.hibernate.test.bytecode.*;
+import java.lang.reflect.Field;
+
+import junit.framework.TestSuite;
+
+import org.hibernate.Session;
+import org.hibernate.cfg.Environment;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.test.bytecode.ProxyBean;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-
-import junit.framework.*;
-
-import java.lang.reflect.*;
 
 
 /**
@@ -29,7 +32,7 @@ public class CGLIBThreadLocalTest extends FunctionalTestCase {
 	}
 
 	public void testCglibClearing() {
-		if (!(Environment.getBytecodeProvider() instanceof org.hibernate.bytecode.cglib.BytecodeProviderImpl)) {
+		if (!( Environment.getBytecodeProvider() instanceof org.hibernate.bytecode.cglib.BytecodeProviderImpl)) {
 			// because of the scoping :(
 			reportSkip("env not configured for cglib provider", "cglib thread local callback clearing");
 			return;
@@ -49,7 +52,7 @@ public class CGLIBThreadLocalTest extends FunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		proxyBean = (ProxyBean) s.load(ProxyBean.class, proxyBean.getSomeString());
-		assertTrue(proxyBean instanceof HibernateProxy);
+		assertTrue(proxyBean instanceof HibernateProxy );
 		try {
 			//check that the static thread callbacks thread local has been cleared out
 			Field field = proxyBean.getClass().getDeclaredField("CGLIB$THREAD_CALLBACKS");

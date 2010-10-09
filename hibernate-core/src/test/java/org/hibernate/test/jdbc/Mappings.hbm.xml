@@ -19,7 +19,7 @@
   ~ Red Hat Author(s): Steve Ebersole
   -->
 
-<hibernate-mapping package="org.hibernate.jdbc">
+<hibernate-mapping package="org.hibernate.test.jdbc">
 
     <class name="Person" table="T_JDBC_PERSON">
         <id name="id" column="ID">

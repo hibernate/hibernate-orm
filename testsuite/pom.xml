@@ -80,7 +80,7 @@
             </testResource>
             <testResource>
                 <filtering>true</filtering>
-                <directory>src/test/resources</directory>
+                <directory>../hibernate-core/src/test/resources</directory>
             </testResource>
         </testResources>
 

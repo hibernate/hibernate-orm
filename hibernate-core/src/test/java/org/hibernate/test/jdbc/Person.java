@@ -13,26 +13,24 @@
  *
  * Red Hat Author(s): Steve Ebersole
  */
-package org.hibernate.jdbc;
+package org.hibernate.test.jdbc;
 
 /**
- * Boat implementation
+ * Person implementation
  *
  * @author Steve Ebersole
  */
-public class Boat {
+public class Person {
 	private Long id;
-	private String tag;
-	private Person driver;
-	private Person boarder;
+	private String firstName;
+	private String lastName;
 
-	public Boat() {
+	public Person() {
 	}
 
-	public Boat(String tag, Person driver, Person boarder) {
-		this.tag = tag;
-		this.driver = driver;
-		this.boarder = boarder;
+	public Person(String firstName, String lastName) {
+		this.firstName = firstName;
+		this.lastName = lastName;
 	}
 
 	public Long getId() {
@@ -43,27 +41,19 @@ public class Boat {
 		this.id = id;
 	}
 
-	public String getTag() {
-		return tag;
+	public String getFirstName() {
+		return firstName;
 	}
 
-	public void setTag(String tag) {
-		this.tag = tag;
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
 	}
 
-	public Person getDriver() {
-		return driver;
+	public String getLastName() {
+		return lastName;
 	}
 
-	public void setDriver(Person driver) {
-		this.driver = driver;
-	}
-
-	public Person getBoarder() {
-		return boarder;
-	}
-
-	public void setBoarder(Person boarder) {
-		this.boarder = boarder;
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
 	}
 }

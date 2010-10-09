@@ -13,7 +13,7 @@
  *
  * Red Hat Author(s): Steve Ebersole
  */
-package org.hibernate.jdbc;
+package org.hibernate.test.jdbc;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,6 +24,7 @@ import junit.framework.Test;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
+import org.hibernate.jdbc.Work;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
@@ -38,11 +39,11 @@ public class GeneralWorkTest extends FunctionalTestCase {
 	}
 
 	public String getBaseForMappings() {
-		return "org/hibernate/";
+		return "org/hibernate/test/jdbc/";
 	}
 
 	public String[] getMappings() {
-		return new String[] { "jdbc/Mappings.hbm.xml" };
+		return new String[] { "Mappings.hbm.xml" };
 	}
 
 	public static Test suite() {

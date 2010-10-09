@@ -3,6 +3,7 @@ include 'hibernate-entitymanager'
 include 'hibernate-envers'
 
 include 'hibernate-c3p0'
+include 'hibernate-proxool'
 
 
 rootProject.children.each { project ->

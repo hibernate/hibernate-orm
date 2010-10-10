@@ -44,12 +44,9 @@ sourceSets {
     }
 }
 
+ideaModule {
+    sourceDirs.add( file( buildDir + '/generated-src/antlr/main' ) )
+}
+
 // http://jira.codehaus.org/browse/GRADLE-1158
 test.testReport = false
-
-//ideaModule {
-//    sourceDirs.add( file( buildDirName + '/generated-src/antlr/main' ) )
-//    testSourceDirs.addAll( sourceSets.matrix.java.srcDirs )
-//    testSourceDirs.addAll( sourceSets.matrix.resources.srcDirs )
-//}
-

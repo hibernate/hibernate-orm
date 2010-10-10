@@ -12,8 +12,10 @@ allprojects {
 
 ideaProject {
     javaVersion = "1.6"
+    withXml { root ->
+        root.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+    }
 }
-
 
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
@@ -69,13 +71,15 @@ libraries = [
 
 
 subprojects { subProject ->
+    apply plugin: 'idea'
+
     group = 'org.hibernate'
     version = '4.0.0-SNAPSHOT'
 
     defaultTasks 'build'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
-    buildDirName = "target"
+    buildDir = "target"
 
     if ( 'hibernate-release' != subProject.name ) {
         apply plugin: 'java'
@@ -141,10 +145,12 @@ subprojects { subProject ->
         sourceCompatibility = "1.6"
 
         ideaModule {
-            downloadJavadoc = false
-//            scopes.COMPILE.plus.add( configurations.provided )
-//            outputDir = subProject.sourceSets.main.classesDir
-//            testOutputDir = subProject.sourceSets.test.classesDir
+            // treat our "provided" configuration dependencies as "Compile" scope dependencies in IntelliJ
+            scopes.COMPILE.plus.add( configurations.provided )
+            // Use explicitly separate compilation output directories for Gradle and IntelliJ
+            File baseDirectory = new File( subProject.buildDir, "idea/classes" )
+            outputDir = new File( baseDirectory, "main" )
+            testOutputDir = new File( baseDirectory, "test" )
             whenConfigured { module ->
                 module.dependencies*.exported = true
             }
@@ -153,7 +159,10 @@ subprojects { subProject ->
         // elements used to customize the generated POM used during upload
         def pomConfig = {
             url 'http://hibernate.org'
-            organization 'Hibernate.org'
+            organization {
+                name 'Hibernate.org'
+                url 'http://hibernate.org'
+            }
             issueManagement {
                 system 'jira'
                 url 'http://opensource.atlassian.com/projects/hibernate/browse/HHH'

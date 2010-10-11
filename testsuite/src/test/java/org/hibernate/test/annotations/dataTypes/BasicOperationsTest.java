@@ -29,8 +29,10 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jdbc.Work;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.SkipForDialect;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
 /**
@@ -38,6 +40,7 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
  *
  * @author Steve Ebersole
  */
+@SkipForDialect(value=SybaseASE15Dialect.class, comment="sybase does not support blob")
 public class BasicOperationsTest extends TestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -215,3 +215,14 @@ subprojects { subProject ->
 }
 
 dependsOnChildren()
+
+// This is a task that generates the gradlew scripts, allowing users to run gradle without having gradle installed
+// on their system.
+// This task should be run by "build master" and the resulting ouput committed to source control.  Its outputs include:
+//  1) /gradlew which is the *NIX shell script for executing builds
+//  2) /gradlew.bat which is the windows bat script for for executing builds
+//  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
+task wrapper(type: Wrapper) {
+    gradleVersion = '0.9-rc-1'
+    jarPath = 'wrapper'
+}

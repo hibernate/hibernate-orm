@@ -45,7 +45,7 @@ sourceSets {
 }
 
 ideaModule {
-    sourceDirs.add( file( buildDir + '/generated-src/antlr/main' ) )
+    sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
 }
 
 // http://jira.codehaus.org/browse/GRADLE-1158

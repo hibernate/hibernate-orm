@@ -1,5 +1,6 @@
 .gradle
 target
+build
 local
 .idea
 .idea/*

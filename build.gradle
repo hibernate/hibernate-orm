@@ -17,6 +17,9 @@ ideaProject {
     }
 }
 
+ideaModule {
+}
+
 // build a map of the dependency artifacts to use.  Allows centralized definition of the version of artifacts to
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 slf4jVersion = '1.5.8'
@@ -72,6 +75,7 @@ libraries = [
 
 subprojects { subProject ->
     apply plugin: 'idea'
+    apply { url: 'https://loom.svn.sourceforge.net/svnroot/loom/shared/trunk/artifacts.gradle' } // sets up source and javadoc jar uploads
 
     group = 'org.hibernate'
     version = '4.0.0-SNAPSHOT'
@@ -210,6 +214,23 @@ subprojects { subProject ->
             }
         }
 
+        task javadocJar(type: Jar, dependsOn: javadoc) {
+            from javadoc.destinationDir
+            classifier = 'javadoc'
+        }
+
+        task sourcesJar(type: Jar, dependsOn: compileJava) {
+            from sourceSets.main.allSource
+            classifier = 'sources'
+        }
+
+        artifacts {
+            archives javadocJar
+            archives sourcesJar
+        }
+
+        uploadArchives.dependsOn javadocJar
+        uploadArchives.dependsOn sourcesJar
     }
 
 }

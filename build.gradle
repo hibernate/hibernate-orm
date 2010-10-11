@@ -88,7 +88,7 @@ subprojects { subProject ->
     if ( ! subProject.name.startsWith( 'hibernate-release' ) ) {
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
-//        apply plugin: org.hibernate.build.gradle.upload.UploadManager
+        apply plugin: org.hibernate.build.gradle.upload.UploadManager
 
         configurations {
             provided {
@@ -205,15 +205,15 @@ subprojects { subProject ->
                 name = 'jbossDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-//                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
-//                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
-                credentials = [userName: JBOSS_NEXUS_USERNAME, password: JBOSS_NEXUS_PASSWORD]
-                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/") {
-                    authentication(credentials)
-                }
-                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots") {
-                    authentication(credentials)
-                }
+                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
+                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+//                credentials = [userName: JBOSS_NEXUS_USERNAME, password: JBOSS_NEXUS_PASSWORD]
+//                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/") {
+//                    authentication(credentials)
+//                }
+//                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots") {
+//                    authentication(credentials)
+//                }
             }
         }
 

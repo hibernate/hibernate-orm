@@ -85,9 +85,10 @@ subprojects { subProject ->
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
 
-    if ( 'hibernate-release' != subProject.name ) {
+    if ( ! subProject.name.startsWith( 'hibernate-release' ) ) {
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
+//        apply plugin: org.hibernate.build.gradle.upload.UploadManager
 
         configurations {
             provided {
@@ -192,11 +193,11 @@ subprojects { subProject ->
             pom.project pomConfig
         }
 
-        if ( ! project.hasProperty('MY_JBOSS_USER') ) {
-            MY_JBOSS_USER = "";
+        if ( ! project.hasProperty('JBOSS_NEXUS_USERNAME') ) {
+            JBOSS_NEXUS_USERNAME = "";
         }
-        if ( ! project.hasProperty('MY_JBOSS_PASS') ) {
-            MY_JBOSS_PASS = "";
+        if ( ! project.hasProperty('JBOSS_NEXUS_PASSWORD') ) {
+            JBOSS_NEXUS_PASSWORD = "";
         }
 
         uploadArchives {
@@ -204,7 +205,9 @@ subprojects { subProject ->
                 name = 'jbossDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-                credentials = [userName: MY_JBOSS_USER, password: MY_JBOSS_PASS]
+//                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
+//                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+                credentials = [userName: JBOSS_NEXUS_USERNAME, password: JBOSS_NEXUS_PASSWORD]
                 repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/") {
                     authentication(credentials)
                 }

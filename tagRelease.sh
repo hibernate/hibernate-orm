@@ -39,7 +39,6 @@ updatePomVersionsAndCommit() {
 ################################################################################
 # Start script processing
 ################################################################################
-
 while getopts ":e:r:d:u" opt; do
     case $opt in
         r)
@@ -104,5 +103,5 @@ git tag -m "Tagging $releaseVersion release" $releaseVersion
 updatePomVersionsAndCommit $projectDir $devVersion
 
 if [ $exportDirectory ]; then
-	git archive master | tar -x -C $exportDirectory
+	git archive HEAD | tar -x -C $exportDirectory
 fi

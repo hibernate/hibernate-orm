@@ -5,7 +5,9 @@
 #                                               
 #  Replacement for the maven-release-plugin
 ################################################################################
-
+# be defensive and stop the script 
+set -o nounset # when there are uninitalised variables
+set -o errexit # or when statements return non true values
 
 usage="Usage: tagRelease [-u] [-e exportDirectory] [-r releaseVersion] [-d devVersion]"
 projectDir=`pwd`
@@ -30,7 +32,7 @@ updatePomVersionsAndCommit() {
         		$i > tmp
         mv tmp $i
     done
-    git commit -a -m "Updating pom versions to $1 for release tagging"
+    git commit -a -m "Updating pom versions to $2"
 }
 
 ################################################################################
@@ -100,5 +102,5 @@ git tag -m "Tagging $releaseVersion release" $releaseVersion
 updatePomVersionsAndCommit $projectDir $devVersion
 
 if [ $exportDirectory ]; then
-	git archive HEAD | tar -x -C $exportDirectory
+	git archive $releaseVersion | tar -x -C $exportDirectory
 fi

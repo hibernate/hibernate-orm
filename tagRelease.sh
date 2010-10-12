@@ -1,13 +1,10 @@
 #! /bin/sh
 
-#************************************************#
-#                   tagRelease.sh                #
-#                     written by                 #
-#                  Steve Ebersole                #
-#                Hardy Ferentschik               #
-#                                                #
-#  Replacement for the maven-release-pluign      #
-#************************************************#
+################################################################################
+#                   tagRelease.sh                         
+#                                               
+#  Replacement for the maven-release-plugin
+################################################################################
 
 
 usage="Usage: tagRelease [-u] [-e exportDirectory] [-r releaseVersion] [-d devVersion]"

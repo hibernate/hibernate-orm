@@ -75,7 +75,7 @@ libraries = [
 
 subprojects { subProject ->
     apply plugin: 'idea'
-    apply plugin: 'maven'
+	apply plugin: 'eclipse'
 
     defaultTasks 'build'
 
@@ -159,6 +159,9 @@ subprojects { subProject ->
                 module.dependencies*.exported = true
             }
         }
+		eclipseClasspath {
+			plusConfigurations.add( configurations.provided )
+		}
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {

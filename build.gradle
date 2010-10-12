@@ -1,4 +1,4 @@
-apply plugin: 'eclipse'
+/*apply plugin: 'eclipse'*/
 apply plugin: 'idea'
 
 allprojects {
@@ -75,6 +75,7 @@ libraries = [
 
 subprojects { subProject ->
     apply plugin: 'idea'
+	apply plugin: 'eclipse'
     apply { url: 'https://loom.svn.sourceforge.net/svnroot/loom/shared/trunk/artifacts.gradle' } // sets up source and javadoc jar uploads
 
     group = 'org.hibernate'
@@ -160,6 +161,9 @@ subprojects { subProject ->
                 module.dependencies*.exported = true
             }
         }
+		eclipseClasspath {
+			plusConfigurations.add( configurations.provided )
+		}
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {

@@ -54,9 +54,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/hibernate/core/trunk</developerConnection>
-        <url>https://svn.jboss.org/repos/hibernate/core/trunk</url>
+	    <connection>scm:git:git//github.com:hibernate/hibernate-core.git</connection>
+        <developerConnection>scm:git:git//github.com:hibernate/hibernate-core.git</developerConnection>
+        <url>http://github.com/hibernate/hibernate-core</url>
     </scm>
 
     <ciManagement>

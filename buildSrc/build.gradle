@@ -1,6 +1,8 @@
 apply plugin: 'groovy'
 apply plugin: 'idea'
 
+buildDir = "target"
+
 repositories {
     mavenCentral()
     mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
@@ -15,4 +17,7 @@ dependencies {
     compile 'org.apache.maven.wagon:wagon-http:1.0-beta-6'
 
     groovy localGroovy()
+}
+
+ideaModule {
 }

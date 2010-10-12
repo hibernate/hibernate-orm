@@ -1,0 +1,222 @@
+apply plugin: 'base'
+apply plugin: 'idea'
+
+buildDir = "target"
+
+ideaModule {
+}
+
+
+
+// Javadocs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
+
+def List subProjectsToSkipForJavadoc = ['release'];
+
+task aggregateJavadocs(type: org.hibernate.build.gradle.javadoc.Javadoc) {
+    description = "Build the aggregated JavaDocs for all modules"
+    maxMemory = '512m'
+    destinationDir = javadocBuildDir.dir
+    configure( options ) {
+        overview = new File( projectDir, 'src/javadoc/package.html' )
+        stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
+        windowTitle = 'Hibernate JavaDocs'
+        docTitle = "Hibernate JavaDoc ($project.version)"
+        bottom = 'Copyright &copy; 2001-2010 <a href="http://redhat.com">Red Hat, Inc.</a>  All Rights Reserved.'
+        use = true
+        links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
+        group(
+            'Core API', [
+                'org.hibernate',
+                'org.hibernate.classic',
+                'org.hibernate.criterion',
+                'org.hibernate.mapping',
+                'org.hibernate.metadata',
+                'org.hibernate.cfg',
+                'org.hibernate.stat'
+            ]
+        )
+        group(
+            'Extension SPI', [
+                'org.hibernate.id*',
+                'org.hibernate.connection',
+                'org.hibernate.transaction',
+                'org.hibernate.type',
+                'org.hibernate.dialect*',
+                'org.hibernate.cache*',
+                'org.hibernate.event*',
+                'org.hibernate.property',
+                'org.hibernate.loader*',
+                'org.hibernate.persister*',
+                'org.hibernate.proxy',
+                'org.hibernate.tuple',
+                'org.hibernate.transform',
+                'org.hibernate.collection',
+                'org.hibernate.jdbc',
+                'org.hibernate.usertype'
+            ]
+        )
+        group(
+            'Bytecode providers', [
+                 'org.hibernate.bytecode*',
+                 'org.hibernate.intercept*'
+            ]
+        )
+        group (
+            'Infinispan Integration', ['org.hibernate.cache.infinispan*']
+        )
+        group (
+            'JBossCache Integration', ['org.hibernate.cache.jbc*']
+        )
+        group (
+            'Testing Support', ['org.hibernate.junit*']
+        )
+    }
+
+//    parent.subprojects.each{ subProject->
+//        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
+//            subProject.sourceSets.each { set ->
+//                if ( !"test".equals( set.name ) ) {
+//                    source set.java
+//
+//                    if( classpath ) {
+//                        classpath += set.classes + set.compileClasspath
+//                    }
+//                    else {
+//                        classpath = set.classes + set.compileClasspath
+//                    }
+//                }
+//            }
+//        }
+//    }
+    aggregator {
+        excludeSourceSetName 'test'
+        parent.subprojects.each{ subProject->
+            if ( ! subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
+                project subProject
+            }
+        }
+    }
+}
+
+aggregateJavadocs.doLast {
+    copy {
+        from new File( projectDir, 'src/javadoc/images' )
+        into new File( javadocBuildDir.dir, "/images" )
+    }
+}
+
+System.out.println("Archives config : " + parent.project( 'hibernate-core' ).configurations.archives.files );
+
+// release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+releaseBuildDir = dir( buildDirName )
+
+//task prepareReleaseBundles( dependsOn: [buildDocs, aggregateJavadocs, uberJar] )
+task prepareReleaseBundles( dependsOn: [aggregateJavadocs] )
+
+releaseCopySpec = copySpec {
+    from new File( parent.projectDir, 'lgpl.txt' )
+    from new File( parent.projectDir, 'changelog.txt' )
+    from new File( parent.projectDir, 'hibernate_logo.gif' )
+
+    into('lib/required') {
+        from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
+        from parent.project( 'hibernate-core' ).configurations.runtime
+        from parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+    }
+
+    into('lib/bytecode/cglib') {
+        from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'cglib' }
+    }
+
+    into('lib/bytecode/javassist') {
+        from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
+    }
+
+    into( 'lib/jpa' ) {
+        from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+        from(
+                parent.project( 'hibernate-entitymanager' ).configurations.runtime
+                        - parent.project( 'hibernate-core' ).configurations.runtime
+                        - parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles
+        )
+    }
+
+    into( 'lib/envers' ) {
+        from(
+                ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+                        + parent.project( 'hibernate-envers' ).configurations.runtime )
+                        - parent.project( 'hibernate-core' ).configurations.runtime
+                        - parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles
+                        - parent.project( 'hibernate-entitymanager' ).configurations.runtime
+                        - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifactFiles
+        )
+    }
+
+    ['hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan',
+            'hibernate-oscache', 'hibernate-swarmcache'].each { feature ->
+        final String shortName = feature.substring( 'hibernate-'.length() );
+        into('lib/optional/' + shortName) {
+            from (
+                    ( parent.project( feature ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
+                            + parent.project( feature ).configurations.runtime )
+                            - parent.project( 'hibernate-core' ).configurations.runtime
+                            - parent.project( 'hibernate-core' ).configurations.archives.allArtifactFiles
+            )
+        }
+    }
+
+//    into('documentation/manual') {
+//        from new File( project.buildDir, 'docbook/publish' )
+//    }
+
+    into('documentation/javadocs') {
+        from javadocBuildDir.dir
+    }
+
+    into( 'project' ) {
+        from ( rootProject.projectDir ) {
+            exclude( '.git' )
+            exclude( '.gitignore' )
+            exclude( 'changelog.txt' )
+            exclude( 'lgpl.txt' )
+            exclude( 'hibernate_logo.gif' )
+            exclude( 'tagRelease.sh' )
+            exclude( 'gradlew' )
+            exclude( 'gradlew.bat' )
+            exclude( 'wrapper/*' )
+            exclude( '**/.gradle/**' )
+            exclude( '**/target/**' )
+            exclude( '.idea' )
+            exclude( '**/*.ipr' )
+            exclude( '**/*.iml' )
+            exclude( '**/*.iws' )
+            exclude( '**/atlassian-ide-plugin.xml' )
+            exclude( '**/.classpath' )
+            exclude( '**/.project' )
+            exclude( '**/.settings' )
+            exclude( '**/.nbattrs' )
+        }
+    }
+}
+
+task buildReleaseZip( type: Zip, dependsOn: [prepareReleaseBundles] ) {
+    description = "Build release bundle in ZIP format"
+    baseName = 'hibernate-release'
+    destinationDir = releaseBuildDir.dir
+    with project.releaseCopySpec
+}
+
+task buildReleaseTgz( type: Tar, dependsOn: [prepareReleaseBundles] ) {
+    description = "Build release bundle in GZIP format"
+    baseName = 'hibernate-release'
+    destinationDir = releaseBuildDir.dir
+    compression = Compression.GZIP
+    with project.releaseCopySpec
+}
+
+task buildReleaseBundles( dependsOn: [buildReleaseZip,buildReleaseTgz] ) {
+    description = "Build release bundle in all formats"
+}

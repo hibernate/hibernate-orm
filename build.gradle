@@ -45,7 +45,7 @@ libraries = [
         dom4j:          'dom4j:dom4j:1.6.1@jar',
 
         // h2
-        h2:             'com.h2database:h2:1.2.134',
+        h2:             'com.h2database:h2:1.2.140',
 
         // Javassist
         javassist:      'javassist:javassist:3.12.0.GA',
@@ -75,20 +75,20 @@ libraries = [
 
 subprojects { subProject ->
     apply plugin: 'idea'
-    apply { url: 'https://loom.svn.sourceforge.net/svnroot/loom/shared/trunk/artifacts.gradle' } // sets up source and javadoc jar uploads
+    apply plugin: 'maven'
+
+    defaultTasks 'build'
 
     group = 'org.hibernate'
     version = '4.0.0-SNAPSHOT'
 
-    defaultTasks 'build'
-
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
-
-    if ( ! subProject.name.startsWith( 'hibernate-release' ) ) {
+    
+    if ( ! subProject.name.startsWith( 'release' ) ) {
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
-//        apply plugin: org.hibernate.build.gradle.upload.UploadManager
+        apply plugin: org.hibernate.build.gradle.upload.UploadManager
 
         configurations {
             provided {
@@ -128,7 +128,6 @@ subprojects { subProject ->
         )
 
         test {
-//            ignoreFailures = true
             systemProperties['hibernate.test.validatefailureexpected'] = true
             maxHeapSize = "1024m"
         }
@@ -193,33 +192,14 @@ subprojects { subProject ->
             pom.project pomConfig
         }
 
-        if ( ! project.hasProperty('JBOSS_NEXUS_USERNAME') ) {
-            JBOSS_NEXUS_USERNAME = "";
-        }
-        if ( ! project.hasProperty('JBOSS_NEXUS_PASSWORD') ) {
-            JBOSS_NEXUS_PASSWORD = "";
-        }
-
         uploadArchives {
             repositories.mavenDeployer {
                 name = 'jbossDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-//                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
-//                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
-                credentials = [userName: JBOSS_NEXUS_USERNAME, password: JBOSS_NEXUS_PASSWORD]
-                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/") {
-                    authentication(credentials)
-                }
-                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots") {
-                    authentication(credentials)
-                }
+                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
+                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
             }
-        }
-
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            from javadoc.destinationDir
-            classifier = 'javadoc'
         }
 
         task sourcesJar(type: Jar, dependsOn: compileJava) {
@@ -228,11 +208,9 @@ subprojects { subProject ->
         }
 
         artifacts {
-            archives javadocJar
             archives sourcesJar
         }
 
-        uploadArchives.dependsOn javadocJar
         uploadArchives.dependsOn sourcesJar
     }
 

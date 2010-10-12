@@ -106,4 +106,5 @@ if [ $exportDirectory ]; then
 fi
 
 # So far all changes were locally. Still need to push them to the remote repo
-git push --tags
+git push origin $releaseVersion 
+git push origin

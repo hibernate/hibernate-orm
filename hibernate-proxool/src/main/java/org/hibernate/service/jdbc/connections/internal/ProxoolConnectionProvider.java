@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.connection;
+package org.hibernate.service.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -31,6 +31,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.ConfigHelper;
 

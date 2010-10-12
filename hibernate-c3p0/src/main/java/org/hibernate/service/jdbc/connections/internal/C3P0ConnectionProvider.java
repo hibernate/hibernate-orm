@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.connection;
+package org.hibernate.service.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,6 +38,7 @@ import com.mchange.v2.c3p0.DataSources;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -98,7 +99,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 	public void configure(Properties props) throws HibernateException {
 		String jdbcDriverClass = props.getProperty( Environment.DRIVER );
 		String jdbcUrl = props.getProperty( Environment.URL );
-		Properties connectionProps = ConnectionProviderFactory.getConnectionProperties( props );
+		Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
 		log.info( "C3P0 using driver: " + jdbcDriverClass + " at URL: " + jdbcUrl );
 		log.info( "Connection properties: " + ConfigurationHelper.maskOut( connectionProps, "password" ) );

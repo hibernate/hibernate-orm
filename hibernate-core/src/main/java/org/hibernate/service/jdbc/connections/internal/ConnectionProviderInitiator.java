@@ -26,6 +26,7 @@ package org.hibernate.service.jdbc.connections.internal;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -54,12 +55,43 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 	private static final Logger log = LoggerFactory.getLogger( ConnectionProviderInitiator.class );
 
 	public static final String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
-	public static final String C3P0_PROVIDER_CLASS_NAME = "org.hibernate.connection.C3P0ConnectionProvider";
+	public static final String C3P0_PROVIDER_CLASS_NAME =
+			"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider";
 
 	public static final String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
-	public static final String PROXOOL_PROVIDER_CLASS_NAME = "org.hibernate.connection.ProxoolConnectionProvider";
+	public static final String PROXOOL_PROVIDER_CLASS_NAME =
+			"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider";
 
 	public static final String INJECTION_DATA = "hibernate.connection_provider.injection_data";
+	
+	// mapping from legacy connection provider name to actual
+	// connection provider that will be used
+	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING;
+
+	static {
+		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<String,String>( 5 );
+		
+		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
+				"org.hibernate.connection.DatasourceConnectionProvider",
+				DatasourceConnectionProviderImpl.class.getName()
+		);
+		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
+				"org.hibernate.connection.DriverManagerConnectionProvider",
+				DriverManagerConnectionProviderImpl.class.getName()
+		);
+		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
+				"org.hibernate.connection.UserSuppliedConnectionProvider",
+				UserSuppliedConnectionProviderImpl.class.getName()
+		);
+		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
+				"org.hibernate.connection.C3P0ConnectionProvider",
+				C3P0_PROVIDER_CLASS_NAME 
+		);
+		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
+				"org.hibernate.connection.ProxoolConnectionProvider",
+				PROXOOL_PROVIDER_CLASS_NAME
+		);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -75,7 +107,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 
 		ConnectionProvider connectionProvider = null;
-		String providerClassName = (String) configurationValues.get( Environment.CONNECTION_PROVIDER );
+		String providerClassName = (String) getConfiguredConnectionProviderName( configurationValues );
 		if ( providerClassName != null ) {
 			connectionProvider = instantiateExplicitConnectionProvider( providerClassName, classLoaderService );
 		}
@@ -135,6 +167,23 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		}
 
 		return connectionProvider;
+	}
+
+	private String getConfiguredConnectionProviderName( Map configurationValues ) {
+		String providerClassName = ( String ) configurationValues.get( Environment.CONNECTION_PROVIDER );
+		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerClassName ) ) {
+			String actualProviderClassName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerClassName );
+			if ( log.isWarnEnabled() ) {
+				StringBuffer buf = new StringBuffer()
+						.append( providerClassName )
+						.append( " has been deprecated in favor of ")
+						.append( actualProviderClassName )
+						.append( "; that provider will be used instead." );
+				log.warn( buf.toString() );
+			}
+			providerClassName = actualProviderClassName;
+		}
+		return providerClassName;
 	}
 
 	private ConnectionProvider instantiateExplicitConnectionProvider(

@@ -45,7 +45,7 @@ libraries = [
         dom4j:          'dom4j:dom4j:1.6.1@jar',
 
         // h2
-        h2:             'com.h2database:h2:1.2.134',
+        h2:             'com.h2database:h2:1.2.140',
 
         // Javassist
         javassist:      'javassist:javassist:3.12.0.GA',

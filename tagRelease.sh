@@ -30,7 +30,7 @@ updatePomVersionsAndCommit() {
         		$i > tmp
         mv tmp $i
     done
-    git commit -m "Updating pom versions to $1 for release tagging"
+    git commit -a -m "Updating pom versions to $1 for release tagging"
 }
 
 ################################################################################

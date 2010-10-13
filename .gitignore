@@ -12,3 +12,4 @@ atlassian-ide-plugin.xml
 .nbattrs
 *.log
 .clover
+*~

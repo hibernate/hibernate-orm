@@ -5,20 +5,22 @@
     <title>Tutorial Using Native Hibernate APIs and <phrase>hbm.xml</phrase> Mappings</title>
 
     <para>
-        This tutorial is located within the download bundle under <filename>basic</filename> and illustrates
-        <itemizedlist>
-            <listitem>
-                <para>
-                    using Hibernate mapping files (<phrase>hbm.xml</phrase>) to provide mapping information
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    using the <phrase>native</phrase> Hibernate APIs
-                </para>
-            </listitem>
-        </itemizedlist>
+      This tutorial is located within the download bundle under <filename>basic/</filename>.
     </para>
+    <itemizedlist>
+      <title>Objectives</title>
+      <listitem>
+        <para>
+          using Hibernate mapping files (<phrase>hbm.xml</phrase>) to provide mapping information
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          using the <phrase>native</phrase> Hibernate APIs
+        </para>
+      </listitem>
+    </itemizedlist>
+
 
     <section id="hibernate-gsg-tutorial-basic-config">
         <title>The Hibernate configuration file</title>
@@ -29,44 +31,44 @@
         </para>
 
         <para>
-            The <literal>connection.driver_class</literal>, <literal>connection.url</literal>,
-            <literal>connection.username</literal> and <literal>connection.password</literal>
-            <literal>property</literal> elements define JDBC connection information. These tutorials
-            utilize the H2 in-memory database. So these are all specific to running H2 in its in-memory mode.
-             <literal>connection.pool_size</literal> is used to configure Hibernate's built-in connection pool
-            how many connections to pool.
+            The <varname>connection.driver_class</varname>, <varname>connection.url</varname>,
+            <varname>connection.username</varname> and <varname>connection.password</varname>
+            <varname>property</varname> elements define JDBC connection information. These tutorials utilize the H2
+            in-memory database, So the values of these properties are all specific to running H2 in its in-memory mode.
+            <varname>connection.pool_size</varname> is used to configure the number of connections in Hibernate's
+            built-in connection pool.
         </para>
 
         <important>
             <para>
-                The built-in Hibernate connection pool is in no way intended for production use. It
-                lacks several features found on any decent connection pool.  See the section discussion in 
-                <citetitle pubwork="book">Hibernate Developer Guide</citetitle> for further information.
+                The built-in Hibernate connection pool is in no way intended for production use. It lacks several
+                features found on production-ready connection pools.  See the section discussion in <citetitle
+                pubwork="book">Hibernate Developer Guide</citetitle> for further information.
             </para>
         </important>
 
         <para>
-            The <literal>dialect</literal> property specifies the particular SQL variant Hibernate with which
-            Hibernate will converse.
+            The <varname>dialect</varname> property specifies the particular SQL variant with which Hibernate will
+            converse.
         </para>
 
         <tip>
             <para>
-                In most cases, Hibernate is able to properly determine which dialect to use which is invaluable if
-                your application targets multiple databases.  This is discussed in detail in the
-                <citetitle pubwork="book">Hibernate Developer Guide</citetitle>
+                In most cases, Hibernate is able to properly determine which dialect to use. This is particularly useful
+                if your application targets multiple databases.  This is discussed in detail in the <citetitle
+                pubwork="book">Hibernate Developer Guide</citetitle>
             </para>
         </tip>
 
         <para>
-            The <literal>hbm2ddl.auto</literal> property turns on automatic generation of database schemas directly
-            into the database.
+            The <varname>hbm2ddl.auto</varname> property enables automatic generation of database schemas directly into
+            the database.
         </para>
 
         <para>
-            Finally, add the mapping file(s) for persistent classes to the configuration.  The <literal>resource</literal>
-            attribute of the <literal>mapping</literal> element says to attempt to locate that mapping as a
-            classpath resource (via a <classname>java.lang.ClassLoader</classname> lookup).
+            Finally, add the mapping file(s) for persistent classes to the configuration.  The <option>resource</option>
+            attribute of the <varname>mapping</varname> element causes Hibernate to attempt to locate that mapping as a
+            classpath resource, using a <classname>java.lang.ClassLoader</classname> lookup.
         </para>
 
     </section>
@@ -76,44 +78,38 @@
         <title>The entity Java class</title>
         <para>
             The entity class for this tutorial is <classname>org.hibernate.tutorial.hbm.Event</classname>.
-            <itemizedlist>
-                <title>Notes About the Entity</title>
-                <listitem>
-                    <para>
-                        This class uses standard JavaBean naming conventions
-                        for property getter and setter methods, as well as
-                        private visibility for the fields. Although this is
-                        the recommended design, it is not required.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        The no-argument constructor, which is also a JavaBean
-                        convention, is a requirement for all persistent
-                        classes. Hibernate needs to create objects for you,
-                        using Java Reflection. The constructor can be
-                        private. However, package or public visibility is
-                        required for runtime proxy generation and efficient
-                        data retrieval without bytecode instrumentation.
-                    </para>
-                </listitem>
-            </itemizedlist>
         </para>
+        <itemizedlist>
+          <title>Notes About the Entity</title>
+          <listitem>
+            <para>
+              This class uses standard JavaBean naming conventions for property getter and setter methods, as well as
+              private visibility for the fields. Although this is the recommended design, it is not required.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              The <methodname>no-argument</methodname> constructor, which is also a JavaBean convention, is a
+              requirement for all persistent classes. Hibernate needs to create objects for you, using Java
+              Reflection. The constructor can be private. However, package or public visibility is required for runtime
+              proxy generation and efficient data retrieval without bytecode instrumentation.
+            </para>
+          </listitem>
+        </itemizedlist>
     </section>
 
 
     <section id="hibernate-gsg-tutorial-basic-mapping">
         <title>The mapping file</title>
         <para>
-            The <phrase>hbm.xml</phrase> mapping file for this tutorial is the classpath resource
+            The <filename>hbm.xml</filename> mapping file for this tutorial is the classpath resource
             <filename>org/hibernate/tutorial/hbm/Event.hbm.xml</filename> as we saw in
             <xref linkend="hibernate-gsg-tutorial-basic-config"/>
         </para>
 
         <para>
-            Hibernate uses the mapping metadata to find out how to load and
-            store objects of the persistent class. The Hibernate mapping
-            file is one choice for providing Hibernate with this metadata.
+            Hibernate uses the mapping metadata to determine how to load and store objects of the persistent class. The
+            Hibernate mapping file is one choice for providing Hibernate with this metadata.
         </para>
 
         <example id="hibernate-gsg-tutorial-basic-mapping-class">
@@ -124,18 +120,18 @@
         </example>
 
         <orderedlist>
-            <title>Functions of the <literal>class</literal> mapping element</title>
+            <title>Functions of the <varname>class</varname> mapping element</title>
             <listitem>
                 <para>
-                    The <literal>name</literal> attribute (combined here with the <literal>package</literal>
-                    attribute from the containing <literal>hibernate-mapping</literal> element) names the FQN of
-                    the class you want to define as an entity.
+                    The <option>name</option> attribute (combined here with the <option>package</option> attribute from
+                    the containing <varname>hibernate-mapping</varname> element) names the FQN of the class to be
+                    defined as an entity.
                 </para>
             </listitem>
             <listitem>
                 <para>
-                    The <literal>table</literal> attribute names the database table which contains the data for
-                    this entity.
+                    The <option>table</option> attribute names the database table which contains the data for this
+                    entity.
                 </para>
             </listitem>
         </orderedlist>
@@ -153,30 +149,30 @@
         </example>
 
         <para>
-            Hibernate uses the property named by the <literal>id</literal> element to uniquely identify rows
-            in the table.
+            Hibernate uses the property named by the <varname>id</varname> element to uniquely identify rows in the
+            table.
         </para>
 
         <important>
             <!-- Again, perhaps more sense moving this to the Dev Guide -->
             <para>
-                It is not strictly necessary for the <literal>id</literal> element to map to the table's actual
-                primary key column(s), but it is the normal convention.  Tables mapped in Hibernate do not even
-                need to define primary keys. However, the Hibernate team <emphasis>strongly</emphasis>
-                recommends that all schemas define proper referential integrity. Therefore <literal>id</literal>
-                and <phrase>primary key</phrase> are used interchangeably throughout Hibernate documentation.
+                It is not required for the <varname>id</varname> element to map to the table's actual primary key
+                column(s), but it is the normal convention.  Tables mapped in Hibernate do not even need to define
+                primary keys. However, it is strongly recommend that all schemas define proper referential
+                integrity. Therefore <varname>id</varname> and <phrase>primary key</phrase> are used interchangeably
+                throughout Hibernate documentation.
             </para>
         </important>
         <para>
-            The <literal>id</literal> element here identifies the <database class="field">EVENT_ID</database>
-            column as the primary key of the <database class="table">EVENTS</database> table. It also identifies
-            the <literal>id</literal> property of the <classname>Event</classname> class as the property
-            containing the identifier value.
+            The <varname>id</varname> element here identifies the <database class="field">EVENT_ID</database> column as
+            the primary key of the <database class="table">EVENTS</database> table. It also identifies the
+            <varname>id</varname> property of the <classname>Event</classname> class as the property containing the
+            identifier value.
         </para>
         <para>
-            The <literal>generator</literal> element nested inside the <literal>id</literal> element informs
-            Hibernate about which strategy is used to generated primary key values for this entity.  In this
-            example a simple incrementing count is used.
+            The <varname>generator</varname> element nested inside the <varname>id</varname> element informs Hibernate
+            about which strategy is used to generated primary key values for this entity.  This example uses a simple
+            incrementing count.
         </para>
 
         <example id="hibernate-gsg-tutorial-basic-mapping-property">
@@ -186,38 +182,37 @@
         </example>
 
         <para>
-            The two <literal>property</literal> elements declare the remaining two properties of the
-            <classname>Event</classname> class: <literal>date</literal> and<literal>title</literal>. The
-            <literal>date</literal> property mapping includes the <literal>column</literal> attribute, but the
-            <literal>title</literal> does not. In the absence of a <literal>column</literal> attribute, Hibernate
-            uses the property name as the column name. This is appropriate for <literal>title</literal>, but since
-            <literal>date</literal> is a reserved keyword in most databases, you need to specify a non-reserved
+            The two <varname>property</varname> elements declare the remaining two properties of the
+            <classname>Event</classname> class: <varname>date</varname> and <varname>title</varname>. The
+            <varname>date</varname> property mapping includes the <option>column</option> attribute, but the
+            <varname>title</varname> does not. In the absence of a <option>column</option> attribute, Hibernate
+            uses the property name as the column name. This is appropriate for <varname>title</varname>, but since
+            <varname>date</varname> is a reserved keyword in most databases, you need to specify a non-reserved
             word for the column name.
         </para>
         <para>
-            The <literal>title</literal> mapping also lacks a <literal>type</literal> attribute. The types
+            The <varname>title</varname> mapping also lacks a <option>type</option> attribute. The types
             declared and used in the mapping files are neither Java data types nor SQL database types. Instead,
             they are <firstterm><phrase>Hibernate mapping types</phrase></firstterm>. Hibernate mapping types are
             converters which translate between Java and SQL data types. Hibernate attempts to determine the correct
-            conversion and mapping type autonomously if the <literal>type</literal> attribute is not present in the
+            conversion and mapping type autonomously if the <option>type</option> attribute is not present in the
             mapping, by using Java reflection to determine the Java type of the declared property and using a
             default mapping type for that Java type.
         </para>
         <para>
             In some cases this automatic detection might not chose the default you expect or need, as seen with the
-            <literal>date</literal> property. Hibernate cannot know if the property, which is of type
+            <varname>date</varname> property. Hibernate cannot know if the property, which is of type
             <classname>java.util.Date</classname>, should map to a SQL <database class="datatype">DATE</database>,
             <database class="datatype">TIME</database>, or <database class="datatype">TIMESTAMP</database> datatype.
-            Full date and time information is preserved by mapping the property to a <literal>timestamp</literal>
-            converter (which identifies an instance of the class
-            <classname>org.hibernate.type.TimestampType</classname>).
+            Full date and time information is preserved by mapping the property to a <type>timestamp</type> converter,
+            which identifies an instance of the class <classname>org.hibernate.type.TimestampType</classname>.
         </para>
 
         <tip>
             <!-- This tip probably makes more sense in the Dev Guide -->
             <para>
-                Hibernate makes this mapping type determination using reflection when the mapping files are
-                processed. This process can take time and resources. If startup performance is important, consider
+                Hibernate determines the mapping type using reflection when the mapping files are processed. This
+                process adds overhead in terms of time and resources. If startup performance is important, consider
                 explicitly defining the type to use.
             </para>
         </tip>
@@ -232,10 +227,10 @@
         </para>
         <note>
             <para>
-                The example code in these tutorials is done as JUnit tests mainly for ease of use.  However it is
-                nice in that <methodname>setUp</methodname> and <methodname>tearDown</methodname> roughly illustrate
-                how a <interfacename>org.hibernate.SessionFactory</interfacename> would be created at the start up
-                of an application and closed at the end of the application lifecycle.
+                The examples in these tutorials are presented as JUnit tests, for ease of use.  One benefit of this
+                approach is that <methodname>setUp</methodname> and <methodname>tearDown</methodname> roughly illustrate
+                how a <interfacename>org.hibernate.SessionFactory</interfacename> is created at the start-up of an
+                application and closed<!--destroyed?--> at the end of the application lifecycle.
             </para>
         </note>
 
@@ -249,26 +244,42 @@
 }</programlisting>
         </example>
 
-        <para>
-            The <classname>org.hibernate.cfg.Configuration</classname> class is the first thing to notice. In this
-            tutorial everything is simply configured via the <filename>hibernate.cfg.xml</filename> file
-            discussed in<xref linkend="hibernate-gsg-tutorial-basic-config"/>.
-        </para>
-
-        <para>
-            The <classname>org.hibernate.cfg.Configuration</classname> is then used to create the
-            <interfacename>org.hibernate.SessionFactory</interfacename> which is a thread-safe object that is
-            instantiated once to serve the entire application.
-        </para>
-
-        <para>
-            The <interfacename>org.hibernate.SessionFactory</interfacename> acts as a factory for
-            <interfacename>org.hibernate.Session</interfacename> instances as can be seen in the
-            <methodname>testBasicUsage</methodname> method.  A <interfacename>org.hibernate.Session</interfacename>
-            should be thought of as a corollary to a "unit of work".
+        <procedure>
+          <title>Tutorial Workflow</title>
+          <step>
+            <title>The configuration is loaded.</title>
+            <para>
+              The <classname>org.hibernate.cfg.Configuration</classname> class is the first thing to notice. In this
+              tutorial, all configuration details are located in the <filename>hibernate.cfg.xml</filename> file
+              discussed in <xref linkend="hibernate-gsg-tutorial-basic-config"/>.
+            </para>
+          </step>
+          <step>
+            <title>The <interfacename>org.hibernate.SessionFactory</interfacename> is created.</title>
+            <para>
+              The <classname>org.hibernate.cfg.Configuration</classname> then creates the
+              <interfacename>org.hibernate.SessionFactory</interfacename> which is a thread-safe object that is
+              instantiated once to serve the entire application.
+            </para>
+          </step>
+          <step>
+            <title><interfacename>SessionFactory</interfacename> creates <classname>Session</classname> instances.</title>
+            <para>
+              The <interfacename>org.hibernate.SessionFactory</interfacename> acts as a factory for
+              <interfacename>org.hibernate.Session</interfacename> instances as can be seen in the
+              <methodname>testBasicUsage</methodname> method.  
             <!-- todo : reference to a discussion in dev guide -->
-        </para>
-
+            </para>
+          </step>
+          <step>
+            <title><classname>Session</classname>s perform work.</title>
+            <para>
+              A <interfacename>org.hibernate.Session</interfacename> should be thought of as a corollary to a "unit of
+              work".
+            </para>
+          </step>
+        </procedure>
+        
         <example id="hibernate-gsg-tutorial-basic-test-saving">
             <title>Saving entities</title>
             <programlisting role="JAVA">Session session = sessionFactory.openSession();
@@ -280,9 +291,9 @@ session.close();</programlisting>
         </example>
 
         <para>
-            <methodname>testBasicUsage</methodname> first creates some new <classname>Event</classname> objects
-            and hands them over to Hibernate for "management" via the <methodname>save</methodname> method.  At that
-            point, Hibernate takes responsibility to perform an <literal>INSERT</literal> on the database.
+            <methodname>testBasicUsage</methodname> first creates some new <classname>Event</classname> objects and
+            hands them over to Hibernate for management, using the <methodname>save</methodname> method.  Hibernate now
+            takes responsibility to perform an <command>INSERT</command> on the database.
         </para>
 
         <example id="hibernate-gsg-tutorial-basic-test-list">
@@ -298,19 +309,17 @@ session.close();]]></programlisting>
         </example>
 
         <para>
-            <methodname>testBasicUsage</methodname> then illustrates use of the Hibernate Query Language (HQL) to
-            load all existing <classname>Event</classname> objects from the database.  Hibernate will generate the
-            appropriate <literal>SELECT</literal> SQL, send it to the database and populate
-            <classname>Event</classname> objects with the result set data.
+          <methodname>testBasicUsage</methodname> illustrates use of the <firstterm>Hibernate Query Language
+          (HQL)</firstterm> to load all existing <classname>Event</classname> objects from the database and generate the
+          appropriate <literal>SELECT</literal> SQL, send it to the database and populate <classname>Event</classname>
+          objects with the result set data.
         </para>
     </section>
 
     <section id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>
-        <para>
-            Try the following exercises:
-        </para>
         <itemizedlist>
+          <title>Practice Exercises</title>
             <listitem>
                 <para>
                     Reconfigure the examples to connect to your own persistent relational database.

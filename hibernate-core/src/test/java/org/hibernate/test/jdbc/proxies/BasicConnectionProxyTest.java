@@ -33,7 +33,7 @@ import java.sql.Statement;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
-import org.hibernate.engine.jdbc.proxy.ProxyBuilder;
+import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 

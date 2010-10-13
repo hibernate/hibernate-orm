@@ -21,54 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.proxy;
+package org.hibernate.engine.jdbc.internal.proxy;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 
 /**
- * Invocation handler for {@link java.sql.PreparedStatement} proxies
+ * Invocation handler for {@link Statement} proxies
  *
  * @author Steve Ebersole
  */
-public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler {
-	private final String sql;
-
-	protected PreparedStatementProxyHandler(
-			String sql,
+public class BasicStatementProxyHandler extends AbstractStatementProxyHandler {
+	public BasicStatementProxyHandler(
 			Statement statement,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
 		super( statement, connectionProxyHandler, connectionProxy );
-		connectionProxyHandler.getJdbcServices().getSqlStatementLogger().logStatement( sql );
-		this.sql = sql;
 	}
 
 	protected void beginningInvocationHandling(Method method, Object[] args) {
 		if ( isExecution( method ) ) {
-			logExecution();
+			getJdbcServices().getSqlStatementLogger().logStatement( ( String ) args[0] );
 		}
-		else {
-			journalPossibleParameterBind( method, args );
-		}
-	}
-
-	private void journalPossibleParameterBind(Method method, Object[] args) {
-		String methodName = method.getName();
-		// todo : is this enough???
-		if ( methodName.startsWith( "set" ) && args != null && args.length >= 2 ) {
-			journalParameterBind( method, args );
-		}
-	}
-
-	private void journalParameterBind(Method method, Object[] args) {
 	}
 
 	private boolean isExecution(Method method) {
-		return false;
-	}
-
-	private void logExecution() {
+		String methodName = method.getName();
+		return "execute".equals( methodName )
+				|| "executeQuery".equals( methodName )
+				|| "executeUpdate".equals( methodName );
 	}
 }
+

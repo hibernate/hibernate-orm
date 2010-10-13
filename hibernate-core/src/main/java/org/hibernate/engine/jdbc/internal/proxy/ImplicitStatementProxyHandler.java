@@ -21,36 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.proxy;
+package org.hibernate.engine.jdbc.internal.proxy;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 
+import org.hibernate.HibernateException;
+
 /**
- * Invocation handler for {@link Statement} proxies
+ * Invocation handler for {@link java.sql.Statement} proxies obtained from other JDBC object proxies
  *
  * @author Steve Ebersole
  */
-public class BasicStatementProxyHandler extends AbstractStatementProxyHandler {
-	public BasicStatementProxyHandler(
-			Statement statement,
-			ConnectionProxyHandler connectionProxyHandler,
-			Connection connectionProxy) {
+public class ImplicitStatementProxyHandler extends AbstractStatementProxyHandler {
+	protected ImplicitStatementProxyHandler(Statement statement, ConnectionProxyHandler connectionProxyHandler, Connection connectionProxy) {
 		super( statement, connectionProxyHandler, connectionProxy );
 	}
 
 	protected void beginningInvocationHandling(Method method, Object[] args) {
-		if ( isExecution( method ) ) {
-			getJdbcServices().getSqlStatementLogger().logStatement( ( String ) args[0] );
+		// disallow executions...
+		if ( method.getName().startsWith( "execute" ) ) {
+			throw new HibernateException( "execution not allowed on implicit statement object" );
 		}
 	}
-
-	private boolean isExecution(Method method) {
-		String methodName = method.getName();
-		return "execute".equals( methodName )
-				|| "executeQuery".equals( methodName )
-				|| "executeUpdate".equals( methodName );
-	}
 }
-

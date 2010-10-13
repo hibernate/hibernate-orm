@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.proxy;
+package org.hibernate.engine.jdbc.internal.proxy;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

@@ -21,28 +21,54 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.proxy;
+package org.hibernate.engine.jdbc.internal.proxy;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 
-import org.hibernate.HibernateException;
-
 /**
- * Invocation handler for {@link java.sql.Statement} proxies obtained from other JDBC object proxies
+ * Invocation handler for {@link java.sql.PreparedStatement} proxies
  *
  * @author Steve Ebersole
  */
-public class ImplicitStatementProxyHandler extends AbstractStatementProxyHandler {
-	protected ImplicitStatementProxyHandler(Statement statement, ConnectionProxyHandler connectionProxyHandler, Connection connectionProxy) {
+public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler {
+	private final String sql;
+
+	protected PreparedStatementProxyHandler(
+			String sql,
+			Statement statement,
+			ConnectionProxyHandler connectionProxyHandler,
+			Connection connectionProxy) {
 		super( statement, connectionProxyHandler, connectionProxy );
+		connectionProxyHandler.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+		this.sql = sql;
 	}
 
 	protected void beginningInvocationHandling(Method method, Object[] args) {
-		// disallow executions...
-		if ( method.getName().startsWith( "execute" ) ) {
-			throw new HibernateException( "execution not allowed on implicit statement object" );
+		if ( isExecution( method ) ) {
+			logExecution();
 		}
+		else {
+			journalPossibleParameterBind( method, args );
+		}
+	}
+
+	private void journalPossibleParameterBind(Method method, Object[] args) {
+		String methodName = method.getName();
+		// todo : is this enough???
+		if ( methodName.startsWith( "set" ) && args != null && args.length >= 2 ) {
+			journalParameterBind( method, args );
+		}
+	}
+
+	private void journalParameterBind(Method method, Object[] args) {
+	}
+
+	private boolean isExecution(Method method) {
+		return false;
+	}
+
+	private void logExecution() {
 	}
 }

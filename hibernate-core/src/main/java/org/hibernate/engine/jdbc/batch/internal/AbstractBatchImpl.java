@@ -36,7 +36,7 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.engine.jdbc.proxy.ProxyBuilder;
+import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 
 /**
  * Convenience base class for implementors of the Batch interface.

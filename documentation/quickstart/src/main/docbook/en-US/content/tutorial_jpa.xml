@@ -127,18 +127,5 @@ entityManager.close();]]></programlisting>
         <section id="hibernate-gsg-tutorial-annotations-further">
         <title>Take it further!</title>
         <itemizedlist>
-          <title>Practice Exercises</title>
-            <listitem>
-                <para>
-
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-
-                </para>
-            </listitem>
-        </itemizedlist>
-    </section>
-
-</chapter>
+          <title>Practice Exercises</title> <listitem> <para> </para> </listitem> <listitem> <para> </para> </listitem>
+          </itemizedlist> </section> </chapter>

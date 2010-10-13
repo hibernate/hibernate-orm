@@ -5,50 +5,51 @@
     <title>Tutorial Using Envers</title>
 
     <para>
-        This tutorial is located within the download bundle under <filename>envers</filename> and illustrates
-        <itemizedlist>
-            <listitem>
-                <para>
-                    configuring Envers
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                    using the Envers APIs to look back through history
-                </para>
-            </listitem>
-        </itemizedlist>
+      This tutorial is located within the download bundle under <filename>envers</filename>.
     </para>
+    <itemizedlist>
+      <title>Objectives</title>
+      <listitem>
+        <para>
+          Configure Envers.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Use the Envers APIs to view and analyze historical data.
+        </para>
+      </listitem>
+    </itemizedlist>
 
     <section id="hibernate-gsg-tutorial-envers-config">
-        <title><filename>persistence.xml</filename></title>
-        <para>
-            This file was discussed in the <phrase>JPA</phrase> tutorial, and is largely the same here.  The major
-            difference is the set of properties defining <firstterm><phrase>listeners</phrase></firstterm>.
-            Essentially this enables Envers to recieve notfications from Hibernate processing of certain
-            <firstterm><phrase>events</phrase></firstterm> such as an entity being saved or updated.
-        </para>
+      <title><filename>persistence.xml</filename></title>
+      <para>
+        This file was discussed in the <systemitem>JPA</systemitem> tutorial in <xref
+        linkend="hibernate-gsg-tutorial-jpa-config" />, and is largely the same here.  The major difference is the set
+        of properties defining <firstterm>listeners</firstterm>.  Listeners enable Envers to receive notfications from
+        Hibernate processing about <firstterm>events</firstterm> such as saving or updating of entities.
+      </para>
     </section>
 
     <section id="hibernate-gsg-tutorial-envers-entity">
-        <title>The annotated entity Java class</title>
-        <para>
-            Again, the entity is largely the same as seen in the <phrase>JPA</phrase> tutorial.  The major
-            difference to notice is the addition of the <interfacename>@org.hibernate.envers.Audited</interfacename>
-            annotation which tells Envers to automatically track changes to this entity.
-        </para>
+      <title>The annotated entity Java class</title>
+      <para>
+        Again, the entity is largely the same as in <xref linkend="hibernate-gsg-tutorial-jpa-entity" /> .  The major
+        difference is the addition of the <interfacename>@org.hibernate.envers.Audited</interfacename> annotation, which
+        tells Envers to automatically track changes to this entity.
+      </para>
     </section>
 
     <section id="hibernate-gsg-tutorial-envers-test">
-        <title>Example code</title>
-        <para>
-            Again, this tutorial makes use of the <phrase>JPA</phrase> APIs.  However, the code also makes a
-            change to one of the entites and then uses the Envers API to pull back the initial revision (version)
-            as well as the updated revision.
-        </para>
-        <example id="hibernate-gsg-tutorial-envers-test-api">
-            <title>Using the <interfacename>org.hibernate.envers.AuditReader</interfacename></title>
-            <programlisting role="JAVA">public void testBasicUsage() {
+      <title>Example code</title>
+      <para>
+        Again, this tutorial makes use of the <systemitem>JPA</systemitem> APIs.  However, the code also makes a change to one
+        of the entites, then uses the Envers API to pull back the initial <firstterm>revision</firstterm> as well as the updated
+        revision. A revision refers to a version of an entity.
+      </para>
+      <example id="hibernate-gsg-tutorial-envers-test-api">
+        <title>Using the <interfacename>org.hibernate.envers.AuditReader</interfacename></title>
+        <programlisting role="JAVA">public void testBasicUsage() {
     ...
     AuditReader reader = AuditReaderFactory.get( entityManager );
     Event firstRevision = reader.find( Event.class, 2L, 1 );
@@ -56,17 +57,41 @@
     Event secondRevision = reader.find( Event.class, 2L, 2 );
     ...
 }</programlisting>
-        </example>
-        <para>
-            First an <interfacename>org.hibernate.envers.AuditReader</interfacename> is obtained
-            from the <classname>org.hibernate.envers.AuditReaderFactory</classname> wrapping the
+      </example>
+      <procedure>
+        <title>Description of Example</title>
+        <step>
+          <para>
+            An <interfacename>org.hibernate.envers.AuditReader</interfacename> is obtained from the
+            <classname>org.hibernate.envers.AuditReaderFactory</classname> which wraps the
             <interfacename>javax.persistence.EntityManager</interfacename>.
-        </para>
-        <para>
-            Then the <methodname>find</methodname> method is used to retrieve specific revisions of the entity.  The
-            first call reads "find revision number 1 of Event with id 2".  The second call reads "find revision
-            number 2 of Event with id 2".
-        </para>
+          </para>
+        </step>
+        <step>
+          <para>
+            Next,the <methodname>find</methodname> method retrieves specific revisions of the entity.  The first call
+            reads <literal>find revision number 1 of Event with id 2</literal>.  The second call reads <literal>find
+            revision number 2 of Event with id 2</literal>.
+          </para>
+        </step>
+      </procedure>
+    </section>
+
+    <section id="hibernate-gsg-tutorial-annotations-further">
+      <title>Take it further!</title>
+      <itemizedlist>
+        <title>Practice Exercises</title>
+        <listitem>
+          <para>
+
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+
+          </para>
+        </listitem>
+      </itemizedlist>
     </section>
 
 </chapter>

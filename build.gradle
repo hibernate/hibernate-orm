@@ -2,11 +2,13 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 allprojects {
+    apply plugin: org.hibernate.build.gradle.maven.LocalMavenRepoSniffer
+
     repositories {
         mavenCentral()
         mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
         mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
-        mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
+//        mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
     }
 }
 

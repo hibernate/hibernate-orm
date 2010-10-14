@@ -107,8 +107,6 @@ aggregateJavadocs.doLast {
     }
 }
 
-System.out.println("Archives config : " + parent.project( 'hibernate-core' ).configurations.archives.files );
-
 // release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 releaseBuildDir = dir( buildDirName )

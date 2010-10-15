@@ -62,8 +62,10 @@ public final class ClassWriter {
 			OutputStream os = fo.openOutputStream();
 			PrintWriter pw = new PrintWriter( os );
 
-			pw.println( "package " + metaModelPackage + ";" );
-			pw.println();
+			if ( !metaModelPackage.isEmpty() ) {
+				pw.println( "package " + metaModelPackage + ";" );
+				pw.println();
+			}
 			pw.println( entity.generateImports() );
 			pw.println( body );
 
@@ -166,7 +168,12 @@ public final class ClassWriter {
 	}
 
 	private static String getFullyQualifiedClassName(MetaEntity entity, String metaModelPackage) {
-		return metaModelPackage + "." + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX;
+		String fullyQualifiedClassName = "";
+		if ( !metaModelPackage.isEmpty() ) {
+			fullyQualifiedClassName = fullyQualifiedClassName + metaModelPackage + ".";
+		}
+		fullyQualifiedClassName = fullyQualifiedClassName + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX;
+		return fullyQualifiedClassName;
 	}
 
 	private static String writeGeneratedAnnotation(MetaEntity entity) {

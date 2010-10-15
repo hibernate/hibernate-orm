@@ -128,7 +128,11 @@ public abstract class CompilationTest {
 
 	protected List<File> getCompilationUnits(String baseDir, String packageName) {
 		List<File> javaFiles = new ArrayList<File>();
-		String packageDirName = baseDir + PATH_SEPARATOR + packageName.replace( ".", PATH_SEPARATOR );
+		String packageDirName = baseDir;
+		if(packageName != null) {
+			packageDirName = packageDirName + PATH_SEPARATOR + packageName.replace( ".", PATH_SEPARATOR );	
+		}
+
 		File packageDir = new File( packageDirName );
 		FilenameFilter javaFileFilter = new FilenameFilter() {
 			@Override

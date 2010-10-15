@@ -5,5 +5,8 @@
         <packages>
             <package name="org.hibernate.jpamodelgen.test.*"/>
         </packages>
+        <classes>
+            <class name="DefaultPackageTest"/>
+        </classes>
     </test>
 </suite>

@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-// $Id:$
-
 import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;

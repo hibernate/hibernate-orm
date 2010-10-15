@@ -15,8 +15,6 @@
  * limitations under the License.
  */
 
-// $Id$
-
 package org.hibernate.jpamodelgen;
 
 import java.io.IOException;

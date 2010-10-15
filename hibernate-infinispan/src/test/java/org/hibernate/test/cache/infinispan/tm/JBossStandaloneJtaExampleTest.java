@@ -220,8 +220,8 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
 
    private void bindDataSource() throws Exception {
       ExtendedXADataSource xads = new ExtendedXADataSource();
-      xads.setDriverName("org.hsqldb.jdbcDriver");
-      xads.setUrl("jdbc:hsqldb:mem:/test");
+      xads.setDriverName("org.h2.Driver");
+      xads.setUrl("jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE");
       ctx.bind("java:/MyDatasource", xads);
    }
 

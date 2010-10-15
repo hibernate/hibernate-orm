@@ -1,46 +1,47 @@
 dependencies {
-    infinispanVersion = '4.2.0.ALPHA1'
-    jnpVersion = '5.0.3.GA'
+   infinispanVersion = '4.2.0.ALPHA3'
+   jnpVersion = '5.0.3.GA'
 
-    compile( project( ':hibernate-core' ) )
-    compile( [group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion] ) {
-        artifact {
-            name = "infinispan-core"
-            type = 'jar'
-        }
-    }
-    // http://jira.codehaus.org/browse/GRADLE-739
-    testCompile( [group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion] ) {
-        artifact {
-            name = "infinispan-core"
-            type = 'jar'
-        }
-        artifact {
-            name = "infinispan-core"
-            classifier = 'tests'
-            type = 'jar'
-        }
-    }
-    testCompile( project(':hibernate-core').sourceSets.test.classes )
-    testCompile( [group: 'org.jboss', name: 'jboss-common-core', version: '2.2.14.GA'] )
-    testCompile( [group: 'org.jboss.naming', name: 'jnp-client', version: jnpVersion] )
-    testCompile( [group: 'org.jboss.naming', name: 'jnpserver', version: jnpVersion] )
-    testCompile( [group: 'com.experlog', name: 'xapool', version: '1.5.0'] )
-    testCompile( [group: 'jboss.jbossts', name: 'jbossjta', version: '4.9.0.GA'] )
-    testCompile( libraries.jta )
-    testCompile( libraries.h2 )
-    testCompile( [group: 'org.rhq.helpers', name: 'rhq-pluginAnnotations', version: '1.4.0.B01'] )
-    testRuntime( libraries.javassist )
+   compile(project(':hibernate-core'))
+   compile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion]) {
+      artifact {
+         name = "infinispan-core"
+         type = 'jar'
+      }
+   }
+   // http://jira.codehaus.org/browse/GRADLE-739
+   testCompile([group: 'org.infinispan', name: 'infinispan-core', version: infinispanVersion]) {
+      artifact {
+         name = "infinispan-core"
+         type = 'jar'
+      }
+      artifact {
+         name = "infinispan-core"
+         classifier = 'tests'
+         type = 'jar'
+      }
+   }
+   testCompile(project(':hibernate-core').sourceSets.test.classes)
+   testCompile([group: 'org.jboss', name: 'jboss-common-core', version: '2.2.14.GA'])
+   testCompile([group: 'org.jboss.naming', name: 'jnp-client', version: jnpVersion])
+   testCompile([group: 'org.jboss.naming', name: 'jnpserver', version: jnpVersion])
+   testCompile([group: 'com.experlog', name: 'xapool', version: '1.5.0'])
+   testCompile([group: 'jboss.jbossts', name: 'jbossjta', version: '4.9.0.GA'])
+   testCompile(libraries.jta)
+   testCompile(libraries.h2)
+   // testCompile( [group: 'hsqldb', name: 'hsqldb', version: '1.8.0.2'] )
+   testCompile([group: 'org.rhq.helpers', name: 'rhq-pluginAnnotations', version: '1.4.0.B01'])
+   testCompile([group: 'log4j', name: 'log4j', version: '1.2.16'])
+   testRuntime(libraries.javassist)
 }
 
 test {
-    environment['java.net.preferIPv4Stack'] = true
-    environment['jgroups.ping.timeout'] = 500
-    environment['jgroups.ping.num_initial_members'] = 1
-    environment['jgroups.udp.enable_bundling'] = false
-//    environment['jgroups.bind_addr'] = $jgroupsBindAddress
-    // quite a few failures and the old maven module disabled these tests as well
-    enabled = false
+   systemProperties['java.net.preferIPv4Stack'] = true
+   systemProperties['jgroups.ping.timeout'] = 500
+   systemProperties['jgroups.ping.num_initial_members'] = 1
+   systemProperties['jgroups.udp.enable_bundling'] = false
+   systemProperties['jgroups.bind_addr'] = 'localhost'
+   //   systemProperties['log4j.configuration'] = 'file:/log4j/log4j-infinispan.xml'
+   enabled = true
 }
-
 

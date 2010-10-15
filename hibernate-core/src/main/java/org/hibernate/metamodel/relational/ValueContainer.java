@@ -36,7 +36,7 @@ public interface ValueContainer {
 	 *
 	 * @return Iterator over value definitions.
 	 */
-	public Iterable<Value> iterateValues();
+	public Iterable<Value> values();
 
 	/**
 	 * Get a qualifier which can be used to qualify {@link Value values} belonging to this container in

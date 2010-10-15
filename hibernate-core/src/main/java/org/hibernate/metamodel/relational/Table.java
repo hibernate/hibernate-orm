@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -34,6 +36,9 @@ import java.util.Set;
 public class Table extends AbstractTableSpecification implements ValueContainer, Exportable {
 	private final ObjectName name;
 	private final Set<ObjectName> spaces;
+
+	private List<Index> indexes;
+	private List<UniqueKey> uniqueKeys;
 
 	public Table(ObjectName name) {
 		this.name = name;
@@ -55,13 +60,31 @@ public class Table extends AbstractTableSpecification implements ValueContainer,
 	}
 
 	@Override
-	public Set<ObjectName> getSpaces() {
+	public Iterable<ObjectName> getSpaces() {
 		return spaces;
 	}
 
 	@Override
 	public String toLoggableString() {
 		return getObjectName().getIdentifier();
+	}
+
+	public Index createIndex(String name) {
+		Index index = new Index( this, name );
+		if ( indexes == null ) {
+			indexes = new ArrayList<Index>();
+		}
+		indexes.add( index );
+		return index;
+	}
+
+	public UniqueKey createUniqueKey(String name) {
+		UniqueKey uniqueKey = new UniqueKey( this, name );
+		if ( uniqueKeys == null ) {
+			uniqueKeys = new ArrayList<UniqueKey>();
+		}
+		uniqueKeys.add( uniqueKey );
+		return uniqueKey;
 	}
 
 	@Override

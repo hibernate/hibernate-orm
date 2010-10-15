@@ -44,12 +44,12 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
 
-	public ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name) {
+	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable, String name) {
 		super( sourceTable, name );
 		this.targetTable = targetTable;
 	}
 
-	public ForeignKey(TableSpecification sourceTable, TableSpecification targetTable) {
+	protected ForeignKey(TableSpecification sourceTable, TableSpecification targetTable) {
 		this( sourceTable, targetTable, null );
 	}
 
@@ -61,14 +61,19 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 		return targetTable;
 	}
 
-	public List<Column> getSourceColumns() {
+	public Iterable<Column> getSourceColumns() {
 		return getColumns();
 	}
 
-	public List<Column> getTargetColumns() {
+	public Iterable<Column> getTargetColumns() {
 		return targetColumns == null
 				? getTargetTable().getPrimaryKey().getColumns()
 				: targetColumns;
+	}
+
+	@Override
+	public void addColumn(Column column) {
+		addColumnMapping( column, null );
 	}
 
 	public void addColumnMapping(Column sourceColumn, Column targetColumn) {
@@ -85,7 +90,7 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 		}
 		else {
 			if ( targetColumns == null ) {
-				if ( !getSourceColumns().isEmpty() ) {
+				if ( !internalColumnAccess().isEmpty() ) {
 					log.warn(
 							"Value mapping mismatch as part of FK [table=" + getTable().toLoggableString()
 									+ ", name=" + getName() + "] while adding source column ["
@@ -96,11 +101,17 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 			}
 			targetColumns.add( targetColumn );
 		}
-		getSourceColumns().add( sourceColumn );
+		internalColumnAccess().add( sourceColumn );
 	}
 
 	@Override
 	public String getExportIdentifier() {
 		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
+	}
+
+	public void validate() {
+		if ( getSourceTable() == null ) {
+
+		}
 	}
 }

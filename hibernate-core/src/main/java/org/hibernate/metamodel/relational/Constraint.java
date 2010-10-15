@@ -54,5 +54,5 @@ public interface Constraint {
 	 *
 	 * @return The constrained columns.
 	 */
-	public List<Column> getColumns();
+	public Iterable<Column> getColumns();
 }

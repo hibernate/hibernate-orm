@@ -30,7 +30,7 @@ package org.hibernate.metamodel.relational;
  * @author Steve Ebersole
  */
 public class UniqueKey extends AbstractConstraint implements Constraint {
-	protected UniqueKey(TableSpecification table, String name) {
+	protected UniqueKey(Table table, String name) {
 		super( table, name );
 	}
 }

@@ -34,7 +34,7 @@ public abstract class AbstractValueContainer implements ValueContainer {
 	private final LinkedHashSet<Value> values = new LinkedHashSet<Value>();
 
 	@Override
-	public Iterable<Value> iterateValues() {
+	public Iterable<Value> values() {
 		return values;
 	}
 

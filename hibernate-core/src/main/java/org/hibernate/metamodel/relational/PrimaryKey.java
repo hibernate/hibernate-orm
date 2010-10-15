@@ -37,9 +37,11 @@ public class PrimaryKey extends AbstractConstraint implements Constraint, Export
 	//		(1) primary keys are not required to be named.
 	//		(2) because a primary key is required for each table, it is easier to allow setting the constraint name
 	// 			later in terms of building the metamodel
+	//
+	// todo : default name?  {TABLE_NAME}_PK maybe?
 	private String name;
 
-	public PrimaryKey(TableSpecification table) {
+	protected PrimaryKey(TableSpecification table) {
 		super( table, null );
 	}
 

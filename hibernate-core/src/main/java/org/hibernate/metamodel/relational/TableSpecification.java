@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-import java.util.Set;
-
 /**
  * Models what ANSI SQL terms a table specification which is a table or a view or an inline view.
  *
@@ -38,10 +36,14 @@ public interface TableSpecification extends ValueContainer {
 	 */
 	public PrimaryKey getPrimaryKey();
 
+	public ForeignKey createForeignKey(TableSpecification targetTable, String name);
+
+	public Iterable<ForeignKey> getForeignKeys();
+
 	/**
 	 * Get the physical table names modelled here.  This is especially important in the case of an inline view.
 	 *
 	 * @return The spaces.
 	 */
-	public Set<ObjectName> getSpaces();
+	public Iterable<ObjectName> getSpaces();
 }

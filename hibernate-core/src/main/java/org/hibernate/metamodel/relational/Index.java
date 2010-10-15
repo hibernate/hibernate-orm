@@ -30,7 +30,7 @@ package org.hibernate.metamodel.relational;
  * @author Steve Ebersole
  */
 public class Index extends AbstractConstraint implements Constraint {
-	protected Index(TableSpecification table, String name) {
+	protected Index(Table table, String name) {
 		super( table, name );
 	}
 }

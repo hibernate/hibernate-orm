@@ -85,20 +85,36 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 			this.lobMultiplier = lobMultiplier;
 		}
 
-		public Size(int precision) {
-			this( precision, -1, -1, null );
+		public static Size precision(int precision) {
+			return new Size( precision, -1, -1, null );
 		}
 
-		public Size(int precision, int scale) {
-			this( precision, scale, -1, null );
+		public static Size precision(int precision, int scale) {
+			return new Size( precision, scale, -1, null );
 		}
 
-		public Size(long length) {
-			this( -1, -1, length, null );
+		public static Size length(long length) {
+			return new Size( -1, -1, length, null );
 		}
 
-		public Size(long length, LobMultiplier lobMultiplier) {
-			this( -1, -1, length, lobMultiplier );
+		public static Size length(long length, LobMultiplier lobMultiplier) {
+			return new Size( -1, -1, length, lobMultiplier );
+		}
+
+		public int getPrecision() {
+			return precision;
+		}
+
+		public int getScale() {
+			return scale;
+		}
+
+		public long getLength() {
+			return length;
+		}
+
+		public LobMultiplier getLobMultiplier() {
+			return lobMultiplier;
 		}
 	}
 }

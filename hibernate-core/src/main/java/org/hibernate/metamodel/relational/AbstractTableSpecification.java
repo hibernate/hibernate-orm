@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Convenience base class for implementing the {@link ValueContainer} contract centralizing commonality
  * between modelling tables views and inline views.
@@ -31,6 +34,19 @@ package org.hibernate.metamodel.relational;
  */
 public abstract class AbstractTableSpecification extends AbstractValueContainer implements TableSpecification {
 	private PrimaryKey primaryKey = new PrimaryKey( this );
+	private List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
+
+	@Override
+	public Iterable<ForeignKey> getForeignKeys() {
+		return foreignKeys;
+	}
+
+	@Override
+	public ForeignKey createForeignKey(TableSpecification targetTable, String name) {
+		ForeignKey fk = new ForeignKey( this, targetTable, name );
+		foreignKeys.add( fk );
+		return fk;
+	}
 
 	/**
 	 * {@inheritDoc}

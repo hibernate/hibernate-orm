@@ -30,6 +30,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.5.6</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -58,8 +59,8 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/hibernate/jpamodelgen/trunk</connection>
-        <url>http://fisheye.jboss.org/browse/Hibernate/jpamodelgen/trunk</url>
+        <connection>scm:git:git://github.com/hibernate/git@github.com:hibernate/hibernate-metamodelgen.git</connection>
+        <url>http://github.com/hibernate/hibernate-metamodelgen</url>
     </scm>
     
     <distributionManagement>

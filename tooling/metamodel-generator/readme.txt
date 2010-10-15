@@ -29,9 +29,9 @@
   Resources
   ---------
 
-  Home Page:          http://www.hibernate.org/
-  Mailing Lists:      http://www.hibernate.org/20.html
-  Source Code:        http://anonsvn.jboss.org/repos/hibernate/jpamodelgen/trunk/
+  Home Page:          http://www.hibernate.org/subprojects/jpamodelgen.html
+  Mailing Lists:      http://www.hibernate.org/community/mailinglists
+  Source Code:        http://github.com/hibernate/hibernate-metamodelgen
   Issue Tracking:     http://opensource.atlassian.com/projects/hibernate/browse/METAGEN
 
   

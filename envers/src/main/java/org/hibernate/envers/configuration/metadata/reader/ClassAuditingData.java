@@ -31,6 +31,7 @@ import static org.hibernate.envers.tools.Tools.*;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Sebastian Komander
+ * @author Hern&aacut;n Chanfreau
 */
 public class ClassAuditingData implements AuditedPropertiesHolder {
     private final Map<String, PropertyAuditingData> properties;
@@ -47,6 +48,10 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
     public ClassAuditingData() {
         properties = newHashMap();
         secondaryTableDictionary = newHashMap();
+    }
+
+    public boolean isEmpty() {
+    	return properties.isEmpty();
     }
 
 	public void addPropertyAuditingData(String propertyName, PropertyAuditingData auditingData) {
@@ -80,4 +85,8 @@ public class ClassAuditingData implements AuditedPropertiesHolder {
 	public boolean isAudited() {
         return defaultAudited || properties.size() > 0;
     }
+	
+	public boolean contains(String propertyName) {
+		return properties.containsKey(propertyName);
+	}
 }

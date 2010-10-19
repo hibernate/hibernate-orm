@@ -266,7 +266,7 @@ public class PutFromLoadValidator {
       PendingPutMap pending = pendingPuts.get(key);
       if (pending != null) {
          if (pending.size() == 0) {
-            pendingPuts.remove(key);
+            pendingPuts.remove(key, pending);
          }
          pending.releaseLock();
       }
@@ -561,10 +561,12 @@ public class PutFromLoadValidator {
                try {
                   PendingPut cleaned = map.remove(toClean.owner);
                   if (toClean.equals(cleaned) == false) {
-                     // Oops. Restore it.
-                     map.put(cleaned);
+                     if (cleaned != null) {
+                        // Oops. Restore it.
+                        map.put(cleaned);
+                     }
                   } else if (map.size() == 0) {
-                     pendingPuts.remove(toClean.key);
+                     pendingPuts.remove(toClean.key, map);
                   }
                }
                finally {

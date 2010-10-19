@@ -3,6 +3,7 @@ package org.hibernate.envers.configuration.metadata.reader;
 /**
  * Implementations hold other audited properties.
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern&aacut;n Chanfreau
  */
 public interface AuditedPropertiesHolder {
 	/**
@@ -17,4 +18,16 @@ public interface AuditedPropertiesHolder {
 	 * @return Auditing data for the property.
 	 */
 	PropertyAuditingData getPropertyAuditingData(String propertyName);
+	
+	
+	/**
+	 * @return true if the holder contains any audited property
+	 */
+	boolean isEmpty();
+	
+	/**
+	 * @return true if the holder contains the given audited property
+	 */
+	boolean contains(String propertyName);
+	
 }

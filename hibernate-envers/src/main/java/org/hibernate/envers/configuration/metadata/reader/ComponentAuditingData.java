@@ -31,12 +31,17 @@ import java.util.Map;
 /**
  * Audit mapping meta-data for component.
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern&aacut;n Chanfreau
  */
 public class ComponentAuditingData extends PropertyAuditingData implements AuditedPropertiesHolder {
 	private final Map<String, PropertyAuditingData> properties;
 
 	public ComponentAuditingData() {
 		this.properties = newHashMap();
+	}
+
+	public boolean isEmpty() {
+		return properties.isEmpty();
 	}
 
 	public void addPropertyAuditingData(String propertyName, PropertyAuditingData auditingData) {
@@ -46,4 +51,8 @@ public class ComponentAuditingData extends PropertyAuditingData implements Audit
     public PropertyAuditingData getPropertyAuditingData(String propertyName) {
         return properties.get(propertyName);
     }
+    
+    public boolean contains(String propertyName) {
+    	return properties.containsKey(propertyName);
+    }    
 }

@@ -30,9 +30,10 @@ import org.hibernate.MappingException;
  * filling all the auditing data.
  * @author Adam Warski (adam at warski dot org)
  * @author Erik-Berndt Scheper
+ * @author Hern&aacut;n Chanfreau
  */
 public class AuditedPropertiesReader {
-	private final ModificationStore defaultStore;
+	protected final ModificationStore defaultStore;
 	private final PersistentPropertiesSource persistentPropertiesSource;
 	private final AuditedPropertiesHolder auditedPropertiesHolder;
 	private final GlobalConfiguration globalCfg;
@@ -68,7 +69,7 @@ public class AuditedPropertiesReader {
 	}
 
 	private void readPersistentPropertiesAccess() {
-		Iterator propertyIter = persistentPropertiesSource.getPropertyIterator();
+		Iterator<Property> propertyIter = persistentPropertiesSource.getPropertyIterator();
 		while (propertyIter.hasNext()) {
 			Property property = (Property) propertyIter.next();
 			if ("field".equals(property.getPropertyAccessorName())) {
@@ -80,49 +81,84 @@ public class AuditedPropertiesReader {
 	}
 
 	private void addPropertiesFromClass(XClass clazz)  {
+		Audited allClassAudited = clazz.getAnnotation(Audited.class);
+		//look in the class
+		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited);
+		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited);
+		
+		if(allClassAudited != null || !auditedPropertiesHolder.isEmpty()) {
+			XClass superclazz = clazz.getSuperclass();
+			if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
+				addPropertiesFromClassRec(superclazz);
+			}
+		}
+	}
+	
+	private void addPropertiesFromClassRec(XClass clazz)  {
+		
+		Audited allClassAudited = clazz.getAnnotation(Audited.class);
+		
 		XClass superclazz = clazz.getSuperclass();
 		if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
-			addPropertiesFromClass(superclazz);
+			addPropertiesFromClassRec(superclazz);
 		}
 
-		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties);
-		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties);
+		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited);
+		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited);
 	}
 
-	private void addFromProperties(Iterable<XProperty> properties, String accessType, Set<String> persistentProperties) {
+	private void addFromProperties(Iterable<XProperty> properties, String accessType, Set<String> persistentProperties, Audited allClassAudited) {
 		for (XProperty property : properties) {
 			// If this is not a persistent property, with the same access type as currently checked,
-			// it's not audited as well.
-			if (persistentProperties.contains(property.getName())) {
+			// it's not audited as well. 
+			// If the property was already defined by the subclass, is ignored by superclasses
+			if ((persistentProperties.contains(property.getName()) && (!auditedPropertiesHolder
+					.contains(property.getName())))) {
 				Value propertyValue = persistentPropertiesSource.getProperty(property.getName()).getValue();
-
-				PropertyAuditingData propertyData;
-				boolean isAudited;
 				if (propertyValue instanceof Component) {
-					ComponentAuditingData componentData = new ComponentAuditingData();
-					isAudited = fillPropertyData(property, componentData, accessType);
-
-					PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
-							(Component) propertyValue);
-					new AuditedPropertiesReader(ModificationStore.FULL, componentPropertiesSource, componentData,
-							globalCfg, reflectionManager,
-							propertyNamePrefix + MappingTools.createComponentPrefix(property.getName()))
-							.read();
-
-					propertyData = componentData;
+					this.addFromComponentProperty(property, accessType, (Component)propertyValue, allClassAudited);
 				} else {
-					propertyData = new PropertyAuditingData();
-					isAudited = fillPropertyData(property, propertyData, accessType);
-				}
-
-				if (isAudited) {
-					// Now we know that the property is audited
-					auditedPropertiesHolder.addPropertyAuditingData(property.getName(), propertyData);
+					this.addFromNotComponentProperty(property, accessType, allClassAudited);
 				}
 			}
 		}
 	}
+	
+	private void addFromComponentProperty(XProperty property,
+			String accessType, Component propertyValue, Audited allClassAudited) {
 
+		ComponentAuditingData componentData = new ComponentAuditingData();
+		boolean isAudited = fillPropertyData(property, componentData, accessType,
+				allClassAudited);
+
+		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
+				(Component) propertyValue);
+		
+		ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
+				ModificationStore.FULL, componentPropertiesSource,
+				componentData, globalCfg, reflectionManager, propertyNamePrefix
+						+ MappingTools
+								.createComponentPrefix(property.getName()));
+		audPropReader.read();
+
+		if (isAudited) {
+			// Now we know that the property is audited
+			auditedPropertiesHolder.addPropertyAuditingData(property.getName(),
+					componentData);
+		}
+	}
+
+	private void addFromNotComponentProperty(XProperty property, String accessType, Audited allClassAudited){
+		PropertyAuditingData propertyData = new PropertyAuditingData();
+		boolean isAudited = fillPropertyData(property, propertyData, accessType, allClassAudited);
+
+		if (isAudited) {
+			// Now we know that the property is audited
+			auditedPropertiesHolder.addPropertyAuditingData(property.getName(), propertyData);
+		}
+	}
+	
+	
 	/**
 	 * Checks if a property is audited and if yes, fills all of its data.
 	 * @param property Property to check.
@@ -131,7 +167,7 @@ public class AuditedPropertiesReader {
 	 * @return False if this property is not audited.
 	 */
 	private boolean fillPropertyData(XProperty property, PropertyAuditingData propertyData,
-									 String accessType) {
+									 String accessType, Audited allClassAudited) {
 
 		// check if a property is declared as not audited to exclude it
 		// useful if a class is audited but some properties should be excluded
@@ -149,18 +185,11 @@ public class AuditedPropertiesReader {
 			}
 		}
 
-		// Checking if this property is explicitly audited or if all properties are.
-		Audited aud = property.getAnnotation(Audited.class);
-		if (aud != null) {
-			propertyData.setStore(aud.modStore());
-			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
-		} else {
-			if (defaultStore != null) {
-				propertyData.setStore(defaultStore);
-			} else {
-				return false;
-			}
+		
+		if(!this.checkAudited(property, propertyData, allClassAudited)){
+			return false;
 		}
+	
 
 		propertyData.setName(propertyNamePrefix + property.getName());
 		propertyData.setBeanName(property.getName());
@@ -175,6 +204,21 @@ public class AuditedPropertiesReader {
         setPropertyAuditMappedBy(property, propertyData);
 
 		return true;
+	}
+
+	
+	protected boolean checkAudited(XProperty property,
+			PropertyAuditingData propertyData, Audited allClassAudited) {
+		// Checking if this property is explicitly audited or if all properties are.
+		Audited aud = (property.isAnnotationPresent(Audited.class)) ? (property.getAnnotation(Audited.class)) : allClassAudited;
+		//Audited aud = property.getAnnotation(Audited.class);
+		if (aud != null) {
+			propertyData.setStore(aud.modStore());
+			propertyData.setRelationTargetAuditMode(aud.targetAuditMode());
+			return true;
+		} else {
+			return false;
+		}
 	}
 
     private void setPropertyAuditMappedBy(XProperty property, PropertyAuditingData propertyData) {

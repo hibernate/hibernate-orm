@@ -1163,6 +1163,10 @@ public abstract class AbstractEntityPersister
 		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
 	}
 
+	protected boolean[] getPropertyUniqueness() {
+		return propertyUniqueness;
+	}
+
 	protected String generateInsertGeneratedValuesSelectString() {
 		return generateGeneratedValuesSelectString( getPropertyInsertGenerationInclusions() );
 	}

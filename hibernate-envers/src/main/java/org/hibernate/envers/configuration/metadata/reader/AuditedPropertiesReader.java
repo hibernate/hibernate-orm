@@ -89,22 +89,9 @@ public class AuditedPropertiesReader {
 		if(allClassAudited != null || !auditedPropertiesHolder.isEmpty()) {
 			XClass superclazz = clazz.getSuperclass();
 			if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
-				addPropertiesFromClassRec(superclazz);
+				addPropertiesFromClass(superclazz);
 			}
 		}
-	}
-	
-	private void addPropertiesFromClassRec(XClass clazz)  {
-		
-		Audited allClassAudited = clazz.getAnnotation(Audited.class);
-		
-		XClass superclazz = clazz.getSuperclass();
-		if (!clazz.isInterface() && !"java.lang.Object".equals(superclazz.getName())) {
-			addPropertiesFromClassRec(superclazz);
-		}
-
-		addFromProperties(clazz.getDeclaredProperties("field"), "field", fieldAccessedPersistentProperties, allClassAudited);
-		addFromProperties(clazz.getDeclaredProperties("property"), "property", propertyAccessedPersistentProperties, allClassAudited);
 	}
 
 	private void addFromProperties(Iterable<XProperty> properties, String accessType, Set<String> persistentProperties, Audited allClassAudited) {

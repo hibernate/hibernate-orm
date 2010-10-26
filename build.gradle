@@ -8,7 +8,6 @@ allprojects {
         mavenCentral()
         mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
         mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
-//        mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
     }
 }
 
@@ -69,7 +68,7 @@ libraries = [
         // testing
         junit:          'junit:junit:3.8.2',
         testng:         'org.testng:testng:5.8:jdk15',
-        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.0.0.Final',
+        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.0.CR1',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-alpha-6',
         shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-alpha-6'
 ]

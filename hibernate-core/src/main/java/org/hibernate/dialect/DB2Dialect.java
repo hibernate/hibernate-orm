@@ -418,6 +418,10 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
+	//DB2 v9.1 doesn't support 'cross join' syntax 
+	public String getCrossJoinSeparator() {
+		return ", ";
+	}
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean supportsEmptyInList() {

@@ -8,12 +8,11 @@
         <class>org.hibernate.ejb.test.pack.defaultpar.Lighter</class>
         <validation-mode>CALLBACK</validation-mode>
         <properties>
-            <property name="hibernate.dialect" value="${db.dialect}"/>
-            <property name="hibernate.connection.driver_class" value="${jdbc.driver}"/>
-            <property name="hibernate.connection.username" value="${jdbc.user}"/>
-            <property name="hibernate.connection.password" value="${jdbc.pass}"/>
-            <property name="hibernate.connection.url" value="${jdbc.url}"/>
-            <property name="hibernate.connection.isolation" value="${jdbc.isolation}"/>
+            <property name="hibernate.dialect" value="@db.dialect@"/>
+            <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>
+            <property name="hibernate.connection.username" value="@jdbc.user@"/>
+            <property name="hibernate.connection.password" value="@jdbc.pass@"/>
+            <property name="hibernate.connection.url" value="@jdbc.url@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.cache.provider_class" value="org.hibernate.cache.HashtableCacheProvider"/>
         </properties>

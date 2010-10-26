@@ -1,8 +1,6 @@
+import org.apache.tools.ant.filters.*
+
 apply plugin: 'java'
-
-// todo : there are test failures due to issues with how 'bundles' are handled.
-//      My guess is using TCCL as the tests try to is not valid in Gradle.
-
 
 // not needed if we rename the directories to match the sourceSet name
 sourceSets {
@@ -35,27 +33,47 @@ dependencies {
 
 procTargetDirName = buildDirName + "/generated-src/jpamodelgen"
 procTargetDir = dir( procTargetDirName )
-compileJava {
+
+task generateMetaModel(type: Compile) {
+    classpath = compileTestJava.classpath
+    source = compileTestJava.source
+    destinationDir = compileTestJava.destinationDir
+    configure( options ) {
+        compilerArgs = ["-proc:only", "-s", "$procTargetDir.dir.absolutePath"]
+    }
+}
+generateMetaModel.dependsOn procTargetDir
+
+compileTestJava {
     configure( options ) {
         compilerArgs = [ "-s", "$procTargetDir.dir.absolutePath" ]
     }
+    source += files(procTargetDir.dir)
 }
-compileJava.dependsOn procTargetDir
+compileTestJava.dependsOn generateMetaModel
 
-bundlesTargetDirName = "$buildDirName/bundles"
-bundlesTargetDir = dir( bundlesTargetDirName )
-task processBundleResources {
-    copy {
-        from 'src/test/bundles'
-        into bundlesTargetDir.dir
-    }
+task copyBundleResources (type: Copy) {
+    bundlesTargetDirName = "$buildDirName/bundles"
+    bundlesTargetDir = dir( bundlesTargetDirName )
+
+    from file('src/test/bundles') 
+    into bundlesTargetDir.dir
+    filter(ReplaceTokens, tokens: [
+            buildDirName: buildDir.absolutePath,
+            'db.dialect': 'org.hibernate.dialect.H2Dialect',
+            'jdbc.driver': 'org.h2.Driver',
+            'jdbc.user': 'sa',
+            'jdbc.pass': '',
+            'jdbc.url': 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE',
+    ])
 }
-processBundleResources.dependsOn bundlesTargetDir
+//copyBundleResources.dependsOn hibernateProperties
+processTestResources.dependsOn copyBundleResources
 
 ideaModule {
     testSourceDirs.add( file( procTargetDirName ) )
 }
+ideaModule.dependsOn procTargetDir
 
-// TODO : temporarily disable the tests until the shrinkwrap stuff is straightened out.
-test.enabled = false
+
 

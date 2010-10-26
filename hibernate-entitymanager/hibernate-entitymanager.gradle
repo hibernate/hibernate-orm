@@ -55,10 +55,9 @@ compileTestJava {
 }
 compileTestJava.dependsOn generateMetaModel
 
+bundlesTargetDirName = "$buildDirName/bundles"
+bundlesTargetDir = dir( bundlesTargetDirName )
 task copyBundleResources (type: Copy) {
-    bundlesTargetDirName = "$buildDirName/bundles"
-    bundlesTargetDir = dir( bundlesTargetDirName )
-
     from file('src/test/bundles') 
     into bundlesTargetDir.dir
     filter(ReplaceTokens, tokens: [
@@ -70,6 +69,9 @@ task copyBundleResources (type: Copy) {
             'jdbc.url': 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE',
     ])
 }
+copyBundleResources.dependsOn bundlesTargetDir
+
+// make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
 
 ideaModule {

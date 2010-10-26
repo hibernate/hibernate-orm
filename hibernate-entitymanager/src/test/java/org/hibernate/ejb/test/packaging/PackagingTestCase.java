@@ -66,33 +66,32 @@ import org.hibernate.ejb.test.pack.various.Seat;
 public abstract class PackagingTestCase extends TestCase {
 	protected static ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 	protected static ClassLoader bundleClassLoader;
-	protected static File targetDir;
+	protected static File packageTargetDir;
 
 	static {
 		// get a URL reference to something we now is part of the classpath (us)
 		URL myUrl = originalClassLoader.getResource(
 				PackagingTestCase.class.getName().replace( '.', '/' ) + ".class"
 		);
-		File myPath = new File( myUrl.getFile() );
-		// navigate back to '/target'
-		targetDir = myPath
-				.getParentFile()  // target/classes/test/org/hibernate/ejb/test/packaging
-				.getParentFile()  // target/classes/test/org/hibernate/ejb/test
-				.getParentFile()  // target/classes/test/org/hibernate/ejb
-				.getParentFile()  // target/classes/test/org/hibernate
-				.getParentFile()  // target/classes/test/org
-				.getParentFile()  // target/classes/test
-				.getParentFile()  // target/classes
-		        .getParentFile(); // target
-		File testPackagesDir = new File( targetDir, "bundles" );
+
+		// this is assuming that there is a target directory
+		int index = myUrl.getFile().lastIndexOf( "target" );
+		if ( index == -1 ) {
+			fail("Unable to setup packaging test");
+		}
+
+		String baseDirPath = myUrl.getFile().substring( 0, index);
+		File baseDir = new File( baseDirPath );
+
+		File testPackagesDir = new File( baseDir, "target/bundles" );
 		try {
 			bundleClassLoader = new URLClassLoader( new URL[] { testPackagesDir.toURL() }, originalClassLoader );
 		}
 		catch ( MalformedURLException e ) {
 			fail( "Unable to build custom class loader" );
 		}
-		targetDir = new File( targetDir, "packages" );
-		targetDir.mkdirs();
+		packageTargetDir = new File( baseDir, "target/packages" );
+		packageTargetDir.mkdirs();
 	}
 
 	@Override
@@ -154,7 +153,7 @@ public abstract class PackagingTestCase extends TestCase {
 		archive.addResource( "org/hibernate/ejb/test/pack/defaultpar/package-info.class", path );
 
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -183,7 +182,7 @@ public abstract class PackagingTestCase extends TestCase {
 		archive.addResource( "org/hibernate/ejb/test/pack/defaultpar_1_0/package-info.class", path );
 
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -206,7 +205,7 @@ public abstract class PackagingTestCase extends TestCase {
 		path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addResource( "explicitpar/META-INF/persistence.xml", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -228,8 +227,8 @@ public abstract class PackagingTestCase extends TestCase {
 		path = ArchivePaths.create( "org/hibernate/ejb/test/pack/explodedpar/package-info.class" );
 		archive.addResource( "org/hibernate/ejb/test/pack/explodedpar/package-info.class", path );
 
-		File testPackage = new File( targetDir, fileName );
-		archive.as( ExplodedExporter.class ).exportExploded( targetDir );
+		File testPackage = new File( packageTargetDir, fileName );
+		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
 		return testPackage;
 	}
 
@@ -249,7 +248,7 @@ public abstract class PackagingTestCase extends TestCase {
 		path = ArchivePaths.create( "org/hibernate/ejb/test/pack/excludehbmpar/Mouse.hbm.xml" );
 		archive.addResource( "excludehbmpar/org/hibernate/ejb/test/pack/excludehbmpar/Mouse.hbm.xml", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -268,7 +267,7 @@ public abstract class PackagingTestCase extends TestCase {
 		path = ArchivePaths.create( "org/hibernate/ejb/test/pack/cfgxmlpar/hibernate.cfg.xml" );
 		archive.addResource( "cfgxmlpar/org/hibernate/ejb/test/pack/cfgxmlpar/hibernate.cfg.xml", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -283,7 +282,7 @@ public abstract class PackagingTestCase extends TestCase {
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addResource( "space par/META-INF/persistence.xml", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -301,7 +300,7 @@ public abstract class PackagingTestCase extends TestCase {
 		path = ArchivePaths.create( "overridenpar.properties" );
 		archive.addResource( "overridenpar/overridenpar.properties", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -316,7 +315,7 @@ public abstract class PackagingTestCase extends TestCase {
 		ArchivePath path = ArchivePaths.create( "META-INF/orm.xml" );
 		archive.addResource( "externaljar/META-INF/orm.xml", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -343,7 +342,7 @@ public abstract class PackagingTestCase extends TestCase {
 		path = ArchivePaths.create( "WEB-INF/classes/org/hibernate/ejb/test/pack/war/Mouse.hbm.xml" );
 		archive.addResource( "war/WEB-INF/classes/org/hibernate/ejb/test/pack/war/Mouse.hbm.xml", path );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -353,7 +352,7 @@ public abstract class PackagingTestCase extends TestCase {
 		JavaArchive archive = Archives.create( fileName, JavaArchive.class );
 		archive.addResource( includeFile );
 
-		File testPackage = new File( targetDir, fileName );
+		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportZip( testPackage, true );
 		return testPackage;
 	}
@@ -363,8 +362,8 @@ public abstract class PackagingTestCase extends TestCase {
 		JavaArchive archive = Archives.create( fileName, JavaArchive.class );
 		archive.addResource( includeFile );
 
-		File testPackage = new File( targetDir, fileName );
-		archive.as( ExplodedExporter.class ).exportExploded( targetDir );
+		File testPackage = new File( packageTargetDir, fileName );
+		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
 		return testPackage;
 	}
 }

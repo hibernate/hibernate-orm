@@ -6,7 +6,7 @@
     <persistence-unit name="overridenpar">
         <jta-data-source>java:/unreachableDS</jta-data-source>
 		<properties>
-            <property name="hibernate.dialect" value="${db.dialect}"/>
+            <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.cache.provider_class" value="org.hibernate.cache.HashtableCacheProvider"/>
         </properties>

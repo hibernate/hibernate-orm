@@ -4,12 +4,11 @@
 
 <hibernate-configuration>
     <session-factory>
-        <property name="hibernate.dialect">${db.dialect}</property>
-        <property name="hibernate.connection.driver_class">${jdbc.driver}</property>
-        <property name="hibernate.connection.username">${jdbc.user}</property>
-        <property name="hibernate.connection.password">${jdbc.pass}</property>
-        <property name="hibernate.connection.url">${jdbc.url}</property>
-        <property name="hibernate.connection.isolation">${jdbc.isolation}</property>
+        <property name="hibernate.dialect">org.hibernate.dialect.H2Dialect</property>
+        <property name="hibernate.connection.driver_class">org.h2.Driver</property>
+        <property name="hibernate.connection.username">sa</property>
+        <property name="hibernate.connection.password"></property>
+        <property name="hibernate.connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.cache.region_prefix">hibernate.test</property>
         <property name="hibernate.jdbc.use_streams_for_binary">true</property>
@@ -20,7 +19,7 @@
         <property name="hibernate.cache.provider_class">org.hibernate.cache.HashtableCacheProvider</property>
         <mapping class="org.hibernate.ejb.test.Item"/>
         <mapping class="org.hibernate.ejb.test.Cat"/>
-		<mapping class="org.hibernate.ejb.test.Kitten"/>
+        <mapping class="org.hibernate.ejb.test.Kitten"/>
         <mapping class="org.hibernate.ejb.test.Distributor"/>
         <class-cache class="org.hibernate.ejb.test.Item" usage="read-write"/>
         <collection-cache collection="org.hibernate.ejb.test.Item.distributors" usage="read-write" region="RegionName"/>

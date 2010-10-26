@@ -76,13 +76,14 @@ public abstract class PackagingTestCase extends TestCase {
 		File myPath = new File( myUrl.getFile() );
 		// navigate back to '/target'
 		targetDir = myPath
-				.getParentFile()  // target/classes/org/hibernate/ejb/test/packaging
-				.getParentFile()  // target/classes/org/hibernate/ejb/test
-				.getParentFile()  // target/classes/org/hibernate/ejb
-				.getParentFile()  // target/classes/org/hibernate
-				.getParentFile()  // target/classes/org
-				.getParentFile()  // target/classes/
-				.getParentFile(); // target
+				.getParentFile()  // target/classes/test/org/hibernate/ejb/test/packaging
+				.getParentFile()  // target/classes/test/org/hibernate/ejb/test
+				.getParentFile()  // target/classes/test/org/hibernate/ejb
+				.getParentFile()  // target/classes/test/org/hibernate
+				.getParentFile()  // target/classes/test/org
+				.getParentFile()  // target/classes/test
+				.getParentFile()  // target/classes
+		        .getParentFile(); // target
 		File testPackagesDir = new File( targetDir, "bundles" );
 		try {
 			bundleClassLoader = new URLClassLoader( new URL[] { testPackagesDir.toURL() }, originalClassLoader );

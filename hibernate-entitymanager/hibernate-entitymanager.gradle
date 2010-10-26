@@ -34,6 +34,9 @@ dependencies {
 procTargetDirName = buildDirName + "/generated-src/jpamodelgen"
 procTargetDir = dir( procTargetDirName )
 
+// in theory it metamodel generation and compilation should be possible in a single compilation,
+// but this fails on Mac. Hence, to separate compilations. One to generate the meta model classes
+// and one to compile everything
 task generateMetaModel(type: Compile) {
     classpath = compileTestJava.classpath
     source = compileTestJava.source
@@ -67,7 +70,6 @@ task copyBundleResources (type: Copy) {
             'jdbc.url': 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE',
     ])
 }
-//copyBundleResources.dependsOn hibernateProperties
 processTestResources.dependsOn copyBundleResources
 
 ideaModule {

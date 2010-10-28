@@ -59,6 +59,9 @@ public class DB2390Dialect extends DB2Dialect {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
 		}
+		if ( limit == 0 ) {
+			return sql;
+		}
 		return new StringBuffer( sql.length() + 40 )
 				.append( sql )
 				.append( " fetch first " )

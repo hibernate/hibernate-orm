@@ -59,6 +59,7 @@ import org.hibernate.ejb.test.pack.various.Seat;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.util.ConfigHelper;
 
 /**
@@ -72,7 +73,7 @@ import org.hibernate.util.ConfigHelper;
  */
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
-
+	@FailureExpected(jiraKey = "HHH-5693")
 	public void testDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -107,6 +108,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@FailureExpected(jiraKey = "HHH-5693")
 	public void testDefaultParForPersistence_1_0() throws Exception {
 		File testPackage = buildDefaultPar_1_0();
 		addPackageToClasspath( testPackage );
@@ -179,6 +181,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@FailureExpected(jiraKey = "HHH-5693")
 	public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );
@@ -334,7 +337,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		assertTrue( em.contains( item ) );
 
 		em.getTransaction().begin();
-		Item item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+		Item item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
 		assertNotNull( item1 );
 		assertSame( item, item1 );
 		item.setDescr( "Micro$oft wireless mouse" );
@@ -353,7 +356,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		assertSame( item, item1 );
 		assertTrue( em.contains( item ) );
 
-		item1 = ( Item ) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+		item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
 		assertNotNull( item1 );
 		assertSame( item, item1 );
 		assertTrue( em.contains( item ) );
@@ -378,7 +381,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( ( HibernateEntityManagerFactory ) emf ).getSessionFactory().getStatistics();
+		Statistics stats = ( (HibernateEntityManagerFactory) emf ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 

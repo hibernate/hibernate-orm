@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.Archives;
@@ -59,6 +58,7 @@ import org.hibernate.ejb.test.pack.externaljar.Scooter;
 import org.hibernate.ejb.test.pack.spacepar.Bug;
 import org.hibernate.ejb.test.pack.various.Airplane;
 import org.hibernate.ejb.test.pack.various.Seat;
+import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Hardy Ferentschik
@@ -77,10 +77,10 @@ public abstract class PackagingTestCase extends TestCase {
 		// this is assuming that there is a target directory
 		int index = myUrl.getFile().lastIndexOf( "target" );
 		if ( index == -1 ) {
-			fail("Unable to setup packaging test");
+			fail( "Unable to setup packaging test" );
 		}
 
-		String baseDirPath = myUrl.getFile().substring( 0, index);
+		String baseDirPath = myUrl.getFile().substring( 0, index );
 		File baseDir = new File( baseDirPath );
 
 		File testPackagesDir = new File( baseDir, "target/bundles" );
@@ -365,6 +365,11 @@ public abstract class PackagingTestCase extends TestCase {
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
 		return testPackage;
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[0];
 	}
 }
 

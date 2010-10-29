@@ -85,7 +85,9 @@ public class SQLServer2008Dialect extends SQLServerDialect {
 		// Wrap the query within a with statement:
 		sb.insert(0, "WITH query AS (").append(") SELECT * FROM query ");
 		sb.append("WHERE __hibernate_row_nr__ ");
-		if (offset > 0) sb.append("BETWEEN ").append(offset).append(" AND ").append(limit);
+		
+		// The row_number() function is not zero based and so we must increment the offset and limit by one
+		if (offset > 0) sb.append("BETWEEN ").append(offset + 1).append(" AND ").append(limit + 1);
 		else sb.append(" <= ").append(limit);
 
 		// As mentioned before I don't think that we really need this last order by clause

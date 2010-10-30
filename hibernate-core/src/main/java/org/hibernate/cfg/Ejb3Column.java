@@ -29,6 +29,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
+import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.Nullability;
@@ -37,9 +38,12 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.CompositeCustomType;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.util.StringHelper;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Wrap state of an EJB3 @Column annotation
@@ -422,6 +426,20 @@ public class Ejb3Column {
 				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
 				log.debug( "Column(s) overridden for property {}", inferredData.getPropertyName() );
 			}
+			
+			// get column definition from CustomUserType implementation
+            String columnNamePrefix = "";
+			if ( actualCols == null ) {
+                BasicType basicType = mappings.getTypeResolver().basic(inferredData.getClassOrElementName());
+                if (basicType != null && CompositeCustomType.class.isAssignableFrom(basicType.getClass())) {
+                    CompositeUserType compositeUserType = ((CompositeCustomType) basicType).getUserType();
+                    if (compositeUserType.getClass().isAnnotationPresent(Columns.class)) {
+                        columnNamePrefix = inferredData.getPropertyName() + "_";
+                        actualCols = compositeUserType.getClass().getAnnotation(Columns.class).columns();
+                    }
+                }
+            }
+			
 			if ( actualCols == null ) {
 				columns = buildImplicitColumn(
 						inferredData,
@@ -442,7 +460,7 @@ public class Ejb3Column {
 							? null
 							: nameNormalizer.normalizeIdentifierQuoting( col.columnDefinition() );
 					final String tableName = nameNormalizer.normalizeIdentifierQuoting( col.table() );
-					final String columnName = nameNormalizer.normalizeIdentifierQuoting( col.name() );
+					final String columnName = nameNormalizer.normalizeIdentifierQuoting( columnNamePrefix + col.name() );
 					Ejb3Column column = new Ejb3Column();
 					column.setImplicit( false );
 					column.setSqlType( sqlType );

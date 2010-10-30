@@ -906,9 +906,17 @@ cfg...;
                 <classname>Money</classname> custom type would look as follows:
             </para>
 
+            <para>
+               CompositeUserTypes may optionally use the @Column and @Columns annotations to define a default set of column names,
+               which then simplifies the use of types in the mapping.  Other properties of @Column may also be defined.
+			   Any names defined will then be prefixed with the name of the property to give the full name of the column.
+            </para>
+            
             <example id="types-custom-cut-ex-definition">
                 <title>Defining the custom CompositeUserType</title>
-                <programlisting role="JAVA"><![CDATA[public class MoneyType implements CompositeUserType {
+                <programlisting role="JAVA"><![CDATA[
+                @Columns({columns = { @Column(name = "amount", nullable=false, precision=15), @Column(name = "currency", length=3) })
+                public class MoneyType implements CompositeUserType {
     public String[] getPropertyNames() {
         // ORDER IS IMPORTANT!  it must match the order the columns are defined in the property mapping
         return new String[] { "amount", "currency" };
@@ -986,6 +994,7 @@ cfg...;
     ...
 }]]></programlisting>
             </example>
+
         </section>
 
     </section>

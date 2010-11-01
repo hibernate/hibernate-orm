@@ -14,7 +14,7 @@ javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
 
 def List subProjectsToSkipForJavadoc = ['release'];
 
-task aggregateJavadocs(type: org.hibernate.build.gradle.javadoc.Javadoc) {
+task aggregateJavadocs(type: Javadoc) {
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
     destinationDir = javadocBuildDir.dir
@@ -74,27 +74,19 @@ task aggregateJavadocs(type: org.hibernate.build.gradle.javadoc.Javadoc) {
         )
     }
 
-//    parent.subprojects.each{ subProject->
-//        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
-//            subProject.sourceSets.each { set ->
-//                if ( !"test".equals( set.name ) ) {
-//                    source set.java
-//
-//                    if( classpath ) {
-//                        classpath += set.classes + set.compileClasspath
-//                    }
-//                    else {
-//                        classpath = set.classes + set.compileClasspath
-//                    }
-//                }
-//            }
-//        }
-//    }
-    aggregator {
-        excludeSourceSetName 'test'
-        parent.subprojects.each{ subProject->
-            if ( ! subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
-                project subProject
+    parent.subprojects.each{ subProject->
+        if ( !subProjectsToSkipForJavadoc.contains( subProject.name ) ) {
+            subProject.sourceSets.each { set ->
+                if ( !"test".equals( set.name ) ) {
+                    source set.java
+
+                    if( classpath ) {
+                        classpath += set.classes + set.compileClasspath
+                    }
+                    else {
+                        classpath = set.classes + set.compileClasspath
+                    }
+                }
             }
         }
     }

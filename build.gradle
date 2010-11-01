@@ -13,8 +13,10 @@ allprojects {
 
 ideaProject {
     javaVersion = "1.6"
-    withXml { root ->
-        root.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
+    withXml { provider ->
+        def node = provider.asNode()
+        def vcsConfig = node.component.find { it.'@name' == 'VcsDirectoryMappings' }
+        vcsConfig.mapping[0].'@vcs' = 'Git'
     }
 }
 

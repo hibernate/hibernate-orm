@@ -59,7 +59,6 @@ import org.hibernate.ejb.test.pack.various.Seat;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.util.ConfigHelper;
 
 /**
@@ -73,7 +72,6 @@ import org.hibernate.util.ConfigHelper;
  */
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
-	@FailureExpected(jiraKey = "HHH-5693")
 	public void testDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -108,7 +106,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
-	@FailureExpected(jiraKey = "HHH-5693")
 	public void testDefaultParForPersistence_1_0() throws Exception {
 		File testPackage = buildDefaultPar_1_0();
 		addPackageToClasspath( testPackage );
@@ -181,7 +178,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
-	@FailureExpected(jiraKey = "HHH-5693")
 	public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );

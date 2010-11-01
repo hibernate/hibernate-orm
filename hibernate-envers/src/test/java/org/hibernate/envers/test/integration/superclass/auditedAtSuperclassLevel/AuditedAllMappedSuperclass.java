@@ -20,39 +20,65 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.envers.configuration.metadata.reader;
+package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel;
 
-import static org.hibernate.envers.tools.Tools.*;
+import javax.persistence.MappedSuperclass;
 
-import java.util.Map;
+import org.hibernate.envers.Audited;
 
 /**
- * Audit mapping meta-data for component.
  * @author Adam Warski (adam at warski dot org)
+ * 
  * @author Hern&aacut;n Chanfreau
  */
-public class ComponentAuditingData extends PropertyAuditingData implements AuditedPropertiesHolder {
-	private final Map<String, PropertyAuditingData> properties;
+@MappedSuperclass
+@Audited
+public class AuditedAllMappedSuperclass {
 
-	public ComponentAuditingData() {
-		this.properties = newHashMap();
+	private String str;
+	
+	private String otherStr;
+
+	public AuditedAllMappedSuperclass() {
 	}
 
-	public boolean isEmpty() {
-		return properties.isEmpty();
+	public AuditedAllMappedSuperclass(String str, String otherStr) {
+		this.str = str;
+		this.otherStr = otherStr;
 	}
 
-	public void addPropertyAuditingData(String propertyName, PropertyAuditingData auditingData) {
-		properties.put(propertyName, auditingData);
+	public String getStr() {
+		return str;
 	}
 
-    public PropertyAuditingData getPropertyAuditingData(String propertyName) {
-        return properties.get(propertyName);
-    }
-    
-    public boolean contains(String propertyName) {
-    	return properties.containsKey(propertyName);
-    }    
+	public void setStr(String str) {
+		this.str = str;
+	}
+
+	public String getOtherStr() {
+		return otherStr;
+	}
+
+	public void setOtherStr(String otherStr) {
+		this.otherStr = otherStr;
+	}
+
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (!(o instanceof AuditedAllMappedSuperclass))
+			return false;
+
+		AuditedAllMappedSuperclass that = (AuditedAllMappedSuperclass) o;
+
+		if (str != null ? !str.equals(that.str) : that.str != null)
+			return false;
+
+		return true;
+	}
+
+	public int hashCode() {
+		return (str != null ? str.hashCode() : 0);
+	}
 }

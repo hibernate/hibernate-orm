@@ -21,31 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.test.integration.superclass;
+package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.auditAllSubclass;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel.AuditedAllMappedSuperclass;
+
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern&aacut;n Chanfreau
  */
 @Entity
-public class SubclassEntity extends SuperclassOfEntity {
+@Audited
+public class AuditedAllSubclassEntity extends AuditedAllMappedSuperclass	 {
     @Id
     @GeneratedValue
     private Integer id;
+    
+    private String subAuditedStr;
 
-    public SubclassEntity() {
+
+	public AuditedAllSubclassEntity() {
     }
 
-    public SubclassEntity(Integer id, String str) {
-        super(str);
+    public AuditedAllSubclassEntity(Integer id, String str, String otherString, String subAuditedStr) {
+        super(str, otherString);
+        this.subAuditedStr = subAuditedStr;
         this.id = id;
     }
 
-    public SubclassEntity(String str) {
-        super(str);
+    public AuditedAllSubclassEntity(String str, String otherString, String subAuditedStr ) {
+        super(str, otherString);
+        this.subAuditedStr = subAuditedStr;        
     }
 
     public Integer getId() {
@@ -56,12 +66,20 @@ public class SubclassEntity extends SuperclassOfEntity {
         this.id = id;
     }
 
+    public String getSubAuditedStr() {
+		return subAuditedStr;
+	}
+
+	public void setSubAuditedStr(String subAuditedStr) {
+		this.subAuditedStr = subAuditedStr;
+	}
+	
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof SubclassEntity)) return false;
+        if (!(o instanceof AuditedAllSubclassEntity)) return false;
         if (!super.equals(o)) return false;
 
-        SubclassEntity that = (SubclassEntity) o;
+        AuditedAllSubclassEntity that = (AuditedAllSubclassEntity) o;
 
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
 

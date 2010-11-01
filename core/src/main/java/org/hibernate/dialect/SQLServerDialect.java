@@ -26,9 +26,9 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -68,15 +68,67 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return selectIndex + ( selectDistinctIndex == selectIndex ? 15 : 6 );
 	}
 
-	public String getLimitString(String querySelect, int offset, int limit) {
-		if ( offset > 0 ) {
-			throw new UnsupportedOperationException( "query result offset is not supported" );
+	/**
+	 * Add a LIMIT clause to the given SQL SELECT (HHH-2655: ROW_NUMBER for Paging)
+	 *
+	 * The LIMIT SQL will look like:
+	 *
+	 * <pre>
+	 * WITH query AS (SELECT ROW_NUMBER() OVER (ORDER BY orderby) as __hibernate_row_nr__, original_query_without_orderby)
+	 * SELECT * FROM query WHERE __hibernate_row_nr__ BEETWIN offset AND offset + last
+	 * --ORDER BY __hibernate_row_nr__
+	 * </pre>
+	 *
+	 * I don't think that the last order by clause is mandatory
+	 *
+	 * @param querySqlString The SQL statement to base the limit query off of.
+	 * @param offset Offset of the first row to be returned by the query (zero-based)
+	 * @param limit Maximum number of rows to be returned by the query
+	 *
+	 * @return A new SQL statement with the LIMIT clause applied.
+	 */
+	@Override
+	public String getLimitString(String querySqlString, int offset, int limit) {
+		if ( offset == 0 ) {
+			return new StringBuffer( querySqlString.length() + 8 ).append( querySqlString )
+					.insert( getAfterSelectInsertPoint( querySqlString ), " top " + limit )
+					.toString();
 		}
-		return new StringBuffer( querySelect.length() + 8 )
-				.append( querySelect )
-				.insert( getAfterSelectInsertPoint( querySelect ), " top " + limit )
-				.toString();
+
+		StringBuilder sb = new StringBuilder( querySqlString.trim() );
+
+		String querySqlLowered = querySqlString.trim().toLowerCase();
+		int orderByIndex = querySqlLowered.toLowerCase().indexOf( "order by" );
+		String orderby = orderByIndex > 0 ? querySqlString.substring( orderByIndex ) : "ORDER BY CURRENT_TIMESTAMP";
+
+		// Delete the order by clause at the end of the query
+		if ( orderByIndex > 0 ) {
+			sb.delete( orderByIndex, orderByIndex + orderby.length() );
+		}
+
+		// Find the end of the select statement
+		int selectIndex = querySqlLowered.trim().startsWith( "select distinct" ) ? 15 : 6;
+
+		// Isert after the select statement the row_number() function:
+		sb.insert( selectIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__," );
+
+		// Wrap the query within a with statement:
+		sb.insert( 0, "WITH query AS (" ).append( ") SELECT * FROM query " );
+		sb.append( "WHERE __hibernate_row_nr__ " );
+
+		// The row_number() function is not zero based and so we must increment the offset and limit by one
+		if ( offset > 0 ) {
+			sb.append( "BETWEEN " ).append( offset + 1 ).append( " AND " ).append( limit + 1 );
+		}
+		else {
+			sb.append( " <= " ).append( limit );
+		}
+
+		// As mentioned before I don't think that we really need this last order by clause
+		// sb.append(" ORDER BY __hibernate_row_nr__");
+		return sb.toString();
 	}
+
 
 	/**
 	 * Use <tt>insert table(...) values(...) select SCOPE_IDENTITY()</tt>
@@ -94,6 +146,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public boolean supportsLimitOffset() {
+		return true;
+	}
+
+	@Override
+	public boolean bindLimitParametersFirst() {
 		return false;
 	}
 
@@ -111,9 +168,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	public String appendLockHint(LockMode mode, String tableName) {
 		if ( ( mode == LockMode.UPGRADE ) ||
-			  ( mode == LockMode.UPGRADE_NOWAIT ) ||
-			  ( mode == LockMode.PESSIMISTIC_WRITE ) ||			
-			  ( mode == LockMode.WRITE ) ) {
+				( mode == LockMode.UPGRADE_NOWAIT ) ||
+				( mode == LockMode.PESSIMISTIC_WRITE ) ||
+				( mode == LockMode.WRITE ) ) {
 			return tableName + " with (updlock, rowlock)";
 		}
 		else if ( mode == LockMode.PESSIMISTIC_READ ) {
@@ -126,6 +183,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	// The current_timestamp is more accurate, but only known to be supported
 	// in SQL Server 7.0 and later (i.e., Sybase not known to support it at all)
+
 	public String getCurrentTimestampSelectString() {
 		return "select current_timestamp";
 	}

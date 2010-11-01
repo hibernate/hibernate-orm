@@ -59,6 +59,13 @@ public class DataHelper {
 		return nClobClass != null && nClobClass.isAssignableFrom( type );
 	}
 
+	/**
+	 * Extract the contents of the given reader/stream as a string.
+	 *
+	 * @param reader The reader for the content
+	 *
+	 * @return The content as string
+	 */
 	public static String extractString(Reader reader) {
 		// read the Reader contents into a buffer and return the complete string
 		final StringBuilder stringBuilder = new StringBuilder();
@@ -86,11 +93,20 @@ public class DataHelper {
 		return stringBuilder.toString();
 	}
 
+	/**
+	 * Extracts a portion of the contents of the given reader/stream as a string.
+	 *
+	 * @param characterStream The reader for the content
+	 * @param start The start position/offset (0-based, per general stream/reader contracts).
+	 * @param length The amount to extract
+	 *
+	 * @return The content as string
+	 */
 	private static String extractString(Reader characterStream, long start, int length) {
 		StringBuilder stringBuilder = new StringBuilder( length );
 		try {
-			long skipped = characterStream.skip( start - 1 );
-			if ( skipped != start - 1 ) {
+			long skipped = characterStream.skip( start );
+			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
 			char[] buffer = new char[2048];
@@ -117,10 +133,26 @@ public class DataHelper {
 		return stringBuilder.toString();
 	}
 
+	/**
+	 * Extract a portion of a reader, wrapping the portion in a new reader.
+	 *
+	 * @param characterStream The reader for the content
+	 * @param start The start position/offset (0-based, per general stream/reader contracts).
+	 * @param length The amount to extract
+	 *
+	 * @return The content portion as a reader
+	 */
 	public static Object subStream(Reader characterStream, long start, int length) {
 		return new StringReader( extractString( characterStream, start, length ) );
 	}
 
+	/**
+	 * Extract by bytes from the given stream.
+	 *
+	 * @param inputStream The stream of bytes.
+	 *
+	 * @return The contents as a {@code byte[]}
+	 */
 	public static byte[] extractBytes(InputStream inputStream) {
 		if ( BinaryStream.class.isInstance( inputStream ) ) {
 			return ( (BinaryStream ) inputStream ).getBytes();
@@ -158,19 +190,28 @@ public class DataHelper {
 		return outputStream.toByteArray();
 	}
 
-	public static byte[] extractBytes(InputStream inputStream, long position, int length) {
-		if ( BinaryStream.class.isInstance( inputStream ) && Integer.MAX_VALUE > position ) {
+	/**
+	 * Extract a portion of the bytes from the given stream.
+	 *
+	 * @param inputStream The stream of bytes.
+	 * @param start The start position/offset (0-based, per general stream/reader contracts).
+	 * @param length The amount to extract
+	 *
+	 * @return The extracted bytes
+	 */
+	public static byte[] extractBytes(InputStream inputStream, long start, int length) {
+		if ( BinaryStream.class.isInstance( inputStream ) && Integer.MAX_VALUE > start ) {
 			byte[] data = ( (BinaryStream ) inputStream ).getBytes();
 			int size = Math.min( length, data.length );
 			byte[] result = new byte[size];
-			System.arraycopy( data, (int) position, result, 0, size );
+			System.arraycopy( data, (int) start, result, 0, size );
 			return result;
 		}
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( length );
 		try {
-			long skipped = inputStream.skip( position - 1 );
-			if ( skipped != position - 1 ) {
+			long skipped = inputStream.skip( start );
+			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
 			byte[] buffer = new byte[2048];
@@ -197,6 +238,15 @@ public class DataHelper {
 		return outputStream.toByteArray();
 	}
 
+	/**
+	 * Extract a portion of the bytes from the given stream., wrapping them in a new stream.
+	 *
+	 * @param inputStream The stream of bytes.
+	 * @param start The start position/offset (0-based, per general stream/reader contracts).
+	 * @param length The amount to extract
+	 *
+	 * @return The extracted bytes as a stream
+	 */
 	public static InputStream subStream(InputStream inputStream, long start, int length) {
 		return new BinaryStreamImpl( extractBytes( inputStream, start, length ) );
 	}

@@ -32,7 +32,7 @@ import org.hibernate.sql.ANSICaseFragment;
 /**
  * A dialect for Oracle 9i databases.
  * <p/>
- * Unlike the older (deprecated) {@link Oracle9Dialect), this version specifies
+ * Unlike the older (deprecated) {@link Oracle9Dialect}, this version specifies
  * to not use "ANSI join syntax" because 9i does not seem to properly
  * handle it in all cases.
  *

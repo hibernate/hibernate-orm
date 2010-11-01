@@ -35,8 +35,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 
 /**
- * The {@link ReflectionOptimizer.AccessOptimizer} implementation for CGLIB
- * which simply acts as an adpater to the {@link BulkBean} class.
+ * The {@link ReflectionOptimizer#AccessOptimizer} implementation for CGLIB
+ * which simply acts as an adapter to the {@link BulkBean} class.
  *
  * @author Steve Ebersole
  *

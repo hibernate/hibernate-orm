@@ -30,8 +30,8 @@ import org.hibernate.PropertyAccessException;
 import java.io.Serializable;
 
 /**
- * The {@link ReflectionOptimizer.AccessOptimizer} implementation for Javassist
- * which simply acts as an adpater to the {@link BulkAccessor} class.
+ * The {@link ReflectionOptimizer#AccessOptimizer} implementation for Javassist
+ * which simply acts as an adapter to the {@link BulkAccessor} class.
  *
  * @author Steve Ebersole
  */

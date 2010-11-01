@@ -1025,7 +1025,7 @@ public abstract class Loader {
 
 	/**
 	 * Are rows transformed immediately after being read from the ResultSet?
-	 * @param transformer, the specified transformer
+	 * @param transformer the specified transformer
 	 * @return true, if getResultColumnOrRow() transforms the results; false, otherwise
 	 */
 	protected boolean areResultSetRowsTransformedImmediately(ResultTransformer transformer) {

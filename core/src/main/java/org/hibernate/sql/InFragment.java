@@ -46,7 +46,7 @@ public class InFragment {
 	private List values = new ArrayList();
 
 	/**
-	 * @param value, an SQL literal, NULL, or NOT_NULL
+	 * @param value an SQL literal, NULL, or NOT_NULL
 	 */
 	public InFragment addValue(Object value) {
 		values.add(value);

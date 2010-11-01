@@ -882,7 +882,7 @@ public interface Session extends Serializable {
 	 * entities and proxies that are loaded into the session:
 	 * @see org.hibernate.Session#isDefaultReadOnly()
 	 *
-	 * @param entityOrProxy, an entity or HibernateProxy
+	 * @param entityOrProxy an entity or HibernateProxy
 	 * @return true, the entity or proxy is read-only;
 	 *         false, the entity or proxy is modifiable.
 	 */
@@ -904,8 +904,8 @@ public interface Session extends Serializable {
 	 * and proxies loaded by a Query:
 	 * @see Query#setReadOnly(boolean)
 	 * 
-	 * @param entityOrProxy, an entity or HibernateProxy
-	 * @param readOnly, if true, the entity or proxy is made read-only;
+	 * @param entityOrProxy an entity or HibernateProxy
+	 * @param readOnly if true, the entity or proxy is made read-only;
 	 *                  if false, the entity or proxy is made modifiable.
 	 */
 	public void setReadOnly(Object entityOrProxy, boolean readOnly);

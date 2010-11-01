@@ -30,8 +30,8 @@ import org.hibernate.InstantiationException;
 import java.io.Serializable;
 
 /**
- * The {@link ReflectionOptimizer.InstantiationOptimizer} implementation for Javassist
- * which simply acts as an adpater to the {@link FastClass} class.
+ * The {@link ReflectionOptimizer#InstantiationOptimizer} implementation for Javassist
+ * which simply acts as an adapter to the {@link FastClass} class.
  *
  * @author Steve Ebersole
  */

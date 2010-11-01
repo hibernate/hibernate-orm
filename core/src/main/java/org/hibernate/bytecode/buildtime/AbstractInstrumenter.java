@@ -131,7 +131,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	}
 
 	/**
-	 * Extract the names of classes from file, addding them to the classNames collection.
+	 * Extract the names of classes from file, adding them to the classNames collection.
 	 * <p/>
 	 * IMPL NOTE : file here may be either a class file or a jar.  If a jar, all entries in the jar file are
 	 * processed.

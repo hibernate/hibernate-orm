@@ -148,7 +148,7 @@ public interface PersistenceContext {
 	public void addEntity(EntityUniqueKey euk, Object entity);
 
 	/**
-	 * Retreive the EntityEntry representation of the given entity.
+	 * Retrieve the EntityEntry representation of the given entity.
 	 *
 	 * @param entity The entity for which to locate the EntityEntry.
 	 * @return The EntityEntry for the given entity.
@@ -437,7 +437,7 @@ public interface PersistenceContext {
 	public void setFlushing(boolean flushing);
 
 	/**
-	 * Call this before begining a two-phase load
+	 * Call this before beginning a two-phase load
 	 */
 	public void beforeLoad();
 
@@ -562,7 +562,7 @@ public interface PersistenceContext {
 	 * @see org.hibernate.Query#setReadOnly(boolean)
 	 *
 	 * @param entityOrProxy, an entity or HibernateProxy
-	 * @param readOnly, if true, the entity or proxy is made read-only;
+	 * @param readOnly if true, the entity or proxy is made read-only;
 	 *                  if false, the entity or proxy is made modifiable.
 	 *
 	 * @see org.hibernate.Session#setReadOnly(Object, boolean)
@@ -580,7 +580,7 @@ public interface PersistenceContext {
 
 	/**
 	 * Remove child/parent relation from cache 
-	 * @param parent
+	 * @param child
 	 */
 	public void removeChildParent(Object child);
 

@@ -2,16 +2,6 @@ import org.apache.tools.ant.filters.*
 
 apply plugin: 'java'
 
-// not needed if we rename the directories to match the sourceSet name
-sourceSets {
-    test {
-        // resources inherently exclude sources
-        resources {
-            setSrcDirs( ['src/test/java','src/test/resources'] )
-        }
-    }
-}
-
 dependencies {
     shrinkwrapVersion = '1.0.0-alpha-6'
 
@@ -30,30 +20,6 @@ dependencies {
     testCompile( libraries.slf4j_api )
     testRuntime( libraries.validator )
 }
-
-procTargetDirName = buildDirName + "/generated-src/jpamodelgen"
-procTargetDir = dir( procTargetDirName )
-
-// in theory it metamodel generation and compilation should be possible in a single compilation,
-// but this fails on Mac. Hence, to separate compilations. One to generate the meta model classes
-// and one to compile everything
-task generateMetaModel(type: Compile) {
-    classpath = compileTestJava.classpath
-    source = compileTestJava.source
-    destinationDir = compileTestJava.destinationDir
-    configure( options ) {
-        compilerArgs = ["-proc:only", "-s", "$procTargetDir.dir.absolutePath"]
-    }
-}
-generateMetaModel.dependsOn procTargetDir
-
-compileTestJava {
-    configure( options ) {
-        compilerArgs = [ "-s", "$procTargetDir.dir.absolutePath" ]
-    }
-    source += files(procTargetDir.dir)
-}
-compileTestJava.dependsOn generateMetaModel
 
 bundlesTargetDirName = "$buildDirName/bundles"
 bundlesTargetDir = dir( bundlesTargetDirName )
@@ -74,10 +40,6 @@ copyBundleResources.dependsOn bundlesTargetDir
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
 
-ideaModule {
-    testSourceDirs.add( file( procTargetDirName ) )
-}
-ideaModule.dependsOn procTargetDir
 
 
 

@@ -204,6 +204,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		log.debug( "Statistics initialized [enabled={}]}", settings.isStatisticsEnabled() );
 
 		this.properties = new Properties();
+		this.properties.putAll(settings.getDialect().getDefaultProperties());
 		this.properties.putAll( cfg.getProperties() );
 		this.interceptor = cfg.getInterceptor();
 		this.settings = settings;

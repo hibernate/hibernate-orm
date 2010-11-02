@@ -45,6 +45,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.PropertiesHelper;
 
 /**
  * TODO : javadoc
@@ -266,7 +267,7 @@ public abstract class AbstractStandardBasicType<T>
 		// todo : have SessionImplementor extend WrapperOptions
 		final WrapperOptions options = new WrapperOptions() {
 			public boolean useStreamForLobBinding() {
-				return Environment.useStreamsForBinary();
+				return PropertiesHelper.getBoolean(Environment.USE_STREAMS_FOR_BINARY, session.getFactory().getProperties());
 			}
 
 			public LobCreator getLobCreator() {

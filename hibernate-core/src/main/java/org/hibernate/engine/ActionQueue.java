@@ -665,10 +665,14 @@ public class ActionQueue {
 			// now rebuild the insertions list. There is a batch for each entry in the name list.
 			for ( int i = 0; i < actionBatches.size(); i++ ) {
 				List batch = ( List ) actionBatches.get( new Integer( i ) );
-				for ( Object aBatch : batch ) {
+				ArrayList<EntityInsertAction> subInserts = new ArrayList<EntityInsertAction>();
+				for(int j=0; j < batch.size(); j++) {
+					Object aBatch = batch.get(j);
 					EntityInsertAction action = (EntityInsertAction) aBatch;
-					insertions.add( action );
+					subInserts.add( action );
 				}
+				java.util.Collections.sort(subInserts);
+				insertions.addAll(subInserts);
 			}
 		}
 

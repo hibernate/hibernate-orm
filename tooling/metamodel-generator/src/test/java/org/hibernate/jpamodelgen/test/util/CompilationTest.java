@@ -111,15 +111,6 @@ public abstract class CompilationTest {
 				sourceFiles
 		);
 
-		// TODO - need to call the compiler twice. Once to compile the test classes and generate the java files
-		// of the generated metamodel. The second compile is for generated the class files of the metamodel.
-		// Note sure why this is not recursive the same way as on the command line
-		compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
-
-		compilationUnits = fileManager.getJavaFileObjectsFromFiles(
-				getCompilationUnits( outBaseDir, packageName )
-		);
-		options.add( PROC_NONE ); // for the second compile skip the processor
 		compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
 		compilationDiagnostics.addAll( diagnostics.getDiagnostics() );
 		fileManager.close();

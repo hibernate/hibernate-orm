@@ -8,6 +8,12 @@
   or @Embeddable, as well as entities mapped in /META-INF/orm.xml and mapping files specified in persistence.xml.
 
 
+  Latest stable version
+  -------------------
+
+  1.1.0.Final, 3.11.2010
+
+
   System Requirements
   -------------------
 
@@ -33,13 +39,4 @@
   Mailing Lists:      http://www.hibernate.org/community/mailinglists
   Source Code:        http://github.com/hibernate/hibernate-metamodelgen
   Issue Tracking:     http://opensource.atlassian.com/projects/hibernate/browse/METAGEN
-
-  
-
-
-  
-
-  
-
-
 

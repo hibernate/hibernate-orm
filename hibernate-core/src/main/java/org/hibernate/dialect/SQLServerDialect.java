@@ -37,7 +37,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Gavin King
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
-
+	private static final String SELECT = "select";
+    private static final String SELECT_DISTINCT = "select distinct";
 	public SQLServerDialect() {
 		registerColumnType( Types.VARBINARY, "image" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
@@ -107,26 +108,24 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		// Find the end of the select statement
-		int selectIndex = querySqlLowered.trim().startsWith( "select distinct" ) ? 15 : 6;
+		int selectIndex = querySqlLowered.trim().indexOf(SELECT_DISTINCT);
+        if (selectIndex != -1) {
+            selectIndex += SELECT_DISTINCT.length();
+        } else {
+            selectIndex = querySqlLowered.trim().indexOf(SELECT);
+            if (selectIndex != -1) {
+                selectIndex += SELECT.length();
+            }
+        }
 
-		// Isert after the select statement the row_number() function:
-		sb.insert( selectIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__," );
+        // Isert after the select statement the row_number() function:
+        sb.insert(selectIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__,");
 
-		// Wrap the query within a with statement:
-		sb.insert( 0, "WITH query AS (" ).append( ") SELECT * FROM query " );
-		sb.append( "WHERE __hibernate_row_nr__ " );
+        //Wrap the query within a with statement:
+        sb.insert(0, "WITH query AS (").append(") SELECT * FROM query ");
+        sb.append("WHERE __hibernate_row_nr__ BETWEEN ").append(offset + 1).append(" AND ").append(limit);
 
-		// The row_number() function is not zero based and so we must increment the offset and limit by one
-		if ( offset > 0 ) {
-			sb.append( "BETWEEN " ).append( offset + 1 ).append( " AND " ).append( limit + 1 );
-		}
-		else {
-			sb.append( " <= " ).append( limit );
-		}
-
-		// As mentioned before I don't think that we really need this last order by clause
-		// sb.append(" ORDER BY __hibernate_row_nr__");
-		return sb.toString();
+        return sb.toString();
 	}
 
 

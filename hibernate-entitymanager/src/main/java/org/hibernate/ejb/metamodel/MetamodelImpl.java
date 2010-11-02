@@ -94,7 +94,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaType,
 				superType,
-				persistentClass.getClassName(),
+				persistentClass.getNodeName(),
 				persistentClass.hasIdentifierProperty(),
 				persistentClass.isVersioned()
 		);
@@ -102,7 +102,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		context.popEntityWorkedOn(persistentClass);
 		return entityType;
 	}
-
+	
 	private static MappedSuperclassTypeImpl<?> locateOrBuildMappedsuperclassType(
 			MappedSuperclass mappedSuperclass, MetadataContext context) {
 		MappedSuperclassTypeImpl<?> mappedSuperclassType = context.locateMappedSuperclassType( mappedSuperclass );

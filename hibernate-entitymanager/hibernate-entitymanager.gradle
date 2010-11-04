@@ -21,6 +21,15 @@ dependencies {
     testRuntime( libraries.validator )
 }
 
+procTargetDirName = buildDirName + "/generated-src/jpamodelgen"
+procTargetDir = dir( procTargetDirName )
+compileTestJava {
+    configure( options ) {
+        compilerArgs = [ "-s", "$procTargetDir.dir.absolutePath" ]
+    }
+}
+compileTestJava.dependsOn procTargetDir
+
 bundlesTargetDirName = "$buildDirName/bundles"
 bundlesTargetDir = dir( bundlesTargetDirName )
 task copyBundleResources (type: Copy) {
@@ -39,6 +48,11 @@ copyBundleResources.dependsOn bundlesTargetDir
 
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
+
+ideaModule {
+    testSourceDirs.add( file( procTargetDirName ) )
+}
+
 
 
 

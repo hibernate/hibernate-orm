@@ -38,7 +38,9 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final String SELECT = "select";
-    private static final String SELECT_DISTINCT = "select distinct";
+    private static final String DISTINCT = "distinct";
+    
+    
 	public SQLServerDialect() {
 		registerColumnType( Types.VARBINARY, "image" );
 		registerColumnType( Types.VARBINARY, 8000, "varbinary($l)" );
@@ -96,38 +98,54 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 					.toString();
 		}
 
-		StringBuilder sb = new StringBuilder( querySqlString.trim() );
+		StringBuilder sb = new StringBuilder( querySqlString.trim().toLowerCase() );
 
-		String querySqlLowered = querySqlString.trim().toLowerCase();
-		int orderByIndex = querySqlLowered.toLowerCase().indexOf( "order by" );
-		String orderby = orderByIndex > 0 ? querySqlString.substring( orderByIndex ) : "ORDER BY CURRENT_TIMESTAMP";
+		int orderByIndex = sb.indexOf( "order by" );
+		CharSequence orderby = orderByIndex > 0 ? sb.subSequence( orderByIndex, sb.length() ) : "ORDER BY CURRENT_TIMESTAMP";
 
 		// Delete the order by clause at the end of the query
 		if ( orderByIndex > 0 ) {
 			sb.delete( orderByIndex, orderByIndex + orderby.length() );
 		}
 
-		// Find the end of the select statement
-		int selectIndex = querySqlLowered.trim().indexOf(SELECT_DISTINCT);
-        if (selectIndex != -1) {
-            selectIndex += SELECT_DISTINCT.length();
-        } else {
-            selectIndex = querySqlLowered.trim().indexOf(SELECT);
-            if (selectIndex != -1) {
-                selectIndex += SELECT.length();
-            }
-        }
-
-        // Isert after the select statement the row_number() function:
-        sb.insert(selectIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__,");
-
+		replaceDistinctWithGroupBy( sb );
+		
+		insertRowNumberFunction(sb, orderby);
+		
         //Wrap the query within a with statement:
         sb.insert(0, "WITH query AS (").append(") SELECT * FROM query ");
         sb.append("WHERE __hibernate_row_nr__ BETWEEN ").append(offset + 1).append(" AND ").append(limit);
 
         return sb.toString();
 	}
+	
+	protected static void replaceDistinctWithGroupBy(StringBuilder sb) {
+		int distinctIndex = sb.indexOf( DISTINCT );
+		if (distinctIndex > 0) {
+			
+			sb.delete(distinctIndex, distinctIndex + DISTINCT.length() + 1);
+			sb.append(" group by").append(getSelectFieldsWithoutAs(sb));
+		}
+	}
 
+	protected static CharSequence getSelectFieldsWithoutAs(StringBuilder sql) {
+		String select = sql.substring( sql.indexOf(SELECT) + SELECT.length(), sql.indexOf("from"));
+		
+		// Strip the as clauses
+		return stripAsStatement(select);
+	}
+
+	protected static String stripAsStatement(String str) {
+		return str.replaceAll("\\sas[^,]+(,?)", "$1");
+	}
+	
+	protected static void insertRowNumberFunction(StringBuilder sb, CharSequence orderby) {
+		// Find the end of the select statement
+		int selectEndIndex = sb.indexOf( SELECT ) + SELECT.length();
+
+        // Isert after the select statement the row_number() function:
+        sb.insert( selectEndIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__," );
+	}
 
 	/**
 	 * Use <tt>insert table(...) values(...) select SCOPE_IDENTITY()</tt>

@@ -75,7 +75,7 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
 
         // SELECT new list(ee) FROM middleEntity ee
         QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, "ee");
-        qb.addProjection("new list", "ee", false, false);
+        qb.addProjection(null, "ee", false, false);
         // WHERE
         Parameters rootParameters = qb.getRootParameters();
         // ee.originalId.id_ref_ing = :id_ref_ing

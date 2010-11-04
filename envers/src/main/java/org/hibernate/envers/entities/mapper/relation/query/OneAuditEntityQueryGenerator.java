@@ -75,7 +75,7 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
 
         // SELECT new list(e) FROM versionsEntity e
         QueryBuilder qb = new QueryBuilder(versionsReferencedEntityName, "e");
-        qb.addProjection("new list", "e", false, false);
+        qb.addProjection(null, "e", false, false);
         // WHERE
         Parameters rootParameters = qb.getRootParameters();
         // e.id_ref_ed = :id_ref_ed

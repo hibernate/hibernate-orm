@@ -67,11 +67,15 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
 
     @SuppressWarnings({"unchecked"})
     protected void addToCollection(T collection, Object collectionRow) {
-        Object elementData = ((List) collectionRow).get(elementComponentData.getComponentIndex());
+        Object elementData = collectionRow;
+	Object indexData = collectionRow;
+	if (collectionRow instanceof java.util.List) {
+            elementData = ((List) collectionRow).get(elementComponentData.getComponentIndex());
+            indexData = ((List) collectionRow).get(indexComponentData.getComponentIndex());
+	}
         Object element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
                 (Map<String, Object>) elementData, null, revision);
 
-        Object indexData = ((List) collectionRow).get(indexComponentData.getComponentIndex());
         Object index = indexComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
                 (Map<String, Object>) indexData, element, revision);
 

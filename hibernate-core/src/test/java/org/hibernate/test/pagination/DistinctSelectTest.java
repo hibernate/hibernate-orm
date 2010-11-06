@@ -59,8 +59,6 @@ public class DistinctSelectTest extends FunctionalTestCase {
 		Entry firstEntry = entries.remove(0);
 		assertFalse("The list of entries should not contain dublicated Entry objects as we've done a distinct select", entries.contains(firstEntry));
 
-		assertEquals(5, entries.size());
-
 		s.close();
 	}
 }

@@ -246,7 +246,7 @@
             load the mapping file located in the jar file at
             <literal>META_INF/orm.xml</literal>. Of course any explicit
             mapping file will be loaded too. As a matter of fact, you can
-            provides any XML file in the mapping file element ie. either hbm
+            provide any XML file in the mapping file element ie. either hbm
             files or EJB3 deployment descriptor.</para>
           </listitem>
         </varlistentry>

@@ -10,15 +10,15 @@ import junit.framework.TestCase;
  */
 public class SQLServerDialectTestCase extends TestCase {
 
-	public void testStripAsStatement() {
+	public void testStripAliases() {
 		String input = "some_field1 as f1, some_fild2 as f2, _field3 as f3 ";
 
-		assertEquals( "some_field1, some_fild2, _field3", SQLServerDialect.stripAsStatement(input) );
+		assertEquals( "some_field1, some_fild2, _field3", SQLServerDialect.stripAliases(input) );
 	}
 	
-	public void testGetSelectFieldsWithoutAs() {
+	public void testGetSelectFieldsWithoutAliases() {
 		StringBuilder input = new StringBuilder( "select some_field1 as f12, some_fild2 as f879, _field3 as _f24674_3 from...." );
-		String output = SQLServerDialect.getSelectFieldsWithoutAs( input ).toString();
+		String output = SQLServerDialect.getSelectFieldsWithoutAliases( input ).toString();
 
 		assertEquals( " some_field1, some_fild2, _field3", output );
 	}

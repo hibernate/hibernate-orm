@@ -129,31 +129,31 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		int distinctIndex = sql.indexOf( DISTINCT );
 		if (distinctIndex > 0) {
 			sql.delete(distinctIndex, distinctIndex + DISTINCT.length() + 1);
-			sql.append(" group by").append(getSelectFieldsWithoutAs(sql));
+			sql.append(" group by").append(getSelectFieldsWithoutAliases(sql));
 		}
 	}
 
 	/**
 	 * This utility method searches the given sql query for the fields of the select statement and
-	 * returns them without the as statement. See {@link SQLServerDialectTestCase#testGetSelectFieldsWithoutAs()}
+	 * returns them without the aliases. See {@link SQLServerDialectTestCase#testGetSelectFieldsWithoutAliases()}
 	 * 
 	 * @param an sql query
 	 * @return the fields of the select statement without their alias
 	 */
-	protected static CharSequence getSelectFieldsWithoutAs(StringBuilder sql) {
+	protected static CharSequence getSelectFieldsWithoutAliases(StringBuilder sql) {
 		String select = sql.substring( sql.indexOf(SELECT) + SELECT.length(), sql.indexOf(FROM));
 		
 		// Strip the as clauses
-		return stripAsStatement( select );
+		return stripAliases( select );
 	}
 
 	/**
-	 * Utility method that strips the as statements. See {@link SQLServerDialectTestCase#testStripAsStatement()}
+	 * Utility method that strips the aliases. See {@link SQLServerDialectTestCase#testStripAliases()}
 	 * 
 	 * @param a string to replace the as statements
 	 * @return a string without the as statements
 	 */
-	protected static String stripAsStatement(String str) {
+	protected static String stripAliases(String str) {
 		return str.replaceAll( "\\sas[^,]+(,?)", "$1" );
 	}
 	

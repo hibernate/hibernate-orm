@@ -78,7 +78,7 @@
     <para>Multiple classes may appear, resulting in a cartesian product or
     "cross" join.</para>
 
-    <programlisting>select from, param from Formula as form, Parameter as param</programlisting>
+    <programlisting>select formula, parameter from Formula as formula, Parameter as parameter</programlisting>
 
     <para>It is considered good practice to name query aliases using an
     initial lowercase, consistent with Java naming standards for local

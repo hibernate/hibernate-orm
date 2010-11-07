@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.test.pagination">
+
+	<class name="Tag" dynamic-update="true">
+		<id name="id">
+			<generator class="increment" />
+		</id>
+		<property name="surrogate" />
+	</class>
+	
+	<class name="Entry" dynamic-update="true">
+		<id name="id">
+			<generator class="increment" />
+		</id>
+		<property name="name" />
+		<set name="tags" table="entry_tag">
+			<key column="entry_id" />
+			<many-to-many column="tag_id" class="org.hibernate.test.pagination.Tag" />
+		</set>
+	</class>
+
+</hibernate-mapping>

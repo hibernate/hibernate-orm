@@ -37,16 +37,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.map.ReferenceMap;
+import org.hibernate.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.AssertionFailure;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.MappingException;
-import org.hibernate.NonUniqueObjectException;
-import org.hibernate.PersistentObjectException;
-import org.hibernate.TransientObjectException;
 import org.hibernate.engine.loading.LoadContexts;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.collection.PersistentCollection;
@@ -1143,7 +1136,14 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	    // try cache lookup first
 	    Object parent = parentsByChild.get(childEntity);
 		if (parent != null) {
-	       if (isFoundInParent(propertyName, childEntity, persister, collectionPersister, parent)) {
+
+           boolean isFoundInParent = false;
+           try {
+               isFoundInParent = isFoundInParent(propertyName, childEntity, persister, collectionPersister, parent);
+           } catch (PropertyAccessException e) {
+                // fall through
+           }
+	       if (isFoundInParent) {
 		       return getEntry(parent).getId();
 		   }
 		   else {

@@ -406,7 +406,7 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
       <section>
         <title>Idea</title>
 
-        <para>Intellij Idea contains from version 9.x onwards a specifc
+        <para>Intellij Idea contains from version 9.x onwards a specific
         configuration section for annotation processing under the project
         settings window. The screenshots show you how to configure the
         Hibernate Static Metamodel Generator.</para>
@@ -423,6 +423,17 @@ cq.where( cb.equal(itemNode.get(Item_.id), 5 ) ).distinct(true);
                        scalefit="1" />
           </imageobject>
         </mediaobject>
+
+        <para>In the annotation processor configuration, enable annotation
+        processing and select obtain from project classpath. Add the
+        annotation processor name
+        <classname>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</classname>
+        (and optionally the annotation processor options). Select the
+        module(s) containing your entities. If you have configured Maven as
+        recommended, it is best to select the same output directory for the
+        generated classes. At the time of writing, it is
+        <filename>target/generated-sources/apt</filename>. That way, the
+        generated classes will be available in IntelliJ Idea.</para>
       </section>
 
       <section>

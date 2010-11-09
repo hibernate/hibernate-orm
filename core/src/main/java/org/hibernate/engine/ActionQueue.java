@@ -26,7 +26,6 @@ package org.hibernate.engine;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +49,7 @@ import org.hibernate.action.EntityIdentityInsertAction;
 import org.hibernate.action.EntityInsertAction;
 import org.hibernate.action.EntityUpdateAction;
 import org.hibernate.action.Executable;
+import org.hibernate.action.ExecutableList;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
 
@@ -72,16 +72,16 @@ public class ActionQueue {
 	// Object insertions, updates, and deletions have list semantics because
 	// they must happen in the right order so as to respect referential
 	// integrity
-	private ArrayList insertions;
-	private ArrayList deletions;
-	private ArrayList updates;
+	private ExecutableList insertions;
+	private ExecutableList deletions;
+	private ExecutableList updates;
 	// Actually the semantics of the next three are really "Bag"
 	// Note that, unlike objects, collection insertions, updates,
 	// deletions are not really remembered between flushes. We
 	// just re-use the same Lists for convenience.
-	private ArrayList collectionCreations;
-	private ArrayList collectionUpdates;
-	private ArrayList collectionRemovals;
+	private ExecutableList collectionCreations;
+	private ExecutableList collectionUpdates;
+	private ExecutableList collectionRemovals;
 
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
@@ -97,13 +97,13 @@ public class ActionQueue {
 	}
 
 	private void init() {
-		insertions = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		deletions = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		updates = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		insertions = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		deletions = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		updates = new ExecutableList( INIT_QUEUE_LIST_SIZE );
 
-		collectionCreations = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionRemovals = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionUpdates = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		collectionCreations = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		collectionRemovals = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		collectionUpdates = new ExecutableList( INIT_QUEUE_LIST_SIZE );
 
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
@@ -195,7 +195,7 @@ public class ActionQueue {
 	 * @throws HibernateException error preparing actions.
 	 */
 	public void prepareActions() throws HibernateException {
-		prepareActions( collectionRemovals );
+		prepareActions(  collectionRemovals );
 		prepareActions( collectionUpdates );
 		prepareActions( collectionCreations );
 	}
@@ -244,25 +244,23 @@ public class ActionQueue {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private static boolean areTablesToUpdated(List actions, Set tableSpaces) {
-		for ( Executable action : (List<Executable>) actions ) {
-			final Serializable[] spaces = action.getPropertySpaces();
-			for ( Serializable space : spaces ) {
-				if ( tableSpaces.contains( space ) ) {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "changes must be flushed to space: " + space );
-					}
-					return true;
-				}
-			}
-		}
+	private static boolean areTablesToUpdated(ExecutableList actions, Set tableSpaces) {
+        Set actionSpaces = actions.getPropertySpaces();
+        for ( Object space : tableSpaces ) {
+            if(actionSpaces.contains(space)) {
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "changes must be flushed to space: " + space );
+                }
+                return true;
+            }
+        }
 		return false;
 	}
 
-	private void executeActions(List list) throws HibernateException {
+	private void executeActions(ExecutableList list) throws HibernateException {
 		int size = list.size();
 		for ( int i = 0; i < size; i++ ) {
-			execute( ( Executable ) list.get( i ) );
+			execute( list.get( i ) );
 		}
 		list.clear();
 		session.getBatcher().executeBatch();
@@ -478,42 +476,42 @@ public class ActionQueue {
 
 		int queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] insertions entries" );
-		rtn.insertions = new ArrayList<Executable>( queueSize );
+		rtn.insertions = new ExecutableList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.insertions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] deletions entries" );
-		rtn.deletions = new ArrayList<Executable>( queueSize );
+		rtn.deletions = new ExecutableList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.deletions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] updates entries" );
-		rtn.updates = new ArrayList<Executable>( queueSize );
+		rtn.updates = new ExecutableList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.updates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionUpdates entries" );
-		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
+		rtn.collectionUpdates = new ExecutableList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionUpdates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionRemovals entries" );
-		rtn.collectionRemovals = new ArrayList<Executable>( queueSize );
+		rtn.collectionRemovals = new ExecutableList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionRemovals.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionCreations entries" );
-		rtn.collectionCreations = new ArrayList<Executable>( queueSize );
+		rtn.collectionCreations = new ExecutableList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionCreations.add( ois.readObject() );
 		}

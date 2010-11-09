@@ -10,7 +10,7 @@ import java.util.*;
  * the property spaces for these actions.
  * </p>
  */
-public class ExecutableList<E extends Executable> extends AbstractList<E> implements Cloneable {
+public class ExecutableList<E extends Executable> extends AbstractList<E> implements Cloneable, Serializable {
 
     private Set propertySpaces;
 

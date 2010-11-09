@@ -94,7 +94,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		EntityTypeImpl entityType = new EntityTypeImpl(
 				javaType,
 				superType,
-				persistentClass.getAnnotatedEntityName(),
+				persistentClass.getJpaEntityName(),
 				persistentClass.hasIdentifierProperty(),
 				persistentClass.isVersioned()
 		);

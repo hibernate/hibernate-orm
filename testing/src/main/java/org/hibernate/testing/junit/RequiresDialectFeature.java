@@ -32,7 +32,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation used to indicate that a test should be run only when the current dialect suppports the
+ * Annotation used to indicate that a test should be run only when the current dialect supports the
  * specified feature.
  *
  * @author Hardy Ferentschik

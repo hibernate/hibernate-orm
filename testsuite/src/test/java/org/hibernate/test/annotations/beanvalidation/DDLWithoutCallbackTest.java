@@ -33,11 +33,15 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.DialectChecks;
+import org.hibernate.testing.junit.RequiresDialectFeature;
 
 /**
  * @author Vladimir Klyushnikov
  */
 public class DDLWithoutCallbackTest extends TestCase {
+	@RequiresDialectFeature(value = DialectChecks.SupportsColumnCheck.class,
+			comment = "Not all databases support column checks")
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -46,9 +50,7 @@ public class DDLWithoutCallbackTest extends TestCase {
 		try {
 			s.persist( ch );
 			s.flush();
-			if ( getDialect().supportsColumnCheck() ) {
-				fail( "expecting SQL constraint violation" );
-			}
+			fail( "expecting SQL constraint violation" );
 		}
 		catch ( ConstraintViolationException e ) {
 			fail( "invalid object should not be validated" );

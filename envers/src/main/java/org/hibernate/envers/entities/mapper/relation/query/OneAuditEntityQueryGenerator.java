@@ -52,7 +52,7 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
 
         /*
          * The query that we need to create:
-         *   SELECT new list(e) FROM versionsReferencedEntity e
+         *   SELECT e FROM versionsReferencedEntity e
          *   WHERE
          * (only entities referenced by the association; id_ref_ing = id of the referencing entity)
          *     e.id_ref_ing = :id_ref_ing AND
@@ -73,7 +73,7 @@ public final class OneAuditEntityQueryGenerator implements RelationQueryGenerato
 
         String versionsReferencedEntityName = verEntCfg.getAuditEntityName(referencedEntityName);
 
-        // SELECT new list(e) FROM versionsEntity e
+        // SELECT e FROM versionsEntity e
         QueryBuilder qb = new QueryBuilder(versionsReferencedEntityName, "e");
         qb.addProjection(null, "e", false, false);
         // WHERE

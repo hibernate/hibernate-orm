@@ -139,7 +139,7 @@ class TypeSafeActivator {
 
 		for ( PropertyDescriptor propertyDesc : descriptor.getConstrainedProperties() ) {
 			Property property = findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
-			boolean hasNotNull = false;
+			boolean hasNotNull;
 			if ( property != null ) {
 				hasNotNull = applyConstraints( propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull );
 				if ( property.isComposite() && propertyDesc.isCascaded() ) {

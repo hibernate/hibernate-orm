@@ -38,31 +38,29 @@ import org.hibernate.testing.junit.RequiresDialectFeature;
 
 /**
  * @author Vladimir Klyushnikov
+ * @author Hardy Ferentschik
  */
 public class DDLWithoutCallbackTest extends TestCase {
-	@RequiresDialectFeature(value = DialectChecks.SupportsColumnCheck.class,
-			comment = "Not all databases support column checks")
+	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
+		assertDatabaseConstraintViolationThrown( ch );
+	}
+
+	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
+	public void testMinAndMaxChecksGetApplied() {
+		MinMax minMax = new MinMax(1);
+		assertDatabaseConstraintViolationThrown( minMax );
+
+		minMax = new MinMax(11);
+		assertDatabaseConstraintViolationThrown( minMax );
+
+		minMax = new MinMax(5);
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		try {
-			s.persist( ch );
-			s.flush();
-			fail( "expecting SQL constraint violation" );
-		}
-		catch ( ConstraintViolationException e ) {
-			fail( "invalid object should not be validated" );
-		}
-		catch ( org.hibernate.exception.ConstraintViolationException e ) {
-			if ( getDialect().supportsColumnCheck() ) {
-				// expected
-			}
-			else {
-				fail( "Unexpected SQL constraint violation [" + e.getConstraintName() + "] : " + e.getSQLException() );
-			}
-		}
+		s.persist( minMax );
+		s.flush();
 		tx.rollback();
 		s.close();
 	}
@@ -82,7 +80,31 @@ public class DDLWithoutCallbackTest extends TestCase {
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Address.class,
-				CupHolder.class
+				CupHolder.class,
+				MinMax.class
 		};
+	}
+
+	private void assertDatabaseConstraintViolationThrown(Object o) {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		try {
+			s.persist( o );
+			s.flush();
+			fail( "expecting SQL constraint violation" );
+		}
+		catch ( ConstraintViolationException e ) {
+			fail( "invalid object should not be validated" );
+		}
+		catch ( org.hibernate.exception.ConstraintViolationException e ) {
+			if ( getDialect().supportsColumnCheck() ) {
+				// expected
+			}
+			else {
+				fail( "Unexpected SQL constraint violation [" + e.getConstraintName() + "] : " + e.getSQLException() );
+			}
+		}
+		tx.rollback();
+		s.close();
 	}
 }

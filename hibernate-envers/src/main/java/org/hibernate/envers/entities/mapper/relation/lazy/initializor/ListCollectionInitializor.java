@@ -63,6 +63,8 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 
     @SuppressWarnings({"unchecked"})
     protected void addToCollection(List collection, Object collectionRow) {
+        // collectionRow will be the actual object if retrieved from audit relation or middle table
+        // otherwise it will be a List
         Object elementData = collectionRow;
 	Object indexData = collectionRow;
 	if (collectionRow instanceof java.util.List) {

@@ -53,7 +53,7 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
 
         /*
          * The query that we need to create:
-         *   SELECT new list(ee) FROM middleEntity ee WHERE
+         *   SELECT ee FROM middleEntity ee WHERE
          * (only entities referenced by the association; id_ref_ing = id of the referencing entity)
          *     ee.originalId.id_ref_ing = :id_ref_ing AND
          *     
@@ -73,7 +73,7 @@ public final class OneEntityQueryGenerator implements RelationQueryGenerator {
         String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
         String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
-        // SELECT new list(ee) FROM middleEntity ee
+        // SELECT ee FROM middleEntity ee
         QueryBuilder qb = new QueryBuilder(versionsMiddleEntityName, "ee");
         qb.addProjection(null, "ee", false, false);
         // WHERE

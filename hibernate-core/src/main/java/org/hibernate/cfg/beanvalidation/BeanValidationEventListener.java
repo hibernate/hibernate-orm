@@ -146,12 +146,18 @@ public class BeanValidationEventListener implements
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}
 				StringBuilder builder = new StringBuilder();
-				builder.append( "validation failed for classes " );
+				builder.append( "Validation failed for classes " );
 				builder.append( classNames );
 				builder.append( " during " );
 				builder.append( operation.getName() );
 				builder.append( " time for groups " );
 				builder.append( toString( groups ) );
+				builder.append( "\nList of constraint violations:[\n" );
+				for (ConstraintViolation<?> violation : constraintViolations) {
+					builder.append( "\t" ).append( violation.toString() ).append("\n");
+				}
+				builder.append( "]" );
+
 				throw new ConstraintViolationException(
 						builder.toString(), propagatedViolations
 				);

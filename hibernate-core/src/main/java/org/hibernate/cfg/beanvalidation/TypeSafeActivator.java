@@ -24,6 +24,7 @@
 package org.hibernate.cfg.beanvalidation;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,10 +32,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.Collection;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Digits;
@@ -42,6 +39,9 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.ConstraintDescriptor;
+import javax.validation.metadata.PropertyDescriptor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +59,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.util.ReflectHelper;
+import org.hibernate.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard
@@ -72,7 +73,9 @@ class TypeSafeActivator {
 
 	public static void activateBeanValidation(EventListeners eventListeners, Properties properties) {
 		ValidatorFactory factory = getValidatorFactory( properties );
-		BeanValidationEventListener beanValidationEventListener = new BeanValidationEventListener( factory, properties );
+		BeanValidationEventListener beanValidationEventListener = new BeanValidationEventListener(
+				factory, properties
+		);
 
 		{
 			PreInsertEventListener[] listeners = eventListeners.getPreInsertEventListeners();
@@ -110,19 +113,21 @@ class TypeSafeActivator {
 		for ( PersistentClass persistentClass : persistentClasses ) {
 			final String className = persistentClass.getClassName();
 
-			if ( className == null || className.length() == 0) continue;
+			if ( className == null || className.length() == 0 ) {
+				continue;
+			}
 			Class<?> clazz;
 			try {
 				clazz = ReflectHelper.classForName( className, TypeSafeActivator.class );
 			}
 			catch ( ClassNotFoundException e ) {
-				throw new AssertionFailure( "Entity class not found", e);
+				throw new AssertionFailure( "Entity class not found", e );
 			}
 
 			try {
 				applyDDL( "", persistentClass, clazz, factory, groups, true );
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				logger.warn( "Unable to apply constraints on DDL for " + className, e );
 			}
 		}
@@ -141,9 +146,11 @@ class TypeSafeActivator {
 			Property property = findPropertyByName( persistentClass, prefix + propertyDesc.getPropertyName() );
 			boolean hasNotNull;
 			if ( property != null ) {
-				hasNotNull = applyConstraints( propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull );
+				hasNotNull = applyConstraints(
+						propertyDesc.getConstraintDescriptors(), property, propertyDesc, groups, activateNotNull
+				);
 				if ( property.isComposite() && propertyDesc.isCascaded() ) {
-					Class<?> componentClass = ( ( Component ) property.getValue() ).getComponentClass();
+					Class<?> componentClass = ( (Component) property.getValue() ).getComponentClass();
 
 					/*
 					 * we can apply not null if the upper component let's us activate not null
@@ -151,7 +158,8 @@ class TypeSafeActivator {
 					 * Otherwise, all sub columns should be left nullable
 					 */
 					final boolean canSetNotNullOnColumns = activateNotNull && hasNotNull;
-					applyDDL( prefix + propertyDesc.getPropertyName() + ".",
+					applyDDL(
+							prefix + propertyDesc.getPropertyName() + ".",
 							persistentClass, componentClass, factory, groups,
 							canSetNotNullOnColumns
 					);
@@ -162,12 +170,14 @@ class TypeSafeActivator {
 	}
 
 	private static boolean applyConstraints(Set<ConstraintDescriptor<?>> constraintDescriptors,
-										 Property property,
-										 PropertyDescriptor propertyDesc,
-										 Set<Class<?>> groups, boolean canApplyNotNull) {
+											Property property,
+											PropertyDescriptor propertyDesc,
+											Set<Class<?>> groups, boolean canApplyNotNull) {
 		boolean hasNotNull = false;
-		for (ConstraintDescriptor<?> descriptor : constraintDescriptors) {
-			if ( groups != null && Collections.disjoint( descriptor.getGroups(), groups) ) continue;
+		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
+			if ( groups != null && Collections.disjoint( descriptor.getGroups(), groups ) ) {
+				continue;
+			}
 
 			if ( canApplyNotNull ) {
 				hasNotNull = hasNotNull || applyNotNull( property, descriptor );
@@ -186,38 +196,49 @@ class TypeSafeActivator {
 			hasNotNull = hasNotNull || applyConstraints(
 					descriptor.getComposingConstraints(),
 					property, propertyDesc, null,
-					canApplyNotNull );
+					canApplyNotNull
+			);
 		}
 		return hasNotNull;
 	}
 
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-			@SuppressWarnings( "unchecked" )
+			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			long min = minConstraint.getAnnotation().value();
+
 			Column col = (Column) property.getColumnIterator().next();
-			col.setCheckConstraint( col.getName() + ">=" + min );
+			String checkConstraint = col.getName() + ">=" + min;
+			applySQLCheck( col, checkConstraint );
 		}
 	}
 
 	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor) {
 		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-			@SuppressWarnings( "unchecked" )
+			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			long max = maxConstraint.getAnnotation().value();
 			Column col = (Column) property.getColumnIterator().next();
-			col.setCheckConstraint( col.getName() + "<=" + max );
+			String checkConstraint = col.getName() + "<=" + max;
+			applySQLCheck( col, checkConstraint );
 		}
+	}
+
+	private static void applySQLCheck(Column col, String checkConstraint) {
+		if ( StringHelper.isNotEmpty( col.getCheckConstraint() ) ) {
+			checkConstraint = col.getCheckConstraint() + " AND " + checkConstraint;
+		}
+		col.setCheckConstraint( checkConstraint );
 	}
 
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
 		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-			if ( ! ( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
+			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//single table should not be forced to null
 				if ( !property.isComposite() ) { //composite should not add not-null on all columns
-					@SuppressWarnings( "unchecked" )
+					@SuppressWarnings("unchecked")
 					Iterator<Column> iter = (Iterator<Column>) property.getColumnIterator();
 					while ( iter.hasNext() ) {
 						iter.next().setNullable( false );
@@ -232,7 +253,7 @@ class TypeSafeActivator {
 
 	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {
 		if ( Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
-			@SuppressWarnings( "unchecked" )
+			@SuppressWarnings("unchecked")
 			ConstraintDescriptor<Digits> digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
 			int integerDigits = digitsConstraint.getAnnotation().integer();
 			int fractionalDigits = digitsConstraint.getAnnotation().fraction();
@@ -246,9 +267,9 @@ class TypeSafeActivator {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
-			ConstraintDescriptor<Size> sizeConstraint = ( ConstraintDescriptor<Size> ) descriptor;
+			ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			int max = sizeConstraint.getAnnotation().max();
-			Column col = ( Column ) property.getColumnIterator().next();
+			Column col = (Column) property.getColumnIterator().next();
 			if ( max < Integer.MAX_VALUE ) {
 				col.setLength( max );
 			}
@@ -256,11 +277,13 @@ class TypeSafeActivator {
 	}
 
 	private static void applyLength(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
-		if ( "org.hibernate.validator.constraints.Length".equals(descriptor.getAnnotation().annotationType().getName())
-			&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
+		if ( "org.hibernate.validator.constraints.Length".equals(
+				descriptor.getAnnotation().annotationType().getName()
+		)
+				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
 			int max = (Integer) descriptor.getAttributes().get( "max" );
-			Column col = ( Column ) property.getColumnIterator().next();
+			Column col = (Column) property.getColumnIterator().next();
 			if ( max < Integer.MAX_VALUE ) {
 				col.setLength( max );
 			}
@@ -294,16 +317,20 @@ class TypeSafeActivator {
 						property = associatedClass.getProperty( element );
 					}
 					else {
-						if ( ! property.isComposite() ) return null;
-						property = ( ( Component ) property.getValue() ).getProperty( element );
+						if ( !property.isComposite() ) {
+							return null;
+						}
+						property = ( (Component) property.getValue() ).getProperty( element );
 					}
 				}
 			}
 		}
-		catch ( MappingException e) {
+		catch ( MappingException e ) {
 			try {
 				//if we do not find it try to check the identifier mapper
-				if ( associatedClass.getIdentifierMapper() == null ) return null;
+				if ( associatedClass.getIdentifierMapper() == null ) {
+					return null;
+				}
 				StringTokenizer st = new StringTokenizer( propertyName, ".", false );
 				while ( st.hasMoreElements() ) {
 					String element = (String) st.nextElement();
@@ -311,12 +338,14 @@ class TypeSafeActivator {
 						property = associatedClass.getIdentifierMapper().getProperty( element );
 					}
 					else {
-						if ( ! property.isComposite() ) return null;
+						if ( !property.isComposite() ) {
+							return null;
+						}
 						property = ( (Component) property.getValue() ).getProperty( element );
 					}
 				}
 			}
-			catch (MappingException ee) {
+			catch ( MappingException ee ) {
 				return null;
 			}
 		}
@@ -327,22 +356,24 @@ class TypeSafeActivator {
 		ValidatorFactory factory = null;
 		if ( properties != null ) {
 			Object unsafeProperty = properties.get( FACTORY_PROPERTY );
-			if (unsafeProperty != null) {
+			if ( unsafeProperty != null ) {
 				try {
 					factory = ValidatorFactory.class.cast( unsafeProperty );
 				}
 				catch ( ClassCastException e ) {
-					throw new HibernateException( "Property " + FACTORY_PROPERTY
-							+ " should contain an object of type " + ValidatorFactory.class.getName() );
+					throw new HibernateException(
+							"Property " + FACTORY_PROPERTY
+									+ " should contain an object of type " + ValidatorFactory.class.getName()
+					);
 				}
 			}
 		}
-		if (factory == null) {
+		if ( factory == null ) {
 			try {
 				factory = Validation.buildDefaultValidatorFactory();
 			}
 			catch ( Exception e ) {
-				throw new HibernateException( "Unable to build the default ValidatorFactory", e);
+				throw new HibernateException( "Unable to build the default ValidatorFactory", e );
 			}
 		}
 		return factory;

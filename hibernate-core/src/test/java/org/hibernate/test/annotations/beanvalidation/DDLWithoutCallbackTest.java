@@ -50,16 +50,33 @@ public class DDLWithoutCallbackTest extends TestCase {
 
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testMinAndMaxChecksGetApplied() {
-		MinMax minMax = new MinMax(1);
+		MinMax minMax = new MinMax( 1 );
 		assertDatabaseConstraintViolationThrown( minMax );
 
-		minMax = new MinMax(11);
+		minMax = new MinMax( 11 );
 		assertDatabaseConstraintViolationThrown( minMax );
 
-		minMax = new MinMax(5);
+		minMax = new MinMax( 5 );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		s.persist( minMax );
+		s.flush();
+		tx.rollback();
+		s.close();
+	}
+
+	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
+	public void testRangeChecksGetApplied() {
+		Range range = new Range( 1 );
+		assertDatabaseConstraintViolationThrown( range );
+
+		range = new Range( 11 );
+		assertDatabaseConstraintViolationThrown( range );
+
+		range = new Range( 5 );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		s.persist( range );
 		s.flush();
 		tx.rollback();
 		s.close();
@@ -81,7 +98,8 @@ public class DDLWithoutCallbackTest extends TestCase {
 		return new Class<?>[] {
 				Address.class,
 				CupHolder.class,
-				MinMax.class
+				MinMax.class,
+				Range.class
 		};
 	}
 

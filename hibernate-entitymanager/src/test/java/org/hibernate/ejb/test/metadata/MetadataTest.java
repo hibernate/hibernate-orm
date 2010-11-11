@@ -97,7 +97,7 @@ public class MetadataTest extends TestCase {
 		final SingularAttribute<? super Fridge, Long> id2 = fridgeType.getId( Long.class );
 		assertNotNull( id2 );
 
-		assertEquals( Fridge.class.getName(), fridgeType.getName() );
+		assertEquals( "Fridge", fridgeType.getName() );
 		assertEquals( Long.class, fridgeType.getIdType().getJavaType() );
 		assertTrue( fridgeType.hasSingleIdAttribute() );
 		assertFalse( fridgeType.hasVersionAttribute() );
@@ -106,6 +106,7 @@ public class MetadataTest extends TestCase {
 		assertEquals( 3, fridgeType.getDeclaredAttributes().size() );
 
 		final EntityType<House> houseType = factory.getMetamodel().entity( House.class );
+		assertEquals( "org.hibernate.ejb.test.metadata.House", houseType.getName() );
 		assertTrue( houseType.hasSingleIdAttribute() );
 		final SingularAttribute<House, House.Key> houseId = houseType.getDeclaredId( House.Key.class );
 		assertNotNull( houseId );
@@ -113,6 +114,7 @@ public class MetadataTest extends TestCase {
 		assertEquals( Attribute.PersistentAttributeType.EMBEDDED, houseId.getPersistentAttributeType() );
 		
 		final EntityType<Person> personType = factory.getMetamodel().entity( Person.class );
+		assertEquals( "Homo", personType.getName() );
 		assertFalse( personType.hasSingleIdAttribute() );
 		final Set<SingularAttribute<? super Person,?>> ids = personType.getIdClassAttributes();
 		assertNotNull( ids );

@@ -57,6 +57,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	private String proxyInterfaceName;
 	
 	private String nodeName;
+	private String jpaEntityName;
 
 	private String discriminatorValue;
 	private boolean lazy;
@@ -734,6 +735,14 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	
 	public void setNodeName(String nodeName) {
 		this.nodeName = nodeName;
+	}
+
+	public String getJpaEntityName() {
+		return jpaEntityName;
+	}
+	
+	public void setJpaEntityName(String jpaEntityName) {
+		this.jpaEntityName = jpaEntityName;
 	}
 	
 	public boolean hasPojoRepresentation() {

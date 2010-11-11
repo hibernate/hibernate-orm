@@ -35,22 +35,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+import org.hibernate.action.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.action.BulkOperationCleanupAction;
-import org.hibernate.action.CollectionRecreateAction;
-import org.hibernate.action.CollectionRemoveAction;
-import org.hibernate.action.CollectionUpdateAction;
-import org.hibernate.action.EntityDeleteAction;
-import org.hibernate.action.EntityIdentityInsertAction;
-import org.hibernate.action.EntityInsertAction;
-import org.hibernate.action.EntityUpdateAction;
-import org.hibernate.action.Executable;
-import org.hibernate.action.AfterTransactionCompletionProcess;
-import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
 
@@ -73,16 +63,16 @@ public class ActionQueue {
 	// Object insertions, updates, and deletions have list semantics because
 	// they must happen in the right order so as to respect referential
 	// integrity
-	private ArrayList insertions;
-	private ArrayList deletions;
-	private ArrayList updates;
+	private ExecutableList insertions;
+	private ExecutableList deletions;
+	private ExecutableList updates;
 	// Actually the semantics of the next three are really "Bag"
 	// Note that, unlike objects, collection insertions, updates,
 	// deletions are not really remembered between flushes. We
 	// just re-use the same Lists for convenience.
-	private ArrayList collectionCreations;
-	private ArrayList collectionUpdates;
-	private ArrayList collectionRemovals;
+	private ExecutableList collectionCreations;
+	private ExecutableList collectionUpdates;
+	private ExecutableList collectionRemovals;
 
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
@@ -98,13 +88,13 @@ public class ActionQueue {
 	}
 
 	private void init() {
-		insertions = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		deletions = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		updates = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		insertions = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		deletions = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		updates = new ExecutableList( INIT_QUEUE_LIST_SIZE );
 
-		collectionCreations = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionRemovals = new ArrayList( INIT_QUEUE_LIST_SIZE );
-		collectionUpdates = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		collectionCreations = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		collectionRemovals = new ExecutableList( INIT_QUEUE_LIST_SIZE );
+		collectionUpdates = new ExecutableList( INIT_QUEUE_LIST_SIZE );
 
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
@@ -237,19 +227,17 @@ public class ActionQueue {
 		return ( insertions.size() > 0 || deletions.size() > 0 );
 	}
 
-	private static boolean areTablesToUpdated(List executables, Set tablespaces) {
-		int size = executables.size();
-		for ( int j = 0; j < size; j++ ) {
-			Serializable[] spaces = ( ( Executable ) executables.get( j ) ).getPropertySpaces();
-			for ( int i = 0; i < spaces.length; i++ ) {
-				if ( tablespaces.contains( spaces[i] ) ) {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "changes must be flushed to space: " + spaces[i] );
-					}
-					return true;
-				}
-			}
-		}
+	private static boolean areTablesToUpdated(ExecutableList executables, Set tablespaces) {
+        Set executableSpaces = executables.getPropertySpaces();
+        for(Iterator iter = executableSpaces.iterator(); iter.hasNext();) {
+            Object s = iter.next();
+            if ( tablespaces.contains( s ) ) {
+                if ( log.isDebugEnabled() ) {
+                    log.debug( "changes must be flushed to space: " + s );
+                }
+                return true;
+            }
+        }
 		return false;
 	}
 
@@ -468,42 +456,42 @@ public class ActionQueue {
 
 		int queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] insertions entries" );
-		rtn.insertions = new ArrayList( queueSize );
+		rtn.insertions = new ExecutableList( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.insertions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] deletions entries" );
-		rtn.deletions = new ArrayList( queueSize );
+		rtn.deletions = new ExecutableList( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.deletions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] updates entries" );
-		rtn.updates = new ArrayList( queueSize );
+		rtn.updates = new ExecutableList( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.updates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionUpdates entries" );
-		rtn.collectionUpdates = new ArrayList( queueSize );
+		rtn.collectionUpdates = new ExecutableList( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionUpdates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionRemovals entries" );
-		rtn.collectionRemovals = new ArrayList( queueSize );
+		rtn.collectionRemovals = new ExecutableList( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionRemovals.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
 		log.trace( "starting deserialization of [" + queueSize + "] collectionCreations entries" );
-		rtn.collectionCreations = new ArrayList( queueSize );
+		rtn.collectionCreations = new ExecutableList( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionCreations.add( ois.readObject() );
 		}

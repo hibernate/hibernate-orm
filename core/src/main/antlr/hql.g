@@ -360,7 +360,7 @@ inClassDeclaration!
 	;
 
 inCollectionDeclaration!
-    : IN! OPEN! p:path CLOSE! a:alias {
+    : IN! OPEN! p:path CLOSE! a:asAlias {
         #inCollectionDeclaration = #([JOIN, "join"], [INNER, "inner"], #p, #a);
 	}
     ;

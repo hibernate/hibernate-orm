@@ -172,7 +172,9 @@ class TypeSafeActivator {
 	private static boolean applyConstraints(Set<ConstraintDescriptor<?>> constraintDescriptors,
 											Property property,
 											PropertyDescriptor propertyDesc,
-											Set<Class<?>> groups, boolean canApplyNotNull) {
+											Set<Class<?>> groups,
+											boolean canApplyNotNull
+	) {
 		boolean hasNotNull = false;
 		for ( ConstraintDescriptor<?> descriptor : constraintDescriptors ) {
 			if ( groups != null && Collections.disjoint( descriptor.getGroups(), groups ) ) {
@@ -190,6 +192,8 @@ class TypeSafeActivator {
 			applyMax( property, descriptor );
 
 			// apply hibernate validator specific constraints - we cannot import any HV specific classes though!
+			// no need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
+			// will be taken care later
 			applyLength( property, descriptor, propertyDesc );
 
 			// pass an empty set as composing constraints inherit the main constraint and thus are matching already
@@ -226,7 +230,10 @@ class TypeSafeActivator {
 	}
 
 	private static void applySQLCheck(Column col, String checkConstraint) {
-		if ( StringHelper.isNotEmpty( col.getCheckConstraint() ) ) {
+		String existingCheck = col.getCheckConstraint();
+		// need to check whether the new check is already part of the existing check, because applyDDL can be called
+		// multiple times
+		if ( StringHelper.isNotEmpty( existingCheck ) && !existingCheck.contains( checkConstraint ) ) {
 			checkConstraint = col.getCheckConstraint() + " AND " + checkConstraint;
 		}
 		col.setCheckConstraint( checkConstraint );

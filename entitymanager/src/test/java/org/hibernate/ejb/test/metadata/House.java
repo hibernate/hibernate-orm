@@ -37,7 +37,7 @@ import javax.persistence.OrderColumn;
 /**
  * @author Emmanuel Bernard
  */
-@Entity
+@Entity(name="org.hibernate.ejb.test.metadata.House")
 public class House {
 	private Key key;
 	private Address address;

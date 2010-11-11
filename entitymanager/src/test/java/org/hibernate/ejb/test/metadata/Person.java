@@ -32,7 +32,7 @@ import javax.persistence.Entity;
  * @author Emmanuel Bernard
  */
 @IdClass(Person.PersonPK.class)
-@Entity
+@Entity(name="Homosapien")
 public class Person {
 	private String firstName;
 	private String lastName;

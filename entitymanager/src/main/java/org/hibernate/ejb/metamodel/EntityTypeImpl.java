@@ -33,20 +33,20 @@ import javax.persistence.metamodel.EntityType;
 public class EntityTypeImpl<X> 
 		extends AbstractIdentifiableType<X>
 		implements EntityType<X>, Serializable {
-	private final String className;
+	private final String jpaEntityName;
 
 	public EntityTypeImpl(
 			Class<X> javaType,
 			AbstractIdentifiableType<? super X> superType, 
-			String className,
+			String jpaEntityName,
 			boolean hasIdentifierProperty,
 			boolean isVersioned) {
 		super( javaType, superType, hasIdentifierProperty, isVersioned );
-		this.className = className;
+		this.jpaEntityName = jpaEntityName;
 	}
 
 	public String getName() {
-		return className;
+		return jpaEntityName;
 	}
 
 	public BindableType getBindableType() {

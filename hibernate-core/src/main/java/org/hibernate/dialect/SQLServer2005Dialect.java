@@ -23,6 +23,8 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -35,8 +37,22 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final String SELECT = "select";
 	private static final String FROM = "from";
 	private static final String DISTINCT = "distinct";
+	private static final int MAX_LENGTH = 8000;
 
 	public SQLServer2005Dialect() {
+		// HHH-3965 fix
+		// As per http://www.sql-server-helper.com/faq/sql-server-2005-varchar-max-p01.aspx
+		// use varchar(max) and varbinary(max) instead of TEXT and IMAGE types
+		registerColumnType( Types.VARBINARY, "varbinary(MAX)" );
+		registerColumnType( Types.VARBINARY, MAX_LENGTH, "varbinary($l)" );
+		
+		registerColumnType( Types.LONGVARBINARY, "varbinary(MAX)" );
+		registerColumnType( Types.LONGVARCHAR, "varchar(MAX)" );
+		
+		registerColumnType( Types.VARCHAR, "varchar(MAX)" );
+		registerColumnType( Types.VARCHAR, MAX_LENGTH, "varchar($l)" );
+		
+		
 		registerFunction("row_number", new NoArgSQLFunction("row_number", StandardBasicTypes.INTEGER, true));
 	}
 

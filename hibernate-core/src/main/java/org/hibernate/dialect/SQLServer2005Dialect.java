@@ -183,6 +183,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		return false;
 	}
 
+	@Override
 	public boolean supportsVariableLimit() {
 		return false;
 	}

@@ -29,7 +29,7 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * A dialect for Microsoft SQL 2005
+ * A dialect for Microsoft SQL 2005. (HHH-3936 fix)
  * 
  * @author Yoryos Valotasios
  */

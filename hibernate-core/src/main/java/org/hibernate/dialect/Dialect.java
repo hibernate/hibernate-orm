@@ -99,7 +99,7 @@ public abstract class Dialect {
 
 	private final Properties properties = new Properties();
 	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
-	private final Set sqlKeywords = new HashSet();
+	private final Set<String> sqlKeywords = new HashSet<String>();
 
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -373,7 +373,7 @@ public abstract class Dialect {
 	 *
 	 * @return The map of registered functions.
 	 */
-	public final Map getFunctions() {
+	public final Map<String, SQLFunction> getFunctions() {
 		return sqlFunctions;
 	}
 
@@ -384,7 +384,7 @@ public abstract class Dialect {
 		sqlKeywords.add(word);
 	}
 
-	public Set getKeywords() {
+	public Set<String> getKeywords() {
 		return sqlKeywords;
 	}
 

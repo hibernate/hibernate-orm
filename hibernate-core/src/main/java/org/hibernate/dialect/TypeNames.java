@@ -26,7 +26,6 @@ package org.hibernate.dialect;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.TreeMap;
-import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.util.StringHelper;
@@ -65,8 +64,8 @@ import org.hibernate.util.StringHelper;
  */
 public class TypeNames {
 
-	private HashMap weighted = new HashMap();
-	private HashMap defaults = new HashMap();
+	private Map<Integer, Map<Integer, String>> weighted = new HashMap<Integer, Map<Integer, String>>();
+	private Map<Integer, String> defaults = new HashMap<Integer, String>();
 
 	/**
 	 * get default type name for specified type
@@ -74,7 +73,7 @@ public class TypeNames {
 	 * @return the default type name associated with specified key
 	 */
 	public String get(int typecode) throws MappingException {
-		String result = (String) defaults.get( new Integer(typecode) );
+		String result = defaults.get( new Integer(typecode) );
 		if (result==null) throw new MappingException("No Dialect mapping for JDBC type: " + typecode);
 		return result;
 	}
@@ -89,12 +88,10 @@ public class TypeNames {
 	 * if available and the default type name otherwise
 	 */
 	public String get(int typecode, int size, int precision, int scale) throws MappingException {
-		Map map = (Map) weighted.get( new Integer(typecode) );
+		Map<Integer, String> map = weighted.get( new Integer(typecode) );
 		if ( map!=null && map.size()>0 ) {
 			// iterate entries ordered by capacity to find first fit
-			Iterator entries = map.entrySet().iterator();
-			while ( entries.hasNext() ) {
-				Map.Entry entry = (Map.Entry)entries.next();
+			for (Map.Entry<Integer, String> entry: map.entrySet()) {
 				if ( size <= ( (Integer) entry.getKey() ).intValue() ) {
 					return replace( (String) entry.getValue(), size, precision, scale );
 				}
@@ -114,9 +111,9 @@ public class TypeNames {
 	 * @param typecode the type key
 	 */
 	public void put(int typecode, int capacity, String value) {
-		TreeMap map = (TreeMap)weighted.get( new Integer(typecode) );
+		Map<Integer, String> map = weighted.get( new Integer(typecode) );
 		if (map == null) {// add new ordered map
-			map = new TreeMap();
+			map = new TreeMap<Integer, String>();
 			weighted.put( new Integer(typecode), map );
 		}
 		map.put(new Integer(capacity), value);

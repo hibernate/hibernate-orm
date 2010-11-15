@@ -5,7 +5,7 @@ import java.util.List;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * 
  */
 

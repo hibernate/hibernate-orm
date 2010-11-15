@@ -3,7 +3,7 @@ package org.hibernate.envers.test.integration.entityNames.auditedEntity;
 import org.hibernate.envers.Audited;
 
 /**
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * 
  */
 

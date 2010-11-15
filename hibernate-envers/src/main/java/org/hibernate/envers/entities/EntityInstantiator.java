@@ -36,7 +36,7 @@ import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  */
 public class EntityInstantiator {
     private final AuditConfiguration verCfg;
@@ -101,6 +101,9 @@ public class EntityInstantiator {
                 versionsReader, revision);
         idMapper.mapToEntityFromMap(ret, originalId);
 
+        // Put entity on entityName cache after mapping it from the map representation
+        versionsReader.getFirstLevelCache().putOnEntityNameCache(primaryKey, revision, ret, entityName);
+        
         return ret;
     }
 

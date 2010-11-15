@@ -28,13 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.envers.exception.EnversException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditQueryCreator;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  */
 public interface AuditReader {
     /**
@@ -177,10 +178,58 @@ public interface AuditReader {
     AuditQueryCreator createQuery();
 
     /**
-     * Checks if the entityClass was configured to be audited.
+	 * Checks if the entityClass was configured to be audited. Calling
+	 * isEntityNameAudited() with the string of the class name will return the
+	 * same value.
      *  
-     * @param entityClass Class of the entity asking for audit support
+	 * @param entityClass
+	 *            Class of the entity asking for audit support
      * @return true if the entityClass is audited.
      */
     boolean isEntityClassAudited(Class<?> entityClass);
+	
+	/**
+	 * Checks if the entityName was configured to be audited.
+	 * 
+	 * @param entityClass
+	 *            EntityName of the entity asking for audit support.
+	 * @return true if the entityName is audited.
+	 */
+	boolean isEntityNameAudited(String entityName);	
+
+	/**
+	 * Checks if the entityClass was configured to be a audited in a relation
+	 * with the targetAuditMode as NOT_AUDITED . Calling
+	 * isEntityNameNotAudited() with the string of the class name will return
+	 * the same value.
+	 * 
+	 * @param entityClass
+	 *            Class of the entity asking for
+	 *            @Audit(targetAuditMode=...NOT_AUDITED) support
+	 * @return true if the entityClass is marked in a relation as NOT_AUDITED.
+	 */
+	boolean isEntityClassNotAudited(Class<?> entityClass);
+	
+	/**
+	 * Checks if the entityName was configured be a audited in a relation
+	 * with the targetAuditMode as NOT_AUDITED .
+	 * 
+	 * @param entityClass
+	 *            Class of the entity asking for
+	 *            @Audit(targetAuditMode=...NOT_AUDITED) support
+	 * @return true if the entityClass is marked in a relation as NOT_AUDITED.
+	 */
+	boolean isEntityNameNotAudited(String entityName);	
+
+	/**
+	 * 
+	 * @param entity
+	 *            that was obtained previously from the same AuditReader.
+	 * 
+	 * @return the entityName for the given entity, null in case the entity is
+	 *         not associated with this AuditReader instance.
+	 */
+	String getEntityName(Object primaryKey, Number revision, Object entity)
+			throws EnversException;
+	
 }

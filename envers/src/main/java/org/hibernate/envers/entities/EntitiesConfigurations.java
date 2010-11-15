@@ -29,6 +29,7 @@ import java.util.Map;
 /**
  * Configuration of the user entities: property mapping of the entities, relations, inheritance.
  * @author Adam Warski (adam at warski dot org)
+ * @author Hern&aacute;n Chanfreau
  */
 public class EntitiesConfigurations {
     private Map<String, EntityConfiguration> entitiesConfigurations;
@@ -95,6 +96,14 @@ public class EntitiesConfigurations {
     public boolean isVersioned(String entityName) {
         return get(entityName) != null;
     }
+
+	/**
+	 * @param entityName  
+	 * @return true if the given entityName is marked audited with relationTargetAuditMode = NOT_AUDITED
+	 */
+	public boolean isNotAudited(String entityName) {
+		return getNotVersionEntityConfiguration(entityName) != null;
+	}
 
     public RelationDescription getRelationDescription(String entityName, String propertyName) {
         EntityConfiguration entCfg = entitiesConfigurations.get(entityName);

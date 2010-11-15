@@ -31,7 +31,7 @@ public abstract class AbstractSessionTest {
     @Parameters("auditStrategy")
     public void init(@Optional String auditStrategy) throws URISyntaxException {
         config = new AnnotationConfiguration();
-        URL url = Thread.currentThread().getContextClassLoader().getResource("hibernate.test.session-cfg.xml");
+        URL url = Thread.currentThread().getContextClassLoader().getResource(getHibernateConfigurationFileName());
         config.configure(new File(url.toURI()));
 
         if (auditStrategy != null && !"".equals(auditStrategy)) {
@@ -45,6 +45,9 @@ public abstract class AbstractSessionTest {
 	
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
 
+	protected String getHibernateConfigurationFileName(){
+		return "hibernate.test.session-cfg.xml";
+	}	
 
 
 	private SessionFactory getSessionFactory(){

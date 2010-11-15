@@ -12,10 +12,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * 
  */
 
+@Test(sequential=true)
 public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
 
 	private long id_car1;
@@ -23,11 +24,26 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
 	
 	private long id_pers1;
 	
+	private Person person1;
+	private Car car1;
+	
+	private Person person1_1;
+	private Car car1_2;
+	
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/manyToManyAudited/mappings.hbm.xml");
         config.addFile(new File(url.toURI()));
 	}
 	
+	/**
+	 * The test needs to run with the same session and auditReader.
+	 */
+	@Override
+	public void newSessionFactory() {
+		if (getSession() == null) {
+			super.newSessionFactory();
+		}
+	}
 	
     @BeforeClass(dependsOnMethods = "init")
     public void initData() {
@@ -66,34 +82,65 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
         getSession().persist(car2);
         getSession().getTransaction().commit();
         id_car2 = car2.getId();
-
     }
     
     @Test
     public void testObtainManyYoManyWithEntityName() {
     	
-    	Car car1 = getAuditReader().find(Car.class, id_car1, 2);
-    	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
+    	car1_2 = getAuditReader().find(Car.class, id_car1, 2);
+    	Car car2_2 = getAuditReader().find(Car.class, id_car2, 2);
 
-    	System.out.println("  > Car: " + car1.getNumber());
-    	System.out.println("  > Owners:");
-    	for (Person owner : car1.getOwners()) {
-    		System.out.println("    > Name: " + owner.getName() + " - Age:" + owner.getAge());
-    		System.out.println("    > Cars owned:");
+    	for (Person owner : car1_2.getOwners()) {
     		for (Car ownedCar : owner.getCars()) {
-				System.out.println("      o Car: " + ownedCar.getNumber());
+    			ownedCar.getNumber();
 			}
 		}
-    	System.out.println("  > Car: " + car2.getNumber());
-    	System.out.println("  > Owners:");
-    	for (Person owner : car2.getOwners()) {
-    		System.out.println("    > Name: " + owner.getName() + " - Age:" + owner.getAge());
-    		System.out.println("    > Cars owned:");
+    	for (Person owner : car2_2.getOwners()) {
     		for (Car ownedCar : owner.getCars()) {
-				System.out.println("      o Car: " + ownedCar.getNumber());
+				ownedCar.getNumber();
 			}
 		}
+    	
+    	car1 = (Car)getSession().get(Car.class, id_car1);
+    	person1 = (Person)getSession().get("Personaje", id_pers1);
+    	person1_1 = getAuditReader().find(Person.class, "Personaje", id_pers1, 1);
     }
     
+    @Test(dependsOnMethods="testObtainManyYoManyWithEntityName")
+    public void testGetEntityNameManyYoManyWithEntityName() {
+    	String currPerson1EN = getSession().getEntityName(person1);
+    	String currCar1EN = getSession().getEntityName(car1);
+    	
+    	String person1_1EN = getAuditReader().getEntityName(id_pers1, 1, person1_1);
+    	assert(currPerson1EN.equals(person1_1EN));
+    	
+    	String car1_2EN = getAuditReader().getEntityName(id_car1, 2, car1_2);
+    	assert(currCar1EN.equals(car1_2EN));
+    }
 
+    
+    @Test(dependsOnMethods="testGetEntityNameManyYoManyWithEntityName")
+    public void testFindHistoricAndCurrentForManyYoManyWithEntityName() {
+    	//force new session and AR
+    	super.newSessionFactory();
+    	
+    	car1_2 = getAuditReader().find(Car.class, id_car1, 2);
+    	Car car2_2 = getAuditReader().find(Car.class, id_car2, 2);
+
+    	for (Person owner : car1_2.getOwners()) {
+    		for (Car ownedCar : owner.getCars()) {
+    			ownedCar.getNumber();
+			}
+		}
+    	for (Person owner : car2_2.getOwners()) {
+    		for (Car ownedCar : owner.getCars()) {
+				ownedCar.getNumber();
+			}
+		}
+    	
+    	person1_1 = getAuditReader().find(Person.class, "Personaje", id_pers1, 1);
+		for (Car ownedCar : person1_1.getCars()) {
+			ownedCar.getNumber();
+		}
+    }    
 }

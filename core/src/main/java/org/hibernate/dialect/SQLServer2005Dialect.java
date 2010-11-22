@@ -56,6 +56,17 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		
 		registerFunction("row_number", new NoArgSQLFunction("row_number", StandardBasicTypes.INTEGER, true));
 	}
+	
+	@Override
+	public int convertToFirstRowValue(int zeroBasedFirstResult) {
+		return zeroBasedFirstResult  + 1;
+	}
+	
+	@Override
+	public String getLimitString(String query, int offset, int limit) {
+		if (offset > 1 || limit > 1) return getLimitString(query, true);
+		return query;
+	}
 
 	/**
 	 * Add a LIMIT clause to the given SQL SELECT (HHH-2655: ROW_NUMBER for Paging)
@@ -81,7 +92,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	 * @return A new SQL statement with the LIMIT clause applied.
 	 */
 	@Override
-	public String getLimitString(String querySqlString, int offset, int limit) {
+	public String getLimitString(String querySqlString, boolean hasOffset) {
 		StringBuilder sb = new StringBuilder(querySqlString.trim().toLowerCase());
 
 		int orderByIndex = sb.indexOf("order by");
@@ -100,7 +111,8 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 		// Wrap the query within a with statement:
 		sb.insert(0, "WITH query AS (").append(") SELECT * FROM query ");
-		sb.append("WHERE __hibernate_row_nr__ BETWEEN ").append(offset + 1).append(" AND ").append(limit);
+		//sb.append("WHERE __hibernate_row_nr__ BETWEEN ").append(offset + 1).append(" AND ").append(limit);
+		sb.append("WHERE __hibernate_row_nr__ BETWEEN ? AND ?");
 
 		return sb.toString();
 	}
@@ -185,7 +197,6 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	@Override
 	public boolean supportsVariableLimit() {
-		return false;
+		return true;
 	}
-
 }

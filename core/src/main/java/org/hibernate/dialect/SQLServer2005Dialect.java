@@ -59,11 +59,13 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return zeroBasedFirstResult  + 1;
+		// Our dialect isn't zero based. The first row should get the number 1
+		return zeroBasedFirstResult + 1;
 	}
 	
 	@Override
 	public String getLimitString(String query, int offset, int limit) {
+		// We transform the query to one with an offset and limit if we have an offset and limit to bind
 		if (offset > 1 || limit > 1) return getLimitString(query, true);
 		return query;
 	}

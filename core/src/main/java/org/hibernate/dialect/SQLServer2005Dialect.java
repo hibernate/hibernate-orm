@@ -84,7 +84,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		// Our dialect isn't zero based. The first row should get the number 1
+		// Our dialect paginated results aren't zero based. The first row should get the number 1 and so on
 		return zeroBasedFirstResult + 1;
 	}
 	

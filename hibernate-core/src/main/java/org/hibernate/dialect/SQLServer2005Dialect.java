@@ -58,6 +58,31 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 	}
 	
 	@Override
+	public boolean supportsLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean useMaxForLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsLimitOffset() {
+		return true;
+	}
+
+	@Override
+	public boolean bindLimitParametersFirst() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsVariableLimit() {
+		return true;
+	}
+	
+	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		// Our dialect isn't zero based. The first row should get the number 1
 		return zeroBasedFirstResult + 1;
@@ -175,30 +200,5 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 		// Isert after the select statement the row_number() function:
 		sql.insert(selectEndIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__,");
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return true;
 	}
 }

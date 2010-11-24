@@ -54,6 +54,7 @@
     <xi:include href="content/queries.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/schema.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/tables.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+    <xi:include href="content/partitioning.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/source.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/exceptions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/migration.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />

@@ -42,7 +42,6 @@ import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
-import org.hibernate.envers.exception.EnversException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditEntity;
@@ -279,7 +278,7 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 	}
 
 
-	public String getEntityName(Object primaryKey, Number revision ,Object entity) throws EnversException{
+	public String getEntityName(Object primaryKey, Number revision ,Object entity) throws HibernateException{
         checkNotNull(primaryKey, "Primary key");
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
@@ -294,8 +293,8 @@ public class AuditReaderImpl implements AuditReaderImplementor {
 			// it´s on envers FLC! 
 			return firstLevelCache.getFromEntityNameCache(primaryKey, revision, entity);
 		} else {
-			throw new EnversException(
-						"Can´t resolve entityName for historic entity. The id, revision and entity is not on envers first level cache.");
+			throw new HibernateException(
+						"Envers can´t resolve entityName for historic entity. The id, revision and entity is not on envers first level cache.");
     }	
 }
 }

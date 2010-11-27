@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.envers.exception.EnversException;
+import org.hibernate.HibernateException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditQueryCreator;
@@ -230,6 +230,6 @@ public interface AuditReader {
 	 *         not associated with this AuditReader instance.
 	 */
 	String getEntityName(Object primaryKey, Number revision, Object entity)
-			throws EnversException;
+			throws HibernateException;
 	
 }

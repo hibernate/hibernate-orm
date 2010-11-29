@@ -32,7 +32,7 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * A dialect for Microsoft SQL Server 2000 and 2005
+ * A dialect for Microsoft SQL Server 2000
  *
  * @author Gavin King
  */

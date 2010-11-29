@@ -33,7 +33,7 @@ import org.hibernate.type.StandardBasicTypes;
  *
  * @author Gavin King
  */
-public class SQLServer2008Dialect extends SQLServerDialect {
+public class SQLServer2008Dialect extends SQLServer2005Dialect {
 	public SQLServer2008Dialect() {
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );

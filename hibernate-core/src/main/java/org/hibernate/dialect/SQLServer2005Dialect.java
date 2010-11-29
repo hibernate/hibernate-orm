@@ -56,16 +56,6 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		
 		registerFunction("row_number", new NoArgSQLFunction("row_number", StandardBasicTypes.INTEGER, true));
 	}
-	
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return true;
-	}
 
 	@Override
 	public boolean supportsLimitOffset() {
@@ -145,11 +135,10 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 	/**
 	 * Utility method that checks if the given sql query is a select distinct one and if so replaces the distinct select
-	 * with an equivelant simple select with a group by clause. See
+	 * with an equivalent simple select with a group by clause. See
 	 * {@link SQLServer2005DialectTestCase#testReplaceDistinctWithGroupBy()}
 	 * 
-	 * @param an
-	 *            sql query
+	 * @param sql an sql query
 	 */
 	protected static void replaceDistinctWithGroupBy(StringBuilder sql) {
 		int distinctIndex = sql.indexOf(DISTINCT);
@@ -197,7 +186,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		// Find the end of the select statement
 		int selectEndIndex = sql.indexOf(SELECT) + SELECT.length();
 
-		// Isert after the select statement the row_number() function:
+		// Insert after the select statement the row_number() function:
 		sql.insert(selectEndIndex, " ROW_NUMBER() OVER (" + orderby + ") as __hibernate_row_nr__,");
 	}
 }

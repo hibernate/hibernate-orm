@@ -36,7 +36,6 @@ public class SQLServer2005DialectTestCase extends TestCase {
 		String input = "select distinct f1 as f53245 from table849752 order by f234, f67 desc"; 
 		
 		Dialect sqlDialect = new SQLServer2005Dialect();
-		
-		assertEquals( "with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between 11 and 15", sqlDialect.getLimitString(input, 10, 15).toLowerCase() );
+		assertEquals( "with query as (select row_number() over (order by f234, f67 desc) as __hibernate_row_nr__, f1 as f53245 from table849752  group by f1) select * from query where __hibernate_row_nr__ between ? and ?", sqlDialect.getLimitString(input, 10, 15).toLowerCase() );
 	}
 }

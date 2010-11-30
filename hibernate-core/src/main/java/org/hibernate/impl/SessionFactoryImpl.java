@@ -212,7 +212,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		this.interceptor = cfg.getInterceptor();
 		this.serviceRegistry = serviceRegistry;
 		this.settings = settings;
-		this.sqlFunctionRegistry = new SQLFunctionRegistry(settings.getDialect(), cfg.getSqlFunctions());
+		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
         this.eventListeners = listeners;
 		this.observer = observer != null ? observer : new SessionFactoryObserver() {
 			public void sessionFactoryCreated(SessionFactory factory) {
@@ -250,7 +250,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			if ( !model.isInherited() ) {
 				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
 						cfg.getIdentifierGeneratorFactory(),
-						settings.getDialect(),
+						getDialect(),
 				        settings.getDefaultCatalogName(),
 				        settings.getDefaultSchemaName(),
 				        (RootClass) model
@@ -272,7 +272,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		classes = cfg.getClassMappings();
 		while ( classes.hasNext() ) {
 			final PersistentClass model = (PersistentClass) classes.next();
-			model.prepareTemporaryTables( mapping, settings.getDialect() );
+			model.prepareTemporaryTables( mapping, getDialect() );
 			final String cacheRegionName = cacheRegionPrefix + model.getRootClass().getCacheRegionName();
 			// cache region is defined by the root-class in the hierarchy...
 			EntityRegionAccessStrategy accessStrategy = ( EntityRegionAccessStrategy ) entityAccessStrategies.get( cacheRegionName );
@@ -711,7 +711,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	}
 
 	public Dialect getDialect() {
-		return settings.getDialect();
+		if ( serviceRegistry == null ) {
+			throw new IllegalStateException( "Cannot determine dialect because serviceRegistry is null." );
+		}
+		return serviceRegistry.getService( JdbcServices.class ).getDialect();
 	}
 
 	public Interceptor getInterceptor()

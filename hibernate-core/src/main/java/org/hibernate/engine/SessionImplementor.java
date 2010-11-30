@@ -40,6 +40,7 @@ import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventListeners;

@@ -34,6 +34,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TestingDialects;
 import org.hibernate.dialect.Mocks;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
+import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
+import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 
 /**
  * TODO : javadoc

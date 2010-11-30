@@ -36,6 +36,7 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServicesRegistry;
 
@@ -73,11 +74,11 @@ public class CacheTestUtil {
       return cfg;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(ConnectionProvider connectionProvider,
+   public static InfinispanRegionFactory startRegionFactory(JdbcServices jdbcServices,
 															Configuration cfg)
 		   throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
-      Settings settings = cfg.buildSettings( connectionProvider );
+      Settings settings = cfg.buildSettings( jdbcServices );
       Properties properties = cfg.getProperties();
 
       String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
@@ -89,11 +90,11 @@ public class CacheTestUtil {
       return regionFactory;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(ConnectionProvider connectionProvider,
+   public static InfinispanRegionFactory startRegionFactory(JdbcServices jdbcServices,
 															Configuration cfg,
 															CacheTestSupport testSupport)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-      InfinispanRegionFactory factory = startRegionFactory(connectionProvider, cfg);
+      InfinispanRegionFactory factory = startRegionFactory(jdbcServices, cfg);
       testSupport.registerFactory(factory);
       return factory;
    }

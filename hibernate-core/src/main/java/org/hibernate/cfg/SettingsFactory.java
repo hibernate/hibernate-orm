@@ -24,10 +24,6 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -43,9 +39,9 @@ import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.resolver.DialectFactory;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLExceptionConverterFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
@@ -75,7 +71,7 @@ public class SettingsFactory implements Serializable {
 	protected SettingsFactory() {
 	}
 
-	public Settings buildSettings(Properties props, ConnectionProvider connections) {
+	public Settings buildSettings(Properties props, JdbcServices jdbcServices) {
 		Settings settings = new Settings();
 
 		//SessionFactory name:
@@ -87,69 +83,11 @@ public class SettingsFactory implements Serializable {
 
 		//Interrogate JDBC metadata
 
-		boolean metaSupportsScrollable = false;
-		boolean metaSupportsGetGeneratedKeys = false;
-		boolean metaSupportsBatchUpdates = false;
-		boolean metaReportsDDLCausesTxnCommit = false;
-		boolean metaReportsDDLInTxnSupported = true;
-		Dialect dialect = null;
+		Dialect dialect = jdbcServices.getDialect();
+		ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
 
-		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
-		// The need for it is intended to be alleviated with future development, thus it is
-		// not defined as an Environment constant...
-		//
-		// it is used to control whether we should consult the JDBC metadata to determine
-		// certain Settings default values; it is useful to *not* do this when the database
-		// may not be available (mainly in tools usage).
-		boolean useJdbcMetadata = ConfigurationHelper.getBoolean( "hibernate.temp.use_jdbc_metadata_defaults", props, true );
-		if ( useJdbcMetadata ) {
-			try {
-				Connection conn = connections.getConnection();
-				try {
-					DatabaseMetaData meta = conn.getMetaData();
-					log.info( "Database ->\n" +
-							"       name : " + meta.getDatabaseProductName() + '\n' +
-							"    version : " +  meta.getDatabaseProductVersion() + '\n' +
-							"      major : " + meta.getDatabaseMajorVersion() + '\n' +
-							"      minor : " + meta.getDatabaseMinorVersion()
-					);
-					log.info( "Driver ->\n" +
-							"       name : " + meta.getDriverName() + '\n' +
-							"    version : " + meta.getDriverVersion() + '\n' +
-							"      major : " + meta.getDriverMajorVersion() + '\n' +
-							"      minor : " + meta.getDriverMinorVersion()
-					);
-
-					dialect = DialectFactory.buildDialect( props, conn );
-
-					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
-					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
-					metaReportsDDLCausesTxnCommit = meta.dataDefinitionCausesTransactionCommit();
-					metaReportsDDLInTxnSupported = !meta.dataDefinitionIgnoredInTransactions();
-					metaSupportsGetGeneratedKeys = meta.supportsGetGeneratedKeys();
-				}
-				catch ( SQLException sqle ) {
-					log.warn( "Could not obtain connection metadata", sqle );
-				}
-				finally {
-					connections.closeConnection( conn );
-				}
-			}
-			catch ( SQLException sqle ) {
-				log.warn( "Could not obtain connection to query metadata", sqle );
-				dialect = DialectFactory.buildDialect( props );
-			}
-			catch ( UnsupportedOperationException uoe ) {
-				// user supplied JDBC connections
-				dialect = DialectFactory.buildDialect( props );
-			}
-		}
-		else {
-			dialect = DialectFactory.buildDialect( props );
-		}
-
-		settings.setDataDefinitionImplicitCommit( metaReportsDDLCausesTxnCommit );
-		settings.setDataDefinitionInTransactionSupported( metaReportsDDLInTxnSupported );
+		settings.setDataDefinitionImplicitCommit( meta.doesDataDefinitionCauseTransactionCommit() );
+		settings.setDataDefinitionInTransactionSupported( meta.supportsDataDefinitionInTransaction() );
 		settings.setDialect( dialect );
 
 		//use dialect default properties
@@ -176,7 +114,7 @@ public class SettingsFactory implements Serializable {
 		//JDBC and connection settings:
 
 		int batchSize = ConfigurationHelper.getInt(Environment.STATEMENT_BATCH_SIZE, properties, 0);
-		if ( !metaSupportsBatchUpdates ) batchSize = 0;
+		if ( !meta.supportsBatchUpdates() ) batchSize = 0;
 		if (batchSize>0) log.info("JDBC batch size: " + batchSize);
 		settings.setJdbcBatchSize(batchSize);
 		boolean jdbcBatchVersionedData = ConfigurationHelper.getBoolean(Environment.BATCH_VERSIONED_DATA, properties, false);
@@ -184,7 +122,7 @@ public class SettingsFactory implements Serializable {
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
 		settings.setBatcherFactory( createBatcherFactory(properties, batchSize) );
 
-		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, metaSupportsScrollable);
+		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, meta.supportsScrollableResults());
 		log.info("Scrollable result sets: " + enabledDisabled(useScrollableResultSets) );
 		settings.setScrollableResultSetsEnabled(useScrollableResultSets);
 
@@ -192,7 +130,7 @@ public class SettingsFactory implements Serializable {
 		log.debug( "Wrap result sets: " + enabledDisabled(wrapResultSets) );
 		settings.setWrapResultSetsEnabled(wrapResultSets);
 
-		boolean useGetGeneratedKeys = ConfigurationHelper.getBoolean(Environment.USE_GET_GENERATED_KEYS, properties, metaSupportsGetGeneratedKeys);
+		boolean useGetGeneratedKeys = ConfigurationHelper.getBoolean(Environment.USE_GET_GENERATED_KEYS, properties, meta.supportsGetGeneratedKeys());
 		log.info("JDBC3 getGeneratedKeys(): " + enabledDisabled(useGetGeneratedKeys) );
 		settings.setGetGeneratedKeysEnabled(useGetGeneratedKeys);
 
@@ -208,7 +146,8 @@ public class SettingsFactory implements Serializable {
 		}
 		else {
 			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
-			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT && !connections.supportsAggressiveRelease() ) {
+			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
+					! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {			
 				log.warn( "Overriding release mode as connection provider does not support 'after_statement'" );
 				releaseMode = ConnectionReleaseMode.AFTER_TRANSACTION;
 			}

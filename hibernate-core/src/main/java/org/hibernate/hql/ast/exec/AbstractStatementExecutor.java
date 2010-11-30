@@ -198,7 +198,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		if ( getFactory().getDialect().dropTemporaryTableAfterUse() ) {
 			IsolatedWork work = new IsolatedWork() {
 				public void doWork(Connection connection) throws HibernateException {
-					final String command = session.getFactory().getSettings().getDialect().getDropTemporaryTableString()
+					final String command = session.getFactory().getDialect().getDropTemporaryTableString()
 							+ ' ' + persister.getTemporaryIdTableName();
 					try {
 						Statement statement = connection.createStatement();

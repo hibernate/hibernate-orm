@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.dialect.resolver;
+package org.hibernate.service.jdbc.dialect.internal;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -35,6 +35,8 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class BasicDialectResolver extends AbstractDialectResolver {
+	// TODO: should this disappear???
+
 	public static final int VERSION_INSENSITIVE_VERSION = -9999;
 
 	private final String matchingName;

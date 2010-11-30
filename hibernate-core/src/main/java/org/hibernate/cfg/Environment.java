@@ -239,8 +239,8 @@ public final class Environment {
 	public static final String DIALECT ="hibernate.dialect";
 
 	/**
-	 * {@link org.hibernate.dialect.resolver.DialectResolver} classes to register with the
-	 * {@link org.hibernate.dialect.resolver.DialectFactory}
+	 * {@link org.hibernate.service.jdbc.dialect.spi.DialectResolver} classes to register with the
+	 * {@link org.hibernate.service.jdbc.dialect.spi.DialectFactory}
 	 */
 	public static final String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 

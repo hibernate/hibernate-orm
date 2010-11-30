@@ -49,6 +49,11 @@ import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.cfg.Environment;
+import org.hibernate.service.jdbc.dialect.internal.DialectFactoryImpl;
+import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
+import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
+import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * TODO : javadoc
@@ -56,14 +61,28 @@ import org.hibernate.cfg.Environment;
  * @author Steve Ebersole
  */
 public class DialectFactoryTest extends TestCase {
+	private ServiceRegistryHolder serviceRegistryHolder;
+
 	public DialectFactoryTest(String name) {
 		super( name );
+	}
+
+	protected void setUp() {
+		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	}
+
+	protected void tearDown() {
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+		}
 	}
 
 	public static Test suite() {
 		return new TestSuite( DialectFactoryTest.class );
 	}
 
+	// TODO: is it still possible to build a dialect using a class name???
+	/*
 	public void testBuildDialectByClass() {
 		assertEquals(
 				HSQLDialect.class,
@@ -86,12 +105,13 @@ public class DialectFactoryTest extends TestCase {
 			assertEquals( "unexpected exception type", e.getCause().getClass(), ClassCastException.class );
 		}
 	}
+    */
 
 	public void testBuildDialectByProperties() {
 		Properties props = new Properties();
 
 		try {
-			DialectFactory.buildDialect( props, null );
+			getDialectFactoryImpl( new StandardDialectResolver() ).buildDialect( props, null );
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -99,57 +119,65 @@ public class DialectFactoryTest extends TestCase {
 		}
 
 		props.setProperty( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
-		assertTrue( DialectFactory.buildDialect( props, null ) instanceof HSQLDialect );
+		assertTrue( getDialectFactoryImpl( new StandardDialectResolver() ).buildDialect( props, null ) instanceof HSQLDialect );
+	}
+
+	private DialectFactoryImpl getDialectFactoryImpl(DialectResolver dialectResolver) {
+		DialectFactoryImpl dialectFactoryImpl = new DialectFactoryImpl();
+		dialectFactoryImpl.setClassLoaderService( serviceRegistryHolder.getClassLoaderService() );
+		dialectFactoryImpl.setDialectResolver( dialectResolver );
+		return dialectFactoryImpl;
 	}
 
 	public void testPreregisteredDialects() {
-		testDetermination( "HSQL Database Engine", HSQLDialect.class );
-		testDetermination( "H2", H2Dialect.class );
-		testDetermination( "MySQL", MySQLDialect.class );
-		testDetermination( "PostgreSQL", PostgreSQLDialect.class );
-		testDetermination( "Apache Derby", DerbyDialect.class );
-		testDetermination( "Ingres", IngresDialect.class );
-		testDetermination( "ingres", IngresDialect.class );
-		testDetermination( "INGRES", IngresDialect.class );
-		testDetermination( "Microsoft SQL Server Database", SQLServerDialect.class );
-		testDetermination( "Microsoft SQL Server", SQLServerDialect.class );
-		testDetermination( "Sybase SQL Server", SybaseASE15Dialect.class );
-		testDetermination( "Adaptive Server Enterprise", SybaseASE15Dialect.class );
-		testDetermination( "Adaptive Server Anywhere", SybaseAnywhereDialect.class );
-		testDetermination( "Informix Dynamic Server", InformixDialect.class );
-		testDetermination( "DB2/NT", DB2Dialect.class );
-		testDetermination( "DB2/LINUX", DB2Dialect.class );
-		testDetermination( "DB2/6000", DB2Dialect.class );
-		testDetermination( "DB2/HPUX", DB2Dialect.class );
-		testDetermination( "DB2/SUN", DB2Dialect.class );
-		testDetermination( "DB2/LINUX390", DB2Dialect.class );
-		testDetermination( "DB2/AIX64", DB2Dialect.class );
-		testDetermination( "Oracle", 8, Oracle8iDialect.class );
-		testDetermination( "Oracle", 9, Oracle9iDialect.class );
-		testDetermination( "Oracle", 10, Oracle10gDialect.class );
-		testDetermination( "Oracle", 11, Oracle10gDialect.class );
+		DialectResolver resolver = new StandardDialectResolver();
+		testDetermination( "HSQL Database Engine", HSQLDialect.class, resolver );
+		testDetermination( "H2", H2Dialect.class, resolver );
+		testDetermination( "MySQL", MySQLDialect.class, resolver );
+		testDetermination( "PostgreSQL", PostgreSQLDialect.class, resolver );
+		testDetermination( "Apache Derby", DerbyDialect.class, resolver );
+		testDetermination( "Ingres", IngresDialect.class, resolver );
+		testDetermination( "ingres", IngresDialect.class, resolver );
+		testDetermination( "INGRES", IngresDialect.class, resolver );
+		testDetermination( "Microsoft SQL Server Database", SQLServerDialect.class, resolver );
+		testDetermination( "Microsoft SQL Server", SQLServerDialect.class, resolver );
+		testDetermination( "Sybase SQL Server", SybaseASE15Dialect.class, resolver );
+		testDetermination( "Adaptive Server Enterprise", SybaseASE15Dialect.class, resolver );
+		testDetermination( "Adaptive Server Anywhere", SybaseAnywhereDialect.class, resolver );
+		testDetermination( "Informix Dynamic Server", InformixDialect.class, resolver );
+		testDetermination( "DB2/NT", DB2Dialect.class, resolver );
+		testDetermination( "DB2/LINUX", DB2Dialect.class, resolver );
+		testDetermination( "DB2/6000", DB2Dialect.class, resolver );
+		testDetermination( "DB2/HPUX", DB2Dialect.class, resolver );
+		testDetermination( "DB2/SUN", DB2Dialect.class, resolver );
+		testDetermination( "DB2/LINUX390", DB2Dialect.class, resolver );
+		testDetermination( "DB2/AIX64", DB2Dialect.class, resolver );
+		testDetermination( "Oracle", 8, Oracle8iDialect.class, resolver );
+		testDetermination( "Oracle", 9, Oracle9iDialect.class, resolver );
+		testDetermination( "Oracle", 10, Oracle10gDialect.class, resolver );
+		testDetermination( "Oracle", 11, Oracle10gDialect.class, resolver );
 	}
 
 	public void testCustomDialects() {
-		DialectFactory.registerDialectResolver( TestingDialects.MyDialectResolver1.class.getName() );
-		DialectFactory.registerDialectResolver( TestingDialects.MyDialectResolver2.class.getName() );
-		DialectFactory.registerDialectResolver( TestingDialects.ErrorDialectResolver1.class.getName() );
-		DialectFactory.registerDialectResolver( TestingDialects.ErrorDialectResolver2.class.getName() );
-		DialectFactory.registerDialectResolver( TestingDialects.MyOverridingDialectResolver1.class.getName() );
-		DialectFactory.registerDialectResolver( "org.hibernate.dialect.NoSuchDialectResolver" );
-		DialectFactory.registerDialectResolver( "java.lang.Object" );
+		DialectResolverSet resolvers = new DialectResolverSet();
+		resolvers.addResolver( new TestingDialects.MyDialectResolver1() );
+		resolvers.addResolver( new TestingDialects.MyDialectResolver2() );
+		resolvers.addResolver( new TestingDialects.ErrorDialectResolver1() );
+		resolvers.addResolver( new TestingDialects.ErrorDialectResolver2() );
+		resolvers.addResolver( new TestingDialects.MyOverridingDialectResolver1() );
+		//DialectFactory.registerDialectResolver( "org.hibernate.dialect.NoSuchDialectResolver" );
+		//DialectFactory.registerDialectResolver( "java.lang.Object" );
 
-
-		testDetermination( "MyDatabase1", TestingDialects.MyDialect1.class );
-		testDetermination( "MyDatabase2", 1, TestingDialects.MyDialect21.class );
-		testDetermination( "MyTrickyDatabase1", TestingDialects.MyDialect1.class );
+		testDetermination( "MyDatabase1", TestingDialects.MyDialect1.class, resolvers );
+		testDetermination( "MyDatabase2", 1, TestingDialects.MyDialect21.class, resolvers );
+		testDetermination( "MyTrickyDatabase1", TestingDialects.MyDialect1.class, resolvers );
 
 		// This should be mapped to DB2Dialect by default, but actually it will be
 		// my custom dialect because I have registered MyOverridingDialectResolver1.
-		testDetermination( "DB2/MySpecialPlatform", TestingDialects.MySpecialDB2Dialect.class );
+		testDetermination( "DB2/MySpecialPlatform", TestingDialects.MySpecialDB2Dialect.class, resolvers );
 
 		try {
-			testDetermination( "ErrorDatabase1", Void.TYPE );
+			testDetermination( "ErrorDatabase1", Void.TYPE, resolvers );
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -157,7 +185,7 @@ public class DialectFactoryTest extends TestCase {
 		}
 
 		try {
-			testDetermination( "ErrorDatabase2", Void.TYPE );
+			testDetermination( "ErrorDatabase2", Void.TYPE, resolvers );
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -168,7 +196,7 @@ public class DialectFactoryTest extends TestCase {
 	public void testDialectNotFound() {
 		Properties properties = new Properties();
 		try {
-			DialectFactory.buildDialect( properties, Mocks.createConnection( "NoSuchDatabase", 666 ) );
+			getDialectFactoryImpl( new StandardDialectResolver() ).buildDialect( properties, Mocks.createConnection( "NoSuchDatabase", 666 ) );
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -176,13 +204,15 @@ public class DialectFactoryTest extends TestCase {
 		}
 	}
 
-	private void testDetermination(String databaseName, Class clazz) {
-		testDetermination( databaseName, -9999, clazz );
+	private void testDetermination(String databaseName, Class clazz, DialectResolver resolver) {
+		testDetermination( databaseName, -9999, clazz, resolver );
 	}
 
-	private void testDetermination(String databaseName, int databaseMajorVersion, Class clazz) {
+	private void testDetermination(String databaseName, int databaseMajorVersion, Class clazz, DialectResolver resolver) {
+		DialectFactoryImpl dialectFactoryImpl = getDialectFactoryImpl( new StandardDialectResolver() );
+		dialectFactoryImpl.setDialectResolver( resolver );
 		Properties properties = new Properties();
 		Connection conn = Mocks.createConnection( databaseName, databaseMajorVersion );
-		assertEquals( clazz, DialectFactory.buildDialect( properties, conn ).getClass() );
+		assertEquals( clazz, dialectFactoryImpl.buildDialect( properties, conn ).getClass() );
 	}
 }

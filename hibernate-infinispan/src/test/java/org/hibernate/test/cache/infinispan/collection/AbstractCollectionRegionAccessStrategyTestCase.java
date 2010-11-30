@@ -548,13 +548,13 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
          localCfg = createConfiguration(configName, configResource);
          localRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistryHolder.getJdbcServicesImpl().getConnectionProvider(),
+				 serviceRegistryHolder.getJdbcServicesImpl(),
 				 localCfg
 		 );
 
          remoteCfg = createConfiguration(configName, configResource);
          remoteRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistryHolder.getJdbcServicesImpl().getConnectionProvider(),
+				 serviceRegistryHolder.getJdbcServicesImpl(),
 				 remoteCfg
 		 );
       }

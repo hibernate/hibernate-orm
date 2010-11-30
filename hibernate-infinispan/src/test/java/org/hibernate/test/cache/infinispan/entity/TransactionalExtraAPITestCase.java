@@ -61,7 +61,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
        if (getEntityAccessStrategy() == null) {
            Configuration cfg = createConfiguration();
            InfinispanRegionFactory rf  = CacheTestUtil.startRegionFactory(
-				   getConnectionProvider(), cfg, getCacheTestSupport()
+				   getJdbcServices(), cfg, getCacheTestSupport()
 		   );
            
            // Sleep a bit to avoid concurrent FLUSH problem

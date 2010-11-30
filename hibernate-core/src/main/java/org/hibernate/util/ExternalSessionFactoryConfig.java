@@ -24,8 +24,10 @@
  */
 package org.hibernate.util;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import java.util.Properties;

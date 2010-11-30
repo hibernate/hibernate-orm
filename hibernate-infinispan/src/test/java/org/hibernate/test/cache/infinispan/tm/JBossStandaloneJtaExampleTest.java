@@ -33,6 +33,8 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
+import org.hibernate.test.common.ServiceRegistryHolder;
+
 import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -70,10 +72,12 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    private static final JBossStandaloneJTAManagerLookup lookup = new JBossStandaloneJTAManagerLookup();
    Context ctx;
    Main jndiServer;
+   private ServiceRegistryHolder serviceRegistryHolder;
 
    @Override
    protected void setUp() throws Exception {
       super.setUp();
+	  serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
       jndiServer = startJndiServer();
       ctx = createJndiContext();
       bindTransactionManager();
@@ -83,9 +87,16 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
 
    @Override
    protected void tearDown() throws Exception {
-      super.tearDown();
-      ctx.close();
-      jndiServer.stop();
+      try {
+         super.tearDown();
+         ctx.close();
+         jndiServer.stop();
+	  }
+	  finally {
+		  if ( serviceRegistryHolder != null ) {
+			  serviceRegistryHolder.destroy();
+		  }
+	  }
    }
 
    public void testPersistAndLoadUnderJta() throws Exception {
@@ -290,6 +301,6 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
          Collection coll = (Collection) iter.next();
          cfg.setCollectionCacheConcurrencyStrategy(coll.getRole(), "transactional");
       }
-      return cfg.buildSessionFactory();
+      return cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
    }
 }

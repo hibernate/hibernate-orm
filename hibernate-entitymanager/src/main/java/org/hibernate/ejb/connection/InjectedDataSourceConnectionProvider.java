@@ -28,12 +28,13 @@ import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.connection.DatasourceConnectionProvider;
+import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 /**
- * A specialization of {@link DatasourceConnectionProvider} which uses the {@link DataSource} specified vi
+ * A specialization of {@link DatasourceConnectionProviderImpl} which uses the {@link DataSource} specified vi
  * {@link #setDataSource} rather than locating it from JNDI.
  * <p/>
  * NOTE : {@link #setDataSource} must be called prior to {@link #configure}.
@@ -42,7 +43,7 @@ import org.slf4j.Logger;
  *
  * @author Emmanuel Bernard
  */
-public class InjectedDataSourceConnectionProvider extends DatasourceConnectionProvider {
+public class InjectedDataSourceConnectionProvider extends DatasourceConnectionProviderImpl {
 	private final Logger log = LoggerFactory.getLogger( InjectedDataSourceConnectionProvider.class );
 
 	private String user;

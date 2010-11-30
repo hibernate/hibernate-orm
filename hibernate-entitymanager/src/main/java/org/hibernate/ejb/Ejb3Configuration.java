@@ -74,7 +74,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.Settings;
-import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
@@ -94,6 +93,9 @@ import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
+import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.transaction.JDBCTransactionFactory;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ReflectHelper;
@@ -142,7 +144,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	private String cfgXmlResource;
 
 	private AnnotationConfiguration cfg;
-	private SettingsFactory settingsFactory;
+	private final Map connectionProviderInjectionData;
 	//made transient and not restored in deserialization on purpose, should no longer be called after restoration
 	private transient EventListenerConfigurator listenerConfigurator;
 	private PersistenceUnitTransactionType transactionType;
@@ -153,8 +155,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 
 	public Ejb3Configuration() {
-		settingsFactory = new InjectionSettingsFactory();
-		cfg = new AnnotationConfiguration( settingsFactory );
+		connectionProviderInjectionData = new HashMap();
+		cfg = new AnnotationConfiguration();
 		cfg.setEntityNotFoundDelegate( ejb3EntityNotFoundDelegate );
 		listenerConfigurator = new EventListenerConfigurator( this );
 	}
@@ -169,7 +171,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( ds != null ) {
 			Map cpInjection = new HashMap();
 			cpInjection.put( "dataSource", ds );
-			( (InjectionSettingsFactory) settingsFactory ).setConnectionProviderInjectionData( cpInjection );
+			connectionProviderInjectionData.put( ConnectionProviderInitiator.INJECTION_DATA, cpInjection );
 			this.setProperty( Environment.CONNECTION_PROVIDER, InjectedDataSourceConnectionProvider.class.getName() );
 		}
 	}
@@ -900,11 +902,11 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			configure( (Properties)null, null );
 			NamingHelper.bind(this);
 			return new EntityManagerFactoryImpl(
-					cfg.buildSessionFactory(),
 					transactionType,
 					discardOnClose,
 					getSessionInterceptorClass( cfg.getProperties() ),
-					cfg
+					cfg,
+					connectionProviderInjectionData
 			);
 		}
 		catch (HibernateException e) {
@@ -1350,8 +1352,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-
-	public Settings buildSettings() throws HibernateException {
+	/*
+		TODO: not needed any more?
+	public Settings buildSettings(ConnectionProvider connectionProvider) throws HibernateException {
 		Thread thread = null;
 		ClassLoader contextClassLoader = null;
 		if (overridenClassLoader != null) {
@@ -1360,12 +1363,13 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			thread.setContextClassLoader( overridenClassLoader );
 		}
 		try {
-			return settingsFactory.buildSettings( cfg.getProperties() );
+			return settingsFactory.buildSettings( cfg.getProperties(), connectionProvider );
 		}
 		finally {
 			if (thread != null) thread.setContextClassLoader( contextClassLoader );
 		}
 	}
+	*/
 
 	public Ejb3Configuration addProperties(Properties props) {
 		cfg.addProperties( props );
@@ -1501,8 +1505,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return cfg.getEventListeners();
 	}
 
-	SessionFactory buildSessionFactory() throws HibernateException {
-		return cfg.buildSessionFactory();
+	SessionFactory buildSessionFactory(ServicesRegistry serviceRegistry) throws HibernateException {
+		return cfg.buildSessionFactory( serviceRegistry );
 	}
 
 	public Iterator getTableMappings() {

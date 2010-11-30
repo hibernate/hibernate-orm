@@ -26,8 +26,9 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.ConnectionProviderFactory;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Stoppable;
+import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
  * XaConnectionProvider.
@@ -36,7 +37,7 @@ import org.hibernate.connection.ConnectionProviderFactory;
  * @since 3.5
  */
 public class XaConnectionProvider implements ConnectionProvider {
-   private static ConnectionProvider actualConnectionProvider = ConnectionProviderFactory.newConnectionProvider();
+   private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
    private boolean isTransactional;
 
    public static ConnectionProvider getActualConnectionProvider() {
@@ -69,7 +70,9 @@ public class XaConnectionProvider implements ConnectionProvider {
    }
 
    public void close() throws HibernateException {
-      actualConnectionProvider.close();
+	   if ( actualConnectionProvider instanceof Stoppable ) {
+		   ( ( Stoppable ) actualConnectionProvider ).stop();
+	   }
    }
 
    public boolean supportsAggressiveRelease() {

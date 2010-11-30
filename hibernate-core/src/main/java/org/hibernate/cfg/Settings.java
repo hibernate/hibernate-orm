@@ -29,7 +29,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.exception.SQLExceptionConverter;
@@ -170,10 +170,6 @@ public final class Settings {
 
 	public Integer getJdbcFetchSize() {
 		return jdbcFetchSize;
-	}
-
-	public ConnectionProvider getConnectionProvider() {
-		return connectionProvider;
 	}
 
 	public TransactionFactory getTransactionFactory() {

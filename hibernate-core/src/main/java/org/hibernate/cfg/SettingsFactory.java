@@ -43,8 +43,7 @@ import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.ConnectionProviderFactory;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.resolver.DialectFactory;
 import org.hibernate.exception.SQLExceptionConverter;
@@ -76,7 +75,7 @@ public class SettingsFactory implements Serializable {
 	protected SettingsFactory() {
 	}
 
-	public Settings buildSettings(Properties props) {
+	public Settings buildSettings(Properties props, ConnectionProvider connections) {
 		Settings settings = new Settings();
 
 		//SessionFactory name:
@@ -85,9 +84,6 @@ public class SettingsFactory implements Serializable {
 		settings.setSessionFactoryName(sessionFactoryName);
 
 		//JDBC and connection settings:
-
-		ConnectionProvider connections = createConnectionProvider(props);
-		settings.setConnectionProvider(connections);
 
 		//Interrogate JDBC metadata
 
@@ -447,10 +443,6 @@ public class SettingsFactory implements Serializable {
 				throw new HibernateException("could not instantiate BatcherFactory: " + batcherClass, cnfe);
 			}
 		}
-	}
-
-	protected ConnectionProvider createConnectionProvider(Properties properties) {
-		return ConnectionProviderFactory.newConnectionProvider(properties);
 	}
 
 	protected TransactionFactory createTransactionFactory(Properties properties) {

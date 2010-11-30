@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
+import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.ExternalSessionFactoryConfig;
@@ -32,7 +34,6 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 
 	private String boundName;
 	private Properties properties = new Properties();
-
 
 	public void start() throws HibernateException {
 		boundName = getJndiName();
@@ -61,7 +62,9 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	SessionFactory buildSessionFactory() throws HibernateException {
 		log.info( "starting service at JNDI name: " + boundName );
 		log.info( "service properties: " + properties );
-		return buildConfiguration().buildSessionFactory();
+		return buildConfiguration().buildSessionFactory(
+				new ServicesRegistryBootstrap().initiateServicesRegistry( properties )
+		);
 	}
 
 	protected Map getExtraProperties() {

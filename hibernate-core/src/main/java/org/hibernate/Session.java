@@ -929,7 +929,7 @@ public interface Session extends Serializable {
 	 * <p/>
 	 * Note that disconnect() called on a session where the connection was
 	 * retrieved by Hibernate through its configured
-	 * {@link org.hibernate.connection.ConnectionProvider} has no effect,
+	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} has no effect,
 	 * provided {@link ConnectionReleaseMode#ON_CLOSE} is not in effect.
 	 *
 	 * @return the application-supplied connection or <tt>null</tt>

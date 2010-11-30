@@ -34,10 +34,8 @@ import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.DriverManagerConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -57,6 +55,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.util.JoinedIterator;
@@ -4346,8 +4345,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	public void testUserProvidedConnection() throws Exception {
-		ConnectionProvider dcp = new DriverManagerConnectionProvider();
-		dcp.configure( Environment.getProperties() );
+		ConnectionProvider dcp = ConnectionProviderBuilder.buildConnectionProvider();
 		Session s = getSessions().openSession( dcp.getConnection() );
 		Transaction tx = s.beginTransaction();
 		s.createQuery( "from Fo" ).list();

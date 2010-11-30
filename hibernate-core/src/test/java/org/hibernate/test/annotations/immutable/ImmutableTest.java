@@ -143,7 +143,7 @@ public class ImmutableTest extends TestCase {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Foobar.class);
-			config.buildSessionFactory();
+			config.buildSessionFactory( getServiceRegistry() );
 			fail();
 		} catch (AnnotationException ae) {
 			log.debug("succes");

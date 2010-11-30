@@ -118,6 +118,7 @@ public abstract class TestCase extends HibernateTestCase {
 		if ( factory != null ) {
 			factory.close();
 		}
+		super.closeResources();
 	}
 
 	protected EntityManager getOrCreateEntityManager() {

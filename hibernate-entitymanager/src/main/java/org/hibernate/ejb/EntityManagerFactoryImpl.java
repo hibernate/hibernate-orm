@@ -41,6 +41,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.EntityMode;
+import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -48,6 +49,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
+import org.hibernate.service.internal.ServicesRegistryImpl;
+import org.hibernate.service.spi.ServicesRegistry;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.
@@ -57,6 +60,7 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
  * @author Steve Ebersole
  */
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
+	private final transient ServicesRegistryImpl serviceRegistry;
 	private final SessionFactory sessionFactory;
 	private final PersistenceUnitTransactionType transactionType;
 	private final boolean discardOnClose;
@@ -65,16 +69,25 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final Metamodel metamodel;
 	private final HibernatePersistenceUnitUtil util;
 	private final Map<String,Object> properties;
+	private final Map connectionProviderInjectionData;
+
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
 	@SuppressWarnings( "unchecked" )
 	public EntityManagerFactoryImpl(
-			SessionFactory sessionFactory,
 			PersistenceUnitTransactionType transactionType,
 			boolean discardOnClose,
 			Class<?> sessionInterceptorClass,
-			Configuration cfg) {
-		this.sessionFactory = sessionFactory;
+			Configuration cfg,
+			Map connectionProviderInjectionData) {
+		// FIXME: Get rid of this temporary way of creating the service registry for EM
+		Map serviceRegistryProperties = new HashMap(
+				cfg.getProperties().size() + connectionProviderInjectionData.size()
+		);
+		serviceRegistryProperties.putAll( cfg.getProperties() );
+		serviceRegistryProperties.putAll( connectionProviderInjectionData );
+		this.serviceRegistry = new ServicesRegistryBootstrap().initiateServicesRegistry( serviceRegistryProperties );
+		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
 		this.sessionInterceptorClass = sessionInterceptorClass;
@@ -93,6 +106,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		addAll( props, ( (SessionFactoryImplementor) sessionFactory ).getProperties() );
 		addAll( props, cfg.getProperties() );
 		this.properties = Collections.unmodifiableMap( props );
+		this.connectionProviderInjectionData = new HashMap();
 	}
 
 	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {
@@ -125,6 +139,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	public void close() {
 		sessionFactory.close();
+		serviceRegistry.destroy();
 	}
 
 	public Map<String, Object> getProperties() {

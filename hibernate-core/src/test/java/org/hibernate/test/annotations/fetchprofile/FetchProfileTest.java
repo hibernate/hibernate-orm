@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * Test case for HHH-4812
@@ -44,13 +46,27 @@ public class FetchProfileTest extends TestCase {
 
 	private Logger log = LoggerFactory.getLogger( FetchProfileTest.class );
 
+	private ServiceRegistryHolder serviceRegistryHolder;
+
+	protected void setUp() {
+		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	}
+
+	protected void tearDown() {
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+		}
+	}
+
 	public void testFetchProfileConfigured() {
 		AnnotationConfiguration config = new AnnotationConfiguration();
 		config.addAnnotatedClass( Customer.class );
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( SupportTickets.class );
 		config.addAnnotatedClass( Country.class );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory();
+		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+				serviceRegistryHolder.getServiceRegistry()
+		);
 
 		assertTrue(
 				"fetch profile not parsed properly",
@@ -69,7 +85,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -84,7 +100,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -99,7 +115,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -116,7 +132,9 @@ public class FetchProfileTest extends TestCase {
 				.getContextClassLoader()
 				.getResourceAsStream( "org/hibernate/test/annotations/fetchprofile/mappings.hbm.xml" );
 		config.addInputStream( is );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory();
+		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+				serviceRegistryHolder.getServiceRegistry()
+		);
 
 		assertTrue(
 				"fetch profile not parsed properly",
@@ -129,7 +147,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( Country.class );
 		try {
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -144,7 +162,9 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( SupportTickets.class );
 		config.addAnnotatedClass( Country.class );
 		config.addPackage( Customer.class.getPackage().getName() );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory();
+		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+				serviceRegistryHolder.getServiceRegistry()
+		);
 
 		assertTrue(
 				"fetch profile not parsed properly",

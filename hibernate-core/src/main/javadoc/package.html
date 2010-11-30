@@ -40,7 +40,7 @@ Note that there is a large degree of crossover between the notion of extension p
 Hibernate provides a number of SPIs intended to integrate itself with various third party frameworks or application code to provide
 additional capabilities.   The SPIs fall mainly into 2 categories:<ul>
     <li>Caching - {@link org.hibernate.cache.RegionFactory}</li>
-    <li>JDBC Connection management - {@link org.hibernate.connection.ConnectionProvider}
+    <li>JDBC Connection management - {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider}
 </ul>
 Certainly {@link org.hibernate.dialect.Dialect} could fit in here as well, though we chose to list it under extensions since application
 developers tend to provide extended dialects rather frequently for various reasons.

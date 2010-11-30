@@ -57,7 +57,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * Open a {@link Session}.
 	 * <p/>
 	 * JDBC {@link Connection connection(s} will be obtained from the
-	 * configured {@link org.hibernate.connection.ConnectionProvider} as needed
+	 * configured {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} as needed
 	 * to perform requested work.
 	 *
 	 * @return The created session.
@@ -70,7 +70,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * Open a {@link Session}, utilizing the specified {@link Interceptor}.
 	 * <p/>
 	 * JDBC {@link Connection connection(s} will be obtained from the
-	 * configured {@link org.hibernate.connection.ConnectionProvider} as needed
+	 * configured {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} as needed
 	 * to perform requested work.
 	 *
 	 * @param interceptor a session-scoped interceptor
@@ -87,7 +87,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * Note that the second-level cache will be disabled if you supply a JDBC
 	 * connection. Hibernate will not be able to track any statements you might
 	 * have executed in the same transaction.  Consider implementing your own
-	 * {@link org.hibernate.connection.ConnectionProvider} instead as a highly
+	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} instead as a highly
 	 * recommended alternative.
 	 *
 	 * @param connection a connection provided by the application.
@@ -103,7 +103,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * Note that the second-level cache will be disabled if you supply a JDBC
 	 * connection. Hibernate will not be able to track any statements you might
 	 * have executed in the same transaction.  Consider implementing your own
-	 * {@link org.hibernate.connection.ConnectionProvider} instead as a highly
+	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} instead as a highly
 	 * recommended alternative.
 	 *
 	 * @param connection a connection provided by the application.

@@ -41,8 +41,10 @@ import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.util.ComparableComparator;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
@@ -637,6 +639,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
       private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
       private final String configName;
       private String preferIPv4Stack;
+      private ServiceRegistryHolder serviceRegistryHolder;
 
       public AccessStrategyTestSetup(Test test, String configName) {
          super(test);
@@ -658,22 +661,37 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
          preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
          System.setProperty(PREFER_IPV4STACK, "true");
 
+		 serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+
          localCfg = createConfiguration(configName);
-         localRegionFactory = CacheTestUtil.startRegionFactory(localCfg);
+         localRegionFactory = CacheTestUtil.startRegionFactory(
+				 serviceRegistryHolder.getJdbcServicesImpl().getConnectionProvider(),
+				 localCfg
+		 );
 
          remoteCfg = createConfiguration(configName);
-         remoteRegionFactory = CacheTestUtil.startRegionFactory(remoteCfg);
+         remoteRegionFactory = CacheTestUtil.startRegionFactory(
+				 serviceRegistryHolder.getJdbcServicesImpl().getConnectionProvider(),
+				 remoteCfg
+		 );
       }
 
       @Override
       protected void tearDown() throws Exception {
          super.tearDown();
 
-         if (localRegionFactory != null)
-            localRegionFactory.stop();
+		  try {
+            if (localRegionFactory != null)
+               localRegionFactory.stop();
 
-         if (remoteRegionFactory != null)
-            remoteRegionFactory.stop();
+            if (remoteRegionFactory != null)
+               remoteRegionFactory.stop();
+		  }
+		  finally {
+            if ( serviceRegistryHolder != null ) {
+               serviceRegistryHolder.destroy();
+            }
+		  }
       }
 
    }

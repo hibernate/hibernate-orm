@@ -47,7 +47,7 @@ public class ExtendsTest extends UnitTestCase {
 			cfg.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" );
 			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
 
-			cfg.buildSessionFactory();
+			cfg.buildSessionFactory( getServiceRegistry() );
 
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
@@ -103,7 +103,7 @@ public class ExtendsTest extends UnitTestCase {
 			);
 			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
 
-			cfg.buildSessionFactory();
+			cfg.buildSessionFactory( getServiceRegistry() );
 
 			fail( "Should not be able to build sessionfactory without a Person" );
 		}
@@ -119,7 +119,7 @@ public class ExtendsTest extends UnitTestCase {
 		try {
 			cfg.addResource( getBaseForMappings() + "extendshbm/allseparateinone.hbm.xml" );
 
-			cfg.buildSessionFactory();
+			cfg.buildSessionFactory( getServiceRegistry() );
 
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );

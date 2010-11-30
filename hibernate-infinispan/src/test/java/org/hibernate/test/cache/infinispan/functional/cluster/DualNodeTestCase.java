@@ -21,6 +21,9 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -43,6 +46,7 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
    
    private static final Log log = LogFactory.getLog(DualNodeTestCase.class);
    public static final String NODE_ID_PROP = "hibernate.test.cluster.node.id";
+   public static final String NODE_ID_FIELD = "nodeId";
    public static final String LOCAL = "local";
    public static final String REMOTE = "remote";
    private ExecutionEnvironment secondNodeEnvironment;
@@ -72,10 +76,15 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
    }
 
    @Override
+   protected Map getConnectionProviderInjectionProperties() {
+	   return getFirstNodeConnectionProviderInjectionProperties();
+   }
+
+   @Override
    protected void prepareTest() throws Exception {
       log.info("Building second node locally managed execution env");
       secondNodeEnvironment = new ExecutionEnvironment(new SecondNodeSettings());
-      secondNodeEnvironment.initialize();
+      secondNodeEnvironment.initialize( getSecondNodeConnectionProviderInjectionProperties() );
       super.prepareTest();
    }
    
@@ -142,6 +151,10 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
       cfg.setProperty(NODE_ID_PROP, LOCAL);
    }
 
+	protected Map getFirstNodeConnectionProviderInjectionProperties() {
+		return Collections.singletonMap( NODE_ID_FIELD, LOCAL );
+	}
+
    /**
     * Apply any node-specific configurations to our second node.
     * 
@@ -151,7 +164,11 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
    protected void configureSecondNode(Configuration cfg) {
       cfg.setProperty(NODE_ID_PROP, REMOTE);
    }
-   
+
+	protected Map getSecondNodeConnectionProviderInjectionProperties() {
+		return Collections.singletonMap( NODE_ID_FIELD, REMOTE );
+	}
+
    protected void sleep(long ms) {
       try {
           Thread.sleep(ms);

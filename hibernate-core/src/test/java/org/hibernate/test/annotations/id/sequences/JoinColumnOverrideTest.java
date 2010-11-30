@@ -34,7 +34,7 @@ public class JoinColumnOverrideTest extends TestCase {
 			config.addAnnotatedClass(Bunny.class);
 			config.addAnnotatedClass(PointyTooth.class);
 			config.addAnnotatedClass(TwinkleToes.class);
-			config.buildSessionFactory();
+			config.buildSessionFactory(  getServiceRegistry() );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {

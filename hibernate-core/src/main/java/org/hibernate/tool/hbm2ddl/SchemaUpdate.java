@@ -41,9 +41,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.Formatter;
-import org.hibernate.jdbc.util.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ReflectHelper;
 import org.slf4j.Logger;
@@ -84,15 +85,15 @@ public class SchemaUpdate {
 		formatter = ( ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, props ) ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
-	public SchemaUpdate(Configuration cfg, Settings settings) throws HibernateException {
+	public SchemaUpdate(JdbcServices jdbcServices, Configuration cfg) throws HibernateException {
 		this.configuration = cfg;
-		dialect = settings.getDialect();
+		dialect = jdbcServices.getDialect();
 		connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				settings.getConnectionProvider()
+				jdbcServices.getConnectionProvider()
 		);
 		exceptions = new ArrayList();
-		sqlStatementLogger = settings.getSqlStatementLogger();
-		formatter = ( sqlStatementLogger.isFormatSql() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
+		formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
 	public static void main(String[] args) {

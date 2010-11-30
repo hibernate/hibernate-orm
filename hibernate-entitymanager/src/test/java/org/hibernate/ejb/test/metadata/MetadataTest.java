@@ -61,7 +61,7 @@ public class MetadataTest extends TestCase {
 		configure( cfg );
 		cfg.addAnnotatedClass( WithGenericCollection.class );
 		cfg.buildMappings();
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory();
+		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( getServiceRegistry() );
 		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi );
 	}
 

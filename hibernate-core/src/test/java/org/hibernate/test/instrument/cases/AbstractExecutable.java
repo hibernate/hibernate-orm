@@ -3,12 +3,14 @@ package org.hibernate.test.instrument.cases;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractExecutable implements Executable {
 
+	private ServiceRegistryHolder serviceRegistryHolder;
 	private SessionFactory factory;
 
 	public final void prepare() {
@@ -17,7 +19,8 @@ public abstract class AbstractExecutable implements Executable {
 		for ( int i = 0; i < resources.length; i++ ) {
 			cfg.addResource( resources[i] );
 		}
-		factory = cfg.buildSessionFactory();
+		serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+		factory = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 	}
 
 	public final void complete() {
@@ -26,6 +29,9 @@ public abstract class AbstractExecutable implements Executable {
 		}
 		finally {
 			factory.close();
+			if ( serviceRegistryHolder != null ) {
+				serviceRegistryHolder.destroy();
+			}			
 		}
 	}
 

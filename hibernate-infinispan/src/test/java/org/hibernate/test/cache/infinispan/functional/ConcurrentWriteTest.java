@@ -26,8 +26,10 @@ package org.hibernate.test.cache.infinispan.functional;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -44,7 +46,7 @@ import org.hibernate.Session;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeConnectionProviderImpl;
@@ -146,6 +148,11 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
    public void configure(Configuration cfg) {
       super.configure(cfg);
       cfg.setProperty(DualNodeTestCase.NODE_ID_PROP, DualNodeTestCase.LOCAL);
+   }
+
+   @Override
+   protected Map getConnectionProviderInjectionProperties() {
+      return Collections.singletonMap( DualNodeTestCase.NODE_ID_FIELD, DualNodeTestCase.LOCAL );
    }
 
    @Override

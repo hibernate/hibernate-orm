@@ -23,9 +23,11 @@
  */
 package org.hibernate.testing.junit.functional;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.cfg.Configuration;
@@ -37,6 +39,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Collection;
+import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * {@inheritDoc}
@@ -49,6 +54,8 @@ public class ExecutionEnvironment {
 
 	private final ExecutionEnvironment.Settings settings;
 
+	private Map conectionProviderInjectionProperties;
+	private ServiceRegistryHolder serviceRegistryHolder;
 	private Configuration configuration;
 	private SessionFactory sessionFactory;
 	private boolean allowRebuild;
@@ -73,11 +80,15 @@ public class ExecutionEnvironment {
 		return configuration;
 	}
 
+	public ServicesRegistry getServiceRegistry() {
+		return serviceRegistryHolder.getServiceRegistry();
+	}
+
 	public SessionFactory getSessionFactory() {
 		return sessionFactory;
 	}
 
-	public void initialize() {
+	public void initialize(Map conectionProviderInjectionProperties) {
 		if ( sessionFactory != null ) {
 			throw new IllegalStateException( "attempt to initialize already initialized ExecutionEnvironment" );
 		}
@@ -85,6 +96,7 @@ public class ExecutionEnvironment {
 			return;
 		}
 
+		this.conectionProviderInjectionProperties = conectionProviderInjectionProperties;
 		Configuration configuration = new Configuration();
 		configuration.setProperty( Environment.CACHE_PROVIDER, "org.hibernate.cache.HashtableCacheProvider" );
 
@@ -103,11 +115,26 @@ public class ExecutionEnvironment {
 		applyCacheSettings( configuration );
 		settings.afterConfigurationBuilt( configuration.createMappings(), getDialect() );
 
-		SessionFactory sessionFactory = configuration.buildSessionFactory();
 		this.configuration = configuration;
-		this.sessionFactory = sessionFactory;
+
+		serviceRegistryHolder = new ServiceRegistryHolder( getServiceRegistryProperties() );
+		sessionFactory = configuration.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 
 		settings.afterSessionFactoryBuilt( ( SessionFactoryImplementor ) sessionFactory );
+	}
+
+	private Map getServiceRegistryProperties() {
+		Map serviceRegistryProperties = configuration.getProperties();
+		if ( conectionProviderInjectionProperties != null && conectionProviderInjectionProperties.size() > 0 ) {
+			serviceRegistryProperties = new HashMap(
+					configuration.getProperties().size() + conectionProviderInjectionProperties.size()
+			);
+			serviceRegistryProperties.putAll( configuration.getProperties() );
+			serviceRegistryProperties.put(
+					ConnectionProviderInitiator.INJECTION_DATA, conectionProviderInjectionProperties
+			);
+		}
+		return serviceRegistryProperties;
 	}
 
 	private void applyMappings(Configuration configuration) {
@@ -159,7 +186,12 @@ public class ExecutionEnvironment {
 			sessionFactory.close();
 			sessionFactory = null;
 		}
-		sessionFactory = configuration.buildSessionFactory();
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+			serviceRegistryHolder = null;
+		}
+		serviceRegistryHolder = new ServiceRegistryHolder( getServiceRegistryProperties() );
+		sessionFactory = configuration.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		settings.afterSessionFactoryBuilt( ( SessionFactoryImplementor ) sessionFactory );
 	}
 
@@ -167,6 +199,10 @@ public class ExecutionEnvironment {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 			sessionFactory = null;
+		}
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+			serviceRegistryHolder = null;
 		}
 		configuration = null;
 	}

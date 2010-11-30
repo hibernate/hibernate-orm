@@ -9,8 +9,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.test.common.ServiceRegistryHolder;
+
 import org.testng.annotations.*;
 
 /**
@@ -22,6 +25,7 @@ import org.testng.annotations.*;
 public abstract class AbstractSessionTest {
 
 	protected Configuration config;
+	private ServiceRegistryHolder serviceRegistryHolder;
 	private SessionFactory sessionFactory;
 	private Session session ;
 	private AuditReader auditReader;
@@ -40,7 +44,8 @@ public abstract class AbstractSessionTest {
 
         this.initMappings();
 		
-		sessionFactory = config.buildSessionFactory();
+		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		sessionFactory = config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
     }
 	
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
@@ -60,7 +65,15 @@ public abstract class AbstractSessionTest {
 	
 	@AfterClass
 	public void closeSessionFactory() {
-	    sessionFactory.close();
+		try {
+	   		sessionFactory.close();
+		}
+		finally {
+			if ( serviceRegistryHolder != null ) {
+					serviceRegistryHolder.destroy();
+					serviceRegistryHolder = null;
+			}
+		}
 	}
 	
 	

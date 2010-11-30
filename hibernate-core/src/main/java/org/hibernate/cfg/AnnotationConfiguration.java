@@ -74,10 +74,6 @@ public class AnnotationConfiguration extends Configuration {
 		super();
 	}
 
-	public AnnotationConfiguration(SettingsFactory sf) {
-		super( sf );
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */

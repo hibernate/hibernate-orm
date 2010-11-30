@@ -38,8 +38,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.Work;
+import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.testing.junit.DialectChecks;
 import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.testing.junit.RequiresDialect;
@@ -61,6 +65,7 @@ public abstract class HibernateTestCase extends TestCase {
 
 	protected static Configuration cfg;
 	private static Class<?> lastTestClass;
+	private ServiceRegistryHolder serviceRegistryHolder;
 
 	public HibernateTestCase() {
 		super();
@@ -145,6 +150,17 @@ public abstract class HibernateTestCase extends TestCase {
 	protected void tearDown() throws Exception {
 		runSchemaDrop();
 		handleUnclosedResources();
+	}
+
+	protected ServicesRegistry getServiceRegistry() {
+		if ( serviceRegistryHolder == null ) {
+			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		}
+		return serviceRegistryHolder.getServiceRegistry();
+ 	}
+
+	protected JdbcServices getJdbcServices() {
+		return getServiceRegistry().getService( JdbcServices.class );
 	}
 
 	protected static class Skip {
@@ -265,7 +281,12 @@ public abstract class HibernateTestCase extends TestCase {
 
 	protected abstract void handleUnclosedResources();
 
-	protected abstract void closeResources();
+	protected void closeResources() {
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+			serviceRegistryHolder = null;
+		}
+	}
 
 	protected String[] getAnnotatedPackages() {
 		return new String[] { };
@@ -295,12 +316,12 @@ public abstract class HibernateTestCase extends TestCase {
 	}
 
 	protected void runSchemaGeneration() {
-		SchemaExport export = new SchemaExport( cfg );
+		SchemaExport export = new SchemaExport( getJdbcServices(), cfg );
 		export.create( true, true );
 	}
 
 	protected void runSchemaDrop() {
-		SchemaExport export = new SchemaExport( cfg );
+		SchemaExport export = new SchemaExport( getJdbcServices(), cfg );
 		export.drop( true, true );
 	}
 

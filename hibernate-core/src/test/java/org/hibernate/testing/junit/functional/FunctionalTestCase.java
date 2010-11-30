@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.junit.functional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -90,9 +91,13 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 			log.info( "Building locally managed execution env" );
 			isEnvironmentLocallyManaged = true;
 			environment = new ExecutionEnvironment( this );
-			environment.initialize();
+			environment.initialize( getConnectionProviderInjectionProperties() );
 		}
 		prepareTest();
+	}
+
+	protected Map getConnectionProviderInjectionProperties() {
+		return Collections.EMPTY_MAP;
 	}
 
 	/**

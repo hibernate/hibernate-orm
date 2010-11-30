@@ -35,6 +35,11 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * A basic JUnit {@link junit.framework.TestCase} subclass for
@@ -45,6 +50,8 @@ import junit.framework.TestSuite;
 public abstract class UnitTestCase extends junit.framework.TestCase {
 
 	private static final Logger log = LoggerFactory.getLogger( UnitTestCase.class );
+
+	private ServiceRegistryHolder serviceRegistryHolder;
 
 	public UnitTestCase(String string) {
 		super( string );
@@ -79,6 +86,29 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 		finally {
 			log.info( "Completed test [" + fullTestName() + "]" );
 		}
+	}
+
+	@Override
+	protected void tearDown() throws Exception {
+		if ( serviceRegistryHolder != null ) {
+				serviceRegistryHolder.destroy();
+				serviceRegistryHolder = null;
+		}
+	}
+
+	protected ServicesRegistry getServiceRegistry() {
+		if ( serviceRegistryHolder == null ) {
+			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		}
+		return serviceRegistryHolder.getServiceRegistry();
+ 	}
+
+	protected JdbcServices getJdbcServices() {
+		return getServiceRegistry().getService( JdbcServices.class );
+	}
+
+	protected ConnectionProvider getConnectionProvider() {
+		return getJdbcServices().getConnectionProvider();
 	}
 
 	private static class FailureExpectedTestPassedException extends Exception {

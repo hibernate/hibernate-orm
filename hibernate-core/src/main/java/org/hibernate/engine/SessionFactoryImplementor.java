@@ -45,7 +45,7 @@ import org.hibernate.cache.QueryCache;
 import org.hibernate.cache.UpdateTimestampsCache;
 import org.hibernate.cache.Region;
 import org.hibernate.cfg.Settings;
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.exception.SQLExceptionConverter;

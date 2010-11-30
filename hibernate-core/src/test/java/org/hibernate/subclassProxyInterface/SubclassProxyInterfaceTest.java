@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * TODO : javadoc
@@ -39,6 +40,8 @@ public class SubclassProxyInterfaceTest extends TestCase {
         final Configuration cfg = new Configuration()
 				.setProperty( Environment.DIALECT, H2Dialect.class.getName() );
 		cfg.addClass( Person.class );
-		cfg.buildSessionFactory().close();
+		ServiceRegistryHolder serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+		cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() ).close();
+		serviceRegistryHolder.destroy();
 	}
 }

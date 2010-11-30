@@ -72,7 +72,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
    private void evictOrRemoveTest() throws Exception {
       Configuration cfg = createConfiguration();
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       CacheAdapter localCache = getInfinispanCache(regionFactory);
       boolean invalidation = localCache.isClusteredInvalidation();
 
@@ -83,7 +85,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
                getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
 
       cfg = createConfiguration();
-      regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
 
       GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory,
                getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
@@ -121,7 +125,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
    private void evictOrRemoveAllTest(String configName) throws Exception {
       Configuration cfg = createConfiguration();
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       CacheAdapter localCache = getInfinispanCache(regionFactory);
 
       // Sleep a bit to avoid concurrent FLUSH problem
@@ -131,7 +137,9 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
                getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
 
       cfg = createConfiguration();
-      regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       CacheAdapter remoteCache = getInfinispanCache(regionFactory);
 
       // Sleep a bit to avoid concurrent FLUSH problem

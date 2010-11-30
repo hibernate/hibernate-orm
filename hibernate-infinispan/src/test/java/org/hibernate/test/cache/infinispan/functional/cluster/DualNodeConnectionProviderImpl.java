@@ -28,8 +28,9 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.ConnectionProviderFactory;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Stoppable;
+import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
  * A {@link ConnectionProvider} implementation adding JTA-style transactionality around the returned
@@ -38,7 +39,7 @@ import org.hibernate.connection.ConnectionProviderFactory;
  * @author Brian Stansberry
  */
 public class DualNodeConnectionProviderImpl implements ConnectionProvider {
-   private static ConnectionProvider actualConnectionProvider = ConnectionProviderFactory.newConnectionProvider();
+   private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
    private String nodeId;
    private boolean isTransactional;
 
@@ -46,10 +47,11 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider {
       return actualConnectionProvider;
    }
 
-   public void configure(Properties props) throws HibernateException {
-      nodeId = props.getProperty(DualNodeTestCase.NODE_ID_PROP);
-      if (nodeId == null)
-         throw new HibernateException(DualNodeTestCase.NODE_ID_PROP + " not configured");
+   public void setNodeId(String nodeId) throws HibernateException {
+      if (nodeId == null) {
+         throw new HibernateException( "nodeId not configured" );
+	  }
+	  this.nodeId = nodeId;
    }
 
    public Connection getConnection() throws SQLException {
@@ -76,7 +78,9 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider {
    }
 
    public void close() throws HibernateException {
-      actualConnectionProvider.close();
+	   if ( actualConnectionProvider instanceof Stoppable ) {
+		   ( ( Stoppable ) actualConnectionProvider ).stop();
+	   }
    }
 
    public boolean supportsAggressiveRelease() {

@@ -53,9 +53,11 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.util.ComparableComparator;
 import org.infinispan.Cache;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
@@ -522,6 +524,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       private final String configResource;
       private final String configName;
       private String preferIPv4Stack;
+      private ServiceRegistryHolder serviceRegistryHolder;
 
       public AccessStrategyTestSetup(Test test, String configName) {
          this(test, configName, null);
@@ -541,11 +544,19 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
          preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
          System.setProperty(PREFER_IPV4STACK, "true");
 
+         serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+
          localCfg = createConfiguration(configName, configResource);
-         localRegionFactory = CacheTestUtil.startRegionFactory(localCfg);
+         localRegionFactory = CacheTestUtil.startRegionFactory(
+				 serviceRegistryHolder.getJdbcServicesImpl().getConnectionProvider(),
+				 localCfg
+		 );
 
          remoteCfg = createConfiguration(configName, configResource);
-         remoteRegionFactory = CacheTestUtil.startRegionFactory(remoteCfg);
+         remoteRegionFactory = CacheTestUtil.startRegionFactory(
+				 serviceRegistryHolder.getJdbcServicesImpl().getConnectionProvider(),
+				 remoteCfg
+		 );
       }
 
       @Override
@@ -559,11 +570,18 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                System.setProperty(PREFER_IPV4STACK, preferIPv4Stack);
          }
 
-         if (localRegionFactory != null)
-            localRegionFactory.stop();
+		  try {
+            if (localRegionFactory != null)
+               localRegionFactory.stop();
 
-         if (remoteRegionFactory != null)
-            remoteRegionFactory.stop();
+            if (remoteRegionFactory != null)
+               remoteRegionFactory.stop();
+		  }
+		  finally {
+            if ( serviceRegistryHolder != null ) {
+               serviceRegistryHolder.destroy(); 
+            }
+		  }
       }
 
    }

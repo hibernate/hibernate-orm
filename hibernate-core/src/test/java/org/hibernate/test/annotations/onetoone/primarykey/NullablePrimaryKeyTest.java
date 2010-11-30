@@ -4,7 +4,10 @@ package org.hibernate.test.annotations.onetoone.primarykey;
 import junit.framework.TestCase;
 
 import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.test.common.ServiceRegistryHolder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +22,14 @@ public class NullablePrimaryKeyTest extends TestCase {
 	private Logger log = LoggerFactory.getLogger(NullablePrimaryKeyTest.class);
 
 	public void testGeneratedSql() {
+
+		ServiceRegistryHolder serviceRegistryHolder = null;
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory();
+			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
@@ -35,5 +41,10 @@ public class NullablePrimaryKeyTest extends TestCase {
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
+		finally {
+			if ( serviceRegistryHolder != null ) {
+				serviceRegistryHolder.destroy();
+			}
+		}		
 	}
 }

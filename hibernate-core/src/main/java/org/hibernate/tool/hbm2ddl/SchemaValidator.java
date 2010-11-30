@@ -36,6 +36,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -64,11 +65,11 @@ public class SchemaValidator {
 		connectionHelper = new ManagedProviderConnectionHelper( props );
 	}
 
-	public SchemaValidator(Configuration cfg, Settings settings) throws HibernateException {
+	public SchemaValidator(JdbcServices jdbcServices, Configuration cfg ) throws HibernateException {
 		this.configuration = cfg;
-		dialect = settings.getDialect();
+		dialect = jdbcServices.getDialect();
 		connectionHelper = new SuppliedConnectionProviderConnectionHelper(
-				settings.getConnectionProvider()
+				jdbcServices.getConnectionProvider()
 		);
 	}
 

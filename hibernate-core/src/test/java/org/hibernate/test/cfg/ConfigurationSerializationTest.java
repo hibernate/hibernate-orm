@@ -27,6 +27,7 @@ import javax.persistence.Id;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.util.SerializationHelper;
@@ -103,9 +104,21 @@ public class ConfigurationSerializationTest extends UnitTestCase {
 		byte[] bytes = SerializationHelper.serialize( cfg );
 		cfg = ( Configuration ) SerializationHelper.deserialize( bytes );
 
-		// try to build SF
-		SessionFactory factory = cfg.buildSessionFactory();
-		factory.close();
+		SessionFactory factory = null;
+		ServiceRegistryHolder serviceRegistryHolder = null;
+		try {
+			serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+			// try to build SF
+			factory = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry());
+		}
+		finally {
+			if ( factory != null ) {
+				factory.close();
+			}
+			if ( serviceRegistryHolder != null ) {
+				serviceRegistryHolder.destroy();
+			}
+		}
 	}
 
 	@Entity

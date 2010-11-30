@@ -23,6 +23,9 @@
  */
 package org.hibernate.testing.junit.functional;
 
+import java.util.Collections;
+import java.util.Map;
+
 import junit.framework.TestSuite;
 import junit.framework.Test;
 import junit.framework.TestResult;
@@ -127,11 +130,15 @@ public class FunctionalTestClassTestSuite extends TestSuite {
 		log.info( "Building aggregated execution environment" );
 		try {
 			environment = new ExecutionEnvironment( settings );
-			environment.initialize();
+			environment.initialize( getConnectionProviderInjectionProperties() );
 		}
 		catch( Throwable t ) {
 			environmentSetupError = t;
 		}
+	}
+
+	protected Map getConnectionProviderInjectionProperties() {
+		return Collections.EMPTY_MAP;
 	}
 
 	protected void tearDown() {

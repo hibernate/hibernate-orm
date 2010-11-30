@@ -34,9 +34,11 @@ import junit.framework.TestCase;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
@@ -47,6 +49,18 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  * @author Hardy Ferentschik
  */
 public class XmlAccessTest extends TestCase {
+
+	private ServiceRegistryHolder serviceRegistryHolder;
+
+	protected void setUp() {
+		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	}
+
+	protected void tearDown() {
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+		}
+	}
 
 	public void testAccessOnBasicXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
@@ -170,7 +184,7 @@ public class XmlAccessTest extends TestCase {
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile );
 			cfg.addInputStream( is );
 		}
-		return ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		return ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 	}
 
 	// uses the first getter of the tupelizer for the assertions

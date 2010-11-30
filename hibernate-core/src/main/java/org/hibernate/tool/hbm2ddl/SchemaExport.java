@@ -49,12 +49,12 @@ import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.Formatter;
-import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.ReflectHelper;
@@ -99,14 +99,17 @@ public class SchemaExport {
 	 * @param settings The 'parsed' settings.
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
-	public SchemaExport(Configuration cfg, Settings settings) throws HibernateException {
-		dialect = settings.getDialect();
-		connectionHelper = new SuppliedConnectionProviderConnectionHelper( settings.getConnectionProvider() );
+	public SchemaExport(JdbcServices jdbcServices, Configuration cfg) throws HibernateException {
+		dialect = jdbcServices.getDialect();
+		connectionHelper = new SuppliedConnectionProviderConnectionHelper( jdbcServices.getConnectionProvider() );
 		dropSQL = cfg.generateDropSchemaScript( dialect );
 		createSQL = cfg.generateSchemaCreationScript( dialect );
-		sqlStatementLogger = settings.getSqlStatementLogger();
-		formatter = ( sqlStatementLogger.isFormatSql() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
-		importFiles = settings.getImportFiles() != null ? settings.getImportFiles() : DEFAULT_IMPORT_FILE;
+		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
+		formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
+		importFiles = ConfigurationHelper.getString(
+				Environment.HBM2DDL_IMPORT_FILES, cfg.getProperties(),
+				DEFAULT_IMPORT_FILE
+		);
 	}
 
 	/**

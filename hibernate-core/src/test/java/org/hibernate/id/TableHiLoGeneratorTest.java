@@ -44,6 +44,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
+import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -57,6 +58,7 @@ public class TableHiLoGeneratorTest extends TestCase {
 	private static final String GEN_COLUMN = TableHiLoGenerator.DEFAULT_COLUMN_NAME;
 
 	private Configuration cfg;
+	private ServiceRegistryHolder serviceRegistryHolder;
 	private SessionFactoryImplementor sessionFactory;
 	private TableHiLoGenerator generator;
 
@@ -104,13 +106,18 @@ public class TableHiLoGeneratorTest extends TestCase {
 				)
 		);
 
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory();
+		serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+		sessionFactory =
+				(SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
+		}
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
 		}
 
 		super.tearDown();

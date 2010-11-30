@@ -44,7 +44,8 @@ import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.TestingDatabaseInfo;
-		
+import org.hibernate.test.common.ServiceRegistryHolder;
+
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
  * unit test so that we can make sure the value keep being generated in the expected manner
@@ -56,6 +57,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private Configuration cfg;
+	ServiceRegistryHolder serviceRegistryHolder;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
 
@@ -95,7 +97,8 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 				)
 		);
 
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory();
+		serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 	}
 
 	@Override
@@ -103,7 +106,9 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
-
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+		}
 		super.tearDown();
 	}
 

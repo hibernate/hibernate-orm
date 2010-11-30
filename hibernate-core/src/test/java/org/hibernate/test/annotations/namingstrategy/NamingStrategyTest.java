@@ -9,8 +9,11 @@ import junit.framework.TestCase;
 
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.EJB3NamingStrategy;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Table;
+import org.hibernate.test.common.ServiceRegistryHolder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,13 +26,25 @@ public class NamingStrategyTest extends TestCase {
 	
 	private Logger log = LoggerFactory.getLogger(NamingStrategyTest.class);
 
+	private ServiceRegistryHolder serviceRegistryHolder;
+
+	protected void setUp() {
+		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	}
+
+	protected void tearDown() {
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+		}
+	}
+
 	public void testWithCustomNamingStrategy() throws Exception {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.setNamingStrategy(new DummyNamingStrategy());
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
@@ -45,7 +60,7 @@ public class NamingStrategyTest extends TestCase {
 			config.setNamingStrategy(EJB3NamingStrategy.INSTANCE);
 			config.addAnnotatedClass(A.class);
 			config.addAnnotatedClass(AddressEntry.class);
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			Mappings mappings = config.createMappings();
 			boolean foundIt = false;
 
@@ -73,7 +88,7 @@ public class NamingStrategyTest extends TestCase {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory();
+			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();

@@ -637,7 +637,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(LocalContactDetails.class);
-			config.buildSessionFactory();
+			config.buildSessionFactory( getServiceRegistry() );
 			fail("Did not throw expected exception");
 		}
 		catch( AnnotationException ex ) {

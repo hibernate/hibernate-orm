@@ -33,6 +33,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
 /**
@@ -103,7 +104,7 @@ public abstract class TestCase extends HibernateTestCase {
 				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
 				getCfg().addInputStream( is );
 			}
-			sessions = getCfg().buildSessionFactory();
+			sessions = getCfg().buildSessionFactory( getServiceRegistry() );
 		}
 		catch ( Exception e ) {
 			e.printStackTrace();
@@ -146,5 +147,6 @@ public abstract class TestCase extends HibernateTestCase {
 		}
 		catch ( Exception ignore ) {
 		}
+		super.closeResources();
 	}
 }

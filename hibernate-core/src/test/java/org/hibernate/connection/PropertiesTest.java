@@ -28,6 +28,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+
 /**
  * Undocumented
  *
@@ -46,7 +48,7 @@ public class PropertiesTest extends TestCase {
 		props.put("rpt.6.hibernate.connection.password_enc", "76f271db3661fd50082e68d4b953fbee");
 		props.put("hibernate.connection.create", "true");
 
-		final Properties outputProps = ConnectionProviderFactory.getConnectionProperties(props);
+		final Properties outputProps = ConnectionProviderInitiator.getConnectionProperties( props );
 		assertEquals(1, outputProps.size());
 		assertEquals("true", outputProps.get("create"));
 	}

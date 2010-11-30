@@ -24,12 +24,14 @@
 package org.hibernate.ejb;
 
 import java.util.Map;
+import java.util.Properties;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
 
+import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 
 /**

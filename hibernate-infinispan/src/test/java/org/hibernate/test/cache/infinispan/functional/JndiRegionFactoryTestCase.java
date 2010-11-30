@@ -98,7 +98,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
       getEnvironment().getSessionFactory().close();
       bindToJndi = false;
       ExecutionEnvironment environment = new ExecutionEnvironment( this );
-      environment.initialize();
+      environment.initialize( getConnectionProviderInjectionProperties() );
       setEnvironment(environment);
       addEntityCheckCache();
       JndiInfinispanRegionFactory regionFactory = (JndiInfinispanRegionFactory) ((SessionFactoryImplementor)

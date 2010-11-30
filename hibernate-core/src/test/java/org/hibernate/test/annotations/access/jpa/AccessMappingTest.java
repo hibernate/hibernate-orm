@@ -29,9 +29,11 @@ import junit.framework.TestCase;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
+import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
@@ -43,12 +45,24 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  */
 public class AccessMappingTest extends TestCase {
 
+	private ServiceRegistryHolder serviceRegistryHolder;
+
+	protected void setUp() {
+		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	}
+
+	protected void tearDown() {
+		if ( serviceRegistryHolder != null ) {
+			serviceRegistryHolder.destroy();
+		}
+	}
+
 	public void testInconsistentAnnotationPlacement() throws Exception {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.addAnnotatedClass( Course1.class );
 		cfg.addAnnotatedClass( Student.class );
 		try {
-			cfg.buildSessionFactory();
+			cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
 		}
 		catch ( MappingException e ) {
@@ -61,7 +75,7 @@ public class AccessMappingTest extends TestCase {
 		Class<?> classUnderTest = Course6.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -76,7 +90,7 @@ public class AccessMappingTest extends TestCase {
 		Class<?> classUnderTest = Course7.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -91,7 +105,7 @@ public class AccessMappingTest extends TestCase {
 		Class<?> classUnderTest = Course2.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -106,7 +120,7 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( Course4.class );
 		cfg.addAnnotatedClass( Student.class );
 		try {
-			cfg.buildSessionFactory();
+			cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 			fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
 		}
 		catch ( MappingException e ) {
@@ -119,7 +133,7 @@ public class AccessMappingTest extends TestCase {
 		Class<?> classUnderTest = Course3.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -139,7 +153,7 @@ public class AccessMappingTest extends TestCase {
 		Class<?> classUnderTest = Course5.class;
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Student.class );
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -160,7 +174,7 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( classUnderTest );
 		cfg.addAnnotatedClass( Person.class );
 		cfg.addAnnotatedClass( Being.class );
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( classUnderTest.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -175,7 +189,7 @@ public class AccessMappingTest extends TestCase {
 		cfg.addAnnotatedClass( Horse.class );
 		cfg.addAnnotatedClass( Animal.class );
 
-		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		SessionFactoryImplementor factory = ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 		EntityMetamodel metaModel = factory.getEntityPersister( Animal.class.getName() )
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
@@ -200,6 +214,6 @@ public class AccessMappingTest extends TestCase {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.addAnnotatedClass( Course8.class );
 		cfg.addAnnotatedClass( Student.class );
-		cfg.buildSessionFactory();
+		cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
 	}
 }

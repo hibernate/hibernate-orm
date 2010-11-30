@@ -255,7 +255,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 	public static Properties getConnectionProperties(Map<?,?> properties) {
 		Properties result = new Properties();
 		for ( Map.Entry entry : properties.entrySet() ) {
-			if ( ! ( String.class.isInstance( entry.getKey() ) ) && String.class.isInstance( entry.getValue() ) ) {
+			if ( ! ( String.class.isInstance( entry.getKey() ) ) || ! String.class.isInstance( entry.getValue() ) ) {
 				continue;
 			}
 			final String key = (String) entry.getKey();

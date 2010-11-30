@@ -28,8 +28,9 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.ConnectionProviderFactory;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Stoppable;
+import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
  * A {@link ConnectionProvider} implementation adding JTA-style transactionality
@@ -39,7 +40,7 @@ import org.hibernate.connection.ConnectionProviderFactory;
  * @author Steve Ebersole
  */
 public class ConnectionProviderImpl implements ConnectionProvider {
-	private static ConnectionProvider actualConnectionProvider = ConnectionProviderFactory.newConnectionProvider();
+	private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
 
 	private boolean isTransactional;
 
@@ -74,7 +75,9 @@ public class ConnectionProviderImpl implements ConnectionProvider {
 	}
 
 	public void close() throws HibernateException {
-		actualConnectionProvider.close();
+		if ( actualConnectionProvider instanceof Stoppable ) {
+			( ( Stoppable ) actualConnectionProvider ).stop();
+		}
 	}
 
 	public boolean supportsAggressiveRelease() {

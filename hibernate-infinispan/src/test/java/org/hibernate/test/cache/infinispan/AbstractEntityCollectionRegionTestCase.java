@@ -64,7 +64,9 @@ public abstract class AbstractEntityCollectionRegionTestCase extends AbstractReg
       Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
       String entityCfg = "entity";
       cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, entityCfg);
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       supportedAccessTypeTest(regionFactory, cfg.getProperties());
    }
 
@@ -82,14 +84,18 @@ public abstract class AbstractEntityCollectionRegionTestCase extends AbstractReg
     */
    public void testIsTransactionAware() throws Exception {
       Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       TransactionalDataRegion region = (TransactionalDataRegion) createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
       assertTrue("Region is transaction-aware", region.isTransactionAware());
       CacheTestUtil.stopRegionFactory(regionFactory, getCacheTestSupport());
       cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
       // Make it non-transactional
       cfg.getProperties().remove(Environment.TRANSACTION_MANAGER_STRATEGY);
-      regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       region = (TransactionalDataRegion) createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
       assertFalse("Region is not transaction-aware", region.isTransactionAware());
       CacheTestUtil.stopRegionFactory(regionFactory, getCacheTestSupport());
@@ -97,7 +103,9 @@ public abstract class AbstractEntityCollectionRegionTestCase extends AbstractReg
 
    public void testGetCacheDataDescription() throws Exception {
       Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(cfg, getCacheTestSupport());
+      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+			  getConnectionProvider(), cfg, getCacheTestSupport()
+	  );
       TransactionalDataRegion region = (TransactionalDataRegion) createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
       CacheDataDescription cdd = region.getCacheDataDescription();
       assertNotNull(cdd);

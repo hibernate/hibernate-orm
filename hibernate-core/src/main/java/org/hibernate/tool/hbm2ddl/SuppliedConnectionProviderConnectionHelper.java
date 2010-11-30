@@ -24,7 +24,7 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.util.JDBCExceptionReporter;
 
 import java.sql.Connection;

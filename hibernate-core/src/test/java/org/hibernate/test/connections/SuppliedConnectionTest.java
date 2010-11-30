@@ -10,9 +10,10 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.ConnectionProviderFactory;
-import org.hibernate.connection.UserSuppliedConnectionProvider;
+import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Stoppable;
+import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
@@ -23,7 +24,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  */
 public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 
-	private ConnectionProvider cp = ConnectionProviderFactory.newConnectionProvider();
+	private ConnectionProvider cp = ConnectionProviderBuilder.buildConnectionProvider();
 	private Connection connectionUnderTest;
 
 	public SuppliedConnectionTest(String name) {
@@ -50,7 +51,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.ON_CLOSE.toString() );
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, UserSuppliedConnectionProvider.class.getName() );
+		cfg.setProperty( Environment.CONNECTION_PROVIDER, UserSuppliedConnectionProviderImpl.class.getName() );
 		boolean supportsScroll = true;
 		Connection conn = null;
 		try {
@@ -112,7 +113,10 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 			}
 		}
 		try {
-			cp.close();
+			if ( cp instanceof Stoppable ) {
+					( ( Stoppable ) cp ).stop();
+			}
+			cp = null;
 		}
 		catch( Throwable ignore ) {
 		}

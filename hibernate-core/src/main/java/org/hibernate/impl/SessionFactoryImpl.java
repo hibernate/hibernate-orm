@@ -74,7 +74,8 @@ import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.connection.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.context.CurrentSessionContext;
 import org.hibernate.context.JTASessionContext;
 import org.hibernate.context.ManagedSessionContext;
@@ -110,6 +111,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImplementor;
@@ -142,7 +144,7 @@ import org.hibernate.util.ReflectHelper;
  * and pooling under the covers. It is crucial that the class is not only thread
  * safe, but also highly concurrent. Synchronization must be used extremely sparingly.
  *
- * @see org.hibernate.connection.ConnectionProvider
+ * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider
  * @see org.hibernate.classic.Session
  * @see org.hibernate.hql.QueryTranslator
  * @see org.hibernate.persister.entity.EntityPersister
@@ -170,6 +172,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient Map fetchProfiles;
 	private final transient Map imports;
 	private final transient Interceptor interceptor;
+	private final transient ServicesRegistry serviceRegistry;
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
@@ -194,6 +197,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	public SessionFactoryImpl(
 			Configuration cfg,
 	        Mapping mapping,
+			ServicesRegistry serviceRegistry,
 	        Settings settings,
 	        EventListeners listeners,
 			SessionFactoryObserver observer) throws HibernateException {
@@ -206,6 +210,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
 		this.interceptor = cfg.getInterceptor();
+		this.serviceRegistry = serviceRegistry;
 		this.settings = settings;
 		this.sqlFunctionRegistry = new SQLFunctionRegistry(settings.getDialect(), cfg.getSqlFunctions());
         this.eventListeners = listeners;
@@ -367,16 +372,16 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		log.debug("instantiated session factory");
 
 		if ( settings.isAutoCreateSchema() ) {
-			new SchemaExport( cfg, settings ).create( false, true );
+			new SchemaExport( getJdbcServices(), cfg ).create( false, true );
 		}
 		if ( settings.isAutoUpdateSchema() ) {
-			new SchemaUpdate( cfg, settings ).execute( false, true );
+			new SchemaUpdate( getJdbcServices(), cfg ).execute( false, true );
 		}
 		if ( settings.isAutoValidateSchema() ) {
-			new SchemaValidator( cfg, settings ).validate();
+			new SchemaValidator( getJdbcServices(), cfg ).validate();
 		}
 		if ( settings.isAutoDropSchema() ) {
-			schemaExport = new SchemaExport( cfg, settings );
+			schemaExport = new SchemaExport( getJdbcServices(), cfg );
 		}
 
 		if ( settings.getTransactionManagerLookup()!=null ) {
@@ -897,8 +902,12 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return getEntityPersister(className).getPropertyType(propertyName);
 	}
 
+	private JdbcServices getJdbcServices() {
+		return serviceRegistry.getService( JdbcServices.class );
+	}
+
 	public ConnectionProvider getConnectionProvider() {
-		return settings.getConnectionProvider();
+		return serviceRegistry.getService( JdbcServices.class ).getConnectionProvider();
 	}
 
 	/**
@@ -959,12 +968,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			schemaExport.drop( false, true );
 		}
 
-		try {
-			settings.getConnectionProvider().close();
-		}
-		finally {
-			SessionFactoryObjectFactory.removeInstance(uuid, name, properties);
-		}
+		SessionFactoryObjectFactory.removeInstance(uuid, name, properties);
 
 		observer.sessionFactoryClosed( this );
 		eventListeners.destroyListeners();

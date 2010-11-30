@@ -24,8 +24,8 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.connection.ConnectionProviderFactory;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Stoppable;
 import org.hibernate.util.JDBCExceptionReporter;
 
 import java.util.Properties;
@@ -48,12 +48,14 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	}
 
 	public void prepare(boolean needsAutoCommit) throws SQLException {
-		connectionProvider = ConnectionProviderFactory.newConnectionProvider( cfgProperties );
+		/* TEMP TEMP TEMP
+		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
 		connection = connectionProvider.getConnection();
 		if ( needsAutoCommit && !connection.getAutoCommit() ) {
 			connection.commit();
 			connection.setAutoCommit( true );
 		}
+		*/
 	}
 
 	public Connection getConnection() throws SQLException {
@@ -67,7 +69,10 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 				connectionProvider.closeConnection( connection );
 			}
 			finally {
-				connectionProvider.close();
+				if ( connectionProvider instanceof Stoppable ) {
+						( ( Stoppable ) connectionProvider ).stop();
+				}
+				connectionProvider = null;
 			}
 		}
 		connection = null;

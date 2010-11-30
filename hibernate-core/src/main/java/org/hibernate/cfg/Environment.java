@@ -82,7 +82,7 @@ import org.hibernate.util.ConfigHelper;
  * </tr>
  * <tr>
  *   <td><tt>hibernate.connection.provider_class</tt></td>
- *   <td>classname of <tt>org.hibernate.connection.ConnectionProvider</tt>
+ *   <td>classname of <tt>org.hibernate.service.jdbc.connections.spi.ConnectionProvider</tt>
  *   subclass (if not specified hueristics are used)</td>
  * </tr>
  * <tr><td><tt>hibernate.connection.username</tt></td><td>database username</td></tr>

@@ -46,7 +46,7 @@ public interface StatisticsImplementor {
 	public void flush();
 
 	/**
-	 * Callback about a connection being obtained from {@link org.hibernate.connection.ConnectionProvider}
+	 * Callback about a connection being obtained from {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider}
 	 */
 	public void connect();
 

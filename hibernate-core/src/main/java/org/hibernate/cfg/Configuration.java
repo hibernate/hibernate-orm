@@ -94,6 +94,7 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.DirtyCheckEventListener;
@@ -151,6 +152,8 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
+import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -1820,7 +1823,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
-	public SessionFactory buildSessionFactory() throws HibernateException {
+	public SessionFactory buildSessionFactory(ServicesRegistry serviceRegistry) throws HibernateException {
 		log.debug( "Preparing to build session factory with filters : " + filterDefinitions );
 
 		secondPassCompile();
@@ -1837,11 +1840,12 @@ public class Configuration implements Serializable {
 		Properties copy = new Properties();
 		copy.putAll( properties );
 		ConfigurationHelper.resolvePlaceHolders( copy );
-		Settings settings = buildSettings( copy );
+		Settings settings = buildSettings( copy, serviceRegistry.getService( JdbcServices.class ).getConnectionProvider() );
 
 		return new SessionFactoryImpl(
 				this,
 				mapping,
+				serviceRegistry,
 				settings,
 				getInitializedEventListeners(),
 				sessionFactoryObserver
@@ -2819,18 +2823,18 @@ public class Configuration implements Serializable {
 	 *
 	 * @return The build settings
 	 */
-	public Settings buildSettings() {
+	public Settings buildSettings(ConnectionProvider connectionProvider) {
 		Properties clone = ( Properties ) properties.clone();
 		ConfigurationHelper.resolvePlaceHolders( clone );
-		return buildSettingsInternal( clone );
+		return buildSettingsInternal( clone, connectionProvider );
 	}
 
-	public Settings buildSettings(Properties props) throws HibernateException {
-		return buildSettingsInternal( props );
+	public Settings buildSettings(Properties props, ConnectionProvider connectionProvider) throws HibernateException {
+		return buildSettingsInternal( props, connectionProvider );
 	}
 
-	private Settings buildSettingsInternal(Properties props) {
-		final Settings settings = settingsFactory.buildSettings( props );
+	private Settings buildSettingsInternal(Properties props, ConnectionProvider connectionProvider) {
+		final Settings settings = settingsFactory.buildSettings( props, connectionProvider );
 		settings.setEntityTuplizerFactory( this.getEntityTuplizerFactory() );
 //		settings.setComponentTuplizerFactory( this.getComponentTuplizerFactory() );
 		return settings;

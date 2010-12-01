@@ -37,7 +37,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.util.JDBCExceptionReporter;
 
 /**
@@ -52,9 +52,8 @@ public class ConnectionManager implements Serializable {
 
 	private static final Logger log = LoggerFactory.getLogger( ConnectionManager.class );
 
-	public static interface Callback {
-		public void connectionOpened();
-		public void connectionCleanedUp();
+	// TODO: check if it's ok to change the method names in Callback
+	public static interface Callback extends ConnectionObserver {
 		public boolean isTransactionInProgress();
 	}
 
@@ -234,7 +233,7 @@ public class ConnectionManager implements Serializable {
 		else if ( releaseMode == ConnectionReleaseMode.AFTER_TRANSACTION ) {
 			boolean inAutoCommitState;
 			try {
-				inAutoCommitState = isAutoCommit()&& !callback.isTransactionInProgress();
+				inAutoCommitState = isAutoCommit() && ! callback.isTransactionInProgress();
 			}
 			catch( SQLException e ) {
 				// assume we are in an auto-commit state
@@ -414,7 +413,7 @@ public class ConnectionManager implements Serializable {
 			return c;
 		}
 		finally {
-			callback.connectionCleanedUp();
+			callback.physicalConnectionReleased();
 		}
 	}
 
@@ -452,7 +451,7 @@ public class ConnectionManager implements Serializable {
 				);
 		}
 
-		callback.connectionOpened(); // register synch; stats.connect()
+		callback.physicalConnectionObtained( connection ); // register synch; stats.connect()
 	}
 
 	/**
@@ -546,10 +545,10 @@ public class ConnectionManager implements Serializable {
 	        SessionFactoryImplementor factory,
 	        Interceptor interceptor,
 	        ConnectionReleaseMode connectionReleaseMode,
-	        JDBCContext jdbcContext) throws IOException {
+	        Callback callback) throws IOException {
 		return new ConnectionManager(
 				factory,
-		        jdbcContext,
+		        callback,
 		        connectionReleaseMode,
 		        interceptor,
 		        ois.readBoolean(),

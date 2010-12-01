@@ -41,11 +41,11 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.transaction.synchronization.CallbackCoordinator;
 import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.transaction.TransactionFactory;
 
 /**
@@ -126,17 +126,21 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 
 	// ConnectionManager.Callback implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void connectionOpened() {
+	public void physicalConnectionObtained(Connection connection) {
 		if ( owner.getFactory().getStatistics().isStatisticsEnabled() ) {
 			owner.getFactory().getStatisticsImplementor().connect();
 		}
 	}
 
-	public void connectionCleanedUp() {
+	public void physicalConnectionReleased() {
 		if ( !isTransactionCallbackRegistered ) {
 			afterTransactionCompletion( false, null );
 			// Note : success = false, because we don't know the outcome of the transaction
 		}
+	}
+
+	public void logicalConnectionClosed() {
+		// TODO: anything need to be done?
 	}
 
 	public SessionFactoryImplementor getFactory() {

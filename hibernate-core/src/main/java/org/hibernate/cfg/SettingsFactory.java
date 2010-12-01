@@ -41,9 +41,6 @@ import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.exception.SQLExceptionConverter;
-import org.hibernate.exception.SQLExceptionConverterFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.BatcherFactory;
@@ -82,17 +79,14 @@ public class SettingsFactory implements Serializable {
 		//JDBC and connection settings:
 
 		//Interrogate JDBC metadata
-
-		Dialect dialect = jdbcServices.getDialect();
 		ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
 
 		settings.setDataDefinitionImplicitCommit( meta.doesDataDefinitionCauseTransactionCommit() );
 		settings.setDataDefinitionInTransactionSupported( meta.supportsDataDefinitionInTransaction() );
-		settings.setDialect( dialect );
 
 		//use dialect default properties
 		final Properties properties = new Properties();
-		properties.putAll( dialect.getDefaultProperties() );
+		properties.putAll( jdbcServices.getDialect().getDefaultProperties() );
 		properties.putAll( props );
 
 		settings.setJdbcSupport( new JdbcSupport( ! ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, properties ) ) );

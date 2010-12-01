@@ -29,8 +29,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.BatcherFactory;
@@ -51,7 +49,6 @@ public final class Settings {
 	private SQLStatementLogger sqlStatementLogger;
 	private Integer maximumFetchDepth;
 	private Map querySubstitutions;
-	private Dialect dialect;
 	private int jdbcBatchSize;
 	private int defaultBatchFetchSize;
 	private boolean scrollableResultSetsEnabled;
@@ -78,7 +75,6 @@ public final class Settings {
 	private ConnectionReleaseMode connectionReleaseMode;
 	private RegionFactory regionFactory;
 	private QueryCacheFactory queryCacheFactory;
-	private ConnectionProvider connectionProvider;
 	private TransactionFactory transactionFactory;
 	private TransactionManagerLookup transactionManagerLookup;
 	private BatcherFactory batcherFactory;
@@ -132,10 +128,6 @@ public final class Settings {
 
 	public String getDefaultCatalogName() {
 		return defaultCatalogName;
-	}
-
-	public Dialect getDialect() {
-		return dialect;
 	}
 
 	public int getJdbcBatchSize() {
@@ -325,10 +317,6 @@ public final class Settings {
 		defaultCatalogName = string;
 	}
 
-	void setDialect(Dialect dialect) {
-		this.dialect = dialect;
-	}
-
 	void setJdbcBatchSize(int i) {
 		jdbcBatchSize = i;
 	}
@@ -359,10 +347,6 @@ public final class Settings {
 
 	void setJdbcFetchSize(Integer integer) {
 		jdbcFetchSize = integer;
-	}
-
-	void setConnectionProvider(ConnectionProvider provider) {
-		connectionProvider = provider;
 	}
 
 	void setTransactionFactory(TransactionFactory factory) {

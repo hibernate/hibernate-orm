@@ -1,16 +1,40 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2010 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
 package org.hibernate.test.annotations.beanvalidation;
 
-import java.util.Set;
 import java.util.HashSet;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.ManyToMany;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
-import javax.validation.constraints.NotNull;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author Emmanuel Bernard
@@ -23,7 +47,8 @@ public class Screen {
 	private Set<DisplayConnector> connectors = new HashSet<DisplayConnector>();
 	private Set<Color> displayColors = new HashSet<Color>();
 
-	@Id @GeneratedValue
+	@Id
+	@GeneratedValue
 	public Integer getId() {
 		return id;
 	}
@@ -32,7 +57,6 @@ public class Screen {
 		this.id = id;
 	}
 
-	//@NotNull 
 	@Valid
 	public Button getStopButton() {
 		return stopButton;
@@ -42,7 +66,8 @@ public class Screen {
 		this.stopButton = stopButton;
 	}
 
-	@ManyToOne(cascade = CascadeType.PERSIST) @Valid
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@Valid
 	@NotNull
 	public PowerSupply getPowerSupply() {
 		return powerSupply;

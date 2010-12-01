@@ -22,8 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 
-// $Id$
-
 package org.hibernate.testing.junit;
 
 import org.hibernate.dialect.Dialect;
@@ -55,7 +53,11 @@ abstract public class DialectChecks {
 		}
 	}
 
-
+	public static class SupportsColumnCheck extends DialectChecks {
+		public boolean include(Dialect dialect) {
+			return dialect.supportsColumnCheck();
+		}
+	}
 }
 
 

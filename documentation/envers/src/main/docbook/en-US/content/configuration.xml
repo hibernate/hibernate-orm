@@ -280,6 +280,26 @@
         </tgroup>
     </table>
 
+    <important>
+        <para>
+            The following configuration options have been added recently and should be regarded as experimental: 
+            <orderedlist>
+                <listitem>
+                    org.hibernate.envers.audit_strategy
+                </listitem>
+                <listitem>
+                    org.hibernate.envers.audit_strategy_validity_end_rev_field_name
+                </listitem>
+                <listitem>
+                    org.hibernate.envers.audit_strategy_validity_store_revend_timestamp 
+                </listitem>
+                <listitem>
+                    org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name
+                </listitem>
+            </orderedlist>
+        </para>
+    </important>
+
     <para>
         To change the name of the revision table and its fields (the table, in which the
         numbers of revisions and their timestamps are stored), you can use the

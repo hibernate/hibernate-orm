@@ -24,35 +24,33 @@
 
 package org.hibernate.test.annotations.beanvalidation;
 
-import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.validation.constraints.Max;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Min;
 
 /**
- * @author Emmanuel Bernard
+ * @author Hardy Ferentschik
  */
-@Embeddable
-public class Button {
+@Entity
+public class MinMax {
 
-	private String name;
-
-	private Integer size;
-
-	@NotNull
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
+	@Id
+	@GeneratedValue
+	private Long id;
 
 	@Max(10)
-	public Integer getSize() {
-		return size;
+	@Min(2)
+	private Integer value;
+
+	private MinMax() {
 	}
 
-	public void setSize(Integer size) {
-		this.size = size;
+	public MinMax(Integer value) {
+		this.value = value;
 	}
 }
+
+
+

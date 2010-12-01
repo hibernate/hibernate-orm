@@ -54,6 +54,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -177,7 +178,7 @@ public abstract class AbstractCollectionPersister
 	private final String entityName;
 
 	private final Dialect dialect;
-	private final SQLExceptionConverter sqlExceptionConverter;
+	private final SQLExceptionHelper sqlExceptionHelper;
 	private final SessionFactoryImplementor factory;
 	private final EntityPersister ownerPersister;
 	private final IdentifierGenerator identifierGenerator;
@@ -236,7 +237,7 @@ public abstract class AbstractCollectionPersister
 		}
 		
 		dialect = factory.getDialect();
-		sqlExceptionConverter = factory.getSQLExceptionConverter();
+		sqlExceptionHelper = factory.getSQLExceptionHelper();
 		collectionType = collection.getCollectionType();
 		role = collection.getRole();
 		entityName = collection.getOwnerEntityName();
@@ -1128,8 +1129,7 @@ public abstract class AbstractCollectionPersister
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw JDBCExceptionHelper.convert(
-				        sqlExceptionConverter,
+				throw sqlExceptionHelper.convert(
 				        sqle,
 				        "could not delete collection: " + 
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
@@ -1240,8 +1240,7 @@ public abstract class AbstractCollectionPersister
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw JDBCExceptionHelper.convert(
-				        sqlExceptionConverter,
+				throw sqlExceptionHelper.convert(
 				        sqle,
 				        "could not insert collection: " + 
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
@@ -1349,8 +1348,7 @@ public abstract class AbstractCollectionPersister
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw JDBCExceptionHelper.convert(
-				        sqlExceptionConverter,
+				throw sqlExceptionHelper.convert(
 				        sqle,
 				        "could not delete collection rows: " + 
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
@@ -1451,8 +1449,7 @@ public abstract class AbstractCollectionPersister
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw JDBCExceptionHelper.convert(
-				        sqlExceptionConverter,
+				throw sqlExceptionHelper.convert(
 				        sqle,
 				        "could not insert collection rows: " + 
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
@@ -1669,8 +1666,14 @@ public abstract class AbstractCollectionPersister
 		return indexNodeName;
 	}
 
+	// TODO: deprecate???
 	protected SQLExceptionConverter getSQLExceptionConverter() {
-		return sqlExceptionConverter;
+		return getSQLExceptionHelper().getSqlExceptionConverter();
+	}
+
+	// TODO: needed???
+	protected SQLExceptionHelper getSQLExceptionHelper() {
+		return sqlExceptionHelper;
 	}
 
 	public CacheEntryStructure getCacheEntryStructure() {
@@ -1757,8 +1760,7 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve collection size: " + 
 					MessageHelper.collectionInfoString( this, key, getFactory() ),
@@ -1797,8 +1799,7 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not check row existence: " + 
 					MessageHelper.collectionInfoString( this, key, getFactory() ),
@@ -1831,8 +1832,7 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not read row: " + 
 					MessageHelper.collectionInfoString( this, key, getFactory() ),

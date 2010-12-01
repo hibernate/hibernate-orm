@@ -70,8 +70,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return result;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using scroll()"
 				);
@@ -88,8 +87,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return result;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using first()"
 				);
@@ -106,8 +104,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return result;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using last()"
 				);
@@ -124,8 +121,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return result;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using next()"
 				);
@@ -142,8 +138,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return result;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using previous()"
 				);
@@ -158,8 +153,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			getResultSet().afterLast();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling afterLast()"
 				);
@@ -174,8 +168,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			getResultSet().beforeFirst();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling beforeFirst()"
 				);
@@ -190,8 +183,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return getResultSet().isFirst();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling isFirst()"
 				);
@@ -206,8 +198,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return getResultSet().isLast();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling isLast()"
 				);
@@ -219,8 +210,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return getResultSet().getRow()-1;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling getRow()"
 				);
@@ -235,8 +225,7 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			return result;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using absolute()"
 				);

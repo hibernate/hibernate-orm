@@ -270,8 +270,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return count;
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getSQLExceptionConverter(),
+			throw getSQLExceptionHelper().convert(
 					sqle,
 					"could not update collection rows: " + MessageHelper.collectionInfoString( this, id, getFactory() ),
 					getSQLUpdateRowString()

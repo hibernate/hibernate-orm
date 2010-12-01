@@ -106,8 +106,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
 					sql

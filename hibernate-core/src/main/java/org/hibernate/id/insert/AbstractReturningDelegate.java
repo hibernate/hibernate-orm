@@ -61,8 +61,7 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not insert: " + MessageHelper.infoString( persister ),
 			        insertSQL

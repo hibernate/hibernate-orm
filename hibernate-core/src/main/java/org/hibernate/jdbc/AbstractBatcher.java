@@ -272,8 +272,7 @@ public abstract class AbstractBatcher implements Batcher {
 				}
 			}
 			catch (SQLException sqle) {
-				throw JDBCExceptionHelper.convert(
-				        factory.getSQLExceptionConverter(),
+				throw factory.getSQLExceptionHelper().convert(
 				        sqle,
 				        "Could not execute JDBC batch update",
 				        batchUpdateSQL
@@ -587,8 +586,7 @@ public abstract class AbstractBatcher implements Batcher {
 			return factory.getConnectionProvider().getConnection();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "Cannot open connection"
 				);
@@ -613,7 +611,7 @@ public abstract class AbstractBatcher implements Batcher {
 			factory.getConnectionProvider().closeConnection( conn );
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert( factory.getSQLExceptionConverter(), sqle, "Cannot close connection" );
+			throw factory.getSQLExceptionHelper().convert( sqle, "Cannot close connection" );
 		}
 	}
 
@@ -622,8 +620,7 @@ public abstract class AbstractBatcher implements Batcher {
 			if (lastQuery!=null) lastQuery.cancel();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "Cannot cancel query"
 				);

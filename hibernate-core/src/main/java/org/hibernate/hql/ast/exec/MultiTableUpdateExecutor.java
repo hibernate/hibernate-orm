@@ -148,8 +148,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 				}
 			}
 			catch( SQLException e ) {
-				throw JDBCExceptionHelper.convert(
-						getFactory().getSQLExceptionConverter(),
+				throw getFactory().getSQLExceptionHelper().convert(
 				        e,
 				        "could not insert/select ids for bulk update",
 				        idInsertSelect
@@ -179,8 +178,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 					}
 				}
 				catch( SQLException e ) {
-					throw JDBCExceptionHelper.convert(
-							getFactory().getSQLExceptionConverter(),
+					throw getFactory().getSQLExceptionHelper().convert(
 					        e,
 					        "error performing bulk update",
 					        updates[i]

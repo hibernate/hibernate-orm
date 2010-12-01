@@ -446,8 +446,7 @@ public class ConnectionManager implements Serializable {
 			connection = factory.getConnectionProvider().getConnection();
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 					sqle,
 					"Cannot open connection"
 				);
@@ -475,8 +474,7 @@ public class ConnectionManager implements Serializable {
 			connection = null;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert( 
-					factory.getSQLExceptionConverter(), 
+			throw factory.getSQLExceptionHelper().convert(
 					sqle, 
 					"Cannot release connection"
 				);

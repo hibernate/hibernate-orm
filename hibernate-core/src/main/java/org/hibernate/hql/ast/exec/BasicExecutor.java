@@ -107,8 +107,7 @@ public class BasicExecutor extends AbstractStatementExecutor {
 			}
 		}
 		catch( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not execute update query",
 			        sql

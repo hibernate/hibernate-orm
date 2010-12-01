@@ -94,8 +94,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			afterLast = getResultSet().isAfterLast();
 		}
 		catch( SQLException e ) {
-			throw JDBCExceptionHelper.convert(
-			        getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 			        e,
 			        "exception calling isAfterLast()"
 				);
@@ -209,8 +208,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 				}
 			}
 			catch( SQLException e ) {
-				throw JDBCExceptionHelper.convert(
-						getSession().getFactory().getSQLExceptionConverter(),
+				throw getSession().getFactory().getSQLExceptionHelper().convert(
 						e,
 						"exception calling isAfterLast()"
 					);
@@ -244,8 +242,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			getResultSet().beforeFirst();
 		}
 		catch( SQLException e ) {
-			throw JDBCExceptionHelper.convert(
-			        getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 			        e,
 			        "exception calling beforeFirst()"
 				);
@@ -328,8 +325,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			return currentPosition == 0 && ! getResultSet().isBeforeFirst() && ! getResultSet().isAfterLast();
 		}
 		catch( SQLException e ) {
-			throw JDBCExceptionHelper.convert(
-			        getSession().getFactory().getSQLExceptionConverter(),
+			throw getSession().getFactory().getSQLExceptionHelper().convert(
 			        e,
 			        "Could not determine if resultset is empty due to exception calling isBeforeFirst or isAfterLast()"
 			);

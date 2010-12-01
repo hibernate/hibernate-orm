@@ -874,8 +874,7 @@ public abstract class AbstractEntityPersister
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not initialize lazy properties: " +
 					MessageHelper.infoString( this, id, getFactory() ),
@@ -1122,8 +1121,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve snapshot: " +
 					MessageHelper.infoString( this, id, getFactory() ),
@@ -1317,8 +1315,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve version: " +
 					MessageHelper.infoString( this, id, getFactory() ),
@@ -1376,8 +1373,7 @@ public abstract class AbstractEntityPersister
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve version: " +
 					MessageHelper.infoString( this, id, getFactory() ),
@@ -2433,8 +2429,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not insert: " + MessageHelper.infoString( this ),
 					sql
@@ -2591,8 +2586,7 @@ public abstract class AbstractEntityPersister
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not update: " + MessageHelper.infoString( this, id, getFactory() ),
 					sql
@@ -2707,8 +2701,7 @@ public abstract class AbstractEntityPersister
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not delete: " +
 					MessageHelper.infoString( this, id, getFactory() ),
@@ -4005,8 +3998,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		catch( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"unable to select generated column values",
 					selectionSQL
@@ -4101,8 +4093,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve snapshot: " +
 					MessageHelper.infoString( this, id, getFactory() ),

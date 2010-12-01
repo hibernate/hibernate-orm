@@ -32,7 +32,6 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.JdbcSupport;
-import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.util.SQLStatementLogger;
@@ -84,7 +83,6 @@ public final class Settings {
 	private TransactionManagerLookup transactionManagerLookup;
 	private BatcherFactory batcherFactory;
 	private QueryTranslatorFactory queryTranslatorFactory;
-	private SQLExceptionConverter sqlExceptionConverter;
 	private boolean wrapResultSetsEnabled;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
@@ -250,10 +248,6 @@ public final class Settings {
 
 	public QueryTranslatorFactory getQueryTranslatorFactory() {
 		return queryTranslatorFactory;
-	}
-
-	public SQLExceptionConverter getSQLExceptionConverter() {
-		return sqlExceptionConverter;
 	}
 
 	public boolean isWrapResultSetsEnabled() {
@@ -449,10 +443,6 @@ public final class Settings {
 
 	void setQueryTranslatorFactory(QueryTranslatorFactory queryTranslatorFactory) {
 		this.queryTranslatorFactory = queryTranslatorFactory;
-	}
-
-	void setSQLExceptionConverter(SQLExceptionConverter sqlExceptionConverter) {
-		this.sqlExceptionConverter = sqlExceptionConverter;
 	}
 
 	void setWrapResultSetsEnabled(boolean wrapResultSetsEnabled) {

@@ -111,8 +111,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 
 		}
 		catch ( SQLException sqle ) {
-			JDBCException e = JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			JDBCException e = session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not lock: " + MessageHelper.infoString( getLockable(), id, session.getFactory() ),
 					sql

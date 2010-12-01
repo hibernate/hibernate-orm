@@ -335,8 +335,7 @@ public abstract class Loader {
 				);
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not read next row of results",
 			        getSQLString()
@@ -386,8 +385,7 @@ public abstract class Loader {
 			while ( keyToRead.equals( loadedKeys[0] ) && resultSet.next() );
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not doAfterTransactionCompletion sequential read of results (forward)",
 			        getSQLString()
@@ -453,8 +451,7 @@ public abstract class Loader {
 			return sequentialLoad( resultSet, session, queryParameters, returnProxies, currentKey );
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not doAfterTransactionCompletion sequential read of results (forward)",
 			        getSQLString()
@@ -579,8 +576,7 @@ public abstract class Loader {
 			return sequentialLoad( resultSet, session, queryParameters, returnProxies, keyToRead );
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not doAfterTransactionCompletion sequential read of results (forward)",
 			        getSQLString()
@@ -2100,8 +2096,7 @@ public abstract class Loader {
 		}
 		catch ( SQLException sqle ) {
 			final Loadable[] persisters = getEntityPersisters();
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not load an entity: " + 
 			        MessageHelper.infoString( persisters[persisters.length-1], id, identifierType, getFactory() ),
@@ -2143,8 +2138,7 @@ public abstract class Loader {
 			);
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not collection element by index",
 			        getSQLString()
@@ -2193,8 +2187,7 @@ public abstract class Loader {
 			result = doQueryAndInitializeNonLazyCollections( session, qp, false );
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not load an entity batch: " + 
 			        MessageHelper.infoString( getEntityPersisters()[0], ids, getFactory() ),
@@ -2232,8 +2225,7 @@ public abstract class Loader {
 				);
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 					sqle,
 					"could not initialize a collection: " + 
 					MessageHelper.collectionInfoString( getCollectionPersisters()[0], id, getFactory() ),
@@ -2270,8 +2262,7 @@ public abstract class Loader {
 				);
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not initialize a collection batch: " + 
 			        MessageHelper.collectionInfoString( getCollectionPersisters()[0], ids, getFactory() ),
@@ -2303,8 +2294,7 @@ public abstract class Loader {
 				);
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not load collection by subselect: " + 
 			        MessageHelper.collectionInfoString( getCollectionPersisters()[0], ids, getFactory() ),
@@ -2517,8 +2507,7 @@ public abstract class Loader {
 			result = doQueryAndInitializeNonLazyCollections( session, queryParameters, true, forcedResultTransformer );
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not execute query",
 			        getSQLString()
@@ -2622,8 +2611,7 @@ public abstract class Loader {
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        factory.getSQLExceptionConverter(),
+			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not execute query using scroll",
 			        getSQLString()

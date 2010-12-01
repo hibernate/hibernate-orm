@@ -75,6 +75,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.context.CurrentSessionContext;
 import org.hibernate.context.JTASessionContext;
@@ -94,7 +96,6 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
-import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -731,7 +732,11 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	}
 
 	public SQLExceptionConverter getSQLExceptionConverter() {
-		return settings.getSQLExceptionConverter();
+		return getSQLExceptionHelper().getSqlExceptionConverter();
+	}
+
+	public SQLExceptionHelper getSQLExceptionHelper() {
+		return getJdbcServices().getSqlExceptionHelper();
 	}
 
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {

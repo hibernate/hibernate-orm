@@ -94,8 +94,7 @@ public final class IteratorImpl implements HibernateIterator {
 			}
 			catch (SQLException e) {
 				log.info( "Unable to close iterator", e );
-				throw JDBCExceptionHelper.convert(
-				        session.getFactory().getSQLExceptionConverter(),
+				throw session.getFactory().getSQLExceptionHelper().convert(
 				        e,
 				        "Unable to close iterator"
 					);
@@ -158,8 +157,7 @@ public final class IteratorImpl implements HibernateIterator {
 			return currentResult;
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not get next iterator result"
 				);

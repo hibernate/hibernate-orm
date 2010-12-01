@@ -129,8 +129,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not get next sequence value",
 					sql

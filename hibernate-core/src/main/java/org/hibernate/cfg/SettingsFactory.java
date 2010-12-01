@@ -225,18 +225,6 @@ public class SettingsFactory implements Serializable {
 
 		if (useQueryCache) settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
 
-		//SQL Exception converter:
-
-		SQLExceptionConverter sqlExceptionConverter;
-		try {
-			sqlExceptionConverter = SQLExceptionConverterFactory.buildSQLExceptionConverter( dialect, properties );
-		}
-		catch(HibernateException e) {
-			log.warn("Error building SQLExceptionConverter; using minimal converter");
-			sqlExceptionConverter = SQLExceptionConverterFactory.buildMinimalSQLExceptionConverter();
-		}
-		settings.setSQLExceptionConverter(sqlExceptionConverter);
-
 		//Statistics and logging:
 
 		boolean showSql = ConfigurationHelper.getBoolean(Environment.SHOW_SQL, properties);

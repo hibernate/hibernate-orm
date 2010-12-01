@@ -104,8 +104,7 @@ public class DbTimestampType extends TimestampType {
 			return ts;
 		}
 		catch( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not select current db timestamp",
 			        timestampSelectString
@@ -140,8 +139,7 @@ public class DbTimestampType extends TimestampType {
 			return ts;
 		}
 		catch( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-			        session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 			        sqle,
 			        "could not call current db timestamp function",
 			        callString

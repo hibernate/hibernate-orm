@@ -969,8 +969,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert( 
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not execute query using iterate",
 					getSQLString() 

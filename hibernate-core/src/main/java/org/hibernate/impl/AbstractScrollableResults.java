@@ -122,8 +122,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 			session.getBatcher().closeQueryStatement( ps, resultSet );
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not close results"
 				);

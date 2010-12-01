@@ -120,8 +120,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 
 		}
 		catch ( SQLException sqle ) {
-			JDBCException e = JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			JDBCException e = session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
 					sql

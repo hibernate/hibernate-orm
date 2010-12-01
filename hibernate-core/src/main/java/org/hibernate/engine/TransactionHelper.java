@@ -61,8 +61,7 @@ public abstract class TransactionHelper {
 					generatedValue = doWorkInCurrentTransaction( connection, sql );
 				}
 				catch( SQLException sqle ) {
-					throw JDBCExceptionHelper.convert(
-							session.getFactory().getSQLExceptionConverter(),
+					throw session.getFactory().getSQLExceptionHelper().convert(
 							sqle,
 							"could not get or update next value",
 							sql

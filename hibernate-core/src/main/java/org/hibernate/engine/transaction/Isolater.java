@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 
@@ -210,16 +211,15 @@ public class Isolater {
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw JDBCExceptionHelper.convert(
-						sqlExceptionConverter(),
+				throw sqlExceptionHelper().convert(
 						sqle,
 						"unable to obtain isolated JDBC connection"
 				);
 			}
 		}
 
-		private SQLExceptionConverter sqlExceptionConverter() {
-			return session.getFactory().getSQLExceptionConverter();
+		private SQLExceptionHelper sqlExceptionHelper() {
+			return session.getFactory().getSQLExceptionHelper();
 		}
 	}
 
@@ -266,8 +266,7 @@ public class Isolater {
 						throw ( HibernateException ) e;
 					}
 					else if ( e instanceof SQLException ) {
-						throw JDBCExceptionHelper.convert(
-								sqlExceptionConverter(),
+						throw sqlExceptionHelper().convert(
 								( SQLException ) e,
 								"error performing isolated work"
 						);
@@ -294,16 +293,15 @@ public class Isolater {
 				}
 			}
 			catch ( SQLException sqle ) {
-				throw JDBCExceptionHelper.convert(
-						sqlExceptionConverter(),
+				throw sqlExceptionHelper().convert(
 						sqle,
 						"unable to obtain isolated JDBC connection"
 				);
 			}
 		}
 
-		private SQLExceptionConverter sqlExceptionConverter() {
-			return session.getFactory().getSQLExceptionConverter();
+		private SQLExceptionHelper sqlExceptionHelper() {
+			return session.getFactory().getSQLExceptionHelper();
 		}
 	}
 }

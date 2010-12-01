@@ -122,8 +122,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 				}
 			}
 			catch( SQLException e ) {
-				throw JDBCExceptionHelper.convert(
-						getFactory().getSQLExceptionConverter(),
+				throw getFactory().getSQLExceptionHelper().convert(
 				        e,
 				        "could not insert/select ids for bulk delete",
 				        idInsertSelect
@@ -144,8 +143,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 					}
 				}
 				catch( SQLException e ) {
-					throw JDBCExceptionHelper.convert(
-							getFactory().getSQLExceptionConverter(),
+					throw getFactory().getSQLExceptionHelper().convert(
 					        e,
 					        "error performing bulk delete",
 					        deletes[i]

@@ -306,8 +306,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			return count;
 		}
 		catch ( SQLException sqle ) {
-			throw JDBCExceptionHelper.convert(
-					getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not update collection rows: " + 
 					MessageHelper.collectionInfoString( this, id, getFactory() ),

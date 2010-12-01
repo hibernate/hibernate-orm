@@ -216,9 +216,8 @@ public class NativeSQLQueryPlan implements Serializable {
 			}
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert( session.getFactory()
-					.getSQLExceptionConverter(), sqle,
-					"could not execute native bulk manipulation query", this.sourceQuery );
+			throw session.getFactory().getSQLExceptionHelper().convert(
+					sqle, "could not execute native bulk manipulation query", this.sourceQuery );
 		}
 
 		return result;

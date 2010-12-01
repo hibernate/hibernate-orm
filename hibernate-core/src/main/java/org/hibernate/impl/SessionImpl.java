@@ -36,7 +36,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1998,7 +1997,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			jdbcContext.getConnectionManager().afterStatement();
 		}
 		catch ( SQLException e ) {
-			throw JDBCExceptionHelper.convert( factory.getSettings().getSQLExceptionConverter(), e, "error executing work" );
+			throw factory.getSQLExceptionHelper().convert( e, "error executing work" );
 		}
 	}
 
@@ -2220,8 +2219,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			return callback.executeOnConnection( connection );
 		}
 		catch ( SQLException e ) {
-			throw JDBCExceptionHelper.convert(
-					getFactory().getSQLExceptionConverter(),
+			throw getFactory().getSQLExceptionHelper().convert(
 					e,
 					"Error creating contextual LOB : " + e.getMessage()
 			);

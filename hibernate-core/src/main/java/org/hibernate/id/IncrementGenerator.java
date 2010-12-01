@@ -144,8 +144,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 			}
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert(
-					session.getFactory().getSQLExceptionConverter(),
+			throw session.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not fetch initial value for increment generator",
 					sql

@@ -46,7 +46,6 @@ import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.transaction.CacheSynchronization;
 import org.hibernate.transaction.TransactionFactory;
 
 /**
@@ -293,8 +292,7 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 			}
 		}
 		catch (SQLException sqle) {
-			throw JDBCExceptionHelper.convert( 
-					owner.getFactory().getSQLExceptionConverter(),
+			throw owner.getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not inspect JDBC autocommit mode"
 				);

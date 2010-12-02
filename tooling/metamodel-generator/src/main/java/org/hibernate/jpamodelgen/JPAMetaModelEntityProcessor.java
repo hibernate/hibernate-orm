@@ -153,7 +153,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			for ( MetaEntity entity : toProcessEntities ) {
 				// see METAGEN-36
 				if ( generatedModelClasses.contains( entity.getQualifiedName() ) ) {
-					toProcessEntities.remove( entity );
+					processedEntities.add( entity );
 					continue;
 				}
 				if ( modelGenerationNeedsToBeDeferred( toProcessEntities, entity ) ) {

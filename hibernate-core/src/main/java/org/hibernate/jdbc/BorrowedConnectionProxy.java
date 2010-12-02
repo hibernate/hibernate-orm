@@ -25,6 +25,7 @@
 package org.hibernate.jdbc;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -46,11 +47,11 @@ public class BorrowedConnectionProxy implements InvocationHandler {
 
 	private static final Class[] PROXY_INTERFACES = new Class[] { Connection.class, ConnectionWrapper.class };
 
-	private final ConnectionManager connectionManager;
+	private final LogicalConnectionImpl logicalConnection;
 	private boolean useable = true;
 
-	public BorrowedConnectionProxy(ConnectionManager connectionManager) {
-		this.connectionManager = connectionManager;
+	public BorrowedConnectionProxy(LogicalConnectionImpl logicalConnection) {
+		this.logicalConnection = logicalConnection;
 	}
 
 	/**
@@ -58,7 +59,7 @@ public class BorrowedConnectionProxy implements InvocationHandler {
 	 */
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( "close".equals( method.getName() ) ) {
-			connectionManager.releaseBorrowedConnection();
+			logicalConnection.releaseBorrowedConnection();
 			return null;
 		}
 		// should probably no-op commit/rollback here, at least in JTA scenarios
@@ -67,11 +68,11 @@ public class BorrowedConnectionProxy implements InvocationHandler {
 		}
 
 		if ( "getWrappedConnection".equals( method.getName() ) ) {
-			return connectionManager.getConnection();
+			return logicalConnection.getConnection();
 		}
 
 		try {
-			return method.invoke( connectionManager.getConnection(), args );
+			return method.invoke( logicalConnection.getConnection(), args );
 		}
 		catch( InvocationTargetException e ) {
 			throw e.getTargetException();
@@ -82,12 +83,12 @@ public class BorrowedConnectionProxy implements InvocationHandler {
 	 * Generates a Connection proxy wrapping the connection managed by the passed
 	 * connection manager.
 	 *
-	 * @param connectionManager The connection manager to wrap with the
+	 * @param logicalConnection The logical connection to wrap with the
 	 * connection proxy.
 	 * @return The generated proxy.
 	 */
-	public static Connection generateProxy(ConnectionManager connectionManager) {
-		BorrowedConnectionProxy handler = new BorrowedConnectionProxy( connectionManager );
+	public static Connection generateProxy(LogicalConnectionImpl logicalConnection) {
+		BorrowedConnectionProxy handler = new BorrowedConnectionProxy( logicalConnection );
 		return ( Connection ) Proxy.newProxyInstance(
 				getProxyClassLoader(),
 		        PROXY_INTERFACES,

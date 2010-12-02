@@ -36,6 +36,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.engine.query.QueryPlanCache;
@@ -98,9 +99,15 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	public CollectionPersister getCollectionPersister(String role) throws MappingException;
 
 	/**
+	 * Get the JdbcServices.
+	 * @return the JdbcServices
+	 */
+	public JdbcServices getJdbcServices();
+
+	/**
 	 * Get the SQL dialect.
 	 * <p/>
-	 * Shorthand for {@link #getSettings()}.{@link Settings#getDialect()}
+	 * Shorthand for {@link #getJdbcServices().getDialect()}.{@link JdbcServices#getDialect()}
 	 *
 	 * @return The dialect
 	 */

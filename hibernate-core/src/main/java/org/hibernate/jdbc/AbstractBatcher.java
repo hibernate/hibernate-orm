@@ -43,6 +43,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.TransactionException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.util.JDBCExceptionReporter;
@@ -577,41 +578,6 @@ public abstract class AbstractBatcher implements Batcher {
 		Integer statementFetchSize = factory.getSettings().getJdbcFetchSize();
 		if ( statementFetchSize!=null ) {
 			statement.setFetchSize( statementFetchSize.intValue() );
-		}
-	}
-
-	public Connection openConnection() throws HibernateException {
-		log.debug("opening JDBC connection");
-		try {
-			return factory.getConnectionProvider().getConnection();
-		}
-		catch (SQLException sqle) {
-			throw factory.getSQLExceptionHelper().convert(
-			        sqle,
-			        "Cannot open connection"
-				);
-		}
-	}
-
-	public void closeConnection(Connection conn) throws HibernateException {
-		if ( conn == null ) {
-			log.debug( "found null connection on AbstractBatcher#closeConnection" );
-			// EARLY EXIT!!!!
-			return;
-		}
-
-		if ( log.isDebugEnabled() ) {
-			log.debug( "closing JDBC connection" + preparedStatementCountsToString() + resultSetCountsToString() );
-		}
-
-		try {
-			if ( !conn.isClosed() ) {
-				JDBCExceptionReporter.logAndClearWarnings( conn );
-			}
-			factory.getConnectionProvider().closeConnection( conn );
-		}
-		catch ( SQLException sqle ) {
-			throw factory.getSQLExceptionHelper().convert( sqle, "Cannot close connection" );
 		}
 	}
 

@@ -161,21 +161,6 @@ public interface Batcher {
 
 	public String openResourceStatsAsString();
 
-	// TODO : remove these last two as batcher is no longer managing connections
-
-	/**
-	 * Obtain a JDBC connection
-	 *
-	 * @deprecated Obtain connections from {@link ConnectionProvider} instead
-	 */
-	public Connection openConnection() throws HibernateException;
-	/**
-	 * Dispose of the JDBC connection
-	 *
-	 * @deprecated Obtain connections from {@link ConnectionProvider} instead
-	 */
-	public void closeConnection(Connection conn) throws HibernateException;
-	
 	/**
 	 * Set the transaction timeout to <tt>seconds</tt> later
 	 * than the current system time.

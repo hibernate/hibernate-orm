@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
 import java.sql.Connection;
 
 /**
@@ -30,7 +31,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface LogicalConnection {
+public interface LogicalConnection extends Serializable {
 	/**
 	 * Is this logical connection open?  Another phraseology sometimes used is: "are we
 	 * logically connected"?

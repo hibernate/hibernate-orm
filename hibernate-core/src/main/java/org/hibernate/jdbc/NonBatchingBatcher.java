@@ -29,6 +29,8 @@ import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 
 /**
  * An implementation of the <tt>Batcher</tt> interface that does no batching

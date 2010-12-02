@@ -711,11 +711,15 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return settings;
 	}
 
+	public JdbcServices getJdbcServices() {
+		return serviceRegistry.getService( JdbcServices.class );
+	}
+
 	public Dialect getDialect() {
 		if ( serviceRegistry == null ) {
 			throw new IllegalStateException( "Cannot determine dialect because serviceRegistry is null." );
 		}
-		return serviceRegistry.getService( JdbcServices.class ).getDialect();
+		return getJdbcServices().getDialect();
 	}
 
 	public Interceptor getInterceptor()
@@ -908,10 +912,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	public Type getReferencedPropertyType(String className, String propertyName)
 		throws MappingException {
 		return getEntityPersister(className).getPropertyType(propertyName);
-	}
-
-	private JdbcServices getJdbcServices() {
-		return serviceRegistry.getService( JdbcServices.class );
 	}
 
 	public ConnectionProvider getConnectionProvider() {

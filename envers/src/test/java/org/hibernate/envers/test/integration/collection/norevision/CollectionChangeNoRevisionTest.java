@@ -19,10 +19,8 @@ import java.util.List;
 public class CollectionChangeNoRevisionTest extends AbstractSessionTest {
 
     protected static final int EXPECTED_PERSON_REVISION_COUNT = 1;
-    protected static final int EXPECTED_NAME_REVISION_COUNT = 1;
     protected static final String CREATE_REVISION_ON_COLLECTION_CHANGE = "false";
     protected Integer personId;
-    protected List<Integer> namesId = new ArrayList<Integer>();
 
     @Override
     protected void initMappings() throws MappingException, URISyntaxException {
@@ -35,38 +33,32 @@ public class CollectionChangeNoRevisionTest extends AbstractSessionTest {
         return CREATE_REVISION_ON_COLLECTION_CHANGE;
     }
 
-    @BeforeMethod(firstTimeOnly = true)
+    @BeforeClass(dependsOnMethods = "init")
     public void initData() {
     	newSessionFactory();
         Person p = new Person();
         Name n = new Name();
         n.setName("name1");
         p.getNames().add(n);
-        Transaction transaction = getSession().beginTransaction();
+        getSession().getTransaction().begin();
         getSession().saveOrUpdate(p);
-        transaction.commit();
+        getSession().getTransaction().commit();
         personId = p.getId();
-        namesId.add(n.getId());
-
+        getSession().getTransaction().begin();
+        n.setName("Changed name");
+        getSession().saveOrUpdate(p);
+        getSession().getTransaction().commit();
+        getSession().getTransaction().begin();
+        Name n2 = new Name();
+        n2.setName("name2");
+        p.getNames().add(n2);
+        getSession().getTransaction().commit();
     }
 
     @Test
     public void testPersonRevisionCount() {
-        Person p = (Person) getSession().createCriteria(Person.class).add(Restrictions.idEq(personId)).uniqueResult();
-        Name n2 = new Name();
-        n2.setName("name2");
-        p.getNames().add(n2);
-        Transaction transaction = getSession().beginTransaction();
-        getSession().saveOrUpdate(p);
-        transaction.commit();
-        namesId.add(n2.getId());
         int sizePerson = getAuditReader().getRevisions(Person.class, personId).size();
-        Assert.assertEquals(config.getProperty("org.hibernate.envers.revision_on_collection_change"), getCollectionChangeValue());
-        Assert.assertEquals(sizePerson, getExpectedPersonRevisionCount());
-        for (Integer id : namesId) {
-            int sizeName = getAuditReader().getRevisions(Name.class, id).size();
-            Assert.assertEquals(sizeName, EXPECTED_NAME_REVISION_COUNT);
-        }
+        assert sizePerson == getExpectedPersonRevisionCount();
     }
 
     protected int getExpectedPersonRevisionCount() {

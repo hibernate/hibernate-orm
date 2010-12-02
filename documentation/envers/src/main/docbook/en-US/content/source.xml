@@ -30,45 +30,75 @@
 <chapter id="source">
     <title>Building from source and testing</title>
 
-    <para>
-        Envers, as a module of Hibernate, uses a standard Maven2 build. So all the usual
-        build targets (compile, test, install) will work.
-    </para>
+    <section id="source-checkout">
+        <title>Building from source</title>
+        <para>
+            Envers, as a module of Hibernate, uses the standard Hibernate build. So all the usual
+            build targets (compile, test, install) will work.
+        </para>
 
-    <para>
-        You can check out the source code
-        <ulink url="http://anonsvn.jboss.org/repos/hibernate/core/trunk/">from SVN</ulink>,
-        or browse it using
-        <ulink url="http://fisheye.jboss.org/browse/Hibernate">FishEye</ulink>.
-    </para>
+        <para>
+            The public Hibernate Git repository is hosted at GitHub and can be browsed using
+            <ulink url="https://github.com/hibernate/hibernate-core">GitHub</ulink>.
 
-    <para>
-        The tests use, by default, use a H2 in-memory database. The configuration
-        file can be found in <literal>src/test/resources/hibernate.test.cfg.xml</literal>.
-    </para>
+            The source can be checked out using either  
+            <programlisting>
+            git clone https://github.com/hibernate/hibernate-core hibernate-core.git
+            git clone git://github.com/hibernate/hibernate-core.git
+            </programlisting>
+        </para>
+    </section>
 
-    <para>
-        The tests use TestNG, and can be found in the
-        <literal>org.hibernate.envers.test.integration</literal> package
-        (or rather, in subpackages of this package).
-        The tests aren't unit tests, as they don't test individual classes, but the behaviour
-        and interaction of many classes, hence the name of package.
-    </para>
+    <section id="source-contributing">
+        <title>Contributing</title>
+        <para>
+             If you want to contribute a fix or new feature, either:
+             <itemizedlist>
+             	<listitem>
+             	    use the GitHub fork capability: clone, work on a branch, fork the repo on GitHub (fork button), push the work there and trigger a pull request (pull request button).
+             	</listitem>
+             	<listitem>
+             	    use the pure Git approach: clone, work on a branch, push to a public fork repo hosted somewhere, trigger a pull request 
+             	    (<literal>git pull-request</literal>)
+             	</listitem>
+             	<listitem>
+             	    provide a good old patch file: clone the repo, create a patch with git format-patch or diff and attach the patch file to JIRA
+             	</listitem>
+             </itemizedlist>
+        </para>
+    </section>
 
-    <para>
-        A test normally consists of an entity (or two entities) that will be audited and extends the
-        <literal>AbstractEntityTest</literal> class, which has one abstract method:
-        <literal>configure(Ejb3Configuration)</literal>. The role of this method is to add the entities
-        that will be used in the test to the configuration.
-    </para>
+    <section id="source-tests">
+        <title>Envers integration tests</title>
 
-    <para>
-        The test data is in most cases created in the "initData" method (which is called once before
-        the tests from this class are executed), which normally creates a couple of revisions,
-        by persisting and updating entities. The tests first check if the revisions, in which
-        entities where modified are correct (the testRevisionCounts method), and if the historic
-        data is correct (the testHistoryOfXxx methods).
-    </para>
+        <para>
+            The tests use, by default, use a H2 in-memory database. The configuration
+            file can be found in <literal>src/test/resources/hibernate.test.cfg.xml</literal>.
+        </para>
+
+        <para>
+            The tests use TestNG, and can be found in the
+            <literal>org.hibernate.envers.test.integration</literal> package
+            (or rather, in subpackages of this package).
+            The tests aren't unit tests, as they don't test individual classes, but the behaviour
+            and interaction of many classes, hence the name of package.
+        </para>
+
+        <para>
+            A test normally consists of an entity (or two entities) that will be audited and extends the
+            <literal>AbstractEntityTest</literal> class, which has one abstract method:
+            <literal>configure(Ejb3Configuration)</literal>. The role of this method is to add the entities
+            that will be used in the test to the configuration.
+        </para>
+
+        <para>
+            The test data is in most cases created in the "initData" method (which is called once before
+            the tests from this class are executed), which normally creates a couple of revisions,
+            by persisting and updating entities. The tests first check if the revisions, in which
+            entities where modified are correct (the testRevisionCounts method), and if the historic
+            data is correct (the testHistoryOfXxx methods).
+        </para>
+    </section>
 
 </chapter>
 

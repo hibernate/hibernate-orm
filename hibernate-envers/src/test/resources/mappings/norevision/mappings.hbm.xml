@@ -16,6 +16,6 @@
         </id>
         <property name="name"/>
         <many-to-one name="person" class="org.hibernate.envers.test.integration.collection.norevision.Person"
-                     column="Person_Id" cascade="save-update"/>
+                     column="Person_Id" cascade="save-update" update="false" insert="false"/>
     </class>
 </hibernate-mapping>

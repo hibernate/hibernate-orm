@@ -5,7 +5,7 @@ import org.testng.annotations.BeforeMethod;
 
 import java.net.URISyntaxException;
 
-public class CollectionChangRevisionTest extends CollectionChangeNoRevisionTest {
+public class CollectionChangeRevisionTest extends CollectionChangeNoRevisionTest {
 
     protected static final int PERSON_COUNT_NEW_REVISION_ON_COLLECTION = 2;
     protected static final String NEW_REVISION_ON_COLLECTION = "true";

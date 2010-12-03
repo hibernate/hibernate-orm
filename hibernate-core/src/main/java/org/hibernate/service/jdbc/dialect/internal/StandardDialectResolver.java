@@ -43,6 +43,8 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -88,7 +90,6 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                     }
                     return new IngresDialect();
                 case 10:
-                    log.warn( "Ingres " + databaseMajorVersion + " is not yet fully supported; using Ingres 9.3 dialect" );
                     return new Ingres10Dialect();
                 default:
                     log.warn( "Unknown Ingres major version [" + databaseMajorVersion + "] using Ingres 9.2 dialect" );
@@ -97,6 +98,16 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		}
 
 		if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
+			switch ( databaseMajorVersion ) {
+			case 8:
+				return new SQLServerDialect();
+			case 9:
+				return new SQLServer2005Dialect();
+			case 10:
+				return new SQLServer2008Dialect();
+			default:
+				log.warn( "Unknown Microsoft SQL Server major version [" + databaseMajorVersion + "] using SQL Server 2000 dialect" );
+			}
 			return new SQLServerDialect();
 		}
 
@@ -119,7 +130,6 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 		if ( "Oracle".equals( databaseName ) ) {
 			switch ( databaseMajorVersion ) {
 				case 11:
-					log.warn( "Oracle 11g is not yet fully supported; using 10g dialect" );
 					return new Oracle10gDialect();
 				case 10:
 					return new Oracle10gDialect();

@@ -99,7 +99,7 @@ public abstract class Dialect {
 
 	private final Properties properties = new Properties();
 	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
-	private final Set sqlKeywords = new HashSet();
+	private final Set<String> sqlKeywords = new HashSet<String>();
 
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -197,7 +197,7 @@ public abstract class Dialect {
 			throw new HibernateException( "Dialect class not found: " + dialectName );
 		}
 		catch ( Exception e ) {
-			throw new HibernateException( "Could not instantiate dialect class", e );
+			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName, e );
 		}
 	}
 
@@ -373,7 +373,7 @@ public abstract class Dialect {
 	 *
 	 * @return The map of registered functions.
 	 */
-	public final Map getFunctions() {
+	public final Map<String, SQLFunction> getFunctions() {
 		return sqlFunctions;
 	}
 
@@ -384,7 +384,7 @@ public abstract class Dialect {
 		sqlKeywords.add(word);
 	}
 
-	public Set getKeywords() {
+	public Set<String> getKeywords() {
 		return sqlKeywords;
 	}
 
@@ -481,7 +481,7 @@ public abstract class Dialect {
 	 * @throws MappingException If IDENTITY generation is not supported.
 	 */
 	protected String getIdentitySelectString() throws MappingException {
-		throw new MappingException( "Dialect does not support identity key generation" );
+		throw new MappingException( getClass().getName() + " does not support identity key generation" );
 	}
 
 	/**
@@ -503,7 +503,7 @@ public abstract class Dialect {
 	 * @throws MappingException If IDENTITY generation is not supported.
 	 */
 	protected String getIdentityColumnString() throws MappingException {
-		throw new MappingException( "Dialect does not support identity key generation" );
+		throw new MappingException( getClass().getName() + " does not support identity key generation" );
 	}
 
 	/**
@@ -551,7 +551,7 @@ public abstract class Dialect {
 	 * @throws MappingException If sequences are not supported.
 	 */
 	public String getSequenceNextValString(String sequenceName) throws MappingException {
-		throw new MappingException( "Dialect does not support sequences" );
+		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
 	/**
@@ -566,7 +566,7 @@ public abstract class Dialect {
 	 * @throws MappingException If sequences are not supported.
 	 */
 	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
-		throw new MappingException( "Dialect does not support sequences" );
+		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
 	/**
@@ -609,7 +609,7 @@ public abstract class Dialect {
 	 * @throws MappingException If sequences are not supported.
 	 */
 	protected String getCreateSequenceString(String sequenceName) throws MappingException {
-		throw new MappingException( "Dialect does not support sequences" );
+		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
 	/**
@@ -633,7 +633,7 @@ public abstract class Dialect {
 		if ( supportsPooledSequences() ) {
 			return getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
 		}
-		throw new MappingException( "Dialect does not support pooled sequences" );
+		throw new MappingException( getClass().getName() + " does not support pooled sequences" );
 	}
 
 	/**
@@ -662,7 +662,7 @@ public abstract class Dialect {
 	 * @throws MappingException If sequences are not supported.
 	 */
 	protected String getDropSequenceString(String sequenceName) throws MappingException {
-		throw new MappingException( "Dialect does not support sequences" );
+		throw new MappingException( getClass().getName() + " does not support sequences" );
 	}
 
 	/**
@@ -686,7 +686,7 @@ public abstract class Dialect {
 	 * @return The appropriate command.
 	 */
 	public String getSelectGUIDString() {
-		throw new UnsupportedOperationException( "dialect does not support GUIDs" );
+		throw new UnsupportedOperationException( getClass().getName() + " does not support GUIDs" );
 	}
 
 
@@ -802,7 +802,7 @@ public abstract class Dialect {
 	 * @return the modified SQL
 	 */
 	protected String getLimitString(String query, boolean hasOffset) {
-		throw new UnsupportedOperationException( "paged queries not supported" );
+		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
 	}
 
 	/**
@@ -1502,7 +1502,7 @@ public abstract class Dialect {
 	 * @return The "add column" fragment.
 	 */
 	public String getAddColumnString() {
-		throw new UnsupportedOperationException( "No add column syntax supported by Dialect" );
+		throw new UnsupportedOperationException( "No add column syntax supported by " + getClass().getName() );
 	}
 
 	public String getDropForeignKeyString() {

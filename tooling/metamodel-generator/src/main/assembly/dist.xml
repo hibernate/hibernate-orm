@@ -37,13 +37,12 @@
         <fileSet>
             <directory>target</directory>
             <outputDirectory/>
-            <excludes>
-                <exclude>*-javadoc.jar</exclude>
-                <exclude>*-sources.jar</exclude>
-            </excludes>
             <includes>
-                <include>jpamodelgen-*.jar</include>
+                <include>hibernate-jpamodelgen-*.jar</include>
             </includes>
+            <excludes>
+                <exclude>hibernate-jpamodelgen-*-sources.jar</exclude>
+            </excludes>
         </fileSet>
         <fileSet>
             <directory>target/site/apidocs</directory>
@@ -57,9 +56,12 @@
             <directory>.</directory>
             <outputDirectory/>
             <useDefaultExcludes>true</useDefaultExcludes>
-            <excludes>
-                <exclude>**/target/**</exclude>
-            </excludes>
+            <includes>
+                <include>pom.xml</include>
+                <include>license.txt</include>
+                <include>readme.txt</include>
+                <include>src/**</include>
+            </includes>
         </fileSet>
     </fileSets>
 </assembly>

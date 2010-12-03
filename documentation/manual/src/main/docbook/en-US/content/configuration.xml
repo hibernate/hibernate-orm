@@ -994,15 +994,15 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             </row>
 
             <row>
-              <entry>MySQL</entry>
+              <entry>MySQL5</entry>
 
-              <entry><literal>org.hibernate.dialect.MySQLDialect</literal></entry>
+              <entry><literal>org.hibernate.dialect.MySQL5Dialect</literal></entry>
             </row>
 
             <row>
-              <entry>MySQL with InnoDB</entry>
+              <entry>MySQL5 with InnoDB</entry>
 
-              <entry><literal>org.hibernate.dialect.MySQLInnoDBDialect</literal></entry>
+              <entry><literal>org.hibernate.dialect.MySQL5InnoDBDialect</literal></entry>
             </row>
 
             <row>
@@ -1029,10 +1029,16 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
               <entry><literal>org.hibernate.dialect.Oracle10gDialect</literal></entry>
             </row>
 
+			<row>
+              <entry>Oracle 11g</entry>
+
+              <entry><literal>org.hibernate.dialect.Oracle10gDialect</literal></entry>
+            </row>
+
             <row>
               <entry>Sybase</entry>
 
-              <entry><literal>org.hibernate.dialect.SybaseDialect</literal></entry>
+              <entry><literal>org.hibernate.dialect.SybaseASE15Dialect</literal></entry>
             </row>
 
             <row>
@@ -1042,9 +1048,21 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
             </row>
 
             <row>
-              <entry>Microsoft SQL Server</entry>
+              <entry>Microsoft SQL Server 2000</entry>
 
               <entry><literal>org.hibernate.dialect.SQLServerDialect</literal></entry>
+            </row>
+
+			<row>
+              <entry>Microsoft SQL Server 2005</entry>
+
+              <entry><literal>org.hibernate.dialect.SQLServer2005Dialect</literal></entry>
+            </row>
+
+			<row>
+              <entry>Microsoft SQL Server 2008</entry>
+
+              <entry><literal>org.hibernate.dialect.SQLServer2008Dialect</literal></entry>
             </row>
 
             <row>
@@ -1063,6 +1081,12 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
               <entry>HypersonicSQL</entry>
 
               <entry><literal>org.hibernate.dialect.HSQLDialect</literal></entry>
+            </row>
+
+			<row>
+              <entry>H2 Database</entry>
+
+              <entry><literal>org.hibernate.dialect.H2Dialect</literal></entry>
             </row>
 
             <row>

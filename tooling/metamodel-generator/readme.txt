@@ -11,7 +11,7 @@
   Latest stable version
   -------------------
 
-  1.1.0.Final, 3.11.2010
+  1.1.1.Final, 6.12.2010
 
 
   System Requirements

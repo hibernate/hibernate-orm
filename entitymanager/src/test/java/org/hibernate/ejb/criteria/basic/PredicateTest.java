@@ -100,7 +100,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		orderCriteria.select(orderRoot);
 		Predicate p1 = builder.equal(orderRoot.get("id"), 1);
-		Predicate p1 = builder.equal(orderRoot.get("id"), 2);
+		Predicate p2 = builder.equal(orderRoot.get("id"), 2);
 		orderCriteria.where( builder.not(  builder.or (p1, p2) ) );
 
 		em.createQuery( orderCriteria ).getResultList();
@@ -122,7 +122,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		orderCriteria.select(orderRoot);
 		Predicate p1 = builder.equal(orderRoot.get("id"), 1);
-		Predicate p1 = builder.equal(orderRoot.get("id"), 2);
+		Predicate p2 = builder.equal(orderRoot.get("id"), 2);
 		orderCriteria.where( builder.not(  builder.and (p1, p2) ) );
 
 		em.createQuery( orderCriteria ).getResultList();

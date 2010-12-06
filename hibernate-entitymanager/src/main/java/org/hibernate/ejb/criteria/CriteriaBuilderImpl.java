@@ -251,7 +251,10 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	// predicates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Predicate wrap(Expression<Boolean> expression) {
-		if ( Predicate.class.isInstance( expression ) ) {
+                if ( CompoundPredicate.class.isInstance( expression ) ) {
+                        return (( CompoundPredicate ) expression);
+                }
+                else if(Predicate.class.isInstance(expression)) {
 			return ( ( Predicate ) expression );
 		}
 		else if ( PathImplementor.class.isInstance( expression ) ) {

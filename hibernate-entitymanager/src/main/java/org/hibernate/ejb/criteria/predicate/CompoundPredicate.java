@@ -44,7 +44,7 @@ import org.hibernate.ejb.criteria.Renderable;
 public class CompoundPredicate
 		extends AbstractPredicateImpl
 		implements Serializable {
-	private final BooleanOperator operator;
+	private BooleanOperator operator;
 	private final List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
 	/**
@@ -148,4 +148,29 @@ public class CompoundPredicate
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
+
+        /**
+         * Create negation of compound predicate by using logic rules:
+         * 1. not (x || y) is (not x && not y)
+         * 2. not (x && y) is (not x || not y)
+         * 
+         */
+        @Override
+        public Predicate not() {
+                if (this.operator == BooleanOperator.AND) {
+                        this.operator = BooleanOperator.OR;
+                } else {
+                        this.operator = BooleanOperator.AND;
+                }
+                for (Expression expr : this.getExpressions()) {
+                        if (Predicate.class.isInstance(expr)) {
+                                ( (Predicate) expr ).not();
+                        }
+                        else if(CompoundPredicate.class.isInstance(expr)) {
+                            ( (CompoundPredicate) expr ).not();
+                        }
+                }
+
+                return this;
+        }
 }

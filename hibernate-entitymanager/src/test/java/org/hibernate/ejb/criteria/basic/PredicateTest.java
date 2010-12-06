@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Predicate;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Order;
@@ -64,4 +65,70 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 	}
+
+	/**
+	 * Check simple not.
+	 */ 
+	public void testSimpleNot() {
+		// yes this is a retarded case, but explicitly allowed in the JPA spec
+		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
+		Root<Order> orderRoot = orderCriteria.from(Order.class);
+
+		orderCriteria.select(orderRoot);
+		orderCriteria.where( builder.not( builder.equal(orderRoot.get("id"), 1) ) );
+
+		em.createQuery( orderCriteria ).getResultList();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	/**
+	 * Check complicated not.
+	 */ 
+	public void testComplicatedNotOr() {
+		// yes this is a retarded case, but explicitly allowed in the JPA spec
+		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
+		Root<Order> orderRoot = orderCriteria.from(Order.class);
+
+		orderCriteria.select(orderRoot);
+		Predicate p1 = builder.equal(orderRoot.get("id"), 1);
+		Predicate p1 = builder.equal(orderRoot.get("id"), 2);
+		orderCriteria.where( builder.not(  builder.or (p1, p2) ) );
+
+		em.createQuery( orderCriteria ).getResultList();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	/**
+	 * Check complicated not.
+	 */ 
+	public void testComplicatedNotAND() {
+		// yes this is a retarded case, but explicitly allowed in the JPA spec
+		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
+		Root<Order> orderRoot = orderCriteria.from(Order.class);
+
+		orderCriteria.select(orderRoot);
+		Predicate p1 = builder.equal(orderRoot.get("id"), 1);
+		Predicate p1 = builder.equal(orderRoot.get("id"), 2);
+		orderCriteria.where( builder.not(  builder.and (p1, p2) ) );
+
+		em.createQuery( orderCriteria ).getResultList();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+
 }

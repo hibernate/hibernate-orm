@@ -24,8 +24,8 @@ public class CollectionChangeNoRevisionTest extends AbstractSessionTest {
 
     @Override
     protected void initMappings() throws MappingException, URISyntaxException {
-        URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/norevision/mappings.hbm.xml");
-        config.addFile(new File(url.toURI()));
+        config.addAnnotatedClass(Person.class);
+        config.addAnnotatedClass(Name.class);
         config.setProperty("org.hibernate.envers.revision_on_collection_change", getCollectionChangeValue());
     }
 

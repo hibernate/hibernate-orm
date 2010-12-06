@@ -2,15 +2,19 @@ package org.hibernate.envers.test.integration.collection.norevision;
 
 import org.hibernate.envers.Audited;
 
+import javax.persistence.*;
 import java.io.Serializable;
 
 @Audited
+@Entity
 public class Name implements Serializable {
-
+    @Id
+    @GeneratedValue
     private Integer id;
 
     private String name;
-
+    @ManyToOne
+    @JoinColumn(name = "person_id", insertable = false, updatable = false)
     private Person person;
 
     public Integer getId() {

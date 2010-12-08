@@ -6,6 +6,7 @@
             <package name="org.hibernate.envers.test.integration.cache" />
             <package name="org.hibernate.envers.test.integration.collection" />
             <package name="org.hibernate.envers.test.integration.collection.mapkey" />
+            <package name="org.hibernate.envers.test.integration.collection.norevision" />
             <package name="org.hibernate.envers.test.integration.components" />
             <package name="org.hibernate.envers.test.integration.components.relations" />
             <package name="org.hibernate.envers.test.integration.customtype" />

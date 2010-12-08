@@ -257,7 +257,9 @@ public class AuditEventListener implements PostInsertEventListener, PostUpdateEv
     private void onCollectionAction(AbstractCollectionEvent event, PersistentCollection newColl, Serializable oldColl,
                                     CollectionEntry collectionEntry) {
         String entityName = event.getAffectedOwnerEntityName();
-
+        if (! verCfg.getGlobalCfg().isGenerateRevisionsForCollections()) {
+            return;
+        }
         if (verCfg.getEntCfg().isVersioned(entityName)) {
             AuditProcess auditProcess = verCfg.getSyncManager().get(event.getSession());
 

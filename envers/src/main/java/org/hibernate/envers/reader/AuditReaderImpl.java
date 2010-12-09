@@ -267,16 +267,6 @@ public class AuditReaderImpl implements AuditReaderImplementor {
         return (verCfg.getEntCfg().isVersioned(entityName));
     }	
 
-	public boolean isEntityClassNotAudited(Class<?> entityClass) {
-    	return this.isEntityNameNotAudited(entityClass.getName());
-	}
-
-	public boolean isEntityNameNotAudited(String entityName) {
-        checkNotNull(entityName, "Entity name");
-        checkSession();
-        return (verCfg.getEntCfg().isNotAudited(entityName));
-	}
-
 
 	public String getEntityName(Object primaryKey, Number revision ,Object entity) throws HibernateException{
         checkNotNull(primaryKey, "Primary key");

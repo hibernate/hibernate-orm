@@ -114,13 +114,9 @@ public class ReadEntityAssociatedNotAuditedTest extends AbstractSessionTest{
     	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
     	car2.getOwner().getName();
     	
-    	if(getAuditReader().isEntityNameNotAudited("Personaje")) {
-    		Person person = (Person)getSession().get("Personaje", id_pers1); 
-        	person.getName();
-    	} else {
-    		// it is not_audited
-    		assert(false);
-    	}
+    	// entityName personaje is marked as NOT_AUDITED
+   		Person person = (Person)getSession().get("Personaje", id_pers1); 
+       	person.getName();
     }    
 
 }

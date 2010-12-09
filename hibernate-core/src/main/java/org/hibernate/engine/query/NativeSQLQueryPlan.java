@@ -42,7 +42,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.event.EventSource;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
@@ -199,7 +198,7 @@ public class NativeSQLQueryPlan implements Serializable {
 					session );
 			String sql = queryParameters.getFilteredSQL();
 
-			ps = session.getBatcher().prepareStatement( sql );
+			ps = session.getJDBCContext().getConnectionManager().prepareStatement( sql, false );
 
 			try {
 				int col = 1;
@@ -211,7 +210,7 @@ public class NativeSQLQueryPlan implements Serializable {
 			}
 			finally {
 				if ( ps != null ) {
-					session.getBatcher().closeStatement( ps );
+					ps.close();
 				}
 			}
 		}

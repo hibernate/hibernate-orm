@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 
 /**
  * Generates <tt>string</tt> values using the SQL Server NEWID() function.
@@ -59,7 +58,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 		
 		final String sql = session.getFactory().getDialect().getSelectGUIDString();
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement(sql);
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sql);
 			try {
 				ResultSet rs = st.executeQuery();
 				final String result;
@@ -74,7 +73,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 				return result;
 			}
 			finally {
-				session.getBatcher().closeStatement(st);
+				st.close();
 			}
 		}
 		catch (SQLException sqle) {

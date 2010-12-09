@@ -46,11 +46,10 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.NonFlushedChanges;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
 import org.hibernate.impl.CriteriaImpl;
-import org.hibernate.jdbc.Batcher;
-import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -103,10 +102,6 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 
     public SessionFactoryImplementor getFactory() {
         return delegate.getFactory();
-    }
-
-    public Batcher getBatcher() {
-        return delegate.getBatcher();
     }
 
     public List list(String query, QueryParameters queryParameters) throws HibernateException {

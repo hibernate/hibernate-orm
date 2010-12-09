@@ -23,11 +23,14 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,9 +38,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
+import org.hibernate.jdbc.Batcher;
+import org.hibernate.jdbc.BatcherFactory;
 
 /**
  * Standard implementation of the {@link org.hibernate.engine.jdbc.spi.JdbcResourceRegistry} contract
@@ -50,9 +56,13 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
 	private final SQLExceptionHelper exceptionHelper;
+	private final Batcher batcher;
 
-	public JdbcResourceRegistryImpl(SQLExceptionHelper exceptionHelper) {
+	private Statement lastQuery;
+
+	public JdbcResourceRegistryImpl(SQLExceptionHelper exceptionHelper, BatcherFactory batcherFactory) {
 		this.exceptionHelper = exceptionHelper;
+		this.batcher = batcherFactory.createBatcher( exceptionHelper );
 	}
 
 	public void register(Statement statement) {
@@ -61,6 +71,38 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			throw new HibernateException( "statement already registered with JDBCContainer" );
 		}
 		xref.put( statement, null );
+	}
+
+	public Batcher getBatcher() {
+		return batcher;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	public void registerLastQuery(Statement statement) {
+		log.trace( "registering last query statement [{}]", statement );		
+		if ( statement instanceof JdbcWrapper ) {
+			JdbcWrapper<Statement> wrapper = ( JdbcWrapper<Statement> ) statement;
+			registerLastQuery( wrapper.getWrappedObject() );
+			return;
+		}
+		lastQuery = statement;
+	}
+
+	public void cancelLastQuery() {
+		try {
+			if (lastQuery != null) {
+				lastQuery.cancel();
+			}
+		}
+		catch (SQLException sqle) {
+			throw exceptionHelper.convert(
+			        sqle,
+			        "Cannot cancel query"
+				);
+		}
+		finally {
+			lastQuery = null;
+		}
 	}
 
 	public void release(Statement statement) {
@@ -132,7 +174,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public boolean hasRegisteredResources() {
-		return ! ( xref.isEmpty() && unassociatedResultSets.isEmpty() );
+		return ! xref.isEmpty() || ! unassociatedResultSets.isEmpty();
 	}
 
 	public void releaseResources() {
@@ -141,6 +183,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	private void cleanup() {
+		batcher.closeStatements();		
 		for ( Map.Entry<Statement,Set<ResultSet>> entry : xref.entrySet() ) {
 			if ( entry.getValue() != null ) {
 				for ( ResultSet resultSet : entry.getValue() ) {
@@ -156,6 +199,59 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			close( resultSet );
 		}
 		unassociatedResultSets.clear();
+
+		// TODO: can ConcurrentModificationException still happen???
+		// Following is from old AbstractBatcher...
+		/*
+		Iterator iter = resultSetsToClose.iterator();
+		while ( iter.hasNext() ) {
+			try {
+				logCloseResults();
+				( ( ResultSet ) iter.next() ).close();
+			}
+			catch ( SQLException e ) {
+				// no big deal
+				log.warn( "Could not close a JDBC result set", e );
+			}
+			catch ( ConcurrentModificationException e ) {
+				// this has been shown to happen occasionally in rare cases
+				// when using a transaction manager + transaction-timeout
+				// where the timeout calls back through Hibernate's
+				// registered transaction synchronization on a separate
+				// "reaping" thread.  In cases where that reaping thread
+				// executes through this block at the same time the main
+				// application thread does we can get into situations where
+				// these CMEs occur.  And though it is not "allowed" per-se,
+				// the end result without handling it specifically is infinite
+				// looping.  So here, we simply break the loop
+				log.info( "encountered CME attempting to release batcher; assuming cause is tx-timeout scenario and ignoring" );
+				break;
+			}
+			catch ( Throwable e ) {
+				// sybase driver (jConnect) throwing NPE here in certain
+				// cases, but we'll just handle the general "unexpected" case
+				log.warn( "Could not close a JDBC result set", e );
+			}
+		}
+		resultSetsToClose.clear();
+
+		iter = statementsToClose.iterator();
+		while ( iter.hasNext() ) {
+			try {
+				closeQueryStatement( ( PreparedStatement ) iter.next() );
+			}
+			catch ( ConcurrentModificationException e ) {
+				// see explanation above...
+				log.info( "encountered CME attempting to release batcher; assuming cause is tx-timeout scenario and ignoring" );
+				break;
+			}
+			catch ( SQLException e ) {
+				// no big deal
+				log.warn( "Could not close a JDBC statement", e );
+			}
+		}
+		statementsToClose.clear();
+        */
 	}
 
 	public void close() {
@@ -191,6 +287,9 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 				return; // EARLY EXIT!!!
 			}
 			statement.close();
+			if ( lastQuery == statement ) {
+				lastQuery = null;
+			}
 		}
 		catch( SQLException sqle ) {
 			log.debug( "Unable to release statement [{}]", sqle.getMessage() );

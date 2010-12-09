@@ -26,7 +26,6 @@ package org.hibernate.id.insert;
 
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.pretty.MessageHelper;
 
 import java.io.Serializable;
@@ -78,6 +77,6 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 	protected abstract Serializable executeAndExtract(PreparedStatement insert) throws SQLException;
 
 	protected void releaseStatement(PreparedStatement insert, SessionImplementor session) throws SQLException {
-		session.getBatcher().closeStatement( insert );
+		insert.close();
 	}
 }

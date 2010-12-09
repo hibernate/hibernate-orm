@@ -56,13 +56,13 @@ import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Versioning;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.NonFlushedChanges;
+import org.hibernate.engine.jdbc.internal.JDBCContextImpl;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.jdbc.Batcher;
-import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -81,12 +81,12 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 	private static final Logger log = LoggerFactory.getLogger( StatelessSessionImpl.class );
 
-	private JDBCContext jdbcContext;
+	private JDBCContextImpl jdbcContext;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 
 	StatelessSessionImpl(Connection connection, SessionFactoryImpl factory) {
 		super( factory );
-		this.jdbcContext = new JDBCContext( this, connection, EmptyInterceptor.INSTANCE );
+		this.jdbcContext = new JDBCContextImpl( this, connection, EmptyInterceptor.INSTANCE );
 	}
 
 
@@ -330,7 +330,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 	public void managedFlush() {
 		errorIfClosed();
-		getBatcher().executeBatch();
+		getJDBCContext().getConnectionManager().executeBatch();
 	}
 
 	public boolean shouldAutoClose() {
@@ -369,12 +369,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		}
 		temporaryPersistenceContext.clear();
 		return result;
-	}
-
-	public Batcher getBatcher() {
-		errorIfClosed();
-		return jdbcContext.getConnectionManager()
-				.getBatcher();
 	}
 
 	public CacheMode getCacheMode() {

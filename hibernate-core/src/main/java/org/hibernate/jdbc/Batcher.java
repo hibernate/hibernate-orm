@@ -45,82 +45,10 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  */
 public interface Batcher {
-	/**
-	 * Get a prepared statement for use in loading / querying. If not explicitly
-	 * released by <tt>closeQueryStatement()</tt>, it will be released when the
-	 * session is closed or disconnected.
-	 */
-	public PreparedStatement prepareQueryStatement(String sql, boolean scrollable, ScrollMode scrollMode) throws SQLException, HibernateException;
-	/**
-	 * Close a prepared statement opened with <tt>prepareQueryStatement()</tt>
-	 */
-	public void closeQueryStatement(PreparedStatement ps, ResultSet rs) throws SQLException;
-	/**
-	 * Get a prepared statement for use in loading / querying. If not explicitly
-	 * released by <tt>closeQueryStatement()</tt>, it will be released when the
-	 * session is closed or disconnected.
-	 */
-	public CallableStatement prepareCallableQueryStatement(String sql, boolean scrollable, ScrollMode scrollMode) throws SQLException, HibernateException;
-	
-	
-	/**
-	 * Get a non-batchable prepared statement to use for selecting. Does not
-	 * result in execution of the current batch.
-	 */
-	public PreparedStatement prepareSelectStatement(String sql) throws SQLException, HibernateException;
 
-	/**
-	 * Get a non-batchable prepared statement to use for inserting / deleting / updating,
-	 * using JDBC3 getGeneratedKeys ({@link Connection#prepareStatement(String, int)}).
-	 * <p/>
-	 * Must be explicitly released by {@link #closeStatement} after use.
-	 */
-	public PreparedStatement prepareStatement(String sql, boolean useGetGeneratedKeys) throws SQLException, HibernateException;
-
-	/**
-	 * Get a non-batchable prepared statement to use for inserting / deleting / updating.
-	 * using JDBC3 getGeneratedKeys ({@link Connection#prepareStatement(String, String[])}).
-	 * <p/>
-	 * Must be explicitly released by {@link #closeStatement} after use.
-	 */
-	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException, HibernateException;
-
-	/**
-	 * Get a non-batchable prepared statement to use for inserting / deleting / updating.
-	 * <p/>
-	 * Must be explicitly released by {@link #closeStatement} after use.
-	 */
-	public PreparedStatement prepareStatement(String sql) throws SQLException, HibernateException;
-
-	/**
-	 * Get a non-batchable callable statement to use for inserting / deleting / updating.
-	 * <p/>
-	 * Must be explicitly released by {@link #closeStatement} after use.
-	 */
-	public CallableStatement prepareCallableStatement(String sql) throws SQLException, HibernateException;
-
-	/**
-	 * Close a prepared or callable statement opened using <tt>prepareStatement()</tt> or <tt>prepareCallableStatement()</tt>
-	 */
-	public void closeStatement(PreparedStatement ps) throws SQLException;
-
-	/**
-	 * Get a batchable prepared statement to use for inserting / deleting / updating
-	 * (might be called many times before a single call to <tt>executeBatch()</tt>).
-	 * After setting parameters, call <tt>addToBatch</tt> - do not execute the
-	 * statement explicitly.
-	 * @see Batcher#addToBatch
-	 */
-	public PreparedStatement prepareBatchStatement(String sql) throws SQLException, HibernateException;
-
-	/**
-	 * Get a batchable callable statement to use for inserting / deleting / updating
-	 * (might be called many times before a single call to <tt>executeBatch()</tt>).
-	 * After setting parameters, call <tt>addToBatch</tt> - do not execute the
-	 * statement explicitly.
-	 * @see Batcher#addToBatch
-	 */
-	public CallableStatement prepareBatchCallableStatement(String sql) throws SQLException, HibernateException;
+	public PreparedStatement getStatement(String sql);
+	public void setStatement(String sql, PreparedStatement ps);
+	public boolean hasOpenResources();
 
 	/**
 	 * Add an insert / delete / update to the current batch (might be called multiple times
@@ -134,42 +62,15 @@ public interface Batcher {
 	public void executeBatch() throws HibernateException;
 
 	/**
-	 * Close any query statements that were left lying around
-	 */
-	public void closeStatements();
-	/**
-	 * Execute the statement and return the result set
-	 */
-	public ResultSet getResultSet(PreparedStatement ps) throws SQLException;
-	/**
-	 * Execute the statement and return the result set from a callable statement
-	 */
-	public ResultSet getResultSet(CallableStatement ps, Dialect dialect) throws SQLException;
-
-	/**
 	 * Must be called when an exception occurs
 	 * @param sqle the (not null) exception that is the reason for aborting
 	 */
 	public void abortBatch(SQLException sqle);
 
 	/**
-	 * Cancel the current query statement
+	 * Actually releases the batcher, allowing it to cleanup internally held
+	 * resources.
 	 */
-	public void cancelLastQuery() throws HibernateException;
-
-	public boolean hasOpenResources();
-
-	public String openResourceStatsAsString();
-
-	/**
-	 * Set the transaction timeout to <tt>seconds</tt> later
-	 * than the current system time.
-	 */
-	public void setTransactionTimeout(int seconds);
-	/**
-	 * Unset the transaction timeout, called after the end of a 
-	 * transaction.
-	 */
-	public void unsetTransactionTimeout();
+	public void closeStatements();	
 }
 

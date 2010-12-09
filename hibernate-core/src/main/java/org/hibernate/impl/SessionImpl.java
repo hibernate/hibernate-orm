@@ -89,6 +89,8 @@ import org.hibernate.engine.Status;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.internal.JDBCContextImpl;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.FilterQueryPlan;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
@@ -122,9 +124,6 @@ import org.hibernate.event.ReplicateEvent;
 import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.event.SaveOrUpdateEventListener;
-import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.jdbc.Batcher;
-import org.hibernate.jdbc.JDBCContext;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -174,7 +173,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
-	private transient JDBCContext jdbcContext;
+	private transient JDBCContextImpl jdbcContext;
 	private transient EventListeners listeners;
 
 	private transient boolean flushBeforeCompletionEnabled;
@@ -252,7 +251,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.connectionReleaseMode = connectionReleaseMode;
-		this.jdbcContext = new JDBCContext( this, connection, interceptor );
+		this.jdbcContext = new JDBCContextImpl( this, connection, interceptor );
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
@@ -298,14 +297,6 @@ public final class SessionImpl extends AbstractSessionImpl
 		checkTransactionSynchStatus();
 		persistenceContext.clear();
 		actionQueue.clear();
-	}
-
-	public Batcher getBatcher() {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		// TODO : should remove this exposure
-		//  and have all references to the session's batcher use the ConnectionManager.
-		return jdbcContext.getConnectionManager().getBatcher();
 	}
 
 	public long getTimestamp() {
@@ -1913,7 +1904,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void cancelQuery() throws HibernateException {
 		errorIfClosed();
-		getBatcher().cancelLastQuery();
+		getJDBCContext().getConnectionManager().cancelLastQuery();
 	}
 
 	public Interceptor getInterceptor() {
@@ -2140,7 +2131,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		listeners = factory.getEventListeners();
 
 		if ( isRootSession ) {
-			jdbcContext = JDBCContext.deserialize( ois, this, interceptor );
+			jdbcContext = JDBCContextImpl.deserialize( ois, this, interceptor );
 		}
 
 		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
@@ -2177,7 +2168,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( !jdbcContext.getConnectionManager().isReadyForSerialization() ) {
+		if ( !jdbcContext.isReadyForSerialization() ) {
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 

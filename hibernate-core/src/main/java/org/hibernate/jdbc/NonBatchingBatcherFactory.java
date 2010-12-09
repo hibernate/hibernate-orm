@@ -24,7 +24,8 @@
  */
 package org.hibernate.jdbc;
 
-import org.hibernate.Interceptor;
+import org.hibernate.AssertionFailure;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 
 
 /**
@@ -35,8 +36,14 @@ import org.hibernate.Interceptor;
  */
 public class NonBatchingBatcherFactory implements BatcherFactory {
 
-	public Batcher createBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-		return new NonBatchingBatcher( connectionManager, interceptor );
+	public void setJdbcBatchSize(int jdbcBatchSize) {
+		if ( jdbcBatchSize > 1 ) {
+			throw new AssertionFailure( "jdbcBatchSize must be 1 for " + getClass().getName() );
+		}
+	}
+
+	public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
+		return new NonBatchingBatcher( exceptionHelper );
 	}
 
 }

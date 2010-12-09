@@ -67,7 +67,6 @@ import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.PreLoadEvent;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.impl.FetchingScrollableResultsImpl;
 import org.hibernate.impl.ScrollableResultsImpl;
@@ -891,7 +890,7 @@ public abstract class Loader {
 
 		}
 		finally {
-			session.getBatcher().closeQueryStatement( st, rs );
+			st.close();
 		}
 
 		initializeEntitiesAndCollections( hydratedObjects, rs, session, queryParameters.isReadOnly( session ) );
@@ -1749,16 +1748,12 @@ public abstract class Loader {
 		sql = preprocessSQL( sql, queryParameters, dialect );
 		
 		PreparedStatement st = null;
-		
-		if (callable) {
-			st = session.getBatcher()
-				.prepareCallableQueryStatement( sql, scroll || useScrollableResultSetToSkip, scrollMode );
-		} 
-		else {
-			st = session.getBatcher()
-				.prepareQueryStatement( sql, scroll || useScrollableResultSetToSkip, scrollMode );
-		}
-				
+
+		st = (
+				scroll || useScrollableResultSetToSkip ?
+						session.getJDBCContext().getConnectionManager().prepareScrollableQueryStatement( sql, scrollMode, callable ) :
+						session.getJDBCContext().getConnectionManager().prepareQueryStatement( sql, callable )
+		);
 
 		try {
 
@@ -1809,11 +1804,11 @@ public abstract class Loader {
 			log.trace( "Bound [" + col + "] parameters total" );
 		}
 		catch ( SQLException sqle ) {
-			session.getBatcher().closeQueryStatement( st, null );
+			st.close();
 			throw sqle;
 		}
 		catch ( HibernateException he ) {
-			session.getBatcher().closeQueryStatement( st, null );
+			st.close();
 			throw he;
 		}
 
@@ -2004,12 +1999,7 @@ public abstract class Loader {
 		ResultSet rs = null;
 		try {
 			Dialect dialect = getFactory().getDialect();
-			if (callable) {
-				rs = session.getBatcher().getResultSet( (CallableStatement) st, dialect );
-			} 
-			else {
-				rs = session.getBatcher().getResultSet( st );
-			}
+			rs = st.executeQuery();
 			rs = wrapResultSetIfEnabled( rs , session );
 			
 			if ( !dialect.supportsLimitOffset() || !useLimit( selection, dialect ) ) {
@@ -2022,7 +2012,7 @@ public abstract class Loader {
 			return rs;
 		}
 		catch ( SQLException sqle ) {
-			session.getBatcher().closeQueryStatement( st, rs );
+			st.close();
 			throw sqle;
 		}
 	}

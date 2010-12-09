@@ -32,7 +32,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.exception.JDBCExceptionHelper;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -74,7 +73,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 		final String sql = determineSql( timeout );
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
 				if ( getLockable().isVersioned() ) {
@@ -101,7 +100,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 
 		}

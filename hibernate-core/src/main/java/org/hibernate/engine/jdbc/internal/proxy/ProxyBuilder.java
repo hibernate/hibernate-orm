@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+import org.hibernate.Interceptor;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
@@ -139,7 +140,7 @@ public class ProxyBuilder {
 			CallableStatement statement,
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
-		PreparedStatementProxyHandler proxyHandler = new PreparedStatementProxyHandler(
+		CallableStatementProxyHandler proxyHandler = new CallableStatementProxyHandler(
 				sql,
 				statement,
 				connectionProxyHandler,
@@ -179,6 +180,19 @@ public class ProxyBuilder {
 			ConnectionProxyHandler connectionProxyHandler,
 			Connection connectionProxy) {
 		ImplicitResultSetProxyHandler proxyHandler = new ImplicitResultSetProxyHandler( resultSet, connectionProxyHandler, connectionProxy );
+		return ( ResultSet ) Proxy.newProxyInstance(
+				JdbcWrapper.class.getClassLoader(),
+				RESULTSET_PROXY_INTERFACES,
+				proxyHandler
+		);
+	}
+
+	public static ResultSet buildImplicitResultSet(
+			ResultSet resultSet,
+			ConnectionProxyHandler connectionProxyHandler,
+			Connection connectionProxy,
+			Statement sourceStatement) {
+		ImplicitResultSetProxyHandler proxyHandler = new ImplicitResultSetProxyHandler( resultSet, connectionProxyHandler, connectionProxy, sourceStatement );
 		return ( ResultSet ) Proxy.newProxyInstance(
 				JdbcWrapper.class.getClassLoader(),
 				RESULTSET_PROXY_INTERFACES,

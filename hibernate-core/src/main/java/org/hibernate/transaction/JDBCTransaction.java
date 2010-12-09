@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.transaction.SynchronizationRegistry;
-import org.hibernate.jdbc.JDBCContext;
 
 /**
  * {@link Transaction} implementation based on transaction management through a JDBC {@link java.sql.Connection}.
@@ -100,7 +100,6 @@ public class JDBCTransaction implements Transaction {
 
 		if ( timeout>0 ) {
 			jdbcContext.getConnectionManager()
-					.getBatcher()
 					.setTransactionTimeout(timeout);
 		}
 

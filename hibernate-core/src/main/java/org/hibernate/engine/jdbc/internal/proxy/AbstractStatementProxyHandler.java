@@ -140,7 +140,7 @@ public abstract class AbstractStatementProxyHandler extends AbstractProxyHandler
 
 		final ResultSet wrapper;
 		if ( "getGeneratedKeys".equals( method.getName() ) ) {
-			wrapper = ProxyBuilder.buildImplicitResultSet( ( ResultSet ) result, connectionProxyHandler, connectionProxy );
+			wrapper = ProxyBuilder.buildImplicitResultSet( ( ResultSet ) result, connectionProxyHandler, connectionProxy, ( Statement ) proxy );
 		}
 		else {
 			wrapper = ProxyBuilder.buildResultSet( ( ResultSet ) result, this, ( Statement ) proxy );

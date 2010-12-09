@@ -96,7 +96,7 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 		}
 
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session.getBatcher().prepareStatement( insertSQL, keyColumns );
+			return session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, keyColumns );
 		}
 
 		protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {

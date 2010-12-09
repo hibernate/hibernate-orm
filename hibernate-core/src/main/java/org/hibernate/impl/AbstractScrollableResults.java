@@ -45,7 +45,6 @@ import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
@@ -119,7 +118,8 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	public final void close() throws HibernateException {
 		try {
 			// not absolutely necessary, but does help with aggressive release
-			session.getBatcher().closeQueryStatement( ps, resultSet );
+			//session.getJDBCContext().getConnectionManager().closeQueryStatement( ps, resultSet );
+			ps.close();
 		}
 		catch (SQLException sqle) {
 			throw session.getFactory().getSQLExceptionHelper().convert(

@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.HibernateException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -103,7 +102,7 @@ public class SequenceStructure implements DatabaseStructure {
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
-					PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+					PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 					try {
 						ResultSet rs = st.executeQuery();
 						try {
@@ -125,7 +124,7 @@ public class SequenceStructure implements DatabaseStructure {
 						}
 					}
 					finally {
-						session.getBatcher().closeStatement( st );
+						st.close();
 					}
 
 				}

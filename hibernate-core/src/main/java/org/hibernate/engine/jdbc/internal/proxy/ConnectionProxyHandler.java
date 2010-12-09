@@ -36,10 +36,12 @@ import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.stat.StatisticsImplementor;
 
 /**
  * The {@link InvocationHandler} for intercepting messages to {@link java.sql.Connection} proxies.
@@ -127,7 +129,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 
 		try {
 			Object result = method.invoke( extractPhysicalConnection(), args );
-			result = wrapIfNecessary( result, proxy, method, args );
+			result = postProcess( result, proxy, method, args );
 
 			return result;
 		}
@@ -143,7 +145,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		}
 	}
 
-	private Object wrapIfNecessary(Object result, Object proxy, Method method, Object[] args) {
+	private Object postProcess(Object result, Object proxy, Method method, Object[] args) throws SQLException {
 		String methodName = method.getName();
 		Object wrapped = result;
 		if ( "createStatement".equals( methodName ) ) {
@@ -152,7 +154,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 					this,
 					( Connection ) proxy
 			);
-			getResourceRegistry().register( ( Statement ) wrapped );
+			postProcessStatement( ( Statement ) wrapped );
 		}
 		else if ( "prepareStatement".equals( methodName ) ) {
 			wrapped = ProxyBuilder.buildPreparedStatement(
@@ -161,7 +163,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 					this,
 					( Connection ) proxy
 			);
-			getResourceRegistry().register( ( Statement ) wrapped );
+			postProcessPreparedStatement( ( Statement ) wrapped );
 		}
 		else if ( "prepareCall".equals( methodName ) ) {
 			wrapped = ProxyBuilder.buildCallableStatement(
@@ -170,12 +172,24 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 					this,
 					( Connection ) proxy
 			);
-			getResourceRegistry().register( ( Statement ) wrapped );
+			postProcessPreparedStatement( ( Statement ) wrapped );
 		}
 		else if ( "getMetaData".equals( methodName ) ) {
 			wrapped = ProxyBuilder.buildDatabaseMetaData( (DatabaseMetaData) result, this, ( Connection ) proxy );
 		}
 		return wrapped;
+	}
+
+	private void postProcessStatement(Statement statement) throws SQLException {
+		setTimeout( statement );
+		getResourceRegistry().register( statement );
+	}
+
+	private void postProcessPreparedStatement(Statement statement) throws SQLException  {
+		if ( getStatisticsImplementorOrNull() != null ) {
+			getStatisticsImplementorOrNull().prepareStatement();
+		}
+		postProcessStatement( statement );
 	}
 
 	private void explicitClose() {
@@ -210,4 +224,23 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		log.info( "*** logical connection closed ***" );
 		invalidateHandle();
 	}
+
+	/* package-protected */
+	StatisticsImplementor getStatisticsImplementorOrNull() {
+		return getLogicalConnection().getStatisticsImplementor();
+	}
+
+	private void setTimeout(Statement result) throws SQLException {
+		if ( logicalConnection.isTransactionTimeoutSet() ) {
+			int timeout = (int) ( logicalConnection.getTransactionTimeout() - ( System.currentTimeMillis() / 1000 ) );
+			if (timeout<=0) {
+				throw new TransactionException("transaction timeout expired");
+			}
+			else {
+				result.setQueryTimeout(timeout);
+			}
+		}
+	}
+
+
 }

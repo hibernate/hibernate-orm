@@ -23,7 +23,7 @@ package org.hibernate.ejb.transaction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.CMTTransactionFactory;
 
 /**

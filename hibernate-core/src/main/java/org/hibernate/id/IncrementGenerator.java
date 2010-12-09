@@ -36,7 +36,6 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
@@ -122,7 +121,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
 		log.debug( "fetching initial value: " + sql );
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {
@@ -140,7 +139,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement(st);
+				st.close();
 			}
 		}
 		catch (SQLException sqle) {

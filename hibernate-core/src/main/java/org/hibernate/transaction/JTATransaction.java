@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
 
 /**

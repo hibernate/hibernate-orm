@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.jdbc;
+package org.hibernate.engine.jdbc.internal;
 
-import java.io.Serializable;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -41,12 +40,12 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
+import org.hibernate.engine.jdbc.spi.ConnectionManager;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.synchronization.CallbackCoordinator;
 import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.transaction.TransactionFactory;
 
 /**
  * Acts as the mediary between "entity-mode related" sessions in terms of
@@ -54,7 +53,7 @@ import org.hibernate.transaction.TransactionFactory;
  *
  * @author Steve Ebersole
  */
-public class JDBCContext implements Serializable, ConnectionManager.Callback {
+public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCContext {
 
 	// TODO : make this the factory for "entity mode related" sessions;
 	// also means making this the target of transaction-synch and the
@@ -64,36 +63,24 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	// ConnectionManager is a "JDBCContext"?  A "SessionContext" should
 	// live in the impl package...
 
-	private static final Logger log = LoggerFactory.getLogger( JDBCContext.class );
-
-	public static interface Context extends TransactionFactory.Context {
-		/**
-		 * We cannot rely upon this method being called! It is only
-		 * called if we are using Hibernate Transaction API.
-		 */
-		public void afterTransactionBegin(Transaction tx);
-		public void beforeTransactionCompletion(Transaction tx);
-		public void afterTransactionCompletion(boolean success, Transaction tx);
-		public ConnectionReleaseMode getConnectionReleaseMode();
-		public boolean isAutoCloseSessionEnabled();
-	}
+	private static final Logger log = LoggerFactory.getLogger( JDBCContextImpl.class );
 
 	private Context owner;
-	private ConnectionManager connectionManager;
+	private ConnectionManagerImpl connectionManager;
 	private transient boolean isTransactionCallbackRegistered;
 	private transient Transaction hibernateTransaction;
 
 	private CallbackCoordinator jtaSynchronizationCallbackCoordinator;
 
-	public JDBCContext(Context owner, Connection connection, Interceptor interceptor) {
+	public JDBCContextImpl(Context owner, Connection connection, Interceptor interceptor) {
 		this.owner = owner;
-		this.connectionManager = new ConnectionManager(
+		this.connectionManager = new ConnectionManagerImpl(
 		        owner.getFactory(),
-		        this,
+				this,
 		        owner.getConnectionReleaseMode(),
 		        connection,
 		        interceptor
-			);
+		);
 
 		final boolean registerSynchronization = owner.isAutoCloseSessionEnabled()
 		        || owner.isFlushBeforeCompletionEnabled()
@@ -107,31 +94,34 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	 * Private constructor used exclusively for custom serialization...
 	 *
 	 */
-	private JDBCContext() {
+	private JDBCContextImpl() {
 	}
 
+	@Override
 	public CallbackCoordinator getJtaSynchronizationCallbackCoordinator() {
 		return jtaSynchronizationCallbackCoordinator;
 	}
 
-	public CallbackCoordinator getJtaSynchronizationCallbackCoordinator(javax.transaction.Transaction jtaTransaction) {
+	private CallbackCoordinator getJtaSynchronizationCallbackCoordinator(javax.transaction.Transaction jtaTransaction) {
 		jtaSynchronizationCallbackCoordinator = new CallbackCoordinator( owner, this, jtaTransaction, hibernateTransaction );
 		return jtaSynchronizationCallbackCoordinator;
 	}
 
+	@Override
 	public void cleanUpJtaSynchronizationCallbackCoordinator() {
 		jtaSynchronizationCallbackCoordinator = null;
 	}
 
 
 	// ConnectionManager.Callback implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Override
 	public void physicalConnectionObtained(Connection connection) {
 		if ( owner.getFactory().getStatistics().isStatisticsEnabled() ) {
 			owner.getFactory().getStatisticsImplementor().connect();
 		}
 	}
 
+	@Override
 	public void physicalConnectionReleased() {
 		if ( !isTransactionCallbackRegistered ) {
 			afterTransactionCompletion( false, null );
@@ -139,14 +129,17 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 		}
 	}
 
+	@Override
 	public void logicalConnectionClosed() {
 		// TODO: anything need to be done?
 	}
 
+	@Override
 	public SessionFactoryImplementor getFactory() {
 		return owner.getFactory();
 	}
 
+	@Override
 	public ConnectionManager getConnectionManager() {
 		return connectionManager;
 	}
@@ -155,6 +148,7 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 		return connectionManager.borrowConnection();
 	}
 	
+	@Override
 	public Connection connection() throws HibernateException {
 		if ( owner.isClosed() ) {
 			throw new SessionException( "Session is closed" );
@@ -163,6 +157,7 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 		return connectionManager.getConnection();
 	}
 
+	@Override
 	public boolean registerCallbackIfNecessary() {
 		if ( isTransactionCallbackRegistered ) {
 			return false;
@@ -174,6 +169,7 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 
 	}
 
+	@Override
 	public boolean registerSynchronizationIfPossible() {
 		if ( isTransactionCallbackRegistered ) {
 			// we already have a callback registered; either a local
@@ -234,11 +230,13 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 		}
 	}
 	
+	@Override
 	public boolean isTransactionInProgress() {
 		return owner.getFactory().getSettings().getTransactionFactory()
 				.isTransactionInProgress( this, owner, hibernateTransaction );
 	}
 
+	@Override
 	public Transaction getTransaction() throws HibernateException {
 		if (hibernateTransaction==null) {
 			hibernateTransaction = owner.getFactory().getSettings()
@@ -248,6 +246,7 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 		return hibernateTransaction;
 	}
 	
+	@Override
 	public void beforeTransactionCompletion(Transaction tx) {
 		log.trace( "before transaction completion" );
 		owner.beforeTransactionCompletion(tx);
@@ -257,11 +256,13 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	 * We cannot rely upon this method being called! It is only
 	 * called if we are using Hibernate Transaction API.
 	 */
+	@Override
 	public void afterTransactionBegin(Transaction tx) {
 		log.trace( "after transaction begin" );
 		owner.afterTransactionBegin(tx);
 	}
 
+	@Override
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
 		log.trace( "after transaction completion" );
 
@@ -280,6 +281,7 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	 * Called after executing a query outside the scope of
 	 * a Hibernate or JTA transaction
 	 */
+	@Override
 	public void afterNontransactionalQuery(boolean success) {
 		log.trace( "after autocommit" );
 		try {
@@ -305,6 +307,10 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 
 
 	// serialization ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public boolean isReadyForSerialization() {
+		return connectionManager.isReadyForSerialization();
+	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		// isTransactionCallbackRegistered denotes whether any Hibernate
@@ -345,16 +351,16 @@ public class JDBCContext implements Serializable, ConnectionManager.Callback {
 	 * @param ois The stream from which to read the entry.
 	 * @throws IOException
 	 */
-	public static JDBCContext deserialize(
+	public static JDBCContextImpl deserialize(
 			ObjectInputStream ois,
 	        Context context,
-	        Interceptor interceptor) throws IOException {
-		JDBCContext jdbcContext = new JDBCContext();
+	        Interceptor interceptor) throws IOException, ClassNotFoundException {
+		JDBCContextImpl jdbcContext = new JDBCContextImpl();
 		jdbcContext.owner = context;
-		jdbcContext.connectionManager = ConnectionManager.deserialize(
+		jdbcContext.connectionManager = ConnectionManagerImpl.deserialize(
 				ois,
 				context.getFactory(),
-		        interceptor,
+				interceptor,
 		        context.getConnectionReleaseMode(),
 		        jdbcContext
 		);

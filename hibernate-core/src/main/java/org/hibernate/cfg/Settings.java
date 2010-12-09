@@ -30,6 +30,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.engine.jdbc.JdbcSupport;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.util.SQLStatementLogger;
@@ -78,6 +79,7 @@ public final class Settings {
 	private TransactionFactory transactionFactory;
 	private TransactionManagerLookup transactionManagerLookup;
 	private BatcherFactory batcherFactory;
+	private BatchBuilder batchBuilder;
 	private QueryTranslatorFactory queryTranslatorFactory;
 	private boolean wrapResultSetsEnabled;
 	private boolean orderUpdatesEnabled;
@@ -228,6 +230,10 @@ public final class Settings {
 
 	public BatcherFactory getBatcherFactory() {
 		return batcherFactory;
+	}
+
+	public BatchBuilder getBatchBuilder() {
+		return batchBuilder;
 	}
 
 	public boolean isAutoCloseSessionEnabled() {
@@ -415,6 +421,10 @@ public final class Settings {
 
 	void setBatcherFactory(BatcherFactory batcher) {
 		this.batcherFactory = batcher;
+	}
+
+	void setBatcherBuilder(BatchBuilder batchBuilder) {
+		this.batchBuilder = batchBuilder;
 	}
 
 	void setAutoCloseSessionEnabled(boolean autoCloseSessionEnabled) {

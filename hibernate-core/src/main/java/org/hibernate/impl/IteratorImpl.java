@@ -35,7 +35,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.event.EventSource;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -87,7 +86,7 @@ public final class IteratorImpl implements HibernateIterator {
 		if (ps!=null) {
 			try {
 				log.debug("closing iterator");
-				session.getBatcher().closeQueryStatement(ps, rs);
+				ps.close();
 				ps = null;
 				rs = null;
 				hasNext = false;

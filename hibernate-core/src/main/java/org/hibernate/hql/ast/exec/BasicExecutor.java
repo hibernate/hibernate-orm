@@ -33,7 +33,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.QuerySyntaxException;
 import org.hibernate.hql.ast.SqlGenerator;
@@ -85,7 +84,7 @@ public class BasicExecutor extends AbstractStatementExecutor {
 
 		try {
 			try {
-				st = session.getBatcher().prepareStatement( sql );
+				st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, false );
 				Iterator parameterSpecifications = this.parameterSpecifications.iterator();
 				int pos = 1;
 				while ( parameterSpecifications.hasNext() ) {
@@ -102,7 +101,7 @@ public class BasicExecutor extends AbstractStatementExecutor {
 			}
 			finally {
 				if ( st != null ) {
-					session.getBatcher().closeStatement( st );
+					st.close();
 				}
 			}
 		}

@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.Table;
@@ -107,7 +106,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 
 	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {
@@ -124,7 +123,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement(st);
+				st.close();
 			}
 
 		}

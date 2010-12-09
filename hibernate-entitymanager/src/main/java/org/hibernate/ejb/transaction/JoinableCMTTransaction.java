@@ -26,7 +26,7 @@ import javax.transaction.Transaction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.CMTTransaction;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.util.JTAHelper;

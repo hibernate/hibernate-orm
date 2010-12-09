@@ -26,6 +26,7 @@ import java.util.List;
 import junit.framework.Test;
 import junit.framework.Assert;
 
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cfg.Configuration;
@@ -37,7 +38,6 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.NonBatchingBatcher;
 import org.hibernate.jdbc.Batcher;
-import org.hibernate.jdbc.ConnectionManager;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
@@ -68,16 +68,20 @@ public class BatchedManyToManyTest extends FunctionalTestCase {
 	}
 
 	public static class TestingBatcherFactory implements BatcherFactory {
-		public Batcher createBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-			return new TestingBatcher( connectionManager, interceptor );
+		private int jdbcBatchSize;
+
+		public void setJdbcBatchSize(int jdbcBatchSize) {
+			this.jdbcBatchSize = jdbcBatchSize;
+		}
+		public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
+			return new TestingBatcher( exceptionHelper, jdbcBatchSize );
 		}
 	}
 
 	public static class TestingBatcher extends NonBatchingBatcher {
-		public TestingBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-			super( connectionManager, interceptor );
+		public TestingBatcher(SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
+			super( exceptionHelper );
 		}
-
 	}
 
 	public void testProperLoaderSetup() {

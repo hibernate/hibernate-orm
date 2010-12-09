@@ -28,9 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 
 /**
  * An implementation of the <tt>Batcher</tt> interface that
@@ -39,12 +37,13 @@ import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
  */
 public class BatchingBatcher extends AbstractBatcher {
 
-	private int batchSize;
 	private Expectation[] expectations;
 	
-	public BatchingBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-		super( connectionManager, interceptor );
-		expectations = new Expectation[ getFactory().getSettings().getJdbcBatchSize() ];
+	private int currentSize;
+	public BatchingBatcher(SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
+		super( exceptionHelper, jdbcBatchSize );
+		expectations = new Expectation[ jdbcBatchSize ];
+		currentSize = 0;
 	}
 
 	public void addToBatch(Expectation expectation) throws SQLException, HibernateException {
@@ -53,19 +52,19 @@ public class BatchingBatcher extends AbstractBatcher {
 		}
 		PreparedStatement batchUpdate = getStatement();
 		batchUpdate.addBatch();
-		expectations[ batchSize++ ] = expectation;
-		if ( batchSize == getFactory().getSettings().getJdbcBatchSize() ) {
+		expectations[ currentSize++ ] = expectation;
+		if ( currentSize == getJdbcBatchSize() ) {
 			doExecuteBatch( batchUpdate );
 		}
 	}
 
 	protected void doExecuteBatch(PreparedStatement ps) throws SQLException, HibernateException {
-		if ( batchSize == 0 ) {
+		if ( currentSize == 0 ) {
 			log.debug( "no batched statements to execute" );
 		}
 		else {
 			if ( log.isDebugEnabled() ) {
-				log.debug( "Executing batch size: " + batchSize );
+				log.debug( "Executing batch size: " + currentSize );
 			}
 
 			try {
@@ -76,16 +75,15 @@ public class BatchingBatcher extends AbstractBatcher {
 				throw re;
 			}
 			finally {
-				batchSize = 0;
+				currentSize = 0;
 			}
 
 		}
-
 	}
 
 	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
 		int numberOfRowCounts = rowCounts.length;
-		if ( numberOfRowCounts != batchSize ) {
+		if ( numberOfRowCounts != currentSize ) {
 			log.warn( "JDBC driver did not return the expected number of row counts" );
 		}
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {

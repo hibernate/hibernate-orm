@@ -32,7 +32,6 @@ import java.util.Date;
 
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.exception.JDBCExceptionHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,8 +89,8 @@ public class DbTimestampType extends TimestampType {
 	private Timestamp usePreparedStatement(String timestampSelectString, SessionImplementor session) {
 		PreparedStatement ps = null;
 		try {
-			ps = session.getBatcher().prepareStatement( timestampSelectString );
-			ResultSet rs = session.getBatcher().getResultSet( ps );
+			ps = session.getJDBCContext().getConnectionManager().prepareStatement( timestampSelectString, false );
+			ResultSet rs = ps.executeQuery();
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
 			if ( log.isTraceEnabled() ) {
@@ -113,7 +112,7 @@ public class DbTimestampType extends TimestampType {
 		finally {
 			if ( ps != null ) {
 				try {
-					session.getBatcher().closeStatement( ps );
+					ps.close();
 				}
 				catch( SQLException sqle ) {
 					log.warn( "unable to clean up prepared statement", sqle );
@@ -125,7 +124,7 @@ public class DbTimestampType extends TimestampType {
 	private Timestamp useCallableStatement(String callString, SessionImplementor session) {
 		CallableStatement cs = null;
 		try {
-			cs = session.getBatcher().prepareCallableStatement( callString );
+			cs = session.getJDBCContext().getConnectionManager().prepareCallableStatement( callString );
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
 			cs.execute();
 			Timestamp ts = cs.getTimestamp( 1 );
@@ -148,7 +147,7 @@ public class DbTimestampType extends TimestampType {
 		finally {
 			if ( cs != null ) {
 				try {
-					session.getBatcher().closeStatement( cs );
+					cs.close();
 				}
 				catch( SQLException sqle ) {
 					log.warn( "unable to clean up callable statement", sqle );

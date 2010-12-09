@@ -39,7 +39,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
@@ -203,18 +202,21 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 									expectation = Expectations.appropriateExpectation( getDeleteCheckStyle() );
 									useBatch = expectation.canBeBatched();
 									st = useBatch
-											? session.getBatcher().prepareBatchCallableStatement( sql )
-								            : session.getBatcher().prepareCallableStatement( sql );
+											? session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, true )
+								            : session.getJDBCContext().getConnectionManager().prepareStatement( sql, true );
 									offset += expectation.prepare( st );
 								}
 								else {
-									st = session.getBatcher().prepareBatchStatement( getSQLDeleteRowString() );
+									st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
+											getSQLDeleteRowString(),
+											false
+									);
 								}
 							}
 							int loc = writeKey( st, id, offset, session );
 							writeElementToWhere( st, collection.getSnapshotElement(entry, i), loc, session );
 							if ( useBatch ) {
-								session.getBatcher().addToBatch( expectation );
+								session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -226,13 +228,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				catch ( SQLException sqle ) {
 					if ( useBatch ) {
-						session.getBatcher().abortBatch( sqle );
+						session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 					}
 					throw sqle;
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getBatcher().closeStatement( st );
+						st.close();
 					}
 				}
 			}
@@ -253,21 +255,11 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 						if ( collection.needsUpdating( entry, i, elementType ) ) {
 							if ( useBatch ) {
 								if ( st == null ) {
-									if ( callable ) {
-										st = session.getBatcher().prepareBatchCallableStatement( sql );
-									}
-									else {
-										st = session.getBatcher().prepareBatchStatement( sql );
-									}
+									st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
 								}
 							}
 							else {
-								if ( callable ) {
-									st = session.getBatcher().prepareCallableStatement( sql );
-								}
-								else {
-									st = session.getBatcher().prepareStatement( sql );
-								}
+								st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
 							}
 
 							offset += expectation.prepare( st );
@@ -280,7 +272,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 							writeElementToWhere( st, collection.getElement( entry ), loc, session );
 
 							if ( useBatch ) {
-								session.getBatcher().addToBatch( expectation );
+								session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -292,13 +284,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				}
 				catch ( SQLException sqle ) {
 					if ( useBatch ) {
-						session.getBatcher().abortBatch( sqle );
+						session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 					}
 					throw sqle;
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getBatcher().closeStatement( st );
+						st.close();
 					}
 				}
 			}

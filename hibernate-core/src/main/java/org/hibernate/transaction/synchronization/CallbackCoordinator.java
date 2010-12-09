@@ -23,7 +23,6 @@
  */
 package org.hibernate.transaction.synchronization;
 
-import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
@@ -31,9 +30,8 @@ import javax.transaction.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.util.JTAHelper;
 
@@ -158,7 +156,8 @@ public class CallbackCoordinator {
 	private static final BeforeCompletionManagedFlushChecker STANDARD_MANAGED_FLUSH_CHECKER = new BeforeCompletionManagedFlushChecker() {
 		public boolean shouldDoManagedFlush(TransactionFactory.Context ctx, Transaction jtaTransaction)
 				throws SystemException {
-			return !ctx.isFlushModeNever() &&
+			return !ctx.isClosed() &&
+					!ctx.isFlushModeNever() &&
 					ctx.isFlushBeforeCompletionEnabled() &&
 			        !JTAHelper.isRollback( jtaTransaction.getStatus() );
 					//actually, this last test is probably unnecessary, since

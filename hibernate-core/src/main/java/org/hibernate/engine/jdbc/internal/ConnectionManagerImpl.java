@@ -22,23 +22,32 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.jdbc;
+package org.hibernate.engine.jdbc.internal;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.ScrollMode;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
+import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
+import org.hibernate.engine.jdbc.spi.ConnectionManager;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
+import org.hibernate.engine.jdbc.spi.LogicalConnection;
+import org.hibernate.jdbc.Batcher;
+import org.hibernate.jdbc.Expectation;
 
 /**
  * Encapsulates JDBC Connection management logic needed by Hibernate.
@@ -48,92 +57,71 @@ import org.hibernate.engine.jdbc.spi.ConnectionObserver;
  *
  * @author Steve Ebersole
  */
-public class ConnectionManager implements Serializable {
+public class ConnectionManagerImpl implements ConnectionManager {
 
-	private static final Logger log = LoggerFactory.getLogger( ConnectionManager.class );
+	private static final Logger log = LoggerFactory.getLogger( ConnectionManagerImpl.class );
 
-	// TODO: check if it's ok to change the method names in Callback
 	public static interface Callback extends ConnectionObserver {
 		public boolean isTransactionInProgress();
 	}
 
+	// TODO: check if it's ok to change the method names in Callback
+
 	private transient SessionFactoryImplementor factory;
+	private transient Connection proxiedConnection;
+	private transient Interceptor interceptor;
+
 	private final Callback callback;
 
-	private transient LogicalConnectionImpl connection;
-
-	private transient Batcher batcher;
-	private transient Interceptor interceptor;
+	private transient LogicalConnectionImpl logicalConnection;
 
 	/**
 	 * Constructs a ConnectionManager.
 	 * <p/>
 	 * This is the form used internally.
 	 * 
-	 * @param factory The SessionFactory.
 	 * @param callback An observer for internal state change.
 	 * @param releaseMode The mode by which to release JDBC connections.
-	 * @param connection An externally supplied connection.
+	 * @param suppliedConnection An externally supplied connection.
 	 */ 
-	public ConnectionManager(
+	public ConnectionManagerImpl(
 	        SessionFactoryImplementor factory,
 	        Callback callback,
 	        ConnectionReleaseMode releaseMode,
-	        Connection connection,
+	        Connection suppliedConnection,
 	        Interceptor interceptor) {
-		this.factory = factory;
-		this.callback = callback;
-
-		this.interceptor = interceptor;
-		this.batcher = factory.getSettings().getBatcherFactory().createBatcher( this, interceptor );
-
-		setupConnection( connection, releaseMode );
+		this( factory,
+				callback,
+				interceptor,
+				new LogicalConnectionImpl(
+						suppliedConnection,
+						releaseMode,
+						factory.getJdbcServices(),
+						factory.getStatistics() != null ? factory.getStatisticsImplementor() : null,
+						factory.getSettings().getBatcherFactory()
+				)
+		);
 	}
 
 	/**
 	 * Private constructor used exclusively from custom serialization
 	 */
-	private ConnectionManager(
+	private ConnectionManagerImpl(
 			SessionFactoryImplementor factory,
 			Callback callback,
-			ConnectionReleaseMode releaseMode,
-			Interceptor interceptor
+			Interceptor interceptor,
+			LogicalConnectionImpl logicalConnection
 	) {
 		this.factory = factory;
 		this.callback = callback;
-
 		this.interceptor = interceptor;
-		this.batcher = factory.getSettings().getBatcherFactory().createBatcher( this, interceptor );
+		setupConnection( logicalConnection );
 	}
 
-	private void setupConnection(Connection suppliedConnection,
-								 ConnectionReleaseMode releaseMode
-	) {
-		connection =
-				new LogicalConnectionImpl(
-						suppliedConnection,
-						releaseMode,
-						factory.getJdbcServices()
-				);
-		connection.addObserver( callback );
-	}
-
-	/**
-	 * The session factory.
-	 *
-	 * @return the session factory.
-	 */
-	public SessionFactoryImplementor getFactory() {
-		return factory;
-	}
-
-	/**
-	 * The batcher managed by this ConnectionManager.
-	 *
-	 * @return The batcher.
-	 */
-	public Batcher getBatcher() {
-		return batcher;
+	private void setupConnection(LogicalConnectionImpl logicalConnection) {
+		this.logicalConnection = logicalConnection;
+		this.logicalConnection.addObserver( callback );
+		proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 	}
 
 	/**
@@ -148,21 +136,24 @@ public class ConnectionManager implements Serializable {
 	 * @throws HibernateException Indicates a connection is currently not
 	 * available (we are currently manually disconnected).
 	 */
+	@Override
 	public Connection getConnection() throws HibernateException {
-		return connection.getConnection();
+		return logicalConnection.getConnection();
 	}
 
+	@Override
 	public boolean hasBorrowedConnection() {
 		// used from testsuite
-		return connection.hasBorrowedConnection();
+		return logicalConnection.hasBorrowedConnection();
 	}
 
 	public Connection borrowConnection() {
-		return connection.borrowConnection();
+		return logicalConnection.borrowConnection();
 	}
 
+	@Override
 	public void releaseBorrowedConnection() {
-		connection.releaseBorrowedConnection();
+		logicalConnection.releaseBorrowedConnection();
 	}
 
 	/**
@@ -174,10 +165,10 @@ public class ConnectionManager implements Serializable {
 	 * @throws SQLException Can be thrown by the Connection.isAutoCommit() check.
 	 */
 	public boolean isAutoCommit() throws SQLException {
-		return connection == null ||
-				! connection.isOpen() ||
-				! connection.isPhysicallyConnected() ||
-				connection.getConnection().getAutoCommit();
+		return logicalConnection == null ||
+				! logicalConnection.isOpen() ||
+				! logicalConnection.isPhysicallyConnected() ||
+				logicalConnection.getConnection().getAutoCommit();
 	}
 
 	/**
@@ -194,10 +185,10 @@ public class ConnectionManager implements Serializable {
 	 * @return True if the connections will be released after each statement; false otherwise.
 	 */
 	public boolean isAggressiveRelease() {
-		if ( connection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		if ( logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			return true;
 		}
-		else if ( connection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION ) {
+		else if ( logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION ) {
 			boolean inAutoCommitState;
 			try {
 				inAutoCommitState = isAutoCommit() && ! callback.isTransactionInProgress();
@@ -223,7 +214,7 @@ public class ConnectionManager implements Serializable {
 	 * @return True if the connections will be released after each statement; false otherwise.
 	 */
 	private boolean isAggressiveReleaseNoTransactionCheck() {
-		if ( connection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		if ( logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			return true;
 		}
 		else {
@@ -235,7 +226,7 @@ public class ConnectionManager implements Serializable {
 				// assume we are in an auto-commit state
 				inAutoCommitState = true;
 			}
-			return connection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION && inAutoCommitState;
+			return logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION && inAutoCommitState;
 		}
 	}
 
@@ -246,18 +237,9 @@ public class ConnectionManager implements Serializable {
 	 *
 	 * @return True if logically connected; false otherwise.
 	 */
+	@Override
 	public boolean isCurrentlyConnected() {
-		if ( connection != null ) {
-			if ( connection.isUserSuppliedConnection() ) {
-				return connection.isPhysicallyConnected();
-			}
-			else {
-				return connection.isOpen();
-			}
-		}
-		else {
-			return false;
-		}
+		return logicalConnection != null && logicalConnection.isLogicallyConnected();
 	}
 
 	/**
@@ -265,14 +247,10 @@ public class ConnectionManager implements Serializable {
 	 * conditionally release the JDBC connection aggressively if
 	 * the configured release mode indicates.
 	 */
+	@Override
 	public void afterStatement() {
 		if ( isAggressiveRelease() ) {
-			if ( batcher.hasOpenResources() ) {
-				log.debug( "skipping aggresive-release due to open resources on batcher" );
-			}
-			else {
-				connection.afterStatementExecution();
-			}
+			logicalConnection.afterStatementExecution();
 		}
 	}
 
@@ -282,33 +260,32 @@ public class ConnectionManager implements Serializable {
 	 * indicates.
 	 */
 	public void afterTransaction() {
-		if ( connection != null ) {
-			if ( isAfterTransactionRelease() ) {
-				connection.afterTransaction();
-			}
-			else if ( isAggressiveReleaseNoTransactionCheck() && batcher.hasOpenResources() ) {
-				log.info( "forcing batcher resource cleanup on transaction completion; forgot to close ScrollableResults/Iterator?" );
-				batcher.closeStatements();
-				connection.afterTransaction();
+		if ( logicalConnection != null ) {
+			if ( isAfterTransactionRelease() || isAggressiveReleaseNoTransactionCheck() ) {
+				logicalConnection.afterTransaction();
 			}
 			else if ( isOnCloseRelease() ) {
 				// log a message about potential connection leaks
 				log.debug( "transaction completed on session with on_close connection release mode; be sure to close the session to release JDBC resources!" );
 			}
 		}
-		batcher.unsetTransactionTimeout();
 	}
 
 	private boolean isAfterTransactionRelease() {
-		return connection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION;
+		return logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_TRANSACTION;
 	}
 
 	private boolean isOnCloseRelease() {
-		return connection.getConnectionReleaseMode() == ConnectionReleaseMode.ON_CLOSE;
+		return logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.ON_CLOSE;
 	}
 
 	public boolean isLogicallyConnected() {
-		return connection != null && connection.isOpen();
+		return logicalConnection != null && logicalConnection.isOpen();
+	}
+
+	@Override
+	public void setTransactionTimeout(int seconds) {
+		logicalConnection.setTransactionTimeout( seconds );
 	}
 
 	/**
@@ -318,6 +295,7 @@ public class ConnectionManager implements Serializable {
 	 * @return The connection mantained here at time of close.  Null if
 	 * there was no connection cached internally.
 	 */
+	@Override
 	public Connection close() {
 		return cleanup();
 	}
@@ -329,12 +307,12 @@ public class ConnectionManager implements Serializable {
 	 * @return The connection mantained here at time of disconnect.  Null if
 	 * there was no connection cached internally.
 	 */
+	@Override
 	public Connection manualDisconnect() {
 		if ( ! isLogicallyConnected() ) {
 			throw new IllegalStateException( "cannot manually disconnect because not logically connected." );
 		}
-		batcher.closeStatements();
-		return connection.manualDisconnect();
+		return logicalConnection.manualDisconnect();
 	}
 
 	/**
@@ -343,6 +321,7 @@ public class ConnectionManager implements Serializable {
 	 * <p/>
 	 * This form is used for ConnectionProvider-supplied connections.
 	 */
+	@Override
 	public void manualReconnect() {
 		manualReconnect( null );
 	}
@@ -353,11 +332,12 @@ public class ConnectionManager implements Serializable {
 	 * <p/>
 	 * This form is used for user-supplied connections.
 	 */
+	@Override
 	public void manualReconnect(Connection suppliedConnection) {
 		if ( ! isLogicallyConnected() ) {
 			throw new IllegalStateException( "cannot manually disconnect because not logically connected." );
 		}
-		connection.reconnect( suppliedConnection );
+		logicalConnection.reconnect( suppliedConnection );
 	}
 
 	/**
@@ -371,21 +351,17 @@ public class ConnectionManager implements Serializable {
 	 * @throws HibernateException
 	 */
 	private Connection cleanup() throws HibernateException {
-		if ( connection == null ) {
+		if ( logicalConnection == null ) {
 			log.trace( "connection already null in cleanup : no action");
 			return null;
 		}
 		try {
 			log.trace( "performing cleanup" );
-
-			if ( isLogicallyConnected() ) {
-				batcher.closeStatements();
-			}
-			Connection c = connection.close();
+			Connection c = logicalConnection.close();
 			return c;
 		}
 		finally {
-			connection = null;
+			logicalConnection = null;
 		}
 	}
 
@@ -394,23 +370,192 @@ public class ConnectionManager implements Serializable {
 	 * to temporarily circumvent aggressive connection releasing until after
 	 * the flush cycle is complete {@link #flushEnding()}
 	 */
+	@Override
 	public void flushBeginning() {
 		log.trace( "registering flush begin" );
-		connection.disableReleases();
+		logicalConnection.disableReleases();
 	}
 
 	/**
 	 * Callback to let us know that a flush is ending.  We use this fact to
 	 * stop circumventing aggressive releasing connections.
 	 */
+	@Override
 	public void flushEnding() {
 		log.trace( "registering flush end" );
-		connection.enableReleases();
+		logicalConnection.enableReleases();
 		afterStatement();
 	}
 
+	/**
+	 * Get a non-batchable prepared statement to use for inserting / deleting / updating,
+	 * using JDBC3 getGeneratedKeys ({@link java.sql.Connection#prepareStatement(String, int)}).
+	 */
+	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
+			throws SQLException, HibernateException {
+		if ( autoGeneratedKeys == PreparedStatement.RETURN_GENERATED_KEYS ) {
+			checkAutoGeneratedKeysSupportEnabled();
+		}
+		executeBatch();
+		return proxiedConnection.prepareStatement(
+					getSQL( sql ),
+					autoGeneratedKeys
+		);
+	}
+
+	/**
+	 * Get a non-batchable prepared statement to use for inserting / deleting / updating.
+	 * using JDBC3 getGeneratedKeys ({@link java.sql.Connection#prepareStatement(String, String[])}).
+	 */
+	public PreparedStatement prepareStatement(String sql, String[] columnNames)
+			throws SQLException, HibernateException {
+		checkAutoGeneratedKeysSupportEnabled();
+		executeBatch();
+		return proxiedConnection.prepareStatement( getSQL( sql ), columnNames );
+	}
+
+	private void checkAutoGeneratedKeysSupportEnabled() {
+		if ( ! factory.getSettings().isGetGeneratedKeysEnabled() ) {
+			throw new AssertionFailure("getGeneratedKeys() support is not enabled");
+		}
+	}
+
+	/**
+	 * Get a non-batchable prepared statement to use for selecting. Does not
+	 * result in execution of the current batch.
+	 */
+	public PreparedStatement prepareSelectStatement(String sql)
+			throws SQLException, HibernateException {
+		return proxiedConnection.prepareStatement( getSQL( sql ) );
+	}
+
+	/**
+	 * Get a non-batchable prepared statement to use for inserting / deleting / updating.
+	 */
+	public PreparedStatement prepareStatement(String sql, boolean isCallable)
+	throws SQLException, HibernateException {
+		return isCallable ? prepareCallableStatement( sql ) : prepareStatement( sql );
+	}
+
+	/**
+	 * Get a non-batchable callable statement to use for inserting / deleting / updating.
+	 */
+	public CallableStatement prepareCallableStatement(String sql) throws SQLException, HibernateException {
+		executeBatch();
+		log.trace("preparing callable statement");
+		return CallableStatement.class.cast(
+				proxiedConnection.prepareStatement( getSQL( sql ) )
+		);
+	}
+
+	/**
+	 * Get a batchable prepared statement to use for inserting / deleting / updating
+	 * (might be called many times before a single call to <tt>executeBatch()</tt>).
+	 * After setting parameters, call <tt>addToBatch</tt> - do not execute the
+	 * statement explicitly.
+	 * @see org.hibernate.jdbc.Batcher#addToBatch
+	 */
+	public PreparedStatement prepareBatchStatement(String sql, boolean isCallable)
+			throws SQLException, HibernateException {
+		String batchUpdateSQL = getSQL( sql );
+		PreparedStatement batchUpdate = getBatcher().getStatement( batchUpdateSQL );
+		if ( batchUpdate == null ) {
+			batchUpdate = prepareStatement( batchUpdateSQL, isCallable ); // calls executeBatch()
+			getBatcher().setStatement( batchUpdateSQL, batchUpdate );
+		}
+		else {
+			log.debug( "reusing prepared statement" );
+			factory.getJdbcServices().getSqlStatementLogger().logStatement( batchUpdateSQL );
+		}
+		return batchUpdate;
+	}
+
+	private Batcher getBatcher() {
+		return logicalConnection.getBatcher();
+	}
+
+	private PreparedStatement prepareStatement(String sql)
+	throws SQLException, HibernateException {
+		executeBatch();
+		return proxiedConnection.prepareStatement( getSQL( sql ) );
+	}
+
+	/**
+	 * Get a prepared statement for use in loading / querying. If not explicitly
+	 * released by <tt>closeQueryStatement()</tt>, it will be released when the
+	 * session is closed or disconnected.
+	 */
+	public PreparedStatement prepareQueryStatement(
+			String sql,
+			boolean isCallable) throws SQLException, HibernateException {
+		sql = getSQL( sql );
+		PreparedStatement result = (
+				isCallable ?
+						proxiedConnection.prepareCall(sql ) :
+		                proxiedConnection.prepareStatement( sql )
+				);
+		setStatementFetchSize( result );
+		logicalConnection.getResourceRegistry().registerLastQuery( result );
+		return result;
+	}
+
+	/**
+	 * Cancel the current query statement
+	 */
+	public void cancelLastQuery() throws HibernateException {
+		logicalConnection.getResourceRegistry().cancelLastQuery();
+	}
+
+	public PreparedStatement prepareScrollableQueryStatement(
+			String sql,
+	        ScrollMode scrollMode,
+			boolean isCallable) throws SQLException, HibernateException {
+		if ( ! factory.getSettings().isScrollableResultSetsEnabled() ) {
+			throw new AssertionFailure("scrollable result sets are not enabled");
+		}
+		sql = getSQL( sql );
+		PreparedStatement result = (
+				isCallable ?
+						proxiedConnection.prepareCall(
+								sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY
+						) :
+		                proxiedConnection.prepareStatement(
+								sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY
+						)
+				);
+		setStatementFetchSize( result );
+		logicalConnection.getResourceRegistry().registerLastQuery( result );
+		return result;
+	}
+
+	public void abortBatch(SQLException sqle) {
+		getBatcher().abortBatch( sqle );
+	}
+
+	public void addToBatch(Expectation expectation )  throws SQLException, HibernateException {
+		getBatcher().addToBatch( expectation );
+	}
+
+	public void executeBatch() throws HibernateException {
+		getBatcher().executeBatch();
+	}
+
+	private String getSQL(String sql) {
+		sql = interceptor.onPrepareStatement( sql );
+		if ( sql==null || sql.length() == 0 ) {
+			throw new AssertionFailure( "Interceptor.onPrepareStatement() returned null or empty string." );
+		}
+		return sql;
+	}
+
+	private void setStatementFetchSize(PreparedStatement statement) throws SQLException {
+		if ( factory.getSettings().getJdbcFetchSize() !=null ) {
+			statement.setFetchSize( factory.getSettings().getJdbcFetchSize().intValue() );
+		}
+	}
+
 	public boolean isReadyForSerialization() {
-		return connection == null ? true : ! batcher.hasOpenResources() && connection.isReadyForSerialization();
+		return logicalConnection == null ? true : logicalConnection.isReadyForSerialization();
 	}
 
 	/**
@@ -423,9 +568,6 @@ public class ConnectionManager implements Serializable {
 		if ( !isReadyForSerialization() ) {
 			throw new IllegalStateException( "Cannot serialize a ConnectionManager while connected" );
 		}
-
-		oos.writeObject( factory );
-		oos.writeObject( interceptor );
 		oos.defaultWriteObject();
 	}
 
@@ -437,34 +579,30 @@ public class ConnectionManager implements Serializable {
 	 * @throws ClassNotFoundException Indicates resource class resolution.
 	 */
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		factory = (SessionFactoryImplementor) ois.readObject();
-		interceptor = (Interceptor) ois.readObject();
 		ois.defaultReadObject();
 	}
 
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		connection.serialize( oos );
+		logicalConnection.serialize( oos );
 	}
 
-	public static ConnectionManager deserialize(
+	public static ConnectionManagerImpl deserialize(
 			ObjectInputStream ois,
 	        SessionFactoryImplementor factory,
 	        Interceptor interceptor,
 	        ConnectionReleaseMode connectionReleaseMode,
 	        Callback callback) throws IOException {
-		ConnectionManager connectionManager = new ConnectionManager(
+		return new ConnectionManagerImpl(
 				factory,
 		        callback,
-		        connectionReleaseMode,
-		        interceptor
-		);
-		connectionManager.connection =
+				interceptor,
 				LogicalConnectionImpl.deserialize(
 						ois,
-						factory.getJdbcServices( ),
-						connectionReleaseMode
-				);
-		connectionManager.connection.addObserver( callback );
-		return connectionManager;
+						factory.getJdbcServices(),
+						factory.getStatistics() != null ? factory.getStatisticsImplementor() : null,
+						connectionReleaseMode,
+						factory.getSettings().getBatcherFactory()
+				)
+		);
 	}
 }

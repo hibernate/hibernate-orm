@@ -30,7 +30,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 
 /**
  * Contract for generating Hibernate {@link Transaction} instances.

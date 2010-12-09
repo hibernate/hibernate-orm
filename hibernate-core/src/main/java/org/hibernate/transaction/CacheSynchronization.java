@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.TransactionException;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
 
 /**
@@ -53,7 +53,7 @@ public final class CacheSynchronization implements Synchronization {
 
 	public CacheSynchronization(
 			TransactionFactory.Context ctx, 
-			JDBCContext jdbcContext, 
+			JDBCContext jdbcContext,
 			Transaction transaction, 
 			org.hibernate.Transaction tx) {
 		this.ctx = ctx;

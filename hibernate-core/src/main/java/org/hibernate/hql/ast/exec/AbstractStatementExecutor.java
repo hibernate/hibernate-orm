@@ -238,7 +238,9 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 			// at the very least cleanup the data :)
 			PreparedStatement ps = null;
 			try {
-				ps = session.getBatcher().prepareStatement( "delete from " + persister.getTemporaryIdTableName() );
+				ps = session.getJDBCContext().getConnectionManager().prepareStatement( "delete from " + persister.getTemporaryIdTableName(),
+						false
+				);
 				ps.executeUpdate();
 			}
 			catch( Throwable t ) {
@@ -247,7 +249,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 			finally {
 				if ( ps != null ) {
 					try {
-						session.getBatcher().closeStatement( ps );
+						ps.close();
 					}
 					catch( Throwable ignore ) {
 						// ignore

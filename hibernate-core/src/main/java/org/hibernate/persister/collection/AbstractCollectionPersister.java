@@ -55,7 +55,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.jdbc.Expectation;
@@ -1084,20 +1083,10 @@ public abstract class AbstractCollectionPersister
 				boolean useBatch = expectation.canBeBatched();
 				String sql = getSQLDeleteString();
 				if ( useBatch ) {
-					if ( callable ) {
-						st = session.getBatcher().prepareBatchCallableStatement( sql );
-					}
-					else {
-						st = session.getBatcher().prepareBatchStatement( sql );
-					}
+					st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
 				}
 				else {
-					if ( callable ) {
-						st = session.getBatcher().prepareCallableStatement( sql );
-					}
-					else {
-						st = session.getBatcher().prepareStatement( sql );
-					}
+					st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
 				}
 
 
@@ -1106,7 +1095,7 @@ public abstract class AbstractCollectionPersister
 
 					writeKey( st, id, offset, session );
 					if ( useBatch ) {
-						session.getBatcher().addToBatch( expectation );
+						session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 					}
 					else {
 						expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1114,13 +1103,13 @@ public abstract class AbstractCollectionPersister
 				}
 				catch ( SQLException sqle ) {
 					if ( useBatch ) {
-						session.getBatcher().abortBatch( sqle );
+						session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 					}
 					throw sqle;
 				}
 				finally {
 					if ( !useBatch ) {
-						session.getBatcher().closeStatement( st );
+						st.close();
 					}
 				}
 
@@ -1172,20 +1161,10 @@ public abstract class AbstractCollectionPersister
 							String sql = getSQLInsertRowString();
 
 							if ( useBatch ) {
-								if ( callable ) {
-									st = session.getBatcher().prepareBatchCallableStatement( sql );
-								}
-								else {
-									st = session.getBatcher().prepareBatchStatement( sql );
-								}
+								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
 							}
 							else {
-								if ( callable ) {
-									st = session.getBatcher().prepareCallableStatement( sql );
-								}
-								else {
-									st = session.getBatcher().prepareStatement( sql );
-								}
+								st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
 							}
 
 
@@ -1203,7 +1182,7 @@ public abstract class AbstractCollectionPersister
 								loc = writeElement(st, collection.getElement(entry), loc, session );
 
 								if ( useBatch ) {
-									session.getBatcher().addToBatch( expectation );
+									session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 								}
 								else {
 									expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1214,13 +1193,13 @@ public abstract class AbstractCollectionPersister
 							}
 							catch ( SQLException sqle ) {
 								if ( useBatch ) {
-									session.getBatcher().abortBatch( sqle );
+									session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 								}
 								throw sqle;
 							}
 							finally {
 								if ( !useBatch ) {
-									session.getBatcher().closeStatement( st );
+									st.close();
 								}
 							}
 
@@ -1282,20 +1261,10 @@ public abstract class AbstractCollectionPersister
 						String sql = getSQLDeleteRowString();
 
 						if ( useBatch ) {
-							if ( callable ) {
-								st = session.getBatcher().prepareBatchCallableStatement( sql );
-							}
-							else {
-								st = session.getBatcher().prepareBatchStatement( sql );
-							}
+							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
 						}
 						else {
-							if ( callable ) {
-								st = session.getBatcher().prepareCallableStatement( sql );
-							}
-							else {
-								st = session.getBatcher().prepareStatement( sql );
-							}
+							st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
 						}
 
 						try {
@@ -1317,7 +1286,7 @@ public abstract class AbstractCollectionPersister
 							}
 
 							if ( useBatch ) {
-								session.getBatcher().addToBatch( expectation );
+								session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1326,13 +1295,13 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getBatcher().abortBatch( sqle );
+								session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 							}
 							throw sqle;
 						}
 						finally {
 							if ( !useBatch ) {
-								session.getBatcher().closeStatement( st );
+								st.close();
 							}
 						}
 
@@ -1392,21 +1361,11 @@ public abstract class AbstractCollectionPersister
 
 						if ( useBatch ) {
 							if ( st == null ) {
-								if ( callable ) {
-									st = session.getBatcher().prepareBatchCallableStatement( sql );
-								}
-								else {
-									st = session.getBatcher().prepareBatchStatement( sql );
-								}
+								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
 							}
 						}
 						else {
-							if ( callable ) {
-								st = session.getBatcher().prepareCallableStatement( sql );
-							}
-							else {
-								st = session.getBatcher().prepareStatement( sql );
-							}
+							st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
 						}
 
 						try {
@@ -1422,7 +1381,7 @@ public abstract class AbstractCollectionPersister
 							writeElement(st, collection.getElement(entry), offset, session );
 
 							if ( useBatch ) {
-								session.getBatcher().addToBatch( expectation );
+								session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1432,13 +1391,13 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getBatcher().abortBatch( sqle );
+								session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 							}
 							throw sqle;
 						}
 						finally {
 							if ( !useBatch ) {
-								session.getBatcher().closeStatement( st );
+								st.close();
 							}
 						}
 					}
@@ -1744,7 +1703,7 @@ public abstract class AbstractCollectionPersister
 
 	public int getSize(Serializable key, SessionImplementor session) {
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement(sqlSelectSizeString);
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sqlSelectSizeString);
 			try {
 				getKeyType().nullSafeSet(st, key, 1, session);
 				ResultSet rs = st.executeQuery();
@@ -1756,7 +1715,7 @@ public abstract class AbstractCollectionPersister
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 		}
 		catch (SQLException sqle) {
@@ -1779,7 +1738,7 @@ public abstract class AbstractCollectionPersister
 
 	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SessionImplementor session) {
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement(sql);
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sql);
 			try {
 				getKeyType().nullSafeSet(st, key, 1, session);
 				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
@@ -1795,7 +1754,7 @@ public abstract class AbstractCollectionPersister
 				return false;
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 		}
 		catch (SQLException sqle) {
@@ -1810,7 +1769,7 @@ public abstract class AbstractCollectionPersister
 
 	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement(sqlSelectRowByIndexString);
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sqlSelectRowByIndexString);
 			try {
 				getKeyType().nullSafeSet(st, key, 1, session);
 				getIndexType().nullSafeSet( st, incrementIndexByBase(index), keyColumnNames.length + 1, session );
@@ -1828,7 +1787,7 @@ public abstract class AbstractCollectionPersister
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 		}
 		catch (SQLException sqle) {

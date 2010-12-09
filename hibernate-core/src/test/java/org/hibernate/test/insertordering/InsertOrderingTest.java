@@ -8,15 +8,14 @@ import java.sql.PreparedStatement;
 
 import junit.framework.Test;
 
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.Session;
-import org.hibernate.Interceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.jdbc.BatchingBatcher;
-import org.hibernate.jdbc.ConnectionManager;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.Batcher;
@@ -61,7 +60,7 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( 6, StatsBatcher.batchSizes.size() );  // 2 batches of each insert statement
+		assertEquals( 3, StatsBatcher.batchSizes.size() );
 
 		s = openSession();
 		s.beginTransaction();
@@ -82,8 +81,8 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		private static List batchSizes = new ArrayList();
 		private static int currentBatch = -1;
 
-		public StatsBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-			super( connectionManager, interceptor );
+		public StatsBatcher(SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
+			super( exceptionHelper, jdbcBatchSize );
 		}
 
 		static void reset() {
@@ -92,16 +91,15 @@ public class InsertOrderingTest extends FunctionalTestCase {
 			batchSQL = null;
 		}
 
-		public PreparedStatement prepareBatchStatement(String sql) throws SQLException {
-			PreparedStatement rtn = super.prepareBatchStatement( sql );
-			if ( batchSQL == null || !batchSQL.equals( sql ) ) {
+		public void setStatement(String sql, PreparedStatement ps) {
+			if ( batchSQL == null || ! batchSQL.equals( sql ) ) {
 				currentBatch++;
 				batchSQL = sql;
 				batchSizes.add( currentBatch, new Counter() );
 				System.out.println( "--------------------------------------------------------" );
 				System.out.println( "Preparing statement [" + sql + "]" );
 			}
-			return rtn;
+			super.setStatement( sql, ps );
 		}
 
 		public void addToBatch(Expectation expectation) throws SQLException, HibernateException {
@@ -114,14 +112,18 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		protected void doExecuteBatch(PreparedStatement ps) throws SQLException, HibernateException {
 			System.out.println( "executing batch [" + batchSQL + "]" );
 			System.out.println( "--------------------------------------------------------" );
-			batchSQL = null;
 			super.doExecuteBatch( ps );
 		}
 	}
 
 	public static class StatsBatcherFactory implements BatcherFactory {
-		public Batcher createBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-			return new StatsBatcher( connectionManager, interceptor );
+		private int jdbcBatchSize;
+
+		public void setJdbcBatchSize(int jdbcBatchSize) {
+			this.jdbcBatchSize = jdbcBatchSize;
+		}
+		public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
+			return new StatsBatcher( exceptionHelper, jdbcBatchSize );
 		}
 	}
 }

@@ -28,9 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 
 /**
  * An implementation of the <tt>Batcher</tt> interface that does no batching
@@ -39,8 +37,8 @@ import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
  */
 public class NonBatchingBatcher extends AbstractBatcher {
 
-	public NonBatchingBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-		super( connectionManager, interceptor );
+	public NonBatchingBatcher(SQLExceptionHelper exceptionHelper) {
+		super( exceptionHelper, 1 );
 	}
 
 	public void addToBatch(Expectation expectation) throws SQLException, HibernateException {

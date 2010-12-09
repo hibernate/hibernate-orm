@@ -29,7 +29,7 @@ import java.util.Properties;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
-import org.hibernate.jdbc.JDBCContext;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 
 /**
  * Factory for {@link JDBCTransaction} instances.

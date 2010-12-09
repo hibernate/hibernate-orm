@@ -35,7 +35,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
-import org.hibernate.stat.ConcurrentStatisticsImpl;
+import org.hibernate.jdbc.NonBatchingBatcherFactory;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 
@@ -131,7 +131,13 @@ public class AggressiveReleaseTest extends UnitTestCase {
 	}
 
 	public void testBasicRelease() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_STATEMENT,
+				services,
+				null,
+				new NonBatchingBatcherFactory()
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		ConnectionCounter observer = new ConnectionCounter();
 		logicalConnection.addObserver( observer );
@@ -160,7 +166,13 @@ public class AggressiveReleaseTest extends UnitTestCase {
 	}
 
 	public void testReleaseCircumventedByHeldResources() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_STATEMENT,
+				services,
+				null,
+				new NonBatchingBatcherFactory()
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		ConnectionCounter observer = new ConnectionCounter();
 		logicalConnection.addObserver( observer );
@@ -181,6 +193,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 			// open a result set and hold it open...
 			ps = proxiedConnection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			ps.executeQuery();
+			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 			assertEquals( 2, observer.obtainCount );
 			assertEquals( 1, observer.releaseCount );
@@ -213,7 +226,13 @@ public class AggressiveReleaseTest extends UnitTestCase {
 	}
 
 	public void testReleaseCircumventedManually() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_STATEMENT,
+				services,
+				null,
+				new NonBatchingBatcherFactory()
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		ConnectionCounter observer = new ConnectionCounter();
 		logicalConnection.addObserver( observer );

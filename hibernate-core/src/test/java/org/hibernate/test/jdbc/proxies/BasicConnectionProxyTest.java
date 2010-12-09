@@ -34,6 +34,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
+import org.hibernate.jdbc.NonBatchingBatcherFactory;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 
@@ -58,7 +59,13 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 	}
 
 	public void testDatabaseMetaDataHandling() throws Throwable {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_TRANSACTION, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_TRANSACTION,
+				services,
+				null,
+				new NonBatchingBatcherFactory()
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		try {
 			DatabaseMetaData metaData = proxiedConnection.getMetaData();
@@ -81,7 +88,13 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 	}
 
 	public void testExceptionHandling() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_TRANSACTION, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_TRANSACTION,
+				services,
+				null,
+				new NonBatchingBatcherFactory()
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		try {
 			proxiedConnection.prepareStatement( "select count(*) from NON_EXISTENT" ).executeQuery();
@@ -98,7 +111,13 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 	}
 
 	public void testBasicJdbcUsage() throws JDBCException {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_TRANSACTION, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_TRANSACTION,
+				services,
+				null,
+				new NonBatchingBatcherFactory()
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 
 		try {

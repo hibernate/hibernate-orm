@@ -33,7 +33,6 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.ast.tree.FromElement;
@@ -130,7 +129,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getBatcher().prepareStatement( idInsertSelect );
+					ps = session.getJDBCContext().getConnectionManager().prepareStatement( idInsertSelect, false );
 //					int parameterStart = getWalker().getNumberOfParametersInSetClause();
 //					List allParams = getIdSelectParameterSpecifications();
 //					Iterator whereParams = allParams.subList( parameterStart, allParams.size() ).iterator();
@@ -143,7 +142,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 				}
 				finally {
 					if ( ps != null ) {
-						session.getBatcher().closeStatement( ps );
+						ps.close();
 					}
 				}
 			}
@@ -162,7 +161,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 				}
 				try {
 					try {
-						ps = session.getBatcher().prepareStatement( updates[i] );
+						ps = session.getJDBCContext().getConnectionManager().prepareStatement( updates[i], false );
 						if ( hqlParameters[i] != null ) {
 							int position = 1; // jdbc params are 1-based
 							for ( int x = 0; x < hqlParameters[i].length; x++ ) {
@@ -173,7 +172,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 					}
 					finally {
 						if ( ps != null ) {
-							session.getBatcher().closeStatement( ps );
+							ps.close();
 						}
 					}
 				}

@@ -30,8 +30,8 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
-import org.hibernate.jdbc.JDBCContext;
 
 import javax.transaction.SystemException;
 

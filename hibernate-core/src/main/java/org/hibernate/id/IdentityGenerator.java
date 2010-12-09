@@ -87,7 +87,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session.getBatcher().prepareStatement( insertSQL, true );
+			return session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, PreparedStatement.RETURN_GENERATED_KEYS );
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
@@ -131,7 +131,7 @@ public class IdentityGenerator extends AbstractPostInsertGenerator {
 		}
 
 		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session.getBatcher().prepareStatement( insertSQL, false );
+			return session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 		}
 
 		public Serializable executeAndExtract(PreparedStatement insert) throws SQLException {

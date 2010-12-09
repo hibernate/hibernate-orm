@@ -33,7 +33,6 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
@@ -93,7 +92,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		// todo : should we additionally check the current isolation mode explicitly?
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				lockable.getVersionType().nullSafeSet( st, version, 1, session );
 				int offset = 2;
@@ -113,7 +112,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 
 		}

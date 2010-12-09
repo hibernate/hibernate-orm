@@ -24,6 +24,7 @@
 package org.hibernate.engine.jdbc.spi;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.stat.StatisticsImplementor;
 
 /**
  * The "internal" contract for LogicalConnection
@@ -37,6 +38,27 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * @return JDBC services
 	 */
 	public JdbcServices getJdbcServices();
+
+	/**
+	 * Obtains the statistics implementor.
+	 *
+	 * @return the statistics implementor
+	 */
+	public StatisticsImplementor getStatisticsImplementor();
+
+	/**
+	 * Is the transaction timeout set?
+	 *
+	 * @return true, if the transaction timeout is set; false otherwise
+	 */
+	public boolean isTransactionTimeoutSet();
+
+	/**
+	 * Gets the transaction timeout.
+	 *
+	 * @return the transaction time out
+	 */
+	public long getTransactionTimeout();
 
 	/**
 	 * Obtains the JDBC resource registry associated with this logical connection.
@@ -82,4 +104,6 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * Re-enable aggressive release processing (after a prior {@link #disableReleases()} call.
 	 */
 	public void enableReleases();
+
+
 }

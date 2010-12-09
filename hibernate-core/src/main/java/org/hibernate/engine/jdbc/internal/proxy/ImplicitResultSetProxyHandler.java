@@ -47,6 +47,13 @@ public class ImplicitResultSetProxyHandler extends AbstractResultSetProxyHandler
 		this.connectionProxy = connectionProxy;
 	}
 
+	public ImplicitResultSetProxyHandler(ResultSet resultSet, ConnectionProxyHandler connectionProxyHandler, Connection connectionProxy, Statement sourceStatement) {
+		super( resultSet );
+		this.connectionProxyHandler = connectionProxyHandler;
+		this.connectionProxy = connectionProxy;
+		this.sourceStatement = sourceStatement;
+	}
+
 	@Override
 	protected JdbcServices getJdbcServices() {
 		return connectionProxyHandler.getJdbcServices();

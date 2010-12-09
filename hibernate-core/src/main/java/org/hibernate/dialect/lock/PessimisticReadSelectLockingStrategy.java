@@ -29,7 +29,6 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.JDBCException;
@@ -79,7 +78,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 		final String sql = determineSql( timeout );
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
 				if ( getLockable().isVersioned() ) {
@@ -106,7 +105,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 
 		}

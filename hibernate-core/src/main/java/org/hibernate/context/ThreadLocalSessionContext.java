@@ -76,7 +76,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	private static final Class[] SESS_PROXY_INTERFACES = new Class[] {
 			org.hibernate.classic.Session.class,
 	        org.hibernate.engine.SessionImplementor.class,
-	        org.hibernate.jdbc.JDBCContext.Context.class,
+	        org.hibernate.engine.jdbc.spi.JDBCContext.Context.class,
 	        org.hibernate.event.EventSource.class
 	};
 

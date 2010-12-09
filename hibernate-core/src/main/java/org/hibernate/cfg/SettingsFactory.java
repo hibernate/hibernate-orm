@@ -39,6 +39,7 @@ import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.hql.QueryTranslatorFactory;
@@ -115,6 +116,7 @@ public class SettingsFactory implements Serializable {
 		if (batchSize>0) log.info("JDBC batch updates for versioned data: " + enabledDisabled(jdbcBatchVersionedData) );
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
 		settings.setBatcherFactory( createBatcherFactory(properties, batchSize) );
+		settings.setBatcherBuilder( createBatchBuilder(properties, batchSize) );
 
 		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, meta.supportsScrollableResults());
 		log.info("Scrollable result sets: " + enabledDisabled(useScrollableResultSets) );
@@ -350,20 +352,45 @@ public class SettingsFactory implements Serializable {
 
 	protected BatcherFactory createBatcherFactory(Properties properties, int batchSize) {
 		String batcherClass = properties.getProperty(Environment.BATCH_STRATEGY);
+		BatcherFactory batcherFactory = null;
 		if (batcherClass==null) {
-			return batchSize == 0
+			batcherFactory = batchSize == 0
 					? new NonBatchingBatcherFactory()
-					: new BatchingBatcherFactory();
+					: new BatchingBatcherFactory( );
 		}
 		else {
 			log.info("Batcher factory: " + batcherClass);
 			try {
-				return (BatcherFactory) ReflectHelper.classForName(batcherClass).newInstance();
+				batcherFactory = (BatcherFactory) ReflectHelper.classForName(batcherClass).newInstance();
 			}
 			catch (Exception cnfe) {
 				throw new HibernateException("could not instantiate BatcherFactory: " + batcherClass, cnfe);
 			}
 		}
+		batcherFactory.setJdbcBatchSize( batchSize );
+		return batcherFactory;
+	}
+
+	protected BatchBuilder createBatchBuilder(Properties properties, int batchSize) {
+		//FIXME: uncomment to use BatchBuilder
+		/*
+		String batchBuilderClass = properties.getProperty(Environment.BATCH_STRATEGY);
+		if (batchBuilderClass==null) {
+			return batchSize > 0
+					? new BatchBuilder( batchSize )
+					: new BatchBuilder();
+		}
+		else {
+			log.info("Batcher factory: " + batchBuilderClass);
+			try {
+				return (BatchBuilder) ReflectHelper.classForName(batchBuilderClass).newInstance();
+			}
+			catch (Exception cnfe) {
+				throw new HibernateException("could not instantiate BatchBuilder: " + batchBuilderClass, cnfe);
+			}
+		}
+		*/
+		return null;
 	}
 
 	protected TransactionFactory createTransactionFactory(Properties properties) {

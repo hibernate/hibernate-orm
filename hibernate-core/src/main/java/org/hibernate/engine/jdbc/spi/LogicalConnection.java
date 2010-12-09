@@ -31,7 +31,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface LogicalConnection extends Serializable {
+public interface LogicalConnection {
 	/**
 	 * Is this logical connection open?  Another phraseology sometimes used is: "are we
 	 * logically connected"?

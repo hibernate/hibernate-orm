@@ -31,7 +31,6 @@ import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.DeleteStatement;
 import org.hibernate.hql.ast.tree.FromElement;
@@ -106,7 +105,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getBatcher().prepareStatement( idInsertSelect );
+					ps = session.getJDBCContext().getConnectionManager().prepareStatement( idInsertSelect, false );
 					Iterator paramSpecifications = getIdSelectParameterSpecifications().iterator();
 					int pos = 1;
 					while ( paramSpecifications.hasNext() ) {
@@ -117,7 +116,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 				}
 				finally {
 					if ( ps != null ) {
-						session.getBatcher().closeStatement( ps );
+						ps.close();
 					}
 				}
 			}
@@ -133,12 +132,12 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			for ( int i = 0; i < deletes.length; i++ ) {
 				try {
 					try {
-						ps = session.getBatcher().prepareStatement( deletes[i] );
+						ps = session.getJDBCContext().getConnectionManager().prepareStatement( deletes[i], false );
 						ps.executeUpdate();
 					}
 					finally {
 						if ( ps != null ) {
-							session.getBatcher().closeStatement( ps );
+							ps.close();
 						}
 					}
 				}

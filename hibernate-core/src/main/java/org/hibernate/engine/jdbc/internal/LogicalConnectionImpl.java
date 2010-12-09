@@ -41,7 +41,10 @@ import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.jdbc.Batcher;
+import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.BorrowedConnectionProxy;
+import org.hibernate.stat.StatisticsImplementor;
 
 /**
  * LogicalConnectionImpl implementation
@@ -51,50 +54,71 @@ import org.hibernate.jdbc.BorrowedConnectionProxy;
 public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	private static final Logger log = LoggerFactory.getLogger( LogicalConnectionImpl.class );
 
-	private transient Connection physicalConnection;
-	private transient Connection borrowedConnection;
+	private Connection physicalConnection;
+	private Connection borrowedConnection;
 
 	private final ConnectionReleaseMode connectionReleaseMode;
 	private final JdbcServices jdbcServices;
-	private final JdbcResourceRegistry jdbcResourceRegistry;
+	private final StatisticsImplementor statisticsImplementor;
+	private final JdbcResourceRegistryImpl jdbcResourceRegistry;
 	private final List<ConnectionObserver> observers = new ArrayList<ConnectionObserver>();
+
 	private boolean releasesEnabled = true;
+	private long transactionTimeout = -1;
+	boolean isTransactionTimeoutSet;
 
 	private final boolean isUserSuppliedConnection;
+
 	private boolean isClosed;
 
-	public LogicalConnectionImpl(
-	        Connection userSuppliedConnection,
-	        ConnectionReleaseMode connectionReleaseMode,
-	        JdbcServices jdbcServices) {
+	public LogicalConnectionImpl(Connection userSuppliedConnection,
+								 ConnectionReleaseMode connectionReleaseMode,
+								 JdbcServices jdbcServices,
+								 StatisticsImplementor statisticsImplementor,
+								 BatcherFactory batcherFactory
+	) {
+		this.jdbcServices = jdbcServices;
+		this.statisticsImplementor = statisticsImplementor;
 		this.physicalConnection = userSuppliedConnection;
 		this.connectionReleaseMode =
 				determineConnectionReleaseMode(
-						userSuppliedConnection != null, connectionReleaseMode, jdbcServices
+						jdbcServices, userSuppliedConnection != null, connectionReleaseMode
 				);
-		this.jdbcServices = jdbcServices;
-		this.jdbcResourceRegistry = new JdbcResourceRegistryImpl( jdbcServices.getSqlExceptionHelper() );
+		this.jdbcResourceRegistry =
+				new JdbcResourceRegistryImpl(
+						getJdbcServices().getSqlExceptionHelper(),
+						batcherFactory
+				);
 
 		this.isUserSuppliedConnection = ( userSuppliedConnection != null );
+		this.isClosed = false;
 	}
 
-	public LogicalConnectionImpl(
-			ConnectionReleaseMode connectionReleaseMode,
-			JdbcServices jdbcServices,
-			boolean isUserSuppliedConnection,
-			boolean isClosed) {
+	// used for deserialization
+	private LogicalConnectionImpl(ConnectionReleaseMode connectionReleaseMode,
+								  JdbcServices jdbcServices,
+								  StatisticsImplementor statisticsImplementor,
+								  BatcherFactory batcherFactory,
+								  boolean isUserSuppliedConnection,
+								  boolean isClosed) {
 		this.connectionReleaseMode = determineConnectionReleaseMode(
-				isUserSuppliedConnection, connectionReleaseMode, jdbcServices
+				jdbcServices, isUserSuppliedConnection, connectionReleaseMode
 		);
 		this.jdbcServices = jdbcServices;
-		this.jdbcResourceRegistry = new JdbcResourceRegistryImpl( jdbcServices.getSqlExceptionHelper() );
+		this.statisticsImplementor = statisticsImplementor;
+		this.jdbcResourceRegistry =
+				new JdbcResourceRegistryImpl(
+						getJdbcServices().getSqlExceptionHelper(),
+						batcherFactory
+				);
+
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.isClosed = isClosed;
 	}
 
-	private static ConnectionReleaseMode determineConnectionReleaseMode(boolean isUserSuppliedConnection,
-																		ConnectionReleaseMode connectionReleaseMode,
-																		JdbcServices jdbcServices) {
+	private static ConnectionReleaseMode determineConnectionReleaseMode(JdbcServices jdbcServices,
+																		boolean isUserSuppliedConnection,
+																		ConnectionReleaseMode connectionReleaseMode) {
 		if ( isUserSuppliedConnection ) {
 			return ConnectionReleaseMode.ON_CLOSE;
 		}
@@ -109,10 +133,51 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	/**
+	 * Set the transaction timeout to <tt>seconds</tt> later
+	 * than the current system time.
+	 */
+	public void setTransactionTimeout(int seconds) {
+		isTransactionTimeoutSet = true;
+		transactionTimeout = System.currentTimeMillis() / 1000 + seconds;
+	}
+
+	/**
+	 * Unset the transaction timeout, called after the end of a
+	 * transaction.
+	 */
+	private void unsetTransactionTimeout() {
+		isTransactionTimeoutSet = false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isTransactionTimeoutSet() {
+		return isTransactionTimeoutSet;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public long getTransactionTimeout() throws HibernateException {
+		if ( isTransactionTimeoutSet ) {
+			throw new HibernateException( "transaction timeout has not been set." );
+		}
+		return transactionTimeout;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public StatisticsImplementor getStatisticsImplementor() {
+		return statisticsImplementor;
 	}
 
 	/**
@@ -134,6 +199,15 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 */
 	public boolean isOpen() {
 		return !isClosed;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public boolean isLogicallyConnected() {
+		return isUserSuppliedConnection ?
+				isPhysicallyConnected() :
+				isOpen();
 	}
 
 	/**
@@ -192,8 +266,8 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		return connectionReleaseMode;
 	}
 
-	public boolean isUserSuppliedConnection() {
-		return isUserSuppliedConnection;
+	public Batcher getBatcher() {
+		return jdbcResourceRegistry.getBatcher();
 	}
 
 	public boolean hasBorrowedConnection() {
@@ -204,7 +278,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		if ( isClosed ) {
 			throw new HibernateException( "connection has been closed" );
 		}
-		if ( isUserSuppliedConnection() ) {
+		if ( isUserSuppliedConnection ) {
 			return physicalConnection;
 		}
 		else {
@@ -237,6 +311,9 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 				log.debug( "skipping aggressive release due to registered resources" );
 				return;
 			}
+			else if ( borrowedConnection != null ) {
+				log.debug( "skipping aggresive-release due to borrowed connection" );
+			}			
 			releaseConnection();
 		}
 	}
@@ -250,6 +327,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			}
 			aggressiveRelease();
 		}
+		unsetTransactionTimeout();
 	}
 
 	public void disableReleases() {
@@ -342,6 +420,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			throw new IllegalStateException( "cannot manually disconnect because logical connection is already closed" );
 		}
 		Connection c = physicalConnection;
+		jdbcResourceRegistry.releaseResources();
 		releaseConnection();
 		return c;
 	}
@@ -380,7 +459,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	public boolean isReadyForSerialization() {
-		return isUserSuppliedConnection() ?
+		return isUserSuppliedConnection ?
 				! isPhysicallyConnected() :
 				! getResourceRegistry().hasRegisteredResources()
 				;
@@ -391,13 +470,17 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		oos.writeBoolean( isClosed );
 	}
 
-	public static LogicalConnectionImpl deserialize(
-			ObjectInputStream ois,
-			JdbcServices jdbcServices,
-			ConnectionReleaseMode connectionReleaseMode	) throws IOException {
+	public static LogicalConnectionImpl deserialize(ObjectInputStream ois,
+													JdbcServices jdbcServices,
+													StatisticsImplementor statisticsImplementor,
+													ConnectionReleaseMode connectionReleaseMode,
+													BatcherFactory batcherFactory
+	) throws IOException {
 		return new LogicalConnectionImpl(
 				connectionReleaseMode,
 				jdbcServices,
+				statisticsImplementor,
+				batcherFactory,
 				ois.readBoolean(),
 				ois.readBoolean()
 		);

@@ -39,6 +39,10 @@ public interface JdbcResourceRegistry {
 	 */
 	public void register(Statement statement);
 
+	public void registerLastQuery(Statement statement);
+
+	public void cancelLastQuery();
+	
 	/**
 	 * Release a previously registered statement.
 	 *

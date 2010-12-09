@@ -29,7 +29,6 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
@@ -95,7 +94,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 		}
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getBatcher().prepareSelectStatement( sql );
+			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				lockable.getVersionType().nullSafeSet( st, version, 1, session );
 				int offset = 2;
@@ -115,7 +114,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 
 			}
 			finally {
-				session.getBatcher().closeStatement( st );
+				st.close();
 			}
 
 		}

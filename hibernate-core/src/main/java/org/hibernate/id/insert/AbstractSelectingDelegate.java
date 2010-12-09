@@ -24,7 +24,6 @@
  */
 package org.hibernate.id.insert;
 
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -51,13 +50,13 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	public final Serializable performInsert(String insertSQL, SessionImplementor session, Binder binder) {
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = session.getBatcher().prepareStatement( insertSQL, false );
+			PreparedStatement insert = session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
 				insert.executeUpdate();
 			}
 			finally {
-				session.getBatcher().closeStatement( insert );
+				insert.close();
 			}
 		}
 		catch ( SQLException sqle ) {
@@ -72,7 +71,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 		try {
 			//fetch the generated id in a separate query
-			PreparedStatement idSelect = session.getBatcher().prepareStatement( selectSQL );
+			PreparedStatement idSelect = session.getJDBCContext().getConnectionManager().prepareStatement( selectSQL, false );
 			try {
 				bindParameters( session, idSelect, binder.getEntity() );
 				ResultSet rs = idSelect.executeQuery();
@@ -84,7 +83,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 				}
 			}
 			finally {
-				session.getBatcher().closeStatement( idSelect );
+				idSelect.close();
 			}
 
 		}

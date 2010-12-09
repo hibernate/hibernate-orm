@@ -24,7 +24,7 @@
  */
 package org.hibernate.jdbc;
 
-import org.hibernate.Interceptor;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 
 
 /**
@@ -35,8 +35,14 @@ import org.hibernate.Interceptor;
  */
 public class BatchingBatcherFactory implements BatcherFactory {
 
-	public Batcher createBatcher(ConnectionManager connectionManager, Interceptor interceptor) {
-		return new BatchingBatcher( connectionManager, interceptor );
+	private int jdbcBatchSize;
+
+	public void setJdbcBatchSize(int jdbcBatchSize) {
+		this.jdbcBatchSize = jdbcBatchSize;
+	}
+
+	public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
+		return new BatchingBatcher( exceptionHelper, jdbcBatchSize );
 	}
 
 }

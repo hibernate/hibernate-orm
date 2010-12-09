@@ -39,7 +39,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
@@ -212,21 +211,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 					if ( useBatch ) {
 						if ( st == null ) {
-							if ( callable ) {
-								st = session.getBatcher().prepareBatchCallableStatement( sql );
-							}
-							else {
-								st = session.getBatcher().prepareBatchStatement( sql );
-							}
+							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
 						}
 					}
 					else {
-						if ( callable ) {
-							st = session.getBatcher().prepareCallableStatement( sql );
-						}
-						else {
-							st = session.getBatcher().prepareStatement( sql );
-						}
+						st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
 					}
 
 					try {
@@ -246,7 +235,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 						}
 
 						if ( useBatch ) {
-							session.getBatcher().addToBatch( expectation );
+							session.getJDBCContext().getConnectionManager().addToBatch( expectation );
 						}
 						else {
 							expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -254,13 +243,13 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					}
 					catch ( SQLException sqle ) {
 						if ( useBatch ) {
-							session.getBatcher().abortBatch( sqle );
+							session.getJDBCContext().getConnectionManager().abortBatch( sqle );
 						}
 						throw sqle;
 					}
 					finally {
 						if ( !useBatch ) {
-							session.getBatcher().closeStatement( st );
+							st.close();
 						}
 					}
 					count++;

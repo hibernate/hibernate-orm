@@ -197,29 +197,6 @@ public interface AuditReader {
 	 */
 	boolean isEntityNameAudited(String entityName);	
 
-	/**
-	 * Checks if the entityClass was configured to be a audited in a relation
-	 * with the targetAuditMode as NOT_AUDITED . Calling
-	 * isEntityNameNotAudited() with the string of the class name will return
-	 * the same value.
-	 * 
-	 * @param entityClass
-	 *            Class of the entity asking for
-	 *            @Audit(targetAuditMode=...NOT_AUDITED) support
-	 * @return true if the entityClass is marked in a relation as NOT_AUDITED.
-	 */
-	boolean isEntityClassNotAudited(Class<?> entityClass);
-	
-	/**
-	 * Checks if the entityName was configured be a audited in a relation
-	 * with the targetAuditMode as NOT_AUDITED .
-	 * 
-	 * @param entityClass
-	 *            Class of the entity asking for
-	 *            @Audit(targetAuditMode=...NOT_AUDITED) support
-	 * @return true if the entityClass is marked in a relation as NOT_AUDITED.
-	 */
-	boolean isEntityNameNotAudited(String entityName);	
 
 	/**
 	 * 

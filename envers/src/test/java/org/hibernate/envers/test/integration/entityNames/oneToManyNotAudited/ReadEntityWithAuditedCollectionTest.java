@@ -104,11 +104,8 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     @Test(dependsOnMethods="testObtainCollectionWithEntityNameAndNotAuditedMode")
     public void testObtainEntityNameCollectionWithEntityNameAndNotAuditedMode() {
     	
-    	if(getAuditReader().isEntityNameNotAudited("Personaje")) {
-    		person1_1 = (Person)getSession().get("Personaje", id_pers1); 
-    	} else {
-    		assert(false);
-    	}
+    	// entityName personaje is marked as NOT_AUDITED
+  		person1_1 = (Person)getSession().get("Personaje", id_pers1); 
     	
     	String currCar1EN = getSession().getEntityName(currentCar1);
     	String currPerson1EN = getSession().getEntityName(currentPerson1);
@@ -137,11 +134,9 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     		owner.getAge();
 		}
     	
-    	if(getAuditReader().isEntityNameNotAudited("Personaje")) {
-    		person1_1 = (Person)getSession().get("Personaje", id_pers1); 
-    	} else {
-    		assert(false);
-    	}
+    	// entityName personaje is marked as NOT_AUDITED
+   		person1_1 = (Person)getSession().get("Personaje", id_pers1); 
+
     	person1_1.getName();
     	person1_1.getAge();
     	

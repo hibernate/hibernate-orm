@@ -1112,7 +1112,7 @@ public abstract class Dialect {
 	}
 
 	/**
-	 * Generate a temporary table name given the bas table.
+	 * Generate a temporary table name given the base table.
 	 *
 	 * @param baseTableName The table name from which to base the temp table name.
 	 * @return The generated temp table name.

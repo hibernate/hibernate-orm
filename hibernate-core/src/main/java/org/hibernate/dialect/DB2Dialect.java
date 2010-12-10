@@ -280,7 +280,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	/**
-	 * DB2 does have a one-based offset, however this was actually already handled in the limiot string building
+	 * DB2 does have a one-based offset, however this was actually already handled in the limit string building
 	 * (the '?+1' bit).  To not mess up inheritors, I'll leave that part alone and not touch the offset here.
 	 *
 	 * @param zeroBasedFirstResult The user-supplied, zero-based offset

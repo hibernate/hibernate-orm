@@ -47,20 +47,6 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	public StatisticsImplementor getStatisticsImplementor();
 
 	/**
-	 * Is the transaction timeout set?
-	 *
-	 * @return true, if the transaction timeout is set; false otherwise
-	 */
-	public boolean isTransactionTimeoutSet();
-
-	/**
-	 * Gets the transaction timeout.
-	 *
-	 * @return the transaction time out
-	 */
-	public long getTransactionTimeout();
-
-	/**
 	 * Obtains the JDBC resource registry associated with this logical connection.
 	 *
 	 * @return The JDBC resource registry.

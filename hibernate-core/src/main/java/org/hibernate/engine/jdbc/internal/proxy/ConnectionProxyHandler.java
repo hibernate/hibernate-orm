@@ -181,7 +181,6 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	}
 
 	private void postProcessStatement(Statement statement) throws SQLException {
-		setTimeout( statement );
 		getResourceRegistry().register( statement );
 	}
 
@@ -229,18 +228,4 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	StatisticsImplementor getStatisticsImplementorOrNull() {
 		return getLogicalConnection().getStatisticsImplementor();
 	}
-
-	private void setTimeout(Statement result) throws SQLException {
-		if ( logicalConnection.isTransactionTimeoutSet() ) {
-			int timeout = (int) ( logicalConnection.getTransactionTimeout() - ( System.currentTimeMillis() / 1000 ) );
-			if (timeout<=0) {
-				throw new TransactionException("transaction timeout expired");
-			}
-			else {
-				result.setQueryTimeout(timeout);
-			}
-		}
-	}
-
-
 }

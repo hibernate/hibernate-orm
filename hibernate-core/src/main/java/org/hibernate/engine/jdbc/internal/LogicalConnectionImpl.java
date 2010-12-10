@@ -64,8 +64,6 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	private final List<ConnectionObserver> observers = new ArrayList<ConnectionObserver>();
 
 	private boolean releasesEnabled = true;
-	private long transactionTimeout = -1;
-	boolean isTransactionTimeoutSet;
 
 	private final boolean isUserSuppliedConnection;
 
@@ -130,40 +128,6 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		else {
 			return connectionReleaseMode;
 		}
-	}
-
-	/**
-	 * Set the transaction timeout to <tt>seconds</tt> later
-	 * than the current system time.
-	 */
-	public void setTransactionTimeout(int seconds) {
-		isTransactionTimeoutSet = true;
-		transactionTimeout = System.currentTimeMillis() / 1000 + seconds;
-	}
-
-	/**
-	 * Unset the transaction timeout, called after the end of a
-	 * transaction.
-	 */
-	private void unsetTransactionTimeout() {
-		isTransactionTimeoutSet = false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean isTransactionTimeoutSet() {
-		return isTransactionTimeoutSet;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public long getTransactionTimeout() throws HibernateException {
-		if ( isTransactionTimeoutSet ) {
-			throw new HibernateException( "transaction timeout has not been set." );
-		}
-		return transactionTimeout;
 	}
 
 	/**
@@ -327,7 +291,6 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			}
 			aggressiveRelease();
 		}
-		unsetTransactionTimeout();
 	}
 
 	public void disableReleases() {

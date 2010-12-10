@@ -1749,10 +1749,11 @@ public abstract class Loader {
 		
 		PreparedStatement st = null;
 
-		st = (
-				scroll || useScrollableResultSetToSkip ?
-						session.getJDBCContext().getConnectionManager().prepareScrollableQueryStatement( sql, scrollMode, callable ) :
-						session.getJDBCContext().getConnectionManager().prepareQueryStatement( sql, callable )
+		st = session.getJDBCContext().getConnectionManager().prepareQueryStatement( 
+				sql,
+				scroll || useScrollableResultSetToSkip,
+				scrollMode,
+				callable
 		);
 
 		try {

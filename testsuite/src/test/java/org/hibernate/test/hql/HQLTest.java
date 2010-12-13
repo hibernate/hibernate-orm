@@ -144,6 +144,19 @@ public class HQLTest extends QueryTranslatorTestCase {
 	public void testJoinFetchCollectionOfValues() {
 		assertTranslation( "select h from Human as h join fetch h.nickNames" );
 	}
+	
+	public void testCollectionMemberDeclarations() {
+		assertTranslation( "from Customer c, in(c.orders) o" );
+		assertTranslation( "from Customer c, in(c.orders) as o" );
+		assertTranslation( "select c.name from Customer c, in(c.orders) as o where c.id = o.id.customerId" );
+	}
+	public void testCollectionMemberDeclarationsFailureExpected(){
+		// both these two query translators throw exeptions for this HQL since
+		// IN asks an alias, but the difference is that the error message from AST
+		// contains the error token location (by lines and columns), which is hardly 
+		// to get from Classic query translator --stliu
+		assertTranslation( "from Customer c, in(c.orders)" ); 
+	}
 
 	public void testCollectionJoinsInSubselect() {
 		// caused by some goofiness in FromElementFactory that tries to

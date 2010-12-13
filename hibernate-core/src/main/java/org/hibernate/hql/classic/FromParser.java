@@ -51,6 +51,13 @@ public class FromParser implements Parser {
 	private boolean afterJoinType;
 	private int joinType;
 	private boolean afterFetch;
+	
+	//support collection member declarations
+	//e.g. "from Customer c, in(c.orders) as o"
+	private boolean memberDeclarations;
+	private boolean expectingPathExpression;
+	private boolean afterMemberDeclarations;
+	private String collectionName;
 
 	private static final int NONE = -666;
 
@@ -113,14 +120,32 @@ public class FromParser implements Parser {
 			afterClass = true;
 		}
 		else if ( lcToken.equals( "in" ) ) {
-			if ( !expectingIn ) throw new QueryException( "unexpected token: in" );
-			afterIn = true;
-			expectingIn = false;
+			if (alias == null ){
+				memberDeclarations = true;
+				afterMemberDeclarations = false;
+			}
+			else if ( !expectingIn ) {
+				throw new QueryException( "unexpected token: in" );
+			} else {
+				afterIn = true;
+				expectingIn = false;
+			}
 		}
 		else if ( lcToken.equals( "as" ) ) {
 			if ( !expectingAs ) throw new QueryException( "unexpected token: as" );
 			afterAs = true;
 			expectingAs = false;
+		}
+		else if ( "(".equals( token ) ){
+			if( !memberDeclarations ) throw new QueryException( "unexpected token: (" );
+			//TODO alias should be null here
+			expectingPathExpression = true;
+			
+		}
+		else if ( ")".equals( token ) ){
+//			memberDeclarations = false;
+//			expectingPathExpression = false;
+			afterMemberDeclarations = true;
 		}
 		else {
 
@@ -141,6 +166,9 @@ public class FromParser implements Parser {
 				if ( entityName != null ) {
 					q.setAliasName( token, entityName );
 				}
+				else if ( collectionName != null ) {
+					q.setAliasName( token, collectionName );
+				}
 				else {
 					throw new QueryException( "unexpected: as " + token );
 				}
@@ -148,6 +176,10 @@ public class FromParser implements Parser {
 				expectingJoin = true;
 				expectingAs = false;
 				entityName = null;
+				collectionName = null;
+				memberDeclarations = false;
+				expectingPathExpression = false;
+				afterMemberDeclarations = false;
 
 			}
 			else if ( afterIn ) {
@@ -179,6 +211,16 @@ public class FromParser implements Parser {
 				afterIn = false;
 				afterClass = false;
 				expectingJoin = true;
+			}
+			else if( memberDeclarations && expectingPathExpression ){
+				expectingAs = true;
+				peParser.setJoinType( JoinFragment.INNER_JOIN );
+				peParser.setUseThetaStyleJoin( false );
+				ParserHelper.parse( peParser, q.unalias( token ), ParserHelper.PATH_SEPARATORS, q );
+				if ( !peParser.isCollectionValued() ) throw new QueryException( "path expression did not resolve to collection: " + token );
+				collectionName = peParser.addFromCollection( q );
+				expectingPathExpression = false;
+				memberDeclarations = false;
 			}
 			else {
 
@@ -238,6 +280,7 @@ public class FromParser implements Parser {
 
 	public void start(QueryTranslatorImpl q) {
 		entityName = null;
+		collectionName = null;
 		alias = null;
 		afterIn = false;
 		afterAs = false;
@@ -245,10 +288,18 @@ public class FromParser implements Parser {
 		expectingJoin = false;
 		expectingIn = false;
 		expectingAs = false;
+		memberDeclarations = false;
+		expectingPathExpression = false;
+		afterMemberDeclarations = false;
 		joinType = NONE;
 	}
 
 	public void end(QueryTranslatorImpl q) {
+		if( afterMemberDeclarations ){
+			//The exception throwned by the AST query translator contains the error token location, respensent by line and colum, 
+			//but it hard to get that info here.
+			throw new QueryException("alias not specified for IN");
+		}
 	}
 
 }

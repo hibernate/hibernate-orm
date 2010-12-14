@@ -77,6 +77,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKey;
+import javax.persistence.MapKeyClass;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
@@ -196,6 +197,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( JoinColumn.class, "join-column" );
 		annotationToXml.put( JoinColumns.class, "join-column" );
 		annotationToXml.put( MapKey.class, "map-key" );
+		annotationToXml.put( MapKeyClass.class, "map-key-class" );
 		annotationToXml.put( OrderBy.class, "order-by" );
 		annotationToXml.put( EntityListeners.class, "entity-listeners" );
 		annotationToXml.put( PrePersist.class, "pre-persist" );
@@ -661,6 +663,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				copyStringAttribute( ad, element, "mapped-by", false );
 				getOrderBy( annotationList, element );
 				getMapKey( annotationList, element );
+				getMapKeyClass( annotationList, element, defaults );
 				annotationList.add( AnnotationFactory.create( ad ) );
 				getAccessType( annotationList, element );
 			}
@@ -821,6 +824,31 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 			String mapKeyString = subelement.attributeValue( "name" );
 			AnnotationDescriptor ad = new AnnotationDescriptor( MapKey.class );
 			if ( StringHelper.isNotEmpty( mapKeyString ) ) ad.setValue( "name", mapKeyString );
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+	
+	private void getMapKeyClass(List<Annotation> annotationList, Element element, XMLContext.Default defaults) {
+		String nodeName = "map-key-class";
+		Element subelement = element != null ? element.element( nodeName ) : null;
+		if ( subelement != null ) {
+			String mapKeyClassName = subelement.attributeValue( "class" );
+			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyClass.class );
+			if ( StringHelper.isNotEmpty( mapKeyClassName ) ) {
+				Class clazz;
+				try {
+					clazz = ReflectHelper.classForName(
+							XMLContext.buildSafeClassName( mapKeyClassName, defaults ),
+							this.getClass()
+					);
+				}
+				catch (ClassNotFoundException e) {
+					throw new AnnotationException(
+							"Unable to find " + element.getPath() + " " + nodeName + ": " + mapKeyClassName, e
+					);
+				}
+				ad.setValue( "value", clazz );
+			}
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}

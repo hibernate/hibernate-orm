@@ -211,7 +211,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 					if ( useBatch ) {
 						if ( st == null ) {
-							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
+									this, sql, callable
+							);
 						}
 					}
 					else {
@@ -235,7 +237,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 						}
 
 						if ( useBatch ) {
-							session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+							session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 						}
 						else {
 							expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -243,7 +245,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					}
 					catch ( SQLException sqle ) {
 						if ( useBatch ) {
-							session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+							session.getJDBCContext().getConnectionManager().abortBatch();
 						}
 						throw sqle;
 					}

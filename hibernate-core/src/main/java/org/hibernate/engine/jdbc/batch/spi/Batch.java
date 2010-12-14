@@ -55,17 +55,26 @@ public interface Batch {
 	 * Get a statement which is part of the batch, creating if necessary (and storing for next time).
 	 *
 	 * @param sql The SQL statement.
-	 * @param callable Is the SQL statement callable?
 	 * @return The prepared statement instance, representing the SQL statement.
 	 */
-	public PreparedStatement getBatchStatement(String sql, boolean callable);
+	public PreparedStatement getBatchStatement(Object key, String sql);
+
+	/**
+	 * Store a statement in the batch.
+	 *
+	 * @param sql The SQL statement.
+	 */
+	public void addBatchStatement(Object key, String sql, PreparedStatement preparedStatement);
+
 
 	/**
 	 * Indicates completion of the current part of the batch.
 	 *
+	 * @param key
+	 * @param sql
 	 * @param expectation The expectation for the part's result.
 	 */
-	public void addToBatch(Expectation expectation);
+	public void addToBatch(Object key, String sql, Expectation expectation);
 
 	/**
 	 * Execute this batch.

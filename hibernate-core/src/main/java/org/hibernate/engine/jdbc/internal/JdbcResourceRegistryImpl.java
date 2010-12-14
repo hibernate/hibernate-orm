@@ -23,14 +23,11 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,8 +39,6 @@ import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
-import org.hibernate.jdbc.Batcher;
-import org.hibernate.jdbc.BatcherFactory;
 
 /**
  * Standard implementation of the {@link org.hibernate.engine.jdbc.spi.JdbcResourceRegistry} contract
@@ -56,13 +51,11 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
 	private final SQLExceptionHelper exceptionHelper;
-	private final Batcher batcher;
 
 	private Statement lastQuery;
 
-	public JdbcResourceRegistryImpl(SQLExceptionHelper exceptionHelper, BatcherFactory batcherFactory) {
+	public JdbcResourceRegistryImpl(SQLExceptionHelper exceptionHelper) {
 		this.exceptionHelper = exceptionHelper;
-		this.batcher = batcherFactory.createBatcher( exceptionHelper );
 	}
 
 	public void register(Statement statement) {
@@ -71,10 +64,6 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			throw new HibernateException( "statement already registered with JDBCContainer" );
 		}
 		xref.put( statement, null );
-	}
-
-	public Batcher getBatcher() {
-		return batcher;
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -183,7 +172,6 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	private void cleanup() {
-		batcher.closeStatements();		
 		for ( Map.Entry<Statement,Set<ResultSet>> entry : xref.entrySet() ) {
 			if ( entry.getValue() != null ) {
 				for ( ResultSet resultSet : entry.getValue() ) {

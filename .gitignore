@@ -7,7 +7,8 @@ buildSrc/.gradle
 
 # Build output directies
 /target
-**/target
+*/target
+documentation/*/target
 /build
 */build
 

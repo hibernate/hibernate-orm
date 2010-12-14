@@ -67,6 +67,17 @@ public class Ejb3XmlTest extends TestCase {
 		tx.rollback();
 		s.close();
 	}
+	
+	public void testMapKeyClass() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Company company = new Company();
+		s.persist( company );
+		s.flush();
+		s.clear();
+		tx.rollback();
+		s.close();
+	}
 
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
@@ -83,7 +94,8 @@ public class Ejb3XmlTest extends TestCase {
 		return new String[]{
 				"org/hibernate/test/annotations/xml/ejb3/orm.xml",
 				"org/hibernate/test/annotations/xml/ejb3/orm2.xml",
-				"org/hibernate/test/annotations/xml/ejb3/orm3.xml"
+				"org/hibernate/test/annotations/xml/ejb3/orm3.xml",
+				"org/hibernate/test/annotations/xml/ejb3/orm4.xml"
 		};
 	}
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm/orm_2_0.xsd"
+                 version="2.0">
+    <package>org.hibernate.test.annotations.xml.ejb3</package>
+    <entity class="Company" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <one-to-many name="organization" target-entity="VicePresident">
+                <map-key-class class="java.lang.String" />
+            </one-to-many>
+        </attributes>
+    </entity>
+    <entity class="VicePresident" access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -760,6 +760,12 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( Lob.class );
 				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Enumerated.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Temporal.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Column.class );
+				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( OrderColumn.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( MapKeyClass.class );
@@ -773,12 +779,6 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				annotation = getJavaAnnotation( MapKeyJoinColumn.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( MapKeyJoinColumns.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( Column.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( Temporal.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( Enumerated.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( CollectionTable.class );
 				addIfNotNull( annotationList, annotation );
@@ -839,6 +839,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	// TODO: Complete parsing of all element-collection related xml
 	private void getElementCollection(List<Annotation> annotationList, XMLContext.Default defaults) {
 		for ( Element element : elementsForProperty ) {
 			if ( "element-collection".equals( element.getName() ) ) {

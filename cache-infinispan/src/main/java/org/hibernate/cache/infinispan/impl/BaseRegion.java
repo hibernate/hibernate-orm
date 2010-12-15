@@ -12,7 +12,6 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import net.jcip.annotations.GuardedBy;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.RegionFactory;

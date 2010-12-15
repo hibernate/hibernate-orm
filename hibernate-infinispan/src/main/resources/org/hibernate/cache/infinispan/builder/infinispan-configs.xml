@@ -82,7 +82,6 @@
    <!-- A query cache that replicates queries. Replication is asynchronous. -->
    <namedCache name="replicated-query">
       <clustering mode="replication">
-         <stateRetrieval fetchInMemoryState="false"/>
          <async/>
       </clustering>
       <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
@@ -91,6 +90,16 @@
          the eviction thread will never run.  A separate executor is used for eviction in each cache. -->
       <eviction wakeUpInterval="5000" maxEntries="10000" strategy="LRU"/>
       <expiration maxIdle="100000"/>
+      <!-- State transfer forces all replication calls to be synchronous,
+           so for calls to remain async, use a cluster cache loader instead -->
+      <loaders passivation="false" shared="false" preload="false">
+         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader" fetchPersistentState="false"
+                 ignoreModifications="false" purgeOnStartup="false">
+            <properties>
+               <property name="remoteCallTimeout" value="20000"/>
+            </properties>
+         </loader>
+      </loaders>
    </namedCache>
 
    <!-- Optimized for timestamp caching. A clustered timestamp cache
@@ -98,7 +107,6 @@
         itself is configured with CacheMode=LOCAL. -->
    <namedCache name="timestamps">
       <clustering mode="replication">
-         <stateRetrieval fetchInMemoryState="true" timeout="20000"/>
          <async/>
       </clustering>
       <locking isolationLevel="READ_COMMITTED" concurrencyLevel="1000"
@@ -106,6 +114,16 @@
       <lazyDeserialization enabled="true"/>
       <!--  Don't ever evict modification timestamps -->
       <eviction wakeUpInterval="0" strategy="NONE"/>
+      <!-- State transfer forces all replication calls to be synchronous,
+           so for calls to remain async, use a cluster cache loader instead -->
+      <loaders passivation="false" shared="false" preload="false">
+         <loader class="org.infinispan.loaders.cluster.ClusterCacheLoader" fetchPersistentState="false"
+                 ignoreModifications="false" purgeOnStartup="false">
+            <properties>
+               <property name="remoteCallTimeout" value="20000"/>
+            </properties>
+         </loader>
+      </loaders>
    </namedCache>
 
 </infinispan>

@@ -11,6 +11,14 @@
             <one-to-many name="organization" target-entity="VicePresident">
                 <map-key-class class="java.lang.String" />
             </one-to-many>
+            <element-collection name="conferenceRoomExtensions" target-class="java.lang.String">
+                <map-key-class class="java.lang.String" />
+                <map-key-column name="room_number" />
+                <column name="phone_extension"/>
+                <collection-table name="phone_extension_lookup">
+                    <join-column name="company_id" referenced-column-name="id" />
+                </collection-table>
+            </element-collection>
         </attributes>
     </entity>
     <entity class="VicePresident" access="FIELD" metadata-complete="true">

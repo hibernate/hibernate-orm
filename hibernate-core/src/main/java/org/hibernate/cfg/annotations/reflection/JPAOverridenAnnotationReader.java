@@ -204,16 +204,8 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( JoinTable.class, "join-table" );
 		annotationToXml.put( JoinColumn.class, "join-column" );
 		annotationToXml.put( JoinColumns.class, "join-column" );
-		annotationToXml.put( CollectionTable.class, "collection-table" );
 		annotationToXml.put( MapKey.class, "map-key" );
-		annotationToXml.put( MapKeyClass.class, "map-key-class" );
-		annotationToXml.put( MapKeyTemporal.class, "map-key-temporal" );
-		annotationToXml.put( MapKeyEnumerated.class, "map-key-enumerated" );
-		annotationToXml.put( MapKeyColumn.class, "map-key-column" );
-		annotationToXml.put( MapKeyJoinColumn.class, "map-key-join-column" );
-		annotationToXml.put( MapKeyJoinColumns.class, "map-key-join-column" );
 		annotationToXml.put( OrderBy.class, "order-by" );
-		annotationToXml.put( OrderColumn.class, "order-column" );
 		annotationToXml.put( EntityListeners.class, "entity-listeners" );
 		annotationToXml.put( PrePersist.class, "pre-persist" );
 		annotationToXml.put( PreRemove.class, "pre-remove" );
@@ -222,6 +214,14 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( PostRemove.class, "post-remove" );
 		annotationToXml.put( PostUpdate.class, "post-update" );
 		annotationToXml.put( PostLoad.class, "post-load" );
+		annotationToXml.put( CollectionTable.class, "collection-table" );
+		annotationToXml.put( MapKeyClass.class, "map-key-class" );
+		annotationToXml.put( MapKeyTemporal.class, "map-key-temporal" );
+		annotationToXml.put( MapKeyEnumerated.class, "map-key-enumerated" );
+		annotationToXml.put( MapKeyColumn.class, "map-key-column" );
+		annotationToXml.put( MapKeyJoinColumn.class, "map-key-join-column" );
+		annotationToXml.put( MapKeyJoinColumns.class, "map-key-join-column" );
+		annotationToXml.put( OrderColumn.class, "order-column" );
 	}
 
 	private XMLContext xmlContext;
@@ -678,13 +678,13 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				copyBooleanAttribute( ad, element, "orphan-removal" );
 				copyStringAttribute( ad, element, "mapped-by", false );
 				getOrderBy( annotationList, element );
-				//TODO: support order-column
 				getMapKey( annotationList, element );
 				getMapKeyClass( annotationList, element, defaults );
+				getMapKeyColumn(annotationList, element);
+				//TODO: support order-column
 				//TODO: support map-key-temporal
 				//TODO: support map-key-enumerated
 				//TODO: support map-key-attribute-override
-				getMapKeyColumn(annotationList, element);
 				//TODO: support map-key-join-column
 				annotationList.add( AnnotationFactory.create( ad ) );
 				getAccessType( annotationList, element );
@@ -706,21 +706,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( MapKey.class );
 				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKeyClass.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKeyTemporal.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKeyEnumerated.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKeyColumn.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKeyJoinColumn.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKeyJoinColumns.class );
-				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( OrderBy.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( OrderColumn.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( AttributeOverride.class );
 				addIfNotNull( annotationList, annotation );
@@ -740,17 +726,41 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( Columns.class );
 				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKeyClass.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKeyTemporal.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKeyEnumerated.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKeyColumn.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKeyJoinColumn.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKeyJoinColumns.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( OrderColumn.class );
+				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( Cascade.class );
 				addIfNotNull( annotationList, annotation );
 			}
 			else if ( isJavaAnnotationPresent( ElementCollection.class ) ) { //JPA2
 				annotation = overridesDefaultsInJoinTable( getJavaAnnotation( ElementCollection.class ), defaults );
 				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( MapKey.class );
+				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( OrderBy.class );
 				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( OrderColumn.class );
+				annotation = getJavaAnnotation( AttributeOverride.class );
 				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( MapKey.class );
+				annotation = getJavaAnnotation( AttributeOverrides.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( AssociationOverride.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( AssociationOverrides.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( Lob.class );
+				addIfNotNull( annotationList, annotation );
+				annotation = getJavaAnnotation( OrderColumn.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( MapKeyClass.class );
 				addIfNotNull( annotationList, annotation );
@@ -769,16 +779,6 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				annotation = getJavaAnnotation( Temporal.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( Enumerated.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( Lob.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( AttributeOverride.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( AttributeOverrides.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( AssociationOverride.class );
-				addIfNotNull( annotationList, annotation );
-				annotation = getJavaAnnotation( AssociationOverrides.class );
 				addIfNotNull( annotationList, annotation );
 				annotation = getJavaAnnotation( CollectionTable.class );
 				addIfNotNull( annotationList, annotation );
@@ -930,6 +930,30 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				ad.setValue( "value", clazz );
 			}
 			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+	
+	private void getCollectionTable(List<Annotation> annotationList, Element element, XMLContext.Default defaults) {
+		Element subelement = element != null ? element.element( "collection-table" ) : null;
+		if ( subelement != null ) {
+			AnnotationDescriptor annotation = new AnnotationDescriptor( CollectionTable.class );
+			copyStringAttribute( annotation, subelement, "name", false );
+			copyStringAttribute( annotation, subelement, "catalog", false );
+			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
+					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
+				annotation.setValue( "catalog", defaults.getCatalog() );
+			}
+			copyStringAttribute( annotation, subelement, "schema", false );
+			if ( StringHelper.isNotEmpty( defaults.getSchema() )
+					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
+				annotation.setValue( "schema", defaults.getSchema() );
+			}
+			JoinColumn[] joinColumns = getJoinColumns( subelement, false );
+			if ( joinColumns.length > 0 ) {
+				annotation.setValue( "joinColumns", joinColumns );
+			}
+			buildUniqueConstraints( annotation, subelement );
+			annotationList.add( AnnotationFactory.create( annotation ) );
 		}
 	}
 
@@ -2142,30 +2166,6 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		}
 		else {
 			return null;
-		}
-	}
-	
-	private void getCollectionTable(List<Annotation> annotationList, Element element, XMLContext.Default defaults) {
-		Element subelement = element != null ? element.element( "collection-table" ) : null;
-		if ( subelement != null ) {
-			AnnotationDescriptor annotation = new AnnotationDescriptor( CollectionTable.class );
-			copyStringAttribute( annotation, subelement, "name", false );
-			copyStringAttribute( annotation, subelement, "catalog", false );
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
-				annotation.setValue( "catalog", defaults.getCatalog() );
-			}
-			copyStringAttribute( annotation, subelement, "schema", false );
-			if ( StringHelper.isNotEmpty( defaults.getSchema() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
-				annotation.setValue( "schema", defaults.getSchema() );
-			}
-			JoinColumn[] joinColumns = getJoinColumns( subelement, false );
-			if ( joinColumns.length > 0 ) {
-				annotation.setValue( "joinColumns", joinColumns );
-			}
-			buildUniqueConstraints( annotation, subelement );
-			annotationList.add( AnnotationFactory.create( annotation ) );
 		}
 	}
 

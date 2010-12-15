@@ -18,7 +18,8 @@
     <description>Integration of Hibernate with Infinispan</description>
 
     <properties>
-      <version.infinispan>4.2.0.ALPHA1</version.infinispan>
+      <version.infinispan>4.2.0.CR4</version.infinispan>
+      <version.jcipannotations>1.0</version.jcipannotations>
       <version.hsqldb>1.8.0.2</version.hsqldb>
       <version.cglib>2.2</version.cglib>
       <version.javassist>3.4.GA</version.javassist>
@@ -45,7 +46,13 @@
             <artifactId>infinispan-core</artifactId>
             <version>${version.infinispan}</version> 
         </dependency>
-        
+        <dependency>
+            <groupId>net.jcip</groupId>
+            <artifactId>jcip-annotations</artifactId>
+            <version>${version.jcipannotations}</version>
+            <optional>true</optional>
+         </dependency>
+
         <!-- test dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>

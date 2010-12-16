@@ -22,8 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 
-// $Id$
-
 package org.hibernate.cfg.annotations.reflection;
 
 import java.beans.Introspector;
@@ -1349,7 +1347,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 	}
 
 	private AssociationOverrides getAssociationOverrides(Element tree, XMLContext.Default defaults) {
-		List<AssociationOverride> attributes = (List<AssociationOverride>) buildAssociationOverrides( tree );
+		List<AssociationOverride> attributes = buildAssociationOverrides( tree );
 		if ( defaults.canUseJavaAnnotations() ) {
 			AssociationOverride annotation = getJavaAnnotation( AssociationOverride.class );
 			addAssociationOverrideIfNeeded( annotation, attributes );
@@ -1565,7 +1563,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 	}
 
 	private SqlResultSetMappings getSqlResultSetMappings(Element tree, XMLContext.Default defaults) {
-		List<SqlResultSetMapping> results = (List<SqlResultSetMapping>) buildSqlResultsetMappings( tree, defaults );
+		List<SqlResultSetMapping> results = buildSqlResultsetMappings( tree, defaults );
 		if ( defaults.canUseJavaAnnotations() ) {
 			SqlResultSetMapping annotation = getJavaAnnotation( SqlResultSetMapping.class );
 			addSqlResultsetMappingIfNeeded( annotation, results );

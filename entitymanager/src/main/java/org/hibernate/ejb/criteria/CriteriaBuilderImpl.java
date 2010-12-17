@@ -251,11 +251,8 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	// predicates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Predicate wrap(Expression<Boolean> expression) {
-                if ( CompoundPredicate.class.isInstance( expression ) ) {
-                        return (( CompoundPredicate ) expression);
-                }
-                else if(Predicate.class.isInstance(expression)) {
-			return ( ( Predicate ) expression );
+		if ( Predicate.class.isInstance( expression ) ) {
+			return ( (Predicate) expression );
 		}
 		else if ( PathImplementor.class.isInstance( expression ) ) {
 			return new BooleanAssertionPredicate( this, expression, Boolean.TRUE );
@@ -343,7 +340,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 			if ( predicate.getExpressions().size() == 0 ) {
 				return new BooleanStaticAssertionPredicate(
 						this,
-						predicate.getOperator() == Predicate.BooleanOperator.OR 
+						predicate.getOperator() == Predicate.BooleanOperator.OR
 				);
 			}
 			predicate.not();
@@ -1366,7 +1363,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		}
 		return new MemberOfPredicate<E, C>(
 				this,
-				e, 
+				e,
 				(PluralAttributePath<C>)collectionExpression
 		);
 	}

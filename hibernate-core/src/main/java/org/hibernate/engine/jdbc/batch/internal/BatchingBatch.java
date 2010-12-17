@@ -50,6 +50,11 @@ public class BatchingBatch extends AbstractBatchImpl {
 	private static final Logger log = LoggerFactory.getLogger( BatchingBatch.class );
 
 	private final int batchSize;
+
+	// TODO: A Map is used for expectations so it is possible to track when a batch
+	// is full (i.e., when the batch for a particular statement exceeds batchSize)
+	// Until HHH-5797 is fixed, there will only be 1 statement in a batch, so it won't
+	// be necessary to track expectations by statement.
 	private Map<String, List<Expectation>>  expectationsBySql;
 	private int maxBatchPosition;
 
@@ -88,6 +93,10 @@ public class BatchingBatch extends AbstractBatchImpl {
 		}
 		expectations.add( expectation );
 		maxBatchPosition = Math.max( maxBatchPosition, expectations.size() );
+
+		// TODO: When HHH-5797 is fixed the following if-block should probably be moved before
+		// adding the batch to the current statement (to detect that we have finished
+		// with the previous entity).
 		if ( maxBatchPosition == batchSize ) {
 			notifyObserversImplicitExecution();
 			doExecuteBatch();

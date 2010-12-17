@@ -52,15 +52,16 @@ public interface Batch {
 	public void addObserver(BatchObserver observer);
 
 	/**
-	 * Get a statement which is part of the batch, creating if necessary (and storing for next time).
+	 * Get a statement which is part of the batch.
 	 *
 	 * @param sql The SQL statement.
-	 * @return The prepared statement instance, representing the SQL statement.
+	 * @return the prepared statement representing the SQL statement, if the batch contained it;
+	 *         null, otherwise.
 	 */
 	public PreparedStatement getBatchStatement(Object key, String sql);
 
 	/**
-	 * Store a statement in the batch.
+	 * Add a prepared statement to the batch.
 	 *
 	 * @param sql The SQL statement.
 	 */

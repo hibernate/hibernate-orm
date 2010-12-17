@@ -23,11 +23,12 @@
  */
 package org.hibernate.ejb.criteria.basic;
 
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Order;
@@ -36,99 +37,121 @@ import org.hibernate.ejb.metamodel.Order;
  * Test the various predicates.
  *
  * @author Steve Ebersole
+ * @author Hardy Ferentschik
  */
 public class PredicateTest extends AbstractMetamodelSpecificTest {
-	public void testEmptyConjunction() {
-		// yes this is a retarded case, but explicitly allowed in the JPA spec
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
+
+	private EntityManager em;
+	private CriteriaBuilder builder;
+
+	public void setUp() throws Exception {
+		super.setUp();
+		builder = factory.getCriteriaBuilder();
+		em = getOrCreateEntityManager();
+		createTestOrders();
 		em.getTransaction().begin();
-        CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
-		Root<Order> orderRoot = orderCriteria.from(Order.class);
-		orderCriteria.select(orderRoot);
-		orderCriteria.where( builder.isTrue( builder.conjunction() ) );
-		em.createQuery( orderCriteria ).getResultList();
+	}
+
+	public void tearDown() throws Exception {
 		em.getTransaction().commit();
 		em.close();
+		super.tearDown();
+	}
+
+	public void testEmptyConjunction() {
+		// yes this is a retarded case, but explicitly allowed in the JPA spec
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		orderCriteria.select( orderRoot );
+		orderCriteria.where( builder.isTrue( builder.conjunction() ) );
+		em.createQuery( orderCriteria ).getResultList();
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 3 );
 	}
 
 	public void testEmptyDisjunction() {
 		// yes this is a retarded case, but explicitly allowed in the JPA spec
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-        CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
-		Root<Order> orderRoot = orderCriteria.from(Order.class);
-		orderCriteria.select(orderRoot);
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		orderCriteria.select( orderRoot );
 		orderCriteria.where( builder.isFalse( builder.disjunction() ) );
 		em.createQuery( orderCriteria ).getResultList();
-		em.getTransaction().commit();
-		em.close();
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 3 );
 	}
 
 	/**
 	 * Check simple not.
-	 */ 
+	 */
 	public void testSimpleNot() {
-		// yes this is a retarded case, but explicitly allowed in the JPA spec
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
-		CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
-		Root<Order> orderRoot = orderCriteria.from(Order.class);
+		orderCriteria.select( orderRoot );
+		orderCriteria.where( builder.not( builder.equal( orderRoot.get( "id" ), "order-1" ) ) );
 
-		orderCriteria.select(orderRoot);
-		orderCriteria.where( builder.not( builder.equal(orderRoot.get("id"), 1) ) );
-
-		em.createQuery( orderCriteria ).getResultList();
-		em.getTransaction().commit();
-		em.close();
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 2 );
 	}
 
 	/**
 	 * Check complicated not.
-	 */ 
+	 */
 	public void testComplicatedNotOr() {
-		// yes this is a retarded case, but explicitly allowed in the JPA spec
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
-		CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
-		Root<Order> orderRoot = orderCriteria.from(Order.class);
+		orderCriteria.select( orderRoot );
+		Predicate p1 = builder.equal( orderRoot.get( "id" ), "order-1" );
+		Predicate p2 = builder.equal( orderRoot.get( "id" ), "order-2" );
+		orderCriteria.where( builder.not( builder.or( p1, p2 ) ) );
 
-		orderCriteria.select(orderRoot);
-		Predicate p1 = builder.equal(orderRoot.get("id"), 1);
-		Predicate p2 = builder.equal(orderRoot.get("id"), 2);
-		orderCriteria.where( builder.not(  builder.or (p1, p2) ) );
-
-		em.createQuery( orderCriteria ).getResultList();
-		em.getTransaction().commit();
-		em.close();
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 1 );
+		Order order = orders.get( 0 );
+		assertEquals( "order-3", order.getId() );
 	}
 
 	/**
 	 * Check complicated not.
-	 */ 
-	public void testComplicatedNotAND() {
-		// yes this is a retarded case, but explicitly allowed in the JPA spec
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	 */
+	public void testNotMultipleOr() {
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
-		CriteriaQuery<Order> orderCriteria = builder.createQuery(Order.class);
-		Root<Order> orderRoot = orderCriteria.from(Order.class);
+		orderCriteria.select( orderRoot );
+		Predicate p1 = builder.equal( orderRoot.get( "id" ), "order-1" );
+		Predicate p2 = builder.equal( orderRoot.get( "id" ), "order-2" );
+		Predicate p3 = builder.equal( orderRoot.get( "id" ), "order-3" );
+		orderCriteria.where( builder.not( builder.or( p1, p2, p3 ) ) );
 
-		orderCriteria.select(orderRoot);
-		Predicate p1 = builder.equal(orderRoot.get("id"), 1);
-		Predicate p2 = builder.equal(orderRoot.get("id"), 2);
-		orderCriteria.where( builder.not(  builder.and (p1, p2) ) );
-
-		em.createQuery( orderCriteria ).getResultList();
-		em.getTransaction().commit();
-		em.close();
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 0 );
 	}
 
+	/**
+	 * Check complicated not.
+	 */
+	public void testComplicatedNotAnd() {
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
+		orderCriteria.select( orderRoot );
+		Predicate p1 = builder.equal( orderRoot.get( "id" ), "order-1" );
+		Predicate p2 = builder.equal( orderRoot.get( "id" ), "order-2" );
+		orderCriteria.where( builder.not( builder.and( p1, p2 ) ) );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 3 );
+	}
+
+	private void createTestOrders() {
+		em.getTransaction().begin();
+		em.persist( new Order( "order-1", 1.0d ) );
+		em.persist( new Order( "order-2", 10.0d ) );
+		em.persist( new Order( "order-3", 100.0d ) );
+		em.getTransaction().commit();
+	}
 }

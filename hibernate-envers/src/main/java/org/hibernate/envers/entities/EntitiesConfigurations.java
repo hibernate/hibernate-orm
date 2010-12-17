@@ -97,14 +97,6 @@ public class EntitiesConfigurations {
         return get(entityName) != null;
     }
 
-	/**
-	 * @param entityName  
-	 * @return true if the given entityName is marked audited with relationTargetAuditMode = NOT_AUDITED
-	 */
-	public boolean isNotAudited(String entityName) {
-		return getNotVersionEntityConfiguration(entityName) != null;
-	}
-
     public RelationDescription getRelationDescription(String entityName, String propertyName) {
         EntityConfiguration entCfg = entitiesConfigurations.get(entityName);
         RelationDescription relDesc = entCfg.getRelationDescription(propertyName);

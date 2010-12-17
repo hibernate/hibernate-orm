@@ -7,7 +7,6 @@ import java.net.URL;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.envers.AuditReader;
@@ -19,7 +18,7 @@ import org.testng.annotations.*;
 /**
  * Base class for testing envers with Session.
  * 
- * @author Hern�n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  *
  */
 public abstract class AbstractSessionTest {
@@ -34,7 +33,7 @@ public abstract class AbstractSessionTest {
 	@BeforeClass
     @Parameters("auditStrategy")
     public void init(@Optional String auditStrategy) throws URISyntaxException {
-        config = new AnnotationConfiguration();
+        config = new Configuration();
         URL url = Thread.currentThread().getContextClassLoader().getResource(getHibernateConfigurationFileName());
         config.configure(new File(url.toURI()));
 

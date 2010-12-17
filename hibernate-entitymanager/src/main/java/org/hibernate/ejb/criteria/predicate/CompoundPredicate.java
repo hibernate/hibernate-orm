@@ -24,15 +24,15 @@
 package org.hibernate.ejb.criteria.predicate;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.persistence.criteria.Predicate;
+import java.util.List;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 
-import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
+import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
 
 /**
@@ -44,15 +44,15 @@ import org.hibernate.ejb.criteria.Renderable;
 public class CompoundPredicate
 		extends AbstractPredicateImpl
 		implements Serializable {
-	private final BooleanOperator operator;
+	private BooleanOperator operator;
 	private final List<Expression<Boolean>> expressions = new ArrayList<Expression<Boolean>>();
 
 	/**
 	 * Constructs an empty conjunction or disjunction.
 	 *
-	 * @param criteriaBuilder The query builder from whcih this originates.
-	 * @param operator Indicates whether this predicate will funtion
-	 * as a conjunction or disjuntion.
+	 * @param criteriaBuilder The query builder from which this originates.
+	 * @param operator Indicates whether this predicate will function
+	 * as a conjunction or disjunction.
 	 */
 	public CompoundPredicate(CriteriaBuilderImpl criteriaBuilder, BooleanOperator operator) {
 		super( criteriaBuilder );
@@ -63,31 +63,31 @@ public class CompoundPredicate
 	 * Constructs a conjunction or disjunction over the given expressions.
 	 *
 	 * @param criteriaBuilder The query builder from which this originates.
-	 * @param operator Indicates whether this predicate will funtion
-	 * as a conjunction or disjuntion.
+	 * @param operator Indicates whether this predicate will function
+	 * as a conjunction or disjunction.
 	 * @param expressions The expressions to be grouped.
 	 */
 	public CompoundPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			BooleanOperator operator,
 			Expression<Boolean>... expressions) {
-		this( criteriaBuilder,  operator );
+		this( criteriaBuilder, operator );
 		applyExpressions( expressions );
 	}
 
 	/**
 	 * Constructs a conjunction or disjunction over the given expressions.
 	 *
-	 * @param criteriaBuilder The query builder from whcih this originates.
-	 * @param operator Indicates whether this predicate will funtion
-	 * as a conjunction or disjuntion.
+	 * @param criteriaBuilder The query builder from which this originates.
+	 * @param operator Indicates whether this predicate will function
+	 * as a conjunction or disjunction.
 	 * @param expressions The expressions to be grouped.
 	 */
 	public CompoundPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			BooleanOperator operator,
 			List<Expression<Boolean>> expressions) {
-		this( criteriaBuilder,  operator );
+		this( criteriaBuilder, operator );
 		applyExpressions( expressions );
 	}
 
@@ -110,7 +110,7 @@ public class CompoundPredicate
 
 	public void registerParameters(ParameterRegistry registry) {
 		for ( Expression expression : getExpressions() ) {
-			Helper.possibleParameter(expression, registry);
+			Helper.possibleParameter( expression, registry );
 		}
 	}
 
@@ -125,7 +125,7 @@ public class CompoundPredicate
 					: "0=1"; // false
 		}
 		if ( getExpressions().size() == 1 ) {
-			return ( (Renderable) getExpressions().get(0) ).render( renderingContext );
+			return ( (Renderable) getExpressions().get( 0 ) ).render( renderingContext );
 		}
 		final StringBuilder buffer = new StringBuilder();
 		String sep = "";
@@ -147,5 +147,30 @@ public class CompoundPredicate
 
 	public String renderProjection(CriteriaQueryCompiler.RenderingContext renderingContext) {
 		return render( renderingContext );
+	}
+
+	/**
+	 * Create negation of compound predicate by using logic rules:
+	 * 1. not (x || y) is (not x && not y)
+	 * 2. not (x && y) is (not x || not y)
+	 */
+	@Override
+	public Predicate not() {
+		toggleOperator();
+		for ( Expression expr : this.getExpressions() ) {
+			if ( Predicate.class.isInstance( expr ) ) {
+				( (Predicate) expr ).not();
+			}
+		}
+		return this;
+	}
+
+	private void toggleOperator() {
+		if ( this.operator == BooleanOperator.AND ) {
+			this.operator = BooleanOperator.OR;
+		}
+		else {
+			this.operator = BooleanOperator.AND;
+		}
 	}
 }

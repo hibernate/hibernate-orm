@@ -6,7 +6,7 @@ import java.net.URL;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractSessionTest;
+import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
  */
 
 @Test(sequential=true)
-public class ReadEntityWhtiEntityNameTest extends AbstractSessionTest{
+public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest{
 
 	private long id_pers1;
 	private long id_pers2;
@@ -33,20 +33,11 @@ public class ReadEntityWhtiEntityNameTest extends AbstractSessionTest{
         config.addFile(new File(url.toURI()));
 	}
 	
-	/**
-	 * The test needs to run with the same session and auditReader.
-	 */
-	@Override
-	public void newSessionFactory() {
-		if (getSession() == null) {
-			super.newSessionFactory();
-		}
-	}
 	
     @BeforeClass(dependsOnMethods = "init")
     public void initData() {
     	
-    	newSessionFactory();
+    	initializeSession();
 
         Person pers1 = new Person("Hernan", 28);
         Person pers2 = new Person("Leandro", 29);
@@ -103,12 +94,10 @@ public class ReadEntityWhtiEntityNameTest extends AbstractSessionTest{
     	person1_2 = getAuditReader().find(Person.class, "Personaje", id_pers1, 2);
     	person1_3 = getAuditReader().find(Person.class, "Personaje", id_pers1, 3);
     	
-    	person1_1.getName();
-    	person1_1.getAge();
-    	person1_2.getName();
-    	person1_2.getAge();
-    	person1_3.getName();
-    	person1_3.getAge();
+    	assert(person1_1 != null);
+    	assert(person1_2 != null);
+    	assert(person1_3 != null);
+    	
     }
     
     @Test(dependsOnMethods="testRetrieveAuditedEntityWithEntityName")
@@ -128,21 +117,18 @@ public class ReadEntityWhtiEntityNameTest extends AbstractSessionTest{
     }    
     
     @Test(dependsOnMethods="testObtainEntityNameAuditedEntityWithEntityName")
-    public void testFindHistoricAndCurrentForAuditedEntityWithEntityName() {
+    public void testRetrieveAuditedEntityWithEntityNameWithNewSession() {
     	
     	// force a new session and AR
-    	super.newSessionFactory();
+    	forceNewSession();
 
     	person1_1 = getAuditReader().find(Person.class, "Personaje", id_pers1, 1);
     	person1_2 = getAuditReader().find(Person.class, "Personaje", id_pers1, 2);
     	person1_3 = getAuditReader().find(Person.class, "Personaje", id_pers1, 3);
     	
-    	person1_1.getName();
-    	person1_1.getAge();
-    	person1_2.getName();
-    	person1_2.getAge();
-    	person1_3.getName();
-    	person1_3.getAge();    	
+    	assert(person1_1 != null);
+    	assert(person1_2 != null);
+    	assert(person1_3 != null);  	
     }    
     
     

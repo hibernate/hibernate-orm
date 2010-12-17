@@ -26,7 +26,11 @@ import java.util.List;
 import junit.framework.Test;
 import junit.framework.Assert;
 
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
+import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cfg.Configuration;
@@ -35,9 +39,6 @@ import org.hibernate.Session;
 import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
 import org.hibernate.EmptyInterceptor;
-import org.hibernate.jdbc.BatcherFactory;
-import org.hibernate.jdbc.NonBatchingBatcher;
-import org.hibernate.jdbc.Batcher;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
@@ -64,23 +65,23 @@ public class BatchedManyToManyTest extends FunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.BATCH_STRATEGY, TestingBatcherFactory.class.getName() );
+		cfg.setProperty( Environment.BATCH_STRATEGY, TestingBatchBuilder.class.getName() );
 	}
 
-	public static class TestingBatcherFactory implements BatcherFactory {
+	public static class TestingBatchBuilder extends BatchBuilder {
 		private int jdbcBatchSize;
 
 		public void setJdbcBatchSize(int jdbcBatchSize) {
 			this.jdbcBatchSize = jdbcBatchSize;
 		}
-		public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
-			return new TestingBatcher( exceptionHelper, jdbcBatchSize );
+		public Batch buildBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper) {
+			return new TestingBatch(key, statementLogger, exceptionHelper, jdbcBatchSize );
 		}
 	}
 
-	public static class TestingBatcher extends NonBatchingBatcher {
-		public TestingBatcher(SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
-			super( exceptionHelper );
+	public static class TestingBatch extends NonBatchingBatch {
+		public TestingBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
+			super( key, statementLogger, exceptionHelper );
 		}
 	}
 

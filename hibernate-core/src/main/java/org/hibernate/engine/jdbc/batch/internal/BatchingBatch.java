@@ -25,18 +25,24 @@ package org.hibernate.engine.jdbc.batch.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.jdbc.Expectation;
 
 /**
- * A {@link org.hibernate.engine.jdbc.batch.spi.Batch} implementation which does batching based on a given size.  Once the batch size is exceeded, the
- * batch is implicitly executed.
+ * A {@link org.hibernate.engine.jdbc.batch.spi.Batch} implementation which does
+ * batching based on a given size.  Once the batch size is reached for a statement
+ * in the batch, the entire batch is implicitly executed.
  *
  * @author Steve Ebersole
  */
@@ -44,33 +50,54 @@ public class BatchingBatch extends AbstractBatchImpl {
 	private static final Logger log = LoggerFactory.getLogger( BatchingBatch.class );
 
 	private final int batchSize;
-	private Expectation[] expectations;
-	private int batchPosition;
 
-	public BatchingBatch(Object key, LogicalConnectionImplementor logicalConnection, int batchSize) {
-		super( key, logicalConnection );
+	// TODO: A Map is used for expectations so it is possible to track when a batch
+	// is full (i.e., when the batch for a particular statement exceeds batchSize)
+	// Until HHH-5797 is fixed, there will only be 1 statement in a batch, so it won't
+	// be necessary to track expectations by statement.
+	private Map<String, List<Expectation>>  expectationsBySql;
+	private int maxBatchPosition;
+
+	public BatchingBatch(Object key,
+						 SQLStatementLogger statementLogger,
+						 SQLExceptionHelper exceptionHelper,
+						 int batchSize) {
+		super( key, statementLogger, exceptionHelper );
 		this.batchSize = batchSize;
-		this.expectations = new Expectation[ batchSize ];
+		this.expectationsBySql = new HashMap<String, List<Expectation>>();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void addToBatch(Expectation expectation) {
-		if ( !expectation.canBeBatched() ) {
+	public void addToBatch(Object key, String sql, Expectation expectation) {
+		checkConsistentBatchKey( key );
+		if ( sql == null || expectation == null ) {
+			throw new AssertionFailure( "sql or expection was null." );
+		}
+		if ( ! expectation.canBeBatched() ) {
 			throw new HibernateException( "attempting to batch an operation which cannot be batched" );
 		}
-		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
-			try {
-				entry.getValue().addBatch();
-			}
-			catch ( SQLException e ) {
-				log.error( "sqlexception escaped proxy", e );
-				throw getJdbcServices().getSqlExceptionHelper().convert( e, "could not perform addBatch", entry.getKey() );
-			}
+		final PreparedStatement statement = getStatements().get( sql );
+		try {
+			statement.addBatch();
 		}
-		expectations[ batchPosition++ ] = expectation;
-		if ( batchPosition == batchSize ) {
+		catch ( SQLException e ) {
+			log.error( "sqlexception escaped proxy", e );
+			throw getSqlExceptionHelper().convert( e, "could not perform addBatch", sql );
+		}
+		List<Expectation> expectations = expectationsBySql.get( sql );
+		if ( expectations == null ) {
+			expectations = new ArrayList<Expectation>( batchSize );
+			expectationsBySql.put( sql, expectations );
+		}
+		expectations.add( expectation );
+		maxBatchPosition = Math.max( maxBatchPosition, expectations.size() );
+
+		// TODO: When HHH-5797 is fixed the following if-block should probably be moved before
+		// adding the batch to the current statement (to detect that we have finished
+		// with the previous entity).
+		if ( maxBatchPosition == batchSize ) {
 			notifyObserversImplicitExecution();
 			doExecuteBatch();
 		}
@@ -80,46 +107,89 @@ public class BatchingBatch extends AbstractBatchImpl {
 	 * {@inheritDoc}
 	 */
 	protected void doExecuteBatch() {
-		if ( batchPosition == 0 ) {
+		if ( maxBatchPosition == 0 ) {
 			log.debug( "no batched statements to execute" );
 		}
 		else {
 			if ( log.isDebugEnabled() ) {
-				log.debug( "Executing batch size: " + batchPosition );
+				log.debug( "Executing {} statements with maximum batch size {} ",
+						getStatements().size(), maxBatchPosition
+				);
 			}
-
 			try {
-				for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
-					try {
-						final PreparedStatement statement = entry.getValue();
-						checkRowCounts( statement.executeBatch(), statement );
-					}
-					catch ( SQLException e ) {
-						log.error( "sqlexception escaped proxy", e );
-						throw getJdbcServices().getSqlExceptionHelper()
-								.convert( e, "could not perform addBatch", entry.getKey() );
-					}
-				}
+				executeStatements();
 			}
 			catch ( RuntimeException re ) {
 				log.error( "Exception executing batch [{}]", re.getMessage() );
 				throw re;
 			}
 			finally {
-				batchPosition = 0;
+				for ( List<Expectation> expectations : expectationsBySql.values() ) {
+					expectations.clear();
+				}				
+				maxBatchPosition = 0;
 			}
-
 		}
 	}
 
-	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
+	private void executeStatements() {
+		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
+			final String sql = entry.getKey();
+			final PreparedStatement statement = entry.getValue();
+			final List<Expectation> expectations = expectationsBySql.get( sql );
+			if ( batchSize < expectations.size() ) {
+				throw new IllegalStateException(
+						"Number of expectations [" + expectations.size() +
+								"] is greater than batch size [" + batchSize +
+								"] for statement [" + sql +
+								"]"
+				);
+			}
+			if ( expectations.size() > 0 ) {
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Executing with batch of size {}: {}", expectations.size(), sql  );
+				}
+				executeStatement( sql, statement, expectations );
+				expectations.clear();
+			}
+			else {
+				if ( log.isDebugEnabled() ) {
+					log.debug( "Skipped executing because batch size is 0: ", sql );
+				}
+			}
+		}
+	}
+
+	private void executeStatement(String sql, PreparedStatement ps, List<Expectation> expectations) {
+		try {
+			checkRowCounts( sql, ps.executeBatch(), ps, expectations );
+		}
+		catch ( SQLException e ) {
+			log.error( "sqlexception escaped proxy", e );
+			throw getSqlExceptionHelper()
+					.convert( e, "could not execute statement: " + sql );
+		}
+	}
+
+	private void checkRowCounts(String sql, int[] rowCounts, PreparedStatement ps, List<Expectation> expectations) {
 		int numberOfRowCounts = rowCounts.length;
-		if ( numberOfRowCounts != batchPosition ) {
+		if ( numberOfRowCounts != expectations.size() ) {
 			log.warn( "JDBC driver did not return the expected number of row counts" );
 		}
-		for ( int i = 0; i < numberOfRowCounts; i++ ) {
-			expectations[i].verifyOutcome( rowCounts[i], ps, i );
+		try {
+			for ( int i = 0; i < numberOfRowCounts; i++ ) {
+				expectations.get( i ).verifyOutcome( rowCounts[i], ps, i );
+			}
+		}
+		catch ( SQLException e ) {
+			log.error( "sqlexception escaped proxy", e );
+			throw getSqlExceptionHelper()
+					.convert( e, "row count verification failed for statement: ", sql );
 		}
 	}
 
+	public void release() {
+		expectationsBySql.clear();
+		maxBatchPosition = 0;
+	}
 }

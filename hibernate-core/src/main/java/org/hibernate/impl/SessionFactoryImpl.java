@@ -99,7 +99,6 @@ import org.hibernate.event.EventListeners;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -1233,10 +1232,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	public Set getDefinedFilterNames() {
 		return filters.keySet();
-	}
-
-	public BatcherFactory getBatcherFactory() {
-		return settings.getBatcherFactory();
 	}
 
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName) {

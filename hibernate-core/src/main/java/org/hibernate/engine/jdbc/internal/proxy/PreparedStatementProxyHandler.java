@@ -26,6 +26,10 @@ package org.hibernate.engine.jdbc.internal.proxy;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Arrays;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Invocation handler for {@link java.sql.PreparedStatement} proxies
@@ -33,6 +37,8 @@ import java.sql.Statement;
  * @author Steve Ebersole
  */
 public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler {
+	private static final Logger log = LoggerFactory.getLogger( ConnectionProxyHandler.class );
+
 	private final String sql;
 
 	protected PreparedStatementProxyHandler(
@@ -63,6 +69,7 @@ public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler
 	}
 
 	private void journalParameterBind(Method method, Object[] args) {
+		log.trace( "binding via {}: []", method.getName(), Arrays.asList( args ) );
 	}
 
 	private boolean isExecution(Method method) {

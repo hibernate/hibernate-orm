@@ -25,12 +25,12 @@ package org.hibernate.engine.jdbc.batch.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.jdbc.Expectation;
 
 /**
@@ -42,22 +42,26 @@ import org.hibernate.jdbc.Expectation;
 public class NonBatchingBatch extends AbstractBatchImpl {
 	private static final Logger log = LoggerFactory.getLogger( NonBatchingBatch.class );
 
-	protected NonBatchingBatch(Object key, LogicalConnectionImplementor logicalConnection) {
-		super( key, logicalConnection );
+	protected NonBatchingBatch(Object key,
+							SQLStatementLogger statementLogger,
+							SQLExceptionHelper exceptionHelper) {
+		super( key, statementLogger, exceptionHelper );
 	}
 
-	public void addToBatch(Expectation expectation) {
+	public void addToBatch(Object key, String sql, Expectation expectation) {
+		checkConsistentBatchKey( key );
+		if ( sql == null ) {
+			throw new IllegalArgumentException( "sql must be non-null." );
+		}
 		notifyObserversImplicitExecution();
-		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
-			try {
-				final PreparedStatement statement = entry.getValue();
-				final int rowCount = statement.executeUpdate();
-				expectation.verifyOutcome( rowCount, statement, 0 );
-			}
-			catch ( SQLException e ) {
-				log.error( "sqlexception escaped proxy", e );
-				throw getJdbcServices().getSqlExceptionHelper().convert( e, "could not execute batch statement", entry.getKey() );
-			}
+		try {
+			final PreparedStatement statement = getStatements().get( sql );
+			final int rowCount = statement.executeUpdate();
+			expectation.verifyOutcome( rowCount, statement, 0 );
+		}
+		catch ( SQLException e ) {
+			log.error( "sqlexception escaped proxy", e );
+			throw getSqlExceptionHelper().convert( e, "could not execute batch statement", sql );
 		}
 	}
 

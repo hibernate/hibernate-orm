@@ -28,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 
 /**
  * A builder for {@link Batch} instances.
@@ -46,15 +48,17 @@ public class BatchBuilder {
 		this.size = size;
 	}
 
-	public void setSize(int size) {
+	public void setJdbcBatchSize(int size) {
 		this.size = size;
 	}
 
-	public Batch buildBatch(Object key, LogicalConnectionImplementor logicalConnection) {
+	public Batch buildBatch(Object key,
+							SQLStatementLogger statementLogger,
+							SQLExceptionHelper exceptionHelper) {
 		log.trace( "building batch [size={}]", size );
 		return size > 1
-				? new BatchingBatch( key, logicalConnection, size )
-				: new NonBatchingBatch( key, logicalConnection );
+				? new BatchingBatch( key, statementLogger, exceptionHelper, size )
+				: new NonBatchingBatch( key, statementLogger, exceptionHelper );
 	}
 }
 

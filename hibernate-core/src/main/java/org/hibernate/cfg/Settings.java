@@ -32,7 +32,6 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.hql.QueryTranslatorFactory;
-import org.hibernate.jdbc.BatcherFactory;
 import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
@@ -78,7 +77,6 @@ public final class Settings {
 	private QueryCacheFactory queryCacheFactory;
 	private TransactionFactory transactionFactory;
 	private TransactionManagerLookup transactionManagerLookup;
-	private BatcherFactory batcherFactory;
 	private BatchBuilder batchBuilder;
 	private QueryTranslatorFactory queryTranslatorFactory;
 	private boolean wrapResultSetsEnabled;
@@ -226,10 +224,6 @@ public final class Settings {
 
 	public boolean isFlushBeforeCompletionEnabled() {
 		return flushBeforeCompletionEnabled;
-	}
-
-	public BatcherFactory getBatcherFactory() {
-		return batcherFactory;
 	}
 
 	public BatchBuilder getBatchBuilder() {
@@ -417,10 +411,6 @@ public final class Settings {
 
 	void setFlushBeforeCompletionEnabled(boolean flushBeforeCompletionEnabled) {
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
-	}
-
-	void setBatcherFactory(BatcherFactory batcher) {
-		this.batcherFactory = batcher;
 	}
 
 	void setBatcherBuilder(BatchBuilder batchBuilder) {

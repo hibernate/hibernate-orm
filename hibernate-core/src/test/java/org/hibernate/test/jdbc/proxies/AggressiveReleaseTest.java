@@ -35,7 +35,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
-import org.hibernate.jdbc.NonBatchingBatcherFactory;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 
@@ -135,8 +134,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 				null,
 				ConnectionReleaseMode.AFTER_STATEMENT,
 				services,
-				null,
-				new NonBatchingBatcherFactory()
+				null
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		ConnectionCounter observer = new ConnectionCounter();
@@ -170,8 +168,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 				null,
 				ConnectionReleaseMode.AFTER_STATEMENT,
 				services,
-				null,
-				new NonBatchingBatcherFactory()
+				null
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		ConnectionCounter observer = new ConnectionCounter();
@@ -230,8 +227,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 				null,
 				ConnectionReleaseMode.AFTER_STATEMENT,
 				services,
-				null,
-				new NonBatchingBatcherFactory()
+				null
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		ConnectionCounter observer = new ConnectionCounter();

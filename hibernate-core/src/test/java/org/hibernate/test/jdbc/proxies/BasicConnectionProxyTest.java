@@ -34,7 +34,6 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
-import org.hibernate.jdbc.NonBatchingBatcherFactory;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 
@@ -63,8 +62,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 				null,
 				ConnectionReleaseMode.AFTER_TRANSACTION,
 				services,
-				null,
-				new NonBatchingBatcherFactory()
+				null
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		try {
@@ -92,8 +90,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 				null,
 				ConnectionReleaseMode.AFTER_TRANSACTION,
 				services,
-				null,
-				new NonBatchingBatcherFactory()
+				null
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		try {
@@ -115,8 +112,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 				null,
 				ConnectionReleaseMode.AFTER_TRANSACTION,
 				services,
-				null,
-				new NonBatchingBatcherFactory()
+				null
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 

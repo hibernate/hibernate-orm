@@ -2381,7 +2381,7 @@ public abstract class AbstractEntityPersister
 			// Render the SQL query
 			final PreparedStatement insert;
 			if ( useBatch ) {
-				insert = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+				insert = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
 			}
 			else {
 				insert = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
@@ -2398,7 +2398,7 @@ public abstract class AbstractEntityPersister
 
 				if ( useBatch ) {
 					// TODO : shouldnt inserts be Expectations.NONE?
-					session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+					session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 				}
 				else {
 					expectation.verifyOutcome( insert.executeUpdate(), insert, -1 );
@@ -2407,7 +2407,7 @@ public abstract class AbstractEntityPersister
 			}
 			catch ( SQLException sqle ) {
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+					session.getJDBCContext().getConnectionManager().abortBatch();
 				}
 				throw sqle;
 			}
@@ -2500,7 +2500,7 @@ public abstract class AbstractEntityPersister
 			int index = 1; // starting index
 			final PreparedStatement update;
 			if ( useBatch ) {
-				update = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+				update = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
 			}
 			else {
 				update = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
@@ -2543,7 +2543,7 @@ public abstract class AbstractEntityPersister
 				}
 
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+					session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 					return true;
 				}
 				else {
@@ -2553,7 +2553,7 @@ public abstract class AbstractEntityPersister
 			}
 			catch ( SQLException sqle ) {
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+					session.getJDBCContext().getConnectionManager().abortBatch();
 				}
 				throw sqle;
 			}
@@ -2614,7 +2614,7 @@ public abstract class AbstractEntityPersister
 			PreparedStatement delete;
 			int index = 1;
 			if ( useBatch ) {
-				delete = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+				delete = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
 			}
 			else {
 				delete = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
@@ -2649,7 +2649,7 @@ public abstract class AbstractEntityPersister
 				}
 
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+					session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 				}
 				else {
 					check( delete.executeUpdate(), id, j, expectation, delete );
@@ -2658,7 +2658,7 @@ public abstract class AbstractEntityPersister
 			}
 			catch ( SQLException sqle ) {
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+					session.getJDBCContext().getConnectionManager().abortBatch();
 				}
 				throw sqle;
 			}

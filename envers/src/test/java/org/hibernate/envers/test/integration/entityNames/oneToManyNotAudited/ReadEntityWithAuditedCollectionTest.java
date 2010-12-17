@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractSessionTest;
+import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
  */
 
 @Test(sequential=true)
-public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
+public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest{
 
 	private long id_car1;
 	private long id_car2;
@@ -28,27 +28,17 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 	private long id_pers1;
 	
 	private Car car1_1;
-	private Person person1_1;	
 	
 	protected void initMappings() throws MappingException, URISyntaxException {
 		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/oneToManyNotAudited/mappings.hbm.xml");
         config.addFile(new File(url.toURI()));
 	}
 	
-	/**
-	 * The test needs to run with the same session and auditReader.
-	 */
-	@Override
-	public void newSessionFactory() {
-		if (getSession() == null) {
-			super.newSessionFactory();
-		}
-	}
 	
     @BeforeClass(dependsOnMethods = "init")
     public void initData() {
     	
-    	newSessionFactory();
+    	initializeSession();
 
         Person pers1 = new Person("Hernan", 28);
         Person pers2 = new Person("Leandro", 29);
@@ -82,8 +72,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 
     }
     
-    @Test
-    public void testObtainCollectionWithEntityNameAndNotAuditedMode() {
+    private void loadDataOnSessionAndAuditReader() {
     	
     	currentCar1 = (Car)getSession().get(Car.class, id_car1);
     	currentPerson1 = (Person)getSession().get("Personaje", id_pers1);
@@ -101,11 +90,7 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 		}
     }
     
-    @Test(dependsOnMethods="testObtainCollectionWithEntityNameAndNotAuditedMode")
-    public void testObtainEntityNameCollectionWithEntityNameAndNotAuditedMode() {
-    	
-    	// entityName personaje is marked as NOT_AUDITED
-  		person1_1 = (Person)getSession().get("Personaje", id_pers1); 
+    private void checkEntityNames() {
     	
     	String currCar1EN = getSession().getEntityName(currentCar1);
     	String currPerson1EN = getSession().getEntityName(currentPerson1);
@@ -113,32 +98,28 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     	String car1_1EN = getAuditReader().getEntityName(id_car1, 2, car1_1);
     	assert(currCar1EN.equals(car1_1EN));
     	
-    	String person1_1EN = getSession().getEntityName(person1_1);
+    	String person1_1EN = getSession().getEntityName(currentPerson1);
     	assert(currPerson1EN.equals(person1_1EN));
     }
-    
+
+    @Test
+    public void testObtainEntityNameCollectionWithEntityNameAndNotAuditedMode() {
+    	loadDataOnSessionAndAuditReader();
+    	
+    	checkEntityNames();
+
+    	
+    }    
+
     @Test(dependsOnMethods="testObtainEntityNameCollectionWithEntityNameAndNotAuditedMode")
-    public void testObtainCollectionWithEntityNameAndNotAuditedModeWithNewSession() {
+    public void testObtainEntityNameCollectionWithEntityNameAndNotAuditedModeInNewSession() {
     	// force new session and AR
-    	super.newSessionFactory();
+    	forceNewSession();
     	
-    	Car car1_1 = getAuditReader().find(Car.class, id_car1, 2);
-    	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
-
-    	for (Person owner : car1_1.getOwners()) {
-    		owner.getName();
-    		owner.getAge();
-		}
-    	for (Person owner : car2.getOwners()) {
-    		owner.getName();
-    		owner.getAge();
-		}
+    	loadDataOnSessionAndAuditReader();
     	
-    	// entityName personaje is marked as NOT_AUDITED
-   		person1_1 = (Person)getSession().get("Personaje", id_pers1); 
+    	checkEntityNames();
 
-    	person1_1.getName();
-    	person1_1.getAge();
     	
     }
     	

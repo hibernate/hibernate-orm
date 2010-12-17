@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractSessionTest;
+import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
  */
 
 @Test(sequential=true)
-public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
+public class ReadEntityWithAuditedCollectionTest extends AbstractOneSessionTest{
 
 	private long id_car1;
 	private long id_car2;
@@ -34,21 +34,12 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 		URL url = Thread.currentThread().getContextClassLoader().getResource("mappings/entityNames/oneToManyAudited/mappings.hbm.xml");
         config.addFile(new File(url.toURI()));
 	}
-	
-	/**
-	 * The test needs to run with the same session and auditReader.
-	 */
-	@Override
-	public void newSessionFactory() {
-		if (getSession() == null) {
-			super.newSessionFactory();
-		}
-	}
+
 	
     @BeforeClass(dependsOnMethods = "init")
     public void initData() {
     	
-    	newSessionFactory();
+    	initializeSession();
 
         Person pers1 = new Person("Hernan", 28);
         Person pers2 = new Person("Leandro", 29);
@@ -82,12 +73,12 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
 
     }
     
-    @Test
-    public void testObtainAuditedCollectionWithEntityName() {
+    private void loadDataOnSessionAndAuditReader() {
     	
     	currentCar1 = (Car)getSession().get(Car.class, id_car1);
     	currentPerson1 = (Person)getSession().get("Personaje", id_pers1);
     	
+    	person1_1 = getAuditReader().find(Person.class,"Personaje", id_pers1, 1);
     	car1_1 = getAuditReader().find(Car.class, id_car1, 2);
     	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
 
@@ -100,13 +91,9 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     		owner.getAge();
 		}
     }
-    
-    @Test(dependsOnMethods="testObtainAuditedCollectionWithEntityName")
-    public void testObtainEntityNameAuditedCollectionWithEntityName() {
-    	
-    	person1_1 = getAuditReader().find(Person.class,"Personaje", id_pers1, 1);
-    	
-    	String currCar1EN = getSession().getEntityName(currentCar1);
+
+	private void checkEntityNames() {
+		String currCar1EN = getSession().getEntityName(currentCar1);
     	String currPerson1EN = getSession().getEntityName(currentPerson1);
     	
     	String car1_1EN = getAuditReader().getEntityName(id_car1, 2, car1_1);
@@ -114,29 +101,28 @@ public class ReadEntityWithAuditedCollectionTest extends AbstractSessionTest{
     	
     	String person1_1EN = getAuditReader().getEntityName(id_pers1, 1, person1_1);
     	assert(currPerson1EN.equals(person1_1EN));
+	}        
+	
+	@Test	
+    public void testObtainEntityNameAuditedCollectionWithEntityName() {
     	
-    }    
+    	this.loadDataOnSessionAndAuditReader();
+    	
+    	checkEntityNames();
+    	
+    }
+
+
     
     @Test(dependsOnMethods="testObtainEntityNameAuditedCollectionWithEntityName")
-    public void testObtainAuditedCollectionWithEntityNameWithNewSession() {
+    public void testObtainEntityNameAuditedCollectionWithEntityNameInNewSession() {
     	// force a new session and AR
-    	super.newSessionFactory();
+    	forceNewSession();
     	
-    	Car car1_1 = getAuditReader().find(Car.class, id_car1, 2);
-    	Car car2 = getAuditReader().find(Car.class, id_car2, 2);
-    	Person person1_1 = getAuditReader().find(Person.class,"Personaje", id_pers1, 1);
-
-    	for (Person owner : car1_1.getOwners()) {
-    		owner.getName(); 
-    		owner.getAge();
-		}
-    	for (Person owner : car2.getOwners()) {
-    		owner.getName(); 
-    		owner.getAge();
-		}    	
+    	loadDataOnSessionAndAuditReader();
     	
-    	person1_1.getName();
-    	person1_1.getAge();
+    	checkEntityNames();
+    	
     }
 }
 

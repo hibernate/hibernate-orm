@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.envers.test.AbstractSessionTest;
+import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -17,7 +17,7 @@ import org.testng.annotations.Test;
  */
 
 @Test(sequential=true)
-public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
+public class ReadEntityWithAuditedManyToManyTest extends AbstractOneSessionTest{
 
 	private long id_car1;
 	private long id_car2;
@@ -35,20 +35,11 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
         config.addFile(new File(url.toURI()));
 	}
 	
-	/**
-	 * The test needs to run with the same session and auditReader.
-	 */
-	@Override
-	public void newSessionFactory() {
-		if (getSession() == null) {
-			super.newSessionFactory();
-		}
-	}
 	
     @BeforeClass(dependsOnMethods = "init")
     public void initData() {
     	
-    	newSessionFactory();
+    	initializeSession();
 
         Person pers1 = new Person("Hernan", 28);
         Person pers2 = new Person("Leandro", 29);
@@ -84,12 +75,12 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
         id_car2 = car2.getId();
     }
     
-    @Test
-    public void testObtainManyYoManyWithEntityName() {
+    private void loadDataOnSessionAndAuditReader() {
     	
     	car1_2 = getAuditReader().find(Car.class, id_car1, 2);
     	Car car2_2 = getAuditReader().find(Car.class, id_car2, 2);
 
+    	// navigate through relations to load objects
     	for (Person owner : car1_2.getOwners()) {
     		for (Car ownedCar : owner.getCars()) {
     			ownedCar.getNumber();
@@ -106,9 +97,10 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
     	person1_1 = getAuditReader().find(Person.class, "Personaje", id_pers1, 1);
     }
     
-    @Test(dependsOnMethods="testObtainManyYoManyWithEntityName")
-    public void testGetEntityNameManyYoManyWithEntityName() {
-    	String currPerson1EN = getSession().getEntityName(person1);
+
+
+	private void checkEntityNames() {
+		String currPerson1EN = getSession().getEntityName(person1);
     	String currCar1EN = getSession().getEntityName(car1);
     	
     	String person1_1EN = getAuditReader().getEntityName(id_pers1, 1, person1_1);
@@ -116,31 +108,24 @@ public class ReadEntityWithAuditedManyToManyTest extends AbstractSessionTest{
     	
     	String car1_2EN = getAuditReader().getEntityName(id_car1, 2, car1_2);
     	assert(currCar1EN.equals(car1_2EN));
+	}
+    
+    @Test
+    public void testGetEntityNameManyYoManyWithEntityName() {
+    	
+    	loadDataOnSessionAndAuditReader();
+    	
+    	checkEntityNames();
     }
 
     
     @Test(dependsOnMethods="testGetEntityNameManyYoManyWithEntityName")
-    public void testFindHistoricAndCurrentForManyYoManyWithEntityName() {
+    public void testGetEntityNameManyYoManyWithEntityNameInNewSession() {
     	//force new session and AR
-    	super.newSessionFactory();
+    	forceNewSession();
+    	loadDataOnSessionAndAuditReader();
     	
-    	car1_2 = getAuditReader().find(Car.class, id_car1, 2);
-    	Car car2_2 = getAuditReader().find(Car.class, id_car2, 2);
+    	checkEntityNames();
 
-    	for (Person owner : car1_2.getOwners()) {
-    		for (Car ownedCar : owner.getCars()) {
-    			ownedCar.getNumber();
-			}
-		}
-    	for (Person owner : car2_2.getOwners()) {
-    		for (Car ownedCar : owner.getCars()) {
-				ownedCar.getNumber();
-			}
-		}
-    	
-    	person1_1 = getAuditReader().find(Person.class, "Personaje", id_pers1, 1);
-		for (Car ownedCar : person1_1.getCars()) {
-			ownedCar.getNumber();
-		}
     }    
 }

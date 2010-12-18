@@ -346,9 +346,19 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			Object propertyFromEntity = persister.getPropertyValue( entity, propertyName, source.getEntityMode() );
 			Type propertyType = persister.getPropertyType( propertyName );
 			EntityEntry copyEntry = source.getPersistenceContext().getEntry( copy );
-			if ( propertyFromCopy == null || ! propertyType.isEntityType() ) {
-				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
-						"' is null or not an entity; " + propertyName + " =["+propertyFromCopy+"]");
+			if ( propertyFromCopy == null ||
+					propertyFromEntity == null ||
+					! propertyType.isEntityType() ||
+					! copyCache.containsKey( propertyFromEntity ) ) {
+				if ( log.isTraceEnabled() ) {
+					String fullPropertyName = "property '" + copyEntry.getEntityName() + "." + propertyName;
+					log.trace( fullPropertyName + " in copy is " + ( propertyFromCopy == null ? "null" : propertyFromCopy ) );
+					log.trace( fullPropertyName + " in original is " + ( propertyFromCopy == null ? "null" : propertyFromCopy ) );
+					log.trace( fullPropertyName + ( propertyType.isEntityType() ? " is" : " is not" ) + " an entity type" );
+					if ( propertyFromEntity != null && ! copyCache.containsKey( propertyFromEntity ) ) {
+						log.trace( fullPropertyName + " is not in copy cache" );
+					}
+				}
 				if ( isNullabilityCheckedGlobal( source ) ) {
 					throw ex;
 				}
@@ -358,27 +368,17 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 					saveTransientEntity( copy, entityName, requestedId, source, copyCache, false );
 				}
 			}
-			if ( ! copyCache.containsKey( propertyFromEntity ) ) {
-				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
-						"' from original entity is not in copyCache; " + propertyName + " =["+propertyFromEntity+"]");
-				if ( isNullabilityCheckedGlobal( source ) ) {
-					throw ex;
+			if ( log.isTraceEnabled() && propertyFromEntity != null ) {
+				if ( ( ( EventCache ) copyCache ).isOperatedOn( propertyFromEntity ) ) {
+					log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
+							"' from original entity is in copyCache and is in the process of being merged; " +
+							propertyName + " =["+propertyFromEntity+"]");
 				}
 				else {
-					// retry save w/o checking non-nullable properties
-					// (the failure will be detected later)
-					saveTransientEntity( copy, entityName, requestedId, source, copyCache, false );					
+					log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
+							"' from original entity is in copyCache and is not in the process of being merged; " +
+							propertyName + " =["+propertyFromEntity+"]");
 				}
-			}
-			if ( ( ( EventCache ) copyCache ).isOperatedOn( propertyFromEntity ) ) {
-				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
-						"' from original entity is in copyCache and is in the process of being merged; " +
-						propertyName + " =["+propertyFromEntity+"]");
-			}
-			else {
-				log.trace( "property '" + copyEntry.getEntityName() + "." + propertyName +
-						"' from original entity is in copyCache and is not in the process of being merged; " +
-						propertyName + " =["+propertyFromEntity+"]");
 			}
 			// continue...; we'll find out if it ends up not getting saved later
 		}

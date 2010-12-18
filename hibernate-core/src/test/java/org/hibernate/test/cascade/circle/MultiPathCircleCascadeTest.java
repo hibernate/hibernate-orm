@@ -109,15 +109,15 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		try {
 			s.merge( node );
+			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
 		catch ( Exception ex ) {
-			if ( ( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability() ) {
-				assertTrue( ex instanceof TransientObjectException );
-			}
-			else {
-				assertTrue( ex instanceof JDBCException );
-			}
+			checkExceptionFromNullValueForNonNullable(
+					ex,
+					( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability(),
+					false
+			);
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -138,15 +138,15 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		try {
 			s.merge( node );
+			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
 		catch ( Exception ex ) {
-			if ( ( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability() ) {
-				assertTrue( ex instanceof PropertyValueException );
-			}
-			else {
-				assertTrue( ex instanceof JDBCException );
-			}
+			checkExceptionFromNullValueForNonNullable(
+					ex,
+					( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability(),
+					true
+			);
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -165,15 +165,15 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		try {
 			s.merge( route );
+			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
 		catch ( Exception ex ) {
-			if ( ( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability() ) {
-				assertTrue( ex instanceof PropertyValueException );
-			}
-			else {
-				assertTrue( ex instanceof JDBCException );
-			}
+			checkExceptionFromNullValueForNonNullable(
+					ex,
+					( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability(),
+					true
+			);
 		}
 		finally {
 			s.getTransaction().rollback();
@@ -529,6 +529,20 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		assertInsertCount( 6 );
 		assertUpdateCount( 1 );
+	}
+
+	protected void checkExceptionFromNullValueForNonNullable(Exception ex, boolean checkNullability, boolean isNullValue ) {
+		if ( checkNullability ) {
+			if ( isNullValue ) {
+				assertTrue( ex instanceof PropertyValueException );
+			}
+			else {
+				assertTrue( ex instanceof TransientObjectException );
+			}
+		}
+		else {
+			assertTrue( ex instanceof JDBCException );
+		}
 	}
 
 	protected void clearCounts() {

@@ -29,8 +29,8 @@ import net.sf.ehcache.util.ClassLoaderUtil;
 
 import java.net.URL;
 import java.util.Properties;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Singleton cache Provider plugin for Hibernate 3.2 and ehcache-1.2. New in this provider is support for

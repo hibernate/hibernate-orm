@@ -23,14 +23,14 @@
  */
 package org.hibernate.cache;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * EHCache plugin for Hibernate

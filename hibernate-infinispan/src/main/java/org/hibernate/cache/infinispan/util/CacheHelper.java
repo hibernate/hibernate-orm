@@ -50,12 +50,12 @@ public class CacheHelper {
 
    public static void initInternalEvict(CacheAdapter cacheAdapter, AddressAdapter member) {
       EvictAll eKey = new EvictAll(member == null ? NoAddress.INSTANCE : member);
-      cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL).put(eKey, Internal.INIT);
+      cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL, FlagAdapter.SKIP_CACHE_LOAD).put(eKey, Internal.INIT);
    }
 
    public static void sendEvictAllNotification(CacheAdapter cacheAdapter, AddressAdapter member) {
       EvictAll eKey = new EvictAll(member == null ? NoAddress.INSTANCE : member);
-      cacheAdapter.put(eKey, Internal.EVICT);
+      cacheAdapter.withFlags(FlagAdapter.SKIP_CACHE_LOAD).put(eKey, Internal.EVICT);
    }
 
    public static boolean isEvictAllNotification(Object key) {

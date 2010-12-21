@@ -52,24 +52,24 @@ public class Staff {
 	@Column(name="size_in_cm")
 	@ColumnTransformer(
 			forColumn = "size_in_cm",
-			read = "size_in_cm / 2.54",
-			write = "? * 2.54" )
+			read = "size_in_cm / 2.54E0",
+			write = "? * 2.54E0" )
 	public double getSizeInInches() { return sizeInInches; }
 	public void setSizeInInches(double sizeInInches) {  this.sizeInInches = sizeInInches; }
 	private double sizeInInches;
 
 	//Weird extra S to avoid potential SQL keywords
 	@ColumnTransformer(
-			read = "radiusS / 2.54",
-			write = "? * 2.54" )
+			read = "radiusS / 2.54E0",
+			write = "? * 2.54E0" )
 	public double getRadiusS() { return radiusS; }
 	public void setRadiusS(double radiusS) {  this.radiusS = radiusS; }
 	private double radiusS;
 
 	@Column(name="diamet")
 	@ColumnTransformer(
-			read = "diamet / 2.54",
-			write = "? * 2.54" )
+			read = "diamet / 2.54E0",
+			write = "? * 2.54E0" )
 	public double getDiameter() { return diameter; }
 	public void setDiameter(double diameter) {  this.diameter = diameter; }
 	private double diameter;

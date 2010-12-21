@@ -15,8 +15,8 @@
 	    <property name="weightPounds">
 	    	<column name="weight_kg" 
 	    		not-null="true" 
-	    		write="0.453 * ?" 
-	    		read="weight_kg / 0.453"/>
+	    		write="0.453E0 * ?"
+	    		read="weight_kg / 0.453E0"/>
 	    </property>
 
 	    <property name="effectiveStartDate" column="eff_start_dt" type="java.util.Date"/>

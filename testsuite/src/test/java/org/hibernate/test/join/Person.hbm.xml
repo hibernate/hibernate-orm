@@ -39,8 +39,8 @@
 		<property name="heightInches">
 			<column name="height_centimeters" 
 				not-null="true" 
-				read="height_centimeters / 2.54" 
-				write="? * 2.54"/>
+				read="height_centimeters / 2.54E0"
+				write="? * 2.54E0"/>
 		</property>        
 
         <join table="address">
@@ -73,8 +73,8 @@
                 <property name="login" column="u_login"/>
 				<property name="passwordExpiryDays">
 					<column name="pwd_expiry_weeks" 
-						read="pwd_expiry_weeks * 7.0" 
-						write="? / 7.0"/>
+						read="pwd_expiry_weeks * 7.0E0"
+						write="? / 7.0E0"/>
 				</property>                
             </join>
             <join table="t_silly" fetch="select" optional="true">

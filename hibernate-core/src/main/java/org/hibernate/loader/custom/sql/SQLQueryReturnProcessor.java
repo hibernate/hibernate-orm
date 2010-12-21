@@ -24,43 +24,45 @@
  */
 package org.hibernate.loader.custom.sql;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.loader.custom.Return;
-import org.hibernate.loader.custom.ScalarReturn;
-import org.hibernate.loader.custom.RootReturn;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryNonScalarReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.loader.BasicLoader;
+import org.hibernate.loader.CollectionAliases;
+import org.hibernate.loader.ColumnEntityAliases;
+import org.hibernate.loader.DefaultEntityAliases;
+import org.hibernate.loader.EntityAliases;
+import org.hibernate.loader.GeneratedCollectionAliases;
+import org.hibernate.loader.custom.CollectionFetchReturn;
 import org.hibernate.loader.custom.CollectionReturn;
 import org.hibernate.loader.custom.ColumnCollectionAliases;
-import org.hibernate.loader.custom.FetchReturn;
-import org.hibernate.loader.custom.CollectionFetchReturn;
-import org.hibernate.loader.custom.NonScalarReturn;
 import org.hibernate.loader.custom.EntityFetchReturn;
-import org.hibernate.loader.BasicLoader;
-import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.DefaultEntityAliases;
-import org.hibernate.loader.ColumnEntityAliases;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.GeneratedCollectionAliases;
-import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryNonScalarReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.loader.custom.FetchReturn;
+import org.hibernate.loader.custom.NonScalarReturn;
+import org.hibernate.loader.custom.Return;
+import org.hibernate.loader.custom.RootReturn;
+import org.hibernate.loader.custom.ScalarReturn;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Responsible for processing the series of {@link org.hibernate.engine.query.sql.NativeSQLQueryReturn returns}
@@ -74,7 +76,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SQLQueryReturnProcessor {
 
-	public static final Logger log = LoggerFactory.getLogger( SQLQueryReturnProcessor.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SQLQueryReturnProcessor.class.getPackage().getName());
 
 	private NativeSQLQueryReturn[] queryReturns;
 
@@ -384,7 +387,7 @@ public class SQLQueryReturnProcessor {
 	private void addPersister(String alias, Map propertyResult, SQLLoadable persister) {
 		alias2Persister.put( alias, persister );
 		String suffix = generateEntitySuffix();
-		log.trace( "mapping alias [" + alias + "] to entity-suffix [" + suffix + "]" );
+        LOG.mappingAliasToEntitySuffix(alias, suffix);
 		alias2Suffix.put( alias, suffix );
 		entityPropertyResultMaps.put( alias, propertyResult );
 	}
@@ -393,7 +396,7 @@ public class SQLQueryReturnProcessor {
 		SQLLoadableCollection collectionPersister = ( SQLLoadableCollection ) factory.getCollectionPersister( role );
 		alias2CollectionPersister.put( alias, collectionPersister );
 		String suffix = generateCollectionSuffix();
-		log.trace( "mapping alias [" + alias + "] to collection-suffix [" + suffix + "]" );
+        LOG.mappingAliasToCollectionSuffix(alias, suffix);
 		alias2CollectionSuffix.put( alias, suffix );
 		collectionPropertyResultMaps.put( alias, propertyResults );
 
@@ -522,4 +525,20 @@ public class SQLQueryReturnProcessor {
 //		return alias2Return;
 //	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Mapping alias [%s] to collection-suffix [%s]" )
+        void mappingAliasToCollectionSuffix( String alias,
+                                             String suffix );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Mapping alias [%s] to entity-suffix [%s]" )
+        void mappingAliasToEntitySuffix( String alias,
+                                         String suffix );
+    }
 }

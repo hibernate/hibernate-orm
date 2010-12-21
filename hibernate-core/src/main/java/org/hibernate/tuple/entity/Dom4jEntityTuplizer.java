@@ -28,11 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -50,6 +46,9 @@ import org.hibernate.proxy.dom4j.Dom4jProxyFactory;
 import org.hibernate.tuple.Dom4jInstantiator;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.CompositeType;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link EntityTuplizer} specific to the dom4j entity mode.
@@ -59,7 +58,8 @@ import org.hibernate.type.CompositeType;
  */
 public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 
-	static final Logger log = LoggerFactory.getLogger( Dom4jEntityTuplizer.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                Dom4jEntityTuplizer.class.getPackage().getName());
 
 	private Map inheritenceNodeNameMap = new HashMap();
 
@@ -72,7 +72,7 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 			inheritenceNodeNameMap.put( mapping.getNodeName(), mapping.getEntityName() );
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -85,8 +85,8 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 			return mappedProperty.getPropertyAccessor(null);
 		}
 		else {
-			return PropertyAccessorFactory.getDom4jPropertyAccessor( 
-					mappedProperty.getNodeName(), 
+			return PropertyAccessorFactory.getDom4jPropertyAccessor(
+					mappedProperty.getNodeName(),
 					mappedProperty.getType(),
 					getEntityMetamodel().getSessionFactory()
 				);
@@ -96,35 +96,40 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
+	@Override
+    protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
+	@Override
+    protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	@Override
+    protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		return new Dom4jInstantiator( persistentClass );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Serializable getIdentifier(Object entityOrId) throws HibernateException {
+	@Override
+    public Serializable getIdentifier(Object entityOrId) throws HibernateException {
 		return getIdentifier( entityOrId, null );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Serializable getIdentifier(Object entityOrId, SessionImplementor session) {
+	@Override
+    public Serializable getIdentifier(Object entityOrId, SessionImplementor session) {
 		if ( entityOrId instanceof Element ) {
 			return super.getIdentifier( entityOrId, session );
 		}
@@ -137,7 +142,8 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
+	@Override
+    protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
 		HashSet proxyInterfaces = new HashSet();
 		proxyInterfaces.add( HibernateProxy.class );
 		proxyInterfaces.add( Element.class );
@@ -156,7 +162,7 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 			);
 		}
 		catch ( HibernateException he ) {
-			log.warn( "could not create proxy factory for:" + getEntityName(), he );
+            LOG.warn(LOG.unableToCreateProxyFactory(getEntityName()), he);
 			pf = null;
 		}
 		return pf;
@@ -220,15 +226,27 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 		/**
 		 * {@inheritDoc}
 		 */
-		public boolean equals(Object obj) {
+		@Override
+        public boolean equals(Object obj) {
 			return rootEntityName.equals( ( ( BasicEntityNameResolver ) obj ).rootEntityName );
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return rootEntityName.hashCode();
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "could not create proxy factory for:%s" )
+        Object unableToCreateProxyFactory( String entityName );
+    }
 }

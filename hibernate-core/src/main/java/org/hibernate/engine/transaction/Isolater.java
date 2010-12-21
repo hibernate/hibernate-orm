@@ -24,20 +24,24 @@
  */
 package org.hibernate.engine.transaction;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import javax.transaction.SystemException;
-import javax.transaction.NotSupportedException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Class which provides the isolation semantics required by
@@ -52,7 +56,7 @@ import org.hibernate.exception.SQLExceptionConverter;
  */
 public class Isolater {
 
-	private static final Logger log = LoggerFactory.getLogger( Isolater.class );
+    static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Isolater.class.getPackage().getName());
 
 	/**
 	 * Ensures that all processing actually performed by the given work will
@@ -116,9 +120,7 @@ public class Isolater {
 			try {
 				// First we suspend any current JTA transaction
 				Transaction surroundingTransaction = transactionManager.suspend();
-				if ( log.isDebugEnabled() ) {
-					log.debug( "surrounding JTA transaction suspended [" + surroundingTransaction + "]" );
-				}
+                LOG.jtaTransactionSuspended(surroundingTransaction);
 
 				boolean hadProblems = false;
 				try {
@@ -137,9 +139,7 @@ public class Isolater {
 				finally {
 					try {
 						transactionManager.resume( surroundingTransaction );
-						if ( log.isDebugEnabled() ) {
-							log.debug( "surrounding JTA transaction resumed [" + surroundingTransaction + "]" );
-						}
+                        LOG.jtaTransactionResumed(surroundingTransaction);
 					}
 					catch( Throwable t ) {
 						// if the actually work had an error use that, otherwise error based on t
@@ -170,7 +170,7 @@ public class Isolater {
 						transactionManager.rollback();
 					}
 					catch ( Exception ignore ) {
-						log.info( "Unable to rollback isolated transaction on error [" + e + "] : [" + ignore + "]" );
+                        LOG.unableToRollbackIsolatedTransaction(e, ignore);
 					}
 				}
 			}
@@ -206,7 +206,7 @@ public class Isolater {
 						session.getFactory().getConnectionProvider().closeConnection( connection );
 					}
 					catch ( Throwable ignore ) {
-						log.info( "Unable to release isolated connection [" + ignore + "]" );
+                        LOG.unableToReleaseIsolatedConnection(ignore);
 					}
 				}
 			}
@@ -259,7 +259,7 @@ public class Isolater {
 						}
 					}
 					catch( Exception ignore ) {
-						log.info( "unable to rollback connection on exception [" + ignore + "]" );
+                        LOG.unableToRollbackConnection(ignore);
 					}
 
 					if ( e instanceof HibernateException ) {
@@ -281,14 +281,14 @@ public class Isolater {
 							connection.setAutoCommit( true );
 						}
 						catch( Exception ignore ) {
-							log.trace( "was unable to reset connection back to auto-commit" );
+                            LOG.unableToResetConnectionToAutoCommit();
 						}
 					}
 					try {
 						session.getFactory().getConnectionProvider().closeConnection( connection );
 					}
 					catch ( Exception ignore ) {
-						log.info( "Unable to release isolated connection [" + ignore + "]" );
+                        LOG.unableToReleaseIsolatedConnection(ignore);
 					}
 				}
 			}
@@ -304,4 +304,40 @@ public class Isolater {
 			return session.getFactory().getSQLExceptionHelper();
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "On release of batch it still contained JDBC statements" )
+        void batchContainedStatementsOnRelease();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Surrounding JTA transaction resumed [%s]" )
+        void jtaTransactionResumed( Transaction surroundingTransaction );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Surrounding JTA transaction suspended [%s]" )
+        void jtaTransactionSuspended( Transaction surroundingTransaction );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Unable to release isolated connection [%s]" )
+        void unableToReleaseIsolatedConnection( Throwable ignore );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Unable to reset connection back to auto-commit" )
+        void unableToResetConnectionToAutoCommit();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Unable to rollback connection on exception [%s]" )
+        void unableToRollbackConnection( Exception ignore );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Unable to rollback isolated transaction on error [%s] : [%s]" )
+        void unableToRollbackIsolatedTransaction( Exception e,
+                                                  Exception ignore );
+    }
 }

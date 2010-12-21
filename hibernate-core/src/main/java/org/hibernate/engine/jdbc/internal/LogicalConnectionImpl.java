@@ -30,16 +30,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.jdbc.BorrowedConnectionProxy;
 import org.hibernate.stat.StatisticsImplementor;
@@ -50,7 +46,9 @@ import org.hibernate.stat.StatisticsImplementor;
  * @author Steve Ebersole
  */
 public class LogicalConnectionImpl implements LogicalConnectionImplementor {
-	private static final Logger log = LoggerFactory.getLogger( LogicalConnectionImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                LogicalConnectionImpl.class.getPackage().getName());
 
 	private Connection physicalConnection;
 	private Connection borrowedConnection;
@@ -200,11 +198,11 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			// no matter what
 			physicalConnection = null;
 			isClosed = true;
-			log.trace( "logical connection closed" );
+	        LOG.closedLogicalConnection();
 			for ( ConnectionObserver observer : observers ) {
 				observer.logicalConnectionClosed();
 			}
-		}			
+		}
 	}
 
 	/**
@@ -245,19 +243,19 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	public void afterStatementExecution() {
-		log.trace( "starting after statement execution processing [{}]", connectionReleaseMode );
+        LOG.startingAfterStatementExecution(connectionReleaseMode);
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				log.debug( "skipping aggressive release due to manual disabling" );
+                LOG.skippingAggressiveReleaseDueToManualDisabling();
 				return;
 			}
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
-				log.debug( "skipping aggressive release due to registered resources" );
+                LOG.skippingAggressiveReleaseDueToRegisteredResources();
 				return;
 			}
 			else if ( borrowedConnection != null ) {
 				log.debug( "skipping aggresive-release due to borrowed connection" );
-			}			
+			}
 			releaseConnection();
 		}
 	}
@@ -266,7 +264,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ||
 				connectionReleaseMode == ConnectionReleaseMode.AFTER_TRANSACTION ) {
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
-				log.info( "forcing container resource cleanup on transaction completion" );
+                LOG.forcingContainerResourceCleanup();
 				jdbcResourceRegistry.releaseResources();
 			}
 			aggressiveRelease();
@@ -274,12 +272,12 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	public void disableReleases() {
-		log.trace( "disabling releases" );
+        LOG.disablingReleases();
 		releasesEnabled = false;
 	}
 
 	public void enableReleases() {
-		log.trace( "(re)enabling releases" );
+        LOG.enablingReleases();
 		releasesEnabled = true;
 		//FIXME: uncomment after new batch stuff is integrated!!!
 		//afterStatementExecution();
@@ -290,10 +288,10 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 */
 	public void aggressiveRelease() {
 		if ( isUserSuppliedConnection ) {
-			log.debug( "cannot aggressively release user-supplied connection; skipping" );
+            LOG.unableToAggressivelyReleaseUserSuppliedConnection();
 		}
 		else {
-			log.debug( "aggressively releasing JDBC connection" );
+			LOG.aggressivelyReleasingJdbcConnection(  );
 			if ( physicalConnection != null ) {
 				releaseConnection();
 			}
@@ -307,13 +305,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws org.hibernate.JDBCException Indicates problem opening a connection
 	 */
 	private void obtainConnection() throws JDBCException {
-		log.debug( "obtaining JDBC connection" );
+        LOG.obtainingJdbcConnection();
 		try {
 			physicalConnection = getJdbcServices().getConnectionProvider().getConnection();
 			for ( ConnectionObserver observer : observers ) {
 				observer.physicalConnectionObtained( physicalConnection );
 			}
-			log.debug( "obtained JDBC connection" );
+            LOG.obtainedJdbcConnection();
 		}
 		catch ( SQLException sqle) {
 			throw getJdbcServices().getSqlExceptionHelper().convert( sqle, "Could not open connection" );
@@ -326,7 +324,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws JDBCException Indicates problem closing a connection
 	 */
 	private void releaseConnection() throws JDBCException {
-		log.debug( "releasing JDBC connection" );
+        LOG.releasingJdbcConnection();
 		if ( physicalConnection == null ) {
 			return;
 		}
@@ -337,7 +335,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			if ( !isUserSuppliedConnection ) {
 				getJdbcServices().getConnectionProvider().closeConnection( physicalConnection );
 			}
-			log.debug( "released JDBC connection" );
+            LOG.releasedJdbcConnection();
 		}
 		catch (SQLException sqle) {
 			throw getJdbcServices().getSqlExceptionHelper().convert( sqle, "Could not close connection" );
@@ -427,4 +425,72 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		);
  	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    /*
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Aggressively releasing JDBC connection" )
+        void aggressivelyReleasingJdbcConnection();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Logical connection closed" )
+        void closedLogicalConnection();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Closing logical connection" )
+        void closingLogicalConnection();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Disabling releases" )
+        void disablingReleases();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "(Re)enabling releases" )
+        void enablingReleases();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Forcing container resource cleanup on transaction completion" )
+        void forcingContainerResourceCleanup();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Obtained JDBC connection" )
+        void obtainedJdbcConnection();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Obtaining JDBC connection" )
+        void obtainingJdbcConnection();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Released JDBC connection" )
+        void releasedJdbcConnection();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Releasing JDBC connection" )
+        void releasingJdbcConnection();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Skipping aggressive release due to manual disabling" )
+        void skippingAggressiveReleaseDueToManualDisabling();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Skipping aggressive release due to registered resources" )
+        void skippingAggressiveReleaseDueToRegisteredResources();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting after statement execution processing [%s]" )
+        void startingAfterStatementExecution( ConnectionReleaseMode connectionReleaseMode );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Cannot aggressively release user-supplied connection; skipping" )
+        void unableToAggressivelyReleaseUserSuppliedConnection();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Connection provider reports to not support aggressive release; overriding" )
+        void unsupportedAggressiveRelease();
+    }
+    */
 }

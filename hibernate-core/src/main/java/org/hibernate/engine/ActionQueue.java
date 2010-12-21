@@ -23,6 +23,9 @@
  */
 package org.hibernate.engine;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -33,10 +36,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.AfterTransactionCompletionProcess;
@@ -52,6 +51,10 @@ import org.hibernate.action.EntityUpdateAction;
 import org.hibernate.action.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
@@ -64,7 +67,8 @@ import org.hibernate.type.Type;
  */
 public class ActionQueue {
 
-	private static final Logger log = LoggerFactory.getLogger( ActionQueue.class );
+    static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ActionQueue.class.getPackage().getName());
 	private static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	private SessionImplementor session;
@@ -249,9 +253,7 @@ public class ActionQueue {
 			final Serializable[] spaces = action.getPropertySpaces();
 			for ( Serializable space : spaces ) {
 				if ( tableSpaces.contains( space ) ) {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "changes must be flushed to space: " + space );
-					}
+                    LOG.changesMustBeFlushed(space);
 					return true;
 				}
 			}
@@ -299,7 +301,8 @@ public class ActionQueue {
 	 *
 	 * @return a string representation of the object.
 	 */
-	public String toString() {
+	@Override
+    public String toString() {
 		return new StringBuffer()
 				.append( "ActionQueue[insertions=" ).append( insertions )
 				.append( " updates=" ).append( updates )
@@ -412,45 +415,45 @@ public class ActionQueue {
 	 * @throws IOException Indicates an error writing to the stream
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		log.trace( "serializing action-queue" );
+        LOG.serializingActionQueue();
 
 		int queueSize = insertions.size();
-		log.trace( "starting serialization of [" + queueSize + "] insertions entries" );
+        LOG.serializingInsertions(queueSize);
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( insertions.get( i ) );
 		}
 
 		queueSize = deletions.size();
-		log.trace( "starting serialization of [" + queueSize + "] deletions entries" );
+        LOG.serializingDeletions(queueSize);
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( deletions.get( i ) );
 		}
 
 		queueSize = updates.size();
-		log.trace( "starting serialization of [" + queueSize + "] updates entries" );
+        LOG.serializingUpdates(queueSize);
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( updates.get( i ) );
 		}
 
 		queueSize = collectionUpdates.size();
-		log.trace( "starting serialization of [" + queueSize + "] collectionUpdates entries" );
+        LOG.serializingCollectionUpdates(queueSize);
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionUpdates.get( i ) );
 		}
 
 		queueSize = collectionRemovals.size();
-		log.trace( "starting serialization of [" + queueSize + "] collectionRemovals entries" );
+        LOG.serializingCollectionRemovals(queueSize);
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionRemovals.get( i ) );
 		}
 
 		queueSize = collectionCreations.size();
-		log.trace( "starting serialization of [" + queueSize + "] collectionCreations entries" );
+        LOG.serializingCollectionCreations(queueSize);
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionCreations.get( i ) );
@@ -473,46 +476,46 @@ public class ActionQueue {
 	public static ActionQueue deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		log.trace( "deserializing action-queue" );
+        LOG.deserializingActionQueue();
 		ActionQueue rtn = new ActionQueue( session );
 
 		int queueSize = ois.readInt();
-		log.trace( "starting deserialization of [" + queueSize + "] insertions entries" );
+        LOG.deserializingInsertions(queueSize);
 		rtn.insertions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.insertions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
-		log.trace( "starting deserialization of [" + queueSize + "] deletions entries" );
+        LOG.deserializingDeletions(queueSize);
 		rtn.deletions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.deletions.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
-		log.trace( "starting deserialization of [" + queueSize + "] updates entries" );
+        LOG.deserializingUpdates(queueSize);
 		rtn.updates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.updates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
-		log.trace( "starting deserialization of [" + queueSize + "] collectionUpdates entries" );
+        LOG.deserializingCollectionUpdates(queueSize);
 		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionUpdates.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
-		log.trace( "starting deserialization of [" + queueSize + "] collectionRemovals entries" );
+        LOG.deserializingCollectionRemovals(queueSize);
 		rtn.collectionRemovals = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionRemovals.add( ois.readObject() );
 		}
 
 		queueSize = ois.readInt();
-		log.trace( "starting deserialization of [" + queueSize + "] collectionCreations entries" );
+        LOG.deserializingCollectionCreations(queueSize);
 		rtn.collectionCreations = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			rtn.collectionCreations.add( ois.readObject() );
@@ -591,7 +594,7 @@ public class ActionQueue {
 					process.doAfterTransactionCompletion( success, session );
 				}
 				catch ( CacheException ce ) {
-					log.error( "could not release a cache lock", ce );
+                    LOG.unableToReleaseCacheLock(ce);
 					// continue loop
 				}
 				catch ( Exception e ) {
@@ -730,4 +733,74 @@ public class ActionQueue {
 
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Changes must be flushed to space: %s" )
+        void changesMustBeFlushed( Serializable space );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Could not release a cache lock : %s" )
+        void unableToReleaseCacheLock( CacheException ce );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Dedeserializing action-queue" )
+        void deserializingActionQueue();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting deserialization of [%d] collectionCreations entries" )
+        void deserializingCollectionCreations( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting deserialization of [%d] collectionRemovals entries" )
+        void deserializingCollectionRemovals( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting deserialization of [%d] collectionUpdates entries" )
+        void deserializingCollectionUpdates( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting deserialization of [%d] deletions entries" )
+        void deserializingDeletions( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting deserialization of [%d] insertions entries" )
+        void deserializingInsertions( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting deserialization of [%d] updates entries" )
+        void deserializingUpdates( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Serializing action-queue" )
+        void serializingActionQueue();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting serialization of [%d] collectionCreations entries" )
+        void serializingCollectionCreations( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting serialization of [%d] collectionRemovals entries" )
+        void serializingCollectionRemovals( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting serialization of [%d] collectionUpdates entries" )
+        void serializingCollectionUpdates( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting serialization of [%d] deletions entries" )
+        void serializingDeletions( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting serialization of [%d] insertions entries" )
+        void serializingInsertions( int queueSize );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting serialization of [%d] updates entries" )
+        void serializingUpdates( int queueSize );
+    }
 }

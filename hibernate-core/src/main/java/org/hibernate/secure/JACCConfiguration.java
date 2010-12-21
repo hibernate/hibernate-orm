@@ -24,25 +24,27 @@
  */
 package org.hibernate.secure;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.StringTokenizer;
-
 import javax.security.jacc.EJBMethodPermission;
 import javax.security.jacc.PolicyConfiguration;
 import javax.security.jacc.PolicyConfigurationFactory;
 import javax.security.jacc.PolicyContextException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Adds Hibernate permissions to roles via JACC
- * 
+ *
  * @author Gavin King
  */
 public class JACCConfiguration {
 
-	private static final Logger log = LoggerFactory.getLogger( JACCConfiguration.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JACCConfiguration.class.getPackage().getName());
 
 	private final PolicyConfiguration policyConfiguration;
 
@@ -70,16 +72,14 @@ public class JACCConfiguration {
 
 		while ( tok.hasMoreTokens() ) {
 			String methodName = tok.nextToken().trim();
-			EJBMethodPermission permission = new EJBMethodPermission( 
-					entityName, 
-					methodName, 
+			EJBMethodPermission permission = new EJBMethodPermission(
+					entityName,
+					methodName,
 					null, // interfaces
 					null // arguments
 				);
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( "adding permission to role " + role + ": " + permission );
-			}
+            LOG.addingPermissionToRole(role, permission);
 			try {
 				policyConfiguration.addToRole( role, permission );
 			}
@@ -89,4 +89,15 @@ public class JACCConfiguration {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Adding permission to role %s: %s" )
+        void addingPermissionToRole( String role,
+                                     EJBMethodPermission permission );
+    }
 }

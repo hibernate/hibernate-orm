@@ -24,19 +24,20 @@
  */
 package org.hibernate.id;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
-import org.hibernate.type.Type;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -45,7 +46,9 @@ import org.hibernate.type.CustomType;
  * @author Steve Ebersole
  */
 public final class IdentifierGeneratorHelper {
-	private static final Logger log = LoggerFactory.getLogger( IdentifierGeneratorHelper.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                IdentifierGeneratorHelper.class.getPackage().getName());
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
@@ -54,7 +57,8 @@ public final class IdentifierGeneratorHelper {
 	 * entity's id value.
 	 */
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
-		public String toString() {
+		@Override
+        public String toString() {
 			return "SHORT_CIRCUIT_INDICATOR";
 		}
 	};
@@ -64,7 +68,8 @@ public final class IdentifierGeneratorHelper {
 	 * be generated as part of the datbase insertion.
 	 */
 	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
-		public String toString() {
+		@Override
+        public String toString() {
 			return "POST_INSERT_INDICATOR";
 		}
 	};
@@ -84,7 +89,7 @@ public final class IdentifierGeneratorHelper {
 			throw new HibernateException( "The database returned no natively generated identity value" );
 		}
 		final Serializable id = IdentifierGeneratorHelper.get( rs, type );
-		log.debug( "Natively generated identity: " + id );
+        LOG.nativelyGeneratedIdentity(id);
 		return id;
 	}
 
@@ -147,7 +152,8 @@ public final class IdentifierGeneratorHelper {
 	 *
 	 * @deprecated Use the {@link #getIntegralDataTypeHolder holders} instead.
 	 */
-	public static Number createNumber(long value, Class clazz) throws IdentifierGenerationException {
+	@Deprecated
+    public static Number createNumber(long value, Class clazz) throws IdentifierGenerationException {
 		if ( clazz == Long.class ) {
 			return new Long( value );
 		}
@@ -363,11 +369,13 @@ public final class IdentifierGeneratorHelper {
 			return result;
 		}
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return "BasicHolder[" + exactType.getName() + "[" + value + "]]";
 		}
 
-		public boolean equals(Object o) {
+		@Override
+        public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
@@ -380,7 +388,8 @@ public final class IdentifierGeneratorHelper {
 			return value == that.value;
 		}
 
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return (int) ( value ^ ( value >>> 32 ) );
 		}
 	}
@@ -501,11 +510,13 @@ public final class IdentifierGeneratorHelper {
 			return result;
 		}
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return "BigIntegerHolder[" + value + "]";
 		}
 
-		public boolean equals(Object o) {
+		@Override
+        public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
@@ -520,7 +531,8 @@ public final class IdentifierGeneratorHelper {
 					: value.equals( that.value );
 		}
 
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return value != null ? value.hashCode() : 0;
 		}
 	}
@@ -641,11 +653,13 @@ public final class IdentifierGeneratorHelper {
 			return result;
 		}
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return "BigDecimalHolder[" + value + "]";
 		}
 
-		public boolean equals(Object o) {
+		@Override
+        public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
@@ -660,7 +674,8 @@ public final class IdentifierGeneratorHelper {
 					: this.value.equals( that.value );
 		}
 
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return value != null ? value.hashCode() : 0;
 		}
 	}
@@ -671,4 +686,14 @@ public final class IdentifierGeneratorHelper {
 	private IdentifierGeneratorHelper() {
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Natively generated identity: %s" )
+        void nativelyGeneratedIdentity( Serializable id );
+    }
 }

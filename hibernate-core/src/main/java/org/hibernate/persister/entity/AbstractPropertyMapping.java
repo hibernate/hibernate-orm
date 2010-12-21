@@ -24,12 +24,9 @@
  */
 package org.hibernate.persister.entity;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
@@ -40,6 +37,10 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Basic implementation of the {@link PropertyMapping} contract.
@@ -47,7 +48,9 @@ import org.hibernate.util.StringHelper;
  * @author Gavin King
  */
 public abstract class AbstractPropertyMapping implements PropertyMapping {
-	private static final Logger log = LoggerFactory.getLogger( AbstractPropertyMapping.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractPropertyMapping.class.getPackage().getName());
 
 	private final Map typesByPropertyPath = new HashMap();
 	private final Map columnsByPropertyPath = new HashMap();
@@ -66,7 +69,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 	public String[] getIdentifierColumnReaders() {
 		throw new UnsupportedOperationException("one-to-one is not supported here");
 	}
-	
+
 	protected abstract String getEntityName();
 
 	public Type toType(String propertyName) throws QueryException {
@@ -96,7 +99,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			throw propertyException( propertyName );
 		}
 		String[] formulaTemplates = (String[]) formulaTemplatesByPropertyPath.get(propertyName);
-		String[] columnReaderTemplates = (String[]) columnReaderTemplatesByPropertyPath.get(propertyName);		
+		String[] columnReaderTemplates = (String[]) columnReaderTemplatesByPropertyPath.get(propertyName);
 		String[] result = new String[columns.length];
 		for ( int i=0; i<columns.length; i++ ) {
 			if ( columnReaderTemplates[i]==null ) {
@@ -137,13 +140,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates) {
 		// TODO : not quite sure yet of the difference, but this is only needed from annotations for @Id @ManyToOne support
 		if ( typesByPropertyPath.containsKey( path ) ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-						"Skipping duplicate registration of path [" + path
-								+ "], existing type = [" + typesByPropertyPath.get(path)
-								+ "], incoming type = [" + type + "]"
-				);
-			}
+            LOG.skippingDuplicatePathRegistration(path, typesByPropertyPath.get(path), type);
 			return;
 		}
 		typesByPropertyPath.put(path, type);
@@ -302,4 +299,16 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Skipping duplicate registration of path [%s], existing type = [%s], incoming type = [%s]" )
+        void skippingDuplicatePathRegistration( String path,
+                                                Object object,
+                                                Type type );
+    }
 }

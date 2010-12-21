@@ -23,15 +23,18 @@
  */
 package org.hibernate.id.enhanced;
 
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Factory for {@link Optimizer} instances.
@@ -39,7 +42,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Steve Ebersole
  */
 public class OptimizerFactory {
-	private static final Logger log = LoggerFactory.getLogger( OptimizerFactory.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                OptimizerFactory.class.getPackage().getName());
 
 	public static final String NONE = "none";
 	public static final String HILO = "hilo";
@@ -78,7 +83,8 @@ public class OptimizerFactory {
 	 *
 	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
 	 */
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@Deprecated
+    @SuppressWarnings({ "UnnecessaryBoxing" })
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
 		String optimizerClassName;
 		if ( NONE.equals( type ) ) {
@@ -106,7 +112,7 @@ public class OptimizerFactory {
 			return ( Optimizer ) ctor.newInstance( returnClass, Integer.valueOf( incrementSize ) );
 		}
 		catch( Throwable ignore ) {
-			log.warn( "Unable to instantiate specified optimizer [{}], falling back to noop", type );
+            LOG.unableToInstantiateOptimizer(type);
 		}
 
 		// the default...
@@ -252,12 +258,8 @@ public class OptimizerFactory {
 
 		public HiLoOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
-			if ( incrementSize < 1 ) {
-				throw new HibernateException( "increment size cannot be less than 1" );
-			}
-			if ( log.isTraceEnabled() ) {
-				log.trace( "creating hilo optimizer with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
-			}
+            if (incrementSize < 1) throw new HibernateException("increment size cannot be less than 1");
+            LOG.creatingHiloOptimizer(incrementSize, returnClass.getName());
 		}
 
 		/**
@@ -332,13 +334,8 @@ public class OptimizerFactory {
 
 		public LegacyHiLoAlgorithmOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
-			if ( incrementSize < 1 ) {
-				throw new HibernateException( "increment size cannot be less than 1" );
-			}
-			if ( log.isTraceEnabled() ) {
-				log.trace( "creating hilo optimizer (legacy) with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
-			}
-
+            if (incrementSize < 1) throw new HibernateException("increment size cannot be less than 1");
+            LOG.creatingLegacyHiloOptimizer(incrementSize, returnClass.getName());
 			maxLo = incrementSize;
 			lo = maxLo+1;
 		}
@@ -403,9 +400,7 @@ public class OptimizerFactory {
 			if ( incrementSize < 1 ) {
 				throw new HibernateException( "increment size cannot be less than 1" );
 			}
-			if ( log.isTraceEnabled() ) {
-				log.trace( "creating pooled optimizer with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
-			}
+            LOG.creatingPooledOptimizer(incrementSize, returnClass.getName());
 		}
 
 		/**
@@ -414,17 +409,13 @@ public class OptimizerFactory {
 		public synchronized Serializable generate(AccessCallback callback) {
 			if ( hiValue == null ) {
 				value = callback.getNextValue();
-				if ( value.lt( 1 ) ) {
-					// unfortunately not really safe to normalize this
-					// to 1 as an initial value like we do the others
-					// because we would not be able to control this if
-					// we are using a sequence...
-					log.info( "pooled optimizer source reported [" + value + "] as the initial value; use of 1 or greater highly recommended" );
-				}
-				if ( ( initialValue == -1 && value.lt( incrementSize ) ) || value.eq( initialValue ) ) {
-					// the call to obtain next-value just gave us the initialValue
-					hiValue = callback.getNextValue();
-				}
+                // unfortunately not really safe to normalize this
+                // to 1 as an initial value like we do the others
+                // because we would not be able to control this if
+                // we are using a sequence...
+                if (value.lt(1)) LOG.pooledOptimizerReportedInitialValue(value);
+                // the call to obtain next-value just gave us the initialValue
+                if ((initialValue == -1 && value.lt(incrementSize)) || value.eq(initialValue)) hiValue = callback.getNextValue();
 				else {
 					hiValue = value;
 					value = hiValue.copy().subtract( incrementSize );
@@ -479,9 +470,7 @@ public class OptimizerFactory {
 			if ( incrementSize < 1 ) {
 				throw new HibernateException( "increment size cannot be less than 1" );
 			}
-			if ( log.isTraceEnabled() ) {
-				log.trace( "creating pooled optimizer (lo) with [incrementSize=" + incrementSize + "; returnClass="  + returnClass.getName() + "]" );
-			}
+            LOG.creatingPooledLoOptimizer(incrementSize, returnClass.getName());
 		}
 
 		public Serializable generate(AccessCallback callback) {
@@ -504,4 +493,39 @@ public class OptimizerFactory {
 			return true;
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Creating hilo optimizer with [incrementSize=%d; returnClass=%s]" )
+        void creatingHiloOptimizer( int incrementSize,
+                                    String name );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Creating hilo optimizer (legacy) with [incrementSize=%d; returnClass=%s]" )
+        void creatingLegacyHiloOptimizer( int incrementSize,
+                                          String name );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Creating pooled optimizer (lo) with [incrementSize=%d; returnClass=%s]" )
+        void creatingPooledLoOptimizer( int incrementSize,
+                                        String name );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Creating pooled optimizer with [incrementSize=%d; returnClass=%s]" )
+        void creatingPooledOptimizer( int incrementSize,
+                                      String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Pooled optimizer source reported [%s] as the initial value; use of 1 or greater highly recommended" )
+        void pooledOptimizerReportedInitialValue( IntegralDataTypeHolder value );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to instantiate specified optimizer [%s], falling back to noop" )
+        void unableToInstantiateOptimizer( String type );
+    }
 }

@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Calendar;
@@ -34,10 +35,6 @@ import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -60,12 +57,18 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class SimpleValueBinder {
-	private Logger log = LoggerFactory.getLogger( SimpleValueBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SimpleValueBinder.class.getPackage().getName());
+
 	private String propertyName;
 	private String returnedClassName;
 	private Ejb3Column[] columns;
@@ -300,7 +303,7 @@ public class SimpleValueBinder {
 	public SimpleValue make() {
 
 		validate();
-		log.debug( "building SimpleValue for {}", propertyName );
+        LOG.buildingSimpleValue(propertyName);
 		if ( table == null ) {
 			table = columns[0].getTable();
 		}
@@ -338,7 +341,7 @@ public class SimpleValueBinder {
 
 	public void fillSimpleValue() {
 
-		log.debug( "Setting SimpleValue typeName for {}", propertyName );
+        LOG.settingSimpleValueTypeName(propertyName);
 
 		String type = BinderHelper.isEmptyAnnotationValue( explicitType ) ? returnedClassName : explicitType;
 		org.hibernate.mapping.TypeDef typeDef = mappings.getTypeDef( type );
@@ -368,4 +371,19 @@ public class SimpleValueBinder {
 	public void setKey(boolean key) {
 		this.key = key;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "building SimpleValue for %s" )
+        void buildingSimpleValue( String propertyName );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Setting SimpleValue typeName for %s" )
+        void settingSimpleValueTypeName( String propertyName );
+    }
 }

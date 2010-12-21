@@ -24,18 +24,20 @@
  */
 package org.hibernate.jdbc;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.StaleStateException;
-import org.hibernate.HibernateException;
-import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
-import org.hibernate.util.JDBCExceptionReporter;
-import org.hibernate.exception.GenericJDBCException;
-
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.CallableStatement;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Types;
+import org.hibernate.HibernateException;
+import org.hibernate.StaleStateException;
+import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.util.JDBCExceptionReporter;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Holds various often used {@link Expectation} definitions.
@@ -43,7 +45,9 @@ import java.sql.Types;
  * @author Steve Ebersole
  */
 public class Expectations {
-	private static final Logger log = LoggerFactory.getLogger( Expectations.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                Expectations.class.getPackage().getName());
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;
@@ -72,22 +76,13 @@ public class Expectations {
 		}
 
 		private void checkBatched(int rowCount, int batchPosition) {
-			if ( rowCount == -2 ) {
-				if ( log.isDebugEnabled() ) {
-					log.debug( "success of batch update unknown: " + batchPosition );
-				}
-			}
-			else if ( rowCount == -3 ) {
-				throw new BatchFailedException( "Batch update failed: " + batchPosition );
-			}
+            if (rowCount == -2) LOG.successOfBatchUpdateUnknown(batchPosition);
+            else if (rowCount == -3) throw new BatchFailedException("Batch update failed: " + batchPosition);
 			else {
-				if ( expectedRowCount > rowCount ) {
-					throw new StaleStateException(
-							"Batch update returned unexpected row count from update [" + batchPosition +
-							"]; actual row count: " + rowCount +
-							"; expected: " + expectedRowCount
-					);
-				}
+                if (expectedRowCount > rowCount) throw new StaleStateException(
+                                                                               "Batch update returned unexpected row count from update ["
+                                                                               + batchPosition + "]; actual row count: " + rowCount
+                                                                               + "; expected: " + expectedRowCount);
 				if ( expectedRowCount < rowCount ) {
 					String msg = "Batch update returned unexpected row count from update [" +
 					             batchPosition + "]; actual row count: " + rowCount +
@@ -129,16 +124,19 @@ public class Expectations {
 			this.parameterPosition = parameterPosition;
 		}
 
-		public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
+		@Override
+        public int prepare(PreparedStatement statement) throws SQLException, HibernateException {
 			toCallableStatement( statement ).registerOutParameter( parameterPosition, Types.NUMERIC );
 			return 1;
 		}
 
-		public boolean canBeBatched() {
+		@Override
+        public boolean canBeBatched() {
 			return false;
 		}
 
-		protected int determineRowCount(int reportedRowCount, PreparedStatement statement) {
+		@Override
+        protected int determineRowCount(int reportedRowCount, PreparedStatement statement) {
 			try {
 				return toCallableStatement( statement ).getInt( parameterPosition );
 			}
@@ -195,4 +193,15 @@ public class Expectations {
 
 	private Expectations() {
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Success of batch update unknown: %s" )
+        void successOfBatchUpdateUnknown( int batchPosition );
+    }
 }

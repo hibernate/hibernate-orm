@@ -23,13 +23,15 @@
  */
 package org.hibernate.engine.transaction;
 
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.LinkedHashSet;
 import javax.transaction.Synchronization;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Manages a registry of {@link Synchronization Synchronizations}.
@@ -37,7 +39,9 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class SynchronizationRegistry {
-	private static final Logger log = LoggerFactory.getLogger( SynchronizationRegistry.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SynchronizationRegistry.class.getPackage().getName());
 
 	private LinkedHashSet<Synchronization> synchronizations;
 
@@ -45,7 +49,7 @@ public class SynchronizationRegistry {
 	 * Register a user {@link Synchronization} callback for this transaction.
 	 *
 	 * @param synchronization The synchronization callback to register.
-	 * 
+	 *
 	 * @throws HibernateException
 	 */
 	public void registerSynchronization(Synchronization synchronization) {
@@ -58,9 +62,7 @@ public class SynchronizationRegistry {
 		}
 
 		boolean added = synchronizations.add( synchronization );
-		if ( !added ) {
-			log.info( "Synchronization [{}] was already registered", synchronization );
-		}
+        if (!added) LOG.synchronizationAlreadyRegistered(synchronization);
 	}
 
 	/**
@@ -74,7 +76,7 @@ public class SynchronizationRegistry {
 					synchronization.beforeCompletion();
 				}
 				catch ( Throwable t ) {
-					log.error( "exception calling user Synchronization [{}]", synchronization, t );
+                    LOG.synchronizationFailed(synchronization, t);
 				}
 			}
 		}
@@ -93,9 +95,25 @@ public class SynchronizationRegistry {
 					synchronization.afterCompletion( status );
 				}
 				catch ( Throwable t ) {
-					log.error( "exception calling user Synchronization [{}]", synchronization, t );
+                    LOG.synchronizationFailed(synchronization, t);
 				}
 			}
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Synchronization [%s] was already registered" )
+        void synchronizationAlreadyRegistered( Synchronization synchronization );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Exception calling user Synchronization [%s] : %s" )
+        void synchronizationFailed( Synchronization synchronization,
+                                    Throwable t );
+    }
 }

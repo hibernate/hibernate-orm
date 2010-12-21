@@ -2,10 +2,6 @@
 package org.hibernate.test.annotations.naturalid;
 
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -24,10 +20,8 @@ import org.hibernate.test.annotations.TestCase;
 @SuppressWarnings("unchecked")
 public class NaturalIdOnSingleManyToOneTest extends TestCase {
 
-	private Logger log = LoggerFactory.getLogger( NaturalIdOnManyToOne.class );
-
 	public void testMappingProperties() {
-		log.warn( "Commented out test" );
+        LOG.warn("Commented out test");
 
 		ClassMetadata metaData = getSessions().getClassMetadata(
 				NaturalIdOnManyToOne.class
@@ -103,14 +97,16 @@ public class NaturalIdOnSingleManyToOneTest extends TestCase {
 		s.close();
 	}
 
-	protected Class[] getAnnotatedClasses() {
+	@Override
+    protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Citizen.class, State.class,
 				NaturalIdOnManyToOne.class
 		};
 	}
 
-	protected void configure(Configuration cfg) {
+	@Override
+    protected void configure(Configuration cfg) {
 		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
 	}
 }

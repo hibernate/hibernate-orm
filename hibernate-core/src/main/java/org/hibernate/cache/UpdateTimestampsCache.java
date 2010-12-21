@@ -28,10 +28,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Settings;
 
@@ -47,14 +43,14 @@ import org.hibernate.cfg.Settings;
  */
 public class UpdateTimestampsCache {
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-	private static final Logger log = LoggerFactory.getLogger( UpdateTimestampsCache.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	private final TimestampsRegion region;
 
 	public UpdateTimestampsCache(Settings settings, Properties props) throws HibernateException {
 		String prefix = settings.getCacheRegionPrefix();
 		String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
-		log.info( "starting update timestamps cache at region: " + regionName );
+        LOG.startingUpdateTimestampsCache(regionName);
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
 	}
 
@@ -62,9 +58,7 @@ public class UpdateTimestampsCache {
 		//TODO: to handle concurrent writes correctly, this should return a Lock to the client
 		Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
 		for ( int i=0; i<spaces.length; i++ ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Pre-invalidating space [" + spaces[i] + "]" );
-			}
+            LOG.preInvalidatingSpace(spaces[i]);
 			//put() has nowait semantics, is this really appropriate?
 			//note that it needs to be async replication, never local or sync
 			region.put( spaces[i], ts );
@@ -77,9 +71,7 @@ public class UpdateTimestampsCache {
 		Long ts = new Long( region.nextTimestamp() );
 		//TODO: if lock.getTimestamp().equals(ts)
 		for ( int i=0; i<spaces.length; i++ ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Invalidating space [" + spaces[i] + "], timestamp: " + ts);
-			}
+            LOG.invalidatingSpace(spaces[i], ts);
 			//put() has nowait semantics, is this really appropriate?
 			//note that it needs to be async replication, never local or sync
 			region.put( spaces[i], ts );
@@ -98,9 +90,7 @@ public class UpdateTimestampsCache {
 				//result = false; // safer
 			}
 			else {
-				if ( log.isDebugEnabled() ) {
-					log.debug("[" + space + "] last update timestamp: " + lastUpdate + ", result set timestamp: " + timestamp );
-				}
+                LOG.spaceLastUpdated(space, lastUpdate, timestamp);
 				if ( lastUpdate.longValue() >= timestamp.longValue() ) {
 					return false;
 				}
@@ -118,15 +108,16 @@ public class UpdateTimestampsCache {
 			region.destroy();
 		}
 		catch (Exception e) {
-			log.warn("could not destroy UpdateTimestamps cache", e);
+            LOG.unableToDestroyUpdateTimestampsCache(region.getName(), e.getMessage());
 		}
 	}
 
 	public TimestampsRegion getRegion() {
 		return region;
 	}
-	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		return "UpdateTimestampeCache";
 	}
 

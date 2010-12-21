@@ -24,19 +24,21 @@
  */
 package org.hibernate.context;
 
-import org.hibernate.HibernateException;
+import static org.jboss.logging.Logger.Level.DEBUG;
+import java.util.Hashtable;
+import java.util.Map;
+import javax.transaction.Synchronization;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.HibernateException;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.JTAHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import javax.transaction.Synchronization;
-import java.util.Map;
-import java.util.Hashtable;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An implementation of {@link CurrentSessionContext} which scopes the notion
@@ -63,7 +65,8 @@ import java.util.Hashtable;
  */
 public class JTASessionContext implements CurrentSessionContext {
 
-	private static final Logger log = LoggerFactory.getLogger( JTASessionContext.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JTASessionContext.class.getPackage().getName());
 
 	protected final SessionFactoryImplementor factory;
 	private transient Map currentSessionMap = new Hashtable();
@@ -118,7 +121,7 @@ public class JTASessionContext implements CurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable ignore ) {
-					log.debug( "Unable to release generated current-session on failed synch registration", ignore );
+                    LOG.unableToReleaseSession(ignore.getMessage());
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}
@@ -209,4 +212,15 @@ public class JTASessionContext implements CurrentSessionContext {
 			context.currentSessionMap.remove( transactionIdentifier );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Unable to release generated current-session on failed synch registration\n%s" )
+        void unableToReleaseSession( String message );
+    }
 }

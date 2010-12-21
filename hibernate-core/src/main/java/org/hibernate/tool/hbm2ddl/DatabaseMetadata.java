@@ -24,6 +24,7 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -33,24 +34,26 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.mapping.Table;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * JDBC database metadata
  * @author Christoph Sturm, Teodor Danciu
  */
 public class DatabaseMetadata {
-	
-	private static final Logger log = LoggerFactory.getLogger(DatabaseMetadata.class);
-	
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DatabaseMetaData.class.getPackage().getName());
+
 	private final Map tables = new HashMap();
 	private final Set sequences = new HashSet();
 	private final boolean extras;
@@ -79,34 +82,34 @@ public class DatabaseMetadata {
 			return table;
 		}
 		else {
-			
+
 			try {
 				ResultSet rs = null;
 				try {
 					if ( (isQuoted && meta.storesMixedCaseQuotedIdentifiers())) {
 						rs = meta.getTables(catalog, schema, name, TYPES);
-					} else if ( (isQuoted && meta.storesUpperCaseQuotedIdentifiers()) 
+					} else if ( (isQuoted && meta.storesUpperCaseQuotedIdentifiers())
 						|| (!isQuoted && meta.storesUpperCaseIdentifiers() )) {
-						rs = meta.getTables( 
-								StringHelper.toUpperCase(catalog), 
-								StringHelper.toUpperCase(schema), 
-								StringHelper.toUpperCase(name), 
-								TYPES 
+						rs = meta.getTables(
+								StringHelper.toUpperCase(catalog),
+								StringHelper.toUpperCase(schema),
+								StringHelper.toUpperCase(name),
+								TYPES
 							);
 					}
 					else if ( (isQuoted && meta.storesLowerCaseQuotedIdentifiers())
 							|| (!isQuoted && meta.storesLowerCaseIdentifiers() )) {
-						rs = meta.getTables( 
-								StringHelper.toLowerCase(catalog), 
-								StringHelper.toLowerCase(schema), 
-								StringHelper.toLowerCase(name), 
-								TYPES 
+						rs = meta.getTables(
+								StringHelper.toLowerCase(catalog),
+								StringHelper.toLowerCase(schema),
+								StringHelper.toLowerCase(name),
+								TYPES
 							);
 					}
 					else {
 						rs = meta.getTables(catalog, schema, name, TYPES);
 					}
-					
+
 					while ( rs.next() ) {
 						String tableName = rs.getString("TABLE_NAME");
 						if ( name.equalsIgnoreCase(tableName) ) {
@@ -115,8 +118,8 @@ public class DatabaseMetadata {
 							return table;
 						}
 					}
-					
-					log.info("table not found: " + name);
+
+                    LOG.tableNotFound(name);
 					return null;
 
 				}
@@ -143,13 +146,13 @@ public class DatabaseMetadata {
 		if ( dialect.supportsSequences() ) {
 			String sql = dialect.getQuerySequencesString();
 			if (sql!=null) {
-	
+
 				Statement statement = null;
 				ResultSet rs = null;
 				try {
 					statement = connection.createStatement();
 					rs = statement.executeQuery(sql);
-		
+
 					while ( rs.next() ) {
 						sequences.add( rs.getString(1).toLowerCase().trim() );
 					}
@@ -158,7 +161,7 @@ public class DatabaseMetadata {
 					if (rs!=null) rs.close();
 					if (statement!=null) statement.close();
 				}
-				
+
 			}
 		}
 	}
@@ -192,13 +195,20 @@ public class DatabaseMetadata {
  		}
  		return false;
  	}
- 	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		return "DatabaseMetadata" + tables.keySet().toString() + sequences.toString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Table not found: %s" )
+        void tableNotFound( String name );
+    }
 }
-
-
-
-
-

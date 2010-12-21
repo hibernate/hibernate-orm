@@ -27,14 +27,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
 import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
@@ -52,7 +48,6 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
-	private static final Logger log = LoggerFactory.getLogger( DatasourceConnectionProviderImpl.class );
 
 	private DataSource dataSource;
 	private String user;

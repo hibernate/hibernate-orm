@@ -23,6 +23,9 @@
  */
 package org.hibernate.internal.util.jndi;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
@@ -32,14 +35,16 @@ import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cfg.Environment;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 public final class JndiHelper {
-	private static final Logger log = LoggerFactory.getLogger( JndiHelper.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JndiHelper.class.getPackage().getName());
 
 	private JndiHelper() {
 	}
@@ -113,7 +118,7 @@ public final class JndiHelper {
 	 */
 	public static void bind(String jndiName, Object value, Context context) {
 		try {
-			log.trace( "binding : " + jndiName );
+            LOG.binding(jndiName);
 			context.rebind( jndiName, value );
 		}
 		catch ( Exception initialException ) {
@@ -126,7 +131,7 @@ public final class JndiHelper {
 
 				Context intermediateContext = null;
 				try {
-					log.trace( "intermediate lookup: " + intermediateContextName );
+                    LOG.intermediateLookup(intermediateContextName);
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -136,11 +141,9 @@ public final class JndiHelper {
 					throw new JndiException( "Unaniticipated error doing intermediate lookup", e );
 				}
 
-				if ( intermediateContext != null ) {
-					log.trace( "Found interediate context: " + intermediateContextName );
-				}
+                if (intermediateContext != null) LOG.foundIntermediateContext(intermediateContextName);
 				else {
-					log.trace( "Creating subcontext: " + intermediateContextName );
+                    LOG.creatingSubcontextTrace(intermediateContextName);
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -151,7 +154,7 @@ public final class JndiHelper {
 				intermediateContextBase = intermediateContext;
 				n = n.getSuffix( 1 );
 			}
-			log.trace( "binding: " + n );
+            LOG.binding(n);
 			try {
 				intermediateContextBase.rebind( n, value );
 			}
@@ -159,7 +162,7 @@ public final class JndiHelper {
 				throw new JndiException( "Error performing intermediate bind [" + n + "]", e );
 			}
 		}
-		log.debug( "Bound name: " + jndiName );
+        LOG.boundName(jndiName);
 	}
 
 	private static Name tokenizeName(String jndiName, Context context) {
@@ -185,14 +188,14 @@ public final class JndiHelper {
 	public static InitialContext getInitialContext(Properties props) throws NamingException {
 
 		Hashtable hash = extractJndiProperties(props);
-		log.info("JNDI InitialContext properties:" + hash);
+        LOG.jndiInitialContextProperties(hash);
 		try {
 			return hash.size()==0 ?
 					new InitialContext() :
 					new InitialContext(hash);
 		}
 		catch (NamingException e) {
-			log.error("Could not obtain initial context", e);
+            LOG.error(LOG.unableToObtainInitialContext(), e);
 			throw e;
 		}
 	}
@@ -207,7 +210,7 @@ public final class JndiHelper {
 	 */
 	public static void bind(Context ctx, String name, Object val) throws NamingException {
 		try {
-			log.trace("binding: " + name);
+            LOG.binding(name);
 			ctx.rebind(name, val);
 		}
 		catch (Exception e) {
@@ -217,26 +220,71 @@ public final class JndiHelper {
 
 				Context subctx=null;
 				try {
-					log.trace("lookup: " + ctxName);
+                    LOG.lookup(ctxName);
 					subctx = (Context) ctx.lookup(ctxName);
 				}
 				catch (NameNotFoundException nfe) {}
 
 				if (subctx!=null) {
-					log.debug("Found subcontext: " + ctxName);
+                    LOG.foundSubcontext(ctxName);
 					ctx = subctx;
 				}
 				else {
-					log.info("Creating subcontext: " + ctxName);
+                    LOG.creatingSubcontextInfo(ctxName);
 					ctx = ctx.createSubcontext(ctxName);
 				}
 				n = n.getSuffix(1);
 			}
-			log.trace("binding: " + n);
+            LOG.binding(n);
 			ctx.rebind(n, val);
 		}
-		log.debug("Bound name: " + name);
+        LOG.boundName(name);
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Binding : %s" )
+        void binding( Object jndiName );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Bound name: %s" )
+        void boundName( String jndiName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Creating subcontext: %s" )
+        void creatingSubcontextInfo( String intermediateContextName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Creating subcontext: %s" )
+        void creatingSubcontextTrace( String intermediateContextName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Found intermediate context: %s" )
+        void foundIntermediateContext( String intermediateContextName );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Found subcontext: %s" )
+        void foundSubcontext( String ctxName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Intermediate lookup: %s" )
+        void intermediateLookup( String intermediateContextName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JNDI InitialContext properties:%s" )
+        void jndiInitialContextProperties( Hashtable hash );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Lookup: %s" )
+        void lookup( String ctxName );
+
+        @Message( value = "Could not obtain initial context" )
+        Object unableToObtainInitialContext();
+    }
 }
 

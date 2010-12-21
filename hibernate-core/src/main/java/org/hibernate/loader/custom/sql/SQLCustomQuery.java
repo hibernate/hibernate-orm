@@ -24,35 +24,38 @@
  */
 package org.hibernate.loader.custom.sql;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
-
 import org.hibernate.HibernateException;
-import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Implements Hibernate's built-in support for native SQL queries.
  * <p/>
  * This support is built on top of the notion of "custom queries"...
- * 
+ *
  * @author Gavin King
  * @author Max Andersen
  * @author Steve Ebersole
  */
 public class SQLCustomQuery implements CustomQuery {
 
-	public static final Logger log = LoggerFactory.getLogger( SQLCustomQuery.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SQLCustomQuery.class.getPackage().getName());
 
 	private final String sql;
 	private final Set querySpaces = new HashSet();
@@ -82,7 +85,7 @@ public class SQLCustomQuery implements CustomQuery {
 			final Collection additionalQuerySpaces,
 			final SessionFactoryImplementor factory) throws HibernateException {
 
-		log.trace( "starting processing of sql query [" + sqlQuery + "]" );
+        LOG.processingSqlQery(sqlQuery);
 		SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(queryReturns, factory);
 		SQLQueryReturnProcessor.ResultAliasContext aliasContext = processor.process();
 
@@ -252,4 +255,15 @@ public class SQLCustomQuery implements CustomQuery {
 			return aliasContext.getPropertyResultsMap( alias );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Starting processing of sql query [%s]" )
+        void processingSqlQery( String sqlQuery );
+    }
 }

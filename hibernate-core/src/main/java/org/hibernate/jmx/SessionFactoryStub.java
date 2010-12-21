@@ -23,25 +23,22 @@
  */
 package org.hibernate.jmx;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
-
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
-import org.hibernate.Cache;
 import org.hibernate.TypeHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.id.IdentifierGenerator;
@@ -50,6 +47,10 @@ import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A flyweight for <tt>SessionFactory</tt>. If the MBean itself does not
@@ -60,7 +61,9 @@ import org.hibernate.stat.Statistics;
  */
 public class SessionFactoryStub implements SessionFactory {
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
-	private static final Logger log = LoggerFactory.getLogger( SessionFactoryStub.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SessionFactoryStub.class.getPackage().getName());
 
 	private transient SessionFactory impl;
 	private transient HibernateService service;
@@ -91,7 +94,7 @@ public class SessionFactoryStub implements SessionFactory {
 	public org.hibernate.classic.Session openSession() throws HibernateException {
 		return getImpl().openSession();
 	}
-	
+
 	public org.hibernate.classic.Session openSession(Connection conn) {
 		return getImpl().openSession(conn);
 	}
@@ -99,7 +102,7 @@ public class SessionFactoryStub implements SessionFactory {
 	public org.hibernate.classic.Session getCurrentSession() {
 		return getImpl().getCurrentSession();
 	}
-	
+
 	private synchronized SessionFactory getImpl() {
 		if (impl==null) impl = service.buildSessionFactory();
 		return impl;
@@ -110,19 +113,12 @@ public class SessionFactoryStub implements SessionFactory {
 		// look for the instance by uuid
 		Object result = SessionFactoryObjectFactory.getInstance(uuid);
 		if (result==null) {
-			// in case we were deserialized in a different JVM, look for an instance with the same name
+            // in case we were deserialized in a different JVM, look for an instance with the same name
 			// (alternatively we could do an actual JNDI lookup here....)
 			result = SessionFactoryObjectFactory.getNamedInstance(name);
-			if (result==null) {
-				throw new InvalidObjectException("Could not find a stub SessionFactory named: " + name);
-			}
-			else {
-				log.debug("resolved stub SessionFactory by name");
-			}
-		}
-		else {
-			log.debug("resolved stub SessionFactory by uid");
-		}
+            if (result == null) throw new InvalidObjectException("Could not find a stub SessionFactory named: " + name);
+            LOG.resolvedStubSessionFactoryByName();
+        } else LOG.resolvedStubSessionFactoryByUid();
 		return result;
 	}
 
@@ -161,7 +157,7 @@ public class SessionFactoryStub implements SessionFactory {
 
 	public void close() throws HibernateException {
 	}
-	
+
 	public boolean isClosed() {
 		return false;
 	}
@@ -183,7 +179,7 @@ public class SessionFactoryStub implements SessionFactory {
 	throws HibernateException {
 		getImpl().evictEntity(entityName, id);
 	}
-	
+
 	public void evictEntity(String entityName) throws HibernateException {
 		getImpl().evictEntity(entityName);
 	}
@@ -232,4 +228,19 @@ public class SessionFactoryStub implements SessionFactory {
 	public TypeHelper getTypeHelper() {
 		return getImpl().getTypeHelper();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Resolved stub SessionFactory by name" )
+        void resolvedStubSessionFactoryByName();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Resolved stub SessionFactory by uid" )
+        void resolvedStubSessionFactoryByUid();
+    }
 }

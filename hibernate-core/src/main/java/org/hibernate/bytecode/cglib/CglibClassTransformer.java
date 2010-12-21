@@ -24,28 +24,26 @@
  */
 package org.hibernate.bytecode.cglib;
 
-import java.security.ProtectionDomain;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.ByteArrayOutputStream;
-
+import java.io.IOException;
+import java.security.ProtectionDomain;
+import net.sf.cglib.core.ClassNameReader;
+import net.sf.cglib.core.DebuggingClassWriter;
+import net.sf.cglib.transform.ClassReaderGenerator;
 import net.sf.cglib.transform.ClassTransformer;
 import net.sf.cglib.transform.TransformingClassGenerator;
-import net.sf.cglib.transform.ClassReaderGenerator;
 import net.sf.cglib.transform.impl.InterceptFieldEnabled;
 import net.sf.cglib.transform.impl.InterceptFieldFilter;
 import net.sf.cglib.transform.impl.InterceptFieldTransformer;
-import net.sf.cglib.core.ClassNameReader;
-import net.sf.cglib.core.DebuggingClassWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.bytecode.AbstractClassTransformerImpl;
-import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.HibernateException;
-import org.objectweb.asm.Type;
+import org.hibernate.bytecode.AbstractClassTransformerImpl;
+import org.hibernate.bytecode.Logger;
+import org.hibernate.bytecode.util.ClassFilter;
+import org.hibernate.bytecode.util.FieldFilter;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
 
 /**
  * Enhance the classes allowing them to implements InterceptFieldEnabled
@@ -58,13 +56,14 @@ import org.objectweb.asm.ClassWriter;
 @Deprecated
 public class CglibClassTransformer extends AbstractClassTransformerImpl {
 
-	private static Logger log = LoggerFactory.getLogger( CglibClassTransformer.class.getName() );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	public CglibClassTransformer(ClassFilter classFilter, FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );
 	}
 
-	protected byte[] doTransform(
+	@Override
+    protected byte[] doTransform(
 			ClassLoader loader,
 			String className,
 			Class classBeingRedefined,
@@ -75,7 +74,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 			reader = new ClassReader( new ByteArrayInputStream( classfileBuffer ) );
 		}
 		catch (IOException e) {
-			log.error( "Unable to read class", e );
+            LOG.unableToReadClass(e.getMessage());
 			throw new HibernateException( "Unable to read class: " + e.getMessage() );
 		}
 
@@ -83,9 +82,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 		ClassWriter w = new DebuggingClassWriter( ClassWriter.COMPUTE_MAXS  );
 		ClassTransformer t = getClassTransformer( names );
 		if ( t != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Enhancing " + className );
-			}
+            LOG.enhancingClass(className);
 			ByteArrayOutputStream out;
 			byte[] result;
 			try {
@@ -99,7 +96,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 				out.close();
 			}
 			catch (Exception e) {
-				log.error( "Unable to transform class", e );
+                LOG.unableToTransformClass(e.getMessage());
 				throw new HibernateException( "Unable to transform class: " + e.getMessage() );
 			}
 			return result;

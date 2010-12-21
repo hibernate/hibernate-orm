@@ -25,14 +25,12 @@ package org.hibernate.type.descriptor.sql;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Convenience base implementation of {@link ValueBinder}
@@ -40,7 +38,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class BasicBinder<J> implements ValueBinder<J> {
-	private static final Logger log = LoggerFactory.getLogger( BasicBinder.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                BasicBinder.class.getPackage().getName());
 
 	private static final String BIND_MSG_TEMPLATE = "binding parameter [%d] as [%s] - %s";
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%d] as [%s] - <null>";
@@ -66,26 +66,14 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	 */
 	public final void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-						String.format(
-								NULL_BIND_MSG_TEMPLATE,
-								index,
-								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() )
-						)
-				);
-			}
+            LOG.trace(String.format(NULL_BIND_MSG_TEMPLATE, index, JdbcTypeNameMapper.getTypeName(sqlDescriptor.getSqlType())));
 			st.setNull( index, sqlDescriptor.getSqlType() );
 		}
 		else {
-			log.trace(
-					String.format(
-							BIND_MSG_TEMPLATE,
-							index,
-							JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() ),
-							getJavaDescriptor().extractLoggableRepresentation( value )
-					)
-			);
+            LOG.trace(String.format(BIND_MSG_TEMPLATE,
+                                    index,
+                                    JdbcTypeNameMapper.getTypeName(sqlDescriptor.getSqlType()),
+                                    getJavaDescriptor().extractLoggableRepresentation(value)));
 			doBind( st, value, index, options );
 		}
 	}
@@ -101,4 +89,11 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	 * @throws SQLException Indicates a problem binding to the prepared statement.
 	 */
 	protected abstract void doBind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException;
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+    }
 }

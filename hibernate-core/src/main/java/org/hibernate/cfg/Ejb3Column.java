@@ -23,8 +23,8 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Map;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
@@ -38,8 +38,10 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Wrap state of an EJB3 @Column annotation
@@ -48,7 +50,10 @@ import org.slf4j.Logger;
  * @author Emmanuel Bernard
  */
 public class Ejb3Column {
-	private static final Logger log = LoggerFactory.getLogger( Ejb3Column.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                Ejb3Column.class.getPackage().getName());
+
 	private Column mappingColumn;
 	private boolean insertable = true;
 	private boolean updatable = true;
@@ -103,7 +108,7 @@ public class Ejb3Column {
 	public boolean isFormula() {
 		return StringHelper.isNotEmpty( formulaString );
 	}
-		
+
 	public String getFormulaString() {
 		return formulaString;
 	}
@@ -181,7 +186,7 @@ public class Ejb3Column {
 
 	public void bind() {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
-			log.debug( "binding formula {}", formulaString );
+            LOG.bindingFormula(formulaString);
 			formula = new Formula();
 			formula.setFormula( formulaString );
 		}
@@ -189,7 +194,7 @@ public class Ejb3Column {
 			initMappingColumn(
 					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
 			);
-			log.debug( "Binding column: " + toString());
+            LOG.bindingColumn(toString());
 		}
 	}
 
@@ -218,7 +223,7 @@ public class Ejb3Column {
 			this.mappingColumn.setNullable( nullable );
 			this.mappingColumn.setSqlType( sqlType );
 			this.mappingColumn.setUnique( unique );
-			
+
 			if(writeExpression != null && !writeExpression.matches("[^?]*\\?[^?]*")) {
 				throw new AnnotationException(
 						"@WriteExpression must contain exactly one value placeholder ('?') character: property ["
@@ -420,7 +425,7 @@ public class Ejb3Column {
 					throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
 				}
 				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
-				log.debug( "Column(s) overridden for property {}", inferredData.getPropertyName() );
+                LOG.columnsOverridden(inferredData.getPropertyName());
 			}
 			if ( actualCols == null ) {
 				columns = buildImplicitColumn(
@@ -495,7 +500,7 @@ public class Ejb3Column {
 	}
 
 	private void processExpression(ColumnTransformer annotation) {
-		String nonNullLogicalColumnName = logicalColumnName != null ? logicalColumnName : ""; //use the default for annotations 
+		String nonNullLogicalColumnName = logicalColumnName != null ? logicalColumnName : ""; //use the default for annotations
 		if ( annotation != null &&
 				( StringHelper.isEmpty( annotation.forColumn() )
 						|| annotation.forColumn().equals( nonNullLogicalColumnName ) ) ) {
@@ -551,14 +556,14 @@ public class Ejb3Column {
 
 	public static void checkPropertyConsistency(Ejb3Column[] columns, String propertyName) {
 		int nbrOfColumns = columns.length;
-		
+
 		if ( nbrOfColumns > 1 ) {
 			for (int currentIndex = 1; currentIndex < nbrOfColumns; currentIndex++) {
-				
+
 				if (columns[currentIndex].isFormula() || columns[currentIndex - 1].isFormula()) {
 					continue;
 				}
-				
+
 				if ( columns[currentIndex].isInsertable() != columns[currentIndex - 1].isInsertable() ) {
 					throw new AnnotationException(
 							"Mixing insertable and non insertable columns in a property is not allowed: " + propertyName
@@ -581,7 +586,7 @@ public class Ejb3Column {
 				}
 			}
 		}
-		
+
 	}
 
 	public void addIndex(Index index, boolean inSecondPass) {
@@ -626,4 +631,23 @@ public class Ejb3Column {
 		sb.append( '}' );
 		return sb.toString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding column: %s" )
+        void bindingColumn( String column );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding formula %s" )
+        void bindingFormula( String formula );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Column(s) overridden for property %s" )
+        void columnsOverridden( String propertyName );
+    }
 }

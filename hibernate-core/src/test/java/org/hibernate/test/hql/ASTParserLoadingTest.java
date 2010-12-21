@@ -12,9 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -37,8 +35,6 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.test.any.IntegerPropertyValue;
@@ -47,17 +43,17 @@ import org.hibernate.test.any.PropertyValue;
 import org.hibernate.test.any.StringPropertyValue;
 import org.hibernate.test.cid.Customer;
 import org.hibernate.test.cid.LineItem;
+import org.hibernate.test.cid.LineItem.Id;
 import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
-import org.hibernate.test.cid.LineItem.Id;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -70,8 +66,6 @@ import org.slf4j.LoggerFactory;
  * @author Steve
  */
 public class ASTParserLoadingTest extends FunctionalTestCase {
-
-	private static final Logger log = LoggerFactory.getLogger( ASTParserLoadingTest.class );
 
 	private List createdAnimalIds = new ArrayList();
 
@@ -99,7 +93,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		};
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -338,7 +333,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-			log.trace( "expected failure...", qe );
+            LOG.trace("expected failure...", qe);
 		}
 
 		try {
@@ -346,7 +341,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-			log.trace( "expected failure...", qe );
+            LOG.trace("expected failure...", qe);
 		}
 
 		try {
@@ -354,7 +349,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-			log.trace( "expected failure...", qe );
+            LOG.trace("expected failure...", qe);
 		}
 
 		try {
@@ -362,7 +357,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			fail( "illegal collection dereference semantic did not cause failure" );
 		}
 		catch( QueryException qe ) {
-			log.trace( "expected failure...", qe );
+            LOG.trace("expected failure...", qe);
 		}
 
 		s.getTransaction().commit();
@@ -393,21 +388,21 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			// HSQLDB and DB2 don't like the abs(? - ?) syntax. bit work if at least one parameter is typed...
 			s.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
 			s.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
-			s.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();			
-		} 
+			s.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
+		}
 		else {
 			s.createQuery( "from Animal where abs(:x - :y) < 2.0" ).setLong( "x", 1 ).setLong( "y", 1 ).list();
 		}
 
 		if ( getDialect() instanceof DB2Dialect ) {
-			s.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" ).setString( "foo", "foo" ).list();			
+			s.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" ).setString( "foo", "foo" ).list();
 		}
 		else {
 			s.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" ).setString( "foo", "foo" ).list();
 		}
 		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setLong( "param", 1 ).list();
 		if ( getDialect() instanceof DB2Dialect ) {
-			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setString( "bar", "xyz" ).list();			
+			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setString( "bar", "xyz" ).list();
 		}
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
@@ -500,7 +495,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		product.setPrice( new BigDecimal( 123 ) );
 		product.setProductId( "4321" );
 		s.save( product );
-		
+
 
 		Customer customer = new Customer();
 		customer.setCustomerId( "123456789" );
@@ -531,7 +526,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertEquals( 2, query.list().size() );
 		s.getTransaction().rollback();
 		s.close();
-		
+
 	}
 	private void checkCounts(String hql, int expected, String testCondition) {
 		Session s = openSession();
@@ -1275,7 +1270,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
 	public void testOrderedWithCustomColumnReadAndWrite() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1292,20 +1287,20 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertEquals(2, listViaSql.size());
 		assertEquals(second.getId().longValue(), ((Number)listViaSql.get(0)).longValue());
 		assertEquals(first.getId().longValue(), ((Number)listViaSql.get(1)).longValue());
-		
+
 		// Check order via HQL. Now first comes first b/c the read negates the DB negation.
 		List listViaHql = s.createQuery("from SimpleEntityWithAssociation order by negatedNumber").list();
 		assertEquals(2, listViaHql.size());
 		assertEquals(first.getId(), ((SimpleEntityWithAssociation)listViaHql.get(0)).getId());
 		assertEquals(second.getId(), ((SimpleEntityWithAssociation)listViaHql.get(1)).getId());
-		
+
 		s.delete(first);
 		s.delete(second);
 		t.commit();
 		s.close();
-		
+
 	}
-	
+
 	public void testHavingWithCustomColumnReadAndWrite() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1327,15 +1322,15 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Number r = (Number)s.createQuery("select sum(negatedNumber) from SimpleEntityWithAssociation " +
 				"group by name having sum(negatedNumber) < 20").uniqueResult();
 		assertEquals(r.intValue(), 15);
-		
+
 		s.delete(first);
 		s.delete(second);
 		s.delete(third);
 		t.commit();
 		s.close();
-		
+
 	}
-	
+
 	public void testLoadSnapshotWithCustomColumnReadAndWrite() {
 		// Exercises entity snapshot load when select-before-update is true.
 		Session s = openSession();
@@ -1347,12 +1342,12 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		image.setSizeKb(SIZE_IN_KB);
 		s.persist(image);
 		s.flush();
-		
+
 		Double sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
 		assertEquals(SIZE_IN_MB, sizeViaSql, 0.01d);
 		t.commit();
 		s.close();
-		
+
 		s = openSession();
 		t = s.beginTransaction();
 		final double NEW_SIZE_IN_KB = 2048d;
@@ -1362,14 +1357,14 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.flush();
 
 		sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
-		assertEquals(NEW_SIZE_IN_MB, sizeViaSql, 0.01d);		
-		
+		assertEquals(NEW_SIZE_IN_MB, sizeViaSql, 0.01d);
+
 		s.delete(image);
 		t.commit();
 		s.close();
-		
+
 	}
-		
+
 
 	private Human genSimpleHuman(String fName, String lName) {
 		Human h = new Human();
@@ -1836,7 +1831,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		txn.commit();
 		session.close();
 	}
-	
+
 	public void testFilterWithCustomColumnReadAndWrite() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -1868,7 +1863,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.delete(friend);
 
 		txn.commit();
-		session.close();		
+		session.close();
 	}
 
 	public void testSelectExpressions() {
@@ -2597,7 +2592,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		hql = "from Animal a where mod(16, 4) = 4";
 		session.createQuery(hql).list();
 		/**
-		 * PostgreSQL >= 8.3.7 typecasts are no longer automatically allowed 
+		 * PostgreSQL >= 8.3.7 typecasts are no longer automatically allowed
 		 * <link>http://www.postgresql.org/docs/current/static/release-8-3.html</link>
 		 */
 		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof HSQLDialect){
@@ -2605,14 +2600,14 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		}else{
 			hql = "from Animal a where bit_length(a.bodyWeight) = 24";
 		}
-		
+
 		session.createQuery(hql).list();
 		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof HSQLDialect){
 			hql = "select bit_length(str(a.bodyWeight)) from Animal a";
 		}else{
 			hql = "select bit_length(a.bodyWeight) from Animal a";
 		}
-		
+
 		session.createQuery(hql).list();
 
 		/*hql = "select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3";

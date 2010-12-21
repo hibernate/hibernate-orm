@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,10 +43,6 @@ import javax.validation.constraints.Size;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -60,6 +57,10 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -67,7 +68,8 @@ import org.hibernate.util.StringHelper;
  */
 class TypeSafeActivator {
 
-	private static final Logger logger = LoggerFactory.getLogger( TypeSafeActivator.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TypeSafeActivator.class.getPackage().getName());
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
@@ -127,8 +129,8 @@ class TypeSafeActivator {
 			try {
 				applyDDL( "", persistentClass, clazz, factory, groups, true );
 			}
-			catch ( Exception e ) {
-				logger.warn( "Unable to apply constraints on DDL for " + className, e );
+			catch (Exception e) {
+                LOG.unableToApplyConstraints(className, e.getMessage());
 			}
 		}
 	}
@@ -245,8 +247,8 @@ class TypeSafeActivator {
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//single table should not be forced to null
 				if ( !property.isComposite() ) { //composite should not add not-null on all columns
-					@SuppressWarnings("unchecked")
-					Iterator<Column> iter = (Iterator<Column>) property.getColumnIterator();
+					@SuppressWarnings( "unchecked" )
+					Iterator<Column> iter = property.getColumnIterator();
 					while ( iter.hasNext() ) {
 						iter.next().setNullable( false );
 						hasNotNull = true;
@@ -386,4 +388,15 @@ class TypeSafeActivator {
 		return factory;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to apply constraints on DDL for %s\n%s" )
+        void unableToApplyConstraints( String className,
+                                       String message );
+    }
 }

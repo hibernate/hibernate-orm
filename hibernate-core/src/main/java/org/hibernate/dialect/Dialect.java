@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,10 +33,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -69,6 +66,10 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS.
@@ -83,7 +84,7 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class Dialect {
 
-	private static final Logger log = LoggerFactory.getLogger( Dialect.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Dialect.class.getPackage().getName());
 
 	public static final String DEFAULT_BATCH_SIZE = "15";
 	public static final String NO_BATCH = "0";
@@ -105,7 +106,7 @@ public abstract class Dialect {
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected Dialect() {
-		log.info( "Using dialect: " + this );
+        LOG.usingDialect(this);
 		StandardAnsiSqlAggregationFunctions.primeFunctionMap( sqlFunctions );
 
 		// standard sql92 functions (can be overridden by subclasses)
@@ -210,7 +211,8 @@ public abstract class Dialect {
 		return properties;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return getClass().getName();
 	}
 
@@ -577,7 +579,8 @@ public abstract class Dialect {
 	 * @throws MappingException If sequences are not supported.
 	 * @deprecated Use {@link #getCreateSequenceString(String, int, int)} instead
 	 */
-	public String[] getCreateSequenceStrings(String sequenceName) throws MappingException {
+	@Deprecated
+    public String[] getCreateSequenceStrings(String sequenceName) throws MappingException {
 		return new String[] { getCreateSequenceString( sequenceName ) };
 	}
 
@@ -1012,7 +1015,7 @@ public abstract class Dialect {
 	 * dialect given the aliases of the columns to be write locked.
 	 *
 	 * @param aliases The columns to be write locked.
-	 * @param lockOptions 
+	 * @param lockOptions
 	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
@@ -1169,7 +1172,7 @@ public abstract class Dialect {
 	 * <li><i>null</i> - defer to the JDBC driver response in regards to
 	 * {@link java.sql.DatabaseMetaData#dataDefinitionCausesTransactionCommit()}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @return see the result matrix above.
 	 */
 	public Boolean performTemporaryTableDDLInIsolation() {
@@ -1925,13 +1928,24 @@ public abstract class Dialect {
 		return false;
 	}
 
-	/**
-	 * Does this dialect support `count(distinct a,b)`?
-	 *
-	 * @return True if the database supports counting disintct tuples; false otherwise.
-	 */
+    /**
+     * Does this dialect support `count(distinct a,b)`?
+     * 
+     * @return True if the database supports counting distinct tuples; false otherwise.
+     */
 	public boolean supportsTupleDistinctCounts() {
 		// oddly most database in fact seem to, so true is the default.
 		return true;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using dialect: %s" )
+        void usingDialect( Dialect dialect );
+    }
 }

@@ -24,21 +24,23 @@
  */
 package org.hibernate.pretty;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
 import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Renders entities to a nicely readable string.
@@ -46,8 +48,9 @@ import org.hibernate.type.Type;
  */
 public final class Printer {
 
-	private SessionFactoryImplementor factory;
-	private static final Logger log = LoggerFactory.getLogger(Printer.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Printer.class.getPackage().getName());
+
+    private SessionFactoryImplementor factory;
 
 	/**
 	 * @param entity an actual entity object, not a proxy!
@@ -102,15 +105,15 @@ public final class Printer {
 	}
 
 	public void toString(Iterator iter, EntityMode entityMode) throws HibernateException {
-		if ( !log.isDebugEnabled() || !iter.hasNext() ) return;
-		log.debug("listing entities:");
+        if (!LOG.isDebugEnabled() || !iter.hasNext()) return;
+        LOG.listingEntities();
 		int i=0;
 		while ( iter.hasNext() ) {
 			if (i++>20) {
-				log.debug("more......");
+                LOG.more();
 				break;
 			}
-			log.debug( toString( iter.next(), entityMode ) );
+            LOG.debug(toString(iter.next(), entityMode));
 		}
 	}
 
@@ -118,4 +121,18 @@ public final class Printer {
 		this.factory = factory;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Listing entities:" )
+        void listingEntities();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "More......" )
+        void more();
+    }
 }

@@ -23,17 +23,19 @@
  */
 package org.hibernate.transaction.synchronization;
 
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.TRACE;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
@@ -41,7 +43,9 @@ import org.hibernate.util.JTAHelper;
  * @author Steve Ebersole
  */
 public class CallbackCoordinator {
-	private static final Logger log = LoggerFactory.getLogger( CallbackCoordinator.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CallbackCoordinator.class.getPackage().getName());
 
 	private final TransactionFactory.Context ctx;
 	private JDBCContext jdbcContext;
@@ -98,7 +102,7 @@ public class CallbackCoordinator {
 	// sync callbacks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void beforeCompletion() {
-		log.trace( "transaction before completion callback" );
+        LOG.transactionBeforeCompletionCallback();
 
 		boolean flush;
 		try {
@@ -111,7 +115,7 @@ public class CallbackCoordinator {
 
 		try {
 			if ( flush ) {
-				log.trace( "automatically flushing session" );
+                LOG.automaticallyFlushingSession();
 				ctx.managedFlush();
 			}
 		}
@@ -130,12 +134,12 @@ public class CallbackCoordinator {
 		}
 		catch ( SystemException se ) {
 			// best effort
-			log.error( "could not set transaction to rollback only", se );
+			LOG.error( LOG.unableToSetTransactionToRollbackOnly(), se );
 		}
 	}
 
 	public void afterCompletion(int status) {
-		log.trace( "transaction after completion callback [status={}]", status );
+        LOG.transactionAfterCompletionCallback(status);
 
 		try {
 			afterCompletionAction.doAction( ctx, status );
@@ -147,7 +151,7 @@ public class CallbackCoordinator {
 			reset();
 			jdbcContext.cleanUpJtaSynchronizationCallbackCoordinator();
 			if ( ctx.shouldAutoClose() && !ctx.isClosed() ) {
-				log.trace( "automatically closing session" );
+                LOG.automaticallyClosingSession();
 				ctx.managedClose();
 			}
 		}
@@ -167,12 +171,12 @@ public class CallbackCoordinator {
 
 	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
 		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-			log.error( "could not determine transaction status [{}]", systemException.getMessage() );
+            LOG.unableToDetermineTransactionStatus(systemException.getMessage());
 			return new TransactionException( "could not determine transaction status in beforeCompletion()", systemException );
 		}
 
 		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
-			log.error( "Error during managed flush [{}]", failure.getMessage() );
+            LOG.unableToPerformManagedFlush(failure.getMessage());
 			return failure;
 		}
 	};
@@ -182,4 +186,38 @@ public class CallbackCoordinator {
 			// nothing to do by default.
 		}
 	};
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Automatically closing session" )
+        void automaticallyClosingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Automatically flushing session" )
+        void automaticallyFlushingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Transaction after completion callback [status=%d]" )
+        void transactionAfterCompletionCallback( int status );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Transaction before completion callback" )
+        void transactionBeforeCompletionCallback();
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Could not determine transaction status [%s]" )
+        void unableToDetermineTransactionStatus( String message );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Error during managed flush [%s]" )
+        void unableToPerformManagedFlush( String message );
+
+        @Message( value = "Could not set transaction to rollback only" )
+        Object unableToSetTransactionToRollbackOnly();
+    }
 }

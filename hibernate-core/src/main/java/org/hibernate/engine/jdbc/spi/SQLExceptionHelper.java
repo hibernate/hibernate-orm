@@ -23,18 +23,22 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.JDBCException;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Helper for handling SQLExceptions in various manners.
@@ -42,7 +46,9 @@ import org.hibernate.util.StringHelper;
  * @author Steve Ebersole
  */
 public class SQLExceptionHelper {
-	private static final Logger log = LoggerFactory.getLogger( SQLExceptionHelper.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SQLExceptionHelper.class.getPackage().getName());
 
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";
@@ -123,13 +129,13 @@ public class SQLExceptionHelper {
 	 * @param connection The connection to check for warnings.
 	 */
 	public void logAndClearWarnings(Connection connection) {
-		if ( log.isWarnEnabled() ) {
+        if (LOG.isEnabled(WARN)) {
 			try {
 				logWarnings( connection.getWarnings() );
 			}
 			catch ( SQLException sqle ) {
 				//workaround for WebLogic
-				log.debug( "could not log warnings", sqle );
+                LOG.unableToLogWarnings(sqle);
 			}
 		}
 		try {
@@ -137,7 +143,7 @@ public class SQLExceptionHelper {
 			connection.clearWarnings();
 		}
 		catch ( SQLException sqle ) {
-			log.debug( "could not clear warnings", sqle );
+            LOG.unableToClearWarnings(sqle);
 		}
 
 	}
@@ -158,19 +164,16 @@ public class SQLExceptionHelper {
 	 * @param message The message text to use as a preamble.
 	 */
 	public void logWarnings(SQLWarning warning, String message) {
-		if ( log.isWarnEnabled() ) {
-			if ( log.isDebugEnabled() && warning != null ) {
-				message = StringHelper.isNotEmpty( message ) ? message : DEFAULT_WARNING_MSG;
-				log.debug( message, warning );
-			}
+        if (LOG.isEnabled(WARN)) {
+            if (warning != null) LOG.warningPreamble(StringHelper.isNotEmpty(message) ? message : DEFAULT_WARNING_MSG, warning);
 			while ( warning != null ) {
 				StringBuffer buf = new StringBuffer( 30 )
 						.append( "SQL Warning: " )
 						.append( warning.getErrorCode() )
 						.append( ", SQLState: " )
 						.append( warning.getSQLState() );
-				log.warn( buf.toString() );
-				log.warn( warning.getMessage() );
+                LOG.warningProperties(buf.toString());
+                LOG.warningMessage(warning.getMessage());
 				warning = warning.getNextWarning();
 			}
 		}
@@ -192,21 +195,63 @@ public class SQLExceptionHelper {
 	 * @param message The message text to use as a preamble.
 	 */
 	public void logExceptions(SQLException sqlException, String message) {
-		if ( log.isErrorEnabled() ) {
-			if ( log.isDebugEnabled() ) {
-				message = StringHelper.isNotEmpty( message ) ? message : DEFAULT_EXCEPTION_MSG;
-				log.debug( message, sqlException );
-			}
+        if (LOG.isEnabled(ERROR)) {
+            LOG.errorPreamble(StringHelper.isNotEmpty(message) ? message : DEFAULT_EXCEPTION_MSG, sqlException);
 			while ( sqlException != null ) {
 				StringBuffer buf = new StringBuffer( 30 )
 						.append( "SQL Error: " )
 						.append( sqlException.getErrorCode() )
 						.append( ", SQLState: " )
 						.append( sqlException.getSQLState() );
-				log.warn( buf.toString() );
-				log.error( sqlException.getMessage() );
+                LOG.errorProperties(buf.toString());
+                LOG.errorMessage(sqlException.getMessage());
 				sqlException = sqlException.getNextException();
 			}
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "On release of batch it still contained JDBC statements" )
+        void batchContainedStatementsOnRelease();
+
+        @LogMessage( level = ERROR )
+        @Message( value = "%s" )
+        void errorMessage( String message );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "%s : %s" )
+        void errorPreamble( String string,
+                            SQLException sqlException );
+
+        @LogMessage( level = WARN )
+        @Message( value = "%s" )
+        void errorProperties( String string );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Could not clear warnings : %s" )
+        void unableToClearWarnings( SQLException sqle );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Could not log warnings : %s" )
+        void unableToLogWarnings( SQLException sqle );
+
+        @LogMessage( level = WARN )
+        @Message( value = "%s" )
+        void warningMessage( String message );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "%s : %s" )
+        void warningPreamble( String message,
+                       SQLWarning warning );
+
+        @LogMessage( level = WARN )
+        @Message( value = "%s" )
+        void warningProperties( String string );
+    }
 }

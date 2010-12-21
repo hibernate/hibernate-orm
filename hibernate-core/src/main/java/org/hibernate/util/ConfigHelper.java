@@ -31,11 +31,11 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A simple class to centralize logic needed to locate config files on the system.
@@ -43,7 +43,9 @@ import org.hibernate.cfg.Environment;
  * @author Steve
  */
 public final class ConfigHelper {
-	private static final Logger log = LoggerFactory.getLogger(ConfigHelper.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ConfigHelper.class.getPackage().getName());
 
 	/** Try to locate a local URL representing the incoming path.  The first attempt
 	 * assumes that the incoming path is an actual URL string (file://, etc).  If this
@@ -62,9 +64,9 @@ public final class ConfigHelper {
 		}
 	}
 
-	/** 
-	 * Try to locate a local URL representing the incoming path.  
-	 * This method <b>only</b> attempts to locate this URL as a 
+	/**
+	 * Try to locate a local URL representing the incoming path.
+	 * This method <b>only</b> attempts to locate this URL as a
 	 * java system resource.
 	 *
 	 * @param path The path representing the config location.
@@ -106,8 +108,8 @@ public final class ConfigHelper {
 		final URL url = ConfigHelper.locateConfig(path);
 
 		if (url == null) {
-			String msg = "Unable to locate config file: " + path;
-			log.error( msg );
+            String msg = LOG.unableToLocateConfigFile(path);
+            LOG.error(msg);
 			throw new HibernateException(msg);
 		}
 
@@ -148,7 +150,7 @@ public final class ConfigHelper {
 			throw new HibernateException("Unable to load properties from specified config file: " + path, e);
 		}
 	}
-	
+
 	private ConfigHelper() {}
 
 	public static InputStream getResourceAsStream(String resource) {
@@ -201,4 +203,13 @@ public final class ConfigHelper {
 		return stream;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "Unable to locate config file: %s" )
+        String unableToLocateConfigFile( String path );
+    }
 }

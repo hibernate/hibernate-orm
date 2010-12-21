@@ -23,18 +23,19 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A help for dealing with BLOB and CLOB data
@@ -42,7 +43,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Steve Ebersole
  */
 public class DataHelper {
-	private static final Logger log = LoggerFactory.getLogger( DataHelper.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DataHelper.class.getPackage().getName());
 
 	private static Class nClobClass;
 	static {
@@ -51,7 +54,7 @@ public class DataHelper {
 			nClobClass = ReflectHelper.classForName( "java.sql.NClob", DataHelper.class );
 		}
 		catch ( ClassNotFoundException e ) {
-			log.info( "Could not locate 'java.sql.NClob' class; assuming JDBC 3" );
+            LOG.unableToLocateNClobClass();
 		}
 	}
 
@@ -87,7 +90,7 @@ public class DataHelper {
 				reader.close();
 			}
 			catch (IOException e) {
-				log.warn( "IOException occurred closing stream", e );
+                LOG.warn(LOG.unableToCloseStream(), e);
 			}
 		}
 		return stringBuilder.toString();
@@ -178,13 +181,13 @@ public class DataHelper {
 				inputStream.close();
 			}
 			catch ( IOException e ) {
-				log.warn( "IOException occurred closing input stream", e );
+                LOG.warn(LOG.unableToCloseInputStream(), e);
 			}
 			try {
 				outputStream.close();
 			}
 			catch ( IOException e ) {
-				log.warn( "IOException occurred closing output stream", e );
+                LOG.warn(LOG.unableToCloseOutputStream(), e);
 			}
 		}
 		return outputStream.toByteArray();
@@ -250,4 +253,24 @@ public class DataHelper {
 	public static InputStream subStream(InputStream inputStream, long start, int length) {
 		return new BinaryStreamImpl( extractBytes( inputStream, start, length ) );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "IOException occurred closing input stream" )
+        Object unableToCloseInputStream();
+
+        @Message( value = "IOException occurred closing output stream" )
+        Object unableToCloseOutputStream();
+
+        @Message( value = "IOException occurred closing stream" )
+        Object unableToCloseStream();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Could not locate 'java.sql.NClob' class; assuming JDBC 3" )
+        void unableToLocateNClobClass();
+    }
 }

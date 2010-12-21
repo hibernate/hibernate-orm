@@ -24,6 +24,7 @@
  */
 package org.hibernate.impl;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -35,10 +36,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -48,6 +45,10 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Implementation of the <tt>ScrollableResults</tt> interface
@@ -56,7 +57,8 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractScrollableResults implements ScrollableResults {
 
-	private static final Logger log = LoggerFactory.getLogger( AbstractScrollableResults.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractScrollableResults.class.getPackage().getName());
 
 	private final ResultSet resultSet;
 	private final PreparedStatement ps;
@@ -81,7 +83,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 		this.queryParameters = queryParameters;
 		this.types = types;
 		this.holderInstantiator = holderInstantiator!=null && holderInstantiator.isRequired()
-		        ? holderInstantiator 
+		        ? holderInstantiator
 		        : null;
 	}
 
@@ -133,7 +135,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 			}
 			catch( Throwable ignore ) {
 				// ignore this error for now
-				log.trace( "exception trying to cleanup load context : " + ignore.getMessage() );
+                LOG.unableToCleanupLoadContext(ignore.getMessage());
 			}
 		}
 	}
@@ -158,7 +160,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 		if ( holderInstantiator!=null ) {
 			throw new HibernateException("query specifies a holder class");
 		}
-		
+
 		if ( returnType.getReturnedClass()==types[col].getReturnedClass() ) {
 			return get(col);
 		}
@@ -179,7 +181,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 		if ( holderInstantiator!=null ) {
 			throw new HibernateException("query specifies a holder class");
 		}
-		
+
 		if ( returnType.getReturnedClass().isAssignableFrom( types[col].getReturnedClass() ) ) {
 			return get(col);
 		}
@@ -276,15 +278,26 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	        int i,
 	        Type type,
 	        Type returnType) throws HibernateException {
-		throw new HibernateException( 
-				"incompatible column types: " + 
-				type.getName() + 
-				", " + 
-				returnType.getName() 
+		throw new HibernateException(
+				"incompatible column types: " +
+				type.getName() +
+				", " +
+				returnType.getName()
 		);
 	}
 
 	protected void afterScrollOperation() {
 		session.afterScrollOperation();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Exception trying to cleanup load context : %s" )
+        void unableToCleanupLoadContext( String message );
+    }
 }

@@ -24,14 +24,17 @@
  */
 package org.hibernate.impl;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.Serializable;
-import java.io.ByteArrayOutputStream;
-import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -44,20 +47,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.Query;
@@ -72,21 +73,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
-import org.hibernate.UnresolvableObjectException;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.EntityNameResolver;
-import org.hibernate.LockOptions;
+import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Status;
-import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.internal.JDBCContextImpl;
@@ -136,11 +135,15 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.SessionStatisticsImpl;
-import org.hibernate.type.Type;
 import org.hibernate.type.SerializationException;
+import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -151,18 +154,19 @@ import org.hibernate.util.StringHelper;
  *
  * @author Gavin King
  */
-public final class SessionImpl extends AbstractSessionImpl 
+public final class SessionImpl extends AbstractSessionImpl
 		implements EventSource, org.hibernate.classic.Session, JDBCContext.Context, LobCreationContext {
 
 	// todo : need to find a clean way to handle the "event source" role
 	// a seperate classs responsible for generating/dispatching events just duplicates most of the Session methods...
 	// passing around seperate reto interceptor, factory, actionQueue, and persistentContext is not manageable...
 
-	private static final Logger log = LoggerFactory.getLogger(SessionImpl.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SessionImpl.class.getPackage().getName());
 
 	private transient EntityMode entityMode = EntityMode.POJO;
 	private transient boolean autoClear; //for EJB3
-	
+
 	private transient long timestamp;
 	private transient FlushMode flushMode = FlushMode.AUTO;
 	private transient CacheMode cacheMode = CacheMode.NORMAL;
@@ -209,11 +213,9 @@ public final class SessionImpl extends AbstractSessionImpl
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().openSession();
-		}
+        if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-		log.debug( "opened session [" + entityMode + "]" );
+		LOG.openedSession(entityMode);
 	}
 
 	/**
@@ -255,13 +257,9 @@ public final class SessionImpl extends AbstractSessionImpl
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().openSession();
-		}
+        if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( "opened session at timestamp: " + timestamp );
-		}
+        LOG.openedSessionAt(timestamp);
 	}
 
 	public Session getSession(EntityMode entityMode) {
@@ -305,11 +303,11 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public Connection close() throws HibernateException {
-		log.trace( "closing session" );
+        LOG.closingSession();
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed" );
 		}
-		
+
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().closeSession();
@@ -366,12 +364,12 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void managedFlush() {
 		if ( isClosed() ) {
-			log.trace( "skipping auto-flush due to session closed" );
+            LOG.skippingAutoFlush();
 			return;
 		}
-		log.trace("automatically flushing session");
+        LOG.automaticallyFlushingSession();
 		flush();
-		
+
 		if ( childSessionsByEntityMode != null ) {
 			Iterator iter = childSessionsByEntityMode.values().iterator();
 			while ( iter.hasNext() ) {
@@ -447,7 +445,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		ObjectOutputStream oos = null;
 		try {
 			oos = new ObjectOutputStream( baos );
-			( ( StatefulPersistenceContext ) pc ).serialize( oos );
+			( pc ).serialize( oos );
 		}
 		catch (IOException ex) {
 			throw new SerializationException( "could not serialize persistence context", ex );
@@ -517,7 +515,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void managedClose() {
-		log.trace( "automatically closing session" );
+        LOG.automaticallyClosingSession();
 		close();
 	}
 
@@ -530,7 +528,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		checkTransactionSynchStatus();
 		return !isClosed() && jdbcContext.getConnectionManager().isCurrentlyConnected();
 	}
-	
+
 	public boolean isTransactionInProgress() {
 		checkTransactionSynchStatus();
 		return !isClosed() && jdbcContext.isTransactionInProgress();
@@ -538,46 +536,46 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
-		log.debug( "disconnecting session" );
+        LOG.disconnectingSession();
 		return jdbcContext.getConnectionManager().manualDisconnect();
 	}
 
 	public void reconnect() throws HibernateException {
 		errorIfClosed();
-		log.debug( "reconnecting session" );
+        LOG.reconnectingSession();
 		checkTransactionSynchStatus();
 		jdbcContext.getConnectionManager().manualReconnect();
 	}
 
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
-		log.debug( "reconnecting session" );
+        LOG.reconnectingSession();
 		checkTransactionSynchStatus();
 		jdbcContext.getConnectionManager().manualReconnect( conn );
 	}
 
 	public void beforeTransactionCompletion(Transaction tx) {
-		log.trace( "before transaction completion" );
+        LOG.beforeTransactionCompletion();
 		actionQueue.beforeTransactionCompletion();
 		if ( rootSession == null ) {
 			try {
 				interceptor.beforeTransactionCompletion(tx);
 			}
 			catch (Throwable t) {
-				log.error("exception in interceptor beforeTransactionCompletion()", t);
+                LOG.error(LOG.exceptionInBeforeTransactionCompletionInterceptor(), t);
 			}
 		}
 	}
-	
+
 	public void setAutoClear(boolean enabled) {
 		errorIfClosed();
 		autoClear = enabled;
 	}
-	
+
 	/**
-	 * Check if there is a Hibernate or JTA transaction in progress and, 
-	 * if there is not, flush if necessary, make sure the connection has 
-	 * been committed (if it is not in autocommit mode) and run the after 
+	 * Check if there is a Hibernate or JTA transaction in progress and,
+	 * if there is not, flush if necessary, make sure the connection has
+	 * been committed (if it is not in autocommit mode) and run the after
 	 * completion processing
 	 */
 	public void afterOperation(boolean success) {
@@ -587,7 +585,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
-		log.trace( "after transaction completion" );
+        LOG.afterTransactionCompletion();
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion(success);
 		if ( rootSession == null && tx != null ) {
@@ -595,7 +593,7 @@ public final class SessionImpl extends AbstractSessionImpl
 				interceptor.afterTransactionCompletion(tx);
 			}
 			catch (Throwable t) {
-				log.error("exception in interceptor afterTransactionCompletion()", t);
+                LOG.error(LOG.exceptionInAfterTransactionCompletionInterceptor(), t);
 			}
 		}
 		if ( autoClear ) {
@@ -604,7 +602,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	/**
-	 * clear all the internal collections, just 
+	 * clear all the internal collections, just
 	 * to help the garbage collector, does not
 	 * clear anything that is needed during the
 	 * afterTransactionCompletion() phase
@@ -630,10 +628,10 @@ public final class SessionImpl extends AbstractSessionImpl
 			throw new TransientObjectException( "Given object not associated with the session" );
 		}
 		if ( e.getStatus() != Status.MANAGED ) {
-			throw new ObjectDeletedException( 
-					"The given object was deleted", 
-					e.getId(), 
-					e.getPersister().getEntityName() 
+			throw new ObjectDeletedException(
+					"The given object was deleted",
+					e.getId(),
+					e.getPersister().getEntityName()
 				);
 		}
 		return e.getLockMode();
@@ -1007,11 +1005,11 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * Do NOT return a proxy.
 	 */
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
-		if ( log.isDebugEnabled() ) {
+        if (LOG.isDebugEnabled()) {
 			EntityPersister persister = getFactory().getEntityPersister(entityName);
-			log.debug( "initializing proxy: " + MessageHelper.infoString( persister, id, getFactory() ) );
+            LOG.initializingProxy(MessageHelper.infoString(persister, id, getFactory()));
 		}
-		
+
 		LoadEvent event = new LoadEvent(id, entityName, true, this);
 		fireLoad(event, LoadEventListener.IMMEDIATE_LOAD);
 		return event.getResult();
@@ -1071,7 +1069,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	   	fireLoad(event, LoadEventListener.GET);
 		return event.getResult();
 	}
-	
+
 	private void fireLoad(LoadEvent event, LoadType loadType) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1180,9 +1178,9 @@ public final class SessionImpl extends AbstractSessionImpl
 	public boolean isDirty() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		log.debug("checking session dirtiness");
+        LOG.checkingSessionDirtiness();
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-			log.debug("session dirty (scheduled updates and insertions)");
+            LOG.sessionDirty();
 			return true;
 		}
 		else {
@@ -1209,12 +1207,9 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
 		errorIfClosed();
-		if ( log.isDebugEnabled() ) {
-			log.debug(
-				"flushing to force deletion of re-saved object: " +
-				MessageHelper.infoString( entityEntry.getPersister(), entityEntry.getId(), getFactory() )
-			);
-		}
+        if (LOG.isDebugEnabled()) LOG.flushingToForceDeletion(MessageHelper.infoString(entityEntry.getPersister(),
+                                                                                       entityEntry.getId(),
+                                                                                       getFactory()));
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(
@@ -1291,9 +1286,9 @@ public final class SessionImpl extends AbstractSessionImpl
         queryParameters.validateParameters();
         NativeSQLQueryPlan plan = getNativeSQLQueryPlan(nativeQuerySpecification);
 
-        
+
         autoFlushIfRequired( plan.getCustomQuery().getQuerySpaces() );
-        
+
         boolean success = false;
         int result = 0;
         try {
@@ -1362,11 +1357,9 @@ public final class SessionImpl extends AbstractSessionImpl
 			throw new IllegalArgumentException("attempt to doAfterTransactionCompletion delete-by-query with null query");
 		}
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "delete: " + query );
-			if ( values.length != 0 ) {
-				log.trace( "parameters: " + StringHelper.toString( values ) );
-			}
+        if (LOG.isTraceEnabled()) {
+            LOG.delete(query);
+            if (values.length != 0) LOG.parameters(StringHelper.toString(values));
 		}
 
 		List list = find( query, values, types );
@@ -1390,7 +1383,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		filter.setComment( queryString );
 		return filter;
 	}
-	
+
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1422,12 +1415,10 @@ public final class SessionImpl extends AbstractSessionImpl
 	public void setFlushMode(FlushMode flushMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		if ( log.isTraceEnabled() ) {
-			log.trace("setting flush mode to: " + flushMode);
-		}
+        LOG.settingFlushMode(flushMode);
 		this.flushMode = flushMode;
 	}
-	
+
 	public FlushMode getFlushMode() {
 		checkTransactionSynchStatus();
 		return flushMode;
@@ -1437,33 +1428,30 @@ public final class SessionImpl extends AbstractSessionImpl
 		checkTransactionSynchStatus();
 		return cacheMode;
 	}
-	
+
 	public void setCacheMode(CacheMode cacheMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		if ( log.isTraceEnabled() ) {
-			log.trace("setting cache mode to: " + cacheMode);
-		}
-		this.cacheMode= cacheMode; 
+        LOG.settingCacheMode(cacheMode);
+		this.cacheMode= cacheMode;
 	}
 
 	public Transaction getTransaction() throws HibernateException {
 		errorIfClosed();
 		return jdbcContext.getTransaction();
 	}
-	
+
 	public Transaction beginTransaction() throws HibernateException {
 		errorIfClosed();
-		if ( rootSession != null ) {
-			// todo : should seriously consider not allowing a txn to begin from a child session
-			//      can always route the request to the root session...
-			log.warn( "Transaction started on non-root session" );
-		}
+        // todo : should seriously consider not allowing a txn to begin from a child session
+        // can always route the request to the root session...
+        if (rootSession != null) LOG.transactionStartedOnNonRootSession();
+
 		Transaction result = getTransaction();
 		result.begin();
 		return result;
 	}
-	
+
 	public void afterTransactionBegin(Transaction tx) {
 		errorIfClosed();
 		interceptor.afterTransactionBegin(tx);
@@ -1529,7 +1517,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			return entry != null ? entry.getId() : null;
 		}
 	}
-	
+
 	private Serializable getProxyIdentifier(Object proxy) {
 		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
 	}
@@ -1741,7 +1729,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			}
 			else {
 				//if it is initialized, see if the underlying
-				//instance is contained, since we need to 
+				//instance is contained, since we need to
 				//account for the fact that it might have been
 				//evicted
 				object = li.getImplementation();
@@ -1753,13 +1741,13 @@ public final class SessionImpl extends AbstractSessionImpl
 		EntityEntry entry = persistenceContext.getEntry( object );
 		return entry != null && entry.getStatus() != Status.DELETED && entry.getStatus() != Status.GONE;
 	}
-	
+
 	public Query createQuery(String queryString) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return super.createQuery(queryString);
 	}
-	
+
 	public SQLQuery createSQLQuery(String sql) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1795,9 +1783,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "scroll SQL query: " + customQuery.getSQL() );
-		}
+        LOG.scrollSqlQuery(customQuery.getSQL());
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
@@ -1813,15 +1799,13 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	// basically just an adapted copy of find(CriteriaImpl)
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) 
+	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "SQL query: " + customQuery.getSQL() );
-		}
-		
+        LOG.sqlQuery(customQuery.getSQL());
+
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
 		autoFlushIfRequired( loader.getQuerySpaces() );
@@ -1843,7 +1827,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		checkTransactionSynchStatus();
 		return factory;
 	}
-	
+
 	public void initializeCollection(PersistentCollection collection, boolean writing)
 	throws HibernateException {
 		errorIfClosed();
@@ -1872,7 +1856,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			return entry.getPersister().getEntityName();
 		}
 	}
-	
+
 	public String getEntityName(Object object) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1939,13 +1923,13 @@ public final class SessionImpl extends AbstractSessionImpl
 		checkTransactionSynchStatus();
 		return actionQueue;
 	}
-	
+
 	public PersistenceContext getPersistenceContext() {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return persistenceContext;
 	}
-	
+
 	public SessionStatistics getStatistics() {
 		checkTransactionSynchStatus();
 		return new SessionStatisticsImpl(this);
@@ -1973,7 +1957,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	public boolean isReadOnly(Object entityOrProxy) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		return persistenceContext.isReadOnly( entityOrProxy );	
+		return persistenceContext.isReadOnly( entityOrProxy );
 	}
 
 	public void setReadOnly(Object entity, boolean readOnly) {
@@ -2111,7 +2095,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		log.trace( "deserializing session" );
+        LOG.deserializingSession();
 
 		ois.defaultReadObject();
 
@@ -2172,7 +2156,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 
-		log.trace( "serializing session" );
+        LOG.serializingSession();
 
 		oos.defaultWriteObject();
 
@@ -2358,4 +2342,109 @@ public final class SessionImpl extends AbstractSessionImpl
 			fireLock( object, lockOptions );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "After transaction completion" )
+        void afterTransactionCompletion();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Automatically closing session" )
+        void automaticallyClosingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Automatically flushing session" )
+        void automaticallyFlushingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Before transaction completion" )
+        void beforeTransactionCompletion();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Checking session dirtiness" )
+        void checkingSessionDirtiness();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Closing session" )
+        void closingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "delete: %s" )
+        void delete( String query );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Deserializing session" )
+        void deserializingSession();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Disconnecting session" )
+        void disconnectingSession();
+
+        @Message( value = "Exception in interceptor afterTransactionCompletion()" )
+        Object exceptionInAfterTransactionCompletionInterceptor();
+
+        @Message( value = "Exception in interceptor beforeTransactionCompletion()" )
+        Object exceptionInBeforeTransactionCompletionInterceptor();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Flushing to force deletion of re-saved object: %s" )
+        void flushingToForceDeletion( String infoString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Initializing proxy: %s" )
+        void initializingProxy( String infoString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Opened session [%s]" )
+        void openedSession( EntityMode entityMode );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Opened session at timestamp: %ld" )
+        void openedSessionAt( long timestamp );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Parameters: %s" )
+        void parameters( String string );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Reconnecting session" )
+        void reconnectingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Scroll SQL query: %s" )
+        void scrollSqlQuery( String sql );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Serializing session" )
+        void serializingSession();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Session dirty (scheduled updates and insertions)" )
+        void sessionDirty();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Setting cache mode to: %s" )
+        void settingCacheMode( CacheMode cacheMode );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Setting flush mode to: %s" )
+        void settingFlushMode( FlushMode flushMode );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Skipping auto-flush due to session closed" )
+        void skippingAutoFlush();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "SQL query: %s" )
+        void sqlQuery( String sql );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Transaction started on non-root session" )
+        void transactionStartedOnNonRootSession();
+    }
 }

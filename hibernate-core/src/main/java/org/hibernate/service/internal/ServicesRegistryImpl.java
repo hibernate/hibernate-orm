@@ -23,22 +23,23 @@
  */
 package org.hibernate.service.internal;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Basic Hibernate implementation of the service registry.
@@ -46,7 +47,9 @@ import org.hibernate.service.spi.UnknownServiceException;
  * @author Steve Ebersole
  */
 public class ServicesRegistryImpl implements ServicesRegistry {
-	private static final Logger log = LoggerFactory.getLogger( ServicesRegistryImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ServicesRegistryImpl.class.getPackage().getName());
 
 	private final List<ServiceInitiator> serviceInitiators;
 	private ServicesInitializer initializer;
@@ -73,7 +76,7 @@ public class ServicesRegistryImpl implements ServicesRegistry {
 					( (Stoppable) service ).stop();
 				}
 				catch ( Exception e ) {
-					log.info( "Error stopping service [" + service.getClass() + "] : " + e.toString() );
+                    LOG.unableToStopService(service.getClass(), e.toString());
 				}
 			}
 		}
@@ -110,4 +113,16 @@ public class ServicesRegistryImpl implements ServicesRegistry {
 		serviceList.add( service );
 		serviceMap.put( serviceRole, service );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Error stopping service [%s] : %s" )
+        void unableToStopService( Class<? extends Service> class1,
+                                  String string );
+    }
 }

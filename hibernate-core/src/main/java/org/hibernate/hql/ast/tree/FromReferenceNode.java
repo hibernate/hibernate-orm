@@ -27,9 +27,6 @@ package org.hibernate.hql.ast.tree;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Represents a reference to a FROM element, for example a class alias in a WHERE clause.
  *
@@ -38,13 +35,15 @@ import org.slf4j.LoggerFactory;
 public abstract class FromReferenceNode extends AbstractSelectExpression
         implements ResolvableNode, DisplayableNode, InitializeableNode, PathNode {
 
-	private static final Logger log = LoggerFactory.getLogger( FromReferenceNode.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                FromReferenceNode.class.getPackage().getName());
 
 	private FromElement fromElement;
 	private boolean resolved = false;
 	public static final int ROOT_LEVEL = 0;
 
-	public FromElement getFromElement() {
+	@Override
+    public FromElement getFromElement() {
 		return fromElement;
 	}
 
@@ -70,9 +69,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 
 	public void setResolved() {
 		this.resolved = true;
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Resolved :  " + this.getPath() + " -> " + this.getText() );
-		}
+        LOG.resolved(this.getPath(), this.getText());
 	}
 
 	public String getDisplayText() {
@@ -101,7 +98,8 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 		resolve( true, impliedJoin, classAlias, parent );
 	}
 
-	public boolean isReturnableEntity() throws SemanticException {
+	@Override
+    public boolean isReturnableEntity() throws SemanticException {
 		return !isScalar() && fromElement.isEntity();
 	}
 

@@ -29,10 +29,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
@@ -47,7 +43,9 @@ import org.hibernate.jdbc.Expectation;
  * @author Steve Ebersole
  */
 public class BatchingBatch extends AbstractBatchImpl {
-	private static final Logger log = LoggerFactory.getLogger( BatchingBatch.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                BatchingBatch.class.getPackage().getName());
 
 	private final int batchSize;
 
@@ -83,7 +81,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 			statement.addBatch();
 		}
 		catch ( SQLException e ) {
-			log.error( "sqlexception escaped proxy", e );
+			LOG.error( LOG.sqlExceptionEscapedProxy(), e );
 			throw getSqlExceptionHelper().convert( e, "could not perform addBatch", sql );
 		}
 		List<Expectation> expectations = expectationsBySql.get( sql );
@@ -106,7 +104,8 @@ public class BatchingBatch extends AbstractBatchImpl {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected void doExecuteBatch() {
+	@Override
+    protected void doExecuteBatch() {
 		if ( maxBatchPosition == 0 ) {
 			log.debug( "no batched statements to execute" );
 		}
@@ -120,13 +119,13 @@ public class BatchingBatch extends AbstractBatchImpl {
 				executeStatements();
 			}
 			catch ( RuntimeException re ) {
-				log.error( "Exception executing batch [{}]", re.getMessage() );
+                LOG.unableToExecuteBatch(re.getMessage());
 				throw re;
 			}
 			finally {
 				for ( List<Expectation> expectations : expectationsBySql.values() ) {
 					expectations.clear();
-				}				
+				}
 				maxBatchPosition = 0;
 			}
 		}
@@ -188,7 +187,8 @@ public class BatchingBatch extends AbstractBatchImpl {
 		}
 	}
 
-	public void release() {
+	@Override
+    public void release() {
 		expectationsBySql.clear();
 		maxBatchPosition = 0;
 	}

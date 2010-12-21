@@ -34,9 +34,7 @@ import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.Logger;
 
 /**
  * SimpleJtaTransactionImpl implementation
@@ -44,7 +42,8 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class SimpleJtaTransactionImpl implements Transaction {
-	private static final Logger log = LoggerFactory.getLogger( SimpleJtaTransactionImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private int status;
 	private LinkedList synchronizations;
@@ -64,7 +63,7 @@ public class SimpleJtaTransactionImpl implements Transaction {
 			throws RollbackException, HeuristicMixedException, HeuristicRollbackException, IllegalStateException, SystemException {
 
 		if ( status == Status.STATUS_MARKED_ROLLBACK ) {
-			log.trace( "on commit, status was marked for rollback-only" );
+            LOG.trace("on commit, status was marked for rollback-only");
 			rollback();
 		}
 		else {

@@ -25,11 +25,7 @@
 package org.hibernate.test.hql;
 
 import java.util.List;
-
 import junit.framework.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -49,8 +45,6 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  */
 public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 
-	private static final Logger log = LoggerFactory.getLogger( FunctionNameAsColumnTest.class );
-
 	public FunctionNameAsColumnTest(String name) {
 		super( name );
 	}
@@ -61,7 +55,8 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		};
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
 	}

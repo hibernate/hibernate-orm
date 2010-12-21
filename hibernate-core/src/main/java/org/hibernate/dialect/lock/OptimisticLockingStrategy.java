@@ -24,15 +24,16 @@
 package org.hibernate.dialect.lock;
 
 import java.io.Serializable;
-
-import org.hibernate.*;
-import org.hibernate.event.EventSource;
+import org.hibernate.HibernateException;
+import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
+import org.hibernate.OptimisticLockException;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.EntityVerifyVersionProcess;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.Lockable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An optimistic locking strategy that verifies that the version hasn't changed (prior to transaction commit).
@@ -44,7 +45,6 @@ import org.slf4j.LoggerFactory;
  * @author Scott Marlow
  */
 public class OptimisticLockingStrategy implements LockingStrategy {
-	private static final Logger log = LoggerFactory.getLogger( OptimisticLockingStrategy.class );
 
 	private final Lockable lockable;
 	private final LockMode lockMode;

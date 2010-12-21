@@ -23,33 +23,34 @@
  */
 package org.hibernate.id.factory;
 
-import java.util.Properties;
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.UUIDHexGenerator;
-import org.hibernate.id.TableHiLoGenerator;
+import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.id.Assigned;
+import org.hibernate.id.Configurable;
+import org.hibernate.id.ForeignGenerator;
+import org.hibernate.id.GUIDGenerator;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SelectGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
-import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.ForeignGenerator;
-import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.SequenceIdentityGenerator;
-import org.hibernate.id.Configurable;
+import org.hibernate.id.TableHiLoGenerator;
+import org.hibernate.id.UUIDGenerator;
+import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.MappingException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Basic <tt>templated</tt> support for {@link IdentifierGeneratorFactory} implementations.
@@ -57,7 +58,9 @@ import org.hibernate.MappingException;
  * @author Steve Ebersole
  */
 public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFactory, Serializable {
-	private static final Logger log = LoggerFactory.getLogger( DefaultIdentifierGeneratorFactory.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultIdentifierGeneratorFactory.class.getPackage().getName());
 
 	private transient Dialect dialect;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
@@ -87,17 +90,15 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	 * {@inheritDoc}
 	 */
 	public void setDialect(Dialect dialect) {
-		log.debug( "Setting dialect [" + dialect + "]" );
+        LOG.settingDialect(dialect);
 		this.dialect = dialect;
 	}
 
 	public void register(String strategy, Class generatorClass) {
-		String msg = "Registering IdentifierGenerator strategy [" + strategy + "] -> [" + generatorClass + "]";
 		Object old = generatorStrategyToClassNameMap.put( strategy, generatorClass );
-		if ( old != null ) {
-			msg += ", overriding [" + old + "]";
-		}
-		log.debug( msg );
+        String msg = LOG.registeringIdentifierGeneratorStrategy(strategy, generatorClass);
+        if (old != null) msg += LOG.overriding(old);
+        LOG.debug(msg);
 	}
 
 	/**
@@ -138,4 +139,22 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 		}
 		return generatorClass;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = ", overriding [%s]" )
+        String overriding( Object old );
+
+        @Message( value = "Registering IdentifierGenerator strategy [%s] -> [%s]" )
+        String registeringIdentifierGeneratorStrategy( String strategy,
+                                                       Class generatorClass );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Setting dialect [%s]" )
+        void settingDialect( Dialect dialect );
+    }
 }

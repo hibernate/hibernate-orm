@@ -32,12 +32,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import junit.framework.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
@@ -51,13 +48,13 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.legacy.Blobber;
 import org.hibernate.test.legacy.Broken;
 import org.hibernate.test.legacy.Fixed;
 import org.hibernate.test.legacy.Simple;
 import org.hibernate.test.legacy.Single;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests for function support on CacheSQL...
@@ -66,7 +63,7 @@ import org.hibernate.test.legacy.Single;
  */
 public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTestCase {
 
-	private static final Logger log = LoggerFactory.getLogger(SQLFunctionsInterSystemsTest.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	public SQLFunctionsInterSystemsTest(String name) {
 		super(name);
@@ -540,7 +537,7 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		s.flush();
 		s.refresh(b);
 		//b.getBlob().setBytes( 2, "abc".getBytes() );
-        log.debug("levinson: just bfore b.getClob()");
+        LOG.debug("levinson: just bfore b.getClob()");
         b.getClob().getSubString(2, 3);
 		//b.getClob().setString(2, "abc");
 		s.flush();
@@ -611,11 +608,11 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 	public void testSqlFunctionAsAlias() throws Exception {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
-			log.info("Dialect does not list any no-arg functions");
+            LOG.info("Dialect does not list any no-arg functions");
 			return;
 		}
 
-		log.info("Using function named [" + functionName + "] for 'function as alias' test");
+        LOG.info("Using function named [" + functionName + "] for 'function as alias' test");
 		String query = "select " + functionName + " from Simple as " + functionName + " where " + functionName + ".id = 10";
 
 		Session s = openSession();

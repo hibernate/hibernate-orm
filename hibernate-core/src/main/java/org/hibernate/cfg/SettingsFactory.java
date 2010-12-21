@@ -23,22 +23,22 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
+import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -51,6 +51,10 @@ import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.transaction.TransactionManagerLookupFactory;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Reads configuration properties and builds a {@link Settings} instance.
@@ -58,8 +62,11 @@ import org.hibernate.util.StringHelper;
  * @author Gavin King
  */
 public class SettingsFactory implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( SettingsFactory.class );
-	private static final long serialVersionUID = -1194386144994524825L;
+
+    private static final long serialVersionUID = -1194386144994524825L;
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SettingsFactory.class.getPackage().getName());
 
 	public static final String DEF_CACHE_REG_FACTORY = NoCachingRegionFactory.class.getName();
 
@@ -96,42 +103,42 @@ public class SettingsFactory implements Serializable {
 		settings.setTransactionManagerLookup( createTransactionManagerLookup(properties) );
 
 		boolean flushBeforeCompletion = ConfigurationHelper.getBoolean(Environment.FLUSH_BEFORE_COMPLETION, properties);
-		log.info("Automatic flush during beforeCompletion(): " + enabledDisabled(flushBeforeCompletion) );
+        LOG.autoFlush(enabledDisabled(flushBeforeCompletion));
 		settings.setFlushBeforeCompletionEnabled(flushBeforeCompletion);
 
 		boolean autoCloseSession = ConfigurationHelper.getBoolean(Environment.AUTO_CLOSE_SESSION, properties);
-		log.info("Automatic session close at end of transaction: " + enabledDisabled(autoCloseSession) );
+        LOG.autoSessionClose(enabledDisabled(autoCloseSession));
 		settings.setAutoCloseSessionEnabled(autoCloseSession);
 
 		//JDBC and connection settings:
 
 		int batchSize = ConfigurationHelper.getInt(Environment.STATEMENT_BATCH_SIZE, properties, 0);
 		if ( !meta.supportsBatchUpdates() ) batchSize = 0;
-		if (batchSize>0) log.info("JDBC batch size: " + batchSize);
+		if (batchSize>0) LOG.jdbcBatchSize(batchSize);
 		settings.setJdbcBatchSize(batchSize);
 		boolean jdbcBatchVersionedData = ConfigurationHelper.getBoolean(Environment.BATCH_VERSIONED_DATA, properties, false);
-		if (batchSize>0) log.info("JDBC batch updates for versioned data: " + enabledDisabled(jdbcBatchVersionedData) );
+        if (batchSize > 0) LOG.jdbcBatchUpdates(enabledDisabled(jdbcBatchVersionedData));
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
 		settings.setBatcherBuilder( createBatchBuilder(properties, batchSize) );
 
 		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, meta.supportsScrollableResults());
-		log.info("Scrollable result sets: " + enabledDisabled(useScrollableResultSets) );
+        LOG.scrollabelResultSets(enabledDisabled(useScrollableResultSets));
 		settings.setScrollableResultSetsEnabled(useScrollableResultSets);
 
 		boolean wrapResultSets = ConfigurationHelper.getBoolean(Environment.WRAP_RESULT_SETS, properties, false);
-		log.debug( "Wrap result sets: " + enabledDisabled(wrapResultSets) );
+        LOG.wrapResultSets(enabledDisabled(wrapResultSets));
 		settings.setWrapResultSetsEnabled(wrapResultSets);
 
 		boolean useGetGeneratedKeys = ConfigurationHelper.getBoolean(Environment.USE_GET_GENERATED_KEYS, properties, meta.supportsGetGeneratedKeys());
-		log.info("JDBC3 getGeneratedKeys(): " + enabledDisabled(useGetGeneratedKeys) );
+        LOG.jdbc3GeneratedKeys(enabledDisabled(useGetGeneratedKeys));
 		settings.setGetGeneratedKeysEnabled(useGetGeneratedKeys);
 
 		Integer statementFetchSize = ConfigurationHelper.getInteger(Environment.STATEMENT_FETCH_SIZE, properties);
-		if (statementFetchSize!=null) log.info("JDBC result set fetch size: " + statementFetchSize);
+        if (statementFetchSize != null) LOG.jdbcResultSetFetchSize(statementFetchSize);
 		settings.setJdbcFetchSize(statementFetchSize);
 
 		String releaseModeName = ConfigurationHelper.getString( Environment.RELEASE_CONNECTIONS, properties, "auto" );
-		log.info( "Connection release mode: " + releaseModeName );
+        LOG.connectionReleaseMode(releaseModeName);
 		ConnectionReleaseMode releaseMode;
 		if ( "auto".equals(releaseModeName) ) {
 			releaseMode = transactionFactory.getDefaultReleaseMode();
@@ -139,8 +146,8 @@ public class SettingsFactory implements Serializable {
 		else {
 			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
 			if ( releaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
-					! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {			
-				log.warn( "Overriding release mode as connection provider does not support 'after_statement'" );
+					! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
+                LOG.unsupportedAfterStatement();
 				releaseMode = ConnectionReleaseMode.AFTER_TRANSACTION;
 			}
 		}
@@ -150,50 +157,50 @@ public class SettingsFactory implements Serializable {
 
 		String defaultSchema = properties.getProperty(Environment.DEFAULT_SCHEMA);
 		String defaultCatalog = properties.getProperty(Environment.DEFAULT_CATALOG);
-		if (defaultSchema!=null) log.info("Default schema: " + defaultSchema);
-		if (defaultCatalog!=null) log.info("Default catalog: " + defaultCatalog);
+        if (defaultSchema != null) LOG.defaultSchema(defaultSchema);
+        if (defaultCatalog != null) LOG.defaultCatalog(defaultCatalog);
 		settings.setDefaultSchemaName(defaultSchema);
 		settings.setDefaultCatalogName(defaultCatalog);
 
 		Integer maxFetchDepth = ConfigurationHelper.getInteger(Environment.MAX_FETCH_DEPTH, properties);
-		if (maxFetchDepth!=null) log.info("Maximum outer join fetch depth: " + maxFetchDepth);
+        if (maxFetchDepth != null) LOG.maxOuterJoinFetchDepth(maxFetchDepth);
 		settings.setMaximumFetchDepth(maxFetchDepth);
 		int batchFetchSize = ConfigurationHelper.getInt(Environment.DEFAULT_BATCH_FETCH_SIZE, properties, 1);
-		log.info("Default batch fetch size: " + batchFetchSize);
+        LOG.defaultBatchFetchSize(batchFetchSize);
 		settings.setDefaultBatchFetchSize(batchFetchSize);
 
 		boolean comments = ConfigurationHelper.getBoolean(Environment.USE_SQL_COMMENTS, properties);
-		log.info( "Generate SQL with comments: " + enabledDisabled(comments) );
+        LOG.generateSqlWithComments(enabledDisabled(comments));
 		settings.setCommentsEnabled(comments);
 
 		boolean orderUpdates = ConfigurationHelper.getBoolean(Environment.ORDER_UPDATES, properties);
-		log.info( "Order SQL updates by primary key: " + enabledDisabled(orderUpdates) );
+        LOG.orderSqlUpdatesByPrimaryKey(enabledDisabled(orderUpdates));
 		settings.setOrderUpdatesEnabled(orderUpdates);
 
 		boolean orderInserts = ConfigurationHelper.getBoolean(Environment.ORDER_INSERTS, properties);
-		log.info( "Order SQL inserts for batching: " + enabledDisabled( orderInserts ) );
+        LOG.orderSqlInsertsForBatching(enabledDisabled(orderInserts));
 		settings.setOrderInsertsEnabled( orderInserts );
 
 		//Query parser settings:
 
 		settings.setQueryTranslatorFactory( createQueryTranslatorFactory(properties) );
 
-		Map querySubstitutions = ConfigurationHelper.toMap(Environment.QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", properties);
-		log.info("Query language substitutions: " + querySubstitutions);
+        Map querySubstitutions = ConfigurationHelper.toMap(Environment.QUERY_SUBSTITUTIONS, " ,=;:\n\t\r\f", properties);
+        LOG.queryLanguageSubstitutions(querySubstitutions);
 		settings.setQuerySubstitutions(querySubstitutions);
 
 		boolean jpaqlCompliance = ConfigurationHelper.getBoolean( Environment.JPAQL_STRICT_COMPLIANCE, properties, false );
 		settings.setStrictJPAQLCompliance( jpaqlCompliance );
-		log.info( "JPA-QL strict compliance: " + enabledDisabled( jpaqlCompliance ) );
+        LOG.jpaQlStrictCompliance(enabledDisabled(jpaqlCompliance));
 
 		// Second-level / query cache:
 
 		boolean useSecondLevelCache = ConfigurationHelper.getBoolean(Environment.USE_SECOND_LEVEL_CACHE, properties, true);
-		log.info( "Second-level cache: " + enabledDisabled(useSecondLevelCache) );
+        LOG.secondLevelCache(enabledDisabled(useSecondLevelCache));
 		settings.setSecondLevelCacheEnabled(useSecondLevelCache);
 
 		boolean useQueryCache = ConfigurationHelper.getBoolean(Environment.USE_QUERY_CACHE, properties);
-		log.info( "Query cache: " + enabledDisabled(useQueryCache) );
+        LOG.queryCache(enabledDisabled(useQueryCache));
 		settings.setQueryCacheEnabled(useQueryCache);
 
 		// The cache provider is needed when we either have second-level cache enabled
@@ -203,16 +210,16 @@ public class SettingsFactory implements Serializable {
 		boolean useMinimalPuts = ConfigurationHelper.getBoolean(
 				Environment.USE_MINIMAL_PUTS, properties, settings.getRegionFactory().isMinimalPutsEnabledByDefault()
 		);
-		log.info( "Optimize cache for minimal puts: " + enabledDisabled(useMinimalPuts) );
+        LOG.optimizeCacheForMinimalInputs(enabledDisabled(useMinimalPuts));
 		settings.setMinimalPutsEnabled(useMinimalPuts);
 
 		String prefix = properties.getProperty(Environment.CACHE_REGION_PREFIX);
 		if ( StringHelper.isEmpty(prefix) ) prefix=null;
-		if (prefix!=null) log.info("Cache region prefix: "+ prefix);
+        if (prefix != null) LOG.cacheRegionPrefix(prefix);
 		settings.setCacheRegionPrefix(prefix);
 
 		boolean useStructuredCacheEntries = ConfigurationHelper.getBoolean(Environment.USE_STRUCTURED_CACHE, properties, false);
-		log.info( "Structured second-level cache entries: " + enabledDisabled(useStructuredCacheEntries) );
+        LOG.structuredSecondLevelCacheEntries(enabledDisabled(useStructuredCacheEntries));
 		settings.setStructuredCacheEntriesEnabled(useStructuredCacheEntries);
 
 		if (useQueryCache) settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
@@ -220,7 +227,7 @@ public class SettingsFactory implements Serializable {
 		//Statistics and logging:
 
 		boolean showSql = ConfigurationHelper.getBoolean(Environment.SHOW_SQL, properties);
-		if (showSql) log.info("Echoing all SQL to stdout");
+		if (showSql) LOG.echoingSql();
 //		settings.setShowSqlEnabled(showSql);
 
 		boolean formatSql = ConfigurationHelper.getBoolean(Environment.FORMAT_SQL, properties);
@@ -229,11 +236,11 @@ public class SettingsFactory implements Serializable {
 		settings.setSqlStatementLogger( new SQLStatementLogger( showSql, formatSql ) );
 
 		boolean useStatistics = ConfigurationHelper.getBoolean(Environment.GENERATE_STATISTICS, properties);
-		log.info( "Statistics: " + enabledDisabled(useStatistics) );
+		LOG.statistics( enabledDisabled(useStatistics) );
 		settings.setStatisticsEnabled(useStatistics);
 
 		boolean useIdentifierRollback = ConfigurationHelper.getBoolean(Environment.USE_IDENTIFIER_ROLLBACK, properties);
-		log.info( "Deleted entity synthetic identifier rollback: " + enabledDisabled(useIdentifierRollback) );
+        LOG.deletedEntitySyntheticIdentifierRollback(enabledDisabled(useIdentifierRollback));
 		settings.setIdentifierRollbackEnabled(useIdentifierRollback);
 
 		//Schema export:
@@ -249,15 +256,15 @@ public class SettingsFactory implements Serializable {
 		settings.setImportFiles( properties.getProperty( Environment.HBM2DDL_IMPORT_FILES ) );
 
 		EntityMode defaultEntityMode = EntityMode.parse( properties.getProperty( Environment.DEFAULT_ENTITY_MODE ) );
-		log.info( "Default entity-mode: " + defaultEntityMode );
+        LOG.defaultEntityMode(defaultEntityMode);
 		settings.setDefaultEntityMode( defaultEntityMode );
 
 		boolean namedQueryChecking = ConfigurationHelper.getBoolean( Environment.QUERY_STARTUP_CHECKING, properties, true );
-		log.info( "Named query checking : " + enabledDisabled( namedQueryChecking ) );
+        LOG.namedQueryChecking(enabledDisabled(namedQueryChecking));
 		settings.setNamedQueryStartupCheckingEnabled( namedQueryChecking );
 
 		boolean checkNullability = ConfigurationHelper.getBoolean(Environment.CHECK_NULLABILITY, properties, true);
-		log.info( "Check Nullability in Core (should be disabled when Bean Validation is on): " + enabledDisabled(checkNullability) );
+        LOG.checkNullability(enabledDisabled(checkNullability));
 		settings.setCheckNullability(checkNullability);
 
 
@@ -278,7 +285,7 @@ public class SettingsFactory implements Serializable {
 			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
 		}
 		else {
-			log.debug( "using javassist as bytecode provider by default" );
+            LOG.usingJavassist();
 			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 		}
 	}
@@ -291,7 +298,7 @@ public class SettingsFactory implements Serializable {
 		String queryCacheFactoryClassName = ConfigurationHelper.getString(
 				Environment.QUERY_CACHE_FACTORY, properties, "org.hibernate.cache.StandardQueryCacheFactory"
 		);
-		log.info("Query cache factory: " + queryCacheFactoryClassName);
+        LOG.queryCacheFactory(queryCacheFactoryClassName);
 		try {
 			return (QueryCacheFactory) ReflectHelper.classForName(queryCacheFactoryClassName).newInstance();
 		}
@@ -312,7 +319,7 @@ public class SettingsFactory implements Serializable {
 		if ( regionFactoryClassName == null ) {
 			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
 		}
-		log.info( "Cache region factory : " + regionFactoryClassName );
+        LOG.cacheRegionFactory(regionFactoryClassName);
 		try {
 			try {
 				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName )
@@ -321,10 +328,7 @@ public class SettingsFactory implements Serializable {
 			}
 			catch ( NoSuchMethodException nsme ) {
 				// no constructor accepting Properties found, try no arg constructor
-				log.debug(
-						regionFactoryClassName + " did not provide constructor accepting java.util.Properties; " +
-								"attempting no-arg constructor."
-				);
+                LOG.constructorWithPropertiesNotFound(regionFactoryClassName);
 				return (RegionFactory) ReflectHelper.classForName( regionFactoryClassName ).newInstance();
 			}
 		}
@@ -337,7 +341,7 @@ public class SettingsFactory implements Serializable {
 		String className = ConfigurationHelper.getString(
 				Environment.QUERY_TRANSLATOR, properties, "org.hibernate.hql.ast.ASTQueryTranslatorFactory"
 		);
-		log.info("Query translator: " + className);
+        LOG.queryTranslator(className);
 		try {
 			return (QueryTranslatorFactory) ReflectHelper.classForName(className).newInstance();
 		}
@@ -355,7 +359,7 @@ public class SettingsFactory implements Serializable {
 					: new BatchBuilder();
 		}
 		else {
-			log.info("Batch factory: " + batchBuilderClass);
+            LOG.batcherFactory(batchBuilderClass);
 			try {
 				batchBuilder = (BatchBuilder) ReflectHelper.classForName(batchBuilderClass).newInstance();
 			}
@@ -375,4 +379,192 @@ public class SettingsFactory implements Serializable {
 		return TransactionManagerLookupFactory.getTransactionManagerLookup(properties);
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Automatic flush during beforeCompletion(): %s" )
+        void autoFlush( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Automatic session close at end of transaction: %s" )
+        void autoSessionClose( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Batcher factory: %s" )
+        void batcherFactory( String batcherClass );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Cache region factory : %s" )
+        void cacheRegionFactory( String regionFactoryClassName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Cache region prefix: %s" )
+        void cacheRegionPrefix( String prefix );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Check Nullability in Core (should be disabled when Bean Validation is on): %s" )
+        void checkNullability( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Connection release mode: %s" )
+        void connectionReleaseMode( String releaseModeName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor." )
+        void constructorWithPropertiesNotFound( String regionFactoryClassName );
+
+        @LogMessage( level = INFO )
+        // @formatter:off
+        @Message( value = "Database ->\n" +
+                          "       name : %s\n" +
+                          "    version : %s\n" +
+                          "      major : %s\n" +
+                          "      minor : %s" )
+        // @formatter:on
+        void database( String databaseProductName,
+                       String databaseProductVersion,
+                       int databaseMajorVersion,
+                       int databaseMinorVersion );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Default batch fetch size: %s" )
+        void defaultBatchFetchSize( int batchFetchSize );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Default catalog: %s" )
+        void defaultCatalog( String defaultCatalog );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Default entity-mode: %s" )
+        void defaultEntityMode( EntityMode defaultEntityMode );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Default schema: %s" )
+        void defaultSchema( String defaultSchema );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Deleted entity synthetic identifier rollback: %s" )
+        void deletedEntitySyntheticIdentifierRollback( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        // @formatter:off
+        @Message( value = "Driver ->\n" +
+                          "       name : %s\n" +
+                          "    version : %s\n" +
+                          "      major : %s\n" +
+                          "      minor : %s" )
+        // @formatter:on
+        void driver( String driverProductName,
+                     String driverProductVersion,
+                     int driverMajorVersion,
+                     int driverMinorVersion );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Echoing all SQL to stdout" )
+        void echoingSql();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Generate SQL with comments: %s" )
+        void generateSqlWithComments( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JDBC3 getGeneratedKeys(): %s" )
+        void jdbc3GeneratedKeys( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JDBC batch size: %s" )
+        void jdbcBatchSize( int batchSize );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JDBC batch updates for versioned data: %s" )
+        void jdbcBatchUpdates( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JDBC result set fetch size: %s" )
+        void jdbcResultSetFetchSize( Integer statementFetchSize );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JPA-QL strict compliance: %s" )
+        void jpaQlStrictCompliance( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Maximum outer join fetch depth: %s" )
+        void maxOuterJoinFetchDepth( Integer maxFetchDepth );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Named query checking : %s" )
+        void namedQueryChecking( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Optimize cache for minimal puts: %s" )
+        void optimizeCacheForMinimalInputs( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Order SQL inserts for batching: %s" )
+        void orderSqlInsertsForBatching( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Order SQL updates by primary key: %s" )
+        void orderSqlUpdatesByPrimaryKey( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Query cache: %s" )
+        void queryCache( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Query cache factory: %s" )
+        void queryCacheFactory( String queryCacheFactoryClassName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Query language substitutions: %s" )
+        void queryLanguageSubstitutions( Map<String, String> querySubstitutions );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Query translator: %s" )
+        void queryTranslator( String className );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Scrollable result sets: %s" )
+        void scrollabelResultSets( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Second-level cache: %s" )
+        void secondLevelCache( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Statistics: %s" )
+        void statistics( String enabledDisabled );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Structured second-level cache entries: %s" )
+        void structuredSecondLevelCacheEntries( String enabledDisabled );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Could not obtain connection metadata: %s" )
+        void unableToObjectConnectionMetadata( SQLException error );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Could not obtain connection to query metadata: %s" )
+        void unableToObjectConnectionToQueryMetadata( SQLException error );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Overriding release mode as connection provider does not support 'after_statement'" )
+        void unsupportedAfterStatement();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Using javassist as bytecode provider by default" )
+        void usingJavassist();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Error building SQLExceptionConverter; using minimal converter" )
+        void usingMinimalConverter();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Wrap result sets: %s" )
+        void wrapResultSets( String enabledDisabled );
+    }
 }

@@ -24,19 +24,21 @@
  */
 package org.hibernate.event.def;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.LockMode;
-import org.hibernate.ObjectDeletedException;
 import org.hibernate.LockOptions;
-import org.hibernate.event.EventSource;
+import org.hibernate.ObjectDeletedException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.Status;
+import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A convenience base class for listeners that respond to requests to perform a
@@ -46,7 +48,8 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class AbstractLockUpgradeEventListener extends AbstractReassociateEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractLockUpgradeEventListener.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractLockUpgradeEventListener.class.getPackage().getName());
 
 	/**
 	 * Performs a pessimistic lock upgrade on a given entity, if needed.
@@ -73,23 +76,18 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 
 			final EntityPersister persister = entry.getPersister();
 
-			if ( log.isTraceEnabled() )
-				log.trace(
-						"locking " +
-						MessageHelper.infoString( persister, entry.getId(), source.getFactory() ) +
-						" in mode: " +
-						requestedLockMode
-				);
+            if (LOG.isTraceEnabled()) LOG.locking(MessageHelper.infoString(persister, entry.getId(), source.getFactory()),
+                                                  requestedLockMode);
 
 			final SoftLock lock;
 			final CacheKey ck;
 			if ( persister.hasCache() ) {
-				ck = new CacheKey( 
-						entry.getId(), 
-						persister.getIdentifierType(), 
-						persister.getRootEntityName(), 
-						source.getEntityMode(), 
-						source.getFactory() 
+				ck = new CacheKey(
+						entry.getId(),
+						persister.getIdentifierType(),
+						persister.getRootEntityName(),
+						source.getEntityMode(),
+						source.getFactory()
 				);
 				lock = persister.getCacheAccessStrategy().lockItem( ck, entry.getVersion() );
 			}
@@ -97,7 +95,7 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 				ck = null;
 				lock = null;
 			}
-			
+
 			try {
 				if ( persister.isVersioned() && requestedLockMode == LockMode.FORCE  ) {
 					// todo : should we check the current isolation mode explicitly?
@@ -122,4 +120,15 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Locking %s in mode: %s" )
+        void locking( String infoString,
+                      LockMode requestedLockMode );
+    }
 }

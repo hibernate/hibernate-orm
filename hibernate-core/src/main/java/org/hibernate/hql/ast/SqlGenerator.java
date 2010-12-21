@@ -24,32 +24,31 @@
  */
 package org.hibernate.hql.ast;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Arrays;
-
-import antlr.RecognitionException;
-import antlr.collections.AST;
 import org.hibernate.QueryException;
-import org.hibernate.hql.ast.tree.FunctionNode;
-import org.hibernate.hql.ast.tree.SqlNode;
-import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
-import org.hibernate.param.ParameterSpecification;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.SqlGeneratorBase;
 import org.hibernate.hql.antlr.SqlTokenTypes;
-import org.hibernate.hql.ast.tree.MethodNode;
 import org.hibernate.hql.ast.tree.FromElement;
+import org.hibernate.hql.ast.tree.FunctionNode;
 import org.hibernate.hql.ast.tree.Node;
-import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.tree.ParameterContainer;
+import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.util.ASTPrinter;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.param.ParameterSpecification;
+import org.hibernate.type.Type;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 /**
  * Generates SQL by overriding callback methods in the base class, which does
@@ -59,7 +58,9 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
-	private static final Logger log = LoggerFactory.getLogger( SqlGenerator.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SqlGenerator.class.getPackage().getName());
 
 	public static boolean REGRESSION_STYLE_CROSS_JOINS = false;
 
@@ -83,13 +84,12 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
     private int traceDepth = 0;
 
-	public void traceIn(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
+	@Override
+    public void traceIn(String ruleName, AST tree) {
+        if (inputState.guessing > 0) return;
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
 		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-		log.trace( prefix + traceText );
+        LOG.trace(prefix + traceText);
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -98,23 +98,24 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
 	}
 
-	public void traceOut(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
+	@Override
+    public void traceOut(String ruleName, AST tree) {
+        if (inputState.guessing > 0) return;
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
 
 	public List getCollectedParameters() {
 		return collectedParameters;
 	}
 
-	protected void out(String s) {
+	@Override
+    protected void out(String s) {
 		writer.clause( s );
 	}
 
-	protected void out(AST n) {
+	@Override
+    protected void out(AST n) {
 		if ( n instanceof Node ) {
 			out( ( ( Node ) n ).getRenderText( sessionFactory ) );
 		}
@@ -135,19 +136,23 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 	}
 
-	protected void commaBetweenParameters(String comma) {
+	@Override
+    protected void commaBetweenParameters(String comma) {
 		writer.commaBetweenParameters( comma );
 	}
 
-	public void reportError(RecognitionException e) {
+	@Override
+    public void reportError(RecognitionException e) {
 		parseErrorHandler.reportError( e ); // Use the delegate.
 	}
 
-	public void reportError(String s) {
+	@Override
+    public void reportError(String s) {
 		parseErrorHandler.reportError( s ); // Use the delegate.
 	}
 
-	public void reportWarning(String s) {
+	@Override
+    public void reportWarning(String s) {
 		parseErrorHandler.reportWarning( s );
 	}
 
@@ -165,7 +170,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		return getStringBuffer().toString();
 	}
 
-	protected void optionalSpace() {
+	@Override
+    protected void optionalSpace() {
 		int c = getLastChar();
 		switch ( c ) {
 			case -1:
@@ -181,7 +187,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 	}
 
-	protected void beginFunctionTemplate(AST node, AST nameNode) {
+	@Override
+    protected void beginFunctionTemplate(AST node, AST nameNode) {
 		// NOTE for AGGREGATE both nodes are the same; for METHOD the first is the METHOD, the second is the
 		// 		METHOD_NAME
 		FunctionNode functionNode = ( FunctionNode ) node;
@@ -197,7 +204,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 	}
 
-	protected void endFunctionTemplate(AST node) {
+	@Override
+    protected void endFunctionTemplate(AST node) {
 		FunctionNode functionNode = ( FunctionNode ) node;
 		SQLFunction sqlFunction = functionNode.getSQLFunction();
 		if ( sqlFunction == null ) {
@@ -273,7 +281,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		throw new QueryException( "TreeWalker: panic" );
 	}
 
-	protected void fromFragmentSeparator(AST a) {
+	@Override
+    protected void fromFragmentSeparator(AST a) {
 		// check two "adjecent" nodes at the top of the from-clause tree
 		AST next = a.getNextSibling();
 		if ( next == null || !hasText( a ) ) {
@@ -330,7 +339,8 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 	}
 
-	protected void nestedFromFragment(AST d, AST parent) {
+	@Override
+    protected void nestedFromFragment(AST d, AST parent) {
 		// check a set of parent/child nodes in the from-clause tree
 		// to determine if a comma is required between them
 		if ( d != null && hasText( d ) ) {
@@ -357,4 +367,14 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Evicting %s" )
+        void evicting( String infoString );
+    }
 }

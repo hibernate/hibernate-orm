@@ -26,10 +26,6 @@ package org.hibernate.cache;
 
 import java.io.Serializable;
 import java.util.Comparator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -50,7 +46,7 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class ReadWriteCache implements CacheConcurrencyStrategy {
 
-	private static final Logger log = LoggerFactory.getLogger(ReadWriteCache.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	private Cache cache;
 	private int nextLockId;
@@ -68,7 +64,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	public String getRegionName() {
 		return cache.getRegionName();
 	}
-	
+
 	/**
 	 * Generate an id for a new lock. Uniqueness per cache instance is very
 	 * desirable but not absolutely critical. Must be called from one of the
@@ -96,35 +92,16 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * the data is versioned or timestamped.
 	 */
 	public synchronized Object get(Object key, long txTimestamp) throws CacheException {
-
-		if ( log.isTraceEnabled() ) log.trace("Cache lookup: " + key);
-
-		/*try {
-			cache.lock(key);*/
-
-			Lockable lockable = (Lockable) cache.get(key);
-
-			boolean gettable = lockable!=null && lockable.isGettable(txTimestamp);
-
-			if (gettable) {
-				if ( log.isTraceEnabled() ) log.trace("Cache hit: " + key);
-				return ( (Item) lockable ).getValue();
-			}
-			else {
-				if ( log.isTraceEnabled() ) {
-					if (lockable==null) {
-						log.trace("Cache miss: " + key);
-					}
-					else {
-						log.trace("Cached item was locked: " + key);
-					}
-				}
-				return null;
-			}
-		/*}
-		finally {
-			cache.unlock(key);
-		}*/
+        LOG.lookup(key);
+		Lockable lockable = (Lockable)cache.get(key);
+		boolean gettable = lockable != null && lockable.isGettable(txTimestamp);
+		if (gettable) {
+            LOG.hit(key);
+            return ((Item)lockable).getValue();
+        }
+        if (lockable == null) LOG.miss(key);
+        else LOG.locked(key);
+        return null;
 	}
 
 	/**
@@ -135,8 +112,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * item.
 	 */
 	public synchronized SoftLock lock(Object key, Object version) throws CacheException {
-		if ( log.isTraceEnabled() ) log.trace("Invalidating: " + key);
-
+        LOG.invalidating(key);
 		try {
 			cache.lock(key);
 
@@ -163,37 +139,31 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * version.
 	 */
 	public synchronized boolean put(
-			Object key, 
-			Object value, 
-			long txTimestamp, 
-			Object version, 
+			Object key,
+			Object value,
+			long txTimestamp,
+			Object version,
 			Comparator versionComparator,
-			boolean minimalPut) 
+			boolean minimalPut)
 	throws CacheException {
-		if ( log.isTraceEnabled() ) log.trace("Caching: " + key);
+        LOG.caching(key);
 
 		try {
 			cache.lock(key);
 
 			Lockable lockable = (Lockable) cache.get(key);
 
-			boolean puttable = lockable==null || 
+			boolean puttable = lockable==null ||
 				lockable.isPuttable(txTimestamp, version, versionComparator);
 
 			if (puttable) {
 				cache.put( key, new Item( value, version, cache.nextTimestamp() ) );
-				if ( log.isTraceEnabled() ) log.trace("Cached: " + key);
+                LOG.cached(key);
 				return true;
 			}
 			else {
-				if ( log.isTraceEnabled() ) {
-					if ( lockable.isLock() ) {
-						log.trace("Item was locked: " + key);
-					}
-					else {
-						log.trace("Item was already cached: " + key);
-					}
-				}
+                if (lockable.isLock()) LOG.locked(key);
+                else LOG.exists(key);
 				return false;
 			}
 		}
@@ -217,7 +187,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * simultaneous lock).
 	 */
 	public synchronized void release(Object key, SoftLock clientLock) throws CacheException {
-		if ( log.isTraceEnabled() ) log.trace("Releasing: " + key);
+        LOG.releasing(key);
 
 		try {
 			cache.lock(key);
@@ -236,7 +206,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	}
 
 	void handleLockExpiry(Object key) throws CacheException {
-		log.warn("An item was expired by the cache while it was locked (increase your cache timeout): " + key);
+        LOG.expired(key);
 		long ts = cache.nextTimestamp() + cache.getTimeout();
 		// create new lock that times out immediately
 		Lock lock = new Lock( ts, nextLockId(), null );
@@ -257,7 +227,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 			cache.destroy();
 		}
 		catch (Exception e) {
-			log.warn("could not destroy cache", e);
+            LOG.unableToDestroyCache(e.getMessage());
 		}
 	}
 
@@ -265,10 +235,10 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * Re-cache the updated state, if and only if there there are
 	 * no other concurrent soft locks. Release our lock.
 	 */
-	public synchronized boolean afterUpdate(Object key, Object value, Object version, SoftLock clientLock) 
+	public synchronized boolean afterUpdate(Object key, Object value, Object version, SoftLock clientLock)
 	throws CacheException {
-		
-		if ( log.isTraceEnabled() ) log.trace("Updating: " + key);
+
+        LOG.updating(key);
 
 		try {
 			cache.lock(key);
@@ -285,7 +255,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 				else {
 					//recache the updated state
 					cache.update( key, new Item( value, version, cache.nextTimestamp() ) );
-					if ( log.isTraceEnabled() ) log.trace("Updated: " + key);
+                    LOG.updated(key);
 					return true;
 				}
 			}
@@ -304,17 +274,17 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * Add the new item to the cache, checking that no other transaction has
 	 * accessed the item.
 	 */
-	public synchronized boolean afterInsert(Object key, Object value, Object version) 
+	public synchronized boolean afterInsert(Object key, Object value, Object version)
 	throws CacheException {
-	
-		if ( log.isTraceEnabled() ) log.trace("Inserting: " + key);
+
+        LOG.inserting(key);
 		try {
 			cache.lock(key);
 
 			Lockable lockable = (Lockable) cache.get(key);
 			if (lockable==null) {
 				cache.update( key, new Item( value, version, cache.nextTimestamp() ) );
-				if ( log.isTraceEnabled() ) log.trace("Inserted: " + key);
+                LOG.inserted(key);
 				return true;
 			}
 			else {
@@ -426,7 +396,8 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 			return version!=null && comparator.compare(version, newVersion) < 0;
 		}
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return "Item{version=" + version +
 				",freshTimestamp=" + freshTimestamp;
 		}
@@ -482,7 +453,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 		public boolean isPuttable(long txTimestamp, Object newVersion, Comparator comparator) {
 			if (timeout < txTimestamp) return true;
 			if (multiplicity>0) return false;
-			return version==null ? 
+			return version==null ?
 				unlockTimestamp < txTimestamp :
 				comparator.compare(version, newVersion) < 0; //by requiring <, we rely on lock timeout in the case of an unsuccessful update!
 		}
@@ -509,7 +480,8 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 
 		public int getId() { return id; }
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return "Lock{id=" + id +
 				",version=" + version +
 				",multiplicity=" + multiplicity +
@@ -518,7 +490,8 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return cache + "(read-write)";
 	}
 

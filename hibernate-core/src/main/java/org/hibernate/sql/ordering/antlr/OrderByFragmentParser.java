@@ -25,17 +25,14 @@
 package org.hibernate.sql.ordering.antlr;
 
 import java.util.ArrayList;
-
-import antlr.TokenStream;
-import antlr.CommonAST;
-import antlr.collections.AST;
-
-import org.hibernate.sql.Template;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.sql.Template;
 import org.hibernate.util.StringHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.MessageLogger;
+import antlr.CommonAST;
+import antlr.TokenStream;
+import antlr.collections.AST;
 
 /**
  * Extension of the Antlr-generated parser for the purpose of adding our custom parsing behavior.
@@ -43,7 +40,9 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
-	private static final Logger log = LoggerFactory.getLogger( OrderByFragmentParser.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                OrderByFragmentParser.class.getPackage().getName());
 
 	private final TranslationContext context;
 
@@ -59,33 +58,37 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
     private int traceDepth = 0;
 
 
-	public void traceIn(String ruleName) {
+	@Override
+    public void traceIn(String ruleName) {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
 
-	public void traceOut(String ruleName) {
+	@Override
+    public void traceOut(String ruleName) {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected void trace(String msg) {
-		log.trace( msg );
+	@Override
+    protected void trace(String msg) {
+        LOG.trace(msg);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected AST quotedIdentifier(AST ident) {
+	@Override
+    protected AST quotedIdentifier(AST ident) {
 		return getASTFactory().create(
 				OrderByTemplateTokenTypes.IDENT,
 				Template.TEMPLATE + "." + context.getDialect().quote( '`' + ident.getText() + '`' )
@@ -95,14 +98,16 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected AST quotedString(AST ident) {
+	@Override
+    protected AST quotedString(AST ident) {
 		return getASTFactory().create( OrderByTemplateTokenTypes.IDENT, context.getDialect().quote( ident.getText() ) );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected boolean isFunctionName(AST ast) {
+	@Override
+    protected boolean isFunctionName(AST ast) {
 		AST child = ast.getFirstChild();
 		// assume it is a function if it has parameters
 		if ( child != null && "{param list}".equals( child.getText() ) ) {
@@ -122,7 +127,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected AST resolveFunction(AST ast) {
+	@Override
+    protected AST resolveFunction(AST ast) {
 		AST child = ast.getFirstChild();
 		if ( child != null ) {
 			assert "{param list}".equals(  child.getText() );
@@ -160,7 +166,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected AST resolveIdent(AST ident) {
+	@Override
+    protected AST resolveIdent(AST ident) {
 		String text = ident.getText();
 		String[] replacements;
 		try {
@@ -189,7 +196,8 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected AST postProcessSortSpecification(AST sortSpec) {
+	@Override
+    protected AST postProcessSortSpecification(AST sortSpec) {
 		assert SORT_SPEC == sortSpec.getType();
 		SortSpecification sortSpecification = ( SortSpecification ) sortSpec;
 		AST sortKey = sortSpecification.getSortKey();
@@ -229,4 +237,11 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		}
 		return ( SortSpecification ) sortSpecification;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+    }
 }

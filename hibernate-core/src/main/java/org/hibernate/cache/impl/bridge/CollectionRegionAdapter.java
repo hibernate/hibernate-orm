@@ -24,21 +24,18 @@
  */
 package org.hibernate.cache.impl.bridge;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.Cache;
-import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.cache.OptimisticCache;
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CacheConcurrencyStrategy;
-import org.hibernate.cache.TransactionalCache;
-import org.hibernate.cache.ReadWriteCache;
+import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.NonstrictReadWriteCache;
+import org.hibernate.cache.OptimisticCache;
 import org.hibernate.cache.ReadOnlyCache;
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
+import org.hibernate.cache.ReadWriteCache;
+import org.hibernate.cache.TransactionalCache;
 import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 
 /**
@@ -47,7 +44,8 @@ import org.hibernate.cfg.Settings;
  * @author Steve Ebersole
  */
 public class CollectionRegionAdapter extends BaseTransactionalDataRegionAdapter implements CollectionRegion {
-	private static final Logger log = LoggerFactory.getLogger( CollectionRegionAdapter.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	public CollectionRegionAdapter(Cache underlyingCache, Settings settings, CacheDataDescription metadata) {
 		super( underlyingCache, settings, metadata );
@@ -59,9 +57,7 @@ public class CollectionRegionAdapter extends BaseTransactionalDataRegionAdapter 
 	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		CacheConcurrencyStrategy ccs;
 		if ( AccessType.READ_ONLY.equals( accessType ) ) {
-			if ( metadata.isMutable() ) {
-				log.warn( "read-only cache configured for mutable collection [" + getName() + "]" );
-			}
+            if (metadata.isMutable()) LOG.readOnlyCacheConfiguredForMutableCollection(getName());
 			ccs = new ReadOnlyCache();
 		}
 		else if ( AccessType.READ_WRITE.equals( accessType ) ) {

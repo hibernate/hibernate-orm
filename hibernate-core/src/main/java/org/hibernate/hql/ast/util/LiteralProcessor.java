@@ -24,9 +24,15 @@
  */
 package org.hibernate.hql.ast.util;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.text.DecimalFormat;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
@@ -40,18 +46,13 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ReflectHelper;
-
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import antlr.SemanticException;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.text.DecimalFormat;
 
 /**
  * A delegate that handles literals and constants for HqlSqlWalker, performing the token replacement functions and
@@ -77,7 +78,8 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	 */
 	public static int DECIMAL_LITERAL_FORMAT = EXACT;
 
-	private static final Logger log = LoggerFactory.getLogger( LiteralProcessor.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                LiteralProcessor.class.getPackage().getName());
 
 	private HqlSqlWalker walker;
 
@@ -123,28 +125,20 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			// the name of an entity class
 			final String discrim = persister.getDiscriminatorSQLValue();
 			node.setDataType( persister.getDiscriminatorType() );
-			if ( InFragment.NULL.equals(discrim) || InFragment.NOT_NULL.equals(discrim) ) {
-				throw new InvalidPathException( "subclass test not allowed for null or not null discriminator: '" + text + "'" );
-			}
-			else {
-				setSQLValue( node, text, discrim ); //the class discriminator value
-			}
+            if (InFragment.NULL.equals(discrim) || InFragment.NOT_NULL.equals(discrim)) throw new InvalidPathException(
+                                                                                                                       "subclass test not allowed for null or not null discriminator: '"
+                                                                                                                       + text + "'");
+            setSQLValue(node, text, discrim); // the class discriminator value
 		}
 		else {
 			Object value = ReflectHelper.getConstantValue( text );
-			if ( value == null ) {
-				throw new InvalidPathException( "Invalid path: '" + text + "'" );
-			}
-			else {
-				setConstantValue( node, text, value );
-			}
+            if (value == null) throw new InvalidPathException("Invalid path: '" + text + "'");
+            setConstantValue(node, text, value);
 		}
 	}
 
 	private void setSQLValue(DotNode node, String text, String value) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "setSQLValue() " + text + " -> " + value );
-		}
+        LOG.setSqlValue(text, value);
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		node.setType( SqlTokenTypes.SQL_TOKEN );
 		node.setText(value);
@@ -152,9 +146,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setConstantValue(DotNode node, String text, Object value) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "setConstantValue() " + text + " -> " + value + " " + value.getClass().getName() );
-		}
+        LOG.setConstantValue(text, value, value.getClass().getName());
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		if ( value instanceof String ) {
 			node.setType( SqlTokenTypes.QUOTED_STRING );
@@ -222,9 +214,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	private void processLiteral(AST constant) {
 		String replacement = ( String ) walker.getTokenReplacements().get( constant.getText() );
 		if ( replacement != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "processConstant() : Replacing '" + constant.getText() + "' with '" + replacement + "'" );
-			}
+            LOG.processConstant(constant.getText(), replacement);
 			constant.setText( replacement );
 		}
 	}
@@ -234,15 +224,11 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 				|| literal.getType() == NUM_LONG
 				|| literal.getType() == NUM_BIG_INTEGER ) {
 			literal.setText( determineIntegerRepresentation( literal.getText(), literal.getType() ) );
-		}
-		else if ( literal.getType() == NUM_FLOAT
+        } else if (literal.getType() == NUM_FLOAT
 				|| literal.getType() == NUM_DOUBLE
 				|| literal.getType() == NUM_BIG_DECIMAL ) {
 			literal.setText( determineDecimalRepresentation( literal.getText(), literal.getType() ) );
-		}
-		else {
-			log.warn( "Unexpected literal token type [" + literal.getType() + "] passed for numeric processing" );
-		}
+        } else LOG.unexpectedLiteralTokenType(literal.getType());
 	}
 
 	private String determineIntegerRepresentation(String text, int type) {
@@ -259,7 +245,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 					return Integer.valueOf( text ).toString();
 				}
 				catch( NumberFormatException e ) {
-					log.trace( "could not format incoming text [" + text + "] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG" );
+                    LOG.unableToFormatIncomingText(text);
 				}
 			}
 			String literalValue = text;
@@ -335,4 +321,35 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			new ExactDecimalFormatter(),
 			new ApproximateDecimalFormatter()
 	};
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "processConstant() : Replacing '%s' with '%s'" )
+        void processConstant( String text,
+                              String replacement );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "setConstantValue() %s -> %s %s" )
+        void setConstantValue( String text,
+                               Object value,
+                               String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "setSQLValue() %s -> %s" )
+        void setSqlValue( String text,
+                          String value );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Could not format incoming text [%s] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG" )
+        void unableToFormatIncomingText( String text );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unexpected literal token type [%d] passed for numeric processing" )
+        void unexpectedLiteralTokenType( int type );
+    }
 }

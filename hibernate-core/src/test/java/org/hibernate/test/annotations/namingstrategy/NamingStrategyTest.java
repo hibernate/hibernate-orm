@@ -4,9 +4,7 @@ package org.hibernate.test.annotations.namingstrategy;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
-
 import junit.framework.TestCase;
-
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Environment;
@@ -14,25 +12,24 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Table;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Test harness for ANN-716.
- * 
+ *
  * @author Hardy Ferentschik
  */
 public class NamingStrategyTest extends TestCase {
-	
-	private Logger log = LoggerFactory.getLogger(NamingStrategyTest.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ServiceRegistryHolder serviceRegistryHolder;
 
-	protected void setUp() {
+	@Override
+    protected void setUp() {
 		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
 	}
 
-	protected void tearDown() {
+	@Override
+    protected void tearDown() {
 		if ( serviceRegistryHolder != null ) {
 			serviceRegistryHolder.destroy();
 		}
@@ -49,7 +46,7 @@ public class NamingStrategyTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-			log.debug(writer.toString());
+            LOG.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
@@ -66,7 +63,7 @@ public class NamingStrategyTest extends TestCase {
 
 			for ( Iterator iter = mappings.iterateTables(); iter.hasNext();  ) {
 				Table table = (Table) iter.next();
-				log.info("testWithEJB3NamingStrategy table = " + table.getName());
+                LOG.info("testWithEJB3NamingStrategy table = " + table.getName());
 				if ( table.getName().equalsIgnoreCase("A_ADDRESS")) {
 					foundIt = true;
 				}
@@ -78,7 +75,7 @@ public class NamingStrategyTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-			log.debug(writer.toString());
+            LOG.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
@@ -93,8 +90,8 @@ public class NamingStrategyTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-			log.debug(writer.toString());
+            LOG.debug(writer.toString());
 			fail(e.getMessage());
 		}
-	}	
+	}
 }

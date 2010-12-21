@@ -24,18 +24,21 @@
  */
 package org.hibernate.exception;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
+import java.lang.reflect.Constructor;
+import java.sql.SQLException;
+import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-
-import java.lang.reflect.Constructor;
-import java.sql.SQLException;
-import java.util.Properties;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A factory for building SQLExceptionConverter instances.
@@ -44,7 +47,8 @@ import java.util.Properties;
  */
 public class SQLExceptionConverterFactory {
 
-	private static final Logger log = LoggerFactory.getLogger( SQLExceptionConverterFactory.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SQLExceptionConverterFactory.class.getPackage().getName());
 
 	private SQLExceptionConverterFactory() {
 		// Private constructor - stops checkstyle from complaining.
@@ -72,7 +76,7 @@ public class SQLExceptionConverterFactory {
 		}
 
 		if ( converter == null ) {
-			log.trace( "Using dialect defined converter" );
+            LOG.usingDialectDefinedConverter();
 			converter = dialect.buildSQLExceptionConverter();
 		}
 
@@ -81,7 +85,7 @@ public class SQLExceptionConverterFactory {
 				( ( Configurable ) converter ).configure( properties );
 			}
 			catch ( HibernateException e ) {
-				log.warn( "Unable to configure SQLExceptionConverter", e );
+                LOG.unableToConfigureSqlExceptionConverter(e);
 				throw e;
 			}
 		}
@@ -105,7 +109,7 @@ public class SQLExceptionConverterFactory {
 
 	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtracter violatedConstraintNameExtracter) {
 		try {
-			log.trace( "Attempting to construct instance of specified SQLExceptionConverter [" + converterClassName + "]" );
+            LOG.attemptingToConstructSqlExceptionConverter(converterClassName);
 			Class converterClass = ReflectHelper.classForName( converterClassName );
 
 			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtracter param...
@@ -129,9 +133,32 @@ public class SQLExceptionConverterFactory {
 
 		}
 		catch ( Throwable t ) {
-			log.warn( "Unable to construct instance of specified SQLExceptionConverter", t );
+            LOG.unableToConstructSqlExceptionConverter(t);
 		}
 
 		return null;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Attempting to construct instance of specified SQLExceptionConverter [%s]" )
+        void attemptingToConstructSqlExceptionConverter( String converterClassName );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to configure SQLExceptionConverter : %s" )
+        void unableToConfigureSqlExceptionConverter( HibernateException e );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to construct instance of specified SQLExceptionConverter : %s" )
+        void unableToConstructSqlExceptionConverter( Throwable t );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Using dialect defined converter" )
+        void usingDialectDefinedConverter();
+    }
 }

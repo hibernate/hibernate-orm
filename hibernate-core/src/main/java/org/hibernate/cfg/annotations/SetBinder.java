@@ -23,12 +23,15 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Bind a set.
@@ -36,7 +39,8 @@ import org.slf4j.LoggerFactory;
  * @author Matthew Inger
  */
 public class SetBinder extends CollectionBinder {
-	private final Logger log = LoggerFactory.getLogger( SetBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SetBinder.class.getPackage().getName());
 
 	public SetBinder() {
 	}
@@ -45,19 +49,28 @@ public class SetBinder extends CollectionBinder {
 		super( sorted );
 	}
 
-	protected Collection createCollection(PersistentClass persistentClass) {
+	@Override
+    protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.Set( getMappings(), persistentClass );
 	}
 
-	public void setSqlOrderBy(OrderBy orderByAnn) {
+	@Override
+    public void setSqlOrderBy(OrderBy orderByAnn) {
 		// *annotation* binder, jdk 1.5, ... am i missing something?
 		if ( orderByAnn != null ) {
-			if ( Environment.jvmSupportsLinkedHashCollections() ) {
-				super.setSqlOrderBy( orderByAnn );
-			}
-			else {
-				log.warn( "Attribute \"order-by\" ignored in JDK1.3 or less" );
-			}
+            if (Environment.jvmSupportsLinkedHashCollections()) super.setSqlOrderBy(orderByAnn);
+            else LOG.orderByAttributeIgnored();
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Attribute \"order-by\" ignored in JDK1.3 or less" )
+        void orderByAttributeIgnored();
+    }
 }

@@ -24,13 +24,16 @@
  */
 package org.hibernate.loader.collection;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.DEBUG;
 import org.hibernate.MappingException;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Loads one-to-many associations<br>
@@ -43,42 +46,54 @@ import org.hibernate.persister.collection.QueryableCollection;
  */
 public class OneToManyLoader extends CollectionLoader {
 
-	private static final Logger log = LoggerFactory.getLogger(OneToManyLoader.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                OneToManyLoader.class.getPackage().getName());
 
 	public OneToManyLoader(
-			QueryableCollection oneToManyPersister, 
-			SessionFactoryImplementor session, 
+			QueryableCollection oneToManyPersister,
+			SessionFactoryImplementor session,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		this( oneToManyPersister, 1, session, loadQueryInfluencers );
 	}
 
 	public OneToManyLoader(
-			QueryableCollection oneToManyPersister, 
-			int batchSize, 
-			SessionFactoryImplementor factory, 
+			QueryableCollection oneToManyPersister,
+			int batchSize,
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		this( oneToManyPersister, batchSize, null, factory, loadQueryInfluencers );
 	}
 
 	public OneToManyLoader(
-			QueryableCollection oneToManyPersister, 
-			int batchSize, 
-			String subquery, 
-			SessionFactoryImplementor factory, 
+			QueryableCollection oneToManyPersister,
+			int batchSize,
+			String subquery,
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( oneToManyPersister, factory, loadQueryInfluencers );
-		
+
 		JoinWalker walker = new OneToManyJoinWalker(
-				oneToManyPersister, 
-				batchSize, 
-				subquery, 
-				factory, 
+				oneToManyPersister,
+				batchSize,
+				subquery,
+				factory,
 				loadQueryInfluencers
 		);
 		initFromWalker( walker );
 
 		postInstantiate();
-		log.debug( "Static select for one-to-many " + oneToManyPersister.getRole() + ": " + getSQLString() );
+        LOG.staticSelectForOneToMany(oneToManyPersister.getRole(), getSQLString());
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Static select for one-to-many %s: %s" )
+        void staticSelectForOneToMany( String role,
+                                       String sqlString );
+    }
 }

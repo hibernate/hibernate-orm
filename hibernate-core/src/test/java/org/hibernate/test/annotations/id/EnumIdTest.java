@@ -6,20 +6,16 @@ import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.id.entities.Planet;
 import org.hibernate.test.annotations.id.entities.PlanetCheatSheet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Tests for enum type as id.
- * 
+ *
  * @author Hardy Ferentschik
  * @see ANN-744
  */
 @SuppressWarnings("unchecked")
 public class EnumIdTest extends TestCase {
 
-	private Logger log = LoggerFactory.getLogger(EnumIdTest.class);	
-	
 	public EnumIdTest(String x) {
 		super(x);
 	}
@@ -40,11 +36,11 @@ public class EnumIdTest extends TestCase {
 		tx = s.beginTransaction();
 		PlanetCheatSheet mercuryFromDb = (PlanetCheatSheet) s.get(PlanetCheatSheet.class, mercury.getPlanet());
 		assertNotNull(mercuryFromDb);
-		log.debug(mercuryFromDb.toString());
+        LOG.debug(mercuryFromDb.toString());
 		s.delete(mercuryFromDb);
 		tx.commit();
 		s.close();
-		
+
 		s = openSession();
 		tx = s.beginTransaction();
 		mercury = (PlanetCheatSheet) s.get(PlanetCheatSheet.class, Planet.MERCURY);
@@ -56,7 +52,8 @@ public class EnumIdTest extends TestCase {
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected Class[] getAnnotatedClasses() {
+	@Override
+    protected Class[] getAnnotatedClasses() {
 		return new Class[] { PlanetCheatSheet.class };
 	}
 }

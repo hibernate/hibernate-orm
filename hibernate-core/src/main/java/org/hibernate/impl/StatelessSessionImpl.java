@@ -21,6 +21,7 @@
  */
 package org.hibernate.impl;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
@@ -28,9 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -50,12 +48,12 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Versioning;
-import org.hibernate.engine.LoadQueryInfluencers;
-import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.jdbc.internal.JDBCContextImpl;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.HQLQueryPlan;
@@ -72,6 +70,10 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Gavin King
@@ -79,7 +81,8 @@ import org.hibernate.util.CollectionHelper;
 public class StatelessSessionImpl extends AbstractSessionImpl
 		implements JDBCContext.Context, StatelessSession {
 
-	private static final Logger log = LoggerFactory.getLogger( StatelessSessionImpl.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                StatelessSessionImpl.class.getPackage().getName());
 
 	private JDBCContextImpl jdbcContext;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
@@ -200,12 +203,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		final EntityPersister persister = this.getEntityPersister( entityName, entity );
 		final Serializable id = persister.getIdentifier( entity, this );
-		if ( log.isTraceEnabled() ) {
-			log.trace(
-					"refreshing transient " +
-					MessageHelper.infoString( persister, id, this.getFactory() )
-			);
-		}
+        if (LOG.isTraceEnabled()) LOG.refreshingTransient(MessageHelper.infoString(persister, id, this.getFactory()));
 		// TODO : can this ever happen???
 //		EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
 //		if ( source.getPersistenceContext().getEntry( key ) != null ) {
@@ -673,7 +671,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		// no auto-flushing to support in stateless session
 		return false;
 	}
-	
+
 	public int executeNativeUpdate(NativeSQLQuerySpecification nativeSQLQuerySpecification,
 			QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
@@ -692,4 +690,14 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		return result;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Refreshing transient %s" )
+        void refreshingTransient( String infoString );
+    }
 }

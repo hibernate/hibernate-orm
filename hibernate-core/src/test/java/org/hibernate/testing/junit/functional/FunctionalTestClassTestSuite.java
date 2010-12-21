@@ -25,13 +25,9 @@ package org.hibernate.testing.junit.functional;
 
 import java.util.Collections;
 import java.util.Map;
-
-import junit.framework.TestSuite;
 import junit.framework.Test;
 import junit.framework.TestResult;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import junit.framework.TestSuite;
 
 /**
  * A specialized {@link junit.framework.TestSuite} implementation intended
@@ -43,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FunctionalTestClassTestSuite extends TestSuite {
 
-	private static final Logger log = LoggerFactory.getLogger( FunctionalTestClassTestSuite.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ExecutionEnvironment.Settings settings;
 	private ExecutionEnvironment environment;
@@ -60,8 +56,9 @@ public class FunctionalTestClassTestSuite extends TestSuite {
 	}
 
 
-	public void addTest(Test test) {
-		log.trace( "adding test [" + test + "]" );
+	@Override
+    public void addTest(Test test) {
+        LOG.trace("adding test [" + test + "]");
 		if ( settings == null ) {
 			if ( test instanceof ExecutionEnvironment.Settings ) {
 				settings = ( ExecutionEnvironment.Settings ) test;
@@ -75,13 +72,14 @@ public class FunctionalTestClassTestSuite extends TestSuite {
 		super.addTest( test );
 	}
 
-	public void run(TestResult testResult) {
+	@Override
+    public void run(TestResult testResult) {
 		if ( testCount == 0 ) {
 			// might be zero if database-specific...
 			return;
 		}
 		try {
-			log.info( "Starting test-suite [" + getName() + "]" );
+            LOG.info("Starting test-suite [" + getName() + "]");
 			setUp();
 			testPosition = 0;
 			super.run( testResult );
@@ -92,11 +90,12 @@ public class FunctionalTestClassTestSuite extends TestSuite {
 			}
 			catch( Throwable ignore ) {
 			}
-			log.info( "Completed test-suite [" + getName() + "]" );
+            LOG.info("Completed test-suite [" + getName() + "]");
 		}
 	}
 
-	public void runTest(Test test, TestResult testResult) {
+	@Override
+    public void runTest(Test test, TestResult testResult) {
 		testPosition++;
 		if ( environmentSetupError != null ) {
 			testResult.startTest( test );
@@ -127,7 +126,7 @@ public class FunctionalTestClassTestSuite extends TestSuite {
 		if ( settings == null ) {
 			return;
 		}
-		log.info( "Building aggregated execution environment" );
+        LOG.info("Building aggregated execution environment");
 		try {
 			environment = new ExecutionEnvironment( settings );
 			environment.initialize( getConnectionProviderInjectionProperties() );
@@ -143,7 +142,7 @@ public class FunctionalTestClassTestSuite extends TestSuite {
 
 	protected void tearDown() {
 		if ( environment != null ) {
-			log.info( "Destroying aggregated execution environment" );
+            LOG.info("Destroying aggregated execution environment");
 			environment.complete();
 			this.environment = null;
 		}

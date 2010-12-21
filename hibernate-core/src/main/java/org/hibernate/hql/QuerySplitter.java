@@ -24,16 +24,18 @@
  */
 package org.hibernate.hql;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.WARN;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.util.StringHelper;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Provides query splitting methods, which were originally in QueryTranslator.
@@ -44,7 +46,8 @@ import java.util.Set;
  */
 public final class QuerySplitter {
 
-	private static final Logger log = LoggerFactory.getLogger( QuerySplitter.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                QuerySplitter.class.getPackage().getName());
 
 	private static final Set BEFORE_CLASS_TOKENS = new HashSet();
 	private static final Set NOT_AFTER_CLASS_TOKENS = new HashSet();
@@ -93,7 +96,7 @@ public final class QuerySplitter {
 
 		templateQuery.append( tokens[0] );
 		if ( "select".equals( tokens[0].toLowerCase() ) ) isSelectClause = true;
-        
+
 		for ( int i = 1; i < tokens.length; i++ ) {
 
 			//update last non-whitespace token, if necessary
@@ -113,10 +116,10 @@ public final class QuerySplitter {
 					}
 				}
 
-				boolean process = !isSelectClause && 
-						isJavaIdentifier( token ) && 
+				boolean process = !isSelectClause &&
+						isJavaIdentifier( token ) &&
 						isPossiblyClassName( last, next );
-						
+
 				if (process) {
 					String importedClassName = getImportedClass( token, factory );
 					if ( importedClassName != null ) {
@@ -136,14 +139,14 @@ public final class QuerySplitter {
 
 		}
 		String[] results = StringHelper.multiply( templateQuery.toString(), placeholders.iterator(), replacements.iterator() );
-		if ( results.length == 0 ) log.warn( "no persistent classes found for query class: " + query );
+        if (results.length == 0) LOG.noPersistentClassesFound(query);
 		return results;
 	}
 
 	private static boolean isPossiblyClassName(String last, String next) {
-		return "class".equals( last ) || ( 
-				BEFORE_CLASS_TOKENS.contains( last ) && 
-				!NOT_AFTER_CLASS_TOKENS.contains( next ) 
+		return "class".equals( last ) || (
+				BEFORE_CLASS_TOKENS.contains( last ) &&
+				!NOT_AFTER_CLASS_TOKENS.contains( next )
 			);
 	}
 
@@ -154,4 +157,15 @@ public final class QuerySplitter {
 	public static String getImportedClass(String name, SessionFactoryImplementor factory) {
 		return factory.getImportedClassName( name );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "no persistent classes found for query class: %s" )
+        void noPersistentClassesFound( String query );
+    }
 }

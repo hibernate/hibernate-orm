@@ -26,36 +26,11 @@ package org.hibernate.cfg;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.MapsId;
-
 import org.dom4j.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.AnnotationException;
-import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.engine.NamedQueryDefinition;
-import org.hibernate.engine.NamedSQLQueryDefinition;
-import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.mapping.IdGenerator;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
-import org.hibernate.util.CollectionHelper;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate
@@ -68,7 +43,6 @@ import org.hibernate.util.CollectionHelper;
  */
 @Deprecated
 public class AnnotationConfiguration extends Configuration {
-	private Logger log = LoggerFactory.getLogger( AnnotationConfiguration.class );
 
 	public AnnotationConfiguration() {
 		super();

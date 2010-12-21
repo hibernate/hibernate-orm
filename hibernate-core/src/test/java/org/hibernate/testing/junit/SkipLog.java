@@ -23,8 +23,7 @@
  */
 package org.hibernate.testing.junit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.Logger;
 
 /**
  * Well-known-location lookup for the test-skip log...
@@ -32,5 +31,6 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class SkipLog {
-	public static final Logger LOG = LoggerFactory.getLogger( "org.hibernate.test.SKIPPED" );
+
+    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 }

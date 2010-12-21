@@ -24,25 +24,28 @@
  */
 package org.hibernate.tuple;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.ReflectionOptimizer;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines a POJO-based instantiator for use from the tuplizers.
  */
 public class PojoInstantiator implements Instantiator, Serializable {
 
-	private static final Logger log = LoggerFactory.getLogger(PojoInstantiator.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PojoInstantiator.class.getPackage().getName());
 
 	private transient Constructor constructor;
 
@@ -62,11 +65,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			constructor = ReflectHelper.getDefaultConstructor(mappedClass);
 		}
 		catch ( PropertyNotFoundException pnfe ) {
-			log.info(
-			        "no default (no-argument) constructor for class: " +
-					mappedClass.getName() +
-					" (class must be instantiated by Interceptor)"
-			);
+            LOG.noDefaultConstructor(mappedClass.getName());
 			constructor = null;
 		}
 	}
@@ -81,11 +80,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 		}
 		catch ( PropertyNotFoundException pnfe ) {
-			log.info(
-			        "no default (no-argument) constructor for class: " +
-					mappedClass.getName() +
-					" (class must be instantiated by Interceptor)"
-			);
+            LOG.noDefaultConstructor(mappedClass.getName());
 			constructor = null;
 		}
 	}
@@ -115,16 +110,27 @@ public class PojoInstantiator implements Instantiator, Serializable {
 			}
 		}
 	}
-	
+
 	public Object instantiate(Serializable id) {
-		final boolean useEmbeddedIdentifierInstanceAsEntity = embeddedIdentifier && 
-				id != null && 
+		final boolean useEmbeddedIdentifierInstanceAsEntity = embeddedIdentifier &&
+				id != null &&
 				id.getClass().equals(mappedClass);
 		return useEmbeddedIdentifierInstanceAsEntity ? id : instantiate();
 	}
 
 	public boolean isInstance(Object object) {
-		return mappedClass.isInstance(object) || 
+		return mappedClass.isInstance(object) ||
 				( proxyInterface!=null && proxyInterface.isInstance(object) ); //this one needed only for guessEntityMode()
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "No default (no-argument) constructor for class: %s (class must be instantiated by Interceptor)" )
+        void noDefaultConstructor( String name );
+    }
 }

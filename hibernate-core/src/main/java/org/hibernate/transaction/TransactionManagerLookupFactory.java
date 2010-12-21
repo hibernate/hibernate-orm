@@ -25,12 +25,7 @@
 package org.hibernate.transaction;
 
 import java.util.Properties;
-
 import javax.transaction.TransactionManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ReflectHelper;
@@ -42,7 +37,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public final class TransactionManagerLookupFactory {
 
-	private static final Logger log = LoggerFactory.getLogger(TransactionManagerLookupFactory.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TransactionManagerLookupFactory.class.getPackage().getName());
 
 	/**
 	 * Disallow instantiation
@@ -62,7 +58,7 @@ public final class TransactionManagerLookupFactory {
 	 * {@link TransactionManagerLookup} or (b) asking it to locate the {@link TransactionManager}.
 	 */
 	public static TransactionManager getTransactionManager(Properties props) throws HibernateException {
-		log.info( "obtaining TransactionManager" );
+        LOG.obtainingTransactionManager();
 		return getTransactionManagerLookup( props ).getTransactionManager( props );
 	}
 
@@ -77,21 +73,17 @@ public final class TransactionManagerLookupFactory {
 	public static TransactionManagerLookup getTransactionManagerLookup(Properties props) throws HibernateException {
 		String tmLookupClass = props.getProperty( Environment.TRANSACTION_MANAGER_STRATEGY );
 		if ( tmLookupClass == null ) {
-			log.info( "No TransactionManagerLookup configured (in JTA environment, use of read-write or transactional second-level cache is not recommended)" );
+            LOG.transactionManagerLookupNotConfigured();
 			return null;
 		}
-		else {
-			log.info( "instantiating TransactionManagerLookup: " + tmLookupClass );
-			try {
-				TransactionManagerLookup lookup = ( TransactionManagerLookup )
-						ReflectHelper.classForName( tmLookupClass ).newInstance();
-				log.info( "instantiated TransactionManagerLookup" );
-				return lookup;
-			}
-			catch ( Exception e ) {
-				log.error( "Could not instantiate TransactionManagerLookup", e );
-				throw new HibernateException( "Could not instantiate TransactionManagerLookup '" + tmLookupClass + "'" );
-			}
+        LOG.instantiatingTransactionManagerLookup(tmLookupClass);
+        try {
+            TransactionManagerLookup lookup = (TransactionManagerLookup)ReflectHelper.classForName(tmLookupClass).newInstance();
+            LOG.instantiatedTransactionManagerLookup();
+            return lookup;
+        } catch (Exception e) {
+            LOG.error(LOG.unableToInstantiateTransactionManagerLookup(), e);
+            throw new HibernateException(LOG.unableToInstantiateTransactionManagerLookup(tmLookupClass));
 		}
 	}
 }

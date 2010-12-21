@@ -24,8 +24,8 @@
  */
 package org.hibernate.jdbc.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Centralize logging handling for SQL statements.
@@ -36,7 +36,9 @@ public class SQLStatementLogger {
 	// todo : for 4.0
 //	private static final Logger log = LoggerFactory.getLogger( SQLStatementLogger.class );
 	// this is the legacy logging 'category'...
-	private static final Logger log = LoggerFactory.getLogger( "org.hibernate.SQL" );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SQLStatementLogger.class.getPackage().getName());
 
 	private boolean logToStdout;
 	private boolean formatSql;
@@ -104,17 +106,22 @@ public class SQLStatementLogger {
 	 * @param style The requested formatting style.
 	 */
 	public void logStatement(String statement, FormatStyle style) {
-		if ( log.isDebugEnabled() || logToStdout ) {
+        if (LOG.isDebugEnabled() || logToStdout) {
 			style = determineActualStyle( style );
 			statement = style.getFormatter().format( statement );
-		}
-		log.debug( statement );
-		if ( logToStdout ) {
-			System.out.println( "Hibernate: " + statement );
+            LOG.debug(statement);
+            if (logToStdout) System.out.println("Hibernate: " + statement);
 		}
 	}
 
 	private FormatStyle determineActualStyle(FormatStyle style) {
 		return formatSql ? style : FormatStyle.NONE;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+    }
 }

@@ -23,18 +23,20 @@
  */
 package org.hibernate.type;
 
-import java.sql.Timestamp;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
-
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.dialect.Dialect;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.engine.SessionImplementor;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * <tt>dbtimestamp</tt>: An extension of {@link TimestampType} which
@@ -50,9 +52,11 @@ import org.slf4j.LoggerFactory;
 public class DbTimestampType extends TimestampType {
 	public static final DbTimestampType INSTANCE = new DbTimestampType();
 
-	private static final Logger log = LoggerFactory.getLogger( DbTimestampType.class );
-	
-	public String getName() {
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DbTimestampType.class.getPackage().getName());
+
+	@Override
+    public String getName() {
 		return "dbtimestamp";
 	}
 
@@ -61,13 +65,14 @@ public class DbTimestampType extends TimestampType {
 		return new String[] { getName() };
 	}
 
-	public Date seed(SessionImplementor session) {
+	@Override
+    public Date seed(SessionImplementor session) {
 		if ( session == null ) {
-			log.trace( "incoming session was null; using current jvm time" );
+            LOG.incomingSessionWasNull();
 			return super.seed( session );
 		}
 		else if ( !session.getFactory().getDialect().supportsCurrentTimestampSelection() ) {
-			log.debug( "falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
+            LOG.fallingBackToVmBasedTimestamp();
 			return super.seed( session );
 		}
 		else {
@@ -93,13 +98,7 @@ public class DbTimestampType extends TimestampType {
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-				        "current timestamp retreived from db : " + ts +
-				        " (nanos=" + ts.getNanos() +
-				        ", time=" + ts.getTime() + ")"
-					);
-			}
+            LOG.currentTimestampRetrievedFromDatabase(ts, ts.getNanos(), ts.getTime());
 			return ts;
 		}
 		catch( SQLException sqle ) {
@@ -115,7 +114,7 @@ public class DbTimestampType extends TimestampType {
 					ps.close();
 				}
 				catch( SQLException sqle ) {
-					log.warn( "unable to clean up prepared statement", sqle );
+                    LOG.warn(LOG.unableToCleanUpPreparedStatement(), sqle);
 				}
 			}
 		}
@@ -128,13 +127,7 @@ public class DbTimestampType extends TimestampType {
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
 			cs.execute();
 			Timestamp ts = cs.getTimestamp( 1 );
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-				        "current timestamp retreived from db : " + ts +
-				        " (nanos=" + ts.getNanos() +
-				        ", time=" + ts.getTime() + ")"
-					);
-			}
+            LOG.currentTimestampRetrievedFromDatabase(ts, ts.getNanos(), ts.getTime());
 			return ts;
 		}
 		catch( SQLException sqle ) {
@@ -150,9 +143,36 @@ public class DbTimestampType extends TimestampType {
 					cs.close();
 				}
 				catch( SQLException sqle ) {
-					log.warn( "unable to clean up callable statement", sqle );
+                    LOG.warn(LOG.unableToCleanUpCallableStatement(), sqle);
 				}
 			}
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" )
+        void fallingBackToVmBasedTimestamp();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Current timestamp retreived from db : %s (nanos=%d, time=%ld)" )
+        void currentTimestampRetrievedFromDatabase( Timestamp ts,
+                                                    int nanos,
+                                                    long time );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Incoming session was null; using current jvm time" )
+        void incomingSessionWasNull();
+
+        @Message( value = "Unable to clean up callable statement" )
+        Object unableToCleanUpCallableStatement();
+
+        @Message( value = "Unable to clean up prepared statement" )
+        Object unableToCleanUpPreparedStatement();
+    }
 }

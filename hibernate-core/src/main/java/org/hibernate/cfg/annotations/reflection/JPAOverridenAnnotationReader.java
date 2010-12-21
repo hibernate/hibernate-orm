@@ -24,6 +24,7 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -115,12 +116,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
-
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
@@ -132,6 +129,10 @@ import org.hibernate.annotations.common.reflection.Filter;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor.
@@ -143,7 +144,8 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings("unchecked")
 public class JPAOverridenAnnotationReader implements AnnotationReader {
-	private Logger log = LoggerFactory.getLogger( JPAOverridenAnnotationReader.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JPAOverridenAnnotationReader.class.getPackage().getName());
 	private static final Map<Class, String> annotationToXml;
 	private static final String SCHEMA_VALIDATION = "Activate schema validation for more information";
 	private static final Filter FILTER = new Filter() {
@@ -441,13 +443,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 			}
 			for ( Element subelement : (List<Element>) element.elements() ) {
 				String propertyName = subelement.attributeValue( "name" );
-				if ( !properties.contains( propertyName ) ) {
-					log.warn(
-							"Property {} not found in class"
-									+ " but described in <mapping-file/> (possible typo error)",
-							StringHelper.qualify( className, propertyName )
-					);
-				}
+                if (!properties.contains(propertyName)) LOG.propertyNotFound(StringHelper.qualify(className, propertyName));
 			}
 		}
 	}
@@ -2508,4 +2504,15 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 	private Annotation[] getJavaAnnotations() {
 		return element.getAnnotations();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Property %s not found in class but described in <mapping-file/> (possible typo error)" )
+        void propertyNotFound( String property );
+    }
 }

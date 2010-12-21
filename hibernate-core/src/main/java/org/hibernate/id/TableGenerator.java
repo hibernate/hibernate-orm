@@ -31,19 +31,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An <tt>IdentifierGenerator</tt> that uses a database
@@ -75,17 +75,18 @@ public class TableGenerator extends TransactionHelper
 	/* COLUMN and TABLE should be renamed but it would break the public API */
 	/** The column parameter */
 	public static final String COLUMN = "column";
-	
+
 	/** Default column name */
 	public static final String DEFAULT_COLUMN_NAME = "next_hi";
-	
+
 	/** The table parameter */
 	public static final String TABLE = "table";
-	
-	/** Default table name */	
+
+	/** Default table name */
 	public static final String DEFAULT_TABLE_NAME = "hibernate_unique_key";
 
-	private static final Logger log = LoggerFactory.getLogger(TableGenerator.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TableGenerator.class.getPackage().getName());
 
 	private Type identifierType;
 	private String tableName;
@@ -119,18 +120,18 @@ public class TableGenerator extends TransactionHelper
 				)
 		);
 
-		query = "select " + 
-			columnName + 
-			" from " + 
+		query = "select " +
+			columnName +
+			" from " +
 			dialect.appendLockHint(LockMode.PESSIMISTIC_WRITE, tableName) +
 			dialect.getForUpdateString();
 
-		update = "update " + 
-			tableName + 
-			" set " + 
-			columnName + 
-			" = ? where " + 
-			columnName + 
+		update = "update " +
+			tableName +
+			" set " +
+			columnName +
+			" = ? where " +
+			columnName +
 			" = ?";
 	}
 
@@ -176,7 +177,8 @@ public class TableGenerator extends TransactionHelper
 	 *
 	 * @throws SQLException
 	 */
-	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
+	@Override
+    public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
 		IntegralDataTypeHolder value = buildHolder();
 		int rows;
 		do {
@@ -190,15 +192,15 @@ public class TableGenerator extends TransactionHelper
 			try {
 				ResultSet rs = qps.executeQuery();
 				if ( !rs.next() ) {
-					String err = "could not read a hi value - you need to populate the table: " + tableName;
-					log.error(err);
+                    String err = LOG.unableToReadHiValue(tableName);
+                    LOG.error(err);
 					throw new IdentifierGenerationException(err);
 				}
 				value.initialize( rs, 1 );
 				rs.close();
 			}
 			catch (SQLException sqle) {
-				log.error("could not read a hi value", sqle);
+                LOG.error(LOG.unableToReadHiValue(), sqle);
 				throw sqle;
 			}
 			finally {
@@ -214,7 +216,7 @@ public class TableGenerator extends TransactionHelper
 				rows = ups.executeUpdate();
 			}
 			catch (SQLException sqle) {
-				log.error("could not update hi value in: " + tableName, sqle);
+                LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
 				throw sqle;
 			}
 			finally {
@@ -228,4 +230,20 @@ public class TableGenerator extends TransactionHelper
 	protected IntegralDataTypeHolder buildHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "Could not read a hi value" )
+        String unableToReadHiValue();
+
+        @Message( value = "Could not read a hi value - you need to populate the table: %s" )
+        String unableToReadHiValue( String tableName );
+
+        @Message( value = "Could not update hi value in: %s" )
+        Object unableToUpdateHiValue( String tableName );
+    }
 }

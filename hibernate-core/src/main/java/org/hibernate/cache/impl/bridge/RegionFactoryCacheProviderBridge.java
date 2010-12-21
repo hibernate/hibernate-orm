@@ -24,24 +24,20 @@
 package org.hibernate.cache.impl.bridge;
 
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.CacheProvider;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.EntityRegion;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.QueryResultsRegion;
-import org.hibernate.cache.NoCacheProvider;
-import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.CacheProvider;
+import org.hibernate.cache.CollectionRegion;
+import org.hibernate.cache.EntityRegion;
+import org.hibernate.cache.NoCacheProvider;
+import org.hibernate.cache.QueryResultsRegion;
+import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.access.AccessType;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * Acts as a bridge between the {@link RegionFactory} contract and the older
@@ -51,14 +47,15 @@ import org.hibernate.cfg.Settings;
  */
 public class RegionFactoryCacheProviderBridge implements RegionFactory {
 	public static final String DEF_PROVIDER = NoCacheProvider.class.getName();
-	private static final Logger log = LoggerFactory.getLogger( RegionFactoryCacheProviderBridge.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	private CacheProvider cacheProvider;
 	private Settings settings;
 
 	public RegionFactoryCacheProviderBridge(Properties properties) {
 		String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, DEF_PROVIDER );
-		log.info( "Cache provider: " + providerClassName );
+        LOG.cacheProvider(providerClassName);
 		try {
 			cacheProvider = ( CacheProvider ) ReflectHelper.classForName( providerClassName ).newInstance();
 		}

@@ -24,27 +24,25 @@
  */
 package org.hibernate.hql.ast.util;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Map;
-
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.FromElement;
+import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.RestrictableStatement;
 import org.hibernate.hql.ast.tree.SqlFragment;
-import org.hibernate.hql.ast.tree.Node;
-import org.hibernate.hql.ast.HqlSqlWalker;
+import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.util.StringHelper;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.param.CollectionFilterKeyParameterSpecification;
-
-import antlr.ASTFactory;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Creates synthetic and nodes based on the where fragment part of a JoinSequence.
@@ -52,7 +50,9 @@ import org.slf4j.LoggerFactory;
  * @author josh
  */
 public class SyntheticAndFactory implements HqlSqlTokenTypes {
-	private static final Logger log = LoggerFactory.getLogger( SyntheticAndFactory.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SyntheticAndFactory.class.getPackage().getName());
 
 	private HqlSqlWalker hqlSqlWalker;
 	private AST thetaJoins;
@@ -91,7 +91,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			whereFragment = whereFragment.substring( 4 );
 		}
 
-		log.debug( "Using unprocessed WHERE-fragment [{}]", whereFragment );
+        LOG.usingUnprocessedWhereFragment(whereFragment);
 
 		SqlFragment fragment = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
 		fragment.setJoinFragment( joinFragment );
@@ -122,7 +122,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				hqlSqlWalker
 		);
 
-		log.debug( "Using processed WHERE-fragment [{}]", fragment.getText() );
+        LOG.usingProcessedWhereFragment(fragment.getText());
 
 		// Filter conditions need to be inserted before the HQL where condition and the
 		// theta join node.  This is because org.hibernate.loader.Loader binds the filter parameters first,
@@ -136,7 +136,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				// Put the FILTERS node before the HQL condition and theta joins
 				ASTUtil.insertChild( where, filters );
 			}
-			
+
 			// add the current fragment to the FILTERS node
 			filters.addChild( fragment );
 		}
@@ -154,7 +154,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 					ASTUtil.insertSibling( thetaJoins, filters );
 				}
 			}
-			
+
 			// add the current fragment to the THETA_JOINS node
 			thetaJoins.addChild(fragment);
 		}
@@ -204,4 +204,19 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			statement.getWhereClause().setFirstChild( and );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Using processed WHERE-fragment [%s]" )
+        void usingProcessedWhereFragment( String whereFragment );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Using unprocessed WHERE-fragment [%s]" )
+        void usingUnprocessedWhereFragment( String whereFragment );
+    }
 }

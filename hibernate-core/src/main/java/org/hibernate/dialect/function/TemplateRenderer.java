@@ -23,21 +23,24 @@
  */
 package org.hibernate.dialect.function;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
- * Delegate for handling function "templates". 
+ * Delegate for handling function "templates".
  *
  * @author Steve Ebersole
  */
 public class TemplateRenderer {
-	private static final Logger log = LoggerFactory.getLogger( TemplateRenderer.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TemplateRenderer.class.getPackage().getName());
 
 	private final String template;
 	private final String[] chunks;
@@ -99,10 +102,8 @@ public class TemplateRenderer {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public String render(List args, SessionFactoryImplementor factory) {
 		int numberOfArguments = args.size();
-		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
-			log.warn( "Function template anticipated {} arguments, but {} arguments encountered",
-					getAnticipatedNumberOfArguments(), numberOfArguments );
-		}
+        if (getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments()) LOG.missingArguments(getAnticipatedNumberOfArguments(),
+                                                                                                                                  numberOfArguments);
 		StringBuffer buf = new StringBuffer();
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {
@@ -118,4 +119,16 @@ public class TemplateRenderer {
 		}
 		return buf.toString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Function template anticipated %d arguments, but %d arguments encountered" )
+        void missingArguments( int anticipatedNumberOfArguments,
+                               int numberOfArguments );
+    }
 }

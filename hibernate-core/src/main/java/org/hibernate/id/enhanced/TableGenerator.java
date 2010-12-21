@@ -23,37 +23,38 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.sql.Types;
+import static org.jboss.logging.Logger.Level.INFO;
+import java.io.Serializable;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Properties;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Collections;
 import java.util.Map;
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.Properties;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.TransactionHelper;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.TransactionHelper;
+import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.Configurable;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.type.Type;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.LockOptions;
-import org.hibernate.LockMode;
-import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An enhanced version of table-based id generation.
@@ -129,7 +130,9 @@ import org.hibernate.util.StringHelper;
  * @author Steve Ebersole
  */
 public class TableGenerator extends TransactionHelper implements PersistentIdentifierGenerator, Configurable {
-	private static final Logger log = LoggerFactory.getLogger( TableGenerator.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TableGenerator.class.getPackage().getName());
 
 	public static final String CONFIG_PREFER_SEGMENT_PER_ENTITY = "prefer_entity_table_as_segment_value";
 
@@ -410,7 +413,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	protected String determineDefaultSegmentValue(Properties params) {
 		boolean preferSegmentPerEntity = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params, false );
 		String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
-		log.info( "explicit segment value for id generator [" + tableName + '.' + segmentColumnName + "] suggested; using default [" + defaultToUse + "]" );
+        LOG.usingDefaultIdGeneratorSegmentValue(tableName, segmentColumnName, defaultToUse);
 		return defaultToUse;
 	}
 
@@ -472,7 +475,8 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	/**
 	 * {@inheritDoc}
 	 */
-	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
+	@Override
+    public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
 		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 		int rows;
 		do {
@@ -503,7 +507,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				selectRS.close();
 			}
 			catch ( SQLException sqle ) {
-				log.error( "could not read or init a hi value", sqle );
+                LOG.error(LOG.unableToReadOrInitHiValue(), sqle);
 				throw sqle;
 			}
 			finally {
@@ -526,7 +530,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				rows = updatePS.executeUpdate();
 			}
 			catch ( SQLException sqle ) {
-				log.error( "could not updateQuery hi value in: " + tableName, sqle );
+                LOG.error(LOG.unableToUpdateQueryHiValue(tableName), sqle);
 				throw sqle;
 			}
 			finally {
@@ -579,4 +583,23 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		}
 		return new String[] { sqlDropString.toString() };
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "Could not read or init a hi value" )
+        Object unableToReadOrInitHiValue();
+
+        @Message( value = "Could not updateQuery hi value in: %s" )
+        Object unableToUpdateQueryHiValue( String tableName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]" )
+        void usingDefaultIdGeneratorSegmentValue( String tableName,
+                                                  String segmentColumnName,
+                                                  String defaultToUse );
+    }
 }

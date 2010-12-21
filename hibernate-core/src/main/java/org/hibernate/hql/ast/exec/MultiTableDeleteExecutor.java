@@ -27,7 +27,6 @@ package org.hibernate.hql.ast.exec;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
@@ -39,23 +38,22 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.util.StringHelper;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Implementation of MultiTableDeleteExecutor.
  *
  * @author Steve Ebersole
  */
 public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
-	private static final Logger log = LoggerFactory.getLogger( MultiTableDeleteExecutor.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                MultiTableDeleteExecutor.class.getPackage().getName());
 
 	private final Queryable persister;
 	private final String idInsertSelect;
 	private final String[] deletes;
 
 	public MultiTableDeleteExecutor(HqlSqlWalker walker) {
-		super( walker, log );
+        super(walker, null);
 
 		if ( !walker.getSessionFactoryHelper().getFactory().getDialect().supportsTemporaryTables() ) {
 			throw new HibernateException( "cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables" );
@@ -67,7 +65,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 		this.persister = fromElement.getQueryable();
 
 		this.idInsertSelect = generateIdInsertSelect( persister, bulkTargetAlias, deleteStatement.getWhereClause() );
-		log.trace( "Generated ID-INSERT-SELECT SQL (multi-table delete) : " +  idInsertSelect );
+        LOG.generatedIdInsertSelectDelete(idInsertSelect);
 
 		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = persister.getContraintOrderedTableKeyColumnClosure();
@@ -157,7 +155,8 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 		}
 	}
 
-	protected Queryable[] getAffectedQueryables() {
+	@Override
+    protected Queryable[] getAffectedQueryables() {
 		return new Queryable[] { persister };
 	}
 }

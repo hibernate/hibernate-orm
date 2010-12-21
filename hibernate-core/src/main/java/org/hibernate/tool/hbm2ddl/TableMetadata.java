@@ -23,17 +23,19 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.Map;
+import java.util.Set;
 import org.hibernate.mapping.ForeignKey;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * JDBC table metadata
@@ -42,8 +44,10 @@ import org.hibernate.mapping.ForeignKey;
  * @author Max Rydahl Andersen
  */
 public class TableMetadata {
-	private static final Logger log = LoggerFactory.getLogger(TableMetadata.class);
-	
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TableMetadata.class.getPackage().getName());
+
 	private final String catalog;
 	private final String schema;
 	private final String name;
@@ -62,11 +66,11 @@ public class TableMetadata {
 		}
 		String cat = catalog==null ? "" : catalog + '.';
 		String schem = schema==null ? "" : schema + '.';
-		log.info( "table found: " + cat + schem + name );
-		log.info( "columns: " + columns.keySet() );
+        LOG.tableFound(cat + schem + name);
+        LOG.columns(columns.keySet());
 		if (extras) {
-			log.info( "foreign keys: " + foreignKeys.keySet() );
-			log.info( "indexes: " + indexes.keySet() );
+            LOG.foreignKeys(foreignKeys.keySet());
+            LOG.indexes(indexes.keySet());
 		}
 	}
 
@@ -77,12 +81,13 @@ public class TableMetadata {
 	public String getCatalog() {
 		return catalog;
 	}
-	
+
 	public String getSchema() {
 		return schema;
 	}
-	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		return "TableMetadata(" + name + ')';
 	}
 
@@ -175,7 +180,7 @@ public class TableMetadata {
 
 		try {
 			rs = meta.getIndexInfo(catalog, schema, name, false, true);
-			
+
 			while ( rs.next() ) {
 				if ( rs.getShort("TYPE") == DatabaseMetaData.tableIndexStatistic ) {
 					continue;
@@ -192,7 +197,7 @@ public class TableMetadata {
 
 	private void initColumns(DatabaseMetaData meta) throws SQLException {
 		ResultSet rs = null;
-		
+
 		try {
 			rs = meta.getColumns(catalog, schema, name, "%");
 			while ( rs.next() ) {
@@ -205,11 +210,27 @@ public class TableMetadata {
 			}
 		}
 	}
-	
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Columns: %s" )
+        void columns( Set keySet );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Foreign keys: %s" )
+        void foreignKeys( Set keySet );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Indexes: %s" )
+        void indexes( Set keySet );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Table found: %s" )
+        void tableFound( String string );
+    }
 }
-
-
-
-
-
-

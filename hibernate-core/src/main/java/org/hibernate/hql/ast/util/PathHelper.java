@@ -24,14 +24,15 @@
  */
 package org.hibernate.hql.ast.util;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.util.StringHelper;
-
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import antlr.ASTFactory;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Provides utility methods for paths.
@@ -40,7 +41,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class PathHelper {
 
-	private static final Logger log = LoggerFactory.getLogger( PathHelper.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PathHelper.class.getPackage().getName());
 
 	private PathHelper() {
 	}
@@ -65,13 +67,23 @@ public final class PathHelper {
 				lhs = ASTUtil.createBinarySubtree( factory, HqlSqlTokenTypes.DOT, ".", lhs, child );
 			}
 		}
-		if ( log.isDebugEnabled() ) {
-			log.debug( "parsePath() : " + path + " -> " + ASTUtil.getDebugString( lhs ) );
-		}
+        if (LOG.isDebugEnabled()) LOG.parsePath(path, ASTUtil.getDebugString(lhs));
 		return lhs;
 	}
 
 	public static String getAlias(String path) {
 		return StringHelper.root( path );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "parsePath() : %s -> %s" )
+        void parsePath( String path,
+                        String debugString );
+    }
 }

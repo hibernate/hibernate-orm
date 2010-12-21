@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -33,10 +34,6 @@ import javax.validation.TraversableResolver;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -48,6 +45,10 @@ import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -59,7 +60,9 @@ import org.hibernate.persister.entity.EntityPersister;
 public class BeanValidationEventListener implements
 		PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, Initializable {
 
-	private static final Logger log = LoggerFactory.getLogger( BeanValidationEventListener.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                BeanValidationEventListener.class.getPackage().getName());
+
 	private ValidatorFactory factory;
 	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =
 			new ConcurrentHashMap<EntityPersister, Set<String>>();
@@ -139,9 +142,7 @@ public class BeanValidationEventListener implements
 						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
 				Set<String> classNames = new HashSet<String>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
-					if ( log.isTraceEnabled() ) {
-						log.trace( violation.toString() );
-					}
+                    LOG.violation(violation);
 					propagatedViolations.add( violation );
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}
@@ -173,4 +174,15 @@ public class BeanValidationEventListener implements
 		toString.append( "]" );
 		return toString.toString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "%s" )
+        void violation( ConstraintViolation<?> violation );
+    }
 }

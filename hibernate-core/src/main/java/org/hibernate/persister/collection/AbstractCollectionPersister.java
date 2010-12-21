@@ -23,6 +23,7 @@
  */
 package org.hibernate.persister.collection;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,7 +32,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -70,7 +70,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Alias;
@@ -85,8 +84,10 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -98,7 +99,11 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractCollectionPersister
 		implements CollectionMetadata, SQLLoadableCollection {
-	// TODO: encapsulate the protected instance variables!
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractCollectionPersister.class.getPackage().getName());
+
+    // TODO: encapsulate the protected instance variables!
 
 	private final String role;
 
@@ -118,14 +123,14 @@ public abstract class AbstractCollectionPersister
 	private final boolean hasOrder;
 	protected final boolean hasWhere;
 	private final int baseIndex;
-	
+
 	private final String nodeName;
 	private final String elementNodeName;
 	private final String indexNodeName;
 
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
-	
+
 	//types
 	private final Type keyType;
 	private final Type indexType;
@@ -149,7 +154,7 @@ public abstract class AbstractCollectionPersister
 	protected final String[] indexColumnAliases;
 	protected final String[] elementColumnAliases;
 	protected final String[] keyColumnAliases;
-	
+
 	protected final String identifierColumnName;
 	private final String identifierColumnAlias;
 	//private final String unquotedIdentifierColumnName;
@@ -186,7 +191,7 @@ public abstract class AbstractCollectionPersister
 	private final CollectionRegionAccessStrategy cacheAccessStrategy;
 	private final CollectionType collectionType;
 	private CollectionInitializer initializer;
-	
+
 	private final CacheEntryStructure cacheEntryStructure;
 
 	// dynamic filters for the collection
@@ -216,8 +221,6 @@ public abstract class AbstractCollectionPersister
 	private Map collectionPropertyColumnAliases = new HashMap();
 	private Map collectionPropertyColumnNames = new HashMap();
 
-	private static final Logger log = LoggerFactory.getLogger( AbstractCollectionPersister.class );
-
 	public AbstractCollectionPersister(
 			final Collection collection,
 			final CollectionRegionAccessStrategy cacheAccessStrategy,
@@ -234,7 +237,7 @@ public abstract class AbstractCollectionPersister
 		else {
 			cacheEntryStructure = new UnstructuredCacheEntry();
 		}
-		
+
 		dialect = factory.getDialect();
 		sqlExceptionHelper = factory.getSQLExceptionHelper();
 		collectionType = collection.getCollectionType();
@@ -253,11 +256,11 @@ public abstract class AbstractCollectionPersister
 		isPrimitiveArray = collection.isPrimitiveArray();
 		isArray = collection.isArray();
 		subselectLoadable = collection.isSubselectLoadable();
-		
-		qualifiedTableName = table.getQualifiedName( 
+
+		qualifiedTableName = table.getQualifiedName(
 				dialect,
 				factory.getSettings().getDefaultCatalogName(),
-				factory.getSettings().getDefaultSchemaName() 
+				factory.getSettings().getDefaultSchemaName()
 			);
 
 		int spacesSize = 1 + collection.getSynchronizedTables().size();
@@ -283,7 +286,7 @@ public abstract class AbstractCollectionPersister
 		batchSize = batch;
 
 		isVersioned = collection.isOptimisticLocked();
-		
+
 		// KEY
 
 		keyType = collection.getKey().getType();
@@ -299,7 +302,7 @@ public abstract class AbstractCollectionPersister
 			keyColumnAliases[k] = col.getAlias(dialect,collection.getOwner().getRootTable());
 			k++;
 		}
-		
+
 		//unquotedKeyColumnNames = StringHelper.unQuote(keyColumnAliases);
 
 		//ELEMENT
@@ -312,11 +315,11 @@ public abstract class AbstractCollectionPersister
 				elemNode = cfg.getClassMapping(entityName).getNodeName();
 			}
 			// NativeSQL: collect element column and auto-aliases
-			
+
 		}
 		else {
 			elementPersister = null;
-		}		
+		}
 		elementNodeName = elemNode;
 
 		int elementSpan = collection.getElement().getColumnSpan();
@@ -357,7 +360,7 @@ public abstract class AbstractCollectionPersister
 			j++;
 		}
 		elementIsPureFormula = isPureFormula;
-		
+
 		//workaround, for backward compatibility of sets with no
 		//not-null columns, assume all columns are used in the
 		//row locator SQL
@@ -399,10 +402,10 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 			indexContainsFormula = hasFormula;
-			baseIndex = indexedCollection.isList() ? 
+			baseIndex = indexedCollection.isList() ?
 					( (List) indexedCollection ).getBaseIndex() : 0;
 
-			indexNodeName = indexedCollection.getIndexNodeName(); 
+			indexNodeName = indexedCollection.getIndexNodeName();
 
 		}
 		else {
@@ -416,7 +419,7 @@ public abstract class AbstractCollectionPersister
 			baseIndex = 0;
 			indexNodeName = null;
 		}
-		
+
 		hasIdentifier = collection.isIdentified();
 		if (hasIdentifier) {
 			if ( collection.isOneToMany() ) {
@@ -444,9 +447,9 @@ public abstract class AbstractCollectionPersister
 			//unquotedIdentifierColumnName = null;
 			identifierGenerator = null;
 		}
-		
+
 		//GENERATE THE SQL:
-				
+
 		//sqlSelectString = sqlSelectString();
 		//sqlSelectRowString = sqlSelectRowString();
 
@@ -502,9 +505,9 @@ public abstract class AbstractCollectionPersister
 		sqlDetectRowByIndexString = generateDetectRowByIndexString();
 		sqlDetectRowByElementString = generateDetectRowByElementString();
 		sqlSelectRowByIndexString = generateSelectRowByIndexString();
-		
+
 		logStaticSQL();
-		
+
 		isLazy = collection.isLazy();
 		isExtraLazy = collection.isExtraLazy();
 
@@ -519,19 +522,19 @@ public abstract class AbstractCollectionPersister
 		}
 
 		if ( elementType.isComponentType() ) {
-			elementPropertyMapping = new CompositeElementPropertyMapping( 
+			elementPropertyMapping = new CompositeElementPropertyMapping(
 					elementColumnNames,
 					elementColumnReaders,
 					elementColumnReaderTemplates,
 					elementFormulaTemplates,
 					(CompositeType) elementType,
-					factory 
+					factory
 				);
 		}
 		else if ( !elementType.isEntityType() ) {
-			elementPropertyMapping = new ElementPropertyMapping( 
+			elementPropertyMapping = new ElementPropertyMapping(
 					elementColumnNames,
-					elementType 
+					elementType
 				);
 		}
 		else {
@@ -539,9 +542,9 @@ public abstract class AbstractCollectionPersister
 				elementPropertyMapping = (PropertyMapping) elementPersister;
 			}
 			else {
-				elementPropertyMapping = new ElementPropertyMapping( 
+				elementPropertyMapping = new ElementPropertyMapping(
 						elementColumnNames,
-						elementType 
+						elementType
 					);
 			}
 		}
@@ -606,20 +609,12 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void logStaticSQL() {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Static SQL for collection: " + getRole() );
-			if ( getSQLInsertRowString() != null ) {
-				log.debug( " Row insert: " + getSQLInsertRowString() );
-			}
-			if ( getSQLUpdateRowString() != null ) {
-				log.debug( " Row update: " + getSQLUpdateRowString() );
-			}
-			if ( getSQLDeleteRowString() != null ) {
-				log.debug( " Row delete: " + getSQLDeleteRowString() );
-			}
-			if ( getSQLDeleteString() != null ) {
-				log.debug( " One-shot delete: " + getSQLDeleteString() );
-			}
+        if (LOG.isDebugEnabled()) {
+            LOG.staticSqlForCollection(getRole());
+            if (getSQLInsertRowString() != null) LOG.rowInsert(getSQLInsertRowString());
+            if (getSQLUpdateRowString() != null) LOG.rowUpdate(getSQLUpdateRowString());
+            if (getSQLDeleteRowString() != null) LOG.rowDelete(getSQLDeleteRowString());
+            if (getSQLDeleteString() != null) LOG.oneShotDelete(getSQLDeleteString());
 		}
 	}
 
@@ -650,26 +645,26 @@ public abstract class AbstractCollectionPersister
 		if ( !isSubselectLoadable() ) {
 			return null;
 		}
-		
+
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
-		
+
 		SubselectFetch subselect = persistenceContext.getBatchFetchQueue()
 			.getSubselect( new EntityKey( key, getOwnerEntityPersister(), session.getEntityMode() ) );
-		
+
 		if (subselect == null) {
 			return null;
 		}
 		else {
-			
+
 			// Take care of any entities that might have
-			// been evicted!	
+			// been evicted!
 			Iterator iter = subselect.getResult().iterator();
 			while ( iter.hasNext() ) {
 				if ( !persistenceContext.containsEntity( (EntityKey) iter.next() ) ) {
 					iter.remove();
 				}
-			}	
-			
+			}
+
 			// Run a subquery loader
 			return createSubselectInitializer( subselect, session );
 		}
@@ -758,12 +753,12 @@ public abstract class AbstractCollectionPersister
 		return elementClass;
 	}
 
-	public Object readElement(ResultSet rs, Object owner, String[] aliases, SessionImplementor session) 
+	public Object readElement(ResultSet rs, Object owner, String[] aliases, SessionImplementor session)
 	throws HibernateException, SQLException {
 		return getElementType().nullSafeGet( rs, aliases, session, owner );
 	}
 
-	public Object readIndex(ResultSet rs, String[] aliases, SessionImplementor session) 
+	public Object readIndex(ResultSet rs, String[] aliases, SessionImplementor session)
 	throws HibernateException, SQLException {
 		Object index = getIndexType().nullSafeGet( rs, aliases, session, null );
 		if ( index == null ) {
@@ -780,7 +775,7 @@ public abstract class AbstractCollectionPersister
 		return index;
 	}
 
-	public Object readIdentifier(ResultSet rs, String alias, SessionImplementor session) 
+	public Object readIdentifier(ResultSet rs, String alias, SessionImplementor session)
 	throws HibernateException, SQLException {
 		Object id = getIdentifierType().nullSafeGet( rs, alias, session, null );
 		if ( id == null ) {
@@ -789,7 +784,7 @@ public abstract class AbstractCollectionPersister
 		return id;
 	}
 
-	public Object readKey(ResultSet rs, String[] aliases, SessionImplementor session) 
+	public Object readKey(ResultSet rs, String[] aliases, SessionImplementor session)
 	throws HibernateException, SQLException {
 		return getKeyType().nullSafeGet( rs, aliases, session, null );
 	}
@@ -799,7 +794,7 @@ public abstract class AbstractCollectionPersister
 	 */
 	protected int writeKey(PreparedStatement st, Serializable key, int i, SessionImplementor session)
 			throws HibernateException, SQLException {
-		
+
 		if ( key == null ) {
 			throw new NullPointerException( "null key for collection: " + role );  //an assertion
 		}
@@ -863,7 +858,7 @@ public abstract class AbstractCollectionPersister
 	 */
 	public int writeIdentifier(PreparedStatement st, Object id, int i, SessionImplementor session)
 			throws HibernateException, SQLException {
-		
+
 		getIdentifierType().nullSafeSet( st, id, i, session );
 		return i + 1;
 	}
@@ -901,7 +896,7 @@ public abstract class AbstractCollectionPersister
 			return null;
 		}
 	}
-	
+
 	public String getIdentifierColumnName() {
 		if ( hasIdentifier ) {
 			return identifierColumnName;
@@ -924,7 +919,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
-		String selectValue = isIntegerIndexed ? 
+		String selectValue = isIntegerIndexed ?
 			"max(" + getIndexColumnNames()[0] + ") + 1": //lists, arrays
 			"count(" + getElementColumnNames()[0] + ")"; //sets, maps, bags
 		return new SimpleSelect(dialect)
@@ -1023,7 +1018,7 @@ public abstract class AbstractCollectionPersister
 	public String[] getElementColumnNames(String alias) {
 		return qualify(alias, elementColumnNames, elementFormulaTemplates);
 	}
-	
+
 	private static String[] qualify(String alias, String[] columnNames, String[] formulaTemplates) {
 		int span = columnNames.length;
 		String[] result = new String[span];
@@ -1066,12 +1061,7 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( 
-						"Deleting collection: " + 
-						MessageHelper.collectionInfoString( this, id, getFactory() ) 
-					);
-			}
+            if (LOG.isDebugEnabled()) LOG.deletingCollection(MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			// Remove all the old entries
 
@@ -1113,14 +1103,12 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 
-				if ( log.isDebugEnabled() ) {
-					log.debug( "done deleting collection" );
-				}
+                LOG.deletingCollectionDone();
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
 				        sqle,
-				        "could not delete collection: " + 
+				        "could not delete collection: " +
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
 				        getSQLDeleteString()
 					);
@@ -1135,12 +1123,7 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( 
-						"Inserting collection: " + 
-						MessageHelper.collectionInfoString( this, id, getFactory() ) 
-					);
-			}
+            if (LOG.isDebugEnabled()) LOG.insertingCollection(MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			try {
 				//create all the new entries
@@ -1209,28 +1192,21 @@ public abstract class AbstractCollectionPersister
 						i++;
 					}
 
-					if ( log.isDebugEnabled() ) {
-						log.debug( "done inserting collection: " + count + " rows inserted" );
-					}
+                    LOG.insertingCollectionDone(count);
 
-				}
-				else {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "collection was empty" );
-					}
-				}
+                } else LOG.collectionWasEmpty();
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
 				        sqle,
-				        "could not insert collection: " + 
+				        "could not insert collection: " +
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
 				        getSQLInsertRowString()
 					);
 			}
 		}
 	}
-	
+
 	protected boolean isRowDeleteEnabled() {
 		return true;
 	}
@@ -1240,15 +1216,10 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( 
-						"Deleting rows of collection: " + 
-						MessageHelper.collectionInfoString( this, id, getFactory() ) 
-					);
-			}
-			
+            if (LOG.isDebugEnabled()) LOG.deletingCollectionRows(MessageHelper.collectionInfoString(this, id, getFactory()));
+
 			boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
-			
+
 			try {
 				//delete all the deleted entries
 				Iterator deletes = collection.getDeletes( this, !deleteByIndex );
@@ -1309,28 +1280,21 @@ public abstract class AbstractCollectionPersister
 							}
 						}
 
-						if ( log.isDebugEnabled() ) {
-							log.debug( "done deleting collection rows: " + count + " deleted" );
-						}
+                        LOG.deletingCollectionRowsDone(count);
 					}
-				}
-				else {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "no rows to delete" );
-					}
-				}
+                } else LOG.noRowsToDelete();
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
 				        sqle,
-				        "could not delete collection rows: " + 
+				        "could not delete collection rows: " +
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
 				        getSQLDeleteRowString()
 					);
 			}
 		}
 	}
-	
+
 	protected boolean isRowInsertEnabled() {
 		return true;
 	}
@@ -1340,12 +1304,7 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( 
-						"Inserting rows of collection: " + 
-						MessageHelper.collectionInfoString( this, id, getFactory() ) 
-					);
-			}
+            if (LOG.isDebugEnabled()) LOG.insertingCollectionRows(MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			try {
 				//insert all the new entries
@@ -1409,14 +1368,12 @@ public abstract class AbstractCollectionPersister
 					}
 					i++;
 				}
-				if ( log.isDebugEnabled() ) {
-					log.debug( "done inserting rows: " + count + " inserted" );
-				}
+                LOG.insertingCollectionRowsDone(count);
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
 				        sqle,
-				        "could not insert collection rows: " + 
+				        "could not insert collection rows: " +
 				        MessageHelper.collectionInfoString( this, id, getFactory() ),
 				        getSQLInsertRowString()
 					);
@@ -1515,7 +1472,7 @@ public abstract class AbstractCollectionPersister
 		if ( elementPersister == null ) {
 			throw new AssertionFailure( "not an association" );
 		}
-		return ( Loadable ) elementPersister;
+		return elementPersister;
 	}
 
 	public boolean isCollection() {
@@ -1534,25 +1491,21 @@ public abstract class AbstractCollectionPersister
 
 	protected abstract String generateInsertRowString();
 
-	public void updateRows(PersistentCollection collection, Serializable id, SessionImplementor session) 
+	public void updateRows(PersistentCollection collection, Serializable id, SessionImplementor session)
 	throws HibernateException {
 
 		if ( !isInverse && collection.isRowUpdatePossible() ) {
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Updating rows of collection: " + role + "#" + id );
-			}
+            LOG.updatingCollectionRows(role, id);
 
 			//update all the modified entries
 			int count = doUpdateRows( id, collection, session );
 
-			if ( log.isDebugEnabled() ) {
-				log.debug( "done updating rows: " + count + " updated" );
-			}
+            LOG.updatingCollectionRowsDone(count);
 		}
 	}
 
-	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SessionImplementor session) 
+	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SessionImplementor session)
 	throws HibernateException;
 
 	public CollectionMetadata getCollectionMetadata() {
@@ -1618,7 +1571,7 @@ public abstract class AbstractCollectionPersister
 	public boolean isVersioned() {
 		return isVersioned && getOwnerEntityPersister().isVersioned();
 	}
-	
+
 	public String getNodeName() {
 		return nodeName;
 	}
@@ -1653,7 +1606,7 @@ public abstract class AbstractCollectionPersister
 	public boolean isSubselectLoadable() {
 		return subselectLoadable;
 	}
-	
+
 	public boolean isMutable() {
 		return isMutable;
 	}
@@ -1664,14 +1617,14 @@ public abstract class AbstractCollectionPersister
 		if ( rawAliases == null ) {
 			return null;
 		}
-		
+
 		String result[] = new String[rawAliases.length];
 		for ( int i=0; i<rawAliases.length; i++ ) {
 			result[i] = new Alias(suffix).toUnquotedAliasString( rawAliases[i] );
 		}
 		return result;
 	}
-	
+
 	//TODO: formulas ?
 	public void initCollectionPropertyMap() {
 
@@ -1681,20 +1634,20 @@ public abstract class AbstractCollectionPersister
 			initCollectionPropertyMap( "index", indexType, indexColumnAliases, indexColumnNames );
 		}
 		if (hasIdentifier) {
-			initCollectionPropertyMap( 
-					"id", 
-					identifierType, 
-					new String[] { identifierColumnAlias }, 
-					new String[] { identifierColumnName } 
+			initCollectionPropertyMap(
+					"id",
+					identifierType,
+					new String[] { identifierColumnAlias },
+					new String[] { identifierColumnName }
 				);
 		}
 	}
 
 	private void initCollectionPropertyMap(String aliasName, Type type, String[] columnAliases, String[] columnNames) {
-		
+
 		collectionPropertyColumnAliases.put(aliasName, columnAliases);
 		collectionPropertyColumnNames.put(aliasName, columnNames);
-	
+
 		if( type.isComponentType() ) {
 			CompositeType ct = (CompositeType) type;
 			String[] propertyNames = ct.getPropertyNames();
@@ -1703,8 +1656,8 @@ public abstract class AbstractCollectionPersister
 				collectionPropertyColumnAliases.put( aliasName + "." + name, columnAliases[i] );
 				collectionPropertyColumnNames.put( aliasName + "." + name, columnNames[i] );
 			}
-		} 
-		
+		}
+
 	}
 
 	public int getSize(Serializable key, SessionImplementor session) {
@@ -1727,13 +1680,13 @@ public abstract class AbstractCollectionPersister
 		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
-					"could not retrieve collection size: " + 
+					"could not retrieve collection size: " +
 					MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
 				);
 		}
 	}
-	
+
 	public boolean indexExists(Serializable key, Object index, SessionImplementor session) {
 		return exists(key, incrementIndexByBase(index), getIndexType(), sqlDetectRowByIndexString, session);
 	}
@@ -1766,7 +1719,7 @@ public abstract class AbstractCollectionPersister
 		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
-					"could not check row existence: " + 
+					"could not check row existence: " +
 					MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
 				);
@@ -1799,7 +1752,7 @@ public abstract class AbstractCollectionPersister
 		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
-					"could not read row: " + 
+					"could not read row: " +
 					MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
 				);
@@ -1809,13 +1762,13 @@ public abstract class AbstractCollectionPersister
 	public boolean isExtraLazy() {
 		return isExtraLazy;
 	}
-	
+
 	protected Dialect getDialect() {
 		return dialect;
 	}
 
 	/**
-	 * Intended for internal use only.  In fact really only currently used from 
+	 * Intended for internal use only.  In fact really only currently used from
 	 * test suite for assertion purposes.
 	 *
 	 * @return The default collection initializer for this persister/collection.
@@ -1823,4 +1776,80 @@ public abstract class AbstractCollectionPersister
 	public CollectionInitializer getInitializer() {
 		return initializer;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Collection was empty" )
+        void collectionWasEmpty();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Deleting collection: %s" )
+        void deletingCollection( String collectionInfoString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Done deleting collection" )
+        void deletingCollectionDone();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Deleting rows of collection: %s" )
+        void deletingCollectionRows( String collectionInfoString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Done deleting collection rows: %d deleted" )
+        void deletingCollectionRowsDone( int count );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Inserting collection: %s" )
+        void insertingCollection( String collectionInfoString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Done inserting collection: %d rows inserted" )
+        void insertingCollectionDone( int count );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Inserting rows of collection: %s" )
+        void insertingCollectionRows( String collectionInfoString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Done inserting rows: %d inserted" )
+        void insertingCollectionRowsDone( int count );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "No rows to delete" )
+        void noRowsToDelete();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = " One-shot delete: %s" )
+        void oneShotDelete( String sqlDeleteString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = " Row delete: %s" )
+        void rowDelete( String sqlDeleteRowString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = " Row insert: %s" )
+        void rowInsert( String sqlInsertRowString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = " Row update: %s" )
+        void rowUpdate( String sqlUpdateRowString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Static SQL for collection: %s" )
+        void staticSqlForCollection( String role );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Updating rows of collection: %s#%s" )
+        void updatingCollectionRows( String role,
+                                     Serializable id );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Done updating rows: %d updated" )
+        void updatingCollectionRowsDone( int count );
+    }
 }

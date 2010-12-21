@@ -23,19 +23,18 @@
  */
 package org.hibernate.hql.ast.exec;
 
-import java.sql.PreparedStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.List;
 import java.util.Collections;
-
+import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.transaction.Isolater;
 import org.hibernate.engine.transaction.IsolatedWork;
+import org.hibernate.engine.transaction.Isolater;
 import org.hibernate.event.EventSource;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.SqlGenerator;
@@ -45,12 +44,8 @@ import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.StringHelper;
-
 import antlr.RecognitionException;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of AbstractStatementExecutor.
@@ -58,15 +53,16 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public abstract class AbstractStatementExecutor implements StatementExecutor {
-	private static final Logger LOG = LoggerFactory.getLogger( AbstractStatementExecutor.class );
 
-	private final Logger log;
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractStatementExecutor.class.getPackage().getName());
+
 	private final HqlSqlWalker walker;
 	private List idSelectParameterSpecifications = Collections.EMPTY_LIST;
 
-	public AbstractStatementExecutor(HqlSqlWalker walker, Logger log) {
+    public AbstractStatementExecutor( HqlSqlWalker walker,
+                                      Logger log ) {
 		this.walker = walker;
-		this.log = log;
 	}
 
 	protected HqlSqlWalker getWalker() {
@@ -160,7 +156,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 					}
 				}
 				catch( Exception e ) {
-					log.debug( "unable to create temporary id table [" + e.getMessage() + "]" );
+                    LOG.unableToCreateTemporaryIdTable(e.getMessage());
 				}
 			}
 		};
@@ -184,7 +180,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 
 		public void prepare(SQLWarning warning) {
-			LOG.debug( "Warnings creating temp table", warning );
+            LOG.warningsCreatingTempTable(warning);
 		}
 
 		@Override
@@ -216,7 +212,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 						}
 					}
 					catch( Exception e ) {
-						log.warn( "unable to drop temporary id table after use [" + e.getMessage() + "]" );
+                        LOG.unableToDropTemporaryIdTable(e.getMessage());
 					}
 				}
 			};
@@ -244,7 +240,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 				ps.executeUpdate();
 			}
 			catch( Throwable t ) {
-				log.warn( "unable to cleanup temporary id table after use [" + t + "]" );
+                LOG.unableToCleanupTemporaryIdTable(t);
 			}
 			finally {
 				if ( ps != null ) {
@@ -273,11 +269,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	protected boolean shouldIsolateTemporaryTableDDL() {
 		Boolean dialectVote = getFactory().getDialect().performTemporaryTableDDLInIsolation();
-		if ( dialectVote != null ) {
-			return dialectVote.booleanValue();
-		}
-		else {
-			return getFactory().getSettings().isDataDefinitionImplicitCommit();
-		}
+        if (dialectVote != null) return dialectVote.booleanValue();
+        return getFactory().getSettings().isDataDefinitionImplicitCommit();
 	}
 }

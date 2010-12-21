@@ -25,11 +25,9 @@
 package org.hibernate.bytecode.javassist;
 
 import java.lang.reflect.Modifier;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ClassTransformer;
+import org.hibernate.bytecode.Logger;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.ClassFilter;
@@ -43,7 +41,7 @@ import org.hibernate.util.StringHelper;
  */
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-	private static final Logger log = LoggerFactory.getLogger( BytecodeProviderImpl.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	public ProxyFactoryFactory getProxyFactoryFactory() {
 		return new ProxyFactoryFactoryImpl();
@@ -73,21 +71,17 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		catch ( Throwable t ) {
 			fastClass = null;
 			bulkAccessor = null;
-			String message = "reflection optimizer disabled for: " +
-			                 clazz.getName() +
-			                 " [" +
-			                 StringHelper.unqualify( t.getClass().getName() ) +
-			                 ": " +
-			                 t.getMessage();
-
-			if ( t instanceof BulkAccessorException ) {
-				int index = ( ( BulkAccessorException ) t ).getIndex();
-				if ( index >= 0 ) {
-					message += " (property " + setterNames[index] + ")";
-				}
-			}
-
-			log.debug( message );
+            if (LOG.isDebugEnabled()) {
+                int index = 0;
+                if (t instanceof BulkAccessorException) index = ((BulkAccessorException)t).getIndex();
+                if (index >= 0) LOG.reflectionOptimizerDisabledForBulkException(clazz.getName(),
+                                                                                StringHelper.unqualify(t.getClass().getName()),
+                                                                                t.getMessage(),
+                                                                                setterNames[index]);
+                else LOG.reflectionOptimizerDisabled(clazz.getName(),
+                                                     StringHelper.unqualify(t.getClass().getName()),
+                                                     t.getMessage());
+            }
 		}
 
 		if ( fastClass != null && bulkAccessor != null ) {
@@ -104,5 +98,4 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	public ClassTransformer getTransformer(ClassFilter classFilter, FieldFilter fieldFilter) {
 		return new JavassistClassTransformer( classFilter, fieldFilter );
 	}
-
 }

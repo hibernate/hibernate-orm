@@ -27,10 +27,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
@@ -42,7 +38,9 @@ import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
  * @author Steve Ebersole
  */
 public abstract class AbstractBatchImpl implements Batch {
-	private static final Logger log = LoggerFactory.getLogger( AbstractBatchImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractBatchImpl.class.getPackage().getName());
 
 	private final SQLStatementLogger statementLogger;
 	private final SQLExceptionHelper exceptionHelper;
@@ -176,8 +174,8 @@ public abstract class AbstractBatchImpl implements Batch {
 				statement.close();
 			}
 			catch ( SQLException e ) {
-				log.error( "unable to release batch statement..." );
-				log.error( "sqlexception escaped proxy", e );
+                LOG.unableToReleaseBatchStatement();
+                LOG.sqlExceptionEscapedProxy(e.getMessage());
 			}
 		}
 		getStatements().clear();
@@ -199,9 +197,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	}
 
 	public void release() {
-		if ( getStatements() != null && !getStatements().isEmpty() ) {
-			log.info( "On release of batch it still contained JDBC statements" );
-		}
+        if (getStatements() != null && !getStatements().isEmpty()) LOG.batchContainedStatementsOnRelease();
 		releaseStatements();
 		observers.clear();
 	}

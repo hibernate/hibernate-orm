@@ -23,6 +23,8 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -42,10 +44,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -112,6 +110,10 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -121,7 +123,8 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public abstract class CollectionBinder {
-	private Logger log = LoggerFactory.getLogger( CollectionBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CollectionBinder.class.getPackage().getName());
 
 	protected Collection collection;
 	protected String propertyName;
@@ -372,8 +375,9 @@ public abstract class CollectionBinder {
 
 	public void bind() {
 		this.collection = createCollection( propertyHolder.getPersistentClass() );
-		log.debug( "Collection role: {}", StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
-		collection.setRole( StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
+        String role = StringHelper.qualify(propertyHolder.getPath(), propertyName);
+        LOG.collectionRole(role);
+        collection.setRole(role);
 		collection.setNodeName( propertyName );
 
 		if ( (property.isAnnotationPresent( org.hibernate.annotations.MapKey.class )
@@ -624,7 +628,8 @@ public abstract class CollectionBinder {
 			final TableBinder assocTableBinder,
 			final Mappings mappings) {
 		return new CollectionSecondPass( mappings, collection ) {
-			public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas) throws MappingException {
+			@Override
+            public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas) throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
 						isEmbedded, property, unique, assocTableBinder, ignoreNotFound, mappings
@@ -715,7 +720,7 @@ public abstract class CollectionBinder {
 			String hqlOrderBy,
 			Mappings mappings,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-		log.debug("Binding a OneToMany: {}.{} through a foreign key", propertyHolder.getEntityName(), propertyName);
+        LOG.bindingOneToMany(propertyHolder.getEntityName(), propertyName);
 		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( mappings, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
@@ -742,9 +747,7 @@ public abstract class CollectionBinder {
 			column.setJoins( joins );
 			collection.setCollectionTable( column.getTable() );
 		}
-		log.info(
-				"Mapping collection: " + collection.getRole() + " -> " + collection.getCollectionTable().getName()
-		);
+        LOG.mappingCollection(collection.getRole(), collection.getCollectionTable().getName());
 		bindFilters( false );
 		bindCollectionSecondPass( collection, null, fkJoinColumns, cascadeDeleteEnabled, property, mappings );
 		if ( !collection.isInverse()
@@ -972,7 +975,7 @@ public abstract class CollectionBinder {
 						//TODO check whether @ManyToOne @JoinTable in @IdClass used for @OrderBy works: doh!
 						table = "";
 					}
-					
+
 					else if (pc == associatedClass
 							|| (associatedClass instanceof SingleTableSubclass && pc
 									.getMappedClass().isAssignableFrom(
@@ -981,7 +984,7 @@ public abstract class CollectionBinder {
 					} else {
 						table = pc.getTable().getQuotedName() + ".";
 					}
-					
+
 					Iterator propertyColumns = p.getColumnIterator();
 					while ( propertyColumns.hasNext() ) {
 						Selectable column = (Selectable) propertyColumns.next();
@@ -1146,20 +1149,12 @@ public abstract class CollectionBinder {
 		PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( collType.getName() );
 		boolean isCollectionOfEntities = collectionEntity != null;
 		ManyToAny anyAnn = property.getAnnotation( ManyToAny.class );
-		if ( log.isDebugEnabled() ) {
+        if (LOG.isDebugEnabled()) {
 			String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
-			if ( isCollectionOfEntities && unique ) {
-				log.debug( "Binding a OneToMany: {} through an association table", path );
-			}
-			else if ( isCollectionOfEntities ) {
-				log.debug( "Binding as ManyToMany: {}", path );
-			}
-			else if ( anyAnn != null ) {
-				log.debug( "Binding a ManyToAny: {}", path );
-			}
-			else {
-				log.debug( "Binding a collection of element: {}", path );
-			}
+            if (isCollectionOfEntities && unique) LOG.bindingOneToMany(path);
+            else if (isCollectionOfEntities) LOG.bindingManyToMany(path);
+            else if (anyAnn != null) LOG.bindingManyToAny(path);
+            else LOG.bindingCollection(path);
 		}
 		//check for user error
 		if ( !isCollectionOfEntities ) {
@@ -1273,7 +1268,7 @@ public abstract class CollectionBinder {
 			element.setFetchMode( FetchMode.JOIN );
 			element.setLazy( false );
 			element.setIgnoreNotFound( ignoreNotFound );
-			// as per 11.1.38 of JPA-2 spec, default to primary key if no column is specified by @OrderBy. 
+			// as per 11.1.38 of JPA-2 spec, default to primary key if no column is specified by @OrderBy.
 			if ( hqlOrderBy != null ) {
 				collValue.setManyToManyOrdering(
 						buildOrderByClauseFromHql( hqlOrderBy, collectionEntity, collValue.getRole() )
@@ -1546,4 +1541,41 @@ public abstract class CollectionBinder {
 	public void setLocalGenerators(HashMap<String, IdGenerator> localGenerators) {
 		this.localGenerators = localGenerators;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding a collection of element: %s" )
+        void bindingCollection( String property );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding a ManyToAny: %s" )
+        void bindingManyToAny( String property );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding as ManyToMany: %s" )
+        void bindingManyToMany( String property );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding a OneToMany: %s through an association table" )
+        void bindingOneToMany( String property );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binding a OneToMany: %s.%s through a foreign key" )
+        void bindingOneToMany( String entity,
+                               String property );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Collection role: %s" )
+        void collectionRole( String role );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping collection: %s -> %s" )
+        void mappingCollection( String role,
+                          String collectionTable );
+    }
 }

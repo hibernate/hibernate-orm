@@ -29,7 +29,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
@@ -42,16 +41,15 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Update;
 import org.hibernate.util.StringHelper;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Implementation of MultiTableUpdateExecutor.
  *
  * @author Steve Ebersole
  */
 public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
-	private static final Logger log = LoggerFactory.getLogger( MultiTableUpdateExecutor.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                MultiTableUpdateExecutor.class.getPackage().getName());
 
 	private final Queryable persister;
 	private final String idInsertSelect;
@@ -59,7 +57,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 	private final ParameterSpecification[][] hqlParameters;
 
 	public MultiTableUpdateExecutor(HqlSqlWalker walker) {
-		super( walker, log );
+        super(walker, null);
 
 		if ( !walker.getSessionFactoryHelper().getFactory().getDialect().supportsTemporaryTables() ) {
 			throw new HibernateException( "cannot doAfterTransactionCompletion multi-table updates using dialect not supporting temp tables" );
@@ -71,7 +69,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 		this.persister = fromElement.getQueryable();
 
 		this.idInsertSelect = generateIdInsertSelect( persister, bulkTargetAlias, updateStatement.getWhereClause() );
-		log.trace( "Generated ID-INSERT-SELECT SQL (multi-table update) : " +  idInsertSelect );
+        LOG.generatedIdInsertSelectUpdate(idInsertSelect);
 
 		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = persister.getContraintOrderedTableKeyColumnClosure();
@@ -192,7 +190,8 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 		}
 	}
 
-	protected Queryable[] getAffectedQueryables() {
+	@Override
+    protected Queryable[] getAffectedQueryables() {
 		return new Queryable[] { persister };
 	}
 }

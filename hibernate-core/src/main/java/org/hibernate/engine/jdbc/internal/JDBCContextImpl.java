@@ -25,15 +25,15 @@
 package org.hibernate.engine.jdbc.internal;
 
 import java.io.ObjectOutputStream;
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import javax.transaction.TransactionManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -46,10 +46,19 @@ import org.hibernate.transaction.synchronization.CallbackCoordinator;
 import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.transaction.TransactionFactory;
+import org.hibernate.transaction.synchronization.CallbackCoordinator;
+import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
+import org.hibernate.util.JTAHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
- * Acts as the mediary between "entity-mode related" sessions in terms of
- * their interaction with the JDBC data store.
+ * Acts as the intermediary between "entity-mode related" sessions in terms of their interaction with the JDBC data store.
  *
  * @author Steve Ebersole
  */
@@ -63,7 +72,8 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 	// ConnectionManager is a "JDBCContext"?  A "SessionContext" should
 	// live in the impl package...
 
-	private static final Logger log = LoggerFactory.getLogger( JDBCContextImpl.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JDBCContext.class.getPackage().getName());
 
 	private Context owner;
 	private ConnectionManagerImpl connectionManager;
@@ -154,6 +164,8 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 			throw new SessionException( "Session is closed" );
 		}
 
+	public Connection connection() throws HibernateException {
+        if (owner.isClosed()) throw new SessionException("Session is closed");
 		return connectionManager.getConnection();
 	}
 
@@ -162,72 +174,52 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 		if ( isTransactionCallbackRegistered ) {
 			return false;
 		}
-		else {
-			isTransactionCallbackRegistered = true;
-			return true;
-		}
-
+        isTransactionCallbackRegistered = true;
+        return true;
 	}
 
 	@Override
 	public boolean registerSynchronizationIfPossible() {
-		if ( isTransactionCallbackRegistered ) {
-			// we already have a callback registered; either a local
-			// (org.hibernate.Transaction) transaction has accepted
-			// callback responsibilities, or we have previously
-			// registered a transaction synch.
-			return true;
-		}
+        // we already have a callback registered; either a local
+        // (org.hibernate.Transaction) transaction has accepted
+        // callback responsibilities, or we have previously
+        // registered a transaction synch.
+        if (isTransactionCallbackRegistered) return true;
 		boolean localCallbacksOnly = owner.getFactory().getSettings()
 				.getTransactionFactory()
 				.areCallbacksLocalToHibernateTransactions();
-		if ( localCallbacksOnly ) {
-			// the configured transaction-factory says it only supports
-			// local callback mode, so no sense attempting to register a
-			// JTA Synchronization
-			return false;
-		}
+        // the configured transaction-factory says it only supports
+        // local callback mode, so no sense attempting to register a
+        // JTA Synchronization
+        if (localCallbacksOnly) return false;
 		TransactionManager tm = owner.getFactory().getTransactionManager();
-		if ( tm == null ) {
-			// if there is no TM configured, we will not be able to access
-			// the javax.transaction.Transaction object in order to
-			// register a synch anyway.
-			return false;
-		}
-		else {
-			try {
-				if ( !isTransactionInProgress() ) {
-					log.trace( "TransactionFactory reported no active transaction; Synchronization not registered" );
-					return false;
-				}
-				else {
-					javax.transaction.Transaction tx = tm.getTransaction();
-					if ( JTAHelper.isMarkedForRollback( tx ) ) {
-						// transactions marked for rollback-only cause some TM impls to throw exceptions
-						log.debug( "Transaction is marked for rollback; skipping Synchronization registration" );
-						return false;
-					}
-					else {
-						if ( hibernateTransaction == null ) {
-							hibernateTransaction = owner.getFactory().getSettings().getTransactionFactory().createTransaction( this, owner );
-						}
-						tx.registerSynchronization(
-								new HibernateSynchronizationImpl( getJtaSynchronizationCallbackCoordinator( tx ) )
-						);
+        // if there is no TM configured, we will not be able to access
+        // the javax.transaction.Transaction object in order to
+        // register a synch anyway.
+        if (tm == null) return false;
+        try {
+            if (!isTransactionInProgress()) {
+                LOG.noActiveTransaction();
+                return false;
+            }
+            javax.transaction.Transaction tx = tm.getTransaction();
+            if (JTAHelper.isMarkedForRollback(tx)) {
+                // transactions marked for rollback-only cause some TM impls to throw exceptions
+                LOG.transactionMarkedForRollback();
+                return false;
+            }
+            if (hibernateTransaction == null) hibernateTransaction = owner.getFactory().getSettings().getTransactionFactory().createTransaction(this,
+                                                                                                                                                owner);
+            tx.registerSynchronization(new HibernateSynchronizationImpl(getJtaSynchronizationCallbackCoordinator(tx)));
 //						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, hibernateTransaction) );
-						isTransactionCallbackRegistered = true;
-						log.debug("successfully registered Synchronization");
-						return true;
-					}
-				}
-			}
-			catch( HibernateException e ) {
-				throw e;
-			}
-			catch (Exception e) {
-				throw new TransactionException( "could not register synchronization with JTA TransactionManager", e );
-			}
-		}
+            isTransactionCallbackRegistered = true;
+            LOG.successfullyRegisteredSynchronization();
+            return true;
+        } catch (HibernateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new TransactionException("could not register synchronization with JTA TransactionManager", e);
+        }
 	}
 	
 	@Override
@@ -248,23 +240,23 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 	
 	@Override
 	public void beforeTransactionCompletion(Transaction tx) {
-		log.trace( "before transaction completion" );
+        LOG.beforeTransactionCompletion();
 		owner.beforeTransactionCompletion(tx);
 	}
-	
+
 	/**
 	 * We cannot rely upon this method being called! It is only
 	 * called if we are using Hibernate Transaction API.
 	 */
 	@Override
 	public void afterTransactionBegin(Transaction tx) {
-		log.trace( "after transaction begin" );
+        LOG.afterTransactionBegin();
 		owner.afterTransactionBegin(tx);
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
-		log.trace( "after transaction completion" );
+        LOG.afterTransactionCompletion();
 
 		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
 			getFactory().getStatisticsImplementor().endTransaction(success);
@@ -276,23 +268,23 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 		hibernateTransaction = null;
 		owner.afterTransactionCompletion(success, tx);
 	}
-	
+
 	/**
 	 * Called after executing a query outside the scope of
 	 * a Hibernate or JTA transaction
 	 */
 	@Override
 	public void afterNontransactionalQuery(boolean success) {
-		log.trace( "after autocommit" );
+        LOG.afterAutoCommit();
 		try {
-			// check to see if the connection is in auto-commit 
+			// check to see if the connection is in auto-commit
 			// mode (no connection means aggressive connection
 			// release outside a JTA transaction context, so MUST
 			// be autocommit mode)
 			boolean isAutocommit = connectionManager.isAutoCommit();
 
 			connectionManager.afterTransaction();
-			
+
 			if ( isAutocommit ) {
 				owner.afterTransactionCompletion(success, null);
 			}
@@ -366,4 +358,39 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 		);
 		return jdbcContext;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "After autocommit" )
+        void afterAutoCommit();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "After transaction begin" )
+        void afterTransactionBegin();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "After transaction completion" )
+        void afterTransactionCompletion();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Before transaction completion" )
+        void beforeTransactionCompletion();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "TransactionFactory reported no active transaction; Synchronization not registered" )
+        void noActiveTransaction();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Successfully registered Synchronization" )
+        void successfullyRegisteredSynchronization();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Transaction is marked for rollback; skipping Synchronization registration" )
+        void transactionMarkedForRollback();
+    }
 }

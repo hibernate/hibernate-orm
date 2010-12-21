@@ -31,13 +31,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTUtil;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -47,7 +43,9 @@ import antlr.collections.AST;
  * @author josh
  */
 public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, DisplayableNode {
-	private static Logger log = LoggerFactory.getLogger( FromClause.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                FromClause.class.getPackage().getName());
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;
@@ -193,7 +191,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	public List getFromElements() {
 		return ASTUtil.collectChildren( this, fromElementPredicate );
 	}
-	
+
 	public FromElement getFromElement() {
 		// TODO: not sure about this one
 //		List fromElements = getFromElements();
@@ -225,28 +223,32 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	private static ASTUtil.FilterPredicate fromElementPredicate = new ASTUtil.IncludePredicate() {
-		public boolean include(AST node) {
+		@Override
+        public boolean include(AST node) {
 			FromElement fromElement = ( FromElement ) node;
 			return fromElement.isFromOrJoinFragment();
 		}
 	};
 
 	private static ASTUtil.FilterPredicate projectionListPredicate = new ASTUtil.IncludePredicate() {
-		public boolean include(AST node) {
+		@Override
+        public boolean include(AST node) {
 			FromElement fromElement = ( FromElement ) node;
 			return fromElement.inProjectionList();
 		}
 	};
 
 	private static ASTUtil.FilterPredicate collectionFetchPredicate = new ASTUtil.IncludePredicate() {
-		public boolean include(AST node) {
+		@Override
+        public boolean include(AST node) {
 			FromElement fromElement = ( FromElement ) node;
 			return fromElement.isFetch() && fromElement.getQueryableCollection() != null;
 		}
 	};
 
 	private static ASTUtil.FilterPredicate explicitFromPredicate = new ASTUtil.IncludePredicate() {
-		public boolean include(AST node) {
+		@Override
+        public boolean include(AST node) {
 			final FromElement fromElement = ( FromElement ) node;
 			return !fromElement.isImplied();
 		}
@@ -274,9 +276,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addJoinByPathMap(String path, FromElement destination) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "addJoinByPathMap() : " + path + " -> " + destination.getDisplayText() );
-		}
+        LOG.addJoinByPathMap(path, destination.getDisplayText());
 		fromElementsByPath.put( path, destination );
 	}
 
@@ -346,9 +346,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	public void promoteJoin(FromElement elem) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Promoting [" + elem + "] to [" + this + "]" );
-		}
+        LOG.promoting(elem, this);
 		//TODO: implement functionality
 		//  this might be painful to do here, as the "join post processing" for
 		//  the subquery has already been performed (meaning that for
@@ -364,9 +362,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addCollectionJoinFromElementByPath(String path, FromElement destination) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "addCollectionJoinFromElementByPath() : " + path + " -> " + destination );
-		}
+        LOG.addCollectionJoinFromElementByPath(path, destination);
 		collectionJoinFromElementsByPath.put( path, destination );	// Add the new node to the map so that we don't create it twice.
 	}
 
@@ -401,7 +397,8 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 		impliedElements.add( element );
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return "FromClause{" +
 				"level=" + level +
 				"}";

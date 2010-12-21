@@ -24,34 +24,37 @@
  */
 package org.hibernate.engine.query;
 
-import org.hibernate.hql.QuerySplitter;
-import org.hibernate.hql.QueryTranslator;
-import org.hibernate.hql.ParameterTranslations;
-import org.hibernate.hql.FilterTranslator;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.IdentitySet;
-import org.hibernate.HibernateException;
-import org.hibernate.ScrollableResults;
-import org.hibernate.QueryException;
-import org.hibernate.type.Type;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.RowSelection;
-import org.hibernate.event.EventSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.HashMap;
+import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
+import org.hibernate.ScrollableResults;
+import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.RowSelection;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.hql.FilterTranslator;
+import org.hibernate.hql.ParameterTranslations;
+import org.hibernate.hql.QuerySplitter;
+import org.hibernate.hql.QueryTranslator;
+import org.hibernate.type.Type;
+import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.EmptyIterator;
+import org.hibernate.util.IdentitySet;
+import org.hibernate.util.JoinedIterator;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines a query execution plan for an HQL query (or filter).
@@ -60,9 +63,10 @@ import java.util.HashMap;
  */
 public class HQLQueryPlan implements Serializable {
 
-	// TODO : keep seperate notions of QT[] here for shallow/non-shallow queries...
+    // TODO : keep separate notions of QT[] here for shallow/non-shallow queries...
 
-	private static final Logger log = LoggerFactory.getLogger( HQLQueryPlan.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HQLQueryPlan.class.getPackage().getName());
 
 	private final String sourceQuery;
 	private final QueryTranslator[] translators;
@@ -170,8 +174,8 @@ public class HQLQueryPlan implements Serializable {
 	public List performList(
 			QueryParameters queryParameters,
 	        SessionImplementor session) throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "find: " + getSourceQuery() );
+        if (LOG.isTraceEnabled()) {
+            LOG.find(getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		boolean hasLimit = queryParameters.getRowSelection() != null &&
@@ -179,7 +183,7 @@ public class HQLQueryPlan implements Serializable {
 		boolean needsLimit = hasLimit && translators.length > 1;
 		QueryParameters queryParametersToUse;
 		if ( needsLimit ) {
-			log.warn( "firstResult/maxResults specified on polymorphic query; applying in memory!" );
+            LOG.needsLimit();
 			RowSelection selection = new RowSelection();
 			selection.setFetchSize( queryParameters.getRowSelection().getFetchSize() );
 			selection.setTimeout( queryParameters.getRowSelection().getTimeout() );
@@ -229,8 +233,8 @@ public class HQLQueryPlan implements Serializable {
 	public Iterator performIterate(
 			QueryParameters queryParameters,
 	        EventSource session) throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "iterate: " + getSourceQuery() );
+        if (LOG.isTraceEnabled()) {
+            LOG.iterate(getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length == 0 ) {
@@ -255,8 +259,8 @@ public class HQLQueryPlan implements Serializable {
 	public ScrollableResults performScroll(
 			QueryParameters queryParameters,
 	        SessionImplementor session) throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "iterate: " + getSourceQuery() );
+        if (LOG.isTraceEnabled()) {
+            LOG.iterate(getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length != 1 ) {
@@ -271,13 +275,11 @@ public class HQLQueryPlan implements Serializable {
 
 	public int performExecuteUpdate(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "executeUpdate: " + getSourceQuery() );
+        if (LOG.isTraceEnabled()) {
+            LOG.executeUpdate(getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
-		if ( translators.length != 1 ) {
-			log.warn( "manipulation query [" + getSourceQuery() + "] resulted in [" + translators.length + "] split queries" );
-		}
+        if (translators.length != 1) LOG.splitQueries(getSourceQuery(), translators.length);
 		int result = 0;
 		for ( int i = 0; i < translators.length; i++ ) {
 			result += translators[i].executeUpdate( queryParameters, session );
@@ -289,9 +291,7 @@ public class HQLQueryPlan implements Serializable {
 		long start = System.currentTimeMillis();
 		ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
 		long end = System.currentTimeMillis();
-		if ( log.isTraceEnabled() ) {
-			log.trace( "HQL param location recognition took " + (end - start) + " mills (" + hql + ")" );
-		}
+        LOG.hqlParamLocationRecognition(end - start, hql);
 
 		int ordinalParamCount = parameterTranslations.getOrdinalParameterCount();
 		int[] locations = ArrayHelper.toIntArray( recognizer.getOrdinalParameterLocationList() );
@@ -336,4 +336,37 @@ public class HQLQueryPlan implements Serializable {
 		System.arraycopy(translators, 0, copy, 0, copy.length);
 		return copy;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Execute update: %s" )
+        void executeUpdate( String sourceQuery );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Find: %s" )
+        void find( String sourceQuery );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "HQL param location recognition took %d mills (%s)" )
+        void hqlParamLocationRecognition( long l,
+                                          String hql );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Iterate: %s" )
+        void iterate( String sourceQuery );
+
+        @LogMessage( level = WARN )
+        @Message( value = "FirstResult/maxResults specified on polymorphic query; applying in memory!" )
+        void needsLimit();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Manipulation query [%s] resulted in [%d] split queries" )
+        void splitQueries( String sourceQuery,
+                           int length );
+    }
 }

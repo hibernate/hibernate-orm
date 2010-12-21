@@ -24,28 +24,23 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import java.util.List;
-import java.util.Iterator;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
+import java.util.Iterator;
+import java.util.List;
 import org.hibernate.QueryException;
-import org.hibernate.param.ParameterSpecification;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-
 import antlr.RecognitionException;
 import antlr.SemanticException;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents the [] operator and provides it's semantics.
@@ -54,13 +49,15 @@ import org.slf4j.LoggerFactory;
  */
 public class IndexNode extends FromReferenceNode {
 
-	private static final Logger log = LoggerFactory.getLogger( IndexNode.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                IndexNode.class.getPackage().getName());
 
 	public void setScalarColumnText(int i) throws SemanticException {
 		throw new UnsupportedOperationException( "An IndexNode cannot generate column text!" );
 	}
 
-	public void prepareForDot(String propertyName) throws SemanticException {
+	@Override
+    public void prepareForDot(String propertyName) throws SemanticException {
 		FromElement fromElement = getFromElement();
 		if ( fromElement == null ) {
 			throw new IllegalStateException( "No FROM element for index operator!" );
@@ -70,9 +67,7 @@ public class IndexNode extends FromReferenceNode {
 
 			FromReferenceNode collectionNode = ( FromReferenceNode ) getFirstChild();
 			String path = collectionNode.getPath() + "[]." + propertyName;
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Creating join for many-to-many elements for " + path );
-			}
+            LOG.creatingJoinForManyToManyElements(path);
 			FromElementFactory factory = new FromElementFactory( fromElement.getFromClause(), fromElement, path );
 			// This will add the new from element to the origin.
 			FromElement elementJoin = factory.createElementJoin( queryableCollection );
@@ -84,7 +79,7 @@ public class IndexNode extends FromReferenceNode {
 		throw new UnsupportedOperationException();
 	}
 
-	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent) 
+	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
 	throws SemanticException {
 		if ( isResolved() ) {
 			return;
@@ -113,16 +108,8 @@ public class IndexNode extends FromReferenceNode {
 		if ( elem == null ) {
 			FromElementFactory factory = new FromElementFactory( fromClause, fromElement, path );
 			elem = factory.createCollectionElementsJoin( queryableCollection, elementTable );
-			if ( log.isDebugEnabled() ) {
-				log.debug( "No FROM element found for the elements of collection join path " + path
-						+ ", created " + elem );
-			}
-		}
-		else {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "FROM element found for collection join path " + path );
-			}
-		}
+            LOG.noFromElementFound(path, elem);
+        } else LOG.fromElementFound(path);
 
 		// The 'from element' that represents the elements of the collection.
 		setFromElement( fromElement );

@@ -37,17 +37,13 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.ComponentType;
 import org.hibernate.util.StringHelper;
-
 import antlr.ASTFactory;
 import antlr.SemanticException;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates the creation of FromElements and JoinSequences.
@@ -56,7 +52,8 @@ import org.slf4j.LoggerFactory;
  */
 public class FromElementFactory implements SqlTokenTypes {
 
-	private static final Logger log = LoggerFactory.getLogger( FromElementFactory.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                FromElementFactory.class.getPackage().getName());
 
 	private FromClause fromClause;
 	private FromElement origin;
@@ -127,14 +124,12 @@ public class FromElementFactory implements SqlTokenTypes {
 	        String pathAlias,
 	        FromElement parentFromElement,
 	        String classAlias) throws SemanticException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "createFromElementInSubselect() : path = " + path );
-		}
+        LOG.createFromElementInSubselect(path);
 		// Create an DotNode AST for the path and resolve it.
 		FromElement fromElement = evaluateFromElementPath( path, classAlias );
 		EntityPersister entityPersister = fromElement.getEntityPersister();
 
-		// If the first identifier in the path referrs to the class alias (not the class name), then this
+        // If the first identifier in the path refers to the class alias (not the class name), then this
 		// is a correlated subselect.  If it's a correlated sub-select, use the existing table alias.  Otherwise
 		// generate a new one.
 		String tableAlias = null;
@@ -148,9 +143,7 @@ public class FromElementFactory implements SqlTokenTypes {
 
 		// If the from element isn't in the same clause, create a new from element.
 		if ( fromElement.getFromClause() != fromClause ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "createFromElementInSubselect() : creating a new FROM element..." );
-			}
+            LOG.createFromElementInSubselect();
 			fromElement = createFromElement( entityPersister );
 			initializeAndAddFromElement( fromElement,
 					path,
@@ -160,9 +153,7 @@ public class FromElementFactory implements SqlTokenTypes {
 					tableAlias
 			);
 		}
-		if ( log.isDebugEnabled() ) {
-			log.debug( "createFromElementInSubselect() : " + path + " -> " + fromElement );
-		}
+        LOG.createFromElementInSubselect(path, fromElement);
 		return fromElement;
 	}
 
@@ -174,12 +165,8 @@ public class FromElementFactory implements SqlTokenTypes {
 				classAlias,
 		        null
 		);
-		if ( pathNode.getImpliedJoin() != null ) {
-			return pathNode.getImpliedJoin();
-		}
-		else {
-			return pathNode.getFromElement();
-		}
+        if (pathNode.getImpliedJoin() != null) return pathNode.getImpliedJoin();
+        return pathNode.getFromElement();
 	}
 
 	FromElement createCollectionElementsJoin(
@@ -265,9 +252,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		EntityPersister entityPersister = elem.getEntityPersister();
 		int numberOfTables = entityPersister.getQuerySpaces().length;
 		if ( numberOfTables > 1 && implied && !elem.useFromFragment() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "createEntityJoin() : Implied multi-table entity join" );
-			}
+            LOG.createEntityJoin();
 			elem.setUseFromFragment( true );
 		}
 
@@ -320,7 +305,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		String associatedEntityName = entityPersister.getEntityName();
 		EntityPersister targetEntityPersister = sfh.requireClassPersister( associatedEntityName );
 		// Create the FROM element for the target (the elements of the collection).
-		destination = createAndAddFromElement( 
+		destination = createAndAddFromElement(
 				associatedEntityName,
 				classAlias,
 				targetEntityPersister,
@@ -386,17 +371,13 @@ public class FromElementFactory implements SqlTokenTypes {
 		String associatedEntityName = entityPersister.getEntityName();
 		// Get the class name of the associated entity.
 		if ( queryableCollection.isOneToMany() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "createEntityAssociation() : One to many - path = " + path + " role = " + role + " associatedEntityName = " + associatedEntityName );
-			}
+            LOG.createEntityAssociation(path, role, associatedEntityName);
 			JoinSequence joinSequence = createJoinSequence( roleAlias, joinType );
 
 			elem = createJoin( associatedEntityName, roleAlias, joinSequence, ( EntityType ) queryableCollection.getElementType(), false );
 		}
 		else {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "createManyToMany() : path = " + path + " role = " + role + " associatedEntityName = " + associatedEntityName );
-			}
+            LOG.createManyToMany(path, role, associatedEntityName);
 			elem = createManyToMany( role, associatedEntityName,
 					roleAlias, entityPersister, ( EntityType ) queryableCollection.getElementType(), joinType );
 			fromClause.getWalker().addQuerySpaces( queryableCollection.getCollectionSpaces() );
@@ -436,8 +417,8 @@ public class FromElementFactory implements SqlTokenTypes {
 			elem = createJoin( associatedEntityName, roleAlias, joinSequence, type, true );
 		}
 		else {
-			// For an explicit many-to-many relationship, add a second join from the intermediate 
-			// (many-to-many) table to the destination table.  Also, make sure that the from element's 
+			// For an explicit many-to-many relationship, add a second join from the intermediate
+			// (many-to-many) table to the destination table.  Also, make sure that the from element's
 			// idea of the destination is the destination table.
 			String tableAlias = fromClause.getAliasGenerator().createName( entityPersister.getEntityName() );
 			String[] secondJoinColumns = sfh.getCollectionElementColumns( role, roleAlias );

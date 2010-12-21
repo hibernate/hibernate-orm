@@ -23,17 +23,18 @@
  */
 package org.hibernate.engine.jdbc;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.util.JDBCExceptionReporter;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -43,7 +44,9 @@ import org.hibernate.util.JDBCExceptionReporter;
  * @author Gail Badner
  */
 public class ResultSetWrapperProxy implements InvocationHandler {
-	private static final Logger log = LoggerFactory.getLogger( ResultSetWrapperProxy.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ResultSetWrapperProxy.class.getPackage().getName());
 	private static final Class[] PROXY_INTERFACES = new Class[] { ResultSet.class };
 
 	private final ResultSet rs;
@@ -110,14 +113,9 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 				JDBCExceptionReporter.logExceptions( ex, buf.toString() );
 			}
 			catch ( NoSuchMethodException ex ) {
-				StringBuffer buf = new StringBuffer()
-						.append( "Exception switching from method: [" )
-						.append( method )
-						.append( "] to a method using the column index. Reverting to using: [" )
-						.append( method )
-						.append( "]" );
-				if ( log.isWarnEnabled() ) {
-					log.warn( buf.toString() );
+                if (LOG.isEnabled(WARN)) {
+                    StringBuffer buf = new StringBuffer().append("Exception switching from method: [").append(method).append("] to a method using the column index. Reverting to using: [").append(method).append("]");
+                    LOG.missingMethod(buf.toString());
 				}
 			}
 		}
@@ -191,4 +189,15 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 			throw e.getTargetException();
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "%s" )
+        void missingMethod( String string );
+    }
 }

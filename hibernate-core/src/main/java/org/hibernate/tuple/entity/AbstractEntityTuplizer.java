@@ -23,14 +23,11 @@
  */
 package org.hibernate.tuple.entity;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -56,6 +53,10 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -66,7 +67,8 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
-	private static final Logger log = LoggerFactory.getLogger( AbstractEntityTuplizer.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractEntityTuplizer.class.getPackage().getName());
 
 	//TODO: currently keeps Getters and Setters (instead of PropertyAccessors) because of the way getGetter() and getSetter() are implemented currently; yuck!
 
@@ -172,7 +174,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else {
 			proxyFactory = null;
 		}
-		
+
 		Component mapper = mappingInfo.getIdentifierMapper();
 		if ( mapper == null ) {
 			identifierMapperType = null;
@@ -369,7 +371,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							subId = pcEntry.getId();
 						}
 						else {
-							log.debug( "Performing implicit derived identity cascade" );
+                            LOG.performingImplicitDerivedIdentityCascade();
 							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
 							for ( int x = 0; x < session.getListeners().getPersistEventListeners().length; x++ ) {
 								session.getListeners().getPersistEventListeners()[x].onPersist( event );
@@ -488,7 +490,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return result;
 	}
 
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) 
+	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session)
 	throws HibernateException {
 		final int span = entityMetamodel.getPropertySpan();
 		final Object[] result = new Object[span];
@@ -562,7 +564,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		else {
 			return baseValue;
 		}
-		
+
 	}
 
 	private int findSubPropertyIndex(ComponentType type, String subPropertyName) {
@@ -638,7 +640,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public boolean isValidatableImplementor() {
 		return false;
 	}
-	
+
 	protected final EntityMetamodel getEntityMetamodel() {
 		return entityMetamodel;
 	}
@@ -654,8 +656,9 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	protected final ProxyFactory getProxyFactory() {
 		return proxyFactory;
 	}
-	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		return getClass().getName() + '(' + getEntityMetamodel().getName() + ')';
 	}
 
@@ -673,4 +676,15 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public Getter getGetter(int i) {
 		return getters[i];
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Performing implicit derived identity cascade" )
+        void performingImplicitDerivedIdentityCascade();
+    }
 }

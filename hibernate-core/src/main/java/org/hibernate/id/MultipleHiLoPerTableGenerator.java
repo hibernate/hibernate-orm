@@ -30,22 +30,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.TransactionHelper;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.TransactionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  *
@@ -64,7 +64,7 @@ import org.hibernate.type.Type;
  * <p/>
  * <p>This implementation is not compliant with a user connection</p>
  * <p/>
- * 
+ *
  * <p>Allowed parameters (all of them are optional):</p>
  * <ul>
  * <li>table: table name (default <tt>hibernate_sequences</tt>)</li>
@@ -78,12 +78,13 @@ import org.hibernate.type.Type;
  * @author Emmanuel Bernard
  * @author <a href="mailto:kr@hbt.de">Klaus Richarz</a>.
  */
-public class MultipleHiLoPerTableGenerator 
+public class MultipleHiLoPerTableGenerator
 	extends TransactionHelper
 	implements PersistentIdentifierGenerator, Configurable {
-	
-	private static final Logger log = LoggerFactory.getLogger(MultipleHiLoPerTableGenerator.class);
-	
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                MultipleHiLoPerTableGenerator.class.getPackage().getName());
+
 	public static final String ID_TABLE = "table";
 	public static final String PK_COLUMN_NAME = "primary_key_column";
 	public static final String PK_VALUE_NAME = "primary_key_value";
@@ -94,7 +95,7 @@ public class MultipleHiLoPerTableGenerator
 	public static final String DEFAULT_TABLE = "hibernate_sequences";
 	private static final String DEFAULT_PK_COLUMN = "sequence_name";
 	private static final String DEFAULT_VALUE_COLUMN = "sequence_next_hi_value";
-	
+
 	private String tableName;
 	private String pkColumnName;
 	private String valueColumnName;
@@ -146,7 +147,8 @@ public class MultipleHiLoPerTableGenerator
 		return tableName;
 	}
 
-	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
+	@Override
+    public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
 		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 		int rows;
 		do {
@@ -169,7 +171,7 @@ public class MultipleHiLoPerTableGenerator
 				rs.close();
 			}
 			catch (SQLException sqle) {
-				log.error("could not read or init a hi value", sqle);
+                LOG.error(LOG.unableToReadOrInitHiValue(), sqle);
 				throw sqle;
 			}
 			finally {
@@ -187,7 +189,7 @@ public class MultipleHiLoPerTableGenerator
 				rows = ups.executeUpdate();
 			}
 			catch (SQLException sqle) {
-				log.error("could not update hi value in: " + tableName, sqle);
+                LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
 				throw sqle;
 			}
 			finally {
@@ -266,10 +268,10 @@ public class MultipleHiLoPerTableGenerator
 			valueColumnName +
 			" = ? and " +
 			pkColumnName +
-			" = '" + 
-			keyValue 
+			" = '" +
+			keyValue
 			+ "'";
-		
+
 		insert = "insert into " + tableName +
 			"(" + pkColumnName + ", " +	valueColumnName + ") " +
 			"values('"+ keyValue +"', ?)";
@@ -283,4 +285,17 @@ public class MultipleHiLoPerTableGenerator
 			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "Could not read or init a hi value" )
+        Object unableToReadOrInitHiValue();
+
+        @Message( value = "Could not update hi value in: %s" )
+        Object unableToUpdateHiValue( String tableName );
+    }
 }

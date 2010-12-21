@@ -1,27 +1,25 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
 
-import javax.persistence.PrePersist;
 import javax.persistence.PostPersist;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import javax.persistence.PrePersist;
+import org.hibernate.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class OtherLogListener {
-	private final Logger log = LoggerFactory.getLogger( OtherLogListener.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	@PrePersist
 	@PostPersist
 	public void log(Object entity) {
-		log.debug( "Logging entity {} with hashCode: {}", entity.getClass().getName(), entity.hashCode() );
+        LOG.debug("Logging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
 	}
 
 
 	public void noLog(Object entity) {
-		log.debug( "NoLogging entity {} with hashCode: {}", entity.getClass().getName(), entity.hashCode() );
+        LOG.debug("NoLogging entity " + entity.getClass().getName() + " with hashCode: " + entity.hashCode());
 	}
 }

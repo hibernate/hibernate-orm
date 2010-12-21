@@ -24,14 +24,15 @@
  */
 package org.hibernate.transform;
 
-import java.util.List;
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.HashSet;
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.Set;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Distinctions the result tuples in the final result based on the defined
@@ -46,7 +47,8 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 
 	public static final DistinctResultTransformer INSTANCE = new DistinctResultTransformer();
 
-	private static final Logger log = LoggerFactory.getLogger( DistinctResultTransformer.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DistinctResultTransformer.class.getPackage().getName());
 
 	/**
 	 * Helper class to handle distincting
@@ -61,7 +63,8 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 		/**
 		 * {@inheritDoc}
 		 */
-		public boolean equals(Object other) {
+		@Override
+        public boolean equals(Object other) {
 			return Identity.class.isInstance( other )
 					&& this.entity == ( ( Identity ) other ).entity;
 		}
@@ -69,7 +72,8 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 		/**
 		 * {@inheritDoc}
 		 */
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return System.identityHashCode( entity );
 		}
 	}
@@ -83,7 +87,8 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 	/**
 	 * Uniquely distinct each tuple row here.
 	 */
-	public List transformList(List list) {
+	@Override
+    public List transformList(List list) {
 		List result = new ArrayList( list.size() );
 		Set distinct = new HashSet();
 		for ( int i = 0; i < list.size(); i++ ) {
@@ -92,13 +97,7 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 				result.add( entity );
 			}
 		}
-		if ( log.isDebugEnabled() ) {
-			log.debug(
-					"transformed: " +
-							list.size() + " rows to: " +
-							result.size() + " distinct results"
-			);
-		}
+        LOG.transformed(list.size(), result.size());
 		return result;
 	}
 
@@ -110,4 +109,16 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 	private Object readResolve() {
 		return INSTANCE;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Transformed: %d rows to: %d distinct results" )
+        void transformed( int size,
+                          int size2 );
+    }
 }

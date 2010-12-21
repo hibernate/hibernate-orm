@@ -23,23 +23,27 @@
  */
 package org.hibernate.service.jdbc.connections.internal;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -51,7 +55,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Steve Ebersole
  */
 public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
-	private static final Logger log = LoggerFactory.getLogger( DriverManagerConnectionProviderImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DriverManagerConnectionProviderImpl.class.getPackage().getName());
 
 	private String url;
 	private Properties connectionProps;
@@ -63,12 +69,10 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 	private int checkedOut = 0;
 
 	public void configure(Map configurationValues) {
-		log.info( "Using Hibernate built-in connection pool (not for production use!)" );
+        LOG.usingHibernateBuiltInConnectionPool();
 
 		String driverClassName = (String) configurationValues.get( Environment.DRIVER );
-		if ( driverClassName == null ) {
-			log.warn( "no JDBC Driver class was specified by property " + Environment.DRIVER );
-		}
+        if (driverClassName == null) LOG.jdbcDriverNotSpecified(Environment.DRIVER);
 		else {
 			try {
 				// trying via forName() first to be as close to DriverManager's semantics
@@ -85,60 +89,55 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 		}
 
 		poolSize = ConfigurationHelper.getInt( Environment.POOL_SIZE, configurationValues, 20 ); // default pool size 20
-		log.info( "Hibernate connection pool size: " + poolSize );
+        LOG.hibernateConnectionPoolSize(poolSize);
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, configurationValues );
-		log.info("autocommit mode: " + autocommit);
+        LOG.autoCommitMode(autocommit);
 
 		isolation = ConfigurationHelper.getInteger( Environment.ISOLATION, configurationValues );
-		if (isolation!=null)
-		log.info( "JDBC isolation level: " + Environment.isolationLevelToString( isolation.intValue() ) );
+        if (isolation != null) LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
 
 		url = (String) configurationValues.get( Environment.URL );
 		if ( url == null ) {
-			String msg = "JDBC URL was not specified by property " + Environment.URL;
-			log.error( msg );
+            String msg = LOG.jdbcUrlNotSpecified(Environment.URL);
+            LOG.error(msg);
 			throw new HibernateException( msg );
 		}
 
 		connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
 
-		log.info( "using driver [" + driverClassName + "] at URL [" + url + "]" );
+        LOG.usingDriver(driverClassName, url);
 		// if debug level is enabled, then log the password, otherwise mask it
-		if ( log.isDebugEnabled() ) {
-			log.info( "connection properties: " + connectionProps );
-		}
-		else if ( log.isInfoEnabled() ) {
-			log.info( "connection properties: " + ConfigurationHelper.maskOut( connectionProps, "password" ) );
-		}
+        if (LOG.isDebugEnabled()) LOG.connectionProperties(connectionProps);
+        else LOG.connectionProperties(ConfigurationHelper.maskOut(connectionProps, "password"));
 	}
 
 	public void stop() {
-		log.info( "cleaning up connection pool [" + url + "]" );
+        LOG.cleaningUpConnectionPool(url);
 
 		for ( Connection connection : pool ) {
 			try {
 				connection.close();
 			}
 			catch (SQLException sqle) {
-				log.warn( "problem closing pooled connection", sqle );
+                LOG.warn(LOG.unableToClosePooledConnection(), sqle);
 			}
 		}
 		pool.clear();
 	}
 
 	public Connection getConnection() throws SQLException {
-		log.trace( "total checked-out connections: " + checkedOut );
+        LOG.totalCheckedOutConnection(checkedOut);
 
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
 			if ( !pool.isEmpty() ) {
 				int last = pool.size() - 1;
-				if ( log.isTraceEnabled() ) {
-					log.trace( "using pooled JDBC connection, pool size: " + last );
+                if (LOG.isTraceEnabled()) {
+                    LOG.usingPooledJdbcConnection(last);
 					checkedOut++;
 				}
-				Connection pooled = (Connection) pool.remove(last);
+				Connection pooled = pool.remove(last);
 				if ( isolation != null ) {
 					pooled.setTransactionIsolation( isolation.intValue() );
 				}
@@ -151,7 +150,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 		// otherwise we open a new connection...
 
-		log.debug( "opening new JDBC connection" );
+        LOG.openingNewJdbcConnection();
 		Connection conn = DriverManager.getConnection( url, connectionProps );
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
@@ -160,9 +159,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			conn.setAutoCommit(autocommit);
 		}
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( "created connection to: " + url + ", Isolation Level: " + conn.getTransactionIsolation() );
-		}
+        LOG.createdConnection(url, conn.getTransactionIsolation());
 
 		checkedOut++;
 
@@ -176,21 +173,93 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 		synchronized (pool) {
 			int currentSize = pool.size();
 			if ( currentSize < poolSize ) {
-				if ( log.isTraceEnabled() ) log.trace("returning connection to pool, pool size: " + (currentSize + 1) );
+                LOG.returningConnectionToPool(currentSize + 1);
 				pool.add(conn);
 				return;
 			}
 		}
 
-		log.debug("closing JDBC connection");
+        LOG.closingJdbcConnection();
 		conn.close();
 	}
 
-	protected void finalize() {
+	@Override
+    protected void finalize() {
 		stop();
 	}
 
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Autocommit mode: %s" )
+        void autoCommitMode( boolean autocommit );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Cleaning up connection pool [%s]" )
+        void cleaningUpConnectionPool( String url );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Closing JDBC connection" )
+        void closingJdbcConnection();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Connection properties: %s" )
+        void connectionProperties( Properties connectionProps );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Created connection to: %s, Isolation Level: %d" )
+        void createdConnection( String url,
+                                int transactionIsolation );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Hibernate connection pool size: %d" )
+        void hibernateConnectionPoolSize( int poolSize );
+
+        @LogMessage( level = WARN )
+        @Message( value = "no JDBC Driver class was specified by property %s" )
+        void jdbcDriverNotSpecified( String driver );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JDBC isolation level: %s" )
+        void jdbcIsolationLevel( String isolationLevelToString );
+
+        @Message( value = "JDBC URL was not specified by property %s" )
+        String jdbcUrlNotSpecified( String url );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Opening new JDBC connection" )
+        void openingNewJdbcConnection();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Returning connection to pool, pool size: %d" )
+        void returningConnectionToPool( int i );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Total checked-out connections: %d" )
+        void totalCheckedOutConnection( int checkedOut );
+
+        @Message( value = "Problem closing pooled connection" )
+        Object unableToClosePooledConnection();
+
+        @LogMessage( level = INFO )
+        @Message( value = "using driver [%s] at URL [%s]" )
+        void usingDriver( String driverClassName,
+                          String url );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using Hibernate built-in connection pool (not for production use!)" )
+        void usingHibernateBuiltInConnectionPool();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Using pooled JDBC connection, pool size: %d" )
+        void usingPooledJdbcConnection( int last );
+    }
 }

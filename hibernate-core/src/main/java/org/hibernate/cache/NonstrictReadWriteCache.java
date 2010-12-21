@@ -25,10 +25,6 @@
 package org.hibernate.cache;
 
 import java.util.Comparator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -43,9 +39,9 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 
-	private Cache cache;
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
-	private static final Logger log = LoggerFactory.getLogger( NonstrictReadWriteCache.class );
+	private Cache cache;
 
 	public NonstrictReadWriteCache() {
 	}
@@ -62,16 +58,14 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Get the most recent version, if available.
 	 */
 	public Object get(Object key, long txTimestamp) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Cache lookup: " + key );
-		}
+        LOG.lookup(key);
 
 		Object result = cache.get( key );
 		if ( result != null ) {
-			log.debug( "Cache hit" );
+            LOG.hit(key);
 		}
 		else {
-			log.debug( "Cache miss" );
+            LOG.miss(key);
 		}
 		return result;
 	}
@@ -87,14 +81,10 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	        Comparator versionComparator,
 	        boolean minimalPut) throws CacheException {
 		if ( minimalPut && cache.get( key ) != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "item already cached: " + key );
-			}
+            LOG.exists(key);
 			return false;
 		}
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Caching: " + key );
-		}
+        LOG.caching(key);
 
 		cache.put( key, value );
 		return true;
@@ -111,16 +101,12 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	}
 
 	public void remove(Object key) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Removing: " + key );
-		}
+        LOG.removing(key);
 		cache.remove( key );
 	}
 
 	public void clear() throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Clearing" );
-		}
+        LOG.clearing();
 		cache.clear();
 	}
 
@@ -129,7 +115,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 			cache.destroy();
 		}
 		catch ( Exception e ) {
-			log.warn( "could not destroy cache", e );
+            LOG.unableToDestroyCache(e.getMessage());
 		}
 	}
 
@@ -137,10 +123,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Invalidate the item
 	 */
 	public void evict(Object key) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Invalidating: " + key );
-		}
-
+        LOG.invalidating(key);
 		cache.remove( key );
 	}
 
@@ -163,10 +146,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Invalidate the item (again, for safety).
 	 */
 	public void release(Object key, SoftLock lock) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Invalidating (again): " + key );
-		}
-
+        LOG.invalidating(key);
 		cache.remove( key );
 	}
 
@@ -189,7 +169,8 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 		return cache.getRegionName();
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return cache + "(nonstrict-read-write)";
 	}
 }

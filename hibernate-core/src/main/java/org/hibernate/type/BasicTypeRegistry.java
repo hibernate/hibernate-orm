@@ -23,16 +23,19 @@
  */
 package org.hibernate.type;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A registry of {@link BasicType} instances
@@ -40,7 +43,9 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public class BasicTypeRegistry implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( BasicTypeRegistry.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                BasicTypeRegistry.class.getPackage().getName());
 
 	// TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
 	private Map<String,BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
@@ -132,20 +137,14 @@ public class BasicTypeRegistry implements Serializable {
 			throw new HibernateException( "Type to register cannot be null" );
 		}
 
-		if ( type.getRegistrationKeys() == null || type.getRegistrationKeys().length == 0 ) {
-			log.warn( "Type [{}] defined no registration keys; ignoring", type );
-		}
+        if (type.getRegistrationKeys() == null || type.getRegistrationKeys().length == 0) LOG.typeDefinedNoRegistrationKeys(type);
 
 		for ( String key : type.getRegistrationKeys() ) {
 			// be safe...
-			if ( key == null ) {
-				continue;
-			}
-			log.debug( "Adding type registration {} -> {}", key, type );
+            if (key == null) continue;
+            LOG.addingTypeRegistration(key, type);
 			final Type old = registry.put( key, type );
-			if ( old != null && old != type ) {
-				log.info( "Type registration [{}] overrides previous : {}", key, old );
-			}
+            if (old != null && old != type) LOG.typeRegistrationOverridesPrevious(key, old);
 		}
 	}
 
@@ -164,4 +163,25 @@ public class BasicTypeRegistry implements Serializable {
 	public BasicTypeRegistry shallowCopy() {
 		return new BasicTypeRegistry( this.registry );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Adding type registration %s -> %s" )
+        void addingTypeRegistration( String key,
+                                     BasicType type );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Type [%s] defined no registration keys; ignoring" )
+        void typeDefinedNoRegistrationKeys( BasicType type );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Type registration [%s] overrides previous : %s" )
+        void typeRegistrationOverridesPrevious( String key,
+                                                Type old );
+    }
 }

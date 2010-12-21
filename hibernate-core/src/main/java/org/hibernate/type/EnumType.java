@@ -29,15 +29,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Enum type mapper
@@ -50,24 +45,8 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings("unchecked")
 public class EnumType implements EnhancedUserType, ParameterizedType, Serializable {
-	/**
-	 * This is the old scheme where logging of parameter bindings and value extractions
-	 * was controlled by the trace level enablement on the 'org.hibernate.type' package...
-	 * <p/>
-	 * Originally was cached such because of performance of looking up the logger each time
-	 * in order to check the trace-enablement.  Driving this via a central Log-specific class
-	 * would alleviate that performance hit, and yet still allow more "normal" logging usage/config.
-	 */
-	private static final boolean IS_VALUE_TRACING_ENABLED = LoggerFactory.getLogger( StringHelper.qualifier( Type.class.getName() ) )
-			.isTraceEnabled();
-	private transient Logger log;
 
-	private Logger log() {
-		if ( log == null ) {
-			log = LoggerFactory.getLogger( getClass() );
-		}
-		return log;
-	}
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, EnumType.class.getPackage().getName());
 
 	public static final String ENUM = "enumClass";
 	public static final String SCHEMA = "schema";
@@ -100,27 +79,20 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
 		Object object = rs.getObject( names[0] );
 		if ( rs.wasNull() ) {
-			if ( IS_VALUE_TRACING_ENABLED ) {
-				log().debug( "Returning null as column {}", names[0] );
-			}
+            if (LOG.isTraceEnabled()) LOG.returningAsColumn(names[0]);
 			return null;
 		}
 		if ( object instanceof Number ) {
 			initEnumValues();
 			int ordinal = ( ( Number ) object ).intValue();
-			if ( ordinal < 0 || ordinal >= enumValues.length ) {
-				throw new IllegalArgumentException( "Unknown ordinal value for enum " + enumClass + ": " + ordinal );
-			}
-			if ( IS_VALUE_TRACING_ENABLED ) {
-				log().debug( "Returning '{}' as column {}", ordinal, names[0] );
-			}
+            if (ordinal < 0 || ordinal >= enumValues.length) throw new IllegalArgumentException("Unknown ordinal value for enum "
+                                                                                                + enumClass + ": " + ordinal);
+            if (LOG.isTraceEnabled()) LOG.returningAsColumn(ordinal, names[0]);
 			return enumValues[ordinal];
 		}
 		else {
 			String name = ( String ) object;
-			if ( IS_VALUE_TRACING_ENABLED ) {
-				log().debug( "Returning '{}' as column {}", name, names[0] );
-			}
+            if (LOG.isTraceEnabled()) LOG.returningAsColumn(name, names[0]);
 			try {
 				return Enum.valueOf( enumClass, name );
 			}
@@ -132,25 +104,19 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
 		if ( value == null ) {
-			if ( IS_VALUE_TRACING_ENABLED ) {
-				log().debug( "Binding null to parameter: {}", index );
-			}
+            if (LOG.isTraceEnabled()) LOG.bindingToParameter(index);
 			st.setNull( index, sqlType );
 		}
 		else {
 			boolean isOrdinal = isOrdinal( sqlType );
 			if ( isOrdinal ) {
 				int ordinal = ( ( Enum<?> ) value ).ordinal();
-				if ( IS_VALUE_TRACING_ENABLED ) {
-					log().debug( "Binding '{}' to parameter: {}", ordinal, index );
-				}
+                if (LOG.isTraceEnabled()) LOG.bindingToParameter(ordinal, index);
 				st.setObject( index, Integer.valueOf( ordinal ), sqlType );
 			}
 			else {
 				String enumString = ( ( Enum<?> ) value ).name();
-				if ( IS_VALUE_TRACING_ENABLED ) {
-					log().debug( "Binding '{}' to parameter: {}", enumString, index );
-				}
+                if (LOG.isTraceEnabled()) LOG.bindingToParameter(enumString, index);
 				st.setObject( index, enumString, sqlType );
 			}
 		}

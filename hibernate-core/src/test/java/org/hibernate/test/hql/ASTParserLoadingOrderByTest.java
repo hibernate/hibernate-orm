@@ -27,44 +27,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import junit.framework.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.QueryException;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
-import org.hibernate.hql.ast.QuerySyntaxException;
-import org.hibernate.persister.entity.DiscriminatorType;
-import org.hibernate.stat.QueryStatistics;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Tests AST parser processing of ORDER BY clauses.
@@ -72,8 +43,6 @@ import org.hibernate.util.StringHelper;
  * @author Gail Badner
  */
 public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
-
-	private static final Logger log = LoggerFactory.getLogger( ASTParserLoadingOrderByTest.class );
 
 	StateProvince stateProvince;
 	private Zoo zoo1;
@@ -97,7 +66,8 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		};
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -108,7 +78,8 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		return new FunctionalTestClassTestSuite( ASTParserLoadingOrderByTest.class );
 	}
 
-	protected void prepareTest() {
+	@Override
+    protected void prepareTest() {
 		cleanupData();
 	}
 

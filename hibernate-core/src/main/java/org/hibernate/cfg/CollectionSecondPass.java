@@ -23,18 +23,20 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Collection second pass
@@ -42,7 +44,10 @@ import org.hibernate.mapping.Value;
  * @author Emmanuel Bernard
  */
 public abstract class CollectionSecondPass implements SecondPass {
-	private static Logger log = LoggerFactory.getLogger( CollectionSecondPass.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CollectionSecondPass.class.getPackage().getName());
+
 	Mappings mappings;
 	Collection collection;
 	private Map localInheritedMetas;
@@ -59,13 +64,12 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	public void doSecondPass(java.util.Map persistentClasses)
 			throws MappingException {
-		if ( log.isDebugEnabled() )
-			log.debug( "Second pass for collection: " + collection.getRole() );
+        LOG.secondPass(collection.getRole());
 
 		secondPass( persistentClasses, localInheritedMetas ); // using local since the inheritedMetas at this point is not the correct map since it is always the empty map
 		collection.createAllKeys();
 
-		if ( log.isDebugEnabled() ) {
+        if (LOG.isDebugEnabled()) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() )
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
@@ -76,7 +80,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-			log.debug( msg );
+            LOG.mappedCollection(msg);
 		}
 	}
 
@@ -92,4 +96,19 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 		return columns.toString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "%s" )
+        void mappedCollection( String message );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Second pass for collection: %s" )
+        void secondPass( String role );
+    }
 }

@@ -23,17 +23,18 @@
  */
 package org.hibernate.service.jdbc.dialect.internal;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to sub-resolvers.
@@ -42,7 +43,9 @@ import org.hibernate.exception.JDBCConnectionException;
  * @author Steve Ebersole
  */
 public class DialectResolverSet implements DialectResolver {
-	private static final Logger log = LoggerFactory.getLogger( DialectResolverSet.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DialectResolverSet.class.getPackage().getName());
 
 	private List<DialectResolver> resolvers;
 
@@ -70,7 +73,7 @@ public class DialectResolverSet implements DialectResolver {
 				throw e;
 			}
 			catch ( Exception e ) {
-				log.info( "sub-resolver threw unexpected exception, continuing to next : " + e.getMessage() );
+                LOG.exceptionInSubResolver(e.getMessage());
 			}
 		}
 		return null;
@@ -95,4 +98,15 @@ public class DialectResolverSet implements DialectResolver {
 	public void addResolverAtFirst(DialectResolver resolver) {
 		resolvers.add( 0, resolver );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Sub-resolver threw unexpected exception, continuing to next : %s" )
+        void exceptionInSubResolver( String message );
+    }
 }

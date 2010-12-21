@@ -23,12 +23,9 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
@@ -47,6 +44,10 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.util.IdentityMap;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -56,13 +57,14 @@ import org.hibernate.util.IdentityMap;
  */
 public class DefaultRefreshEventListener implements RefreshEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultRefreshEventListener.class);
-	
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultRefreshEventListener.class.getPackage().getName());
+
 	public void onRefresh(RefreshEvent event) throws HibernateException {
 		onRefresh( event, IdentityMap.instantiate(10) );
 	}
 
-	/** 
+	/**
 	 * Handle the given refresh event.
 	 *
 	 * @param event The refresh event to be handled.
@@ -70,7 +72,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 	public void onRefresh(RefreshEvent event, Map refreshedAlready) {
 
 		final EventSource source = event.getSession();
-		
+
 		boolean isTransient = ! source.contains( event.getObject() );
 		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
 			if ( isTransient ) {
@@ -82,23 +84,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final Object object = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
 
 		if ( refreshedAlready.containsKey(object) ) {
-			log.trace("already refreshed");
+            LOG.alreadyRefreshed();
 			return;
 		}
 
 		final EntityEntry e = source.getPersistenceContext().getEntry( object );
 		final EntityPersister persister;
 		final Serializable id;
-		
+
 		if ( e == null ) {
 			persister = source.getEntityPersister(null, object); //refresh() does not pass an entityName
 			id = persister.getIdentifier( object, event.getSession() );
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-						"refreshing transient " +
-						MessageHelper.infoString( persister, id, source.getFactory() )
-					);
-			}
+            if (LOG.isTraceEnabled()) LOG.refreshingTransient(MessageHelper.infoString(persister, id, source.getFactory()));
 			EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
 			if ( source.getPersistenceContext().getEntry(key) != null ) {
 				throw new PersistentObjectException(
@@ -108,12 +105,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 		else {
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-						"refreshing " +
-						MessageHelper.infoString( e.getPersister(), e.getId(), source.getFactory()  )
-					);
-			}
+            if (LOG.isTraceEnabled()) LOG.refreshing(MessageHelper.infoString(e.getPersister(), e.getId(), source.getFactory()));
 			if ( !e.isExistsInDatabase() ) {
 				throw new HibernateException( "this instance does not yet exist as a row in the database" );
 			}
@@ -138,14 +130,14 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 					id,
 					persister.getIdentifierType(),
 					persister.getRootEntityName(),
-					source.getEntityMode(), 
+					source.getEntityMode(),
 					source.getFactory()
 			);
 			persister.getCacheAccessStrategy().evict( ck );
 		}
-		
+
 		evictCachedCollections( persister, id, source.getFactory() );
-		
+
 		String previousFetchProfile = source.getFetchProfile();
 		source.setFetchProfile("refresh");
 		Object result = persister.load( id, object, event.getLockOptions(), source );
@@ -161,7 +153,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 		source.setFetchProfile(previousFetchProfile);
-		
+
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 
 	}
@@ -183,4 +175,22 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Already refreshed" )
+        void alreadyRefreshed();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Refreshing %s" )
+        void refreshing( String infoString );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Refreshing transient %s" )
+        void refreshingTransient( String infoString );
+    }
 }

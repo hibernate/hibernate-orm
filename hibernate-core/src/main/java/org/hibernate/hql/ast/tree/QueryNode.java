@@ -29,12 +29,8 @@ import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Defines a top-level AST node representing an HQL select statement.
@@ -43,13 +39,14 @@ import org.slf4j.LoggerFactory;
  */
 public class QueryNode extends AbstractRestrictableStatement implements SelectExpression {
 
-	private static final Logger log = LoggerFactory.getLogger( QueryNode.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                QueryNode.class.getPackage().getName());
 
 	private OrderByClause orderByClause;
 	private int scalarColumnIndex = -1;
 
 	/**
-	 * @see Statement#getStatementType() 
+	 * @see Statement#getStatementType()
 	 */
 	public int getStatementType() {
 		return HqlSqlTokenTypes.QUERY;
@@ -62,12 +59,14 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 		return false;
 	}
 
-	protected int getWhereClauseParentTokenType() {
+	@Override
+    protected int getWhereClauseParentTokenType() {
 		return SqlTokenTypes.FROM;
 	}
 
-	protected Logger getLog() {
-		return log;
+	@Override
+    protected Logger getLog() {
+        return LOG;
 	}
 
 	/**
@@ -98,7 +97,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 
 			// if there is no order by, make one
 			if ( orderByClause == null ) {
-				log.debug( "getOrderByClause() : Creating a new ORDER BY clause" );
+                LOG.getOrderByClause();
 				orderByClause = ( OrderByClause ) ASTUtil.create( getWalker().getASTFactory(), SqlTokenTypes.ORDER, "ORDER" );
 
 				// Find the WHERE; if there is no WHERE, find the FROM...
@@ -118,8 +117,8 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 	private OrderByClause locateOrderByClause() {
 		return ( OrderByClause ) ASTUtil.findTypeInChildren( this, SqlTokenTypes.ORDER );
 	}
-	
-	
+
+
 	private String alias;
 
 	public String getAlias() {
@@ -159,7 +158,8 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 
-	public Type getDataType() {
+	@Override
+    public Type getDataType() {
 		return ( (SelectExpression) getSelectClause().getFirstSelectExpression() ).getDataType();
 	}
 

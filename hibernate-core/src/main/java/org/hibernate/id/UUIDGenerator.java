@@ -23,13 +23,10 @@
  */
 package org.hibernate.id;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -38,6 +35,10 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -60,7 +61,8 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
 
-	private static final Logger log = LoggerFactory.getLogger( UUIDGenerator.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                UUIDGenerator.class.getPackage().getName());
 
 	private UUIDGenerationStrategy strategy;
 	private UUIDTypeDescriptor.ValueTransformer valueTransformer;
@@ -85,11 +87,11 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
 					catch ( Exception ignore ) {
-						log.warn( "Unable to instantiate UUID generation strategy class : {}", ignore );
+                        LOG.unableToInstantiateUuidGenerationStrategy(ignore);
 					}
 				}
 				catch ( ClassNotFoundException ignore ) {
-					log.warn( "Unable to locate requested UUID generation strategy class : {}", strategyClassName );
+                    LOG.unableToLocateUuidGenerationStrategy(strategyClassName);
 				}
 			}
 		}
@@ -116,4 +118,18 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to instantiate UUID generation strategy class : %s" )
+        void unableToInstantiateUuidGenerationStrategy( Exception ignore );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to locate requested UUID generation strategy class : %s" )
+        void unableToLocateUuidGenerationStrategy( String strategyClassName );
+    }
 }

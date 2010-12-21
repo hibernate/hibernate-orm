@@ -25,10 +25,6 @@
 package org.hibernate.transaction;
 
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ReflectHelper;
@@ -40,7 +36,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public final class TransactionFactoryFactory {
 
-	private static final Logger log = LoggerFactory.getLogger( TransactionFactoryFactory.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TransactionFactoryFactory.class.getPackage().getName());
 
 	/**
 	 * Create an appropriate transaction factory based on the given configuration
@@ -56,25 +53,25 @@ public final class TransactionFactoryFactory {
 	public static TransactionFactory buildTransactionFactory(Properties transactionProps) throws HibernateException {
 		String strategyClassName = transactionProps.getProperty( Environment.TRANSACTION_STRATEGY );
 		if ( strategyClassName == null ) {
-			log.info( "Using default transaction strategy (direct JDBC transactions)" );
+            LOG.usingDefaultTransactionStrategy();
 			return new JDBCTransactionFactory();
 		}
-		log.info( "Transaction strategy: " + strategyClassName );
+        LOG.transactionStrategy(strategyClassName);
 		TransactionFactory factory;
 		try {
 			factory = ( TransactionFactory ) ReflectHelper.classForName( strategyClassName ).newInstance();
 		}
 		catch ( ClassNotFoundException e ) {
-			log.error( "TransactionFactory class not found", e );
-			throw new HibernateException( "TransactionFactory class not found: " + strategyClassName );
+            LOG.error(LOG.transactionFactoryClassNotFound(), e);
+            throw new HibernateException(LOG.transactionFactoryClassNotFound(strategyClassName));
 		}
 		catch ( IllegalAccessException e ) {
-			log.error( "Failed to instantiate TransactionFactory", e );
-			throw new HibernateException( "Failed to instantiate TransactionFactory: " + e );
+            LOG.error(LOG.unableToInstantiateTransactionFactory(), e);
+            throw new HibernateException(LOG.unableToInstantiateTransactionFactory(e));
 		}
 		catch ( java.lang.InstantiationException e ) {
-			log.error( "Failed to instantiate TransactionFactory", e );
-			throw new HibernateException( "Failed to instantiate TransactionFactory: " + e );
+            LOG.error(LOG.unableToInstantiateTransactionFactory(), e);
+            throw new HibernateException(LOG.unableToInstantiateTransactionFactory(e));
 		}
 		factory.configure( transactionProps );
 		return factory;

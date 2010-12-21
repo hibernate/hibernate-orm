@@ -23,8 +23,7 @@
  */
 package org.hibernate.event.def;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
@@ -36,6 +35,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Wrap collections in a Hibernate collection
@@ -44,7 +47,8 @@ import org.hibernate.type.Type;
  */
 public class WrapVisitor extends ProxyVisitor {
 
-	private static final Logger log = LoggerFactory.getLogger(WrapVisitor.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                WrapVisitor.class.getPackage().getName());
 
 	boolean substitute = false;
 
@@ -56,7 +60,8 @@ public class WrapVisitor extends ProxyVisitor {
 		super(session);
 	}
 
-	Object processCollection(Object collection, CollectionType collectionType)
+	@Override
+    Object processCollection(Object collection, CollectionType collectionType)
 	throws HibernateException {
 
 		if ( collection!=null && (collection instanceof PersistentCollection) ) {
@@ -90,7 +95,7 @@ public class WrapVisitor extends ProxyVisitor {
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			//TODO: move into collection type, so we can use polymorphism!
 			if ( collectionType.hasHolder( session.getEntityMode() ) ) {
-				
+
 				if (collection==CollectionType.UNFETCHED_COLLECTION) return null;
 
 				PersistentCollection ah = persistenceContext.getCollectionHolder(collection);
@@ -106,7 +111,7 @@ public class WrapVisitor extends ProxyVisitor {
 				PersistentCollection persistentCollection = collectionType.wrap(session, collection);
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
-				if ( log.isTraceEnabled() ) log.trace( "Wrapped collection in role: " + collectionType.getRole() );
+                if (LOG.isTraceEnabled()) LOG.wrappedCollectionInRole(collectionType.getRole());
 
 				return persistentCollection; //Force a substitution!
 
@@ -116,7 +121,8 @@ public class WrapVisitor extends ProxyVisitor {
 
 	}
 
-	void processValue(int i, Object[] values, Type[] types) {
+	@Override
+    void processValue(int i, Object[] values, Type[] types) {
 		Object result = processValue( values[i], types[i] );
 		if (result!=null) {
 			substitute = true;
@@ -124,7 +130,8 @@ public class WrapVisitor extends ProxyVisitor {
 		}
 	}
 
-	Object processComponent(Object component, CompositeType componentType)
+	@Override
+    Object processComponent(Object component, CompositeType componentType)
 	throws HibernateException {
 
 		if (component!=null) {
@@ -146,7 +153,8 @@ public class WrapVisitor extends ProxyVisitor {
 		return null;
 	}
 
-	void process(Object object, EntityPersister persister) throws HibernateException {
+	@Override
+    void process(Object object, EntityPersister persister) throws HibernateException {
 		EntityMode entityMode = getSession().getEntityMode();
 		Object[] values = persister.getPropertyValues( object, entityMode );
 		Type[] types = persister.getPropertyTypes();
@@ -156,4 +164,14 @@ public class WrapVisitor extends ProxyVisitor {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Wrapped collection in role: %s" )
+        void wrappedCollectionInRole( String role );
+    }
 }

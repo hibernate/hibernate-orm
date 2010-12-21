@@ -18,10 +18,8 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
 import junit.framework.Test;
 import junit.textui.TestRunner;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -35,7 +33,6 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -55,18 +52,15 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.SerializationHelper;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class FooBarTest extends LegacyTestCase {
-	private static final Logger log = LoggerFactory.getLogger( FooBarTest.class );
 
 	public FooBarTest(String arg) {
 		super(arg);
@@ -450,11 +444,11 @@ public class FooBarTest extends LegacyTestCase {
 		foo.getFoo().setFoo(foo);
 		foo.setString("fizard");
 		//The following test is disabled for databases with no subselects...also for Interbase (not sure why).
-		if ( 
-				!(getDialect() instanceof MySQLDialect) && 
-				!(getDialect() instanceof HSQLDialect) && 
-				!(getDialect() instanceof MckoiDialect) && 
-				!(getDialect() instanceof SAPDBDialect) && 
+		if (
+				!(getDialect() instanceof MySQLDialect) &&
+				!(getDialect() instanceof HSQLDialect) &&
+				!(getDialect() instanceof MckoiDialect) &&
+				!(getDialect() instanceof SAPDBDialect) &&
 				!(getDialect() instanceof PointbaseDialect) &&
 				!(getDialect() instanceof DerbyDialect)
 		)  {
@@ -1372,7 +1366,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.evict(baz);
 		tx.commit();
 		s.disconnect();
-		
+
 		s.reconnect();
 		tx = s.beginTransaction();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
@@ -1654,7 +1648,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "from Glarch g where g.multiple.count=12" ).list().get(0);
 		s.getTransaction().commit();
 		s.close();
-		
+
 		s = openSession();
 		s.beginTransaction();
 		g = (Glarch) s.createQuery( "from Glarch g where g.multiple.glarch=g and g.multiple.count=12" ).list().get(0);
@@ -1734,7 +1728,7 @@ public class FooBarTest extends LegacyTestCase {
 		}
 
 
-		if (dialectSupportsEmptyInList("HQL 'x in (:name)'  with EMPTY_LIST.")) { 
+		if (dialectSupportsEmptyInList("HQL 'x in (:name)'  with EMPTY_LIST.")) {
 				q.setParameterList("nameList", Collections.EMPTY_LIST);
 			list = q.list();
 			assertTrue( list.size()==0 );
@@ -2330,9 +2324,9 @@ public class FooBarTest extends LegacyTestCase {
 		).iterate();
 		while ( iter.hasNext() ) {
 			Object[] arr = (Object[]) iter.next();
-			log.info( arr[0] + " " + arr[1] + " " + arr[2] + " " + arr[3] );
+            LOG.info(arr[0] + " " + arr[1] + " " + arr[2] + " " + arr[3]);
 		}
-		
+
 		s.delete(baz);
 		s.delete(baz2);
 		s.delete( foos[1] );
@@ -3526,7 +3520,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( "multi-column find", row[0]==foo && row[1]==foo.getFoo() );
 		txn.commit();
 		s.close();
-		
+
 		s = openSession();
 		txn = s.beginTransaction();
 		Iterator iter = s.createQuery(

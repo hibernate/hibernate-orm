@@ -23,13 +23,15 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.InputStream;
-
 import org.hibernate.util.DTDEntityResolver;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Resolve JPA xsd files locally
@@ -39,7 +41,8 @@ import org.slf4j.LoggerFactory;
 public class EJB3DTDEntityResolver extends DTDEntityResolver {
 	public static final EntityResolver INSTANCE = new EJB3DTDEntityResolver();
 
-	private final Logger log = LoggerFactory.getLogger( EJB3DTDEntityResolver.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                EJB3DTDEntityResolver.class.getPackage().getName());
 
 	boolean resolved = false;
 
@@ -51,8 +54,9 @@ public class EJB3DTDEntityResolver extends DTDEntityResolver {
 		return resolved;
 	}
 
-	public InputSource resolveEntity(String publicId, String systemId) {
-		log.trace("Resolving XML entity {} : {}", publicId, systemId);
+	@Override
+    public InputSource resolveEntity(String publicId, String systemId) {
+        LOG.resolvingXmlEntity(publicId, systemId);
 		InputSource is = super.resolveEntity( publicId, systemId );
 		if ( is == null ) {
 			if ( systemId != null ) {
@@ -88,25 +92,45 @@ public class EJB3DTDEntityResolver extends DTDEntityResolver {
 
 	private InputSource buildInputSource(String publicId, String systemId, InputStream dtdStream, boolean resolved) {
 		if ( dtdStream == null ) {
-			log.trace( "unable to locate [{}] on classpath", systemId );
+            LOG.unableToLocate(systemId);
 			return null;
 		}
-		else {
-			log.trace( "located [{}] in classpath", systemId );
-			InputSource source = new InputSource( dtdStream );
-			source.setPublicId( publicId );
-			source.setSystemId( systemId );
-			this.resolved = resolved;
-			return source;
-		}
+        LOG.located(systemId);
+        InputSource source = new InputSource(dtdStream);
+        source.setPublicId(publicId);
+        source.setSystemId(systemId);
+        this.resolved = resolved;
+        return source;
 	}
 
 	private InputStream getStreamFromClasspath(String fileName) {
-		log.trace(
-							"recognized JPA ORM namespace; attempting to resolve on classpath under org/hibernate/ejb"
-		);
+        LOG.resolvingFileName();
 		String path = "org/hibernate/ejb/" + fileName;
 		InputStream dtdStream = resolveInHibernateNamespace( path );
 		return dtdStream;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Located [%s] in classpath" )
+        void located( String systemId );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Recognized JPA ORM namespace; attempting to resolve on classpath under org/hibernate/ejb" )
+        void resolvingFileName();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Resolving XML entity %s : %s" )
+        void resolvingXmlEntity( String publicId,
+                                 String systemId );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Unable to locate [%s] on classpath" )
+        void unableToLocate( String systemId );
+    }
 }

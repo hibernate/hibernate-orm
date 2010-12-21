@@ -24,24 +24,26 @@
  */
 package org.hibernate.engine.loading;
 
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
+import java.io.Serializable;
 import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.util.IdentityMap;
-import org.hibernate.engine.PersistenceContext;
-import org.hibernate.engine.CollectionKey;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.EntityMode;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.CollectionKey;
+import org.hibernate.engine.PersistenceContext;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.EntityMode;
+import org.hibernate.util.IdentityMap;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Maps {@link ResultSet result-sets} to specific contextual data
@@ -60,7 +62,9 @@ import org.hibernate.EntityMode;
  * @author Steve Ebersole
  */
 public class LoadContexts {
-	private static final Logger log = LoggerFactory.getLogger( LoadContexts.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                LoadContexts.class.getPackage().getName());
 
 	private final PersistenceContext persistenceContext;
 	private Map collectionLoadContexts;
@@ -129,7 +133,7 @@ public class LoadContexts {
 			Iterator itr = collectionLoadContexts.values().iterator();
 			while ( itr.hasNext() ) {
 				CollectionLoadContext collectionLoadContext = ( CollectionLoadContext ) itr.next();
-				log.warn( "fail-safe cleanup (collections) : " + collectionLoadContext );
+                LOG.failSafeCleanup(collectionLoadContext);
 				collectionLoadContext.cleanup();
 			}
 			collectionLoadContexts.clear();
@@ -138,7 +142,7 @@ public class LoadContexts {
 			Iterator itr = entityLoadContexts.values().iterator();
 			while ( itr.hasNext() ) {
 				EntityLoadContext entityLoadContext = ( EntityLoadContext ) itr.next();
-				log.warn( "fail-safe cleanup (entities) : " + entityLoadContext );
+                LOG.failSafeCleanup(entityLoadContext);
 				entityLoadContext.cleanup();
 			}
 			entityLoadContexts.clear();
@@ -187,9 +191,7 @@ public class LoadContexts {
 			context = ( CollectionLoadContext ) collectionLoadContexts.get( resultSet );
 		}
 		if ( context == null ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "constructing collection load context for result set [" + resultSet + "]" );
-			}
+            LOG.constructingCollectionLoadContext(resultSet);
 			context = new CollectionLoadContext( this, resultSet );
 			collectionLoadContexts.put( resultSet, context );
 		}
@@ -207,18 +209,16 @@ public class LoadContexts {
 	public PersistentCollection locateLoadingCollection(CollectionPersister persister, Serializable ownerKey) {
 		LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey, getEntityMode() ) );
 		if ( lce != null ) {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "returning loading collection:" + MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() ) );
-			}
+            if (LOG.isTraceEnabled()) LOG.returningLoadingCollection(MessageHelper.collectionInfoString(persister,
+                                                                                                        ownerKey,
+                                                                                                        getSession().getFactory()));
 			return lce.getCollection();
 		}
-		else {
-			// todo : should really move this log statement to CollectionType, where this is used from...
-			if ( log.isTraceEnabled() ) {
-				log.trace( "creating collection wrapper:" + MessageHelper.collectionInfoString( persister, ownerKey, getSession().getFactory() ) );
-			}
-			return null;
-		}
+        // TODO : should really move this log statement to CollectionType, where this is used from...
+        if (LOG.isTraceEnabled()) LOG.creatingCollectionWrapper(MessageHelper.collectionInfoString(persister,
+                                                                                                   ownerKey,
+                                                                                                   getSession().getFactory()));
+        return null;
 	}
 
 	// loading collection xrefs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -286,18 +286,10 @@ public class LoadContexts {
 		if ( xrefLoadingCollectionEntries == null ) {
 			return null;
 		}
-		if ( log.isTraceEnabled() ) {
-			log.trace( "attempting to locate loading collection entry [" + key + "] in any result-set context" );
-		}
+        LOG.locatingLoadingCollectionEntry(key);
 		LoadingCollectionEntry rtn = ( LoadingCollectionEntry ) xrefLoadingCollectionEntries.get( key );
-		if ( log.isTraceEnabled() ) {
-			if ( rtn == null ) {
-				log.trace( "collection [" + key + "] not located in load context" );
-			}
-			else {
-				log.trace( "collection [" + key + "] located in load context" );
-			}
-		}
+        if (rtn == null) LOG.collectionNotLocated(key);
+        else LOG.collectionLocated(key);
 		return rtn;
 	}
 
@@ -328,4 +320,42 @@ public class LoadContexts {
 		return context;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Collection [%s] located in load context" )
+        void collectionLocated( CollectionKey key );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Collection [%s] not located in load context" )
+        void collectionNotLocated( CollectionKey key );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Constructing collection load context for result set [%s]" )
+        void constructingCollectionLoadContext( ResultSet resultSet );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Creating collection wrapper: %s" )
+        void creatingCollectionWrapper( String collectionInfoString );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Fail-safe cleanup (collections) : %s" )
+        void failSafeCleanup( CollectionLoadContext collectionLoadContext );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Fail-safe cleanup (entities) : %s" )
+        void failSafeCleanup( EntityLoadContext entityLoadContext );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Attempting to locate loading collection entry [%s] in any result-set context" )
+        void locatingLoadingCollectionEntry( CollectionKey key );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Returning loading collection: %s" )
+        void returningLoadingCollection( String collectionInfoString );
+    }
 }

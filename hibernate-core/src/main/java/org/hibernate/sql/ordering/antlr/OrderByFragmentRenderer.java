@@ -24,13 +24,11 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
-import antlr.collections.AST;
-
-import org.hibernate.util.StringHelper;
 import org.hibernate.hql.ast.util.ASTPrinter;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.MessageLogger;
+import antlr.collections.AST;
 
 /**
  * TODO : javadoc
@@ -38,10 +36,13 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
-	private static final Logger log = LoggerFactory.getLogger( OrderByFragmentRenderer.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                OrderByFragmentRenderer.class.getPackage().getName());
 	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
 
-	protected void out(AST ast) {
+	@Override
+    protected void out(AST ast) {
 		out( ( ( Node ) ast ).getRenderableText() );
 	}
 
@@ -50,13 +51,14 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
     private int traceDepth = 0;
 
-	public void traceIn(String ruleName, AST tree) {
+	@Override
+    public void traceIn(String ruleName, AST tree) {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
 		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-		log.trace( prefix + traceText );
+        LOG.trace(prefix + traceText);
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -65,11 +67,19 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
 	}
 
-	public void traceOut(String ruleName, AST tree) {
+	@Override
+    public void traceOut(String ruleName, AST tree) {
 		if ( inputState.guessing > 0 ) {
 			return;
 		}
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+    }
 }

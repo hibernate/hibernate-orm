@@ -23,10 +23,12 @@
  */
 package org.hibernate.transaction.synchronization;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import javax.transaction.Synchronization;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * The {@link Synchronization} implementation Hibernate registers with the JTA {@link javax.transaction.Transaction}
@@ -35,7 +37,9 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class HibernateSynchronizationImpl implements Synchronization {
-	private static final Logger log = LoggerFactory.getLogger( HibernateSynchronizationImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HibernateSynchronizationImpl.class.getPackage().getName());
 
 	private final CallbackCoordinator coordinator;
 
@@ -47,7 +51,7 @@ public class HibernateSynchronizationImpl implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void beforeCompletion() {
-		log.trace( "JTA sync : beforeCompletion()" );
+        LOG.jtaSyncBeforeCompletion();
 		coordinator.beforeCompletion();
 	}
 
@@ -55,7 +59,22 @@ public class HibernateSynchronizationImpl implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void afterCompletion(int status) {
-		log.trace( "JTA sync : afterCompletion({})", status );
+        LOG.jtaSyncAfterCompletion(status);
 		coordinator.afterCompletion( status );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "JTA sync : afterCompletion(%d)" )
+        void jtaSyncAfterCompletion( int status );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "JTA sync : beforeCompletion()" )
+        void jtaSyncBeforeCompletion();
+    }
 }

@@ -23,15 +23,17 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
-
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import antlr.SemanticException;
 import antlr.collections.AST;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents an aggregate function i.e. min, max, sum, avg.
@@ -39,7 +41,9 @@ import org.slf4j.LoggerFactory;
  * @author Joshua Davis
  */
 public class AggregateNode extends AbstractSelectExpression implements SelectExpression, FunctionNode {
-	private static final Logger log = LoggerFactory.getLogger( AggregateNode.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AggregateNode.class.getPackage().getName());
 
 	private SQLFunction sqlFunction;
 
@@ -56,7 +60,7 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 			final String name = getText();
 			sqlFunction = getSessionFactoryHelper().findSQLFunction( getText() );
 			if ( sqlFunction == null ) {
-				log.info( "Could not resolve aggregate function {}; using standard definition", name );
+                LOG.unableToResolveAggregateFunction(name);
 				sqlFunction = new StandardSQLFunction( name );
 			}
 		}
@@ -77,7 +81,8 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 		return null;
 	}
 
-	public Type getDataType() {
+	@Override
+    public Type getDataType() {
 		// Get the function return value type, based on the type of the first argument.
 		return getSessionFactoryHelper().findFunctionReturnType( getText(), resolveFunction(), getFirstChild() );
 	}
@@ -86,8 +91,20 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 
-	public boolean isScalar() throws SemanticException {
+	@Override
+    public boolean isScalar() throws SemanticException {
 		// functions in a SELECT should always be considered scalar.
 		return true;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Could not resolve aggregate function {}; using standard definition" )
+        void unableToResolveAggregateFunction( String name );
+    }
 }

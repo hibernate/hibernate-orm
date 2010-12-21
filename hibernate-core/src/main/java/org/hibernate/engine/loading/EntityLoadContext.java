@@ -24,12 +24,14 @@
  */
 package org.hibernate.engine.loading;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.ResultSet;
-import java.util.List;
 import java.util.ArrayList;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * {@inheritDoc}
@@ -37,7 +39,9 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class EntityLoadContext {
-	private static final Logger log = LoggerFactory.getLogger( EntityLoadContext.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                EntityLoadContext.class.getPackage().getName());
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;
@@ -49,15 +53,24 @@ public class EntityLoadContext {
 	}
 
 	void cleanup() {
-		if ( !hydratingEntities.isEmpty() ) {
-			log.warn( "On EntityLoadContext#clear, hydratingEntities contained [" + hydratingEntities.size() + "] entries" );
-		}
+        if (!hydratingEntities.isEmpty()) LOG.hydratingEntitiesCount(hydratingEntities.size());
 		hydratingEntities.clear();
 	}
 
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return super.toString() + "<rs=" + resultSet + ">";
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "On EntityLoadContext#clear, hydratingEntities contained [%d] entries" )
+        void hydratingEntitiesCount( int size );
+    }
 }

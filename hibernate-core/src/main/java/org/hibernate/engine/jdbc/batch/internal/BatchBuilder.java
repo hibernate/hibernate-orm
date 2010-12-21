@@ -23,11 +23,7 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 
@@ -37,7 +33,9 @@ import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
  * @author Steve Ebersole
  */
 public class BatchBuilder {
-	private static final Logger log = LoggerFactory.getLogger( BatchBuilder.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                BatchBuilder.class.getPackage().getName());
 
 	private int size;
 

@@ -25,13 +25,8 @@
 package org.hibernate.transaction;
 
 import java.util.Properties;
-
-import javax.transaction.TransactionManager;
 import javax.transaction.Transaction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
 
 /**
@@ -41,10 +36,11 @@ import org.hibernate.HibernateException;
  */
 public class WebSphereTransactionManagerLookup implements TransactionManagerLookup {
 
-	private static final Logger log = LoggerFactory.getLogger(WebSphereTransactionManagerLookup.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                WebSphereTransactionManagerLookup.class.getPackage().getName());
 	private final int wsVersion;
 	private final Class tmfClass;
-	
+
 	/**
 	 * Constructs a new WebSphereTransactionManagerLookup.
 	 */
@@ -55,18 +51,18 @@ public class WebSphereTransactionManagerLookup implements TransactionManagerLook
 			try {
 				clazz = Class.forName( "com.ibm.ws.Transaction.TransactionManagerFactory" );
 				version = 5;
-				log.info( "WebSphere 5.1" );
+                LOG.info("WebSphere 5.1");
 			}
 			catch ( Exception e ) {
 				try {
 					clazz = Class.forName( "com.ibm.ejs.jts.jta.TransactionManagerFactory" );
 					version = 5;
-					log.info( "WebSphere 5.0" );
-				} 
+                    LOG.info("WebSphere 5.0");
+				}
 				catch ( Exception e2 ) {
 					clazz = Class.forName( "com.ibm.ejs.jts.jta.JTSXA" );
 					version = 4;
-					log.info( "WebSphere 4" );
+                    LOG.info("WebSphere 4");
 				}
 			}
 

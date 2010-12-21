@@ -24,12 +24,14 @@
  */
 package org.hibernate.hql.ast;
 
-import antlr.ANTLRException;
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
-import antlr.collections.AST;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.WARN;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -40,8 +42,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.hql.FilterTranslator;
-import org.hibernate.hql.QueryExecutionRequestException;
 import org.hibernate.hql.ParameterTranslations;
+import org.hibernate.hql.QueryExecutionRequestException;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
@@ -54,21 +56,22 @@ import org.hibernate.hql.ast.tree.InsertStatement;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.Statement;
 import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.hql.ast.util.NodeTraverser;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.hql.ast.util.NodeTraverser;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
 import org.hibernate.util.IdentitySet;
-import org.hibernate.util.StringHelper;
 import org.hibernate.util.ReflectHelper;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.ArrayList;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
+import antlr.ANTLRException;
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
 
 /**
  * A QueryTranslator that uses an Antlr-based parser.
@@ -77,8 +80,8 @@ import java.util.ArrayList;
  */
 public class QueryTranslatorImpl implements FilterTranslator {
 
-	private static final Logger log = LoggerFactory.getLogger( QueryTranslatorImpl.class );
-	private static final Logger AST_LOG = LoggerFactory.getLogger( "org.hibernate.hql.ast.AST" );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                QueryTranslatorImpl.class.getPackage().getName());
 
 	private SessionFactoryImplementor factory;
 
@@ -164,9 +167,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private synchronized void doCompile(Map replacements, boolean shallow, String collectionRole) {
 		// If the query is already compiled, skip the compilation.
 		if ( compiled ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "compile() : The query is already compiled, skipping..." );
-			}
+            LOG.compile();
 			return;
 		}
 
@@ -213,19 +214,15 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			throw qe;
 		}
 		catch ( RecognitionException e ) {
-			// we do not actually propogate ANTLRExceptions as a cause, so
+            // we do not actually propagate ANTLRExceptions as a cause, so
 			// log it here for diagnostic purposes
-			if ( log.isTraceEnabled() ) {
-				log.trace( "converted antlr.RecognitionException", e );
-			}
+            LOG.trace(LOG.convertedRecognitionException(), e);
 			throw QuerySyntaxException.convert( e, hql );
 		}
 		catch ( ANTLRException e ) {
-			// we do not actually propogate ANTLRExceptions as a cause, so
+            // we do not actually propagate ANTLRExceptions as a cause, so
 			// log it here for diagnostic purposes
-			if ( log.isTraceEnabled() ) {
-				log.trace( "converted antlr.ANTLRException", e );
-			}
+            LOG.trace(LOG.convertedAntlrException(), e);
 			throw new QueryException( e.getMessage(), hql );
 		}
 
@@ -237,9 +234,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			SqlGenerator gen = new SqlGenerator(factory);
 			gen.statement( sqlAst );
 			sql = gen.getSQL();
-			if ( log.isDebugEnabled() ) {
-				log.debug( "HQL: " + hql );
-				log.debug( "SQL: " + sql );
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("HQL: " + hql);
+                LOG.debug("SQL: " + sql);
 			}
 			gen.getParseErrorHandler().throwQueryException();
 			collectedParameterSpecifications = gen.getCollectedParameters();
@@ -253,9 +250,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		// Transform the tree.
 		w.statement( hqlAst );
 
-		if ( AST_LOG.isDebugEnabled() ) {
+        if (LOG.isDebugEnabled()) {
 			ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
-			AST_LOG.debug( printer.showAsString( w.getAST(), "--- SQL AST ---" ) );
+            LOG.debug(printer.showAsString(w.getAST(), "--- SQL AST ---"));
 		}
 
 		w.getParseErrorHandler().throwQueryException();
@@ -268,9 +265,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		HqlParser parser = HqlParser.getInstance( hql );
 		parser.setFilter( filter );
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( "parse() - HQL: " + hql );
-		}
+        LOG.debug("parse() - HQL: " + hql);
 		parser.statement();
 
 		AST hqlAst = parser.getAST();
@@ -286,9 +281,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	void showHqlAst(AST hqlAst) {
-		if ( AST_LOG.isDebugEnabled() ) {
+        if (LOG.isDebugEnabled()) {
 			ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class );
-			AST_LOG.debug( printer.showAsString( hqlAst, "--- HQL AST ---" ) );
+            LOG.debug(printer.showAsString(hqlAst, "--- HQL AST ---"));
 		}
 	}
 
@@ -350,7 +345,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		QueryParameters queryParametersToUse;
 		if ( hasLimit && containsCollectionFetches() ) {
-			log.warn( "firstResult/maxResults specified with collection fetch; applying in memory!" );
+            LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
 			RowSelection selection = new RowSelection();
 			selection.setFetchSize( queryParameters.getRowSelection().getFetchSize() );
 			selection.setTimeout( queryParameters.getRowSelection().getTimeout() );
@@ -579,14 +574,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		public void visit(AST node) {
 			if ( dotRoot != null ) {
 				// we are already processing a dot-structure
-				if ( ASTUtil.isSubtreeChild( dotRoot, node ) ) {
-					// ignore it...
-					return;
-				}
-				else {
-					// we are now at a new tree level
-					dotRoot = null;
-				}
+                if (ASTUtil.isSubtreeChild(dotRoot, node)) return;
+                // we are now at a new tree level
+                dotRoot = null;
 			}
 
 			if ( dotRoot == null && node.getType() == HqlTokenTypes.DOT ) {
@@ -604,4 +594,25 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			}
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "compile() : The query is already compiled, skipping..." )
+        void compile();
+
+        @Message( value = "Converted antlr.ANTLRException" )
+        Object convertedAntlrException();
+
+        @Message( value = "Converted antlr.RecognitionException" )
+        Object convertedRecognitionException();
+
+        @LogMessage( level = WARN )
+        @Message( value = "firstResult/maxResults specified with collection fetch; applying in memory!" )
+        void firstOrMaxResultsSpecifiedWithCollectionFetch();
+    }
 }

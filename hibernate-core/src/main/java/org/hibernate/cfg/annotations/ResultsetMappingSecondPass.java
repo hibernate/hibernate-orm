@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,7 +35,6 @@ import javax.persistence.ColumnResult;
 import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
-
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.BinderHelper;
@@ -49,14 +49,18 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ResultsetMappingSecondPass implements QuerySecondPass {
-	private Logger log = LoggerFactory.getLogger( ResultsetMappingSecondPass.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ResultsetMappingSecondPass.class.getPackage().getName());
+
 	private SqlResultSetMapping ann;
 	private Mappings mappings;
 	private boolean isDefault;
@@ -71,7 +75,7 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		//TODO add parameters checkings
 		if ( ann == null ) return;
 		ResultSetMappingDefinition definition = new ResultSetMappingDefinition( ann.name() );
-		log.info( "Binding resultset mapping: {}", definition.getName() );
+        LOG.bindingResultSetMapping(definition.getName());
 
 		int entityAliasIndex = 0;
 
@@ -265,4 +269,15 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 		return -1;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Binding result set mapping: %s" )
+        void bindingResultSetMapping( String mapping );
+    }
 }

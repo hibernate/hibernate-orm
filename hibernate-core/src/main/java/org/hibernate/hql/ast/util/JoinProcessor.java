@@ -24,37 +24,36 @@
  */
 package org.hibernate.hql.ast.util;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.Collection;
-
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.StringTokenizer;
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.impl.FilterImpl;
-import org.hibernate.type.Type;
-import org.hibernate.param.DynamicFilterParameterSpecification;
-import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.engine.JoinSequence;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.HqlSqlWalker;
+import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.FromClause;
 import org.hibernate.hql.ast.tree.FromElement;
-import org.hibernate.hql.ast.tree.QueryNode;
-import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.ParameterContainer;
+import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.classic.ParserHelper;
+import org.hibernate.impl.FilterImpl;
+import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.util.StringHelper;
+import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -65,7 +64,8 @@ import org.slf4j.LoggerFactory;
  */
 public class JoinProcessor implements SqlTokenTypes {
 
-	private static final Logger log = LoggerFactory.getLogger( JoinProcessor.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JoinProcessor.class.getPackage().getName());
 
 	private final HqlSqlWalker walker;
 	private final SyntheticAndFactory syntheticAndFactory;
@@ -137,7 +137,7 @@ public class JoinProcessor implements SqlTokenTypes {
 							boolean containsTableAlias = fromClause.containsTableAlias( alias );
 							if ( fromElement.isDereferencedBySubclassProperty() ) {
 								// TODO : or should we return 'containsTableAlias'??
-								log.trace( "forcing inclusion of extra joins [alias=" + alias + ", containsTableAlias=" + containsTableAlias + "]" );
+                        LOG.forcingInclusionOfExtraJoins(alias, containsTableAlias);
 								return true;
 							}
 							boolean shallowQuery = walker.isShallowQuery();
@@ -175,9 +175,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
 		if ( fromElement.useFromFragment() /*&& StringHelper.isNotEmpty( frag )*/ ) {
 			String fromFragment = processFromFragment( frag, join ).trim();
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Using FROM fragment [" + fromFragment + "]" );
-			}
+            LOG.usingFromFragment(fromFragment);
 			processDynamicFilterParameters(
 					fromFragment,
 					fromElement,
@@ -185,7 +183,7 @@ public class JoinProcessor implements SqlTokenTypes {
 			);
 		}
 
-		syntheticAndFactory.addWhereFragment( 
+		syntheticAndFactory.addWhereFragment(
 				joinFragment,
 				whereFrag,
 				query,
@@ -255,4 +253,19 @@ public class JoinProcessor implements SqlTokenTypes {
 		return sqlFragment.indexOf( "?" ) < 0;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Forcing inclusion of extra joins [alias=%s, containsTableAlias=%s]" )
+        void forcingInclusionOfExtraJoins( String alias,
+                                           boolean containsTableAlias );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Using FROM fragment [%s]" )
+        void usingFromFragment( String fromFragment );
+    }
 }

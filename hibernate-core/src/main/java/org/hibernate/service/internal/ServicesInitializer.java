@@ -23,14 +23,11 @@
  */
 package org.hibernate.service.internal;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
@@ -41,6 +38,10 @@ import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistryAwareService;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.UnknownServiceException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Delegate responsible for initializing services
@@ -48,7 +49,9 @@ import org.hibernate.service.spi.UnknownServiceException;
  * @author Steve Ebersole
  */
 public class ServicesInitializer {
-	private static final Logger log = LoggerFactory.getLogger( ServicesInitializer.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ServicesInitializer.class.getPackage().getName());
 
 	private final ServicesRegistryImpl servicesRegistry;
 	private final Map<Class,ServiceInitiator> serviceInitiatorMap;
@@ -89,7 +92,7 @@ public class ServicesInitializer {
 	 * @return The intiialized instance of the service
 	 */
 	public <T extends Service> T initializeService(Class<T> serviceRole) {
-		log.trace( "Initializing service [role=" + serviceRole.getName() + "]" );
+        LOG.initializingService(serviceRole.getName());
 
 		// PHASE 1 : create service
 		T service = createService( serviceRole );
@@ -105,7 +108,7 @@ public class ServicesInitializer {
 
 	@SuppressWarnings({ "unchecked" })
 	private <T extends Service> T createService(Class<T> serviceRole) {
-		ServiceInitiator<T> initiator = (ServiceInitiator<T>) serviceInitiatorMap.get( serviceRole );
+		ServiceInitiator<T> initiator = serviceInitiatorMap.get( serviceRole );
 		if ( initiator == null ) {
 			throw new UnknownServiceException( serviceRole );
 		}
@@ -189,4 +192,14 @@ public class ServicesInitializer {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Initializing service [role=%s]" )
+        void initializingService( String name );
+    }
 }

@@ -23,19 +23,20 @@
  */
 package org.hibernate.engine.jdbc.internal.proxy;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Basic support for building {@link Statement}-based proxy handlers
@@ -43,7 +44,9 @@ import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
  * @author Steve Ebersole
  */
 public abstract class AbstractStatementProxyHandler extends AbstractProxyHandler {
-	private static final Logger log = LoggerFactory.getLogger( AbstractStatementProxyHandler.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractStatementProxyHandler.class.getPackage().getName());
 
 	private ConnectionProxyHandler connectionProxyHandler;
 	private Connection connectionProxy;
@@ -81,9 +84,10 @@ public abstract class AbstractStatementProxyHandler extends AbstractProxyHandler
 		return statement;
 	}
 
-	protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
+	@Override
+    protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
 		String methodName = method.getName();
-		log.trace( "Handling invocation of statement method [{}]", methodName );
+        LOG.handlingInvocationOfStatementMethod(methodName);
 
 		// other methods allowed while invalid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( "close".equals( methodName ) ) {
@@ -165,4 +169,15 @@ public abstract class AbstractStatementProxyHandler extends AbstractProxyHandler
 		statement = null;
 		invalidate();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Handling invocation of statement method [%s]" )
+        void handlingInvocationOfStatementMethod( String methodName );
+    }
 }

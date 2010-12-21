@@ -24,11 +24,13 @@
  */
 package org.hibernate.engine;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Utilities for dealing with optimisitic locking values.
@@ -59,7 +61,8 @@ public final class Versioning {
 	 */
 	public static final int OPTIMISTIC_LOCK_DIRTY = 1;
 
-	private static final Logger log = LoggerFactory.getLogger( Versioning.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                Versioning.class.getPackage().getName());
 
 	/**
 	 * Private constructor disallowing instantiation.
@@ -76,7 +79,7 @@ public final class Versioning {
 	 */
 	private static Object seed(VersionType versionType, SessionImplementor session) {
 		Object seed = versionType.seed( session );
-		if ( log.isTraceEnabled() ) log.trace("Seeding: " + seed);
+        LOG.seeding(seed);
 		return seed;
 	}
 
@@ -110,9 +113,7 @@ public final class Versioning {
 			return true;
 		}
 		else {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "using initial version: " + initialVersion );
-			}
+            LOG.usingInitialVersion(initialVersion);
 			return false;
 		}
 	}
@@ -129,14 +130,8 @@ public final class Versioning {
 	 */
 	public static Object increment(Object version, VersionType versionType, SessionImplementor session) {
 		Object next = versionType.next( version, session );
-		if ( log.isTraceEnabled() ) {
-			log.trace(
-					"Incrementing: " +
-					versionType.toLoggableString( version, session.getFactory() ) +
-					" to " +
-					versionType.toLoggableString( next, session.getFactory() )
-			);
-		}
+        if (LOG.isTraceEnabled()) LOG.incrementing(versionType.toLoggableString(version, session.getFactory()),
+                                                   versionType.toLoggableString(next, session.getFactory()));
 		return next;
 	}
 
@@ -191,5 +186,23 @@ public final class Versioning {
 	    return false;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
 
+        @LogMessage( level = TRACE )
+        @Message( value = "Incrementing: %s to %s" )
+        void incrementing( String loggableString,
+                           String loggableString2 );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Seeding: %s" )
+        void seeding( Object seed );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Using initial version: %s" )
+        void usingInitialVersion( Object initialVersion );
+    }
 }

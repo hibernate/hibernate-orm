@@ -23,10 +23,12 @@
  */
 package org.hibernate.util.xml;
 
+import static org.jboss.logging.Logger.Level.ERROR;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
@@ -37,7 +39,9 @@ import org.xml.sax.SAXParseException;
  * @author Steve Ebersole
  */
 public class ErrorLogger implements ErrorHandler, Serializable {
-	private static final Logger log = LoggerFactory.getLogger( ErrorLogger.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ErrorLogger.class.getPackage().getName());
 
 	private SAXParseException error; // capture the initial error
 
@@ -54,10 +58,8 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	 * {@inheritDoc}
 	 */
 	public void error(SAXParseException error) {
-		log.error( "Error parsing XML (" + error.getLineNumber() + ") : " + error.getMessage() );
-		if ( this.error == null ) {
-			this.error = error;
-		}
+        LOG.parsingXmlError(error.getLineNumber(), error.getMessage());
+        if (this.error == null) this.error = error;
 	}
 
 	/**
@@ -71,10 +73,27 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	 * {@inheritDoc}
 	 */
 	public void warning(SAXParseException warn) {
-		log.error( "Warning parsing XML (" + error.getLineNumber() + ") : " + error.getMessage() );
+        LOG.parsingXmlError(error.getLineNumber(), error.getMessage());
 	}
 
 	public void reset() {
 		error = null;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Error parsing XML (%d) : %s" )
+        void parsingXmlError( int lineNumber,
+                              String message );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Warning parsing XML (%d) : %s" )
+        void parsingXmlWarning( int lineNumber,
+                                String message );
+    }
 }

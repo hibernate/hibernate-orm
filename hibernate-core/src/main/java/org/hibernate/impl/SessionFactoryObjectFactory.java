@@ -23,6 +23,9 @@
  */
 package org.hibernate.impl;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
@@ -38,12 +41,12 @@ import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
 import javax.naming.spi.ObjectFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.jndi.JndiHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Resolves {@link SessionFactory} instances during <tt>JNDI<tt> look-ups as well as during deserialization
@@ -53,12 +56,12 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	private static final SessionFactoryObjectFactory INSTANCE; //to stop the class from being unloaded
 
-	private static final Logger log;
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SessionFactoryObjectFactory.class.getPackage().getName());
 
 	static {
-		log = LoggerFactory.getLogger( SessionFactoryObjectFactory.class );
 		INSTANCE = new SessionFactoryObjectFactory();
-		log.debug("initializing class SessionFactoryObjectFactory");
+        LOG.initializingSessionFactoryObjectFactory();
 	}
 
 	private static final ConcurrentHashMap<String, SessionFactory> INSTANCES = new ConcurrentHashMap<String, SessionFactory>();
@@ -66,11 +69,11 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 
 	private static final NamingListener LISTENER = new NamespaceChangeListener() {
 		public void objectAdded(NamingEvent evt) {
-			log.debug( "A factory was successfully bound to name: " + evt.getNewBinding().getName() );
+            LOG.factoryBoundToName(evt.getNewBinding().getName());
 		}
 		public void objectRemoved(NamingEvent evt) {
 			String name = evt.getOldBinding().getName();
-			log.info("A factory was unbound from name: " + name);
+            LOG.factoryUnboundFromName(name);
 			Object instance = NAMED_INSTANCES.remove(name);
 			Iterator iter = INSTANCES.values().iterator();
 			while ( iter.hasNext() ) {
@@ -79,49 +82,47 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 		}
 		public void objectRenamed(NamingEvent evt) {
 			String name = evt.getOldBinding().getName();
-			log.info("A factory was renamed from name: " + name);
+            LOG.factoryRenamedFromName(name);
 			NAMED_INSTANCES.put( evt.getNewBinding().getName(), NAMED_INSTANCES.remove(name) );
 		}
 		public void namingExceptionThrown(NamingExceptionEvent evt) {
 			//noinspection ThrowableResultOfMethodCallIgnored
-			log.warn( "Naming exception occurred accessing factory: " + evt.getException() );
+            LOG.namingExceptionAccessingFactory(evt.getException());
 		}
 	};
 
 	public Object getObjectInstance(Object reference, Name name, Context ctx, Hashtable env) throws Exception {
-		log.debug("JNDI lookup: " + name);
+        LOG.jndiLookup(name);
 		String uid = (String) ( (Reference) reference ).get(0).getContent();
 		return getInstance(uid);
 	}
 
 	public static void addInstance(String uid, String name, SessionFactory instance, Properties properties) {
 
-		log.debug("registered: " + uid + " (" + ( (name==null) ? "unnamed" : name ) + ')');
+        LOG.registered(uid, name == null ? LOG.unnamed() : name);
 		INSTANCES.put(uid, instance);
 		if (name!=null) NAMED_INSTANCES.put(name, instance);
 
 		//must add to JNDI _after_ adding to HashMaps, because some JNDI servers use serialization
-		if (name==null) {
-			log.info("Not binding factory to JNDI, no JNDI name configured");
-		}
+        if (name == null) LOG.notBindingFactoryToJndi();
 		else {
 
-			log.info("Factory name: " + name);
+            LOG.factoryName(name);
 
 			try {
 				Context ctx = JndiHelper.getInitialContext(properties);
 				JndiHelper.bind(ctx, name, instance);
-				log.info("Bound factory to JNDI name: " + name);
+                LOG.factoryBoundToJndiName(name);
 				( (EventContext) ctx ).addNamingListener(name, EventContext.OBJECT_SCOPE, LISTENER);
 			}
 			catch (InvalidNameException ine) {
-				log.error("Invalid JNDI name: " + name, ine);
+                LOG.error(LOG.invalidJndiName(name), ine);
 			}
 			catch (NamingException ne) {
-				log.warn("Could not bind factory to JNDI", ne);
+                LOG.warn(LOG.unableToBindFactoryToJndi(), ne);
 			}
 			catch(ClassCastException cce) {
-				log.warn("InitialContext did not implement EventContext");
+                LOG.initialContextDidNotImplementEventContext();
 			}
 
 		}
@@ -132,18 +133,18 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 		//TODO: theoretically non-threadsafe...
 
 		if (name!=null) {
-			log.info("Unbinding factory from JNDI name: " + name);
+            LOG.unbindingFactoryFromJndiName(name);
 
 			try {
 				Context ctx = JndiHelper.getInitialContext(properties);
 				ctx.unbind(name);
-				log.info("Unbound factory from JNDI name: " + name);
+                LOG.factoryUnboundFromJndiName(name);
 			}
 			catch (InvalidNameException ine) {
-				log.error("Invalid JNDI name: " + name, ine);
+                LOG.error(LOG.invalidJndiName(name), ine);
 			}
 			catch (NamingException ne) {
-				log.warn("Could not unbind factory from JNDI", ne);
+                LOG.warn(LOG.unableToUnbindFactoryFromJndi(), ne);
 			}
 
 			NAMED_INSTANCES.remove(name);
@@ -155,25 +156,108 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 	}
 
 	public static Object getNamedInstance(String name) {
-		log.debug("lookup: name=" + name);
+        LOG.lookupName(name);
 		Object result = NAMED_INSTANCES.get(name);
 		if (result==null) {
-			log.debug("Not found: " + name);
-			log.debug( NAMED_INSTANCES.toString() );
+            LOG.notFound(name);
+            LOG.debug(NAMED_INSTANCES.toString());
 		}
 		return result;
 	}
 
 	public static Object getInstance(String uid) {
-		log.debug("lookup: uid=" + uid);
+        LOG.lookupUid(uid);
 		Object result = INSTANCES.get(uid);
 		if (result==null) {
-			log.debug("Not found: " + uid);
-			log.debug( INSTANCES.toString() );
+            LOG.notFound(uid);
+            LOG.debug(INSTANCES.toString());
 		}
 		return result;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Bound factory to JNDI name: %s" )
+        void factoryBoundToJndiName( String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "A factory was successfully bound to name: %s" )
+        void factoryBoundToName( String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Factory name: %s" )
+        void factoryName( String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "A factory was renamed from name: %s" )
+        void factoryRenamedFromName( String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Unbound factory from JNDI name: %s" )
+        void factoryUnboundFromJndiName( String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "A factory was unbound from name: %s" )
+        void factoryUnboundFromName( String name );
+
+        @LogMessage( level = WARN )
+        @Message( value = "InitialContext did not implement EventContext" )
+        void initialContextDidNotImplementEventContext();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Initializing class SessionFactoryObjectFactory" )
+        void initializingSessionFactoryObjectFactory();
+
+        @Message( value = "Invalid JNDI name: %s" )
+        Object invalidJndiName( String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "JNDI lookup: %s" )
+        void jndiLookup( Name name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Lookup: name=%s" )
+        void lookupName( String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Lookup: uid=%s" )
+        void lookupUid( String uid );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Naming exception occurred accessing factory: %s" )
+        void namingExceptionAccessingFactory( NamingException exception );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Not binding factory to JNDI, no JNDI name configured" )
+        void notBindingFactoryToJndi();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Not found: %s" )
+        void notFound( String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Registered: %s (%s)" )
+        void registered( String uid,
+                         String string );
+
+        @Message( value = "Could not bind factory to JNDI" )
+        Object unableToBindFactoryToJndi();
+
+        @Message( value = "Could not unbind factory from JNDI" )
+        Object unableToUnbindFactoryFromJndi();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Unbinding factory from JNDI name: %s" )
+        void unbindingFactoryFromJndiName( String name );
+
+        @Message( value = "<unnamed>" )
+        String unnamed();
+    }
 }
 
 

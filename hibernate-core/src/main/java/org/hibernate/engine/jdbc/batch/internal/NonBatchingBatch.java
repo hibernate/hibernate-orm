@@ -25,10 +25,6 @@ package org.hibernate.engine.jdbc.batch.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.jdbc.Expectation;
@@ -40,7 +36,9 @@ import org.hibernate.jdbc.Expectation;
  * @author Steve Ebersole
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
-	private static final Logger log = LoggerFactory.getLogger( NonBatchingBatch.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                NonBatchingBatch.class.getPackage().getName());
 
 	protected NonBatchingBatch(Object key,
 							SQLStatementLogger statementLogger,
@@ -65,7 +63,8 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 		}
 	}
 
-	protected void doExecuteBatch() {
+	@Override
+    protected void doExecuteBatch() {
 		// nothing to do
 	}
 }

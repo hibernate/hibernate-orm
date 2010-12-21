@@ -23,16 +23,17 @@
  */
 package org.hibernate.id;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.Type;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * <b>uuid</b><br>
@@ -47,7 +48,10 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Gavin King
  */
 public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configurable {
-	private static final Logger log = LoggerFactory.getLogger( UUIDHexGenerator.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                UUIDHexGenerator.class.getPackage().getName());
+
 	private static boolean warned = false;
 
 	private String sep = "";
@@ -55,11 +59,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 	public UUIDHexGenerator() {
 		if ( ! warned ) {
 			warned = true;
-			log.warn(
-					"Using {} which does not generate IETF RFC 4122 compliant UUID values; consider using {} instead",
-					this.getClass().getName(),
-					UUIDGenerator.class.getName()
-			);
+            LOG.usingUuidHexGenerator(this.getClass().getName(), UUIDGenerator.class.getName());
 		}
 	}
 
@@ -96,4 +96,16 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 		buf.replace( 4 - formatted.length(), 4, formatted );
 		return buf.toString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead" )
+        void usingUuidHexGenerator( String name,
+                                    String name2 );
+    }
 }

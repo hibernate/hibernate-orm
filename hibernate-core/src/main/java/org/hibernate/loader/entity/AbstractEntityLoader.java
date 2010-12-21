@@ -28,37 +28,33 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
-public abstract class AbstractEntityLoader extends OuterJoinLoader 
+public abstract class AbstractEntityLoader extends OuterJoinLoader
 		implements UniqueEntityLoader {
 
-	protected static final Logger log = LoggerFactory.getLogger(EntityLoader.class);
 	protected final OuterJoinLoadable persister;
 	protected final Type uniqueKeyType;
 	protected final String entityName;
 
 	public AbstractEntityLoader(
-			OuterJoinLoadable persister, 
-			Type uniqueKeyType, 
-			SessionFactoryImplementor factory, 
+			OuterJoinLoadable persister,
+			Type uniqueKeyType,
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		super( factory, loadQueryInfluencers );
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = persister.getEntityName();
 		this.persister = persister;
-		
+
 	}
 
 	/**
@@ -82,18 +78,18 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 			Object optionalObject,
 			Serializable optionalId,
 			LockOptions lockOptions) {
-		
+
 		List list = loadEntity(
-				session, 
-				id, 
-				uniqueKeyType, 
-				optionalObject, 
-				entityName, 
-				optionalId, 
+				session,
+				id,
+				uniqueKeyType,
+				optionalObject,
+				entityName,
+				optionalId,
 				persister,
 				lockOptions
 			);
-		
+
 		if ( list.size()==1 ) {
 			return list.get(0);
 		}
@@ -113,15 +109,17 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 					);
 			}
 		}
-		
+
 	}
 
-	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session) 
+	@Override
+    protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 	throws SQLException, HibernateException {
 		return row[row.length-1];
 	}
 
-	protected boolean isSingleRowLoader() {
+	@Override
+    protected boolean isSingleRowLoader() {
 		return true;
 	}
 

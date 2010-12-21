@@ -17,7 +17,9 @@ dependencies {
         transitive = true
     }
     provided( libraries.ant )
-    provided( libraries.jacc )
+    provided( libraries.jacc ) {
+        transitive = false
+    }
     provided( libraries.validation )
     testCompile( libraries.validation )
     testCompile( libraries.validator ) {

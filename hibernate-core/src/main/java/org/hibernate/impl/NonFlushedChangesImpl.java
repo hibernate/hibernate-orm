@@ -29,26 +29,28 @@ package org.hibernate.impl;
  * @author Gail Badner
  */
 
-import org.hibernate.engine.NonFlushedChanges;
-import org.hibernate.engine.ActionQueue;
-import org.hibernate.engine.StatefulPersistenceContext;
-import org.hibernate.event.EventSource;
+import static org.jboss.logging.Logger.Level.TRACE;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-
-import java.util.Map;
-import java.util.HashMap;
-import java.io.Serializable;
-import java.io.ObjectInputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.engine.ActionQueue;
+import org.hibernate.engine.NonFlushedChanges;
+import org.hibernate.engine.StatefulPersistenceContext;
+import org.hibernate.event.EventSource;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 public final class NonFlushedChangesImpl implements NonFlushedChanges {
 
-	private static final Logger log = LoggerFactory.getLogger(NonFlushedChangesImpl.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                NonFlushedChangesImpl.class.getPackage().getName());
 
 	private static class SessionNonFlushedChanges implements Serializable {
 		private transient EntityMode entityMode;
@@ -69,7 +71,7 @@ public final class NonFlushedChangesImpl implements NonFlushedChanges {
 		}
 
 		private void writeObject(ObjectOutputStream oos) throws IOException {
-			log.trace( "serializing SessionNonFlushedChanges" );
+            LOG.serializingSessionNonFlushedChanges();
 			oos.defaultWriteObject();
 			oos.writeObject( entityMode.toString() );
 			persistenceContext.serialize( oos );
@@ -96,7 +98,7 @@ public final class NonFlushedChangesImpl implements NonFlushedChanges {
 	/* package-protected */
 	ActionQueue getActionQueue(EntityMode entityMode) {
 		return getSessionNonFlushedChanges( entityMode ).actionQueue;
-	}	
+	}
 
 	/* package-protected */
 	StatefulPersistenceContext getPersistenceContext(EntityMode entityMode) {
@@ -106,4 +108,15 @@ public final class NonFlushedChangesImpl implements NonFlushedChanges {
 	public void clear() {
 		nonFlushedChangesByEntityMode.clear();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Serializing SessionNonFlushedChanges" )
+        void serializingSessionNonFlushedChanges();
+    }
 }

@@ -24,6 +24,8 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -33,22 +35,22 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.util.ReflectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -58,7 +60,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SchemaUpdate {
 
-	private static final Logger log = LoggerFactory.getLogger( SchemaUpdate.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SchemaUpdate.class.getPackage().getName());
 	private ConnectionHelper connectionHelper;
 	private Configuration configuration;
 	private Dialect dialect;
@@ -141,7 +144,7 @@ public class SchemaUpdate {
 			new SchemaUpdate( cfg ).execute( script, doUpdate );
 		}
 		catch ( Exception e ) {
-			log.error( "Error running schema update", e );
+            LOG.error(LOG.unableToRunSchemaUpdate(), e);
 			e.printStackTrace();
 		}
 	}
@@ -153,7 +156,7 @@ public class SchemaUpdate {
 	 */
 	public void execute(boolean script, boolean doUpdate) {
 
-		log.info( "Running hbm2ddl schema update" );
+        LOG.runningHbm2ddlSchemaUpdate();
 
 		Connection connection = null;
 		Statement stmt = null;
@@ -165,7 +168,7 @@ public class SchemaUpdate {
 
 			DatabaseMetadata meta;
 			try {
-				log.info( "fetching database metadata" );
+                LOG.fetchingDatabaseMetadata();
 				connectionHelper.prepare( true );
 				connection = connectionHelper.getConnection();
 				meta = new DatabaseMetadata( connection, dialect );
@@ -173,18 +176,18 @@ public class SchemaUpdate {
 			}
 			catch ( SQLException sqle ) {
 				exceptions.add( sqle );
-				log.error( "could not get database metadata", sqle );
+                LOG.error(LOG.unableToGetDatabaseMetadata(), sqle);
 				throw sqle;
 			}
 
-			log.info( "updating schema" );
+            LOG.updatingSchema();
 
-			
+
 			if ( outputFile != null ) {
-				log.info( "writing generated schema to file: " + outputFile );
+                LOG.writingGeneratedSchemaToFile(outputFile);
 				outputFileWriter = new FileWriter( outputFile );
 			}
-			 
+
 			String[] createSQL = configuration.generateSchemaUpdateScript( dialect, meta );
 			for ( int j = 0; j < createSQL.length; j++ ) {
 
@@ -201,7 +204,7 @@ public class SchemaUpdate {
 						outputFileWriter.write( formatted + "\n" );
 					}
 					if ( doUpdate ) {
-						log.debug( sql );
+                        LOG.debug(sql);
 						stmt.executeUpdate( formatted );
 					}
 				}
@@ -210,17 +213,17 @@ public class SchemaUpdate {
 						throw new JDBCException( "Error during DDL export", e );
 					}
 					exceptions.add( e );
-					log.error( "Unsuccessful: " + sql );
-					log.error( e.getMessage() );
+                    LOG.unsuccessful(sql);
+                    LOG.error(e.getMessage());
 				}
 			}
 
-			log.info( "schema update complete" );
+            LOG.schemaUpdateComplete();
 
 		}
 		catch ( Exception e ) {
 			exceptions.add( e );
-			log.error( "could not complete schema update", e );
+            LOG.error(LOG.unableToCompleteSchemaUpdate(), e);
 		}
 		finally {
 
@@ -232,7 +235,7 @@ public class SchemaUpdate {
 			}
 			catch ( Exception e ) {
 				exceptions.add( e );
-				log.error( "Error closing connection", e );
+                LOG.error(LOG.unableToCloseConnection(), e);
 			}
 			try {
 				if( outputFileWriter != null ) {
@@ -241,7 +244,7 @@ public class SchemaUpdate {
 			}
 			catch(Exception e) {
 				exceptions.add(e);
-				log.error( "Error closing connection", e );
+                LOG.error(LOG.unableToCloseConnection(), e);
 			}
 		}
 	}
@@ -271,4 +274,46 @@ public class SchemaUpdate {
 		this.delimiter = delimiter;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Fetching database metadata" )
+        void fetchingDatabaseMetadata();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Running hbm2ddl schema update" )
+        void runningHbm2ddlSchemaUpdate();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Schema update complete" )
+        void schemaUpdateComplete();
+
+        @Message( value = "Error closing connection" )
+        Object unableToCloseConnection();
+
+        @Message( value = "Could not complete schema update" )
+        Object unableToCompleteSchemaUpdate();
+
+        @Message( value = "Could not get database metadata" )
+        Object unableToGetDatabaseMetadata();
+
+        @Message( value = "Error running schema update" )
+        Object unableToRunSchemaUpdate();
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Unsuccessful: %s" )
+        void unsuccessful( String sql );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Updating schema" )
+        void updatingSchema();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Writing generated schema to file: %s" )
+        void writingGeneratedSchemaToFile( String outputFile );
+    }
 }

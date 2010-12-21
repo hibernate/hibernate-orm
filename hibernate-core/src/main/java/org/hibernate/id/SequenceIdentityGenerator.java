@@ -24,22 +24,24 @@
  */
 package org.hibernate.id;
 
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.id.insert.AbstractReturningDelegate;
-import org.hibernate.id.insert.IdentifierGeneratingInsert;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.sql.Insert;
-import org.hibernate.type.Type;
-import org.hibernate.engine.SessionImplementor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static org.jboss.logging.Logger.Level.INFO;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.insert.AbstractReturningDelegate;
+import org.hibernate.id.insert.IdentifierGeneratingInsert;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.sql.Insert;
+import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A generator which combines sequence generation with immediate retrieval
@@ -57,9 +59,11 @@ import java.util.Properties;
 public class SequenceIdentityGenerator extends SequenceGenerator
 		implements PostInsertIdentifierGenerator {
 
-	private static final Logger log = LoggerFactory.getLogger( SequenceIdentityGenerator.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SequenceIdentityGenerator.class.getPackage().getName());
 
-	public Serializable generate(SessionImplementor s, Object obj) {
+	@Override
+    public Serializable generate(SessionImplementor s, Object obj) {
 		return IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 	}
 
@@ -70,7 +74,8 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 		return new Delegate( persister, dialect, getSequenceName() );
 	}
 
-	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
+	@Override
+    public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		super.configure( type, params, dialect );
 	}
 
@@ -95,11 +100,13 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 			return insert;
 		}
 
-		protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
+		@Override
+        protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
 			return session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, keyColumns );
 		}
 
-		protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
+		@Override
+        protected Serializable executeAndExtract(PreparedStatement insert) throws SQLException {
 			insert.executeUpdate();
 			return IdentifierGeneratorHelper.getGeneratedIdentity(
 					insert.getGeneratedKeys(),
@@ -113,11 +120,23 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 			super( dialect );
 		}
 
-		public Insert setComment(String comment) {
+		@Override
+        public Insert setComment(String comment) {
 			// don't allow comments on these insert statements as comments totally
 			// blow up the Oracle getGeneratedKeys "support" :(
-			log.info( "disallowing insert statement comment for select-identity due to Oracle driver bug" );
+            LOG.disallowingInsertStatementComment();
 			return this;
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Disallowing insert statement comment for select-identity due to Oracle driver bug" )
+        void disallowingInsertStatementComment();
+    }
 }

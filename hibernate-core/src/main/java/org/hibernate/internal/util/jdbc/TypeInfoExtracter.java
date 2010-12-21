@@ -23,15 +23,16 @@
  */
 package org.hibernate.internal.util.jdbc;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Helper to extract type innformation from {@link DatabaseMetaData JDBC metadata}
@@ -39,7 +40,9 @@ import org.hibernate.util.ArrayHelper;
  * @author Steve Ebersole
  */
 public class TypeInfoExtracter {
-	private static final Logger log = LoggerFactory.getLogger( TypeInfoExtracter.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TypeInfoExtracter.class.getPackage().getName());
 
 	private TypeInfoExtracter() {
 	}
@@ -77,19 +80,19 @@ public class TypeInfoExtracter {
 				}
 			}
 			catch ( SQLException e ) {
-				log.warn( "Error accessing type info result set : " + e.toString() );
+                LOG.unableToAccessTypeInfoResultSet(e.toString());
 			}
 			finally {
 				try {
 					resultSet.close();
 				}
 				catch ( SQLException e ) {
-					log.warn( "Unable to release type info result set" );
+                    LOG.unableToReleaseTypeInfoResultSet();
 				}
 			}
 		}
 		catch ( SQLException e ) {
-			log.warn( "Unable to retrieve type info result set : " + e.toString() );
+            LOG.unableToRetrieveTypeInfoResultSet(e.toString());
 		}
 
 		return typeInfoSet;
@@ -101,4 +104,23 @@ public class TypeInfoExtracter {
 		}
 		return value.split( "," );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Error accessing type info result set : %s" )
+        void unableToAccessTypeInfoResultSet( String string );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to release type info result set" )
+        void unableToReleaseTypeInfoResultSet();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to retrieve type info result set : %s" )
+        void unableToRetrieveTypeInfoResultSet( String string );
+    }
 }

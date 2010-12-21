@@ -24,24 +24,26 @@
  */
 package org.hibernate.engine;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
-import org.hibernate.LockOptions;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A session action that may be cascaded from parent entity to its children
@@ -50,7 +52,8 @@ import org.hibernate.type.EntityType;
  */
 public abstract class CascadingAction {
 
-	private static final Logger log = LoggerFactory.getLogger( CascadingAction.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CascadingAction.class.getPackage().getName());
 
 
 	// the CascadingAction contract ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,22 +140,24 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#delete(Object)
 	 */
 	public static final CascadingAction DELETE = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace("cascading to delete: " + entityName);
-			}
+            LOG.cascadingToDelete(entityName);
 			session.delete( entityName, child, isCascadeDeleteEnabled, ( Set ) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// delete does cascade to uninitialized collections
 			return CascadingAction.getAllElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			// orphans should be deleted during delete
 			return true;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_DELETE";
 		}
 	};
@@ -161,11 +166,10 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#lock(Object, LockMode)
 	 */
 	public static final CascadingAction LOCK = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to lock: " + entityName );
-			}
+            LOG.cascadingToLock(entityName);
 			LockMode lockMode = LockMode.NONE;
 			LockOptions lr = new LockOptions();
 			if ( anything instanceof LockOptions) {
@@ -178,15 +182,18 @@ public abstract class CascadingAction {
 			lr.setLockMode(lockMode);
 			session.buildLockRequest(lr).lock(entityName, child);
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// lock doesn't cascade to uninitialized collections
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			//TODO: should orphans really be deleted during lock???
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_LOCK";
 		}
 	};
@@ -195,21 +202,23 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#refresh(Object)
 	 */
 	public static final CascadingAction REFRESH = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to refresh: " + entityName );
-			}
+            LOG.cascadingToRefresh(entityName);
 			session.refresh( child, (Map) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// refresh doesn't cascade to uninitialized collections
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_REFRESH";
 		}
 	};
@@ -218,24 +227,27 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#evict(Object)
 	 */
 	public static final CascadingAction EVICT = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to evict: " + entityName );
-			}
+            LOG.cascadingToEvict(entityName);
 			session.evict(child);
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// evicts don't cascade to uninitialized collections
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			return false;
 		}
-		public boolean performOnLazyProperty() {
+		@Override
+        public boolean performOnLazyProperty() {
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_EVICT";
 		}
 	};
@@ -244,25 +256,28 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#saveOrUpdate(Object)
 	 */
 	public static final CascadingAction SAVE_UPDATE = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to saveOrUpdate: " + entityName );
-			}
+            LOG.cascadingToSaveOrUpdate(entityName);
 			session.saveOrUpdate(entityName, child);
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// saves / updates don't cascade to uninitialized collections
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			// orphans should be deleted during save/update
 			return true;
 		}
-		public boolean performOnLazyProperty() {
+		@Override
+        public boolean performOnLazyProperty() {
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_SAVE_UPDATE";
 		}
 	};
@@ -271,23 +286,25 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#merge(Object)
 	 */
 	public static final CascadingAction MERGE = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to merge: " + entityName );
-			}
+            LOG.cascadingToMerge(entityName);
 			session.merge( entityName, child, (Map) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// merges don't cascade to uninitialized collections
 //			//TODO: perhaps this does need to cascade after all....
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			// orphans should not be deleted during merge??
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_MERGE";
 		}
 	};
@@ -297,22 +314,24 @@ public abstract class CascadingAction {
 	 */
 	public static final CascadingAction SAVE_UPDATE_COPY = new CascadingAction() {
 		// for deprecated saveOrUpdateCopy()
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to saveOrUpdateCopy: " + entityName );
-			}
+            LOG.cascadingToSaveOrUpdateCopy(entityName);
 			session.saveOrUpdateCopy( entityName, child, (Map) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// saves / updates don't cascade to uninitialized collections
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			// orphans should not be deleted during copy??
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_SAVE_UPDATE_COPY";
 		}
 	};
@@ -321,24 +340,27 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#persist(Object)
 	 */
 	public static final CascadingAction PERSIST = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to persist: " + entityName );
-			}
+            LOG.cascadingToPersist(entityName);
 			session.persist( entityName, child, (Map) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// persists don't cascade to uninitialized collections
 			return CascadingAction.getAllElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			return false;
 		}
-		public boolean performOnLazyProperty() {
+		@Override
+        public boolean performOnLazyProperty() {
 			return false;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_PERSIST";
 		}
 	};
@@ -349,24 +371,27 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#persist(Object)
 	 */
 	public static final CascadingAction PERSIST_ON_FLUSH = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to persistOnFlush: " + entityName );
-			}
+            LOG.cascadingToPersistOnFlush(entityName);
 			session.persistOnFlush( entityName, child, (Map) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// persists don't cascade to uninitialized collections
 			return CascadingAction.getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			return true;
 		}
-		public boolean requiresNoCascadeChecking() {
+		@Override
+        public boolean requiresNoCascadeChecking() {
 			return true;
 		}
-		public void noCascade(
+		@Override
+        public void noCascade(
 				EventSource session,
 				Object child,
 				Object parent,
@@ -393,7 +418,8 @@ public abstract class CascadingAction {
 				}
 			}
 		}
-		public boolean performOnLazyProperty() {
+		@Override
+        public boolean performOnLazyProperty() {
 			return false;
 		}
 
@@ -402,7 +428,8 @@ public abstract class CascadingAction {
 			return entry != null && (entry.getStatus() == Status.MANAGED || entry.getStatus() == Status.READ_ONLY);
 		}
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_PERSIST_ON_FLUSH";
 		}
 	};
@@ -411,21 +438,23 @@ public abstract class CascadingAction {
 	 * @see org.hibernate.Session#replicate(Object, org.hibernate.ReplicationMode)
 	 */
 	public static final CascadingAction REPLICATE = new CascadingAction() {
-		public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
+		@Override
+        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-			if ( log.isTraceEnabled() ) {
-				log.trace( "cascading to replicate: " + entityName );
-			}
+            LOG.cascadingToReplicate(entityName);
 			session.replicate( entityName, child, (ReplicationMode) anything );
 		}
-		public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
+		@Override
+        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
 			// replicate does cascade to uninitialized collections
 			return getLoadedElementsIterator(session, collectionType, collection);
 		}
-		public boolean deleteOrphans() {
+		@Override
+        public boolean deleteOrphans() {
 			return false; //I suppose?
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "ACTION_REPLICATE";
 		}
 	};
@@ -469,4 +498,50 @@ public abstract class CascadingAction {
 		return !(collection instanceof PersistentCollection) || ( (PersistentCollection) collection ).wasInitialized();
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to delete: %s" )
+        void cascadingToDelete( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to evict: %s" )
+        void cascadingToEvict( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to lock: %s" )
+        void cascadingToLock( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to merge: %s" )
+        void cascadingToMerge( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to persist: %s" )
+        void cascadingToPersist( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to persist on flush: %s" )
+        void cascadingToPersistOnFlush( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to refresh: %s" )
+        void cascadingToRefresh( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to replicate: %s" )
+        void cascadingToReplicate( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to save or update: %s" )
+        void cascadingToSaveOrUpdate( String entityName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading to save or update copy: %s" )
+        void cascadingToSaveOrUpdateCopy( String entityName );
+    }
 }

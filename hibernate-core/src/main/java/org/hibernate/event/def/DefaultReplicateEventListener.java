@@ -24,26 +24,27 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.TRACE;
+import java.io.Serializable;
 import org.hibernate.HibernateException;
-import org.hibernate.TransientObjectException;
-import org.hibernate.ReplicationMode;
 import org.hibernate.LockMode;
+import org.hibernate.ReplicationMode;
+import org.hibernate.TransientObjectException;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.ReplicateEvent;
 import org.hibernate.event.ReplicateEventListener;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-
-import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -53,7 +54,8 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultReplicateEventListener extends AbstractSaveEventListener implements ReplicateEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger( DefaultReplicateEventListener.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultReplicateEventListener.class.getPackage().getName());
 
 	/**
 	 * Handle the given replicate event.
@@ -65,14 +67,14 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	public void onReplicate(ReplicateEvent event) {
 		final EventSource source = event.getSession();
 		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
-			log.trace( "uninitialized proxy passed to replicate()" );
+            LOG.uninitializedProxy();
 			return;
 		}
 
 		Object entity = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
 
 		if ( source.getPersistenceContext().isEntryFor( entity ) ) {
-			log.trace( "ignoring persistent instance passed to replicate()" );
+            LOG.ignoringPersistentInstance();
 			//hum ... should we cascade anyway? throw an exception? fine like it is?
 			return;
 		}
@@ -97,20 +99,15 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 		else {
 			//what is the version on the database?
-			oldVersion = persister.getCurrentVersion( id, source );			
+			oldVersion = persister.getCurrentVersion( id, source );
 		}
 
-		if ( oldVersion != null ) { 			
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-						"found existing row for " +
-								MessageHelper.infoString( persister, id, source.getFactory() )
-				);
-			}
+		if ( oldVersion != null ) {
+            if (LOG.isTraceEnabled()) LOG.foundExistingRow(MessageHelper.infoString(persister, id, source.getFactory()));
 
 			/// HHH-2378
 			final Object realOldVersion = persister.isVersioned() ? oldVersion : null;
-			
+
 			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
 					entity,
 					realOldVersion,
@@ -118,25 +115,16 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 					persister.getVersionType()
 			);
 
-			if ( canReplicate ) {
-				//will result in a SQL UPDATE:
-				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
-			}
-			else {
-				//else do nothing (don't even reassociate object!)
-				log.trace( "no need to replicate" );
-			}
+            // if can replicate, will result in a SQL UPDATE
+            // else do nothing (don't even reassociate object!)
+            if (canReplicate) performReplication(entity, id, realOldVersion, persister, replicationMode, source);
+            else LOG.noNeedToReplicate();
 
 			//TODO: would it be better to do a refresh from db?
 		}
 		else {
 			// no existing row - do an insert
-			if ( log.isTraceEnabled() ) {
-				log.trace(
-						"no existing row, replicating new instance " +
-								MessageHelper.infoString( persister, id, source.getFactory() )
-				);
-			}
+            if (LOG.isTraceEnabled()) LOG.noExistingRow(MessageHelper.infoString(persister, id, source.getFactory()));
 
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final EntityKey key = regenerate ?
@@ -155,14 +143,16 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 	}
 
-	protected boolean visitCollectionsBeforeSave(Object entity, Serializable id, Object[] values, Type[] types, EventSource source) {
+	@Override
+    protected boolean visitCollectionsBeforeSave(Object entity, Serializable id, Object[] values, Type[] types, EventSource source) {
 		//TODO: we use two visitors here, inefficient!
 		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );
 		visitor.processEntityPropertyValues( values, types );
 		return super.visitCollectionsBeforeSave( entity, id, values, types, source );
 	}
 
-	protected boolean substituteValuesIfNecessary(
+	@Override
+    protected boolean substituteValuesIfNecessary(
 			Object entity,
 			Serializable id,
 			Object[] values,
@@ -171,7 +161,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		return false;
 	}
 
-	protected boolean isVersionIncrementDisabled() {
+	@Override
+    protected boolean isVersionIncrementDisabled() {
 		return true;
 	}
 
@@ -183,12 +174,7 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			ReplicationMode replicationMode,
 			EventSource source) throws HibernateException {
 
-		if ( log.isTraceEnabled() ) {
-			log.trace(
-					"replicating changes to " +
-							MessageHelper.infoString( persister, id, source.getFactory() )
-			);
-		}
+        if (LOG.isTraceEnabled()) LOG.replicatingChanges(MessageHelper.infoString(persister, id, source.getFactory()));
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );
 
@@ -223,7 +209,39 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 	}
 
-	protected CascadingAction getCascadeAction() {
+	@Override
+    protected CascadingAction getCascadeAction() {
 		return CascadingAction.REPLICATE;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Found existing row for %s" )
+        void foundExistingRow( String infoString );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Ignoring persistent instance passed to replicate()" )
+        void ignoringPersistentInstance();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "No existing row, replicating new instance %s" )
+        void noExistingRow( String infoString );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "No need to replicate" )
+        void noNeedToReplicate();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Replicating changes to %s" )
+        void replicatingChanges( String infoString );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Uninitialized proxy passed to replicate()" )
+        void uninitializedProxy();
+    }
 }

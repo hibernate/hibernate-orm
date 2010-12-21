@@ -23,24 +23,27 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.PersistEvent;
 import org.hibernate.event.PersistEventListener;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.ForeignGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.util.IdentityMap;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default create event listener used by hibernate for creating
@@ -49,9 +52,11 @@ import org.hibernate.util.IdentityMap;
  * @author Gavin King
  */
 public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
-	private static final Logger log = LoggerFactory.getLogger(DefaultPersistEventListener.class);
 
-	/** 
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultPersistEventListener.class.getPackage().getName());
+
+	/**
 	 * Handle the given create event.
 	 *
 	 * @param event The create event to be handled.
@@ -60,9 +65,9 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	public void onPersist(PersistEvent event) throws HibernateException {
 		onPersist( event, IdentityMap.instantiate(10) );
 	}
-		
 
-	/** 
+
+	/**
 	 * Handle the given create event.
 	 *
 	 * @param event The create event to be handled.
@@ -71,7 +76,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 	public void onPersist(PersistEvent event, Map createCache) throws HibernateException {
 		final SessionImplementor source = event.getSession();
 		final Object object = event.getObject();
-		
+
 		final Object entity;
 		if ( object instanceof HibernateProxy ) {
 			LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
@@ -112,11 +117,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
 			EntityPersister persister = source.getFactory().getEntityPersister( entityName );
 			if ( ForeignGenerator.class.isInstance( persister.getIdentifierGenerator() ) ) {
-				if ( log.isDebugEnabled() ) {
-					if ( persister.getIdentifier( entity, source ) != null ) {
-						log.debug( "Resetting entity id attribute to null for foreign generator" );
-					}
-				}
+                if (LOG.isDebugEnabled() && persister.getIdentifier(entity, source) != null) LOG.resettingEntityIdAttributeToNull();
 				persister.setIdentifier( entity, null, source );
 				entityState = getEntityState( entity, entityName, entityEntry, source );
 			}
@@ -143,16 +144,16 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		}
 
 	}
-		
+
 	protected void entityIsPersistent(PersistEvent event, Map createCache) {
-		log.trace("ignoring persistent instance");
+        LOG.ignoringPersistentInstance();
 		final EventSource source = event.getSession();
-		
+
 		//TODO: check that entry.getIdentifier().equals(requestedId)
-		
+
 		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
-		
+
 		if ( createCache.put(entity, entity)==null ) {
 			//TODO: merge into one method!
 			cascadeBeforeSave(source, persister, entity, createCache);
@@ -160,33 +161,53 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 		}
 
 	}
-	
-	/** 
+
+	/**
 	 * Handle the given create event.
 	 *
 	 * @param event The save event to be handled.
 	 * @throws HibernateException
 	 */
 	protected void entityIsTransient(PersistEvent event, Map createCache) throws HibernateException {
-		
-		log.trace("saving transient instance");
+
+        LOG.savingTransientInstance();
 
 		final EventSource source = event.getSession();
-		
+
 		final Object entity = source.getPersistenceContext().unproxy( event.getObject() );
-		
+
 		if ( createCache.put(entity, entity)==null ) {
 			saveWithGeneratedId( entity, event.getEntityName(), createCache, source, false );
 		}
 
 	}
 
-	protected CascadingAction getCascadeAction() {
+	@Override
+    protected CascadingAction getCascadeAction() {
 		return CascadingAction.PERSIST;
 	}
-	
-	protected Boolean getAssumedUnsaved() {
+
+	@Override
+    protected Boolean getAssumedUnsaved() {
 		return Boolean.TRUE;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Ignoring persistent instance" )
+        void ignoringPersistentInstance();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Resetting entity id attribute to null for foreign generator" )
+        void resettingEntityIdAttributeToNull();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Saving transient instance" )
+        void savingTransientInstance();
+    }
 }

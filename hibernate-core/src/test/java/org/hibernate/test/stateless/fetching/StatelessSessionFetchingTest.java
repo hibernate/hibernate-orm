@@ -22,20 +22,15 @@
 package org.hibernate.test.stateless.fetching;
 
 import java.util.Date;
-
 import junit.framework.Test;
-
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.DefaultNamingStrategy;
-import org.hibernate.util.StringHelper;
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.Hibernate;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.DefaultNamingStrategy;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.util.StringHelper;
 
 /**
  * TODO : javadoc
@@ -43,7 +38,6 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class StatelessSessionFetchingTest extends FunctionalTestCase {
-	private static final Logger log = LoggerFactory.getLogger( StatelessSessionFetchingTest.class );
 
 	public StatelessSessionFetchingTest(String name) {
 		super( name );
@@ -64,7 +58,7 @@ public class StatelessSessionFetchingTest extends FunctionalTestCase {
 
 		protected String applyPrefix(String baseTableName) {
 			String prefixed = prefix + '_' + baseTableName;
-			log.debug( "prefixed table name : {} -> {} ", baseTableName, prefixed );
+            LOG.debug("prefixed table name : " + baseTableName + " -> " + prefixed);
 			return prefixed;
 		}
 

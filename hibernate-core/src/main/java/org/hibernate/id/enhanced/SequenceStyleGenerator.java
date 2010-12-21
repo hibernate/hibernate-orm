@@ -23,23 +23,25 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.util.Properties;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.cfg.Environment;
-import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.Configurable;
+import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.Configurable;
+import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.dialect.Dialect;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Generates identifier values based on an sequence-style database structure.
@@ -97,7 +99,9 @@ import org.hibernate.dialect.Dialect;
  * @author Steve Ebersole
  */
 public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Configurable {
-	private static final Logger log = LoggerFactory.getLogger( SequenceStyleGenerator.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SequenceStyleGenerator.class.getPackage().getName());
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	public static final String SEQUENCE_PARAM = "sequence_name";
@@ -172,9 +176,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 		if ( dialect.supportsSequences() && !forceTableUse ) {
 			if ( OptimizerFactory.POOL.equals( optimizationStrategy ) && !dialect.supportsPooledSequences() ) {
 				forceTableUse = true;
-				log.info(
-						"Forcing table use for sequence-style generator due to pooled optimizer selection where db does not support pooled sequences"
-				);
+                LOG.forcingTableUse();
 			}
 		}
 
@@ -299,7 +301,7 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	 */
 	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
 		if ( OptimizerFactory.NONE.equals( optimizationStrategy ) && incrementSize > 1 ) {
-			log.warn( "config specified explicit optimizer of [" + OptimizerFactory.NONE + "], but [" + INCREMENT_PARAM + "=" + incrementSize + "; honoring optimizer setting" );
+            LOG.honoringOptimizerSetting(OptimizerFactory.NONE, INCREMENT_PARAM, incrementSize);
 			incrementSize = 1;
 		}
 		return incrementSize;
@@ -369,4 +371,21 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return databaseStructure.sqlDropStrings( dialect );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Forcing table use for sequence-style generator due to pooled optimizer selection where db does not support pooled sequences" )
+        void forcingTableUse();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Config specified explicit optimizer of [%s], but [%s=%d; honoring optimizer setting" )
+        void honoringOptimizerSetting( String none,
+                                       String incrementParam,
+                                       int incrementSize );
+    }
 }

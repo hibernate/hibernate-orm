@@ -23,15 +23,11 @@
  */
 package org.hibernate.dialect;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -44,6 +40,10 @@ import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An SQL dialect for Oracle 9 (uses ANSI-style syntax where possible).
@@ -51,13 +51,15 @@ import org.hibernate.util.ReflectHelper;
  * @deprecated Use either Oracle9iDialect or Oracle10gDialect instead
  * @author Gavin King, David Channon
  */
+@Deprecated
 public class Oracle9Dialect extends Dialect {
 
-	private static final Logger log = LoggerFactory.getLogger( Oracle9Dialect.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                Oracle9Dialect.class.getPackage().getName());
 
 	public Oracle9Dialect() {
 		super();
-		log.warn( "The Oracle9Dialect dialect has been deprecated; use either Oracle9iDialect or Oracle10gDialect instead" );
+        LOG.deprecatedOracle9Dialect();
 		registerColumnType( Types.BIT, "number(1,0)" );
 		registerColumnType( Types.BIGINT, "number(19,0)" );
 		registerColumnType( Types.SMALLINT, "number(5,0)" );
@@ -124,7 +126,7 @@ public class Oracle9Dialect extends Dialect {
 		registerFunction( "current_date", new NoArgSQLFunction("current_date", StandardBasicTypes.DATE, false) );
 		registerFunction( "current_time", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIME, false) );
 		registerFunction( "current_timestamp", new NoArgSQLFunction("current_timestamp", StandardBasicTypes.TIMESTAMP, false) );
-		
+
 		registerFunction( "last_day", new StandardSQLFunction("last_day", StandardBasicTypes.DATE) );
 		registerFunction( "sysdate", new NoArgSQLFunction("sysdate", StandardBasicTypes.DATE, false) );
 		registerFunction( "systimestamp", new NoArgSQLFunction("systimestamp", StandardBasicTypes.TIMESTAMP, false) );
@@ -211,14 +213,14 @@ public class Oracle9Dialect extends Dialect {
 	}
 
 	public String getLimitString(String sql, boolean hasOffset) {
-		
+
 		sql = sql.trim();
 		boolean isForUpdate = false;
 		if ( sql.toLowerCase().endsWith(" for update") ) {
 			sql = sql.substring( 0, sql.length()-11 );
 			isForUpdate = true;
 		}
-		
+
 		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 );
 		if (hasOffset) {
 			pagingSelect.append("select * from ( select row_.*, rownum rownum_ from ( ");
@@ -237,7 +239,7 @@ public class Oracle9Dialect extends Dialect {
 		if ( isForUpdate ) {
 			pagingSelect.append( " for update" );
 		}
-		
+
 		return pagingSelect.toString();
 	}
 
@@ -256,7 +258,7 @@ public class Oracle9Dialect extends Dialect {
 	public boolean useMaxForLimit() {
 		return true;
 	}
-	
+
 	public boolean forUpdateOfColumns() {
 		return true;
 	}
@@ -268,7 +270,7 @@ public class Oracle9Dialect extends Dialect {
 	public String getSelectGUIDString() {
 		return "select rawtohex(sys_guid()) from dual";
 	}
-	
+
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
         return EXTRACTER;
 	}
@@ -298,7 +300,7 @@ public class Oracle9Dialect extends Dialect {
 	};
 
 	// not final-static to avoid possible classcast exceptions if using different oracle drivers.
-	int oracletypes_cursor_value = 0; 
+	int oracletypes_cursor_value = 0;
 	public int registerResultSetOutParameter(java.sql.CallableStatement statement,int col) throws SQLException {
 		if(oracletypes_cursor_value==0) {
 			try {
@@ -306,14 +308,14 @@ public class Oracle9Dialect extends Dialect {
 				oracletypes_cursor_value = types.getField("CURSOR").getInt(types.newInstance());
 			} catch (Exception se) {
 				throw new HibernateException("Problem while trying to load or access OracleTypes.CURSOR value",se);
-			} 
+			}
 		}
 		//	register the type of the out param - an Oracle specific type
 		statement.registerOutParameter(col, oracletypes_cursor_value);
 		col++;
 		return col;
 	}
-	
+
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		ps.execute();
 		return ( ResultSet ) ps.getObject( 1 );
@@ -322,7 +324,7 @@ public class Oracle9Dialect extends Dialect {
 	public boolean supportsUnionAll() {
 		return true;
 	}
-	
+
 	public boolean supportsCommentOn() {
 		return true;
 	}
@@ -370,4 +372,15 @@ public class Oracle9Dialect extends Dialect {
 	public boolean supportsExistsInSelect() {
 		return false;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "The Oracle9Dialect dialect has been deprecated; use either Oracle9iDialect or Oracle10gDialect instead" )
+        void deprecatedOracle9Dialect();
+    }
 }

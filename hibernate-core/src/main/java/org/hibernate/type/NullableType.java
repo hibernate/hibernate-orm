@@ -26,11 +26,7 @@ package org.hibernate.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.Mapping;
@@ -38,34 +34,20 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.EqualsHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Superclass of single-column nullable types.
- * 
+ *
  * @author Gavin King
  *
  * @deprecated Use the {@link AbstractStandardBasicType} approach instead
  */
+@Deprecated
 public abstract class NullableType extends AbstractType implements StringRepresentableType, XmlRepresentableType {
 
-	/**
-	 * This is the old scheme where logging of parameter bindings and value extractions
-	 * was controlled by the trace level enablement on the 'org.hibernate.type' package...
-	 * <p/>
-	 * Originally was cached such because of performance of looking up the logger each time
-	 * in order to check the trace-enablement.  Driving this via a central Log-specific class
-	 * would alleviate that performance hit, and yet still allow more "normal" logging usage/config.
-	 */
-	private static final boolean IS_VALUE_TRACING_ENABLED = LoggerFactory.getLogger( StringHelper.qualifier( Type.class.getName() ) ).isTraceEnabled();
-	private transient Logger log;
 
-	private Logger log() {
-		if ( log == null ) {
-			log = LoggerFactory.getLogger( getClass() );
-		}
-		return log;
-	}
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                NullableType.class.getPackage().getName());
 
 	/**
 	 * Get a column value from a result set, without worrying about the
@@ -141,26 +123,22 @@ public abstract class NullableType extends AbstractType implements StringReprese
 	throws HibernateException, SQLException {
 		try {
 			if ( value == null ) {
-				if ( IS_VALUE_TRACING_ENABLED ) {
-					log().trace( "binding null to parameter: " + index );
-				}
+                if (LOG.isTraceEnabled()) LOG.bindingToParameter(index);
 
 				st.setNull( index, sqlType() );
 			}
 			else {
-				if ( IS_VALUE_TRACING_ENABLED ) {
-					log().trace( "binding '" + toString( value ) + "' to parameter: " + index );
-				}
+                if (LOG.isTraceEnabled()) LOG.bindingToParameter(toString(value), index);
 
 				set( st, value, index );
 			}
 		}
 		catch ( RuntimeException re ) {
-			log().info( "could not bind value '" + nullSafeToString( value ) + "' to parameter: " + index + "; " + re.getMessage() );
+            LOG.unableToBindValueToParameter(nullSafeToString(value), index, re.getMessage());
 			throw re;
 		}
 		catch ( SQLException se ) {
-			log().info( "could not bind value '" + nullSafeToString( value ) + "' to parameter: " + index + "; " + se.getMessage() );
+            LOG.unableToBindValueToParameter(nullSafeToString(value), index, se.getMessage());
 			throw se;
 		}
 	}
@@ -184,24 +162,18 @@ public abstract class NullableType extends AbstractType implements StringReprese
 		try {
 			Object value = get(rs, name);
 			if ( value == null || rs.wasNull() ) {
-				if ( IS_VALUE_TRACING_ENABLED ) {
-					log().trace( "returning null as column: " + name );
-				}
+                if (LOG.isTraceEnabled()) LOG.returningAsColumn(name);
 				return null;
 			}
-			else {
-				if ( IS_VALUE_TRACING_ENABLED ) {
-					log().trace( "returning '" + toString( value ) + "' as column: " + name );
-				}
-				return value;
-			}
+            if (LOG.isTraceEnabled()) LOG.returningAsColumn(toString(value), name);
+            return value;
 		}
 		catch ( RuntimeException re ) {
-			log().info( "could not read column value from result set: " + name + "; " + re.getMessage() );
+            LOG.unableToReadColumnValueFromResultSet(name, re.getMessage());
 			throw re;
 		}
 		catch ( SQLException se ) {
-			log().info( "could not read column value from result set: " + name + "; " + se.getMessage() );
+            LOG.unableToReadColumnValueFromResultSet(name, se.getMessage());
 			throw se;
 		}
 	}
@@ -228,7 +200,8 @@ public abstract class NullableType extends AbstractType implements StringReprese
 		return new int[] { sqlType() };
 	}
 
-	public final boolean isEqual(Object x, Object y, EntityMode entityMode) {
+	@Override
+    public final boolean isEqual(Object x, Object y, EntityMode entityMode) {
 		return isEqual(x, y);
 	}
 

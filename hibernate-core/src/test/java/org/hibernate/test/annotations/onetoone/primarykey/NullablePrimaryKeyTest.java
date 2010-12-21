@@ -2,24 +2,20 @@
 package org.hibernate.test.annotations.onetoone.primarykey;
 
 import junit.framework.TestCase;
-
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Test harness for ANN-742.
- * 
+ *
  * @author Hardy Ferentschik
- * 
+ *
  */
 public class NullablePrimaryKeyTest extends TestCase {
 
-	private Logger log = LoggerFactory.getLogger(NullablePrimaryKeyTest.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	public void testGeneratedSql() {
 
@@ -33,7 +29,7 @@ public class NullablePrimaryKeyTest extends TestCase {
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
-				log.debug(s);
+                LOG.debug(s);
 			}
 			String expectedMappingTableSql = "create table personAddress (address_id numeric(19,0) null, " +
 					"person_id numeric(19,0) not null, primary key (person_id))";

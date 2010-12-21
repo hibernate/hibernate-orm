@@ -26,28 +26,30 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.AccessType;
-
 import org.dom4j.Document;
 import org.dom4j.Element;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.util.StringHelper;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class XMLContext implements Serializable {
-	private Logger log = LoggerFactory.getLogger( XMLContext.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                XMLContext.class.getPackage().getName());
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<String, Element>();
 	private Map<String, Default> defaultsOverriding = new HashMap<String, Default>();
@@ -90,7 +92,7 @@ public class XMLContext implements Serializable {
 				}
 			}
 			else {
-				log.warn( "Found more than one <persistence-unit-metadata>, subsequent ignored" );
+                LOG.duplicateMetadata();
 			}
 		}
 
@@ -107,13 +109,13 @@ public class XMLContext implements Serializable {
 		setAccess( unitElement, entityMappingDefault );
 		defaultElements.add( root );
 
-		List<Element> entities = (List<Element>) root.elements( "entity" );
+		List<Element> entities = root.elements( "entity" );
 		addClass( entities, packageName, entityMappingDefault, addedClasses );
 
-		entities = (List<Element>) root.elements( "mapped-superclass" );
+		entities = root.elements( "mapped-superclass" );
 		addClass( entities, packageName, entityMappingDefault, addedClasses );
 
-		entities = (List<Element>) root.elements( "embeddable" );
+		entities = root.elements( "embeddable" );
 		addClass( entities, packageName, entityMappingDefault, addedClasses );
 		return addedClasses;
 	}
@@ -157,7 +159,7 @@ public class XMLContext implements Serializable {
 			setAccess( access, localDefault );
 			defaultsOverriding.put( className, localDefault );
 
-			log.debug( "Adding XML overriding information for {}", className );
+            LOG.addingOverridingInformation(className);
 			addEntityListenerClasses( element, packageName, addedClasses );
 		}
 	}
@@ -167,16 +169,13 @@ public class XMLContext implements Serializable {
 		Element listeners = element.element( "entity-listeners" );
 		if ( listeners != null ) {
 			@SuppressWarnings( "unchecked" )
-			List<Element> elements = (List<Element>) listeners.elements( "entity-listener" );
+			List<Element> elements = listeners.elements( "entity-listener" );
 			for (Element listener : elements) {
 				String listenerClassName = buildSafeClassName( listener.attributeValue( "class" ), packageName );
 				if ( classOverriding.containsKey( listenerClassName ) ) {
 					//maybe switch it to warn?
 					if ( "entity-listener".equals( classOverriding.get( listenerClassName ).getName() ) ) {
-						log.info(
-								"entity-listener duplication, first event definition will be used: {}",
-								listenerClassName
-						);
+                        LOG.duplicateListener(listenerClassName);
 						continue;
 					}
 					else {
@@ -187,7 +186,7 @@ public class XMLContext implements Serializable {
 				classOverriding.put( listenerClassName, listener );
 			}
 		}
-		log.debug( "Adding XML overriding information for listener: {}", localAddedClasses );
+        LOG.addingListenerOverridingInformation(localAddedClasses);
 		addedClasses.addAll( localAddedClasses );
 		return localAddedClasses;
 	}
@@ -313,4 +312,27 @@ public class XMLContext implements Serializable {
 	public List<String> getDefaultEntityListeners() {
 		return defaultEntityListeners;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Adding XML overriding information for %s" )
+        void addingOverridingInformation( String className );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Adding XML overriding information for listeners: %s" )
+        void addingListenerOverridingInformation( List<String> classNames );
+
+        @LogMessage( level = INFO )
+        @Message( value = "entity-listener duplication, first event definition will be used: %s" )
+        void duplicateListener( String className );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Found more than one <persistence-unit-metadata>, subsequent ignored" )
+        void duplicateMetadata();
+    }
 }

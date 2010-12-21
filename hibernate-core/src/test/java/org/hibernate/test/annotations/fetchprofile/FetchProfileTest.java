@@ -26,11 +26,8 @@
 package org.hibernate.test.annotations.fetchprofile;
 
 import java.io.InputStream;
-
 import junit.framework.TestCase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -44,7 +41,7 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  */
 public class FetchProfileTest extends TestCase {
 
-	private Logger log = LoggerFactory.getLogger( FetchProfileTest.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ServiceRegistryHolder serviceRegistryHolder;
 
@@ -89,7 +86,7 @@ public class FetchProfileTest extends TestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-			log.trace( "success" );
+            LOG.trace("success");
 		}
 	}
 
@@ -104,7 +101,7 @@ public class FetchProfileTest extends TestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-			log.trace( "success" );
+            LOG.trace("success");
 		}
 	}
 
@@ -119,7 +116,7 @@ public class FetchProfileTest extends TestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-			log.trace( "success" );
+            LOG.trace("success");
 		}
 	}
 
@@ -151,7 +148,7 @@ public class FetchProfileTest extends TestCase {
 			fail();
 		}
 		catch ( MappingException e ) {
-			log.trace( "success" );
+            LOG.trace("success");
 		}
 	}
 

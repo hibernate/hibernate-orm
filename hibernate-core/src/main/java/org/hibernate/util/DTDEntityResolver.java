@@ -24,11 +24,15 @@
  */
 package org.hibernate.util;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.InputStream;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
@@ -55,7 +59,8 @@ import org.xml.sax.InputSource;
  */
 public class DTDEntityResolver implements EntityResolver, Serializable {
 
-	private static final Logger log = LoggerFactory.getLogger( DTDEntityResolver.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DTDEntityResolver.class.getPackage().getName());
 
 	private static final String HIBERNATE_NAMESPACE = "http://www.hibernate.org/dtd/";
 	private static final String OLD_HIBERNATE_NAMESPACE = "http://hibernate.sourceforge.net/";
@@ -64,28 +69,23 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 	public InputSource resolveEntity(String publicId, String systemId) {
 		InputSource source = null; // returning null triggers default behavior
 		if ( systemId != null ) {
-			log.debug( "trying to resolve system-id [" + systemId + "]" );
+            LOG.tryingToResolveSystemId(systemId);
 			if ( systemId.startsWith( HIBERNATE_NAMESPACE ) ) {
-				log.debug( "recognized hibernate namespace; attempting to resolve on classpath under org/hibernate/" );
+                LOG.recognizedHibernateNamespace();
 				source = resolveOnClassPath( publicId, systemId, HIBERNATE_NAMESPACE );
 			}
 			else if ( systemId.startsWith( OLD_HIBERNATE_NAMESPACE ) ) {
-				log.warn(
-						"recognized obsolete hibernate namespace " + OLD_HIBERNATE_NAMESPACE + ". Use namespace "
-								+ HIBERNATE_NAMESPACE + " instead. Refer to Hibernate 3.6 Migration Guide!"
-				);
-				log.debug( "attempting to resolve on classpath under org/hibernate/" );
+                LOG.recognizedObsoleteHibernateNamespace(OLD_HIBERNATE_NAMESPACE, HIBERNATE_NAMESPACE);
+                LOG.attemptingToResolveSystemId();
 				source = resolveOnClassPath( publicId, systemId, OLD_HIBERNATE_NAMESPACE );
 			}
 			else if ( systemId.startsWith( USER_NAMESPACE ) ) {
-				log.debug( "recognized local namespace; attempting to resolve on classpath" );
+                LOG.recognizedLocalNamespace();
 				String path = systemId.substring( USER_NAMESPACE.length() );
 				InputStream stream = resolveInLocalNamespace( path );
-				if ( stream == null ) {
-					log.debug( "unable to locate [" + systemId + "] on classpath" );
-				}
+                if (stream == null) LOG.unableToLocateSystemId(systemId);
 				else {
-					log.debug( "located [" + systemId + "] in classpath" );
+                    LOG.systemIdLocated(systemId);
 					source = new InputSource( stream );
 					source.setPublicId( publicId );
 					source.setSystemId( systemId );
@@ -100,13 +100,11 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 		String path = "org/hibernate/" + systemId.substring( namespace.length() );
 		InputStream dtdStream = resolveInHibernateNamespace( path );
 		if ( dtdStream == null ) {
-			log.debug( "unable to locate [" + systemId + "] on classpath" );
-			if ( systemId.substring( namespace.length() ).indexOf( "2.0" ) > -1 ) {
-				log.error( "Don't use old DTDs, read the Hibernate 3.x Migration Guide!" );
-			}
+            LOG.unableToLocateSystemId(systemId);
+            if (systemId.substring(namespace.length()).indexOf("2.0") > -1) LOG.usingOldDtd();
 		}
 		else {
-			log.debug( "located [" + systemId + "] in classpath" );
+            LOG.systemIdLocated(systemId);
 			source = new InputSource( dtdStream );
 			source.setPublicId( publicId );
 			source.setSystemId( systemId );
@@ -126,4 +124,44 @@ public class DTDEntityResolver implements EntityResolver, Serializable {
 			return null;
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Attempting to resolve on classpath under org/hibernate/" )
+        void attemptingToResolveSystemId();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Recognized hibernate namespace; attempting to resolve on classpath under org/hibernate/" )
+        void recognizedHibernateNamespace();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Recognized local namespace; attempting to resolve on classpath" )
+        void recognizedLocalNamespace();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide!" )
+        void recognizedObsoleteHibernateNamespace( String oldHibernateNamespace,
+                                                   String hibernateNamespace );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Located [%s] in classpath" )
+        void systemIdLocated( String systemId );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Trying to resolve system-id [%s]" )
+        void tryingToResolveSystemId( String systemId );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Unable to locate [%s] on classpath" )
+        void unableToLocateSystemId( String systemId );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!" )
+        void usingOldDtd();
+    }
 }

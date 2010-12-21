@@ -24,8 +24,11 @@
  */
 package org.hibernate.hql.ast;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,12 +37,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Arrays;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.QueryException;
 import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.ParameterBinder;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -56,12 +55,15 @@ import org.hibernate.hql.ast.tree.DeleteStatement;
 import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.FromClause;
 import org.hibernate.hql.ast.tree.FromElement;
+import org.hibernate.hql.ast.tree.FromElementFactory;
 import org.hibernate.hql.ast.tree.FromReferenceNode;
 import org.hibernate.hql.ast.tree.IdentNode;
 import org.hibernate.hql.ast.tree.IndexNode;
 import org.hibernate.hql.ast.tree.InsertStatement;
 import org.hibernate.hql.ast.tree.IntoClause;
 import org.hibernate.hql.ast.tree.MethodNode;
+import org.hibernate.hql.ast.tree.OperatorNode;
+import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.ResolvableNode;
@@ -70,37 +72,37 @@ import org.hibernate.hql.ast.tree.ResultVariableRefNode;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.tree.SelectExpression;
 import org.hibernate.hql.ast.tree.UpdateStatement;
-import org.hibernate.hql.ast.tree.OperatorNode;
-import org.hibernate.hql.ast.tree.ParameterContainer;
-import org.hibernate.hql.ast.tree.FromElementFactory;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.AliasGenerator;
 import org.hibernate.hql.ast.util.JoinProcessor;
 import org.hibernate.hql.ast.util.LiteralProcessor;
+import org.hibernate.hql.ast.util.NodeTraverser;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.hql.ast.util.SyntheticAndFactory;
-import org.hibernate.hql.ast.util.NodeTraverser;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.param.NamedParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
-import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-import org.hibernate.type.DbTimestampType;
-import org.hibernate.type.ComponentType;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
-
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import antlr.ASTFactory;
 import antlr.RecognitionException;
 import antlr.SemanticException;
@@ -118,7 +120,9 @@ import antlr.collections.AST;
  * @see SqlASTFactory
  */
 public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, ParameterBinder.NamedParameterSource {
-	private static final Logger log = LoggerFactory.getLogger( HqlSqlWalker.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HqlSqlWalker.class.getPackage().getName());
 
 	private final QueryTranslatorImpl queryTranslatorImpl;
 	private final HqlParser hqlParser;
@@ -185,13 +189,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
     private int traceDepth = 0;
 
-	public void traceIn(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
+	@Override
+    public void traceIn(String ruleName, AST tree) {
+        if (inputState.guessing > 0) return;
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
 		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-		log.trace( prefix + traceText );
+        LOG.trace(prefix + traceText);
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -200,16 +203,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				: tree.getText() + " [" + printer.getTokenTypeName( tree.getType() ) + "]";
 	}
 
-	public void traceOut(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
+	@Override
+    public void traceOut(String ruleName, AST tree) {
+        if (inputState.guessing > 0) return;
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
 
 
-	protected void prepareFromClauseInputTree(AST fromClauseInput) {
+	@Override
+    protected void prepareFromClauseInputTree(AST fromClauseInput) {
 		if ( !isSubQuery() ) {
 //			// inject param specifications to account for dynamic filter param values
 //			if ( ! getEnabledFilters().isEmpty() ) {
@@ -237,7 +240,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 //			}
 
 			if ( isFilter() ) {
-				// Handle collection-fiter compilation.
+                // Handle collection-filter compilation.
 				// IMPORTANT NOTE: This is modifying the INPUT (HQL) tree, not the output tree!
 				QueryableCollection persister = sessionFactoryHelper.getCollectionPersister( collectionFilterRole );
 				Type collectionElementType = persister.getElementType();
@@ -251,9 +254,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				ASTUtil.createSibling( inputAstFactory, HqlTokenTypes.ALIAS, "this", fromElement );
 				fromClauseInput.addChild( fromElement );
 				// Show the modified AST.
-				if ( log.isDebugEnabled() ) {
-					log.debug( "prepareFromClauseInputTree() : Filter - Added 'this' as a from element..." );
-				}
+                LOG.prepareFromClauseInputTree();
 				queryTranslatorImpl.showHqlAst( hqlParser.getAST() );
 
 				// Create a parameter specification for the collection filter...
@@ -296,15 +297,18 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return parseErrorHandler;
 	}
 
-	public void reportError(RecognitionException e) {
+	@Override
+    public void reportError(RecognitionException e) {
 		parseErrorHandler.reportError( e ); // Use the delegate.
 	}
 
-	public void reportError(String s) {
+	@Override
+    public void reportError(String s) {
 		parseErrorHandler.reportError( s ); // Use the delegate.
 	}
 
-	public void reportWarning(String s) {
+	@Override
+    public void reportWarning(String s) {
 		parseErrorHandler.reportWarning( s );
 	}
 
@@ -318,13 +322,15 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return querySpaces;
 	}
 
-	protected AST createFromElement(String path, AST alias, AST propertyFetch) throws SemanticException {
+	@Override
+    protected AST createFromElement(String path, AST alias, AST propertyFetch) throws SemanticException {
 		FromElement fromElement = currentFromClause.addFromElement( path, alias );
 		fromElement.setAllPropertyFetch(propertyFetch!=null);
 		return fromElement;
 	}
 
-	protected AST createFromFilterElement(AST filterEntity, AST alias) throws SemanticException {
+	@Override
+    protected AST createFromFilterElement(AST filterEntity, AST alias) throws SemanticException {
 		FromElement fromElement = currentFromClause.addFromElement( filterEntity.getText(), alias );
 		FromClause fromClause = fromElement.getFromClause();
 		QueryableCollection persister = sessionFactoryHelper.getCollectionPersister( collectionFilterRole );
@@ -345,13 +351,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		join.addCondition( fkTableAlias, keyColumnNames, " = ?" );
 		fromElement.setJoinSequence( join );
 		fromElement.setFilter( true );
-		if ( log.isDebugEnabled() ) {
-			log.debug( "createFromFilterElement() : processed filter FROM element." );
-		}
+        LOG.createFromFilterElement();
 		return fromElement;
 	}
 
-	protected void createFromJoinElement(
+	@Override
+    protected void createFromJoinElement(
 	        AST path,
 	        AST alias,
 	        int joinType,
@@ -376,7 +381,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 		final FromElement fromElement;
 		if ( dot.getDataType() != null && dot.getDataType().isComponentType() ) {
-			FromElementFactory factory = new FromElementFactory( 
+			FromElementFactory factory = new FromElementFactory(
 					getCurrentFromClause(),
 					dot.getLhs().getFromElement(),
 					dot.getPropertyPath(),
@@ -398,17 +403,13 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 		}
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( "createFromJoinElement() : " + getASTPrinter().showAsString( fromElement, "-- join tree --" ) );
-		}
+        if (LOG.isDebugEnabled()) LOG.createFromJoinElement(getASTPrinter().showAsString(fromElement, LOG.joinTreeHeader()));
 	}
 	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException {
 		try {
 			withClause( hqlWithNode );
 			AST hqlSqlWithNode = returnAST;
-			if ( log.isDebugEnabled() ) {
-				log.debug( "handleWithFragment() : " + getASTPrinter().showAsString( hqlSqlWithNode, "-- with clause --" ) );
-			}
+            if (LOG.isDebugEnabled()) LOG.handleWithFragment(getASTPrinter().showAsString(hqlSqlWithNode, LOG.withClauseHeader()));
 			WithClauseVisitor visitor = new WithClauseVisitor( fromElement );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
@@ -450,7 +451,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 
 		public void visit(AST node) {
-			// todo : currently expects that the individual with expressions apply to the same sql table join.
+            // TODO : currently expects that the individual with expressions apply to the same sql table join.
 			//      This may not be the case for joined-subclass where the property values
 			//      might be coming from different tables in the joined hierarchy.  At some
 			//      point we should expand this to support that capability.  However, that has
@@ -471,9 +472,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				else {
 					referencedFromElement = fromElement;
 					joinAlias = extractAppliedAlias( dotNode );
-					// todo : temporary
+                    // TODO : temporary
 					//      needed because currently persister is the one that
-					//      creates and renders the join fragments for inheritence
+                    // creates and renders the join fragments for inheritance
 					//      hierarchies...
 					if ( !joinAlias.equals( referencedFromElement.getTableAlias() ) ) {
 						throw new InvalidWithClauseException( "with clause can only reference columns in the driving table" );
@@ -520,7 +521,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	 * @param fromNode      The new 'FROM' context.
 	 * @param inputFromNode The from node from the input AST.
 	 */
-	protected void pushFromClause(AST fromNode, AST inputFromNode) {
+	@Override
+    protected void pushFromClause(AST fromNode, AST inputFromNode) {
 		FromClause newFromClause = ( FromClause ) fromNode;
 		newFromClause.setParentFromClause( currentFromClause );
 		currentFromClause = newFromClause;
@@ -533,14 +535,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		currentFromClause = currentFromClause.getParentFromClause();
 	}
 
-	protected void lookupAlias(AST aliasRef)
+	@Override
+    protected void lookupAlias(AST aliasRef)
 			throws SemanticException {
 		FromElement alias = currentFromClause.getFromElement( aliasRef.getText() );
 		FromReferenceNode aliasRefNode = ( FromReferenceNode ) aliasRef;
 		aliasRefNode.setFromElement( alias );
 	}
 
-	protected void setImpliedJoinType(int joinType) {
+	@Override
+    protected void setImpliedJoinType(int joinType) {
 		impliedJoinType = JoinProcessor.toHibernateJoinType( joinType );
 	}
 
@@ -548,16 +552,15 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return impliedJoinType;
 	}
 
-	protected AST lookupProperty(AST dot, boolean root, boolean inSelect) throws SemanticException {
+	@Override
+    protected AST lookupProperty(AST dot, boolean root, boolean inSelect) throws SemanticException {
 		DotNode dotNode = ( DotNode ) dot;
 		FromReferenceNode lhs = dotNode.getLhs();
 		AST rhs = lhs.getNextSibling();
 		switch ( rhs.getType() ) {
 			case SqlTokenTypes.ELEMENTS:
 			case SqlTokenTypes.INDICES:
-				if ( log.isDebugEnabled() ) {
-					log.debug( "lookupProperty() " + dotNode.getPath() + " => " + rhs.getText() + "(" + lhs.getPath() + ")" );
-				}
+                if (LOG.isDebugEnabled()) LOG.lookupProperty(dotNode.getPath(), rhs.getText(), lhs.getPath());
 				CollectionFunction f = ( CollectionFunction ) rhs;
 				// Re-arrange the tree so that the collection function is the root and the lhs is the path.
 				f.setFirstChild( lhs );
@@ -573,7 +576,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	protected boolean isNonQualifiedPropertyRef(AST ident) {
+	@Override
+    protected boolean isNonQualifiedPropertyRef(AST ident) {
 		final String identText = ident.getText();
 		if ( currentFromClause.isFromElementAlias( identText ) ) {
 			return false;
@@ -583,7 +587,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( fromElements.size() == 1 ) {
 			final FromElement fromElement = ( FromElement ) fromElements.get( 0 );
 			try {
-				log.trace( "attempting to resolve property [" + identText + "] as a non-qualified ref" );
+                LOG.resolvingPropertyAsNonQualifiedReference(identText);
 				return fromElement.getPropertyMapping( identText ).toType( identText ) != null;
 			}
 			catch( QueryException e ) {
@@ -594,7 +598,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return false;
 	}
 
-	protected AST lookupNonQualifiedProperty(AST property) throws SemanticException {
+	@Override
+    protected AST lookupNonQualifiedProperty(AST property) throws SemanticException {
 		final FromElement fromElement = ( FromElement ) currentFromClause.getExplicitFromElements().get( 0 );
 		AST syntheticDotNode = generateSyntheticDotNodeForNonQualifiedPropertyRef( property, fromElement );
 		return lookupProperty( syntheticDotNode, false, getCurrentClauseType() == HqlSqlTokenTypes.SELECT );
@@ -615,10 +620,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return dot;
 	}
 
-	protected void processQuery(AST select, AST query) throws SemanticException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "processQuery() : " + query.toStringTree() );
-		}
+	@Override
+    protected void processQuery(AST select, AST query) throws SemanticException {
+        LOG.processQuery(query.toStringTree());
 
 		try {
 			QueryNode qn = ( QueryNode ) query;
@@ -702,13 +706,15 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	}
 
-	protected void postProcessUpdate(AST update) throws SemanticException {
+	@Override
+    protected void postProcessUpdate(AST update) throws SemanticException {
 		UpdateStatement updateStatement = ( UpdateStatement ) update;
 
 		postProcessDML( updateStatement );
 	}
 
-	protected void postProcessDelete(AST delete) throws SemanticException {
+	@Override
+    protected void postProcessDelete(AST delete) throws SemanticException {
 		postProcessDML( ( DeleteStatement ) delete );
 	}
 
@@ -717,7 +723,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		        || PostInsertIdentifierGenerator.class.isAssignableFrom( generator.getClass() );
 	}
 
-	protected void postProcessInsert(AST insert) throws SemanticException, QueryException {
+	@Override
+    protected void postProcessInsert(AST insert) throws SemanticException, QueryException {
 		InsertStatement insertStatement = ( InsertStatement ) insert;
 		insertStatement.validate();
 
@@ -859,12 +866,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		select.setNextSibling( sibling );
 		selectClause = ( SelectClause ) select;
 		selectClause.initializeDerivedSelectClause( currentFromClause );
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Derived SELECT clause created." );
-		}
+        LOG.derivedSelectClauseCreated();
 	}
 
-	protected void resolve(AST node) throws SemanticException {
+	@Override
+    protected void resolve(AST node) throws SemanticException {
 		if ( node != null ) {
 			// This is called when it's time to fully resolve a path expression.
 			ResolvableNode r = ( ResolvableNode ) node;
@@ -877,7 +883,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	protected void resolveSelectExpression(AST node) throws SemanticException {
+	@Override
+    protected void resolveSelectExpression(AST node) throws SemanticException {
 		// This is called when it's time to fully resolve a path expression.
 		int type = node.getType();
 		switch ( type ) {
@@ -903,7 +910,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	protected void beforeSelectClause() throws SemanticException {
+	@Override
+    protected void beforeSelectClause() throws SemanticException {
 		// Turn off includeSubclasses on all FromElements.
 		FromClause from = getCurrentFromClause();
 		List fromElements = from.getFromElements();
@@ -913,7 +921,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	protected AST generatePositionalParameter(AST inputNode) throws SemanticException {
+	@Override
+    protected AST generatePositionalParameter(AST inputNode) throws SemanticException {
 		if ( namedParameters.size() > 0 ) {
 			throw new SemanticException( "cannot define positional parameter after any named parameters have been defined" );
 		}
@@ -928,7 +937,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return parameter;
 	}
 
-	protected AST generateNamedParameter(AST delimiterNode, AST nameNode) throws SemanticException {
+	@Override
+    protected AST generateNamedParameter(AST delimiterNode, AST nameNode) throws SemanticException {
 		String name = nameNode.getText();
 		trackNamedParameterPositions( name );
 
@@ -964,38 +974,46 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
-	protected void processConstant(AST constant) throws SemanticException {
+	@Override
+    protected void processConstant(AST constant) throws SemanticException {
 		literalProcessor.processConstant( constant, true );  // Use the delegate, resolve identifiers as FROM element aliases.
 	}
 
-	protected void processBoolean(AST constant) throws SemanticException {
+	@Override
+    protected void processBoolean(AST constant) throws SemanticException {
 		literalProcessor.processBoolean( constant );  // Use the delegate.
 	}
 
-	protected void processNumericLiteral(AST literal) {
+	@Override
+    protected void processNumericLiteral(AST literal) {
 		literalProcessor.processNumeric( literal );
 	}
 
-	protected void processIndex(AST indexOp) throws SemanticException {
+	@Override
+    protected void processIndex(AST indexOp) throws SemanticException {
 		IndexNode indexNode = ( IndexNode ) indexOp;
 		indexNode.resolve( true, true );
 	}
 
-	protected void processFunction(AST functionCall, boolean inSelect) throws SemanticException {
+	@Override
+    protected void processFunction(AST functionCall, boolean inSelect) throws SemanticException {
 		MethodNode methodNode = ( MethodNode ) functionCall;
 		methodNode.resolve( inSelect );
 	}
 
-	protected void processAggregation(AST node, boolean inSelect) throws SemanticException {
+	@Override
+    protected void processAggregation(AST node, boolean inSelect) throws SemanticException {
 		AggregateNode aggregateNode = ( AggregateNode ) node;
 		aggregateNode.resolve();
 	}
 
-	protected void processConstructor(AST constructor) throws SemanticException {
+	@Override
+    protected void processConstructor(AST constructor) throws SemanticException {
 		ConstructorNode constructorNode = ( ConstructorNode ) constructor;
 		constructorNode.prepare();
 	}
 
+    @Override
     protected void setAlias(AST selectExpr, AST ident) {
         ((SelectExpression) selectExpr).setAlias(ident.getText());
 		// only put the alias (i.e., result variable) in selectExpressionsByResultVariable
@@ -1005,7 +1023,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
     }
 
-	protected boolean isOrderExpressionResultVariableRef(AST orderExpressionNode) throws SemanticException {
+	@Override
+    protected boolean isOrderExpressionResultVariableRef(AST orderExpressionNode) throws SemanticException {
 		// ORDER BY is not supported in a subquery
 		// TODO: should an exception be thrown if an ORDER BY is in a subquery?
 		if ( ! isSubQuery() &&
@@ -1016,7 +1035,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return false;
 	}
 
-	protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
+	@Override
+    protected void handleResultVariableRef(AST resultVariableRef) throws SemanticException {
 		if ( isSubQuery() ) {
 			throw new SemanticException(
 					"References to result variables in subqueries are not supported."
@@ -1026,7 +1046,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				selectExpressionsByResultVariable.get( resultVariableRef.getText() )
 		);
 	}
-	
+
 	/**
 	 * Returns the locations of all occurrences of the named parameter.
 	 */
@@ -1060,7 +1080,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	public SelectClause getSelectClause() {
 		return selectClause;
 	}
-	
+
 	public FromClause getFinalFromClause() {
 		FromClause top = currentFromClause;
 		while ( top.getParentFromClause() != null ) {
@@ -1094,7 +1114,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return numberOfParametersInSetClause;
 	}
 
-	protected void evaluateAssignment(AST eq) throws SemanticException {
+	@Override
+    protected void evaluateAssignment(AST eq) throws SemanticException {
 		prepareLogicOperator( eq );
 		Queryable persister = getCurrentFromClause().getFromElement().getQueryable();
 		evaluateAssignment( eq, persister, -1 );
@@ -1118,7 +1139,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return assignmentSpecifications;
 	}
 
-	protected AST createIntoClause(String path, AST propertySpec) throws SemanticException {
+	@Override
+    protected AST createIntoClause(String path, AST propertySpec) throws SemanticException {
 		Queryable persister = ( Queryable ) getSessionFactoryHelper().requireClassPersister( path );
 
 		IntoClause intoClause = ( IntoClause ) getASTFactory().create( INTO, persister.getEntityName() );
@@ -1130,7 +1152,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return intoClause;
 	}
 
-	protected void prepareVersioned(AST updateNode, AST versioned) throws SemanticException {
+	@Override
+    protected void prepareVersioned(AST updateNode, AST versioned) throws SemanticException {
 		UpdateStatement updateStatement = ( UpdateStatement ) updateNode;
 		FromClause fromClause = updateStatement.getFromClause();
 		if ( versioned != null ) {
@@ -1190,15 +1213,18 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return versionPropertyNode;
 	}
 
-	protected void prepareLogicOperator(AST operator) throws SemanticException {
+	@Override
+    protected void prepareLogicOperator(AST operator) throws SemanticException {
 		( ( OperatorNode ) operator ).initialize();
 	}
 
-	protected void prepareArithmeticOperator(AST operator) throws SemanticException {
+	@Override
+    protected void prepareArithmeticOperator(AST operator) throws SemanticException {
 		( ( OperatorNode ) operator ).initialize();
 	}
 
-	protected void validateMapPropertyExpression(AST node) throws SemanticException {
+	@Override
+    protected void validateMapPropertyExpression(AST node) throws SemanticException {
 		try {
 			FromReferenceNode fromReferenceNode = (FromReferenceNode) node;
 			QueryableCollection collectionPersister = fromReferenceNode.getFromElement().getQueryableCollection();
@@ -1217,4 +1243,51 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	public static void panic() {
 		throw new QueryException( "TreeWalker: panic" );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "createFromFilterElement() : processed filter FROM element." )
+        void createFromFilterElement();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "createFromJoinElement() : %s" )
+        void createFromJoinElement( String showAsString );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Derived SELECT clause created." )
+        void derivedSelectClauseCreated();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "handleWithFragment() : %s" )
+        void handleWithFragment( String showAsString );
+
+        @Message( value = "-- join tree --" )
+        String joinTreeHeader();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "lookupProperty() %s => %s(%s)" )
+        void lookupProperty( String path,
+                             String text,
+                             String path2 );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "prepareFromClauseInputTree() : Filter - Added 'this' as a from element..." )
+        void prepareFromClauseInputTree();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "processQuery() : %s" )
+        void processQuery( String stringTree );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Attempting to resolve property [%s] as a non-qualified ref" )
+        void resolvingPropertyAsNonQualifiedReference( String identText );
+
+        @Message( value = "-- with clause --" )
+        String withClauseHeader();
+    }
 }

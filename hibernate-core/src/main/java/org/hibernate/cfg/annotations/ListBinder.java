@@ -23,11 +23,8 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
@@ -48,6 +45,10 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Bind a list to the underlying Hibernate configuration
@@ -57,21 +58,25 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public class ListBinder extends CollectionBinder {
-	private Logger log = LoggerFactory.getLogger( ListBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ListBinder.class.getPackage().getName());
 
 	public ListBinder() {
 	}
 
-	protected Collection createCollection(PersistentClass persistentClass) {
+	@Override
+    protected Collection createCollection(PersistentClass persistentClass) {
 		return new org.hibernate.mapping.List( getMappings(), persistentClass );
 	}
 
-	public void setSqlOrderBy(OrderBy orderByAnn) {
-		if ( orderByAnn != null ) log.warn( "@OrderBy not allowed for a indexed collection, annotation ignored." );
+	@Override
+    public void setSqlOrderBy(OrderBy orderByAnn) {
+        if (orderByAnn != null) LOG.orderByAnnotationIndexedCollection();
 	}
 
-	public void setSort(Sort sortAnn) {
-		if ( sortAnn != null ) log.warn( "@Sort not allowed for a indexed collection, annotation ignored." );
+	@Override
+    public void setSort(Sort sortAnn) {
+        if (sortAnn != null) LOG.sortAnnotationIndexedCollection();
 	}
 
 	@Override
@@ -90,7 +95,8 @@ public class ListBinder extends CollectionBinder {
 			final TableBinder assocTableBinder,
 			final Mappings mappings) {
 		return new CollectionSecondPass( mappings, ListBinder.this.collection ) {
-			public void secondPass(Map persistentClasses, Map inheritedMetas)
+			@Override
+            public void secondPass(Map persistentClasses, Map inheritedMetas)
 					throws MappingException {
 				bindStarToManySecondPass(
 						persistentClasses, collType, fkJoinColumns, keyColumns, inverseColumns, elementColumns,
@@ -141,4 +147,19 @@ public class ListBinder extends CollectionBinder {
 			);
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "@OrderBy not allowed for an indexed collection, annotation ignored." )
+        void orderByAnnotationIndexedCollection();
+
+        @LogMessage( level = WARN )
+        @Message( value = "@Sort not allowed for an indexed collection, annotation ignored." )
+        void sortAnnotationIndexedCollection();
+    }
 }

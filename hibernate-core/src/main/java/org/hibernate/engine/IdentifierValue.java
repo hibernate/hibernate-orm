@@ -24,94 +24,109 @@
  */
 package org.hibernate.engine;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
  * a new transient instance or a previously persistent transient instance.
  * The strategy is determined by the <tt>unsaved-value</tt> attribute in
  * the mapping file.
- * 
+ *
  * @author Gavin King
  */
 public class IdentifierValue {
 
-	private static final Logger log = LoggerFactory.getLogger(IdentifierValue.class);
-	
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                IdentifierValue.class.getPackage().getName());
+
 	private final Serializable value;
-	
+
 	/**
 	 * Always assume the transient instance is newly instantiated
 	 */
 	public static final IdentifierValue ANY = new IdentifierValue() {
-		public final Boolean isUnsaved(Serializable id) {
-			log.trace("id unsaved-value strategy ANY");
+		@Override
+        public final Boolean isUnsaved(Serializable id) {
+            LOG.idUnsavedValueStrategy("ANY");
 			return Boolean.TRUE;
 		}
-		public Serializable getDefaultValue(Serializable currentValue) {
+		@Override
+        public Serializable getDefaultValue(Serializable currentValue) {
 			return currentValue;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "SAVE_ANY";
 		}
 	};
-	
+
 	/**
 	 * Never assume the transient instance is newly instantiated
 	 */
 	public static final IdentifierValue NONE = new IdentifierValue() {
-		public final Boolean isUnsaved(Serializable id) {
-			log.trace("id unsaved-value strategy NONE");
+		@Override
+        public final Boolean isUnsaved(Serializable id) {
+            LOG.idUnsavedValueStrategy("NONE");
 			return Boolean.FALSE;
 		}
-		public Serializable getDefaultValue(Serializable currentValue) {
+		@Override
+        public Serializable getDefaultValue(Serializable currentValue) {
 			return currentValue;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "SAVE_NONE";
 		}
 	};
-	
+
 	/**
 	 * Assume the transient instance is newly instantiated if the identifier
 	 * is null.
 	 */
 	public static final IdentifierValue NULL = new IdentifierValue() {
-		public final Boolean isUnsaved(Serializable id) {
-			log.trace("id unsaved-value strategy NULL");
+		@Override
+        public final Boolean isUnsaved(Serializable id) {
+            LOG.idUnsavedValueStrategy("NULL");
 			return id==null ? Boolean.TRUE : Boolean.FALSE;
 		}
-		public Serializable getDefaultValue(Serializable currentValue) {
+		@Override
+        public Serializable getDefaultValue(Serializable currentValue) {
 			return null;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "SAVE_NULL";
 		}
 	};
-	
+
 	/**
 	 * Assume nothing.
 	 */
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
-		public final Boolean isUnsaved(Serializable id) {
-			log.trace("id unsaved-value strategy UNDEFINED");
+		@Override
+        public final Boolean isUnsaved(Serializable id) {
+            LOG.idUnsavedValueStrategy("UNDEFINED");
 			return null;
 		}
-		public Serializable getDefaultValue(Serializable currentValue) {
+		@Override
+        public Serializable getDefaultValue(Serializable currentValue) {
 			return null;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "UNDEFINED";
 		}
 	};
-	
+
 	protected IdentifierValue() {
 		this.value = null;
 	}
-	
+
 	/**
 	 * Assume the transient instance is newly instantiated if
 	 * its identifier is null or equal to <tt>value</tt>
@@ -119,20 +134,36 @@ public class IdentifierValue {
 	public IdentifierValue(Serializable value) {
 		this.value = value;
 	}
-	
+
 	/**
 	 * Does the given identifier belong to a new instance?
 	 */
 	public Boolean isUnsaved(Serializable id) {
-		if ( log.isTraceEnabled() ) log.trace("id unsaved-value: " + value);
+        LOG.idUnsavedValue(value);
 		return id==null || id.equals(value) ? Boolean.TRUE : Boolean.FALSE;
 	}
-	
+
 	public Serializable getDefaultValue(Serializable currentValue) {
 		return value;
 	}
-	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		return "identifier unsaved-value: " + value;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "ID unsaved-value: %s" )
+        void idUnsavedValue( Serializable value );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "ID unsaved-value strategy %s" )
+        void idUnsavedValueStrategy( String name );
+    }
 }

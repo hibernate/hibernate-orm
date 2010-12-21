@@ -23,6 +23,8 @@
  */
 package org.hibernate.service.jdbc.connections.internal;
 
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -31,17 +33,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServicesRegistry;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -52,7 +54,8 @@ import org.hibernate.service.spi.ServiceInitiator;
 public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionProvider> {
 	public static final ConnectionProviderInitiator INSTANCE = new ConnectionProviderInitiator();
 
-	private static final Logger log = LoggerFactory.getLogger( ConnectionProviderInitiator.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ConnectionProviderInitiator.class.getPackage().getName());
 
 	public static final String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
 	public static final String C3P0_PROVIDER_CLASS_NAME =
@@ -138,7 +141,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		}
 
 		if ( connectionProvider == null ) {
-			log.warn( "No appropriate connection provider encountered, assuming application will be supplying connections" );
+            LOG.noAppropriateConnectionProvider();
 			connectionProvider = new UserSuppliedConnectionProviderImpl();
 		}
 
@@ -190,7 +193,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 			String providerClassName,
 			ClassLoaderService classLoaderService) {
 		try {
-			log.info( "Instantiating explicit connection provider: " + providerClassName );
+            LOG.instantiatingExplicitConnectinProvider(providerClassName);
 			return (ConnectionProvider) classLoaderService.classForName( providerClassName ).newInstance();
 		}
 		catch ( Exception e ) {
@@ -203,10 +206,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 			classLoaderService.classForName( C3P0_PROVIDER_CLASS_NAME );
 		}
 		catch ( Exception e ) {
-			log.warn(
-					"c3p0 properties were encountered, but the " + C3P0_PROVIDER_CLASS_NAME +
-							" provider class was not found on the classpath; these properties are going to be ignored."
-			);
+            LOG.c3p0ProviderClassNotFound(C3P0_PROVIDER_CLASS_NAME);
 			return false;
 		}
 		return true;
@@ -227,10 +227,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 			classLoaderService.classForName( PROXOOL_PROVIDER_CLASS_NAME );
 		}
 		catch ( Exception e ) {
-			log.warn(
-					"proxool properties were encountered, but the " + PROXOOL_PROVIDER_CLASS_NAME +
-							" provider class was not found on the classpath; these properties are going to be ignored."
-			);
+            LOG.proxoolProviderClassNotFound(PROXOOL_PROVIDER_CLASS_NAME);
 			return false;
 		}
 		return true;
@@ -288,4 +285,27 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		SPECIAL_PROPERTIES.add( Environment.USER );
 
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "c3p0 properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored." )
+        void c3p0ProviderClassNotFound( String c3p0ProviderClassName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Instantiating explicit connection provider: %s" )
+        void instantiatingExplicitConnectinProvider( String providerClassName );
+
+        @LogMessage( level = WARN )
+        @Message( value = "No appropriate connection provider encountered, assuming application will be supplying connections" )
+        void noAppropriateConnectionProvider();
+
+        @LogMessage( level = WARN )
+        @Message( value = "proxool properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored." )
+        void proxoolProviderClassNotFound( String proxoolProviderClassName );
+    }
 }

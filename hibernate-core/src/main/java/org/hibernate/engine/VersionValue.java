@@ -24,22 +24,26 @@
  */
 package org.hibernate.engine;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A strategy for determining if a version value is an version of
  * a new transient instance or a previously persistent transient instance.
  * The strategy is determined by the <tt>unsaved-value</tt> attribute in
  * the mapping file.
- * 
+ *
  * @author Gavin King
  */
 public class VersionValue {
 
-	private static final Logger log = LoggerFactory.getLogger(VersionValue.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                VersionValue.class.getPackage().getName());
 
 	private final Object value;
 	/**
@@ -47,14 +51,17 @@ public class VersionValue {
 	 * is null, otherwise assume it is a detached instance.
 	 */
 	public static final VersionValue NULL = new VersionValue() {
-		public final Boolean isUnsaved(Object version) {
-			log.trace("version unsaved-value strategy NULL");
+		@Override
+        public final Boolean isUnsaved(Object version) {
+            LOG.versionUnsavedValueStrategy("NULL");
 			return version==null ? Boolean.TRUE : Boolean.FALSE;
 		}
-		public Object getDefaultValue(Object currentValue) {
+		@Override
+        public Object getDefaultValue(Object currentValue) {
 			return null;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "VERSION_SAVE_NULL";
 		}
 	};
@@ -63,14 +70,17 @@ public class VersionValue {
 	 * is null, otherwise defer to the identifier unsaved-value.
 	 */
 	public static final VersionValue UNDEFINED = new VersionValue() {
-		public final Boolean isUnsaved(Object version) {
-			log.trace("version unsaved-value strategy UNDEFINED");
+		@Override
+        public final Boolean isUnsaved(Object version) {
+            LOG.versionUnsavedValueStrategy("UNDEFINED");
 			return version==null ? Boolean.TRUE : null;
 		}
-		public Object getDefaultValue(Object currentValue) {
+		@Override
+        public Object getDefaultValue(Object currentValue) {
 			return currentValue;
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "VERSION_UNDEFINED";
 		}
 	};
@@ -79,27 +89,26 @@ public class VersionValue {
 	 * is negative, otherwise assume it is a detached instance.
 	 */
 	public static final VersionValue NEGATIVE = new VersionValue() {
-	
-		public final Boolean isUnsaved(Object version) throws MappingException {
-			log.trace("version unsaved-value strategy NEGATIVE");
+
+		@Override
+        public final Boolean isUnsaved(Object version) throws MappingException {
+            LOG.versionUnsavedValueStrategy("NEGATIVE");
 			if (version==null) return Boolean.TRUE;
-			if (version instanceof Number) {
-				return ( (Number) version ).longValue() < 0l ? Boolean.TRUE : Boolean.FALSE;
-			}
-			else {
-				throw new MappingException("unsaved-value NEGATIVE may only be used with short, int and long types");
-			}
+            if (version instanceof Number) return ((Number)version).longValue() < 0l ? Boolean.TRUE : Boolean.FALSE;
+            throw new MappingException("unsaved-value NEGATIVE may only be used with short, int and long types");
 		}
-		public Object getDefaultValue(Object currentValue) {
+		@Override
+        public Object getDefaultValue(Object currentValue) {
 			return IdentifierGeneratorHelper.getIntegralDataTypeHolder( currentValue.getClass() )
 					.initialize( -1L )
 					.makeValue();
 		}
-		public String toString() {
+		@Override
+        public String toString() {
 			return "VERSION_NEGATIVE";
 		}
 	};
-	
+
 	protected VersionValue() {
 		this.value = null;
 	}
@@ -112,7 +121,7 @@ public class VersionValue {
 	public VersionValue(Object value) {
 		this.value = value;
 	}
-	
+
 	/**
 	 * Does the given version belong to a new instance?
 	 *
@@ -120,15 +129,31 @@ public class VersionValue {
 	 * @return true is unsaved, false is saved, null is undefined
 	 */
 	public Boolean isUnsaved(Object version) throws MappingException  {
-		if ( log.isTraceEnabled() ) log.trace("version unsaved-value: " + value);
+        LOG.versionUnsavedValue(value);
 		return version==null || version.equals(value) ? Boolean.TRUE : Boolean.FALSE;
 	}
-	
+
 	public Object getDefaultValue(Object currentValue) {
 		return value;
 	}
-	
-	public String toString() {
+
+	@Override
+    public String toString() {
 		return "version unsaved-value: " + value;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Version unsaved-value: %s" )
+        void versionUnsavedValue( Object value );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Version unsaved-value strategy %s" )
+        void versionUnsavedValueStrategy( String string );
+    }
 }

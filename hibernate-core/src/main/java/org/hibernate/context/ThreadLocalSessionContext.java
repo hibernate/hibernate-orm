@@ -24,6 +24,9 @@
  */
 package org.hibernate.context;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,14 +38,15 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
 import javax.transaction.Synchronization;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A {@link CurrentSessionContext} impl which scopes the notion of current
@@ -72,7 +76,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
  */
 public class ThreadLocalSessionContext implements CurrentSessionContext {
 
-	private static final Logger log = LoggerFactory.getLogger( ThreadLocalSessionContext.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ThreadLocalSessionContext.class.getPackage().getName());
 	private static final Class[] SESS_PROXY_INTERFACES = new Class[] {
 			org.hibernate.classic.Session.class,
 	        org.hibernate.engine.SessionImplementor.class,
@@ -204,20 +209,20 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	private static void cleanupAnyOrphanedSession(SessionFactory factory) {
 		Session orphan = doUnbind( factory, false );
 		if ( orphan != null ) {
-			log.warn( "Already session bound on call to bind(); make sure you clean up your sessions!" );
+            LOG.alreadySessionBound();
 			try {
 				if ( orphan.getTransaction() != null && orphan.getTransaction().isActive() ) {
 					try {
 						orphan.getTransaction().rollback();
 					}
 					catch( Throwable t ) {
-						log.debug( "Unable to rollback transaction for orphaned session", t );
+                        LOG.unableToRollbackTransaction(t.getMessage());
 					}
 				}
 				orphan.close();
 			}
 			catch( Throwable t ) {
-				log.debug( "Unable to close orphaned session", t );
+                LOG.unableToCloseOrphanedSession(t.getMessage());
 			}
 		}
 	}
@@ -330,7 +335,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 					     || "isTransactionInProgress".equals( method.getName() )
 					     || "setFlushMode".equals( method.getName() )
 					     || "getSessionFactory".equals( method.getName() ) ) {
-						log.trace( "allowing method [" + method.getName() + "] in non-transacted context" );
+                        LOG.allowingMethodInNonTransactedContext(method.getName());
 					}
 					else if ( "reconnect".equals( method.getName() )
 					          || "disconnect".equals( method.getName() ) ) {
@@ -340,7 +345,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 						throw new HibernateException( method.getName() + " is not valid without active transaction" );
 					}
 				}
-				log.trace( "allowing proxied method [" + method.getName() + "] to proceed to real session" );
+                LOG.allowingProxiedMethodInSession(method.getName());
 				return method.invoke( realSession, args );
 			}
 			catch ( InvocationTargetException e ) {
@@ -384,4 +389,31 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 			doBind( wrappedSession, factory );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Allowing method [%s] in non-transacted context" )
+        void allowingMethodInNonTransactedContext( String name );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Allowing proxied method [%s] to proceed to real session" )
+        void allowingProxiedMethodInSession( String name );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Already session bound on call to bind(); make sure you clean up your sessions!" )
+        void alreadySessionBound();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Unable to close orphaned session\n%s" )
+        void unableToCloseOrphanedSession( String message );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Unable to rollback transaction for orphaned session\n%s" )
+        void unableToRollbackTransaction( String message );
+    }
 }

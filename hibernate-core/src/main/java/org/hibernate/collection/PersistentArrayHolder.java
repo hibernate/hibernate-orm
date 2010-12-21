@@ -24,6 +24,7 @@
  */
 package org.hibernate.collection;
 
+import static org.jboss.logging.Logger.Level.ERROR;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
@@ -31,15 +32,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A persistent wrapper for an array. Lazy initialization
@@ -51,7 +53,8 @@ import org.hibernate.type.Type;
 public class PersistentArrayHolder extends AbstractPersistentCollection {
 	protected Object array;
 
-	private static final Logger log = LoggerFactory.getLogger(PersistentArrayHolder.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PersistentArrayHolder.class.getPackage().getName());
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;
@@ -73,7 +76,7 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 				Array.set( result, i, persister.getElementType().deepCopy(elt, entityMode, persister.getFactory()) );
 			}
 			catch (IllegalArgumentException iae) {
-				log.error("Array element type error", iae);
+                LOG.invalidArrayElementType(iae.getMessage());
 				throw new HibernateException( "Array element type error", iae );
 			}
 		}
@@ -84,7 +87,8 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		return Array.getLength( snapshot ) == 0;
 	}
 
-	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
+	@Override
+    public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
 		Object[] sn = (Object[]) snapshot;
 		Object[] arr = (Object[]) array;
 		ArrayList result = new ArrayList();
@@ -126,7 +130,8 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		}
 		return list.iterator();
 	}
-	public boolean empty() {
+	@Override
+    public boolean empty() {
 		return false;
 	}
 
@@ -146,11 +151,13 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		return elements();
 	}
 
-	public void beginRead() {
+	@Override
+    public void beginRead() {
 		super.beginRead();
 		tempList = new ArrayList();
 	}
-	public boolean endRead() {
+	@Override
+    public boolean endRead() {
 		setInitialized();
 		array = Array.newInstance( elementClass, tempList.size() );
 		for ( int i=0; i<tempList.size(); i++) {
@@ -164,7 +171,8 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		//if (tempList==null) throw new UnsupportedOperationException("Can't lazily initialize arrays");
 	}
 
-	public boolean isDirectlyAccessible() {
+	@Override
+    public boolean isDirectlyAccessible() {
 		return true;
 	}
 
@@ -196,7 +204,8 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 
 	}
 
-	public Object getValue() {
+	@Override
+    public Object getValue() {
 		return array;
 	}
 
@@ -249,4 +258,14 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		return entry!=null;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Array element type error\n%s" )
+        void invalidArrayElementType( String message );
+    }
 }

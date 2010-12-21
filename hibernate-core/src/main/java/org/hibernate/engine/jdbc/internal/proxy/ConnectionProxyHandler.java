@@ -32,14 +32,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.TransactionException;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.stat.StatisticsImplementor;
 
@@ -49,7 +44,9 @@ import org.hibernate.stat.StatisticsImplementor;
  * @author Steve Ebersole
  */
 public class ConnectionProxyHandler extends AbstractProxyHandler implements InvocationHandler, ConnectionObserver {
-	private static final Logger log = LoggerFactory.getLogger( ConnectionProxyHandler.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractProxyHandler.class.getPackage().getName());
 
 	private LogicalConnectionImplementor logicalConnection;
 
@@ -102,9 +99,10 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		return logicalConnection.getResourceRegistry();
 	}
 
-	protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
+	@Override
+    protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
 		String methodName = method.getName();
-		log.trace( "Handling invocation of connection method [{}]", methodName );
+        LOG.handlingInvocationOfConnectionMethod(methodName);
 
 		// other methods allowed while invalid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( "close".equals( methodName ) ) {
@@ -198,7 +196,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	}
 
 	private void invalidateHandle() {
-		log.trace( "Invalidating connection handle" );
+        LOG.invalidatingConnectionHandle();
 		logicalConnection = null;
 		invalidate();
 	}
@@ -213,14 +211,14 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	 * {@inheritDoc}
 	 */
 	public void physicalConnectionReleased() {
-		log.info( "logical connection releasing its physical connection");
+        LOG.logicalConnectionReleasingPhysicalConnection();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public void logicalConnectionClosed() {
-		log.info( "*** logical connection closed ***" );
+        LOG.logicalConnectionClosed();
 		invalidateHandle();
 	}
 
@@ -228,4 +226,29 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	StatisticsImplementor getStatisticsImplementorOrNull() {
 		return getLogicalConnection().getStatisticsImplementor();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    /*
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Handling invocation of connection method [%s]" )
+        void handlingInvocationOfConnectionMethod( String methodName );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Invalidating connection handle" )
+        void invalidatingConnectionHandle();
+
+        @LogMessage( level = INFO )
+        @Message( value = "*** Logical connection closed ***" )
+        void logicalConnectionClosed();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Logical connection releasing its physical connection" )
+        void logicalConnectionReleasingPhysicalConnection();
+    }
+    */
 }

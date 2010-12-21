@@ -23,17 +23,18 @@
  */
 package org.hibernate.util.xml;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.StringReader;
-
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.InvalidMappingException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import org.hibernate.InvalidMappingException;
 
 /**
  * Handles reading mapping documents, both {@code hbm} and {@code orm} varieties.
@@ -41,7 +42,9 @@ import org.hibernate.InvalidMappingException;
  * @author Steve Ebersole
  */
 public class MappingReader {
-	private static final Logger log = LoggerFactory.getLogger( MappingReader.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                MappingReader.class.getPackage().getName());
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
 	public static final MappingReader INSTANCE = new MappingReader();
@@ -79,7 +82,7 @@ public class MappingReader {
 			return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 		}
 		catch ( Exception orm2Problem ) {
-			log.debug( "Problem parsing XML using orm 2 xsd : {}", orm2Problem.getMessage() );
+            LOG.problemParsingXmlUsingOrm2Xsd(orm2Problem.getMessage());
 			failure = orm2Problem;
 			errorHandler.reset();
 
@@ -94,7 +97,7 @@ public class MappingReader {
 					return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 				}
 				catch ( Exception orm1Problem ) {
-					log.debug( "Problem parsing XML using orm 1 xsd : {}", orm1Problem.getMessage() );
+                    LOG.problemParsingXmlUsingOrm1Xsd(orm1Problem.getMessage());
 				}
 			}
 		}
@@ -254,4 +257,19 @@ public class MappingReader {
 //		}
 //
 //	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Problem parsing XML using orm 1 xsd : %s" )
+        void problemParsingXmlUsingOrm1Xsd( String message );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Problem parsing XML using orm 2 xsd : %s" )
+        void problemParsingXmlUsingOrm2Xsd( String message );
+    }
 }

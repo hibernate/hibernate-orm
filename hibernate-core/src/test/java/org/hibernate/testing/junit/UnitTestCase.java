@@ -27,13 +27,11 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.hibernate.Logger;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -49,7 +47,7 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  */
 public abstract class UnitTestCase extends junit.framework.TestCase {
 
-	private static final Logger log = LoggerFactory.getLogger( UnitTestCase.class );
+    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ServiceRegistryHolder serviceRegistryHolder;
 
@@ -63,10 +61,11 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 	 *
 	 * @throws Throwable
 	 */
-	public void runBare() throws Throwable {
+	@Override
+    public void runBare() throws Throwable {
 		final boolean doValidate = getName().endsWith( "FailureExpected" ) && Boolean.getBoolean( "hibernate.test.validatefailureexpected" );
 		try {
-			log.info( "Starting test [" + fullTestName() + "]" );
+            LOG.info("Starting test [" + fullTestName() + "]");
 			super.runBare();
 			if ( doValidate ) {
 				throw new FailureExpectedTestPassedException();
@@ -84,7 +83,7 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 			}
 		}
 		finally {
-			log.info( "Completed test [" + fullTestName() + "]" );
+            LOG.info("Completed test [" + fullTestName() + "]");
 		}
 	}
 
@@ -149,9 +148,9 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 	protected void reportSkip(String reason, String testDescription) {
 		SkipLog.LOG.warn( "*** skipping [" + fullTestName() + "] - " + testDescription + " : " + reason, new Exception()  );
 	}
-	
+
 	// testsuite utitities ---------------------------------------------------
-	
+
 	/**
 	 * Supports easy creation of TestSuites where a subclass' "FailureExpected"
 	 * version of a base test is included in the suite, while the base test
@@ -161,7 +160,7 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 	 * does not include testBar().
 	 */
 	public static TestSuite createFailureExpectedSuite(Class testClass) {
-	   
+
 	   TestSuite allTests = new TestSuite(testClass);
        Set failureExpected = new HashSet();
 	   Enumeration tests = allTests.tests();
@@ -171,9 +170,9 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 	         String name = ((TestCase) t).getName();
 	         if (name.endsWith("FailureExpected"))
 	            failureExpected.add(name);
-	      }	      
+	      }
 	   }
-	   
+
 	   TestSuite result = new TestSuite();
        tests = allTests.tests();
        while (tests.hasMoreElements()) {
@@ -183,9 +182,9 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
              if (!failureExpected.contains(name + "FailureExpected")) {
                 result.addTest(t);
              }
-          }       
+          }
        }
-	   
+
 	   return result;
 	}
 }

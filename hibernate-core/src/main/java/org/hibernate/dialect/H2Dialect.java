@@ -23,12 +23,9 @@
  */
 package org.hibernate.dialect;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -38,6 +35,10 @@ import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A dialect compatible with the H2 database.
@@ -45,7 +46,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Thomas Mueller
  */
 public class H2Dialect extends Dialect {
-	private static final Logger log = LoggerFactory.getLogger( H2Dialect.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                H2Dialect.class.getPackage().getName());
 
 	private String querySequenceString;
 
@@ -62,13 +65,9 @@ public class H2Dialect extends Dialect {
 			if ( buildId < 32 ) {
 				querySequenceString = "select name from information_schema.sequences";
 			}
-			if ( !( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
-				log.warn(
-						"The {} version of H2 implements temporary table creation such that it commits " +
-								"current transaction; multi-table, bulk hql/jpaql will not work properly",
-						( majorVersion + "." + minorVersion + "." + buildId )
-				);
-			}
+            if (!(majorVersion > 1 || minorVersion > 2 || buildId >= 139)) LOG.unsupportedMultiTableBulkHqlJpaql(majorVersion,
+                                                                                                                 minorVersion,
+                                                                                                                 buildId);
 		}
 		catch ( Exception e ) {
 			// ignore (probably H2 not in the classpath)
@@ -346,4 +345,17 @@ public class H2Dialect extends Dialect {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "The %d.%d.%d version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk hql/jpaql will not work properly" )
+        void unsupportedMultiTableBulkHqlJpaql( int majorVersion,
+                                                int minorVersion,
+                                                int buildId );
+    }
 }

@@ -23,12 +23,9 @@
  */
 package org.hibernate.service.jdbc.dialect.internal;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -48,6 +45,10 @@ import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * The standard Hibernate Dialect resolver.
@@ -55,9 +56,12 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
  * @author Steve Ebersole
  */
 public class StandardDialectResolver extends AbstractDialectResolver {
-	private static final Logger log = LoggerFactory.getLogger( StandardDialectResolver.class );
 
-	protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                StandardDialectResolver.class.getPackage().getName());
+
+	@Override
+    protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
 		String databaseName = metaData.getDatabaseProductName();
 		int databaseMajorVersion = metaData.getDatabaseMajorVersion();
 
@@ -92,7 +96,7 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                 case 10:
                     return new Ingres10Dialect();
                 default:
-                    log.warn( "Unknown Ingres major version [" + databaseMajorVersion + "] using Ingres 9.2 dialect" );
+                    LOG.unknownIngresVersion(databaseMajorVersion);
             }
 			return new IngresDialect();
 		}
@@ -138,10 +142,33 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 				case 8:
 					return new Oracle8iDialect();
 				default:
-					log.warn( "unknown Oracle major version [" + databaseMajorVersion + "]" );
+                    LOG.unknownOracleVersion(databaseMajorVersion);
 			}
 		}
 
 		return null;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Ingres %d is not yet fully supported; using Ingres 9.3 dialect" )
+        void ingresVersionNotFullySupported( int databaseMajorVersion );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Oracle 11g is not yet fully supported; using 10g dialect" )
+        void oracleVersionNotFullySupported();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unknown Ingres major version [%d] using Ingres 9.2 dialect" )
+        void unknownIngresVersion( int databaseMajorVersion );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unknown Oracle major version [%d]" )
+        void unknownOracleVersion( int databaseMajorVersion );
+    }
 }

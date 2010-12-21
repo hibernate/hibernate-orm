@@ -24,11 +24,14 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import org.hibernate.HibernateException;
 import org.hibernate.event.DirtyCheckEvent;
 import org.hibernate.event.DirtyCheckEventListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default dirty-check event listener used by hibernate for
@@ -39,7 +42,8 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListener implements DirtyCheckEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultDirtyCheckEventListener.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultDirtyCheckEventListener.class.getPackage().getName());
 
     /** Handle the given dirty-check event.
      *
@@ -53,12 +57,28 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 		try {
 			flushEverythingToExecutions(event);
 			boolean wasNeeded = event.getSession().getActionQueue().hasAnyQueuedActions();
-			log.debug( wasNeeded ? "session dirty" : "session not dirty" );
+			if (wasNeeded) LOG.sessionDirty();
+            else LOG.sessionNotDirty();
 			event.setDirty( wasNeeded );
 		}
 		finally {
 			event.getSession().getActionQueue().clearFromFlushNeededCheck( oldSize );
 		}
-		
+
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Session dirty" )
+        void sessionDirty();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Session not dirty" )
+        void sessionNotDirty();
+    }
 }

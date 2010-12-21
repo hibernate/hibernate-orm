@@ -23,13 +23,11 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.Map;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
@@ -55,12 +53,18 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-	private Logger log = LoggerFactory.getLogger( PropertyBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PropertyBinder.class.getPackage().getName());
+
 	private String name;
 	private String returnedClassName;
 	private boolean lazy;
@@ -172,7 +176,7 @@ public class PropertyBinder {
 
 	private Property makePropertyAndValue() {
 		validateBind();
-		log.debug( "binding property {} with lazy={}", name, lazy );
+        LOG.bindingPropertyWithLazy(name, lazy);
 		String containerClassName = holder == null ?
 				null :
 				holder.getClassName();
@@ -252,7 +256,7 @@ public class PropertyBinder {
 	//used when the value is provided and the binding is done elsewhere
 	public Property makeProperty() {
 		validateMake();
-		log.debug( "Building property " + name );
+        LOG.buildingProperty(name);
 		Property prop = new Property();
 		prop.setName( name );
 		prop.setNodeName( name );
@@ -309,7 +313,7 @@ public class PropertyBinder {
 				);
 			}
 		}
-		log.trace( "Cascading " + name + " with " + cascade );
+        LOG.cascadingProperty(name, cascade);
 		this.mappingProperty = prop;
 		return prop;
 	}
@@ -337,4 +341,25 @@ public class PropertyBinder {
 	public void setInheritanceStatePerClass(Map<XClass, InheritanceState> inheritanceStatePerClass) {
 		this.inheritanceStatePerClass = inheritanceStatePerClass;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Binder property %s with lazy=%s" )
+        void bindingPropertyWithLazy( String property,
+                                      boolean lazy );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Building property %s" )
+        void buildingProperty( String property );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Cascading %s with %s" )
+        void cascadingProperty( String property,
+                                String cascade );
+    }
 }

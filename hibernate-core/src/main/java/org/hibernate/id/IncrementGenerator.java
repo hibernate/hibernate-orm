@@ -23,14 +23,12 @@
  */
 package org.hibernate.id;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -39,6 +37,10 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * <b>increment</b><br>
@@ -54,7 +56,9 @@ import org.hibernate.util.StringHelper;
  * @author Steve Ebersole
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
-	private static final Logger log = LoggerFactory.getLogger(IncrementGenerator.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                IncrementGenerator.class.getPackage().getName());
 
 	private Class returnClass;
 	private String sql;
@@ -112,27 +116,23 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 			buf.insert( 0, "( " ).append( " ) ids_" );
 			column = "ids_." + column;
 		}
-		
+
 		sql = "select max(" + column + ") from " + buf.toString();
 	}
 
 	private void initializePreviousValueHolder(SessionImplementor session) {
 		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 
-		log.debug( "fetching initial value: " + sql );
+        LOG.fetchingInitialValue(sql);
 		try {
 			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {
-					if ( rs.next() ) {
-						previousValueHolder.initialize( rs, 0L ).increment();
-					}
-					else {
-						previousValueHolder.initialize( 1L );
-					}
+                    if (rs.next()) previousValueHolder.initialize(rs, 0L).increment();
+                    else previousValueHolder.initialize(1L);
 					sql = null;
-					log.debug( "first free id: " + previousValueHolder.makeValue() );
+                    LOG.firstFreeId(previousValueHolder.makeValue());
 				}
 				finally {
 					rs.close();
@@ -151,4 +151,18 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Fetching initial value: %s" )
+        void fetchingInitialValue( String sql );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "First free id: %s" )
+        void firstFreeId( Number makeValue );
+    }
 }

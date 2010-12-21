@@ -24,23 +24,27 @@
  */
 package org.hibernate.event.def;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.event.AutoFlushEvent;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.EventSource;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
- * Defines the default flush event listeners used by hibernate for 
+ * Defines the default flush event listeners used by hibernate for
  * flushing session state in response to generated auto-flush events.
  *
  * @author Steve Ebersole
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultAutoFlushEventListener.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultAutoFlushEventListener.class.getPackage().getName());
 
     /** Handle the given auto-flush event.
      *
@@ -50,33 +54,33 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 
 		final EventSource source = event.getSession();
-		
+
 		if ( flushMightBeNeeded(source) ) {
 
 			final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
 
 			flushEverythingToExecutions(event);
-			
+
 			if ( flushIsReallyNeeded(event, source) ) {
 
-				log.trace("Need to execute flush");
+                LOG.needToExecuteFlush();
 
 				performExecutions(source);
 				postFlush(source);
-				// note: performExecutions() clears all collectionXxxxtion 
+				// note: performExecutions() clears all collectionXxxxtion
 				// collections (the collection actions) in the session
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatisticsImplementor().flush();
 				}
-				
+
 			}
 			else {
 
-				log.trace("Dont need to execute flush");
+                LOG.dontNeedToExecuteFlush();
 				source.getActionQueue().clearFromFlushNeededCheck( oldSize );
 			}
-			
+
 			event.setFlushRequired( flushIsReallyNeeded( event, source ) );
 
 		}
@@ -85,15 +89,29 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 
 	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
 		return source.getActionQueue()
-				.areTablesToBeUpdated( event.getQuerySpaces() ) || 
+				.areTablesToBeUpdated( event.getQuerySpaces() ) ||
 						source.getFlushMode()==FlushMode.ALWAYS;
 	}
 
 	private boolean flushMightBeNeeded(final EventSource source) {
-		return !source.getFlushMode().lessThan(FlushMode.AUTO) && 
+		return !source.getFlushMode().lessThan(FlushMode.AUTO) &&
 				source.getDontFlushFromFind() == 0 &&
 				( source.getPersistenceContext().getEntityEntries().size() > 0 ||
 						source.getPersistenceContext().getCollectionEntries().size() > 0 );
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Don't need to execute flush" )
+        void dontNeedToExecuteFlush();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Need to execute flush" )
+        void needToExecuteFlush();
+    }
 }

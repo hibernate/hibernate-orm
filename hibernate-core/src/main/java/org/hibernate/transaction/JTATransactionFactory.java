@@ -25,22 +25,17 @@
 package org.hibernate.transaction;
 
 import java.util.Properties;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.cfg.Environment;
 import org.hibernate.util.JTAHelper;
 
 /**
@@ -75,7 +70,9 @@ import org.hibernate.util.JTAHelper;
  */
 public class JTATransactionFactory implements TransactionFactory {
 	public static final String DEFAULT_USER_TRANSACTION_NAME = "java:comp/UserTransaction";
-	private static final Logger log = LoggerFactory.getLogger( JTATransactionFactory.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JTATransactionFactory.class.getPackage().getName());
 
 	protected InitialContext initialContext;
 	protected String userTransactionName;
@@ -92,7 +89,7 @@ public class JTATransactionFactory implements TransactionFactory {
 	public void configure(Properties props) throws HibernateException {
 		this.initialContext = resolveInitialContext( props );
 		this.userTransactionName = resolveUserTransactionName( props );
-		log.trace( "Configured JTATransactionFactory to use [{}] for UserTransaction JDNI namespace", userTransactionName );
+        LOG.configuredJtaTransactionFactoryForUserTransactionJndiNamespace(userTransactionName);
 	}
 
 	/**
@@ -157,7 +154,7 @@ public class JTATransactionFactory implements TransactionFactory {
 	 */
 	protected UserTransaction getUserTransaction() {
 		final String utName = getUserTransactionName();
-		log.trace( "Attempting to locate UserTransaction via JNDI [{}]", utName );
+        LOG.attemptingToLocateUserTransactionViaJndi(utName);
 
 		try {
 			UserTransaction ut = ( UserTransaction ) getInitialContext().lookup( utName );
@@ -165,7 +162,7 @@ public class JTATransactionFactory implements TransactionFactory {
 				throw new TransactionException( "Naming service lookup for UserTransaction returned null [" + utName +"]" );
 			}
 
-			log.trace( "Obtained UserTransaction" );
+            LOG.obtainedUserTransaction();
 
 			return ut;
 		}

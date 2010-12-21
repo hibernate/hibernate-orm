@@ -24,25 +24,29 @@
  */
 package org.hibernate.persister.collection;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.collection.CollectionInitializer;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A wrapper around a named query.
  * @author Gavin King
  */
 public final class NamedQueryCollectionInitializer implements CollectionInitializer {
-	private final String queryName;
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                NamedQueryCollectionInitializer.class.getPackage().getName());
+
+    private final String queryName;
 	private final CollectionPersister persister;
-	
-	private static final Logger log = LoggerFactory.getLogger(NamedQueryCollectionInitializer.class);
 
 	public NamedQueryCollectionInitializer(String queryName, CollectionPersister persister) {
 		super();
@@ -50,25 +54,18 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 		this.persister = persister;
 	}
 
-	public void initialize(Serializable key, SessionImplementor session) 
+	public void initialize(Serializable key, SessionImplementor session)
 	throws HibernateException {
-		
-		if ( log.isDebugEnabled() ) {
-			log.debug(
-					"initializing collection: " + 
-					persister.getRole() + 
-					" using named query: " + 
-					queryName 
-				);
-		}
-		
+
+        LOG.initializingCollection(persister.getRole(), queryName);
+
 		//TODO: is there a more elegant way than downcasting?
-		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedSQLQuery(queryName); 
+		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedSQLQuery(queryName);
 		if ( query.getNamedParameters().length>0 ) {
-			query.setParameter( 
-					query.getNamedParameters()[0], 
-					key, 
-					persister.getKeyType() 
+			query.setParameter(
+					query.getNamedParameters()[0],
+					key,
+					persister.getKeyType()
 				);
 		}
 		else {
@@ -79,4 +76,16 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 				.list();
 
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Initializing collection: %s using named query: %s" )
+        void initializingCollection( String role,
+                                     String queryName );
+    }
 }

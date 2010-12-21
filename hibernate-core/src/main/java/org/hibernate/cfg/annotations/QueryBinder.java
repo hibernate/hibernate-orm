@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.HashMap;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
@@ -31,7 +32,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.QueryHint;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -46,8 +46,10 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Query binder
@@ -55,7 +57,8 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-	private static final Logger log = LoggerFactory.getLogger( QueryBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                QueryBinder.class.getPackage().getName());
 
 	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
@@ -83,7 +86,7 @@ public abstract class QueryBinder {
 		else {
 			mappings.addQuery( queryAnn.name(), query );
 		}
-		log.info( "Binding Named query: {} => {}", queryAnn.name(), queryAnn.query() );
+        LOG.bindingNamedQuery(queryAnn.name(), queryAnn.query());
 	}
 
 
@@ -145,7 +148,7 @@ public abstract class QueryBinder {
 		else {
 			mappings.addSQLQuery( queryAnn.name(), query );
 		}
-		log.info( "Binding named native query: {} => {}", queryAnn.name(), queryAnn.query() );
+        LOG.bindingNamedNativeQuery(queryAnn.name(), queryAnn.query());
 	}
 
 	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
@@ -199,7 +202,7 @@ public abstract class QueryBinder {
 			throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
 		}
 		mappings.addSQLQuery( queryAnn.name(), query );
-		log.info( "Binding named native query: {} => {}", queryAnn.name(), queryAnn.query() );
+        LOG.bindingNamedNativeQuery(queryAnn.name(), queryAnn.query());
 	}
 
 	public static void bindQueries(NamedQueries queriesAnn, Mappings mappings, boolean isDefault) {
@@ -248,7 +251,7 @@ public abstract class QueryBinder {
 		);
 
 		mappings.addQuery( queryAnn.name(), query );
-		if ( log.isInfoEnabled() ) log.info( "Binding named query: " + queryAnn.name() + " => " + queryAnn.query() );
+        LOG.bindingNamedQuery(queryAnn.name(), queryAnn.query());
 	}
 
 	private static FlushMode getFlushMode(FlushModeType flushModeType) {
@@ -421,4 +424,21 @@ public abstract class QueryBinder {
 		}
 		return timeout;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Binding named native query: %s => %s" )
+        void bindingNamedNativeQuery( String name,
+                                      String query );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Binding named query: %s => %s" )
+        void bindingNamedQuery( String name,
+                                String query );
+    }
 }

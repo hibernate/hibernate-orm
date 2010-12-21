@@ -26,10 +26,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
@@ -44,7 +40,7 @@ import org.hibernate.util.ReflectHelper;
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
  *
- * 
+ *
  * Used internally to obtain instances of <tt>Type</tt>. Applications should use static methods
  * and constants on <tt>org.hibernate.Hibernate</tt>.
  *
@@ -53,7 +49,9 @@ import org.hibernate.util.ReflectHelper;
  */
 @SuppressWarnings({ "unchecked" })
 public final class TypeFactory implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( TypeFactory.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TypeFactory.class.getPackage().getName());
 
 	private final TypeScopeImpl typeScope = new TypeScopeImpl();
 
@@ -65,12 +63,8 @@ public final class TypeFactory implements Serializable {
 		private SessionFactoryImplementor factory;
 
 		public void injectSessionFactory(SessionFactoryImplementor factory) {
-			if ( this.factory != null ) {
-				log.warn( "Scoping types to session factory {} after already scoped {}", this.factory, factory );
-			}
-			else {
-				log.trace( "Scoping types to session factory {}", factory );
-			}
+            if (this.factory != null) LOG.scopingTypesToSessionFactoryAfterAlreadyScoped(this.factory, factory);
+            else LOG.scopingTypesToSessionFactory(factory);
 			this.factory = factory;
 		}
 
@@ -88,15 +82,15 @@ public final class TypeFactory implements Serializable {
 
 	public Type byClass(Class clazz, Properties parameters) {
 		if ( Type.class.isAssignableFrom( clazz ) ) {
-			return type( (Class<Type>) clazz, parameters );
+			return type( clazz, parameters );
 		}
 
 		if ( CompositeUserType.class.isAssignableFrom( clazz ) ) {
-			return customComponent( (Class<CompositeUserType>) clazz, parameters );
+			return customComponent( clazz, parameters );
 		}
 
 		if ( UserType.class.isAssignableFrom( clazz ) ) {
-			return custom( (Class<UserType>) clazz, parameters );
+			return custom( clazz, parameters );
 		}
 
 		if ( Lifecycle.class.isAssignableFrom( clazz ) || Validatable.class.isAssignableFrom( clazz ) ) {
@@ -138,7 +132,8 @@ public final class TypeFactory implements Serializable {
 	/**
 	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
 	 */
-	@SuppressWarnings({ "JavaDoc" })
+	@Deprecated
+    @SuppressWarnings({ "JavaDoc" })
 	public static CompositeCustomType customComponent(Class<CompositeUserType> typeClass, Properties parameters, TypeScope scope) {
 		try {
 			CompositeUserType userType = typeClass.newInstance();
@@ -177,7 +172,8 @@ public final class TypeFactory implements Serializable {
 	/**
 	 * @deprecated Only for use temporary use by {@link org.hibernate.Hibernate}
 	 */
-	public static CustomType custom(Class<UserType> typeClass, Properties parameters, TypeScope scope) {
+	@Deprecated
+    public static CustomType custom(Class<UserType> typeClass, Properties parameters, TypeScope scope) {
 		try {
 			UserType userType = typeClass.newInstance();
 			injectParameters( userType, parameters );

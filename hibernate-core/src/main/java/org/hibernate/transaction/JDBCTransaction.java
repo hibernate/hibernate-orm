@@ -26,10 +26,6 @@ package org.hibernate.transaction;
 import java.sql.SQLException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -45,7 +41,9 @@ import org.hibernate.engine.transaction.SynchronizationRegistry;
  * @author Gavin King
  */
 public class JDBCTransaction implements Transaction {
-	private static final Logger log = LoggerFactory.getLogger(JDBCTransaction.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JDBCTransaction.class.getPackage().getName());
 
 	private final SynchronizationRegistry synchronizationRegistry = new SynchronizationRegistry();
 	private final JDBCContext jdbcContext;
@@ -75,21 +73,19 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("cannot re-start transaction after failed commit");
 		}
 
-		log.debug("begin");
+        LOG.begin();
 
 		try {
 			toggleAutoCommit = jdbcContext.connection().getAutoCommit();
-			if ( log.isDebugEnabled() ) {
-				log.debug("current autocommit status: " + toggleAutoCommit);
-			}
+            LOG.currentAutoCommitStatus(toggleAutoCommit);
 			if (toggleAutoCommit) {
-				log.debug("disabling autocommit");
+                LOG.disablingAutoCommit();
 				jdbcContext.connection().setAutoCommit(false);
 			}
 		}
 		catch (SQLException e) {
-			log.error("JDBC begin failed", e);
-			throw new TransactionException("JDBC begin failed: ", e);
+            LOG.error(LOG.jdbcBeginFailed(), e);
+            throw new TransactionException(LOG.jdbcBeginFailed(), e);
 		}
 
 		callback = jdbcContext.registerCallbackIfNecessary();
@@ -112,7 +108,7 @@ public class JDBCTransaction implements Transaction {
 				transactionContext.managedClose();
 			}
 			catch (HibernateException he) {
-				log.error("Could not close session", he);
+                LOG.error(LOG.unableToCloseSession(), he);
 				//swallow, the transaction was finished
 			}
 		}
@@ -126,7 +122,7 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-		log.debug("commit");
+        LOG.commit();
 
 		if ( !transactionContext.isFlushModeNever() && callback ) {
 			transactionContext.managedFlush(); //if an exception occurs during flush, user must call rollback()
@@ -139,7 +135,7 @@ public class JDBCTransaction implements Transaction {
 
 		try {
 			commitAndResetAutoCommit();
-			log.debug("committed JDBC Connection");
+            LOG.commitedJdbcConnection();
 			committed = true;
 			if ( callback ) {
 				jdbcContext.afterTransactionCompletion( true, this );
@@ -147,13 +143,13 @@ public class JDBCTransaction implements Transaction {
 			notifySynchronizationsAfterTransactionCompletion( Status.STATUS_COMMITTED );
 		}
 		catch (SQLException e) {
-			log.error("JDBC commit failed", e);
+            LOG.error(LOG.unableToPerformJdbcCommit(), e);
 			commitFailed = true;
 			if ( callback ) {
 				jdbcContext.afterTransactionCompletion( false, this );
 			}
 			notifySynchronizationsAfterTransactionCompletion( Status.STATUS_UNKNOWN );
-			throw new TransactionException("JDBC commit failed", e);
+            throw new TransactionException(LOG.unableToPerformJdbcCommit(), e);
 		}
 		finally {
 			closeIfRequired();
@@ -178,7 +174,7 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-		log.debug("rollback");
+        LOG.rollback();
 
 		if (!commitFailed) {
 
@@ -189,14 +185,14 @@ public class JDBCTransaction implements Transaction {
 
 			try {
 				rollbackAndResetAutoCommit();
-				log.debug("rolled back JDBC Connection");
+                LOG.rolledBackJdbcConnection();
 				rolledBack = true;
 				notifySynchronizationsAfterTransactionCompletion(Status.STATUS_ROLLEDBACK);
 			}
 			catch (SQLException e) {
-				log.error("JDBC rollback failed", e);
+                LOG.error(LOG.jdbcRollbackFailed(), e);
 				notifySynchronizationsAfterTransactionCompletion(Status.STATUS_UNKNOWN);
-				throw new TransactionException("JDBC rollback failed", e);
+                throw new TransactionException(LOG.jdbcRollbackFailed(), e);
 			}
 			finally {
 				if ( callback ) {
@@ -219,12 +215,12 @@ public class JDBCTransaction implements Transaction {
 	private void toggleAutoCommit() {
 		try {
 			if (toggleAutoCommit) {
-				log.debug("re-enabling autocommit");
+                LOG.reenablingAutoCommit();
 				jdbcContext.connection().setAutoCommit( true );
 			}
 		}
 		catch (Exception sqle) {
-			log.error("Could not toggle autocommit", sqle);
+            LOG.error(LOG.unableToToggleAutoCommit(), sqle);
 			//swallow it (the transaction _was_ successful or successfully rolled back)
 		}
 	}

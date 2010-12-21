@@ -23,22 +23,25 @@
  */
 package org.hibernate.id;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * <b>sequence</b><br>
@@ -53,7 +56,9 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Gavin King
  */
 public class SequenceGenerator implements PersistentIdentifierGenerator, Configurable {
-	private static final Logger log = LoggerFactory.getLogger(SequenceGenerator.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SequenceGenerator.class.getPackage().getName());
 
 	/**
 	 * The sequence parameter
@@ -113,9 +118,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 					rs.next();
 					IntegralDataTypeHolder result = buildHolder();
 					result.initialize( rs, 1 );
-					if ( log.isDebugEnabled() ) {
-						log.debug("Sequence identifier generated: " + result);
-					}
+                    LOG.sequenceIdentifierGenerated(result);
 					return result;
 				}
 				finally {
@@ -160,4 +163,14 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 		return sequenceName;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Sequence identifier generated: %s" )
+        void sequenceIdentifierGenerated( IntegralDataTypeHolder result );
+    }
 }

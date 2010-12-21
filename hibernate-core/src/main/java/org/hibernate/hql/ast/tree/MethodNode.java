@@ -25,7 +25,6 @@
 package org.hibernate.hql.ast.tree;
 
 import java.util.Arrays;
-
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
@@ -35,21 +34,18 @@ import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a method call.
  *
  * @author josh
  */
-public class MethodNode extends AbstractSelectExpression implements SelectExpression, FunctionNode {
+public class MethodNode extends AbstractSelectExpression implements FunctionNode {
 
-	private static final Logger log = LoggerFactory.getLogger( MethodNode.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                MethodNode.class.getPackage().getName());
 
 	private String methodName;
 	private FromElement fromElement;
@@ -146,14 +142,13 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 
 		SqlNode expr = ( SqlNode ) path;
 		Type type = expr.getDataType();
-		if ( log.isDebugEnabled() ) {
-			log.debug( "collectionProperty() :  name=" + name + " type=" + type );
-		}
+        LOG.collectionProperty(name, type);
 
 		resolveCollectionProperty( expr );
 	}
 
-	public boolean isScalar() throws SemanticException {
+	@Override
+    public boolean isScalar() throws SemanticException {
 		// Method expressions in a SELECT should always be considered scalar.
 		return true;
 	}
@@ -184,9 +179,9 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 			setType( SqlTokenTypes.SQL_TOKEN );
 		}
 		else {
-			throw new SemanticException( 
-					"Unexpected expression " + expr + 
-					" found for collection function " + propertyName 
+			throw new SemanticException(
+					"Unexpected expression " + expr +
+					" found for collection function " + propertyName
 				);
 		}
 	}
@@ -209,7 +204,7 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 		QueryableCollection queryableCollection = collectionFromElement.getQueryableCollection();
 
 		String path = collectionNode.getPath() + "[]." + propertyName;
-		log.debug( "Creating elements for " + path );
+        LOG.creatingElements(path);
 
 		fromElement = collectionFromElement;
 		if ( !collectionFromElement.isCollectionOfValuesOrComponents() ) {
@@ -232,14 +227,15 @@ public class MethodNode extends AbstractSelectExpression implements SelectExpres
 	protected void prepareSelectColumns(String[] columns) {
 	}
 
-	public FromElement getFromElement() {
+	@Override
+    public FromElement getFromElement() {
 		return fromElement;
 	}
 
 	public String getDisplayText() {
 		return "{" +
 				"method=" + getMethodName() +
-				",selectColumns=" + ( selectColumns == null ? 
+				",selectColumns=" + ( selectColumns == null ?
 						null : Arrays.asList( selectColumns ) ) +
 				",fromElement=" + fromElement.getTableAlias() +
 				"}";

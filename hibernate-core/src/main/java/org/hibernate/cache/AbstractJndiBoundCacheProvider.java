@@ -25,13 +25,9 @@
 package org.hibernate.cache;
 
 import java.util.Properties;
-
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.StringHelper;
@@ -44,7 +40,8 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 
-	private static final Logger log = LoggerFactory.getLogger( AbstractJndiBoundCacheProvider.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+
 	private Object cache;
 
 	protected void prepare(Properties properties) {
@@ -88,7 +85,7 @@ public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 		}
 		catch (NamingException ne) {
 			String msg = "Unable to retreive Cache from JNDI [" + jndiNamespace + "]";
-			log.info( msg, ne );
+            LOG.unableToRetrieveCache(jndiNamespace, ne.getMessage());
 			throw new CacheException( msg );
 		}
 		finally {
@@ -97,12 +94,12 @@ public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 					ctx.close();
 				}
 				catch( NamingException ne ) {
-					log.info( "Unable to release initial context", ne );
+                    LOG.unableToReleaseContext(ne.getMessage());
 				}
 			}
 		}
 	}
-	
+
 	public Object getCache() {
 		return cache;
 	}

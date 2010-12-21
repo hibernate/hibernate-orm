@@ -26,7 +26,6 @@ package org.hibernate.dialect.lock;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -36,8 +35,6 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A locking strategy where the locks are obtained through update statements.
@@ -49,7 +46,9 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class UpdateLockingStrategy implements LockingStrategy {
-	private static final Logger log = LoggerFactory.getLogger( UpdateLockingStrategy.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                UpdateLockingStrategy.class.getPackage().getName());
 
 	private final Lockable lockable;
 	private final LockMode lockMode;
@@ -69,7 +68,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			throw new HibernateException( "[" + lockMode + "] not valid for update statement" );
 		}
 		if ( !lockable.isVersioned() ) {
-			log.warn( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
+            LOG.writeLocksNotSupported(lockable.getEntityName());
 			this.sql = null;
 		}
 		else {

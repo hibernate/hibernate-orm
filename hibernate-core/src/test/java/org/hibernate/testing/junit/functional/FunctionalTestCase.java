@@ -23,27 +23,23 @@
  */
 package org.hibernate.testing.junit.functional;
 
+import java.sql.Connection;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.sql.Connection;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.SessionFactory;
+import java.util.List;
+import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.UnitTestCase;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Mappings;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * Most of the Hibernate test suite in fact is a series of functional tests, not
@@ -52,8 +48,6 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public abstract class FunctionalTestCase extends UnitTestCase implements ExecutionEnvironment.Settings {
-
-	private static final Logger log = LoggerFactory.getLogger( FunctionalTestCase.class );
 
 	private ExecutionEnvironment environment;
 	private boolean isEnvironmentLocallyManaged;
@@ -86,9 +80,10 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 	 *
 	 * @throws Exception
 	 */
-	protected final void setUp() throws Exception {
+	@Override
+    protected final void setUp() throws Exception {
 		if ( environment == null ) {
-			log.info( "Building locally managed execution env" );
+            LOG.info("Building locally managed execution env");
 			isEnvironmentLocallyManaged = true;
 			environment = new ExecutionEnvironment( this );
 			environment.initialize( getConnectionProviderInjectionProperties() );
@@ -106,10 +101,11 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 	 *
 	 * @throws Exception
 	 */
-	protected final void tearDown() throws Exception {
+	@Override
+    protected final void tearDown() throws Exception {
 		cleanupTest();
 		if ( isEnvironmentLocallyManaged ) {
-			log.info( "Destroying locally managed execution env" );
+            LOG.info("Destroying locally managed execution env");
 			environment.complete();
 			environment = null;
 		}
@@ -120,7 +116,8 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 	 *
 	 * @throws Throwable
 	 */
-	protected void runTest() throws Throwable {
+	@Override
+    protected void runTest() throws Throwable {
 		final boolean stats = sfi().getStatistics().isStatisticsEnabled();
 		try {
 			if ( stats ) {
@@ -147,7 +144,7 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 			assertAllDataRemoved();
 		}
 		catch ( Throwable e ) {
-			log.trace( "test run resulted in error; attempting to cleanup", e );
+            LOG.trace("test run resulted in error; attempting to cleanup", e);
 			try {
 				if ( session != null && session.isOpen() ) {
 					if ( session.isConnected() ) {
@@ -206,7 +203,8 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 		}
 	}
 
-	protected void skipExpectedFailure(Throwable error) {
+	@Override
+    protected void skipExpectedFailure(Throwable error) {
 		super.skipExpectedFailure( error );
 		try {
 			if ( recreateSchemaAfterFailure() && environment != null ) {

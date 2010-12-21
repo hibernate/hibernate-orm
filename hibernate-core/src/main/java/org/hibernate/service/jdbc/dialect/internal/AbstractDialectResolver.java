@@ -23,17 +23,18 @@
  */
 package org.hibernate.service.jdbc.dialect.internal;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.JDBCException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
-import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A templated resolver impl which delegates to the {@link #resolveDialectInternal} method
@@ -42,7 +43,9 @@ import org.hibernate.exception.JDBCConnectionException;
  * @author Steve Ebersole
  */
 public abstract class AbstractDialectResolver implements DialectResolver {
-	private static final Logger log = LoggerFactory.getLogger( AbstractDialectResolver.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractDialectResolver.class.getPackage().getName());
 
 	/**
 	 * {@inheritDoc}
@@ -56,16 +59,12 @@ public abstract class AbstractDialectResolver implements DialectResolver {
 		}
 		catch ( SQLException sqlException ) {
 			JDBCException jdbcException = BasicSQLExceptionConverter.INSTANCE.convert( sqlException );
-			if ( jdbcException instanceof JDBCConnectionException ) {
-				throw jdbcException;
-			}
-			else {
-				log.warn( BasicSQLExceptionConverter.MSG + " : " + sqlException.getMessage() );
-				return null;
-			}
+            if (jdbcException instanceof JDBCConnectionException) throw jdbcException;
+            LOG.warn(BasicSQLExceptionConverter.MSG + " : " + sqlException.getMessage());
+            return null;
 		}
 		catch ( Throwable t ) {
-			log.warn( "Error executing resolver [" + this + "] : " + t.getMessage() );
+            LOG.unableToExecuteResolver(this, t.getMessage());
 			return null;
 		}
 	}
@@ -78,4 +77,16 @@ public abstract class AbstractDialectResolver implements DialectResolver {
 	 * @throws SQLException Indicates problems accessing the metadata.
 	 */
 	protected abstract Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException;
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Error executing resolver [%s] : %s" )
+        void unableToExecuteResolver( AbstractDialectResolver abstractDialectResolver,
+                                      String message );
+    }
 }

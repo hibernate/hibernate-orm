@@ -26,10 +26,6 @@ package org.hibernate.stat;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.ArrayHelper;
@@ -42,8 +38,9 @@ import org.hibernate.util.ArrayHelper;
  */
 @SuppressWarnings({ "unchecked" })
 public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplementor {
-	private static final Logger log = LoggerFactory.getLogger( ConcurrentStatisticsImpl.class );
-	private static final Logger PERF_LOG = LoggerFactory.getLogger( Statistics.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ConcurrentStatisticsImpl.class.getPackage().getName());
 
 	private SessionFactoryImplementor sessionFactory;
 
@@ -316,7 +313,7 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public void queryExecuted(String hql, int rows, long time) {
-		PERF_LOG.info( "HQL: {}, time: {}ms, rows: {}", new Object[] {hql, Long.valueOf( time ), Long.valueOf(rows)} );
+        LOG.hql(hql, Long.valueOf(time), Long.valueOf(rows));
 		queryExecutionCount.getAndIncrement();
 		boolean isLongestQuery = false;
 		for ( long old = queryExecutionMaxTime.get();
@@ -537,35 +534,35 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 	 * log in info level the main statistics
 	 */
 	public void logSummary() {
-		log.info( "Logging statistics...." );
-		log.info( "start time: " + startTime );
-		log.info( "sessions opened: " + sessionOpenCount );
-		log.info( "sessions closed: " + sessionCloseCount );
-		log.info( "transactions: " + transactionCount );
-		log.info( "successful transactions: " + committedTransactionCount );
-		log.info( "optimistic lock failures: " + optimisticFailureCount );
-		log.info( "flushes: " + flushCount );
-		log.info( "connections obtained: " + connectCount );
-		log.info( "statements prepared: " + prepareStatementCount );
-		log.info( "statements closed: " + closeStatementCount );
-		log.info( "second level cache puts: " + secondLevelCachePutCount );
-		log.info( "second level cache hits: " + secondLevelCacheHitCount );
-		log.info( "second level cache misses: " + secondLevelCacheMissCount );
-		log.info( "entities loaded: " + entityLoadCount );
-		log.info( "entities updated: " + entityUpdateCount );
-		log.info( "entities inserted: " + entityInsertCount );
-		log.info( "entities deleted: " + entityDeleteCount );
-		log.info( "entities fetched (minimize this): " + entityFetchCount );
-		log.info( "collections loaded: " + collectionLoadCount );
-		log.info( "collections updated: " + collectionUpdateCount );
-		log.info( "collections removed: " + collectionRemoveCount );
-		log.info( "collections recreated: " + collectionRecreateCount );
-		log.info( "collections fetched (minimize this): " + collectionFetchCount );
-		log.info( "queries executed to database: " + queryExecutionCount );
-		log.info( "query cache puts: " + queryCachePutCount );
-		log.info( "query cache hits: " + queryCacheHitCount );
-		log.info( "query cache misses: " + queryCacheMissCount );
-		log.info( "max query time: " + queryExecutionMaxTime + "ms" );
+        LOG.loggingStatistics();
+        LOG.startTime(startTime);
+        LOG.sessionsOpened(sessionOpenCount);
+        LOG.sessionsClosed(sessionCloseCount);
+        LOG.transactions(transactionCount);
+        LOG.successfulTransactions(committedTransactionCount);
+        LOG.optimisticLockFailures(optimisticFailureCount);
+        LOG.flushes(flushCount);
+        LOG.connectionsObtained(connectCount);
+        LOG.statementsPrepared(prepareStatementCount);
+        LOG.statementsClosed(closeStatementCount);
+        LOG.secondLevelCachePuts(secondLevelCachePutCount);
+        LOG.secondLevelCacheHits(secondLevelCacheHitCount);
+        LOG.secondLevelCacheMisses(secondLevelCacheMissCount);
+        LOG.entitiesLoaded(entityLoadCount);
+        LOG.entitiesUpdated(entityUpdateCount);
+        LOG.entitiesInserted(entityInsertCount);
+        LOG.entitiesDeleted(entityDeleteCount);
+        LOG.entitiesFetched(entityFetchCount);
+        LOG.collectionsLoaded(collectionLoadCount);
+        LOG.collectionsUpdated(collectionUpdateCount);
+        LOG.collectionsRemoved(collectionRemoveCount);
+        LOG.collectionsRecreated(collectionRecreateCount);
+        LOG.collectionsFetched(collectionFetchCount);
+        LOG.queriesExecuted(queryExecutionCount);
+        LOG.queryCachePuts(queryCachePutCount);
+        LOG.queryCacheHits(queryCacheHitCount);
+        LOG.queryCacheMisses(queryCacheMissCount);
+        LOG.maxQueryTime(queryExecutionMaxTime);
 	}
 
 	/**
@@ -673,7 +670,8 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 		return optimisticFailureCount.get();
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return new StringBuilder()
 				.append( "Statistics[" )
 				.append( "start time=" ).append( startTime )
@@ -711,5 +709,4 @@ public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplement
 	public String getQueryExecutionMaxTimeQueryString() {
 		return queryExecutionMaxTimeQueryString;
 	}
-
 }

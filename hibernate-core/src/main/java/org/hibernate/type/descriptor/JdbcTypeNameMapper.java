@@ -23,16 +23,17 @@
  */
 package org.hibernate.type.descriptor;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * TODO : javadoc
@@ -40,7 +41,9 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class JdbcTypeNameMapper {
-	private static final Logger log = LoggerFactory.getLogger( JdbcTypeNameMapper.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JdbcTypeNameMapper.class.getPackage().getName());
 	private static Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
 
 	private static Map<Integer, String> buildJdbcTypeMap() {
@@ -56,9 +59,7 @@ public class JdbcTypeNameMapper {
 						Integer.valueOf( code ),
 						field.getName()
 				);
-				if ( old != null ) {
-					log.info( "java.sql.Types mapped the same code [" + code + "] multiple times; was [" + old + "]; now [" + field.getName() + "]" );
-				}
+                if (old != null) LOG.JavaSqlTypesMappedSameCodeMultipleTimes(code, old, field.getName());
 			}
 			catch ( IllegalAccessException e ) {
 				throw new HibernateException( "Unable to access JDBC type mapping [" + field.getName() + "]", e );
@@ -78,4 +79,17 @@ public class JdbcTypeNameMapper {
 		}
 		return name;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "java.sql.Types mapped the same code [%d] multiple times; was [%s]; now [%s]" )
+        void JavaSqlTypesMappedSameCodeMultipleTimes( int code,
+                                                      String old,
+                                                      String name );
+    }
 }

@@ -27,9 +27,6 @@ package org.hibernate.transaction;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -48,7 +45,8 @@ import org.hibernate.util.JTAHelper;
  */
 public class CMTTransaction implements Transaction {
 
-	private static final Logger log = LoggerFactory.getLogger(CMTTransaction.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CMTTransaction.class.getPackage().getName());
 
 	protected final JDBCContext jdbcContext;
 	protected final TransactionFactory.Context transactionContext;
@@ -68,8 +66,8 @@ public class CMTTransaction implements Transaction {
 			return;
 		}
 
-		log.debug("begin");
-		
+        LOG.begin();
+
 		boolean synchronization = jdbcContext.registerSynchronizationIfPossible();
 
 		if ( !synchronization ) {
@@ -77,7 +75,7 @@ public class CMTTransaction implements Transaction {
 		}
 
 		begun = true;
-		
+
 		jdbcContext.afterTransactionBegin(this);
 	}
 
@@ -89,7 +87,7 @@ public class CMTTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-		log.debug("commit");
+        LOG.commit();
 
 		boolean flush = !transactionContext.isFlushModeNever() &&
 		        !transactionContext.isFlushBeforeCompletionEnabled();
@@ -110,13 +108,13 @@ public class CMTTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-		log.debug("rollback");
+        LOG.rollback();
 
 		try {
 			getTransaction().setRollbackOnly();
 		}
 		catch (SystemException se) {
-			log.error("Could not set transaction to rollback only", se);
+            LOG.error(LOG.unableToSetTransactionToRollbackOnly(), se);
 			throw new TransactionException("Could not set transaction to rollback only", se);
 		}
 
@@ -145,11 +143,11 @@ public class CMTTransaction implements Transaction {
 			status = getTransaction().getStatus();
 		}
 		catch (SystemException se) {
-			log.error("Could not determine transaction status", se);
-			throw new TransactionException("Could not determine transaction status: ", se);
+            LOG.error(LOG.unableToDetermineTransactionStatus(), se);
+            throw new TransactionException(LOG.unableToDetermineTransactionStatus(), se);
 		}
 		if (status==Status.STATUS_UNKNOWN) {
-			throw new TransactionException("Could not determine transaction status");
+            throw new TransactionException(LOG.unableToDetermineTransactionStatus());
 		}
 		else {
 			return status==Status.STATUS_ACTIVE;
@@ -168,11 +166,11 @@ public class CMTTransaction implements Transaction {
 			status = getTransaction().getStatus();
 		}
 		catch (SystemException se) {
-			log.error("Could not determine transaction status", se);
-			throw new TransactionException("Could not determine transaction status", se);
+            LOG.error(LOG.unableToDetermineTransactionStatus(), se);
+            throw new TransactionException(LOG.unableToDetermineTransactionStatus(), se);
 		}
 		if (status==Status.STATUS_UNKNOWN) {
-			throw new TransactionException("Could not determine transaction status");
+            throw new TransactionException(LOG.unableToDetermineTransactionStatus());
 		}
 		else {
 			return JTAHelper.isRollback(status);
@@ -191,11 +189,11 @@ public class CMTTransaction implements Transaction {
 			status = getTransaction().getStatus();
 		}
 		catch (SystemException se) {
-			log.error("Could not determine transaction status", se);
-			throw new TransactionException("Could not determine transaction status: ", se);
+            LOG.error(LOG.unableToDetermineTransactionStatus(), se);
+            throw new TransactionException(LOG.unableToDetermineTransactionStatus(), se);
 		}
 		if (status==Status.STATUS_UNKNOWN) {
-			throw new TransactionException("Could not determine transaction status");
+            throw new TransactionException(LOG.unableToDetermineTransactionStatus());
 		}
 		else {
 			return status==Status.STATUS_COMMITTED;

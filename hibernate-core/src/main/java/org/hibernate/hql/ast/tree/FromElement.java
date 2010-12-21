@@ -24,19 +24,18 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
-
 import org.hibernate.QueryException;
-import org.hibernate.hql.ast.TypeDiscriminatorMetadata;
-import org.hibernate.param.ParameterSpecification;
 import org.hibernate.engine.JoinSequence;
-import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.CollectionProperties;
+import org.hibernate.hql.QueryTranslator;
+import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
+import org.hibernate.hql.ast.TypeDiscriminatorMetadata;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.hql.ast.HqlSqlWalker;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
@@ -45,9 +44,6 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Represents a single mapped class mentioned in an HQL FROM clause.  Each
@@ -62,7 +58,9 @@ import org.slf4j.LoggerFactory;
  * @author josh
  */
 public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, ParameterContainer {
-	private static final Logger log = LoggerFactory.getLogger( FromElement.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                FromElement.class.getPackage().getName());
 
 	private String className;
 	private String classAlias;
@@ -153,17 +151,15 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.elementType = new FromElementType( this, persister, type );
 		// Register the FromElement with the FROM clause, now that we have the names and aliases.
 		fromClause.registerFromElement( this );
-		if ( log.isDebugEnabled() ) {
-			log.debug( fromClause + " :  " + className + " ("
-					+ ( classAlias == null ? "no alias" : classAlias ) + ") -> " + tableAlias );
-		}
+        LOG.fromClause(fromClause, className, classAlias == null ? LOG.noAlias() : classAlias, tableAlias);
 	}
 
 	public EntityPersister getEntityPersister() {
 		return elementType.getEntityPersister();
 	}
 
-	public Type getDataType() {
+	@Override
+    public Type getDataType() {
 		return elementType.getDataType();
 	}
 
@@ -292,11 +288,13 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		buf.append( "}" );
 	}
 
-	public int hashCode() {
+	@Override
+    public int hashCode() {
 		return super.hashCode();
 	}
 
-	public boolean equals(Object obj) {
+	@Override
+    public boolean equals(Object obj) {
 		return super.equals( obj );
 	}
 
@@ -310,11 +308,8 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setIncludeSubclasses(boolean includeSubclasses) {
-		if ( isDereferencedBySuperclassOrSubclassProperty() ) {
-			if ( !includeSubclasses && log.isTraceEnabled() ) {
-				log.trace( "attempt to disable subclass-inclusions", new Exception( "stack-trace source" ) );
-			}
-		}
+        if (LOG.isTraceEnabled() && isDereferencedBySuperclassOrSubclassProperty() && !includeSubclasses) LOG.attemptToDisableSubclassInclusions(new Exception(
+                                                                                                                                                               LOG.stackTraceSource()));
 		this.includeSubclasses = includeSubclasses;
 	}
 
@@ -341,7 +336,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		else {
 			propertyName = EntityPersister.ENTITY_ID;
 		}
-		if ( getWalker().getStatementType() == HqlSqlWalker.SELECT ) {
+		if ( getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {
 			cols = getPropertyMapping( propertyName ).toColumns( table, propertyName );
 		}
 		else {
@@ -622,9 +617,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( persister != null ) {
 			try {
 				Queryable.Declarer propertyDeclarer = persister.getSubclassPropertyDeclarer( propertyName );
-				if ( log.isTraceEnabled() ) {
-					log.trace( "handling property dereference [" + persister.getEntityName() + " (" + getClassAlias() + ") -> " + propertyName + " (" + propertyDeclarer + ")]" );
-				}
+                LOG.handlingPropertyDereference(persister.getEntityName(), getClassAlias(), propertyName, propertyDeclarer);
 				if ( propertyDeclarer == Queryable.Declarer.SUBCLASS ) {
 					dereferencedBySubclassProperty = true;
 					includeSubclasses = true;

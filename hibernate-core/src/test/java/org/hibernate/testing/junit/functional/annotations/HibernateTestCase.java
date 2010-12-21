@@ -32,11 +32,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import junit.framework.TestCase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -61,7 +58,7 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class HibernateTestCase extends TestCase {
 
-	public static final Logger log = LoggerFactory.getLogger( HibernateTestCase.class );
+    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	protected static Configuration cfg;
 	private static Class<?> lastTestClass;

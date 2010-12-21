@@ -30,10 +30,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
@@ -44,6 +40,9 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.SQLStatementLogger;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -51,8 +50,10 @@ import org.hibernate.jdbc.util.SQLStatementLogger;
  * @author Steve Ebersole
  */
 public class TableStructure extends TransactionHelper implements DatabaseStructure {
-	private static final Logger log = LoggerFactory.getLogger( TableStructure.class );
-	private static final SQLStatementLogger SQL_STATEMENT_LOGGER = new SQLStatementLogger( false, false );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TableStructure.class.getPackage().getName());
+    private static final SQLStatementLogger SQL_STATEMENT_LOGGER = new SQLStatementLogger(false, false);
 
 	private final String tableName;
 	private final String valueColumnName;
@@ -161,7 +162,8 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
+	@Override
+    protected Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
 		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
 		int rows;
 		do {
@@ -170,15 +172,15 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 			try {
 				ResultSet selectRS = selectPS.executeQuery();
 				if ( !selectRS.next() ) {
-					String err = "could not read a hi value - you need to populate the table: " + tableName;
-					log.error( err );
+                    String err = LOG.unableToReadHiValue(tableName);
+                    LOG.error(err);
 					throw new IdentifierGenerationException( err );
 				}
 				value.initialize( selectRS, 1 );
 				selectRS.close();
 			}
 			catch ( SQLException sqle ) {
-				log.error( "could not read a hi value", sqle );
+                LOG.error(LOG.unableToReadHiValue(), sqle);
 				throw sqle;
 			}
 			finally {
@@ -195,7 +197,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 				rows = updatePS.executeUpdate();
 			}
 			catch ( SQLException sqle ) {
-				log.error( "could not updateQuery hi value in: " + tableName, sqle );
+                LOG.error(LOG.unableToUpdateQueryHiValue(tableName), sqle);
 				throw sqle;
 			}
 			finally {
@@ -208,4 +210,19 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 		return value;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "Could not read a hi value" )
+        String unableToReadHiValue();
+
+        @Message( value = "Could not read a hi value - you need to populate the table: %s" )
+        String unableToReadHiValue( String tableName );
+
+        @Message( value = "Could not updateQuery hi value in: %s" )
+        Object unableToUpdateQueryHiValue( String tableName );
+    }
 }

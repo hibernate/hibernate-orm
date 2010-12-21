@@ -23,16 +23,19 @@
  */
 package org.hibernate.util;
 
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.List;
-
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.DOMReader;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
@@ -42,7 +45,9 @@ import org.xml.sax.SAXParseException;
  * Small helper class that lazy loads DOM and SAX reader and keep them for fast use afterwards.
  */
 public final class XMLHelper {
-	private static final Logger log = LoggerFactory.getLogger(XMLHelper.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                XMLHelper.class.getPackage().getName());
 
 	public static final EntityResolver DEFAULT_DTD_RESOLVER = new DTDEntityResolver();
 
@@ -86,14 +91,14 @@ public final class XMLHelper {
 			this.errors = errors;
 		}
 		public void error(SAXParseException error) {
-			log.error( "Error parsing XML: " + file + '(' + error.getLineNumber() + ") " + error.getMessage() );
+            LOG.parsingXmlError(file, error.getLineNumber(), error.getMessage());
 			errors.add(error);
 		}
 		public void fatalError(SAXParseException error) {
 			error(error);
 		}
 		public void warning(SAXParseException warn) {
-			log.warn( "Warning parsing XML: " + file + '(' + warn.getLineNumber() + ") " + warn.getMessage() );
+            LOG.parsingXmlWarning(file, warn.getLineNumber(), warn.getMessage());
 		}
 	}
 
@@ -116,4 +121,23 @@ public final class XMLHelper {
 		}
 
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Error parsing XML: %s(%d) %s" )
+        void parsingXmlError( String file,
+                              int lineNumber,
+                              String message );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Warning parsing XML: %s(%d) %s" )
+        void parsingXmlWarning( String file,
+                                int lineNumber,
+                                String message );
+    }
 }

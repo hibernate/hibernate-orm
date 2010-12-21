@@ -3,34 +3,29 @@ package org.hibernate.test.annotations.backquotes;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
 import junit.framework.TestCase;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Testcase for ANN-718 - @JoinTable / @JoinColumn fail when using backquotes in PK field name.
- * 
+ *
  * @author Hardy Ferentschik
  *
  */
 public class BackquoteTest extends TestCase {
-		
-	private Logger log = LoggerFactory.getLogger(BackquoteTest.class);	
 	
 	private ServiceRegistryHolder serviceRegistryHolder;
 
-	protected void setUp() {
+	@Override
+    protected void setUp() {
 		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
 	}
 
-	protected void tearDown() {
+	@Override
+    protected void tearDown() {
 		if ( serviceRegistryHolder != null ) {
 			serviceRegistryHolder.destroy();
 		}
@@ -46,16 +41,16 @@ public class BackquoteTest extends TestCase {
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-			log.debug(writer.toString());
+            LOG.debug(writer.toString());
 			fail(e.getMessage());
 		}
 	}
-	
-	/** 
+
+	/**
 	 *  HHH-4647 : Problems with @JoinColumn referencedColumnName and quoted column and table names
-	 *  
-	 *  An invalid referencedColumnName to an entity having a quoted table name results in an 
-	 *  infinite loop in o.h.c.Configuration$MappingsImpl#getPhysicalColumnName(). 
+	 *
+	 *  An invalid referencedColumnName to an entity having a quoted table name results in an
+	 *  infinite loop in o.h.c.Configuration$MappingsImpl#getPhysicalColumnName().
 	 *  The same issue exists with getLogicalColumnName()
 	 */
 	public void testInvalidReferenceToQuotedTableName() {
@@ -67,15 +62,14 @@ public class BackquoteTest extends TestCase {
     		fail("expected MappingException to be thrown");
     	}
     	//we WANT MappingException to be thrown
-        catch( MappingException e ) { 
-        	assertTrue("MappingException was thrown", true); 
+        catch( MappingException e ) {
+        	assertTrue("MappingException was thrown", true);
         }
         catch(Exception e) {
         	StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
-			log.debug(writer.toString());
+            LOG.debug(writer.toString());
         	fail(e.getMessage());
         }
 	}
-
 }

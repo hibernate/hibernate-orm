@@ -23,16 +23,13 @@
  */
 package org.hibernate.tuple.entity;
 
+import static org.jboss.logging.Logger.Level.ERROR;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -56,6 +53,10 @@ import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
@@ -64,7 +65,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Gavin King
  */
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
-	static final Logger log = LoggerFactory.getLogger( PojoEntityTuplizer.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PojoEntityTuplizer.class.getPackage().getName());
 
 	private final Class mappedClass;
 	private final Class proxyInterface;
@@ -107,18 +110,19 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 //					mappedClass, getterNames, setterNames, propTypes
 //			);
 		}
-	
+
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
+	@Override
+    protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
         // determine all interfaces needed by the resulting proxy
 		HashSet<Class> proxyInterfaces = new HashSet<Class>();
 		proxyInterfaces.add( HibernateProxy.class );
-		
+
 		Class mappedClass = persistentClass.getMappedClass();
 		Class proxyInterface = persistentClass.getProxyInterface();
 
@@ -156,27 +160,21 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			Property property = (Property) properties.next();
 			Method method = property.getGetter(clazz).getMethod();
 			if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				log.error(
-						"Getters of lazy classes cannot be final: " + persistentClass.getEntityName() + 
-						"." + property.getName() 
-					);
+                LOG.gettersOfLazyClassesCannotBeFinal(persistentClass.getEntityName(), property.getName());
 			}
 			method = property.getSetter(clazz).getMethod();
             if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
-				log.error(
-						"Setters of lazy classes cannot be final: " + persistentClass.getEntityName() + 
-						"." + property.getName() 
-					);
+                LOG.settersOfLazyClassesCannotBeFinal(persistentClass.getEntityName(), property.getName());
 			}
 		}
 
 		Method idGetterMethod = idGetter==null ? null : idGetter.getMethod();
 		Method idSetterMethod = idSetter==null ? null : idSetter.getMethod();
 
-		Method proxyGetIdentifierMethod = idGetterMethod==null || proxyInterface==null ? 
+		Method proxyGetIdentifierMethod = idGetterMethod==null || proxyInterface==null ?
 				null :
 		        ReflectHelper.getMethod(proxyInterface, idGetterMethod);
-		Method proxySetIdentifierMethod = idSetterMethod==null || proxyInterface==null  ? 
+		Method proxySetIdentifierMethod = idSetterMethod==null || proxyInterface==null  ?
 				null :
 		        ReflectHelper.getMethod(proxyInterface, idSetterMethod);
 
@@ -194,7 +192,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			);
 		}
 		catch ( HibernateException he ) {
-			log.warn( "could not create proxy factory for:" + getEntityName(), he );
+            LOG.warn(LOG.unableToCreateProxyFactory(getEntityName()), he);
 			pf = null;
 		}
 		return pf;
@@ -209,7 +207,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Instantiator buildInstantiator(PersistentClass persistentClass) {
+	@Override
+    protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		if ( optimizer == null ) {
 			return new PojoInstantiator( persistentClass, null );
 		}
@@ -221,7 +220,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
+	@Override
+    public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
 		if ( !getEntityMetamodel().hasLazyProperties() && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			setPropertyValuesWithOptimizer( entity, values );
 		}
@@ -233,7 +233,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object[] getPropertyValues(Object entity) throws HibernateException {
+	@Override
+    public Object[] getPropertyValues(Object entity) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
 		}
@@ -245,7 +246,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) throws HibernateException {
+	@Override
+    public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
 			return getPropertyValuesWithOptimizer( entity );
 		}
@@ -279,28 +281,32 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean isLifecycleImplementor() {
+	@Override
+    public boolean isLifecycleImplementor() {
 		return lifecycleImplementor;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean isValidatableImplementor() {
+	@Override
+    public boolean isValidatableImplementor() {
 		return validatableImplementor;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
+	@Override
+    protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getGetter( mappedEntity.getMappedClass() );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
+	@Override
+    protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getSetter( mappedEntity.getMappedClass() );
 	}
 
@@ -316,7 +322,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
+	@Override
+    public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
 		if ( isInstrumented() ) {
 			Set lazyProps = lazyPropertiesAreUnfetched && getEntityMetamodel().hasLazyProperties() ?
 					lazyPropertyNames : null;
@@ -329,7 +336,8 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean hasUninitializedLazyProperties(Object entity) {
+	@Override
+    public boolean hasUninitializedLazyProperties(Object entity) {
 		if ( getEntityMetamodel().hasLazyProperties() ) {
 			FieldInterceptor callback = FieldInterceptionHelper.extractFieldInterceptor( entity );
 			return callback != null && !callback.isInitialized();
@@ -372,4 +380,24 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return null;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Getters of lazy classes cannot be final: %s.%s" )
+        void gettersOfLazyClassesCannotBeFinal( String entityName,
+                                                String name );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Setters of lazy classes cannot be final: %s.%s" )
+        void settersOfLazyClassesCannotBeFinal( String entityName,
+                                                String name );
+
+        @Message( value = "Could not create proxy factory for:%s" )
+        Object unableToCreateProxyFactory( String entityName );
+    }
 }

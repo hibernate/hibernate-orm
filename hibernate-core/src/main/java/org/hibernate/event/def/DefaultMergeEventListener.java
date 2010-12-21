@@ -24,22 +24,19 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
+import org.hibernate.PropertyValueException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.WrongClassException;
-import org.hibernate.PropertyValueException;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
@@ -57,6 +54,10 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -64,12 +65,14 @@ import org.hibernate.type.TypeHelper;
  *
  * @author Gavin King
  */
-public class DefaultMergeEventListener extends AbstractSaveEventListener 
+public class DefaultMergeEventListener extends AbstractSaveEventListener
 	implements MergeEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultMergeEventListener.class);
-	
-	protected Map getMergeMap(Object anything) {
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultMergeEventListener.class.getPackage().getName());
+
+	@Override
+    protected Map getMergeMap(Object anything) {
 		return ( ( EventCache ) anything ).invertMap();
 	}
 
@@ -98,8 +101,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 					Object transientEntity = ( ( Map.Entry ) it.next() ).getKey();
 					String transientEntityName = event.getSession().guessEntityName( transientEntity );
 					transientEntityNames.add( transientEntityName );
-					log.trace( "transient instance could not be processed by merge when checking nullability: " +
-							transientEntityName + "[" + transientEntity + "]" );
+                    LOG.transientInstanceNotProcessedDueToNullability(transientEntityName, transientEntity);
 				}
 				if ( isNullabilityCheckedGlobal( event.getSession() ) ) {
 					throw new TransientObjectException(
@@ -107,7 +109,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 						transientEntityNames );
 				}
 				else {
-					log.trace( "retry saving transient instances without checking nullability" );
+                    LOG.retrySavingTransientInstancesIgnoringNullability();
 					// failures will be detected later...
 					retryMergeTransientEntities( event, transientCopyCache, copyCache, false );
 				}
@@ -130,8 +132,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			if ( copyEntry == null ) {
 				// entity name will not be available for non-POJO entities
 				// TODO: cache the entity name somewhere so that it is available to this exception
-				log.trace( "transient instance could not be processed by merge: " +
-						event.getSession().guessEntityName( copy ) + "[" + entity + "]" );
+                LOG.transientInstanceNotProcessed(event.getSession().guessEntityName(copy), entity);
 				// merge did not cascade to this entity; it's in copyCache because a
 				// different entity has a non-nullable reference to this entity;
 				// this entity should not be put in transientCopyCache, because it was
@@ -182,7 +183,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		}
 	}
 
-	/** 
+	/**
 	 * Handle the given merge event.
 	 *
 	 * @param event The merge event to be handled.
@@ -200,7 +201,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			if ( original instanceof HibernateProxy ) {
 				LazyInitializer li = ( (HibernateProxy) original ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
-					log.trace("ignoring uninitialized proxy");
+                    LOG.ignoringUninitializedProxy();
 					event.setResult( source.load( li.getEntityName(), li.getIdentifier() ) );
 					return; //EARLY EXIT!
 				}
@@ -214,12 +215,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 
 			if ( copyCache.containsKey( entity ) &&
 					( copyCache.isOperatedOn( entity ) ) ) {
-				log.trace("already in merge process");
-				event.setResult( entity );				
+                LOG.alreadyInMergeProcess();
+				event.setResult( entity );
 			}
 			else {
 				if ( copyCache.containsKey( entity ) ) {
-					log.trace("already in copyCache; setting in merge process");					
+                    LOG.alreadyInCopyCache();
 					copyCache.setOperatedOn( entity, true );
 				}
 				event.setEntity( entity );
@@ -249,7 +250,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				if ( entityState == -1 ) {
 					entityState = getEntityState( entity, event.getEntityName(), entry, source );
 				}
-				
+
 				switch (entityState) {
 					case DETACHED:
 						entityIsDetached(event, copyCache);
@@ -262,38 +263,38 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 						break;
 					default: //DELETED
 						throw new ObjectDeletedException(
-								"deleted instance passed to merge", 
+								"deleted instance passed to merge",
 								null,
 								getLoggableName( event.getEntityName(), entity )
-							);			
+							);
 				}
 			}
-			
+
 		}
-		
+
 	}
 
 	protected void entityIsPersistent(MergeEvent event, Map copyCache) {
-		log.trace("ignoring persistent instance");
-		
+        LOG.ignoringPersistentInstance();
+
 		//TODO: check that entry.getIdentifier().equals(requestedId)
-		
+
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
 		( ( EventCache ) copyCache ).put( entity, entity, true  );  //before cascade!
-		
+
 		cascadeOnMerge(source, persister, entity, copyCache);
 		copyValues(persister, entity, entity, source, copyCache);
-		
+
 		event.setResult(entity);
 	}
 
 	protected void entityIsTransient(MergeEvent event, Map copyCache) {
-		
-		log.trace("merging transient instance");
-		
+
+        LOG.mergingTransientInstance();
+
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
 
@@ -315,7 +316,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 			Map copyCache,
 			boolean isNullabilityChecked) {
 
-		log.trace("merging transient instance");
+        LOG.mergingTransientInstance();
 
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 
@@ -423,9 +424,9 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		}
 	}
 	protected void entityIsDetached(MergeEvent event, Map copyCache) {
-		
-		log.trace("merging detached instance");
-		
+
+        LOG.mergingDetachedInstance();
+
 		final Object entity = event.getEntity();
 		final EventSource source = event.getSession();
 
@@ -443,21 +444,21 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				throw new HibernateException( "merge requested with id not matching id of passed entity" );
 			}
 		}
-		
+
 		String previousFetchProfile = source.getFetchProfile();
 		source.setFetchProfile("merge");
-		//we must clone embedded composite identifiers, or 
+		//we must clone embedded composite identifiers, or
 		//we will get back the same instance that we pass in
 		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
 				.deepCopy( id, source.getEntityMode(), source.getFactory() );
 		final Object result = source.get(entityName, clonedIdentifier);
 		source.setFetchProfile(previousFetchProfile);
-		
+
 		if ( result == null ) {
-			//TODO: we should throw an exception if we really *know* for sure  
+			//TODO: we should throw an exception if we really *know* for sure
 			//      that this is a detached instance, rather than just assuming
 			//throw new StaleObjectStateException(entityName, id);
-			
+
 			// we got here because we assumed that an instance
 			// with an assigned id was detached, when it was
 			// really persistent
@@ -465,7 +466,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		}
 		else {
 			( ( EventCache ) copyCache ).put( entity, result, true ); //before cascade!
-	
+
 			final Object target = source.getPersistenceContext().unproxy(result);
 			if ( target == entity ) {
 				throw new AssertionFailure("entity was not detached");
@@ -484,15 +485,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				}
 				throw new StaleObjectStateException( entityName, id );
 			}
-	
-			// cascade first, so that all unsaved objects get their 
+
+			// cascade first, so that all unsaved objects get their
 			// copy created before we actually copy
 			cascadeOnMerge(source, persister, entity, copyCache);
 			copyValues(persister, entity, target, source, copyCache);
-			
+
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
 			markInterceptorDirty( entity, target );
-			
+
 			event.setResult(result);
 		}
 
@@ -554,9 +555,9 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 	}
 
 	protected void copyValues(
-		final EntityPersister persister, 
-		final Object entity, 
-		final Object target, 
+		final EntityPersister persister,
+		final Object entity,
+		final Object target,
 		final SessionImplementor source,
 		final Map copyCache
 	) {
@@ -565,7 +566,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 				persister.getPropertyValues( target, source.getEntityMode() ),
 				persister.getPropertyTypes(),
 				source,
-				target, 
+				target,
 				copyCache
 			);
 
@@ -574,8 +575,8 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 
 	protected void copyValues(
 			final EntityPersister persister,
-			final Object entity, 
-			final Object target, 
+			final Object entity,
+			final Object target,
 			final SessionImplementor source,
 			final Map copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
@@ -611,7 +612,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 		persister.setPropertyValues( target, copiedValues, source.getEntityMode() );
 	}
 
-	/** 
+	/**
 	 * Perform any cascades needed as part of this copy event.
 	 *
 	 * @param source The merge event being processed.
@@ -636,26 +637,102 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener
 	}
 
 
-	protected CascadingAction getCascadeAction() {
+	@Override
+    protected CascadingAction getCascadeAction() {
 		return CascadingAction.MERGE;
 	}
 
-	protected Boolean getAssumedUnsaved() {
+	@Override
+    protected Boolean getAssumedUnsaved() {
 		return Boolean.FALSE;
 	}
-	
+
 	/**
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
-	protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, Object anything) 
+	@Override
+    protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, Object anything)
 	throws HibernateException {
 	}
 
 	/**
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
-	protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, Object anything) 
+	@Override
+    protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, Object anything)
 	throws HibernateException {
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Already in copyCache; setting in merge process" )
+        void alreadyInCopyCache();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Already in merge process" )
+        void alreadyInMergeProcess();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Ignoring persistent instance" )
+        void ignoringPersistentInstance();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Ignoring uninitialized proxy" )
+        void ignoringUninitializedProxy();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Merging detached instance" )
+        void mergingDetachedInstance();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Merging transient instance" )
+        void mergingTransientInstance();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Property '%s.%s' from original entity is in copyCache and is in the process of being merged; %s =[%s]" )
+        void propertyBeingMerged( String entityName,
+                                  String propertyName,
+                                  String propertyName2,
+                                  Object propertyFromEntity );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Property '%s.%s' from original entity is in copyCache and is not in the process of being merged; %s =[%s]" )
+        void propertyNotBeingMerged( String entityName,
+                                     String propertyName,
+                                     String propertyName2,
+                                     Object propertyFromEntity );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Property '%s.%s' from original entity is not in copyCache; %s =[%s]" )
+        void propertyNotInCopyCache( String entityName,
+                                     String propertyName,
+                                     String propertyName2,
+                                     Object propertyFromEntity );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Property '%s.%s' is null or not an entity; %s =[%s]" )
+        void propertyNullOrNotAnEntity( String entityName,
+                                        String propertyName,
+                                        String propertyName2,
+                                        Object propertyFromCopy );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Retry saving transient instances without checking nullability" )
+        void retrySavingTransientInstancesIgnoringNullability();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Transient instance could not be processed by merge: %s[%s]" )
+        void transientInstanceNotProcessed( String guessEntityName,
+                                            Object entity );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Transient instance could not be processed by merge when checking nullability: %s[%s]" )
+        void transientInstanceNotProcessedDueToNullability( String transientEntityName,
+                                                            Object transientEntity );
+    }
 }

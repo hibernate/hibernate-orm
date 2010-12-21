@@ -24,6 +24,10 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,10 +44,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Configuration;
@@ -58,6 +58,10 @@ import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -67,7 +71,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public class SchemaExport {
 
-	private static final Logger log = LoggerFactory.getLogger( SchemaExport.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SchemaExport.class.getPackage().getName());
 
 	private ConnectionHelper connectionHelper;
 	private String[] dropSQL;
@@ -122,7 +127,8 @@ public class SchemaExport {
 	 *
 	 * @deprecated properties may be specified via the Configuration object
 	 */
-	public SchemaExport(Configuration cfg, Properties properties) throws HibernateException {
+	@Deprecated
+    public SchemaExport(Configuration cfg, Properties properties) throws HibernateException {
 		dialect = Dialect.getDialect( properties );
 
 		Properties props = new Properties();
@@ -174,7 +180,8 @@ public class SchemaExport {
 	 * @return this
 	 * @deprecated use {@link org.hibernate.cfg.Environment.HBM2DDL_IMPORT_FILE}
 	 */
-	public SchemaExport setImportFile(String filename) {
+	@Deprecated
+    public SchemaExport setImportFile(String filename) {
 		importFiles = filename;
 		return this;
 	}
@@ -234,7 +241,7 @@ public class SchemaExport {
 
 	public void execute(boolean script, boolean export, boolean justDrop, boolean justCreate) {
 
-		log.info( "Running hbm2ddl schema export" );
+        LOG.runningHbm2ddlSchemaExport();
 
 		Connection connection = null;
 		Writer outputFileWriter = null;
@@ -252,17 +259,17 @@ public class SchemaExport {
 					importFileReaders.add( new NamedReader( resourceName, stream ) );
 				}
 				catch ( HibernateException e ) {
-					log.debug( "import file not found: " + currentFile );
+                    LOG.importFileNotFound(currentFile);
 				}
 			}
 
 			if ( outputFile != null ) {
-				log.info( "writing generated schema to file: " + outputFile );
+                LOG.writingGeneratedSchemaToFile(outputFile);
 				outputFileWriter = new FileWriter( outputFile );
 			}
 
 			if ( export ) {
-				log.info( "exporting generated schema to database" );
+                LOG.exportingGeneratedSchemaToDatabase();
 				connectionHelper.prepare( true );
 				connection = connectionHelper.getConnection();
 				statement = connection.createStatement();
@@ -281,13 +288,13 @@ public class SchemaExport {
 				}
 			}
 
-			log.info( "schema export complete" );
+            LOG.schemaExportComplete();
 
 		}
 
 		catch ( Exception e ) {
 			exceptions.add( e );
-			log.error( "schema export unsuccessful", e );
+            LOG.error(LOG.schemaExportUnsuccessful(), e);
 		}
 
 		finally {
@@ -302,7 +309,7 @@ public class SchemaExport {
 			}
 			catch ( Exception e ) {
 				exceptions.add( e );
-				log.error( "Could not close connection", e );
+                LOG.error(LOG.unableToCloseConnection(), e);
 			}
 
 			try {
@@ -312,7 +319,7 @@ public class SchemaExport {
 			}
 			catch ( IOException ioe ) {
 				exceptions.add( ioe );
-				log.error( "Error closing output file: " + outputFile, ioe );
+                LOG.error(LOG.unableToCloseOutputFile(outputFile), ioe);
 			}
 				for (NamedReader reader : importFileReaders) {
 					try {
@@ -320,7 +327,7 @@ public class SchemaExport {
 					}
 					catch ( IOException ioe ) {
 						exceptions.add( ioe );
-						log.error( "Error closing imput files: " + reader.getName(), ioe );
+                    LOG.error(LOG.unableToCloseInputFiles(reader.getName()), ioe);
 					}
 				}
 
@@ -348,7 +355,7 @@ public class SchemaExport {
 
 	private void importScript(NamedReader importFileReader, Statement statement)
 			throws IOException {
-		log.info( "Executing import script: " + importFileReader.getName() );
+        LOG.executingImportScript(importFileReader.getName());
 		BufferedReader reader = new BufferedReader( importFileReader.getReader() );
 		long lineNo = 0;
 		for ( String sql = reader.readLine(); sql != null; sql = reader.readLine() ) {
@@ -361,13 +368,9 @@ public class SchemaExport {
 				     trimmedSql.startsWith( "/*" ) ) {
 					continue;
 				}
-				else {
-					if ( trimmedSql.endsWith( ";" ) ) {
-						trimmedSql = trimmedSql.substring( 0, trimmedSql.length() - 1 );
-					}
-					log.debug( trimmedSql );
-					statement.execute( trimmedSql );
-				}
+                if (trimmedSql.endsWith(";")) trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1);
+                LOG.debug(trimmedSql);
+                statement.execute(trimmedSql);
 			}
 			catch ( SQLException e ) {
 				throw new JDBCException( "Error during import script execution at line " + lineNo, e );
@@ -386,8 +389,8 @@ public class SchemaExport {
 					throw new JDBCException( "Error during DDL export", e );
 				}
 				exceptions.add( e );
-				log.error( "Unsuccessful: " + createSQL[j] );
-				log.error( e.getMessage() );
+                LOG.unsuccessfulCreate(createSQL[j]);
+                LOG.error(e.getMessage());
 			}
 		}
 	}
@@ -400,8 +403,8 @@ public class SchemaExport {
 			}
 			catch ( SQLException e ) {
 				exceptions.add( e );
-				log.debug( "Unsuccessful: " + dropSQL[i] );
-				log.debug( e.getMessage() );
+                LOG.unsuccessfulDrop(dropSQL[i]);
+                LOG.debug(e.getMessage());
 			}
 		}
 	}
@@ -415,7 +418,7 @@ public class SchemaExport {
 		if ( script ) {
 			System.out.println( formatted );
 		}
-		log.debug( formatted );
+        LOG.debug(formatted);
 		if ( outputFile != null ) {
 			fileOutput.write( formatted + "\n" );
 		}
@@ -429,11 +432,11 @@ public class SchemaExport {
 				}
 			}
 			catch( SQLException sqle ) {
-				log.warn( "unable to log SQLWarnings : " + sqle );
+                LOG.unableToLogSqlWarnings(sqle);
 			}
 		}
 
-		
+
 	}
 
 	public static void main(String[] args) {
@@ -526,7 +529,7 @@ public class SchemaExport {
 
 		}
 		catch ( Exception e ) {
-			log.error( "Error creating schema ", e );
+            LOG.error(LOG.unableToCreateSchema(), e);
 			e.printStackTrace();
 		}
 	}
@@ -539,4 +542,62 @@ public class SchemaExport {
 	public List getExceptions() {
 		return exceptions;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Executing import script: %s" )
+        void executingImportScript( String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Exporting generated schema to database" )
+        void exportingGeneratedSchemaToDatabase();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Import file not found: %s" )
+        void importFileNotFound( String currentFile );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Running hbm2ddl schema export" )
+        void runningHbm2ddlSchemaExport();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Schema export complete" )
+        void schemaExportComplete();
+
+        @Message( value = "Schema export unsuccessful" )
+        Object schemaExportUnsuccessful();
+
+        @Message( value = "Could not close connection" )
+        Object unableToCloseConnection();
+
+        @Message( value = "Error closing imput files: %s" )
+        Object unableToCloseInputFiles( String name );
+
+        @Message( value = "Error closing output file: %s" )
+        Object unableToCloseOutputFile( String outputFile );
+
+        @Message( value = "Error creating schema " )
+        Object unableToCreateSchema();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to log SQLWarnings : %s" )
+        void unableToLogSqlWarnings( SQLException sqle );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Unsuccessful: %s" )
+        void unsuccessfulCreate( String string );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Unsuccessful: %s" )
+        void unsuccessfulDrop( String string );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Writing generated schema to file: %s" )
+        void writingGeneratedSchemaToFile( String outputFile );
+    }
 }

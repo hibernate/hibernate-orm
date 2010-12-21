@@ -4,10 +4,8 @@ package org.hibernate.test.hql;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
-
 import org.hibernate.QueryException;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
@@ -15,12 +13,9 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.persister.entity.EntityPersister;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -29,8 +24,6 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class BulkManipulationTest extends FunctionalTestCase {
-
-	private static final Logger log = LoggerFactory.getLogger( BulkManipulationTest.class );
 
 	public BulkManipulationTest(String name) {
 		super( name );
@@ -66,7 +59,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			fail( "no exception thrown" );
 		}
 		catch( QueryException e ) {
-			log.debug( "Caught expected error type : " + e.getMessage() );
+            LOG.debug("Caught expected error type : " + e.getMessage());
 		}
 
 		t.commit();
@@ -82,7 +75,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			fail( "no exception thrown" );
 		}
 		catch( QueryException e ) {
-			log.debug( "Caught expected error type : " + e.getMessage() );
+            LOG.debug("Caught expected error type : " + e.getMessage());
 		}
 
 		t.commit();
@@ -166,12 +159,12 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		s.createQuery( "insert into Pickup (id, vin, owner) select id, vin, owner from Car" ).executeUpdate();
-		
+
 		t.commit();
 		t = s.beginTransaction();
 
 		s.createQuery( "delete Vehicle" ).executeUpdate();
-		
+
 		t.commit();
 		s.close();
 
@@ -205,8 +198,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		c.setOwner("NotKirsten");
 		assertEquals(0,s.getNamedQuery( "native-delete-car" ).setString( 0, "Kirsten" ).executeUpdate());
 		assertEquals(1,s.getNamedQuery( "native-delete-car" ).setString( 0, "NotKirsten" ).executeUpdate());
-		
-		
+
+
 		assertEquals(0,s.createSQLQuery( "delete from SUV where owner = :owner" ).setString( "owner", "NotThere" ).executeUpdate());
 		assertEquals(1,s.createSQLQuery( "delete from SUV where owner = :owner" ).setString( "owner", "Joe" ).executeUpdate());
 		s.createSQLQuery( "delete from Pickup" ).executeUpdate();
@@ -221,7 +214,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 		data.cleanup();
 	}
-	
+
 	public void testInsertWithManyToOne() {
 		TestData data = new TestData();
 		data.prepare();
@@ -700,7 +693,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			fail( "update allowed across implicit join" );
 		}
 		catch( QueryException e ) {
-			log.debug( "TEST (OK) : " + e.getMessage() );
+            LOG.debug("TEST (OK) : " + e.getMessage());
 			// expected condition
 		}
 
@@ -1025,7 +1018,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 		data.cleanup();
 	}
-	
+
 	public void testDeleteUnionSubclassAbstractRoot() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1184,7 +1177,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			add.setStreet("Main st");
 			add.setPostalCode("3000");
 			zoo.setAddress(add);
-			
+
 			pettingZoo = new PettingZoo();
 			pettingZoo.setName( "Petting Zoo" );
 			Address addr = new Address();

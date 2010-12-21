@@ -24,13 +24,11 @@
  */
 package org.hibernate.impl;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.NoSuchElementException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.HibernateIterator;
@@ -38,6 +36,10 @@ import org.hibernate.event.EventSource;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An implementation of <tt>java.util.Iterator</tt> that is
@@ -46,7 +48,8 @@ import org.hibernate.type.Type;
  */
 public final class IteratorImpl implements HibernateIterator {
 
-	private static final Logger log = LoggerFactory.getLogger(IteratorImpl.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                IteratorImpl.class.getPackage().getName());
 
 	private ResultSet rs;
 	private final EventSource session;
@@ -104,22 +107,20 @@ public final class IteratorImpl implements HibernateIterator {
 				}
 				catch( Throwable ignore ) {
 					// ignore this error for now
-					log.trace( "exception trying to cleanup load context : " + ignore.getMessage() );
+                    LOG.unableToCleanupLoadContext(ignore.getMessage());
 				}
 			}
 		}
 	}
 
 	private void postNext() throws SQLException {
-		log.debug("attempting to retrieve next results");
+        LOG.retrievingNextResults();
 		this.hasNext = rs.next();
 		if (!hasNext) {
-			log.debug("exhausted results");
+            LOG.exhaustedResults();
 			close();
 		}
-		else {
-			log.debug("retrieved next results");
-		}
+ else LOG.retrievedNextResults();
 	}
 
 	public boolean hasNext() {
@@ -133,7 +134,7 @@ public final class IteratorImpl implements HibernateIterator {
 		try {
 			boolean isHolder = holderInstantiator.isRequired();
 
-			log.debug("assembling results");
+            LOG.assemblingResults();
 			if ( single && !isHolder ) {
 				currentResult = types[0].nullSafeGet( rs, names[0], session, null );
 			}
@@ -152,7 +153,7 @@ public final class IteratorImpl implements HibernateIterator {
 			}
 
 			postNext();
-			log.debug("returning current results");
+            LOG.returningCurrentResults();
 			return currentResult;
 		}
 		catch (SQLException sqle) {
@@ -176,13 +177,50 @@ public final class IteratorImpl implements HibernateIterator {
 		if ( !( types[0] instanceof EntityType ) ) {
 			throw new UnsupportedOperationException("Not an entity");
 		}
-		
-		session.delete( 
-				( (EntityType) types[0] ).getAssociatedEntityName(), 
+
+		session.delete(
+				( (EntityType) types[0] ).getAssociatedEntityName(),
 				currentResult,
 				false,
 		        null
 			);
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Assembling results" )
+        void assemblingResults();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Closing iterator" )
+        void closingIterator();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Exhausted results" )
+        void exhaustedResults();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Retrieved next results" )
+        void retrievedNextResults();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Attempting to retrieve next results" )
+        void retrievingNextResults();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Returning current results" )
+        void returningCurrentResults();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Exception trying to cleanup load context : %s" )
+        void unableToCleanupLoadContext( String message );
+
+        @Message( value = "Unable to close iterator" )
+        Object unableToCloseIterator();
+    }
 }

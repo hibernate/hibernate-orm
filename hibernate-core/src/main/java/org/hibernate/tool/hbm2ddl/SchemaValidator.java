@@ -24,13 +24,11 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
@@ -38,6 +36,10 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -47,7 +49,9 @@ import org.hibernate.util.ReflectHelper;
  */
 public class SchemaValidator {
 
-	private static final Logger log = LoggerFactory.getLogger( SchemaValidator.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                SchemaValidator.class.getPackage().getName());
+
 	private ConnectionHelper connectionHelper;
 	private Configuration configuration;
 	private Dialect dialect;
@@ -109,7 +113,7 @@ public class SchemaValidator {
 			new SchemaValidator( cfg ).validate();
 		}
 		catch ( Exception e ) {
-			log.error( "Error running schema update", e );
+            LOG.error(LOG.unableToRunSchemaUpdate(), e);
 			e.printStackTrace();
 		}
 	}
@@ -119,7 +123,7 @@ public class SchemaValidator {
 	 */
 	public void validate() {
 
-		log.info( "Running schema validator" );
+        LOG.runningSchemaValidator();
 
 		Connection connection = null;
 
@@ -127,13 +131,13 @@ public class SchemaValidator {
 
 			DatabaseMetadata meta;
 			try {
-				log.info( "fetching database metadata" );
+                LOG.fetchingDatabaseMetadata();
 				connectionHelper.prepare( false );
 				connection = connectionHelper.getConnection();
 				meta = new DatabaseMetadata( connection, dialect, false );
 			}
 			catch ( SQLException sqle ) {
-				log.error( "could not get database metadata", sqle );
+                LOG.error(LOG.unableToGetDatabaseMetadata(), sqle);
 				throw sqle;
 			}
 
@@ -141,7 +145,7 @@ public class SchemaValidator {
 
 		}
 		catch ( SQLException e ) {
-			log.error( "could not complete schema validation", e );
+            LOG.error(LOG.unableToCompleteSchemaValidation(), e);
 		}
 		finally {
 
@@ -149,10 +153,36 @@ public class SchemaValidator {
 				connectionHelper.release();
 			}
 			catch ( Exception e ) {
-				log.error( "Error closing connection", e );
+                LOG.error(LOG.unableToCloseConnection(), e);
 			}
 
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Fetching database metadata" )
+        void fetchingDatabaseMetadata();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Running schema validator" )
+        void runningSchemaValidator();
+
+        @Message( value = "Error closing connection" )
+        Object unableToCloseConnection();
+
+        @Message( value = "Could not complete schema validation" )
+        Object unableToCompleteSchemaValidation();
+
+        @Message( value = "Could not get database metadata" )
+        Object unableToGetDatabaseMetadata();
+
+        @Message( value = "Error running schema update" )
+        Object unableToRunSchemaUpdate();
+    }
 }

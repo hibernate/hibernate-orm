@@ -23,15 +23,16 @@
  */
 package org.hibernate.dialect;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Types;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An SQL dialect for Oracle, compatible with Oracle 8.
@@ -39,13 +40,15 @@ import org.hibernate.sql.OracleJoinFragment;
  * @deprecated Use Oracle8iDialect instead.
  * @author Gavin King
  */
+@Deprecated
 public class OracleDialect extends Oracle9Dialect {
 
-	private static final Logger log = LoggerFactory.getLogger( OracleDialect.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                OracleDialect.class.getPackage().getName());
 
 	public OracleDialect() {
 		super();
-		log.warn( "The OracleDialect dialect has been deprecated; use Oracle8iDialect instead" );
+        LOG.deprecatedOracleDialect();
 		// Oracle8 and previous define only a "DATE" type which
 		//      is used to represent all aspects of date/time
 		registerColumnType( Types.TIMESTAMP, "date" );
@@ -53,14 +56,17 @@ public class OracleDialect extends Oracle9Dialect {
 		registerColumnType( Types.VARCHAR, 4000, "varchar2($l)" );
 	}
 
-	public JoinFragment createOuterJoinFragment() {
+	@Override
+    public JoinFragment createOuterJoinFragment() {
 		return new OracleJoinFragment();
 	}
-	public CaseFragment createCaseFragment() {
+	@Override
+    public CaseFragment createCaseFragment() {
 		return new DecodeCaseFragment();
 	}
 
-	public String getLimitString(String sql, boolean hasOffset) {
+	@Override
+    public String getLimitString(String sql, boolean hasOffset) {
 
 		sql = sql.trim();
 		boolean isForUpdate = false;
@@ -68,7 +74,7 @@ public class OracleDialect extends Oracle9Dialect {
 			sql = sql.substring( 0, sql.length()-11 );
 			isForUpdate = true;
 		}
-		
+
 		StringBuffer pagingSelect = new StringBuffer( sql.length()+100 );
 		if (hasOffset) {
 			pagingSelect.append("select * from ( select row_.*, rownum rownum_ from ( ");
@@ -87,11 +93,12 @@ public class OracleDialect extends Oracle9Dialect {
 		if ( isForUpdate ) {
 			pagingSelect.append( " for update" );
 		}
-		
+
 		return pagingSelect.toString();
 	}
 
-	public String getSelectClauseNullString(int sqlType) {
+	@Override
+    public String getSelectClauseNullString(int sqlType) {
 		switch(sqlType) {
 			case Types.VARCHAR:
 			case Types.CHAR:
@@ -105,11 +112,24 @@ public class OracleDialect extends Oracle9Dialect {
 		}
 	}
 
-	public String getCurrentTimestampSelectString() {
+	@Override
+    public String getCurrentTimestampSelectString() {
 		return "select sysdate from dual";
 	}
 
-	public String getCurrentTimestampSQLFunctionName() {
+	@Override
+    public String getCurrentTimestampSQLFunctionName() {
 		return "sysdate";
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "The OracleDialect dialect has been deprecated; use Oracle8iDialect instead" )
+        void deprecatedOracleDialect();
+    }
 }

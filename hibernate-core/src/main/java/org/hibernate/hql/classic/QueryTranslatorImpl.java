@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.classic;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
@@ -38,23 +39,18 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.hql.NameGenerator;
@@ -75,12 +71,19 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An instance of <tt>QueryTranslator</tt> translates a Hibernate
  * query string to SQL.
  */
 public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator {
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                QueryTranslatorImpl.class.getPackage().getName());
 
 	private static final String[] NO_RETURN_ALIASES = new String[] {};
 
@@ -139,8 +142,6 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private String[] suffixes;
 
 	private Map enabledFilters;
-
-	private static final Logger log = LoggerFactory.getLogger( QueryTranslatorImpl.class );
 
 	/**
 	 * Construct a query translator
@@ -235,7 +236,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 */
 	private void compile() throws QueryException, MappingException {
 
-		log.trace( "compiling query" );
+        LOG.compilingQuery();
 		try {
 			ParserHelper.parse( new PreprocessingParser( tokenReplacements ),
 					queryString,
@@ -251,7 +252,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			throw me;
 		}
 		catch ( Exception e ) {
-			log.debug( "unexpected query compilation problem", e );
+            LOG.debug(LOG.unexpectedQueryCompilationProblem(), e);
 			e.printStackTrace();
 			QueryException qe = new QueryException( "Incorrect query syntax", e );
 			qe.setQueryString( queryString );
@@ -264,7 +265,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	}
 
-	public String getSQLString() {
+	@Override
+    public String getSQLString() {
 		return sqlString;
 	}
 
@@ -281,7 +283,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 *
 	 * @return an array of <tt>EntityPersister</tt>s.
 	 */
-	protected Loadable[] getEntityPersisters() {
+	@Override
+    protected Loadable[] getEntityPersisters() {
 		return persisters;
 	}
 
@@ -293,7 +296,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	public Type[] getReturnTypes() {
 		return actualReturnTypes;
 	}
-	
+
 	public String[] getReturnAliases() {
 		// return aliases not supported in classic translator!
 		return NO_RETURN_ALIASES;
@@ -304,9 +307,9 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	private static void logQuery(String hql, String sql) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "HQL: " + hql );
-			log.debug( "SQL: " + sql );
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("HQL: " + hql);
+            LOG.debug("SQL: " + sql);
 		}
 	}
 
@@ -545,7 +548,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 	}
 
-	public int[] getNamedParameterLocs(String name) throws QueryException {
+	@Override
+    public int[] getNamedParameterLocs(String name) throws QueryException {
 		Object o = namedParameters.get( name );
 		if ( o == null ) {
 			QueryException qe = new QueryException( ERROR_NAMED_PARAMETER_DOES_NOT_APPEAR + name );
@@ -722,7 +726,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			for ( int k = 0; k < size; k++ ) {
 
 				scalarTypes.add(
-						getFactory().getTypeResolver().getTypeFactory().manyToOne( persisters[k].getEntityName(), shallowQuery ) 
+						getFactory().getTypeResolver().getTypeFactory().manyToOne( persisters[k].getEntityName(), shallowQuery )
 				);
 
 				String[] idColumnNames = persisters[k].getIdentifierColumnNames();
@@ -855,11 +859,13 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	/**
 	 * Overrides method from Loader
 	 */
-	public CollectionPersister[] getCollectionPersisters() {
+	@Override
+    public CollectionPersister[] getCollectionPersisters() {
 		return collectionPersister == null ? null : new CollectionPersister[] { collectionPersister };
 	}
 
-	protected String[] getCollectionSuffixes() {
+	@Override
+    protected String[] getCollectionSuffixes() {
 		return collectionPersister == null ? null : new String[] { "__" };
 	}
 
@@ -873,11 +879,13 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		}
 	}
 
-	protected String[] getSuffixes() {
+	@Override
+    protected String[] getSuffixes() {
 		return suffixes;
 	}
 
-	protected String[] getAliases() {
+	@Override
+    protected String[] getAliases() {
 		return names;
 	}
 
@@ -972,7 +980,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not execute query using iterate",
-					getSQLString() 
+					getSQLString()
 				);
 		}
 
@@ -982,7 +990,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		throw new UnsupportedOperationException( "Not supported!  Use the AST translator...");
 	}
 
-	protected boolean[] includeInResultRow() {
+	@Override
+    protected boolean[] includeInResultRow() {
 		boolean[] isResultReturned = includeInSelect;
 		if ( hasScalars ) {
 			isResultReturned = new boolean[ returnedTypes.size() ];
@@ -992,14 +1001,16 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 
-	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+	@Override
+    protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return HolderInstantiator.resolveClassicResultTransformer(
 				holderConstructor,
 				resultTransformer
 		);
 	}
 
-	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
+	@Override
+    protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 		Object[] resultRow = getResultRow( row, rs, session );
 		return ( holderClass == null && resultRow.length == 1 ?
@@ -1008,7 +1019,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		);
 	}
 
-	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+	@Override
+    protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 		Object[] resultRow;
 		if ( hasScalars ) {
@@ -1025,7 +1037,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return resultRow;
 	}
 
-	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
+	@Override
+    protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
 		if ( holderClass != null ) {
 			for ( int i = 0; i < results.size(); i++ ) {
 				Object[] row = ( Object[] ) results.get( i );
@@ -1058,7 +1071,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		holderClass = clazz;
 	}
 
-	protected LockMode[] getLockModes(LockOptions lockOptions) {
+	@Override
+    protected LockMode[] getLockModes(LockOptions lockOptions) {
 
 		// unfortunately this stuff can't be cached because
 		// it is per-invocation, not constant for the
@@ -1086,7 +1100,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return lockModesArray;
 	}
 
-	protected String applyLocks(String sql, LockOptions lockOptions, Dialect dialect) throws QueryException {
+	@Override
+    protected String applyLocks(String sql, LockOptions lockOptions, Dialect dialect) throws QueryException {
 		// can't cache this stuff either (per-invocation)
 		final String result;
 		if ( lockOptions == null ||
@@ -1116,11 +1131,13 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return result;
 	}
 
-	protected boolean upgradeLocks() {
+	@Override
+    protected boolean upgradeLocks() {
 		return true;
 	}
 
-	protected int[] getCollectionOwners() {
+	@Override
+    protected int[] getCollectionOwners() {
 		return new int[] { collectionOwnerColumn };
 	}
 
@@ -1128,15 +1145,18 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return compiled;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return queryString;
 	}
 
-	protected int[] getOwners() {
+	@Override
+    protected int[] getOwners() {
 		return owners;
 	}
 
-	protected EntityType[] getOwnerAssociationTypes() {
+	@Override
+    protected EntityType[] getOwnerAssociationTypes() {
 		return ownerAssociationTypes;
 	}
 
@@ -1155,11 +1175,13 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		return scroll( queryParameters, returnTypes, hi, session );
 	}
 
-	public String getQueryIdentifier() {
+	@Override
+    public String getQueryIdentifier() {
 		return queryIdentifier;
 	}
 
-	protected boolean isSubselectLoadingEnabled() {
+	@Override
+    protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
 	}
 
@@ -1213,4 +1235,18 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			}
 		};
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Compiling query" )
+        void compilingQuery();
+
+        @Message( value = "Unexpected query compilation problem" )
+        Object unexpectedQueryCompilationProblem();
+    }
 }

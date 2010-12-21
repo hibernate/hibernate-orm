@@ -24,15 +24,17 @@
  */
 package org.hibernate.engine;
 
-import org.hibernate.HibernateException;
-import org.hibernate.type.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
+import org.hibernate.HibernateException;
+import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Centralizes the commonality regarding binding of parameter values into
@@ -40,12 +42,13 @@ import java.util.Iterator;
  * <p/>
  * Ideally would like to move to the parameter handling as it is done in
  * the hql.ast package.
- * 
+ *
  * @author Steve Ebersole
  */
 public class ParameterBinder {
 
-	private static final Logger log = LoggerFactory.getLogger( ParameterBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ParameterBinder.class.getPackage().getName());
 
 	public static interface NamedParameterSource {
 		public int[] getNamedParameterLocations(String name);
@@ -119,19 +122,26 @@ public class ParameterBinder {
 				TypedValue typedval = ( TypedValue ) e.getValue();
 				int[] locations = source.getNamedParameterLocations( name );
 				for ( int i = 0; i < locations.length; i++ ) {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "bindNamedParameters() " +
-								typedval.getValue() + " -> " + name +
-								" [" + ( locations[i] + start ) + "]" );
-					}
+                    LOG.bindNamedParameters(typedval.getValue(), name, locations[i] + start);
 					typedval.getType().nullSafeSet( ps, typedval.getValue(), locations[i] + start, session );
 				}
 				result += locations.length;
 			}
 			return result;
 		}
-		else {
-			return 0;
-		}
+        return 0;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "bindNamedParameters() %s -> %s [%d]" )
+        void bindNamedParameters( Object value,
+                                  String name,
+                                  int i );
+    }
 }

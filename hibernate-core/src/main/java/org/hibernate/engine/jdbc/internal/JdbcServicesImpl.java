@@ -23,6 +23,8 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -32,14 +34,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
@@ -47,10 +43,16 @@ import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.jdbc.TypeInfo;
+import org.hibernate.internal.util.jdbc.TypeInfoExtracter;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.internal.util.jdbc.TypeInfoExtracter;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -58,7 +60,9 @@ import org.hibernate.internal.util.jdbc.TypeInfoExtracter;
  * @author Steve Ebersole
  */
 public class JdbcServicesImpl implements JdbcServices, Configurable {
-	private static final Logger log = LoggerFactory.getLogger( JdbcServicesImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JdbcServicesImpl.class.getPackage().getName());
 
 	private ConnectionProvider connectionProvider;
 
@@ -107,19 +111,15 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 				Connection conn = connectionProvider.getConnection();
 				try {
 					DatabaseMetaData meta = conn.getMetaData();
-					log.info( "Database ->\n" +
-							"       name : " + meta.getDatabaseProductName() + '\n' +
-							"    version : " +  meta.getDatabaseProductVersion() + '\n' +
-							"      major : " + meta.getDatabaseMajorVersion() + '\n' +
-							"      minor : " + meta.getDatabaseMinorVersion()
-					);
-					log.info( "Driver ->\n" +
-							"       name : " + meta.getDriverName() + '\n' +
-							"    version : " + meta.getDriverVersion() + '\n' +
-							"      major : " + meta.getDriverMajorVersion() + '\n' +
-							"      minor : " + meta.getDriverMinorVersion()
-					);
-					log.info( "JDBC version : " + meta.getJDBCMajorVersion() + "." + meta.getJDBCMinorVersion() );
+                    LOG.database(meta.getDatabaseProductName(),
+                                 meta.getDatabaseProductVersion(),
+                                 meta.getDatabaseMajorVersion(),
+                                 meta.getDatabaseMinorVersion());
+                    LOG.driver(meta.getDriverName(),
+                               meta.getDriverVersion(),
+                               meta.getDriverMajorVersion(),
+                               meta.getDriverMinorVersion());
+                    LOG.jdbcVersion(meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion());
 
 					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
 					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
@@ -144,14 +144,14 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 					}
 				}
 				catch ( SQLException sqle ) {
-					log.warn( "Could not obtain connection metadata", sqle );
+                    LOG.unableToObtainConnectionMetadata(sqle.getMessage());
 				}
 				finally {
 					connectionProvider.closeConnection( conn );
 				}
 			}
 			catch ( SQLException sqle ) {
-				log.warn( "Could not obtain connection to query metadata", sqle );
+                LOG.unableToObtainConnectionToQueryMetadata(sqle.getMessage());
 				dialect = dialectFactory.buildDialect( configValues, null );
 			}
 			catch ( UnsupportedOperationException uoe ) {
@@ -200,13 +200,13 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 				return (SchemaNameResolver) ReflectHelper.getDefaultConstructor( resolverClass ).newInstance();
 			}
 			catch ( ClassNotFoundException e ) {
-				log.warn( "Unable to locate configured schema name resolver class [" + resolverClassName + "]" + e.toString() );
+                LOG.unableToLocateConfiguredSchemaNameResolver(resolverClassName, e.toString());
 			}
 			catch ( InvocationTargetException e ) {
-				log.warn( "Unable to instantiate configured schema name resolver [" + resolverClassName + "]" + e.getTargetException().toString() );
+                LOG.unableToInstantiateConfiguredSchemaNameResolver(resolverClassName, e.getTargetException().toString());
 			}
 			catch ( Exception e ) {
-				log.warn( "Unable to instantiate configured schema name resolver [" + resolverClassName + "]" + e.toString() );
+                LOG.unableToInstantiateConfiguredSchemaNameResolver(resolverClassName, e.toString());
 			}
 		}
 		return null;
@@ -336,4 +336,60 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return extractedMetaDataSupport;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        // @formatter:off
+        @Message( value = "Database ->\n" +
+                          "       name : %s\n" +
+                          "    version : %s\n" +
+                          "      major : %s\n" +
+                          "      minor : %s" )
+        // @formatter:on
+        void database( String databaseProductName,
+                       String databaseProductVersion,
+                       int databaseMajorVersion,
+                       int databaseMinorVersion );
+
+        @LogMessage( level = INFO )
+        // @formatter:off
+        @Message( value = "Driver ->\n" +
+                          "       name : %s\n" +
+                          "    version : %s\n" +
+                          "      major : %s\n" +
+                          "      minor : %s" )
+        // @formatter:on
+        void driver( String driverProductName,
+                     String driverProductVersion,
+                     int driverMajorVersion,
+                     int driverMinorVersion );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JDBC version : %d.%d" )
+        void jdbcVersion( int jdbcMajorVersion,
+                          int jdbcMinorVersion );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to instantiate configured schema name resolver [%s] %s" )
+        void unableToInstantiateConfiguredSchemaNameResolver( String resolverClassName,
+                                                              String message );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to locate configured schema name resolver class [%s] %s" )
+        void unableToLocateConfiguredSchemaNameResolver( String resolverClassName,
+                                                         String message );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Could not obtain connection metadata : %s" )
+        void unableToObtainConnectionMetadata( String message );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Could not obtain connection to query metadata : %s" )
+        void unableToObtainConnectionToQueryMetadata( String message );
+    }
 }

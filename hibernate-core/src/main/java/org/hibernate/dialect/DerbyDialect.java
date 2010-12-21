@@ -23,20 +23,21 @@
  */
 package org.hibernate.dialect;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.Method;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
- * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an 
+ * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
  * override for the identity column generator as well as for the case statement
  * issue documented at:
  * http://www.jroller.com/comments/kenlars99/Weblog/cloudscape_soon_to_be_derby
@@ -44,7 +45,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Simon Johnston
  */
 public class DerbyDialect extends DB2Dialect {
-	private static final Logger log = LoggerFactory.getLogger( DerbyDialect.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DerbyDialect.class.getPackage().getName());
 
 	private int driverVersionMajor;
 	private int driverVersionMinor;
@@ -67,7 +70,7 @@ public class DerbyDialect extends DB2Dialect {
 			driverVersionMinor = ( (Integer) minorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS ) ).intValue();
 		}
 		catch ( Exception e ) {
-			log.warn( "Unable to load/access derby driver class sysinfo to check versions : " + e );
+            LOG.unableToLoadDerbyDriver(e.getMessage());
 			driverVersionMajor = -1;
 			driverVersionMinor = -1;
 		}
@@ -77,22 +80,26 @@ public class DerbyDialect extends DB2Dialect {
 		return driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 5 );
 	}
 
-	public String getCrossJoinSeparator() {
+	@Override
+    public String getCrossJoinSeparator() {
 		return ", ";
 	}
 
 	/**
 	 * Return the case statement modified for Cloudscape.
 	 */
-	public CaseFragment createCaseFragment() {
+	@Override
+    public CaseFragment createCaseFragment() {
 		return new DerbyCaseFragment();
 	}
 
-	public boolean dropConstraints() {
+	@Override
+    public boolean dropConstraints() {
 	      return true;
 	}
 
-	public boolean supportsSequences() {
+	@Override
+    public boolean supportsSequences() {
 		// technically sequence support was added in 10.6.1.0...
 		//
 		// The problem though is that I am not exactly sure how to differentiate 10.6.1.0 from any other 10.6.x release.
@@ -116,31 +123,37 @@ public class DerbyDialect extends DB2Dialect {
 		}
 	}
 
-	public boolean supportsLimit() {
+	@Override
+    public boolean supportsLimit() {
 		return isTenPointFiveReleaseOrNewer();
 	}
-	
+
 	//HHH-4531
-	public boolean supportsCommentOn() {
+	@Override
+    public boolean supportsCommentOn() {
 		return false;
 	}
 
-	public boolean supportsLimitOffset() {
+	@Override
+    public boolean supportsLimitOffset() {
 		return isTenPointFiveReleaseOrNewer();
 	}
 
-   public String getForUpdateString() {
+   @Override
+public String getForUpdateString() {
 		return " for update with rs";
    }
 
-	public String getWriteLockString(int timeout) {
+	@Override
+    public String getWriteLockString(int timeout) {
 		return " for update with rs";
 	}
 
-	public String getReadLockString(int timeout) {
+	@Override
+    public String getReadLockString(int timeout) {
 		return " for read only with rs";
 	}
-	
+
 
 	/**
 	 * {@inheritDoc}
@@ -155,7 +168,8 @@ public class DerbyDialect extends DB2Dialect {
 	 * [WITH {RR|RS|CS|UR}]
 	 * </pre>
 	 */
-	public String getLimitString(String query, final int offset, final int limit) {
+	@Override
+    public String getLimitString(String query, final int offset, final int limit) {
 		StringBuffer sb = new StringBuffer(query.length() + 50);
 
 		final String normalizedSelect = query.toLowerCase().trim();
@@ -190,7 +204,8 @@ public class DerbyDialect extends DB2Dialect {
 		return sb.toString();
 	}
 
-	public boolean supportsVariableLimit() {
+	@Override
+    public boolean supportsVariableLimit() {
 		// we bind the limit and offset values directly into the sql...
 		return false;
 	}
@@ -211,14 +226,27 @@ public class DerbyDialect extends DB2Dialect {
 		return i;
 	}
 
-	public String getQuerySequencesString() {
+	@Override
+    public String getQuerySequencesString() {
 	   return null ;
 	}
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public boolean supportsLobValueChangePropogation() {
+	@Override
+    public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Unable to load/access derby driver class sysinfo to check versions : %s" )
+        void unableToLoadDerbyDriver( String message );
+    }
 }

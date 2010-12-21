@@ -23,16 +23,22 @@
  */
 package org.hibernate.util;
 
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 public final class JDBCExceptionReporter {
-	public static final Logger log = LoggerFactory.getLogger(JDBCExceptionReporter.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JDBCExceptionReporter.class.getPackage().getName());
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";
 
@@ -64,14 +70,14 @@ public final class JDBCExceptionReporter {
 		}
 		catch ( SQLException sqle ) {
 			//workaround for WebLogic
-			log.debug( "could not log warnings", sqle );
+            LOG.debug(LOG.unableToLogWarnings(), sqle);
 		}
 		try {
 			//Sybase fail if we don't do that, sigh...
 			connection.clearWarnings();
 		}
 		catch ( SQLException sqle ) {
-			log.debug( "could not clear warnings", sqle );
+            LOG.debug(LOG.unableToClearWarnings(), sqle);
 		}
 	}
 
@@ -90,14 +96,14 @@ public final class JDBCExceptionReporter {
 		}
 		catch ( SQLException sqle ) {
 			//workaround for WebLogic
-			log.debug( "could not log warnings", sqle );
+            LOG.debug(LOG.unableToLogWarnings(), sqle);
 		}
 		try {
 			//Sybase fail if we don't do that, sigh...
 			statement.clearWarnings();
 		}
 		catch ( SQLException sqle ) {
-			log.debug( "could not clear warnings", sqle );
+            LOG.debug(LOG.unableToClearWarnings(), sqle);
 		}
 	}
 
@@ -187,17 +193,17 @@ public final class JDBCExceptionReporter {
 		}
 
 		public boolean doProcess() {
-			return log.isWarnEnabled();
+            return LOG.isEnabled(WARN);
 		}
 
 		public void prepare(SQLWarning warning) {
-			log.debug( introMessage, warning );
+            LOG.debug(introMessage, warning);
 		}
 
 		@Override
 		protected void logWarning(String description, String message) {
-			log.warn( description );
-			log.warn( message );
+            LOG.warn(description);
+            LOG.warn(message);
 		}
 	}
 
@@ -219,27 +225,38 @@ public final class JDBCExceptionReporter {
 	}
 
 	public static void logExceptions(SQLException ex, String message) {
-		if ( log.isErrorEnabled() ) {
-			if ( log.isDebugEnabled() ) {
+        if (LOG.isEnabled(ERROR)) {
+            if (LOG.isDebugEnabled()) {
 				message = StringHelper.isNotEmpty(message) ? message : DEFAULT_EXCEPTION_MSG;
-				log.debug( message, ex );
+                LOG.debug(message, ex);
 			}
 			while (ex != null) {
-				StringBuffer buf = new StringBuffer(30)
-						.append( "SQL Error: " )
-				        .append( ex.getErrorCode() )
-				        .append( ", SQLState: " )
-				        .append( ex.getSQLState() );
-				log.warn( buf.toString() );
-				log.error( ex.getMessage() );
+                LOG.sqlError(ex.getErrorCode(), ex.getSQLState());
+                LOG.error(ex.getMessage());
 				ex = ex.getNextException();
 			}
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Evicting %s" )
+        void evicting( String infoString );
+
+        @LogMessage( level = WARN )
+        @Message( value = "SQL Error: %d, SQLState: %s" )
+        void sqlError( int errorCode,
+                       String sqlState );
+
+        @Message( value = "Could not clear warnings" )
+        Object unableToClearWarnings();
+
+        @Message( value = "Could not log warnings" )
+        Object unableToLogWarnings();
+    }
 }
-
-
-
-
-
-

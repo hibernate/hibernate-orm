@@ -23,15 +23,17 @@
  */
 package org.hibernate.id;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Generates <tt>string</tt> values using the SQL Server NEWID() function.
@@ -39,23 +41,21 @@ import org.hibernate.engine.SessionImplementor;
  * @author Joseph Fifield
  */
 public class GUIDGenerator implements IdentifierGenerator {
-	private static final Logger log = LoggerFactory.getLogger(GUIDGenerator.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                GUIDGenerator.class.getPackage().getName());
 	private static boolean warned = false;
 
 	public GUIDGenerator() {
 		if ( ! warned ) {
 			warned = true;
-			log.warn(
-					"DEPRECATED : use {} instead with custom {} implementation",
-					UUIDGenerator.class.getName(),
-					UUIDGenerationStrategy.class.getName()
-			);
+            LOG.deprecatedUuidGenerator(UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName());
 		}
 	}
 
 	public Serializable generate(SessionImplementor session, Object obj)
 	throws HibernateException {
-		
+
 		final String sql = session.getFactory().getDialect().getSelectGUIDString();
 		try {
 			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sql);
@@ -69,7 +69,7 @@ public class GUIDGenerator implements IdentifierGenerator {
 				finally {
 					rs.close();
 				}
-				log.debug("GUID identifier generated: " + result);
+                LOG.guidGenerated(result);
 				return result;
 			}
 			finally {
@@ -85,4 +85,19 @@ public class GUIDGenerator implements IdentifierGenerator {
 		}
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "DEPRECATED : use {} instead with custom {} implementation" )
+        void deprecatedUuidGenerator( String name,
+                                      String name2 );
+
+        @LogMessage( level = WARN )
+        @Message( value = "GUID identifier generated: %s" )
+        void guidGenerated( String result );
+    }
 }

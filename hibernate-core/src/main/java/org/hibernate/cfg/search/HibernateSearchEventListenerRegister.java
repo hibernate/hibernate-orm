@@ -23,8 +23,9 @@
  */
 package org.hibernate.cfg.search;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.Properties;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostCollectionRecreateEventListener;
@@ -34,20 +35,23 @@ import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.util.ReflectHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Helper methods initializing Hibernate Search event listeners.
- * 
+ *
  * @deprecated as of release 3.4.0.CR2, replaced by Hibernate Search's {@link org.hibernate.search.cfg.EventListenerRegister}
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-@Deprecated 
+@Deprecated
 public class HibernateSearchEventListenerRegister {
 
-	private static final Logger log = LoggerFactory.getLogger(HibernateSearchEventListenerRegister.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HibernateSearchEventListenerRegister.class.getPackage().getName());
 
 	/**
 	 * Class name of the class needed to enable Search.
@@ -58,27 +62,26 @@ public class HibernateSearchEventListenerRegister {
 	 * @deprecated as of release 3.4.0.CR2, replaced by Hibernate Search's {@link org.hibernate.search.cfg.EventListenerRegister#enableHibernateSearch(EventListeners, Properties)}
 	 */
 	@SuppressWarnings("unchecked")
-	@Deprecated 
+	@Deprecated
 	public static void enableHibernateSearch(EventListeners eventListeners, Properties properties) {
 		// check whether search is explicitly enabled - if so there is nothing
 		// to do
 		String enableSearchListeners = properties.getProperty( "hibernate.search.autoregister_listeners" );
 		if("false".equalsIgnoreCase(enableSearchListeners )) {
-			log.info("Property hibernate.search.autoregister_listeners is set to false." +
-					" No attempt will be made to register Hibernate Search event listeners.");
+            LOG.willNotRegisterListeners();
 			return;
 		}
-		
+
 		// add search events if the jar is available and class can be loaded
 		Class searchEventListenerClass = attemptToLoadSearchEventListener();
 		if ( searchEventListenerClass == null ) {
-			log.info("Unable to find {} on the classpath. Hibernate Search is not enabled.", FULL_TEXT_INDEX_EVENT_LISTENER_CLASS);
+            LOG.unableToFindListenerClass(FULL_TEXT_INDEX_EVENT_LISTENER_CLASS);
 			return;
 		}
-		
+
 		Object searchEventListener = instantiateEventListener(searchEventListenerClass);
-		
-		//TODO Generalize this. Pretty much the same code all the time. Reflecetion? 
+
+        // TODO Generalize this. Pretty much the same code all the time. Reflection?
 		{
 			boolean present = false;
 			PostInsertEventListener[] listeners = eventListeners
@@ -147,7 +150,7 @@ public class HibernateSearchEventListenerRegister {
 				eventListeners
 						.setPostDeleteEventListeners(new PostDeleteEventListener[] { (PostDeleteEventListener) searchEventListener });
 			}
-		}		
+		}
 		{
 			boolean present = false;
 			PostCollectionRecreateEventListener[] listeners = eventListeners.getPostCollectionRecreateEventListeners();
@@ -213,12 +216,12 @@ public class HibernateSearchEventListenerRegister {
 						new PostCollectionUpdateEventListener[] { (PostCollectionUpdateEventListener) searchEventListener }
 				);
 			}
-		}		
+		}
 	}
 
 	/**
 	 * Tries to load Hibernate Search event listener.
-	 * 
+	 *
 	 * @return An event listener instance in case the jar was available.
 	 */
 	private static Class<?> attemptToLoadSearchEventListener() {
@@ -228,7 +231,7 @@ public class HibernateSearchEventListenerRegister {
 					FULL_TEXT_INDEX_EVENT_LISTENER_CLASS,
 					HibernateSearchEventListenerRegister.class);
 		} catch (ClassNotFoundException e) {
-			log.debug("Search not present in classpath, ignoring event listener registration.");
+            LOG.unableToFindListenerClass();
 		}
 		return searchEventListenerClass;
 	}
@@ -243,4 +246,23 @@ public class HibernateSearchEventListenerRegister {
 		}
 		return searchEventListener;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Property hibernate.search.autoregister_listeners is set to false. No attempt will be made to register Hibernate Search event listeners." )
+        void willNotRegisterListeners();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Unable to find %s on the classpath. Hibernate Search is not enabled." )
+        void unableToFindListenerClass( String className );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Search not present in classpath, ignoring event listener registration." )
+        void unableToFindListenerClass();
+    }
 }

@@ -23,6 +23,9 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +37,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -67,10 +69,10 @@ import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.Mappings;
-import org.hibernate.cfg.PropertyHolder;
-import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.ObjectNameSource;
+import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.FilterDefinition;
@@ -85,9 +87,10 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Stateful holder and processor for binding Entity information
@@ -95,11 +98,13 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 public class EntityBinder {
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                EntityBinder.class.getPackage().getName());
+
 	private String name;
 	private XClass annotatedClass;
 	private PersistentClass persistentClass;
 	private Mappings mappings;
-	private Logger log = LoggerFactory.getLogger( EntityBinder.class );
 	private String discriminatorValue = "";
 	private Boolean forceDiscriminator;
 	private Boolean insertableDiscriminator;
@@ -124,8 +129,8 @@ public class EntityBinder {
 	private AccessType propertyAccessType = AccessType.DEFAULT;
 	private boolean wrapIdsInEmbeddedComponents;
 	private String subselect;
-	
-	
+
+
 	public boolean wrapIdsInEmbeddedComponents() {
 		return wrapIdsInEmbeddedComponents;
 	}
@@ -237,14 +242,8 @@ public class EntityBinder {
 			}
 		}
 		else {
-			if ( explicitHibernateEntityAnnotation ) {
-				log.warn( "@org.hibernate.annotations.Entity used on a non root entity: ignored for {}",
-						annotatedClass.getName() );
-			}
-			if ( annotatedClass.isAnnotationPresent( Immutable.class ) ) {
-				log.warn( "@Immutable used on a non root entity: ignored for {}",
-						annotatedClass.getName() );
-			}
+            if (explicitHibernateEntityAnnotation) LOG.entityAnnotationOnNonRoot(annotatedClass.getName());
+            if (annotatedClass.isAnnotationPresent(Immutable.class)) LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
 		}
 		persistentClass.setOptimisticLockMode( getVersioning( optimisticLockType ) );
 		persistentClass.setSelectBeforeUpdate( selectBeforeUpdate );
@@ -277,7 +276,7 @@ public class EntityBinder {
 		SQLDelete sqlDelete = annotatedClass.getAnnotation( SQLDelete.class );
 		SQLDeleteAll sqlDeleteAll = annotatedClass.getAnnotation( SQLDeleteAll.class );
 		Loader loader = annotatedClass.getAnnotation( Loader.class );
-		
+
 		if ( sqlInsert != null ) {
 			persistentClass.setCustomSQLInsert( sqlInsert.sql().trim(), sqlInsert.callable(),
 					ExecuteUpdateResultCheckStyle.parse( sqlInsert.check().toString().toLowerCase() )
@@ -305,18 +304,18 @@ public class EntityBinder {
 
 		if ( annotatedClass.isAnnotationPresent( Synchronize.class )) {
 			Synchronize synchronizedWith = annotatedClass.getAnnotation(Synchronize.class);
-		
+
 			String [] tables = synchronizedWith.value();
 			for (String table : tables) {
 				persistentClass.addSynchronizedTable(table);
 			}
 		}
-				
+
 		if ( annotatedClass.isAnnotationPresent(Subselect.class )) {
 			Subselect subselect = annotatedClass.getAnnotation(Subselect.class);
 			this.subselect = subselect.value();
-		}	
-				
+		}
+
 		//tuplizers
 		if ( annotatedClass.isAnnotationPresent( Tuplizers.class ) ) {
 			for (Tuplizer tuplizer : annotatedClass.getAnnotation( Tuplizers.class ).value()) {
@@ -345,13 +344,8 @@ public class EntityBinder {
 				}
 				persistentClass.addFilter( filterName, cond );
 			}
-		}
-		else {
-			if ( filters.size() > 0 ) {
-				log.warn( "@Filter not allowed on subclasses (ignored): {}", persistentClass.getEntityName() );
-			}
-		}
-		log.debug( "Import with entity name {}", name );
+        } else if (filters.size() > 0) LOG.filterAnnotationOnSubclass(persistentClass.getEntityName());
+        LOG.importWithEntityName(name);
 		try {
 			mappings.addImport( persistentClass.getEntityName(), name );
 			String entityName = persistentClass.getEntityName();
@@ -517,7 +511,7 @@ public class EntityBinder {
 		);
 
 		if ( persistentClass instanceof TableOwner ) {
-			log.info( "Bind entity {} on table {}", persistentClass.getEntityName(), table.getName() );
+            LOG.bindEntityOnTable(persistentClass.getEntityName(), table.getName());
 			( (TableOwner) persistentClass ).setTable( table );
 		}
 		else {
@@ -747,9 +741,7 @@ public class EntityBinder {
 
 		//somehow keep joins() for later.
 		//Has to do the work later because it needs persistentClass id!
-		log.info(
-				"Adding secondary table to entity {} -> {}", persistentClass.getEntityName(), join.getTable().getName()
-		);
+        LOG.addingSecondaryTableToEntity(persistentClass.getEntityName(), join.getTable().getName());
 		org.hibernate.annotations.Table matchingTable = findMatchingComplimentTableAnnotation( join );
 		if ( matchingTable != null ) {
 			join.setSequentialSelect( FetchMode.JOIN != matchingTable.fetch() );
@@ -930,4 +922,37 @@ public class EntityBinder {
 
 		return accessType;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Adding secondary table to entity %s -> %s" )
+        void addingSecondaryTableToEntity( String entity,
+                                           String table );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Bind entity %s on table %s" )
+        void bindEntityOnTable( String entity,
+                                String table );
+
+        @LogMessage( level = WARN )
+        @Message( value = "@org.hibernate.annotations.Entity used on a non root entity: ignored for %s" )
+        void entityAnnotationOnNonRoot( String className );
+
+        @LogMessage( level = WARN )
+        @Message( value = "@Filter not allowed on subclasses (ignored): %s" )
+        void filterAnnotationOnSubclass( String className );
+
+        @LogMessage( level = WARN )
+        @Message( value = "@Immutable used on a non root entity: ignored for %s" )
+        void immutableAnnotationOnNonRoot( String className );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Import with entity name %s" )
+        void importWithEntityName( String entity );
+    }
 }

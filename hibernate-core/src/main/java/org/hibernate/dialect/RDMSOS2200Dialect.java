@@ -23,21 +23,28 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.lock.*;
-
+import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.Types;
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.OptimisticLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
+import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.type.StandardBasicTypes;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -52,12 +59,14 @@ import org.slf4j.LoggerFactory;
  * @author Ploski and Hanson
  */
 public class RDMSOS2200Dialect extends Dialect {
-	private static Logger log = LoggerFactory.getLogger(RDMSOS2200Dialect.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                RDMSOS2200Dialect.class.getPackage().getName());
 
 	public RDMSOS2200Dialect() {
 		super();
         // Display the dialect version.
-		log.info("RDMSOS2200Dialect version: 1.0");
+        LOG.rdmsOs2200Dialect();
 
         /**
          * This section registers RDMS Biult-in Functions (BIFs) with Hibernate.
@@ -356,4 +365,15 @@ public class RDMSOS2200Dialect extends Dialect {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "RDMSOS2200Dialect version: 1.0" )
+        void rdmsOs2200Dialect();
+    }
 }

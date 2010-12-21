@@ -24,8 +24,10 @@
  */
 package org.hibernate;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.jboss.logging.Logger.Level.ERROR;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.
@@ -34,20 +36,30 @@ import org.slf4j.LoggerFactory;
  */
 public class AssertionFailure extends RuntimeException {
 
-	private static final Logger log = LoggerFactory.getLogger( AssertionFailure.class );
+    private static final long serialVersionUID = 1L;
 
-	private static final String MESSAGE = "an assertion failure occured" +
-			" (this may indicate a bug in Hibernate, but is more likely due" +
-			" to unsafe use of the session)";
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, AssertionFailure.class.getName());
 
-	public AssertionFailure(String s) {
-		super( s );
-		log.error( MESSAGE, this );
-	}
+    public AssertionFailure( String s ) {
+        super(s);
+        LOG.failed(this);
+    }
 
-	public AssertionFailure(String s, Throwable t) {
-		super( s, t );
-		log.error( MESSAGE, t );
-	}
+    public AssertionFailure( String s,
+                             Throwable t ) {
+        super(s, t);
+        LOG.failed(t);
+    }
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger {
+
+        @LogMessage( level = ERROR )
+        @Message( value = "an assertion failure occured" + " (this may indicate a bug in Hibernate, but is more likely due"
+                          + " to unsafe use of the session): %s" )
+        void failed( Throwable throwable );
+    }
 }

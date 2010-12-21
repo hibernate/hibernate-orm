@@ -24,10 +24,8 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
@@ -41,6 +39,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default evict event listener used by hibernate for evicting entities
@@ -52,9 +54,10 @@ import org.hibernate.proxy.LazyInitializer;
  */
 public class DefaultEvictEventListener implements EvictEventListener {
 
-	private static final Logger log = LoggerFactory.getLogger(DefaultEvictEventListener.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DefaultEvictEventListener.class.getPackage().getName());
 
-	/** 
+	/**
 	 * Handle the given evict event.
 	 *
 	 * @param event The evict event to be handled.
@@ -95,15 +98,13 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	}
 
 	protected void doEvict(
-		final Object object, 
-		final EntityKey key, 
+		final Object object,
+		final EntityKey key,
 		final EntityPersister persister,
-		final EventSource session) 
+		final EventSource session)
 	throws HibernateException {
 
-		if ( log.isTraceEnabled() ) {
-			log.trace( "evicting " + MessageHelper.infoString(persister) );
-		}
+        if (LOG.isTraceEnabled()) LOG.evicting(MessageHelper.infoString(persister));
 
 		// remove all collections for the entity from the session-level cache
 		if ( persister.hasCollections() ) {
@@ -111,7 +112,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		}
 
 		// remove any snapshot, not really for memory management purposes, but
-		// rather because it might now be stale, and there is no longer any 
+		// rather because it might now be stale, and there is no longer any
 		// EntityEntry to take precedence
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
@@ -119,4 +120,15 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		new Cascade( CascadingAction.EVICT, Cascade.AFTER_EVICT, session )
 				.cascade( persister, object );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Evicting %s" )
+        void evicting( String infoString );
+    }
 }

@@ -30,12 +30,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.ProtectionDomain;
-
 import javassist.bytecode.ClassFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
+import org.hibernate.bytecode.Logger;
 import org.hibernate.bytecode.util.ClassFilter;
 
 /**
@@ -47,13 +45,14 @@ import org.hibernate.bytecode.util.ClassFilter;
  */
 public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 
-	private static Logger log = LoggerFactory.getLogger( JavassistClassTransformer.class.getName() );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	public JavassistClassTransformer(ClassFilter classFilter, org.hibernate.bytecode.util.FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );
 	}
 
-	protected byte[] doTransform(
+	@Override
+    protected byte[] doTransform(
 			ClassLoader loader,
 			String className,
 			Class classBeingRedefined,
@@ -65,14 +64,12 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 			classfile = new ClassFile( new DataInputStream( new ByteArrayInputStream( classfileBuffer ) ) );
 		}
 		catch (IOException e) {
-			log.error( "Unable to build enhancement metamodel for " + className );
+            LOG.unableToBuildEnhancementMetamodel(className);
 			return classfileBuffer;
 		}
 		FieldTransformer transformer = getFieldTransformer( classfile );
 		if ( transformer != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Enhancing " + className );
-			}
+            LOG.enhancingClass("Enhancing " + className);
 			DataOutputStream out = null;
 			try {
 				transformer.transform( classfile );
@@ -82,7 +79,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 				return byteStream.toByteArray();
 			}
 			catch (Exception e) {
-				log.error( "Unable to transform class", e );
+                LOG.unableToTransformClass(e.getMessage());
 				throw new HibernateException( "Unable to transform class: " + e.getMessage() );
 			}
 			finally {

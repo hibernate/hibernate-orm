@@ -25,10 +25,6 @@
 package org.hibernate.cache;
 
 import java.util.Comparator;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -41,7 +37,7 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class TransactionalCache implements CacheConcurrencyStrategy {
 
-	private static final Logger log = LoggerFactory.getLogger( TransactionalCache.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	private Cache cache;
 
@@ -50,13 +46,10 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	}
 
 	public Object get(Object key, long txTimestamp) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "cache lookup: " + key );
-		}
+        LOG.lookup(key);
 		Object result = cache.read( key );
-		if ( log.isDebugEnabled() ) {
-			log.debug( result == null ? "cache miss" : "cache hit" );
-		}
+        if (result == null) LOG.miss(key);
+        else LOG.hit(key);
 		return result;
 	}
 
@@ -68,14 +61,10 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	        Comparator versionComparator,
 	        boolean minimalPut) throws CacheException {
 		if ( minimalPut && cache.read( key ) != null ) {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "item already cached: " + key );
-			}
+            LOG.exists(key);
 			return false;
 		}
-		if ( log.isDebugEnabled() ) {
-			log.debug( "caching: " + key );
-		}
+        LOG.caching(key);
 		if ( cache instanceof OptimisticCache ) {
 			( ( OptimisticCache ) cache ).writeLoad( key, value, version );
 		}
@@ -105,9 +94,7 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	        Object value,
 	        Object currentVersion,
 	        Object previousVersion) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "updating: " + key );
-		}
+        LOG.updating(key);
 		if ( cache instanceof OptimisticCache ) {
 			( ( OptimisticCache ) cache ).writeUpdate( key, value, currentVersion, previousVersion );
 		}
@@ -121,9 +108,7 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 			Object key,
 	        Object value,
 	        Object currentVersion) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "inserting: " + key );
-		}
+        LOG.inserting(key);
 		if ( cache instanceof OptimisticCache ) {
 			( ( OptimisticCache ) cache ).writeInsert( key, value, currentVersion );
 		}
@@ -138,14 +123,12 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	}
 
 	public void remove(Object key) throws CacheException {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "removing: " + key );
-		}
+        LOG.removing(key);
 		cache.remove( key );
 	}
 
 	public void clear() throws CacheException {
-		log.debug( "clearing" );
+        LOG.clearing();
 		cache.clear();
 	}
 
@@ -154,7 +137,7 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 			cache.destroy();
 		}
 		catch ( Exception e ) {
-			log.warn( "could not destroy cache", e );
+            LOG.unableToDestroyCache(e.getMessage());
 		}
 	}
 
@@ -187,7 +170,8 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 		return false;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return cache + "(transactional)";
 	}
 

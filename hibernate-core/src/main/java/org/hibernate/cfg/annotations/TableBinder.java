@@ -23,23 +23,21 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.persistence.UniqueConstraint;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
+import org.hibernate.cfg.Mappings;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.ObjectNameSource;
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -51,8 +49,12 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.util.CollectionHelper;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Table related operations
@@ -62,7 +64,9 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("unchecked")
 public class TableBinder {
 	//TODO move it to a getter/setter strategy
-	private static Logger log = LoggerFactory.getLogger( TableBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                TableBinder.class.getPackage().getName());
+
 	private String schema;
 	private String catalog;
 	private String name;
@@ -147,7 +151,7 @@ public class TableBinder {
 		// ownerEntity can be null when the table name is explicitly set
 		final String ownerObjectName = isJPA2ElementCollection && ownerEntity != null ?
 				StringHelper.unqualify( ownerEntity ) : unquotedOwnerTable;
-		final ObjectNameSource nameSource = buildNameContext( 
+		final ObjectNameSource nameSource = buildNameContext(
 				ownerObjectName,
 				unquotedAssocTable );
 
@@ -201,7 +205,7 @@ public class TableBinder {
 
 		return new AssociationTableNameSource( name, logicalName );
 	}
- 
+
 	public static Table buildAndFillTable(
 			String schema,
 			String catalog,
@@ -228,7 +232,7 @@ public class TableBinder {
 					catalog,
 					realTableName,
 					isAbstract,
-					subselect, 
+					subselect,
 					denormalizedSuperTable
 			);
 		}
@@ -237,7 +241,7 @@ public class TableBinder {
 					schema,
 					catalog,
 					realTableName,
-					subselect, 
+					subselect,
 					isAbstract
 			);
 		}
@@ -271,7 +275,8 @@ public class TableBinder {
 	 *
 	 * @deprecated Use {@link #buildAndFillTable} instead.
 	 */
-	@SuppressWarnings({ "JavaDoc" })
+	@Deprecated
+    @SuppressWarnings({ "JavaDoc" })
 	public static Table fillTable(
 			String schema,
 			String catalog,
@@ -338,7 +343,7 @@ public class TableBinder {
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
 			 */
-			log.debug("Retrieving property {}.{}", associatedClass.getEntityName(), mappedByProperty);
+            LOG.retreivingProperty(associatedClass.getEntityName(), mappedByProperty);
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
 			Iterator mappedByColumns;
@@ -445,7 +450,7 @@ public class TableBinder {
 					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
 					org.hibernate.mapping.Column col;
 					Table table = referencedEntity.getTable(); //works cause the pk has to be on the primary table
-					if ( !idColItr.hasNext() ) log.debug( "No column in the identifier!" );
+                    if (!idColItr.hasNext()) LOG.noColumnInIdentifier();
 					while ( idColItr.hasNext() ) {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
@@ -491,7 +496,7 @@ public class TableBinder {
 			Ejb3JoinColumn[] columns,
 			SimpleValue value) {
 		for (Ejb3JoinColumn joinCol : columns) {
-			Column synthCol = (Column) columnIterator.next();					
+			Column synthCol = (Column) columnIterator.next();
 			if ( joinCol.isNameDeferred() ) {
 				//this has to be the default value
 				joinCol.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
@@ -524,7 +529,8 @@ public class TableBinder {
 	/**
 	 * @deprecated Use {@link #buildUniqueConstraintHolders} instead
 	 */
-	@SuppressWarnings({ "JavaDoc" })
+	@Deprecated
+    @SuppressWarnings({ "JavaDoc" })
 	public static List<String[]> buildUniqueConstraints(UniqueConstraint[] constraintsArray) {
 		List<String[]> result = new ArrayList<String[]>();
 		if ( constraintsArray.length != 0 ) {
@@ -572,4 +578,20 @@ public class TableBinder {
 		this.propertyName = propertyName;
 		this.name = null;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Retrieving property %s.%s" )
+        void retreivingProperty( String entityName,
+                                 String propertyName );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "No column in the identifier!" )
+        void noColumnInIdentifier();
+    }
 }

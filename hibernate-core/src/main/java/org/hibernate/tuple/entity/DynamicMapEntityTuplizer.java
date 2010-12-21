@@ -24,23 +24,23 @@
 package org.hibernate.tuple.entity;
 
 import java.util.Map;
-
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.tuple.Instantiator;
-import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
-import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.proxy.ProxyFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.proxy.map.MapProxyFactory;
+import org.hibernate.tuple.DynamicMapInstantiator;
+import org.hibernate.tuple.Instantiator;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.
@@ -50,12 +50,13 @@ import org.slf4j.LoggerFactory;
  */
 public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
-	static final Logger log = LoggerFactory.getLogger( DynamicMapEntityTuplizer.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                DynamicMapEntityTuplizer.class.getPackage().getName());
 
 	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super(entityMetamodel, mappedEntity);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -75,28 +76,32 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
+	@Override
+    protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getGetter( null, mappedProperty.getName() );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
+	@Override
+    protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return buildPropertyAccessor(mappedProperty).getSetter( null, mappedProperty.getName() );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected Instantiator buildInstantiator(PersistentClass mappingInfo) {
+	@Override
+    protected Instantiator buildInstantiator(PersistentClass mappingInfo) {
         return new DynamicMapInstantiator( mappingInfo );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
+	@Override
+    protected ProxyFactory buildProxyFactory(PersistentClass mappingInfo, Getter idGetter, Setter idSetter) {
 
 		ProxyFactory pf = new MapProxyFactory();
 		try {
@@ -111,7 +116,7 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 			);
 		}
 		catch ( HibernateException he ) {
-			log.warn( "could not create proxy factory for:" + getEntityName(), he );
+            LOG.warn(LOG.unableToCreateProxyFactory(getEntityName()), he);
 			pf = null;
 		}
 		return pf;
@@ -173,15 +178,27 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 		/**
 		 * {@inheritDoc}
 		 */
-		public boolean equals(Object obj) {
+		@Override
+        public boolean equals(Object obj) {
 			return getClass().equals( obj.getClass() );
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return getClass().hashCode();
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "Could not create proxy factory for:%s" )
+        Object unableToCreateProxyFactory( String entityName );
+    }
 }

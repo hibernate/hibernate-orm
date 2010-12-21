@@ -23,11 +23,8 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
@@ -38,6 +35,10 @@ import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A convenience base class for listeners that respond to requests to reassociate an entity
@@ -47,7 +48,8 @@ import org.hibernate.type.TypeHelper;
  */
 public class AbstractReassociateEventListener implements Serializable {
 
-	private static final Logger log = LoggerFactory.getLogger( AbstractReassociateEventListener.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractReassociateEventListener.class.getPackage().getName());
 
 	/**
 	 * Associates a given entity (either transient or associated with another session) to
@@ -62,12 +64,9 @@ public class AbstractReassociateEventListener implements Serializable {
 	 */
 	protected final EntityEntry reassociate(AbstractEvent event, Object object, Serializable id, EntityPersister persister) {
 
-		if ( log.isTraceEnabled() ) {
-			log.trace(
-					"reassociating transient instance: " +
-							MessageHelper.infoString( persister, id, event.getSession().getFactory() )
-			);
-		}
+        if (LOG.isTraceEnabled()) LOG.reassociatingTransientInstance(MessageHelper.infoString(persister,
+                                                                                              id,
+                                                                                              event.getSession().getFactory()));
 
 		EventSource source = event.getSession();
 		EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
@@ -106,4 +105,14 @@ public class AbstractReassociateEventListener implements Serializable {
 
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Reassociating transient instance: %s" )
+        void reassociatingTransientInstance( String infoString );
+    }
 }

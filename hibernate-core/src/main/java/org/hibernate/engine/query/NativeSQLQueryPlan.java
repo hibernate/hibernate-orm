@@ -24,27 +24,29 @@
  */
 package org.hibernate.engine.query;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventSource;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines a query execution plan for a native-SQL query.
@@ -56,7 +58,8 @@ public class NativeSQLQueryPlan implements Serializable {
 
 	private final SQLCustomQuery customQuery;
 
-	private static final Logger log = LoggerFactory.getLogger(NativeSQLQueryPlan.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                NativeSQLQueryPlan.class.getPackage().getName());
 
 	public NativeSQLQueryPlan(
 			NativeSQLQuerySpecification specification,
@@ -154,11 +157,7 @@ public class NativeSQLQueryPlan implements Serializable {
 				TypedValue typedval = (TypedValue) e.getValue();
 				int[] locs = getNamedParameterLocs( name );
 				for (int i = 0; i < locs.length; i++) {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "bindNamedParameters() "
-								+ typedval.getValue() + " -> " + name + " ["
-								+ (locs[i] + start ) + "]" );
-					}
+                    LOG.bindNamedParameters(typedval.getValue(), name, locs[i] + start);
 					typedval.getType().nullSafeSet( ps, typedval.getValue(),
 							locs[i] + start, session );
 				}
@@ -222,4 +221,16 @@ public class NativeSQLQueryPlan implements Serializable {
 		return result;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "bindNamedParameters() %s -> %s [%d]" )
+        void bindNamedParameters( Object value,
+                                  String name,
+                                  int i );
+    }
 }

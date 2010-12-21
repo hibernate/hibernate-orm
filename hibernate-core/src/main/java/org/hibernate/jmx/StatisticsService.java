@@ -5,9 +5,6 @@ import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.stat.CollectionStatistics;
@@ -16,6 +13,9 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImpl;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * JMX service for Hibernate statistics<br>
@@ -46,16 +46,17 @@ import org.hibernate.stat.StatisticsImpl;
  * And call the MBean by providing the <code>SessionFactoryJNDIName</code> first.
  * Then the session factory will be retrieved from JNDI and the statistics
  * loaded.
- * 
+ *
  * @author Emmanuel Bernard
  */
 public class StatisticsService implements StatisticsServiceMBean {
-	
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                StatisticsService.class.getPackage().getName());
 	//TODO: We probably should have a StatisticsNotPublishedException, to make it clean
-	
+
 	SessionFactory sf;
 	String sfJNDIName;
-	Logger log = LoggerFactory.getLogger(StatisticsService.class);
 	Statistics stats = new StatisticsImpl();
 
 	/**
@@ -71,25 +72,25 @@ public class StatisticsService implements StatisticsServiceMBean {
 			}
 			else {
 				setSessionFactory( (SessionFactory) obj );
-			} 
-		} 
+			}
+		}
 		catch (NameNotFoundException e) {
-			log.error("No session factory with JNDI name " + sfJNDIName, e);
+            LOG.error(LOG.noSessionFactoryWithJndiName(sfJNDIName), e);
 			setSessionFactory(null);
-		} 
+		}
 		catch (NamingException e) {
-			log.error("Error while accessing session factory with JNDI name " + sfJNDIName, e);
+            LOG.error(LOG.unableToAccessSessionFactory(sfJNDIName), e);
 			setSessionFactory(null);
-		} 
+		}
 		catch (ClassCastException e) {
-			log.error("JNDI name " + sfJNDIName + " does not handle a session factory reference", e);
+            LOG.error(LOG.jndiNameDoesNotHandleSessionFactoryReference(sfJNDIName), e);
 			setSessionFactory(null);
 		}
 	}
-	
+
 	/**
 	 * Useful to init this MBean wo a JNDI session factory name
-	 * 
+	 *
 	 * @param sf session factory to register
 	 */
 	public void setSessionFactory(SessionFactory sf) {
@@ -98,9 +99,9 @@ public class StatisticsService implements StatisticsServiceMBean {
 			stats = new StatisticsImpl();
 		}
 		else {
-			stats = sf.getStatistics(); 
+			stats = sf.getStatistics();
 		}
-		
+
 	}
 	/**
 	 * @see StatisticsServiceMBean#clear()
@@ -272,7 +273,7 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public void setStatisticsEnabled(boolean enable) {
 		stats.setStatisticsEnabled(enable);
 	}
-	
+
 	public void logSummary() {
 		stats.logSummary();
 	}
@@ -292,7 +293,7 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public String[] getSecondLevelCacheRegionNames() {
 		return stats.getSecondLevelCacheRegionNames();
 	}
-	
+
 	public long getSuccessfulTransactionCount() {
 		return stats.getSuccessfulTransactionCount();
 	}
@@ -314,4 +315,20 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public String getQueryExecutionMaxTimeQueryString() {
 		return stats.getQueryExecutionMaxTimeQueryString();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "JNDI name %s does not handle a session factory reference" )
+        Object jndiNameDoesNotHandleSessionFactoryReference( String sfJNDIName );
+
+        @Message( value = "No session factory with JNDI name %s" )
+        Object noSessionFactoryWithJndiName( String sfJNDIName );
+
+        @Message( value = "Error while accessing session factory with JNDI name %s" )
+        Object unableToAccessSessionFactory( String sfJNDIName );
+    }
 }

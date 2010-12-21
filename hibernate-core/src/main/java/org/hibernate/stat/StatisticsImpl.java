@@ -23,28 +23,27 @@
  *
  */
 package org.hibernate.stat;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.ArrayHelper;
 
 /**
- * @see org.hibernate.stat.Statistics 
- *  
+ * @see org.hibernate.stat.Statistics
+ *
  * @author Gavin King
  *
  * @deprecated Use {@link org.hibernate.stat.ConcurrentStatisticsImpl} instead
  */
 @Deprecated
 public class StatisticsImpl implements Statistics, StatisticsImplementor {
-	
+
 	//TODO: we should provide some way to get keys of collection of statistics to make it easier to retrieve from a GUI perspective
-	
-	private static final Logger log = LoggerFactory.getLogger(StatisticsImpl.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                StatisticsImpl.class.getPackage().getName());
 
 	private SessionFactoryImplementor sessionFactory;
 
@@ -54,10 +53,10 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	private long sessionCloseCount;
 	private long flushCount;
 	private long connectCount;
-	
+
 	private long prepareStatementCount;
 	private long closeStatementCount;
-	
+
 	private long entityLoadCount;
 	private long entityUpdateCount;
 	private long entityInsertCount;
@@ -68,23 +67,23 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	private long collectionRemoveCount;
 	private long collectionRecreateCount;
 	private long collectionFetchCount;
-	
+
 	private long secondLevelCacheHitCount;
 	private long secondLevelCacheMissCount;
 	private long secondLevelCachePutCount;
-	
+
 	private long queryExecutionCount;
 	private long queryExecutionMaxTime;
 	private String queryExecutionMaxTimeQueryString;
 	private long queryCacheHitCount;
 	private long queryCacheMissCount;
 	private long queryCachePutCount;
-	
+
 	private long commitedTransactionCount;
 	private long transactionCount;
-	
+
 	private long optimisticFailureCount;
-	
+
 	/** second level cache statistics per region */
 	private final Map secondLevelCacheStatistics = new HashMap();
 	/** entity statistics per name */
@@ -102,7 +101,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		clear();
 		this.sessionFactory = sessionFactory;
 	}
-	
+
 	/**
 	 * reset all statistics
 	 */
@@ -110,63 +109,63 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		secondLevelCacheHitCount = 0;
 		secondLevelCacheMissCount = 0;
 		secondLevelCachePutCount = 0;
-		
+
 		sessionCloseCount = 0;
 		sessionOpenCount = 0;
 		flushCount = 0;
 		connectCount = 0;
-		
+
 		prepareStatementCount = 0;
 		closeStatementCount = 0;
-		
+
 		entityDeleteCount = 0;
 		entityInsertCount = 0;
 		entityUpdateCount = 0;
 		entityLoadCount = 0;
 		entityFetchCount = 0;
-		
+
 		collectionRemoveCount = 0;
 		collectionUpdateCount = 0;
 		collectionRecreateCount = 0;
 		collectionLoadCount = 0;
 		collectionFetchCount = 0;
-		
+
 		queryExecutionCount = 0;
 		queryCacheHitCount = 0;
 		queryExecutionMaxTime = 0;
 		queryExecutionMaxTimeQueryString = null;
 		queryCacheMissCount = 0;
 		queryCachePutCount = 0;
-		
+
 		transactionCount = 0;
 		commitedTransactionCount = 0;
-		
+
 		optimisticFailureCount = 0;
-		
+
 		secondLevelCacheStatistics.clear();
 		entityStatistics.clear();
 		collectionStatistics.clear();
 		queryStatistics.clear();
-		
+
 		startTime = System.currentTimeMillis();
 	}
-	
+
 	public synchronized void openSession() {
 		sessionOpenCount++;
 	}
-	
+
 	public synchronized void closeSession() {
 		sessionCloseCount++;
 	}
-	
+
 	public synchronized void flush() {
 		flushCount++;
 	}
-	
+
 	public synchronized void connect() {
 		connectCount++;
 	}
-	
+
 	public synchronized void loadEntity(String entityName) {
 		entityLoadCount++;
 		((EntityStatisticsImpl) getEntityStatistics(entityName)).loadCount++;
@@ -179,7 +178,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 
 	/**
 	 * find entity statistics per name
-	 * 
+	 *
 	 * @param entityName entity name
 	 * @return EntityStatistics object
 	 */
@@ -191,7 +190,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		}
 		return es;
 	}
-	
+
 	public synchronized void updateEntity(String entityName) {
 		entityUpdateCount++;
 		EntityStatisticsImpl es = (EntityStatisticsImpl) getEntityStatistics(entityName);
@@ -212,7 +211,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 
 	/**
 	 * Get collection statistics per role
-	 * 
+	 *
 	 * @param role collection role
 	 * @return CollectionStatistics
 	 */
@@ -224,7 +223,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		}
 		return cs;
 	}
-	
+
 	public synchronized void loadCollection(String role) {
 		collectionLoadCount++;
 		((CollectionStatisticsImpl) getCollectionStatistics(role)).loadCount++;
@@ -249,10 +248,10 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		collectionRemoveCount++;
 		((CollectionStatisticsImpl) getCollectionStatistics(role)).removeCount++;
 	}
-	
+
 	/**
 	 * Second level cache statistics per region
-	 * 
+	 *
 	 * @param regionName region name
 	 * @return SecondLevelCacheStatistics
 	 */
@@ -296,10 +295,10 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		if (hql!=null) {
 			QueryStatisticsImpl qs = (QueryStatisticsImpl) getQueryStatistics(hql);
 			qs.executed(rows, time);
-			log.info( "HQL: {}, time: {}ms, rows: {}", new Object[]{hql, new Long( time ), new Long( rows )} );
+            LOG.hql(hql, new Long(time), new Long(rows));
 		}
 	}
-	
+
 	public synchronized void queryCacheHit(String hql, String regionName) {
 		queryCacheHitCount++;
 		if (hql!=null) {
@@ -332,7 +331,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 
 	/**
 	 * Query statistics from query string (HQL or SQL)
-	 * 
+	 *
 	 * @param queryString query string
 	 * @return QueryStatistics
 	 */
@@ -351,21 +350,21 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getEntityDeleteCount() {
 		return entityDeleteCount;
 	}
-	
+
 	/**
 	 * @return entity insertion count
 	 */
 	public long getEntityInsertCount() {
 		return entityInsertCount;
 	}
-	
+
 	/**
 	 * @return entity load (from DB)
 	 */
 	public long getEntityLoadCount() {
 		return entityLoadCount;
 	}
-	
+
 	/**
 	 * @return entity fetch (from DB)
 	 */
@@ -383,26 +382,26 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getQueryExecutionCount() {
 		return queryExecutionCount;
 	}
-	
+
 	public long getQueryCacheHitCount() {
 		return queryCacheHitCount;
 	}
-	
+
 	public long getQueryCacheMissCount() {
 		return queryCacheMissCount;
 	}
-	
+
 	public long getQueryCachePutCount() {
 		return queryCachePutCount;
 	}
-	
+
 	/**
 	 * @return flush
 	 */
 	public long getFlushCount() {
 		return flushCount;
 	}
-	
+
 	/**
 	 * @return session connect
 	 */
@@ -423,7 +422,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getSecondLevelCacheMissCount() {
 		return secondLevelCacheMissCount;
 	}
-	
+
 	/**
 	 * @return second level cache put
 	 */
@@ -437,7 +436,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getSessionCloseCount() {
 		return sessionCloseCount;
 	}
-	
+
 	/**
 	 * @return session opening
 	 */
@@ -458,7 +457,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getCollectionFetchCount() {
 		return collectionFetchCount;
 	}
-	
+
 	/**
 	 * @return collection update
 	 */
@@ -486,49 +485,49 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getStartTime() {
 		return startTime;
 	}
-	
+
 	/**
 	 * log in info level the main statistics
 	 */
 	public void logSummary() {
-		log.info("Logging statistics....");
-		log.info("start time: " + startTime);
-		log.info("sessions opened: " + sessionOpenCount);
-		log.info("sessions closed: " + sessionCloseCount);
-		log.info("transactions: " + transactionCount);
-		log.info("successful transactions: " + commitedTransactionCount);
-		log.info("optimistic lock failures: " + optimisticFailureCount);
-		log.info("flushes: " + flushCount);
-		log.info("connections obtained: " + connectCount);
-		log.info("statements prepared: " + prepareStatementCount);
-		log.info("statements closed: " + closeStatementCount);
-		log.info("second level cache puts: " + secondLevelCachePutCount);
-		log.info("second level cache hits: " + secondLevelCacheHitCount);
-		log.info("second level cache misses: " + secondLevelCacheMissCount);
-		log.info("entities loaded: " + entityLoadCount);
-		log.info("entities updated: " + entityUpdateCount);
-		log.info("entities inserted: " + entityInsertCount);
-		log.info("entities deleted: " + entityDeleteCount);
-		log.info("entities fetched (minimize this): " + entityFetchCount);
-		log.info("collections loaded: " + collectionLoadCount);
-		log.info("collections updated: " + collectionUpdateCount);
-		log.info("collections removed: " + collectionRemoveCount);
-		log.info("collections recreated: " + collectionRecreateCount);
-		log.info("collections fetched (minimize this): " + collectionFetchCount);
-		log.info("queries executed to database: " + queryExecutionCount);
-		log.info("query cache puts: " + queryCachePutCount);
-		log.info("query cache hits: " + queryCacheHitCount);
-		log.info("query cache misses: " + queryCacheMissCount);
-		log.info("max query time: " + queryExecutionMaxTime + "ms");
+        LOG.loggingStatistics();
+        LOG.startTime(startTime);
+        LOG.sessionsOpened(sessionOpenCount);
+        LOG.sessionsClosed(sessionCloseCount);
+        LOG.transactions(transactionCount);
+        LOG.successfulTransactions(commitedTransactionCount);
+        LOG.optimisticLockFailures(optimisticFailureCount);
+        LOG.flushes(flushCount);
+        LOG.connectionsObtained(connectCount);
+        LOG.statementsPrepared(prepareStatementCount);
+        LOG.statementsClosed(closeStatementCount);
+        LOG.secondLevelCachePuts(secondLevelCachePutCount);
+        LOG.secondLevelCacheHits(secondLevelCacheHitCount);
+        LOG.secondLevelCacheMisses(secondLevelCacheMissCount);
+        LOG.entitiesLoaded(entityLoadCount);
+        LOG.entitiesUpdated(entityUpdateCount);
+        LOG.entitiesInserted(entityInsertCount);
+        LOG.entitiesDeleted(entityDeleteCount);
+        LOG.entitiesFetched(entityFetchCount);
+        LOG.collectionsLoaded(collectionLoadCount);
+        LOG.collectionsUpdated(collectionUpdateCount);
+        LOG.collectionsRemoved(collectionRemoveCount);
+        LOG.collectionsRecreated(collectionRecreateCount);
+        LOG.collectionsFetched(collectionFetchCount);
+        LOG.queriesExecuted(queryExecutionCount);
+        LOG.queryCachePuts(queryCachePutCount);
+        LOG.queryCacheHits(queryCacheHitCount);
+        LOG.queryCacheMisses(queryCacheMissCount);
+        LOG.maxQueryTime(queryExecutionMaxTime);
 	}
-	
+
 	/**
 	 * Are statistics logged
 	 */
 	public boolean isStatisticsEnabled() {
 		return isStatisticsEnabled;
 	}
-	
+
 	/**
 	 * Enable statistics logs (this is a dynamic parameter)
 	 */
@@ -543,14 +542,14 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getQueryExecutionMaxTime() {
 		return queryExecutionMaxTime;
 	}
-	
+
 	/**
 	 * Get all executed query strings
 	 */
 	public String[] getQueries() {
 		return ArrayHelper.toStringArray( queryStatistics.keySet() );
 	}
-	
+
 	/**
 	 * Get the names of all entities
 	 */
@@ -574,7 +573,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 			return ArrayHelper.toStringArray( sessionFactory.getAllCollectionMetadata().keySet() );
 		}
 	}
-	
+
 	/**
 	 * Get all second-level cache region names
 	 */
@@ -591,11 +590,11 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 		transactionCount++;
 		if (success) commitedTransactionCount++;
 	}
-	
+
 	public long getSuccessfulTransactionCount() {
 		return commitedTransactionCount;
 	}
-	
+
 	public long getTransactionCount() {
 		return transactionCount;
 	}
@@ -624,7 +623,8 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public long getOptimisticFailureCount() {
 		return optimisticFailureCount;
 	}
-	public String toString() {
+	@Override
+    public String toString() {
 		return new StringBuffer()
 			.append("Statistics[")
 			.append("start time=").append(startTime)
@@ -662,5 +662,4 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 	public String getQueryExecutionMaxTimeQueryString() {
 		return queryExecutionMaxTimeQueryString;
 	}
-	
 }

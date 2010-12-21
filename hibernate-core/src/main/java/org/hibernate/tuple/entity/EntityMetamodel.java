@@ -23,6 +23,8 @@
  */
 package org.hibernate.tuple.entity;
 
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,10 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -57,6 +55,10 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Centralizes metamodel information about an entity.
@@ -65,7 +67,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public class EntityMetamodel implements Serializable {
 
-	private static final Logger log = LoggerFactory.getLogger(EntityMetamodel.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                EntityMetamodel.class.getPackage().getName());
 
 	private static final int NO_VERSION_INDX = -66;
 
@@ -259,9 +262,7 @@ public class EntityMetamodel implements Serializable {
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
 		hasLazyProperties = hasLazy;
-		if ( hasLazyProperties ) {
-			log.info( "lazy property fetching available for: " + name );
-		}
+        if (hasLazyProperties) LOG.lazyPropertyFetchingAvailable(name);
 
 		lazy = persistentClass.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:
@@ -278,7 +279,7 @@ public class EntityMetamodel implements Serializable {
 			isAbstract = persistentClass.isAbstract().booleanValue();
 			if ( !isAbstract && persistentClass.hasPojoRepresentation() &&
 			     ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
-				log.warn( "entity [" + name + "] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names" );
+                LOG.entityMappedAsNonAbstract(name);
 			}
 		}
 		selectBeforeUpdate = persistentClass.hasSelectBeforeUpdate();
@@ -578,7 +579,8 @@ public class EntityMetamodel implements Serializable {
 		return ( String ) entityNameByInheritenceClassMap.get( inheritenceClass );
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return "EntityMetamodel(" + name + ':' + ArrayHelper.toString(properties) + ')';
 	}
 
@@ -639,5 +641,18 @@ public class EntityMetamodel implements Serializable {
 		return hasUpdateGeneratedValues;
 	}
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names" )
+        void entityMappedAsNonAbstract( String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Lazy property fetching available for: %s" )
+        void lazyPropertyFetchingAvailable( String name );
+    }
 }

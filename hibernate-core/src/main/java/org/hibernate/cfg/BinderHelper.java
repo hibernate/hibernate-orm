@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -54,6 +54,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
@@ -61,10 +62,11 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -72,7 +74,9 @@ import org.slf4j.LoggerFactory;
 public class BinderHelper {
 
 	public static final String ANNOTATION_STRING_DEFAULT = "";
-	private static Logger log = LoggerFactory.getLogger( BinderHelper.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                BinderHelper.class.getPackage().getName());
 
 	private BinderHelper() {
 	}
@@ -590,7 +594,7 @@ public class BinderHelper {
 
 		Ejb3Column[] metaColumns = Ejb3Column.buildColumnFromAnnotation(
 				new javax.persistence.Column[] { metaColumn }, null,
-				nullability, propertyHolder, inferredData, entityBinder.getSecondaryTables(), mappings 
+				nullability, propertyHolder, inferredData, entityBinder.getSecondaryTables(), mappings
 		);
 		//set metaColumn to the right table
 		for (Ejb3Column column : metaColumns) {
@@ -638,7 +642,7 @@ public class BinderHelper {
 
 	private static void bindAnyMetaDef(AnyMetaDef defAnn, Mappings mappings) {
 		if ( isEmptyAnnotationValue( defAnn.name() ) ) return; //don't map not named definitions
-		log.info( "Binding Any Meta definition: {}", defAnn.name() );
+        LOG.bindingAnyMetaDefinition(defAnn.name());
 		mappings.addAnyMetaDef( defAnn );
 	}
 
@@ -692,4 +696,15 @@ public class BinderHelper {
 			return mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Binding Any Meta definition: %s" )
+        void bindingAnyMetaDefinition( String name );
+    }
 }

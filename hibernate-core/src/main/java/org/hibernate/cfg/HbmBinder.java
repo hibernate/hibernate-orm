@@ -23,13 +23,15 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.StringTokenizer;
-
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -52,6 +54,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Fetchable;
 import org.hibernate.mapping.Filterable;
 import org.hibernate.mapping.Formula;
@@ -86,7 +89,6 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
-import org.hibernate.mapping.FetchProfile;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -97,9 +99,10 @@ import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.xml.XmlDocument;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Walks an XML mapping document and produces the Hibernate configuration-time metamodel (the
@@ -109,7 +112,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class HbmBinder {
 
-	private static final Logger log = LoggerFactory.getLogger( HbmBinder.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HbmBinder.class.getPackage().getName());
 
 	/**
 	 * Private constructor to disallow instantiation.
@@ -230,7 +234,7 @@ public final class HbmBinder {
 		String rename = ( renameNode == null ) ?
 						StringHelper.unqualify( className ) :
 						renameNode.getValue();
-		log.debug( "Import: " + rename + " -> " + className );
+		LOG.bindImport( rename, className );
 		mappings.addImport( className, rename );
 	}
 
@@ -347,10 +351,7 @@ public final class HbmBinder {
 		entity.setTable( table );
 		bindComment(table, node);
 
-		log.info(
-				"Mapping class: " + entity.getEntityName() +
-				" -> " + entity.getTable().getName()
-			);
+        LOG.mappingClass(entity.getEntityName(), entity.getTable().getName());
 
 		// MUTABLE
 		Attribute mutableNode = node.attribute( "mutable" );
@@ -846,10 +847,7 @@ public final class HbmBinder {
 			);
 		unionSubclass.setTable( mytable );
 
-		log.info(
-				"Mapping union-subclass: " + unionSubclass.getEntityName() +
-				" -> " + unionSubclass.getTable().getName()
-			);
+        LOG.mappingUnionSubclass(unionSubclass.getEntityName(), unionSubclass.getTable().getName());
 
 		createClassProperties( node, unionSubclass, mappings, inheritedMetas );
 
@@ -866,10 +864,7 @@ public final class HbmBinder {
 					.setEntityPersisterClass( SingleTableEntityPersister.class );
 		}
 
-		log.info(
-				"Mapping subclass: " + subclass.getEntityName() +
-				" -> " + subclass.getTable().getName()
-			);
+        LOG.mappingSubclass(subclass.getEntityName(), subclass.getTable().getName());
 
 		// properties
 		createClassProperties( node, subclass, mappings, inheritedMetas );
@@ -925,10 +920,7 @@ public final class HbmBinder {
 		joinedSubclass.setTable( mytable );
 		bindComment(mytable, node);
 
-		log.info(
-				"Mapping joined-subclass: " + joinedSubclass.getEntityName() +
-				" -> " + joinedSubclass.getTable().getName()
-			);
+        LOG.mappingJoinedSubclass(joinedSubclass.getEntityName(), joinedSubclass.getTable().getName());
 
 		// KEY
 		Element keyNode = node.element( "key" );
@@ -990,10 +982,8 @@ public final class HbmBinder {
 			join.setOptional( "true".equals( nullNode.getValue() ) );
 		}
 
-		log.info(
-				"Mapping class join: " + persistentClass.getEntityName() +
-				" -> " + join.getTable().getName()
-			);
+
+        LOG.mappingClassJoin(persistentClass.getEntityName(), join.getTable().getName());
 
 		// KEY
 		Element keyNode = node.element( "key" );
@@ -1302,7 +1292,7 @@ public final class HbmBinder {
 	        // properties generated on update can never be updateable...
 	        if ( property.isUpdateable() && generation == PropertyGeneration.ALWAYS ) {
 		        if ( updateNode == null ) {
-			        // updateable only because the user did not specify 
+			        // updateable only because the user did not specify
 			        // anything; just override it
 			        property.setUpdateable( false );
 		        }
@@ -1328,13 +1318,13 @@ public final class HbmBinder {
 			property.setLazy( lazyNode != null && "true".equals( lazyNode.getValue() ) );
 		}
 
-		if ( log.isDebugEnabled() ) {
+        if (LOG.isDebugEnabled()) {
 			String msg = "Mapped property: " + property.getName();
 			String columns = columns( property.getValue() );
 			if ( columns.length() > 0 ) msg += " -> " + columns;
 			// TODO: this fails if we run with debug on!
 			// if ( model.getType()!=null ) msg += ", type: " + model.getType().getName();
-			log.debug( msg );
+            LOG.mappedProperty(msg);
 		}
 
 		property.setMetaAttributes( getMetas( node, inheritedMetas ) );
@@ -1378,9 +1368,7 @@ public final class HbmBinder {
 			if ( Environment.jvmSupportsLinkedHashCollections() || ( collection instanceof Bag ) ) {
 				collection.setOrderBy( orderNode.getValue() );
 			}
-			else {
-				log.warn( "Attribute \"order-by\" ignored in JDK1.3 or less" );
-			}
+ else LOG.attributeIgnored();
 		}
 		Attribute whereNode = node.attribute( "where" );
 		if ( whereNode != null ) {
@@ -1489,10 +1477,7 @@ public final class HbmBinder {
 			collection.setCollectionTable( table );
 			bindComment(table, node);
 
-			log.info(
-					"Mapping collection: " + collection.getRole() +
-					" -> " + collection.getCollectionTable().getName()
-				);
+            LOG.mappingCollection(collection.getRole(), collection.getCollectionTable().getName());
 		}
 
 		// SORT
@@ -1755,7 +1740,7 @@ public final class HbmBinder {
 		}
 		column.setCustomWrite( customWrite );
 		column.setCustomRead( node.attributeValue( "read" ) );
-		
+
 		Element comment = node.element("comment");
 		if (comment!=null) column.setComment( comment.getTextTrim() );
 
@@ -2080,7 +2065,7 @@ public final class HbmBinder {
 			if ( mappings.getSchemaName() != null ) {
 				params.setProperty(
 						PersistentIdentifierGenerator.SCHEMA,
-						mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( mappings.getSchemaName() ) 
+						mappings.getObjectNameNormalizer().normalizeIdentifierQuoting( mappings.getSchemaName() )
 				);
 			}
 			if ( mappings.getCatalogName() != null ) {
@@ -2475,10 +2460,7 @@ public final class HbmBinder {
 			oneToMany.setAssociatedClass( persistentClass );
 			collection.setCollectionTable( persistentClass.getTable() );
 
-			log.info(
-					"Mapping collection: " + collection.getRole() +
-					" -> " + collection.getCollectionTable().getName()
-				);
+            LOG.mappingCollection(collection.getRole(), collection.getCollectionTable().getName());
 		}
 
 		// CHECK
@@ -2624,11 +2606,7 @@ public final class HbmBinder {
 			if ( condition==null) {
 				throw new MappingException("no filter condition found for filter: " + name);
 			}
-			log.debug(
-					"Applying many-to-many filter [" + name +
-					"] as [" + condition +
-					"] to role [" + collection.getRole() + "]"
-				);
+            LOG.applyingManyToManyFilter(name, condition, collection.getRole());
 			collection.addManyToManyFilter( name, condition );
 		}
 	}
@@ -2661,7 +2639,7 @@ public final class HbmBinder {
 		String queryName = queryElem.attributeValue( "name" );
 		if (path!=null) queryName = path + '.' + queryName;
 		String query = queryElem.getText();
-		log.debug( "Named query: " + queryName + " -> " + query );
+        LOG.namedQuery(queryName, query);
 
 		boolean cacheable = "true".equals( queryElem.attributeValue( "cacheable" ) );
 		String region = queryElem.attributeValue( "cache-region" );
@@ -2771,7 +2749,7 @@ public final class HbmBinder {
 					(IdentifierCollection) collection,
 					persistentClasses,
 					mappings,
-					inheritedMetas 
+					inheritedMetas
 				);
 		}
 
@@ -2789,7 +2767,7 @@ public final class HbmBinder {
 					(Map) collection,
 					persistentClasses,
 					mappings,
-					inheritedMetas 
+					inheritedMetas
 				);
 		}
 
@@ -2808,7 +2786,7 @@ public final class HbmBinder {
 		}
 
 	}
-	
+
 	static class ListSecondPass extends CollectionSecondPass {
 		ListSecondPass(Element node, Mappings mappings, List collection, java.util.Map inheritedMetas) {
 			super( node, mappings, collection, inheritedMetas );
@@ -2821,7 +2799,7 @@ public final class HbmBinder {
 					(List) collection,
 					persistentClasses,
 					mappings,
-					inheritedMetas 
+					inheritedMetas
 				);
 		}
 
@@ -2961,10 +2939,10 @@ public final class HbmBinder {
 			if ( meta == null  ) {
 				meta = new MetaAttribute( name );
 				map.put( name, meta );
-			} else if (meta == inheritedAttribute) { // overriding inherited meta attribute. HBX-621 & HBX-793			
-				meta = new MetaAttribute( name );				
-				map.put( name, meta );				
-			}			
+			} else if (meta == inheritedAttribute) { // overriding inherited meta attribute. HBX-621 & HBX-793
+				meta = new MetaAttribute( name );
+				map.put( name, meta );
+			}
 			meta.addValue( metaNode.getText() );
 		}
 		return map;
@@ -2994,7 +2972,7 @@ public final class HbmBinder {
 
 	private static void parseFilterDef(Element element, Mappings mappings) {
 		String name = element.attributeValue( "name" );
-		log.debug( "Parsing filter-def [" + name + "]" );
+        LOG.parsingFilterDefinition(name);
 		String defaultCondition = element.getTextTrim();
 		if ( StringHelper.isEmpty( defaultCondition ) ) {
 			defaultCondition = element.attributeValue( "condition" );
@@ -3005,12 +2983,12 @@ public final class HbmBinder {
 			final Element param = (Element) params.next();
 			final String paramName = param.attributeValue( "name" );
 			final String paramType = param.attributeValue( "type" );
-			log.debug( "adding filter parameter : " + paramName + " -> " + paramType );
+            LOG.addingFilterParameter(paramName, paramType);
 			final Type heuristicType = mappings.getTypeResolver().heuristicType( paramType );
-			log.debug( "parameter heuristic type : " + heuristicType );
+            LOG.parameterHeuristicType(heuristicType);
 			paramMappings.put( paramName, heuristicType );
 		}
-		log.debug( "Parsed filter-def [" + name + "]" );
+        LOG.parsedFilterDefinition(name);
 		FilterDefinition def = new FilterDefinition( name, defaultCondition, paramMappings );
 		mappings.addFilterDefinition( def );
 	}
@@ -3033,7 +3011,7 @@ public final class HbmBinder {
 		if ( condition==null) {
 			throw new MappingException("no filter condition found for filter: " + name);
 		}
-		log.debug( "Applying filter [" + name + "] as [" + condition + "]" );
+        LOG.applyingFilter(name, condition);
 		filterable.addFilter( name, condition );
 	}
 
@@ -3169,4 +3147,87 @@ public final class HbmBinder {
 	private static interface EntityElementHandler {
 		public void handleEntity(String entityName, String className, Mappings mappings);
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Applying filter [%s] as [%s]" )
+        void applyingFilter( String name,
+                             String condition );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Adding filter parameter : %s -> %s" )
+        void addingFilterParameter( String paramName,
+                                    String paramType );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Applying many-to-many filter [%s] as [%s] to role [%s]" )
+        void applyingManyToManyFilter( String name,
+                                       String condition,
+                                       String role );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Attribute \"order-by\" ignored in JDK1.3 or less" )
+        void attributeIgnored();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Import: %s -> %s" )
+        void bindImport( String rename,
+                         String className );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "%s" )
+        void mappedProperty( String message );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping class: %s -> %s" )
+        void mappingClass( String entityName,
+                           String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping class join: %s -> %s" )
+        void mappingClassJoin( String entityName,
+                               String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping collection: %s -> %s" )
+        void mappingCollection( String entityName,
+                                String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping joined-subclass: %s -> %s" )
+        void mappingJoinedSubclass( String entityName,
+                                    String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping subclass: %s -> %s" )
+        void mappingSubclass( String entityName,
+                              String name );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Mapping union-subclass: %s -> %s" )
+        void mappingUnionSubclass( String entityName,
+                                   String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Named query: %s -> %s" )
+        void namedQuery( String queryName,
+                         String query );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Parameter heuristic type : %s" )
+        void parameterHeuristicType( Type heuristicType );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Parsed filter-def [%s]" )
+        void parsedFilterDefinition( String name );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Parsing filter-def [%s]" )
+        void parsingFilterDefinition( String name );
+    }
 }

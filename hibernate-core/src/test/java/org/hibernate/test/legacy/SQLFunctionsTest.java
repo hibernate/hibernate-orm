@@ -30,11 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import junit.framework.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
@@ -44,20 +40,18 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 
 public class SQLFunctionsTest extends LegacyTestCase {
-
-	private static final Logger log = LoggerFactory.getLogger(SQLFunctionsTest.class);
 
 	public SQLFunctionsTest(String name) {
 		super(name);
@@ -189,7 +183,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		parameters.put("count", new Integer(simple.getCount()));
 
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");
-		q.setProperties(((Map)parameters));
+		q.setProperties((parameters));
 		assertTrue( q.list().get(0)==simple );
 
 		List l = new ArrayList();
@@ -619,11 +613,11 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testSqlFunctionAsAlias() throws Exception {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
-			log.info("Dialect does not list any no-arg functions");
+            LOG.info("Dialect does not list any no-arg functions");
 			return;
 		}
 
-		log.info("Using function named [" + functionName + "] for 'function as alias' test");
+        LOG.info("Using function named [" + functionName + "] for 'function as alias' test");
 		String query = "select " + functionName + " from Simple as " + functionName + " where " + functionName + ".id = 10";
 
 		Session s = openSession();

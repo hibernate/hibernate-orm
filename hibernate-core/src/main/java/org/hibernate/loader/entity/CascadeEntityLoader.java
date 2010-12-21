@@ -26,35 +26,34 @@ package org.hibernate.loader.entity;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 public class CascadeEntityLoader extends AbstractEntityLoader {
-	
+
 	public CascadeEntityLoader(
 			OuterJoinLoadable persister,
 			CascadingAction action,
 			SessionFactoryImplementor factory) throws MappingException {
 		super(
-				persister, 
-				persister.getIdentifierType(), 
+				persister,
+				persister.getIdentifierType(),
 				factory,
 				LoadQueryInfluencers.NONE
 		);
 
 		JoinWalker walker = new CascadeEntityJoinWalker(
-				persister, 
+				persister,
 				action,
 				factory
 		);
 		initFromWalker( walker );
 
 		postInstantiate();
-		
-		log.debug( "Static select for action " + action + " on entity " + entityName + ": " + getSQLString() );
 
+        LOG.staticSelectForAction(action, entityName, getSQLString());
 	}
 
 }

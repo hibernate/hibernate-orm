@@ -28,7 +28,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
@@ -38,11 +37,7 @@ import org.hibernate.hql.ast.QuerySyntaxException;
 import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
-
 import antlr.RecognitionException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of BasicExecutor.
@@ -50,14 +45,13 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class BasicExecutor extends AbstractStatementExecutor {
-	private static final Logger log = LoggerFactory.getLogger( BasicExecutor.class );
 
 	private final Queryable persister;
 	private final String sql;
 	private final List parameterSpecifications;
 
 	public BasicExecutor(HqlSqlWalker walker, Queryable persister) {
-		super( walker, log );
+        super(walker, null);
 		this.persister = persister;
 		try {
 			SqlGenerator gen = new SqlGenerator( getFactory() );
@@ -114,7 +108,8 @@ public class BasicExecutor extends AbstractStatementExecutor {
 		}
 	}
 
-	protected Queryable[] getAffectedQueryables() {
+	@Override
+    protected Queryable[] getAffectedQueryables() {
 		return new Queryable[] { persister };
 	}
 }

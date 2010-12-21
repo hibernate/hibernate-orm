@@ -24,13 +24,13 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.action.CollectionRecreateAction;
 import org.hibernate.action.CollectionRemoveAction;
@@ -44,16 +44,20 @@ import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.Collections;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.PersistenceContext;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.FlushEntityEvent;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEvent;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.Printer;
 import org.hibernate.util.IdentityMap;
 import org.hibernate.util.LazyIterator;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A convenience base class for listeners whose functionality results in flushing.
@@ -62,13 +66,14 @@ import org.hibernate.util.LazyIterator;
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractFlushingEventListener.class);
-	
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractFlushingEventListener.class.getPackage().getName());
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/** 
+	/**
 	 * Coordinates the processing necessary to get things ready for executions
 	 * as db calls by preping the session caches and moving the appropriate
 	 * entities and collections to their respective execution queues.
@@ -78,10 +83,10 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	protected void flushEverythingToExecutions(FlushEvent event) throws HibernateException {
 
-		log.trace("flushing session");
-		
+        LOG.flushingSession();
+
 		EventSource session = event.getSession();
-		
+
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		session.getInterceptor().preFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
 
@@ -93,7 +98,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
-				
+
 		persistenceContext.setFlushing(true);
 		try {
 			flushEntities(event);
@@ -104,22 +109,18 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		}
 
 		//some statistics
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Flushed: " +
-					session.getActionQueue().numberOfInsertions() + " insertions, " +
-					session.getActionQueue().numberOfUpdates() + " updates, " +
-					session.getActionQueue().numberOfDeletions() + " deletions to " +
-					persistenceContext.getEntityEntries().size() + " objects"
-				);
-			log.debug( "Flushed: " +
-					session.getActionQueue().numberOfCollectionCreations() + " (re)creations, " +
-					session.getActionQueue().numberOfCollectionUpdates() + " updates, " +
-					session.getActionQueue().numberOfCollectionRemovals() + " removals to " +
-					persistenceContext.getCollectionEntries().size() + " collections"
-				);
-			new Printer( session.getFactory() ).toString( 
-					persistenceContext.getEntitiesByKey().values().iterator(), 
-					session.getEntityMode() 
+        if (LOG.isDebugEnabled()) {
+            LOG.flushedEntities(session.getActionQueue().numberOfInsertions(),
+                                session.getActionQueue().numberOfUpdates(),
+                                session.getActionQueue().numberOfDeletions(),
+                                persistenceContext.getEntityEntries().size());
+            LOG.flushedCollections(session.getActionQueue().numberOfCollectionCreations(),
+                                   session.getActionQueue().numberOfCollectionUpdates(),
+                                   session.getActionQueue().numberOfCollectionRemovals(),
+                                   persistenceContext.getCollectionEntries().size());
+			new Printer( session.getFactory() ).toString(
+					persistenceContext.getEntitiesByKey().values().iterator(),
+					session.getEntityMode()
 				);
 		}
 	}
@@ -130,8 +131,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 * and also apply orphan delete
 	 */
 	private void prepareEntityFlushes(EventSource session) throws HibernateException {
-		
-		log.debug("processing flush-time cascades");
+
+        LOG.processingFlushTimeCascades();
 
 		final Map.Entry[] list = IdentityMap.concurrentEntries( session.getPersistenceContext().getEntityEntries() );
 		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
@@ -146,8 +147,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			}
 		}
 	}
-	
-	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything) 
+
+	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, Object anything)
 	throws HibernateException {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
@@ -158,9 +159,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			session.getPersistenceContext().decrementCascadeLevel();
 		}
 	}
-	
+
 	protected Object getAnything() { return null; }
-	
+
 	protected CascadingAction getCascadingAction() {
 		return CascadingAction.SAVE_UPDATE;
 	}
@@ -173,8 +174,8 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
-		
-		log.debug("dirty checking collections");
+
+        LOG.dirtyCheckingCollections();
 
 		final List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		final int size = list.size();
@@ -191,7 +192,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void flushEntities(FlushEvent event) throws HibernateException {
 
-		log.trace("Flushing entities and processing referenced collections");
+        LOG.flushingEntitiesAndProcessingReferencedCollections();
 
 		// Among other things, updateReachables() will recursively load all
 		// collections that are moving roles. This might cause entities to
@@ -201,7 +202,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// It is safe because of how IdentityMap implements entrySet()
 
 		final EventSource source = event.getSession();
-		
+
 		final Map.Entry[] list = IdentityMap.concurrentEntries( source.getPersistenceContext().getEntityEntries() );
 		final int size = list.length;
 		for ( int i = 0; i < size; i++ ) {
@@ -230,7 +231,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void flushCollections(EventSource session) throws HibernateException {
 
-		log.trace("Processing unreferenced collections");
+        LOG.processingUnreferencedCollections();
 
 		List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		int size = list.size();
@@ -244,7 +245,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		// Schedule updates to collections:
 
-		log.trace( "Scheduling collection removes/(re)creates/updates" );
+        LOG.schedulingCollectionChanges();
 
 		list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		size = list.size();
@@ -257,35 +258,35 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			if ( ce.isDorecreate() ) {
 				session.getInterceptor().onCollectionRecreate( coll, ce.getCurrentKey() );
 				actionQueue.addAction(
-						new CollectionRecreateAction( 
-								coll, 
-								ce.getCurrentPersister(), 
-								ce.getCurrentKey(), 
-								session 
+						new CollectionRecreateAction(
+								coll,
+								ce.getCurrentPersister(),
+								ce.getCurrentKey(),
+								session
 							)
 					);
 			}
 			if ( ce.isDoremove() ) {
 				session.getInterceptor().onCollectionRemove( coll, ce.getLoadedKey() );
 				actionQueue.addAction(
-						new CollectionRemoveAction( 
-								coll, 
-								ce.getLoadedPersister(), 
-								ce.getLoadedKey(), 
-								ce.isSnapshotEmpty(coll), 
-								session 
+						new CollectionRemoveAction(
+								coll,
+								ce.getLoadedPersister(),
+								ce.getLoadedKey(),
+								ce.isSnapshotEmpty(coll),
+								session
 							)
 					);
 			}
 			if ( ce.isDoupdate() ) {
 				session.getInterceptor().onCollectionUpdate( coll, ce.getLoadedKey() );
 				actionQueue.addAction(
-						new CollectionUpdateAction( 
-								coll, 
-								ce.getLoadedPersister(), 
-								ce.getLoadedKey(), 
-								ce.isSnapshotEmpty(coll), 
-								session 
+						new CollectionUpdateAction(
+								coll,
+								ce.getLoadedPersister(),
+								ce.getLoadedKey(),
+								ce.isSnapshotEmpty(coll),
+								session
 							)
 					);
 			}
@@ -293,7 +294,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		}
 
 		actionQueue.sortCollectionActions();
-		
+
 	}
 
 	/**
@@ -310,7 +311,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	protected void performExecutions(EventSource session) throws HibernateException {
 
-		log.trace("executing flush");
+        LOG.flush();
 
 		try {
 			session.getJDBCContext().getConnectionManager().flushBeginning();
@@ -321,7 +322,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			session.getActionQueue().executeActions();
 		}
 		catch (HibernateException he) {
-			log.error("Could not synchronize database state with session", he);
+            LOG.unableToSynchronizeDatabaseStateWithSession(he);
 			throw he;
 		}
 		finally {
@@ -341,7 +342,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	protected void postFlush(SessionImplementor session) throws HibernateException {
 
-		log.trace( "post flush" );
+        LOG.postFlush();
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		persistenceContext.getCollectionsByKey().clear();
@@ -362,18 +363,74 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			}
 			else {
 				//otherwise recreate the mapping between the collection and its key
-				CollectionKey collectionKey = new CollectionKey( 
-						collectionEntry.getLoadedPersister(), 
-						collectionEntry.getLoadedKey(), 
-						session.getEntityMode() 
+				CollectionKey collectionKey = new CollectionKey(
+						collectionEntry.getLoadedPersister(),
+						collectionEntry.getLoadedKey(),
+						session.getEntityMode()
 					);
 				persistenceContext.getCollectionsByKey()
 						.put(collectionKey, persistentCollection);
 			}
 		}
-		
+
 		session.getInterceptor().postFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
 
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Dirty checking collections" )
+        void dirtyCheckingCollections();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Executing flush" )
+        void flush();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Flushed: %d (re)creations, %d updates, %d removals to %d collections" )
+        void flushedCollections( int numberOfCollectionCreations,
+                                 int numberOfCollectionUpdates,
+                                 int numberOfCollectionRemovals,
+                                 int size );
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Flushed: %d insertions, %d updates, %d deletions to %d objects" )
+        void flushedEntities( int numberOfInsertions,
+                      int numberOfUpdates,
+                      int numberOfDeletions,
+                      int size );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Flushing entities and processing referenced collections" )
+        void flushingEntitiesAndProcessingReferencedCollections();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Flushing session" )
+        void flushingSession();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Post flush" )
+        void postFlush();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Processing flush-time cascades" )
+        void processingFlushTimeCascades();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Processing unreferenced collections" )
+        void processingUnreferencedCollections();
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Scheduling collection removes/(re)creates/updates" )
+        void schedulingCollectionChanges();
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Could not synchronize database state with session: %s" )
+        void unableToSynchronizeDatabaseStateWithSession( HibernateException he );
+    }
 }

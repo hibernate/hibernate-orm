@@ -24,6 +24,7 @@
  */
 package org.hibernate.engine;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,27 +32,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
-import org.hibernate.LockOptions;
-import org.hibernate.impl.FilterImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ParserHelper;
+import org.hibernate.impl.FilterImpl;
 import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * @author Gavin King
  */
 public final class QueryParameters {
-	private static final Logger log = LoggerFactory.getLogger( QueryParameters.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                QueryParameters.class.getPackage().getName());
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
@@ -278,15 +281,9 @@ public final class QueryParameters {
 
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {
 		Printer print = new Printer( factory );
-		if ( positionalParameterValues.length != 0 ) {
-			log.trace(
-					"parameters: " +
-							print.toString( positionalParameterTypes, positionalParameterValues )
-			);
-		}
-		if ( namedParameters != null ) {
-			log.trace( "named parameters: " + print.toString( namedParameters ) );
-		}
+        if (positionalParameterValues.length != 0) LOG.parameters(print.toString(positionalParameterTypes,
+                                                                                 positionalParameterValues));
+        if (namedParameters != null) LOG.namedParameters(print.toString(namedParameters));
 	}
 
 	public boolean isCacheable() {
@@ -419,7 +416,7 @@ public final class QueryParameters {
 	public boolean isReadOnly(SessionImplementor session) {
 		return ( isReadOnlyInitialized ?
 				isReadOnly() :
-				session.getPersistenceContext().isDefaultReadOnly() 
+				session.getPersistenceContext().isDefaultReadOnly()
 		);
 	}
 
@@ -567,5 +564,18 @@ public final class QueryParameters {
 		return copy;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
 
+        @LogMessage( level = TRACE )
+        @Message( value = "Named parameters: %s" )
+        void namedParameters( String string );
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Parameters: %s" )
+        void parameters( String string );
+    }
 }

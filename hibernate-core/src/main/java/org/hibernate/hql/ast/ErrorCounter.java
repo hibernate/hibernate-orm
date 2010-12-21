@@ -24,21 +24,24 @@
  */
 package org.hibernate.hql.ast;
 
-import antlr.RecognitionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.QueryException;
-
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.hibernate.QueryException;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
+import antlr.RecognitionException;
 
 /**
  * An error handler that counts parsing errors and warnings.
  */
 public class ErrorCounter implements ParseErrorHandler {
-	private Logger log = LoggerFactory.getLogger( ErrorCounter.class );
-	private Logger hqlLog = LoggerFactory.getLogger( "org.hibernate.hql.PARSER" );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ErrorCounter.class.getPackage().getName());
 
 	private List errorList = new ArrayList();
 	private List warningList = new ArrayList();
@@ -47,13 +50,11 @@ public class ErrorCounter implements ParseErrorHandler {
 	public void reportError(RecognitionException e) {
 		reportError( e.toString() );
 		recognitionExceptions.add( e );
-		if ( log.isDebugEnabled() ) {
-			log.debug( e.toString(), e );
-		}
+        LOG.error(e.toString(), e);
 	}
 
 	public void reportError(String message) {
-		hqlLog.error( message );
+        LOG.error(message);
 		errorList.add( message );
 	}
 
@@ -62,7 +63,7 @@ public class ErrorCounter implements ParseErrorHandler {
 	}
 
 	public void reportWarning(String message) {
-		hqlLog.debug( message );
+        LOG.debug(message);
 		warningList.add( message );
 	}
 
@@ -78,18 +79,20 @@ public class ErrorCounter implements ParseErrorHandler {
 
 	public void throwQueryException() throws QueryException {
 		if ( getErrorCount() > 0 ) {
-			if ( recognitionExceptions.size() > 0 ) {
-				throw QuerySyntaxException.convert( ( RecognitionException ) recognitionExceptions.get( 0 ) );
-			}
-			else {
-				throw new QueryException( getErrorString() );
-			}
-		}
-		else {
-			// all clear
-			if ( log.isDebugEnabled() ) {
-				log.debug( "throwQueryException() : no errors" );
-			}
-		}
+            if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert((RecognitionException)recognitionExceptions.get(0));
+            throw new QueryException(getErrorString());
+        }
+        LOG.throwQueryException();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "throwQueryException() : no errors" )
+        void throwQueryException();
+    }
 }

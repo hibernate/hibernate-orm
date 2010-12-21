@@ -23,30 +23,37 @@
  */
 package org.hibernate.dialect;
 
+import static org.jboss.logging.Logger.Level.WARN;
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.io.Serializable;
-
+import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.JDBCException;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.persister.entity.Lockable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.lock.*;
+import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.OptimisticLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
+import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -61,7 +68,9 @@ import org.slf4j.LoggerFactory;
  * @author Fred Toussi
  */
 public class HSQLDialect extends Dialect {
-	private static final Logger log = LoggerFactory.getLogger( HSQLDialect.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HSQLDialect.class.getPackage().getName());
 
 	/**
 	 * version is 18 for 1.8 or 20 for 2.0
@@ -590,9 +599,7 @@ public class HSQLDialect extends Dialect {
 
 		public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
 				throws StaleObjectStateException, JDBCException {
-			if ( getLockMode().greaterThan( LockMode.READ ) ) {
-				log.warn( "HSQLDB supports only READ_UNCOMMITTED isolation" );
-			}
+            if (getLockMode().greaterThan(LockMode.READ)) LOG.hsqldbSupportsOnlyReadCommittedIsolation();
 			super.lock( id, version, object, timeout, session );
 		}
 	}
@@ -659,4 +666,15 @@ public class HSQLDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "HSQLDB supports only READ_UNCOMMITTED isolation" )
+        void hsqldbSupportsOnlyReadCommittedIsolation();
+    }
 }

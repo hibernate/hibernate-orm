@@ -26,6 +26,7 @@
 
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -37,10 +38,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ManyToAny;
@@ -49,6 +46,10 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A helper class to keep the {@code XProperty}s of a class ordered by access type.
@@ -57,7 +58,12 @@ import org.hibernate.util.StringHelper;
  */
 class PropertyContainer {
 
-	private static final Logger log = LoggerFactory.getLogger( AnnotationBinder.class );
+    static {
+        System.setProperty("jboss.i18n.generate-proxies", "true");
+    }
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PropertyContainer.class.getPackage().getName());
 
 	private final AccessType explicitClassDefinedAccessType;
 
@@ -149,12 +155,8 @@ class PropertyContainer {
 			// the access type for this property is explicitly set to AccessType.FIELD, hence we have to
 			// use field access for this property even if the default access type for the class is AccessType.PROPERTY
 			AccessType accessType = AccessType.getAccessStrategy( access.value() );
-			if ( accessType == AccessType.FIELD ) {
-				propertyAccessMap.put( property.getName(), property );
-			}
-			else {   // AccessType.PROPERTY
-				log.warn( "Placing @Access(AccessType.PROPERTY) on a field does not have any effect." );
-			}
+            if (accessType == AccessType.FIELD) propertyAccessMap.put(property.getName(), property);
+            else LOG.annotationHasNoEffect(AccessType.FIELD);
 		}
 
 		for ( XProperty property : propertyAccessMap.values() ) {
@@ -168,12 +170,8 @@ class PropertyContainer {
 			// see "2.3.2 Explicit Access Type" of JPA 2 spec
 			// the access type for this property is explicitly set to AccessType.PROPERTY, hence we have to
 			// return use method access even if the default class access type is AccessType.FIELD
-			if ( accessType == AccessType.PROPERTY ) {
-				fieldAccessMap.put( property.getName(), property );
-			}
-			else { // AccessType.FIELD
-				log.warn( "Placing @Access(AccessType.FIELD) on a property does not have any effect." );
-			}
+            if (accessType == AccessType.PROPERTY) fieldAccessMap.put(property.getName(), property);
+            else LOG.annotationHasNoEffect(AccessType.PROPERTY);
 		}
 	}
 
@@ -280,6 +278,17 @@ class PropertyContainer {
 				|| "net.sf.cglib.transform.impl.InterceptFieldCallback".equals( property.getType().getName() )
 				|| "org.hibernate.bytecode.javassist.FieldHandler".equals( property.getType().getName() );
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = WARN )
+        @Message( value = "Placing @Access(AccessType.%s) on a field does not have any effect." )
+        void annotationHasNoEffect( AccessType type );
+    }
 }
 
 

@@ -24,18 +24,16 @@
  */
 package org.hibernate.loader.entity;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -43,15 +41,20 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
- * 
+ *
  *
  * @author Gavin King
  */
 public class CollectionElementLoader extends OuterJoinLoader {
-	
-	private static final Logger log = LoggerFactory.getLogger(CollectionElementLoader.class);
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CollectionElementLoader.class.getPackage().getName());
 
 	private final OuterJoinLoadable persister;
 	private final Type keyType;
@@ -60,7 +63,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 
 	public CollectionElementLoader(
 			QueryableCollection collectionPersister,
-			SessionFactoryImplementor factory, 
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( factory, loadQueryInfluencers );
 
@@ -68,38 +71,38 @@ public class CollectionElementLoader extends OuterJoinLoader {
 		this.indexType = collectionPersister.getIndexType();
 		this.persister = (OuterJoinLoadable) collectionPersister.getElementPersister();
 		this.entityName = persister.getEntityName();
-		
+
 		JoinWalker walker = new EntityJoinWalker(
-				persister, 
-				ArrayHelper.join( 
-						collectionPersister.getKeyColumnNames(), 
+				persister,
+				ArrayHelper.join(
+						collectionPersister.getKeyColumnNames(),
 						collectionPersister.getIndexColumnNames()
 					),
-				1, 
-				LockMode.NONE, 
-				factory, 
+				1,
+				LockMode.NONE,
+				factory,
 				loadQueryInfluencers
 			);
 		initFromWalker( walker );
 
 		postInstantiate();
-		
-		log.debug( "Static select for entity " + entityName + ": " + getSQLString() );
+
+        LOG.staticSelectForEntity(entityName, getSQLString());
 
 	}
 
-	public Object loadElement(SessionImplementor session, Object key, Object index) 
+	public Object loadElement(SessionImplementor session, Object key, Object index)
 	throws HibernateException {
-		
+
 		List list = loadEntity(
-				session, 
+				session,
 				key,
 				index,
-				keyType, 
+				keyType,
 				indexType,
 				persister
 			);
-		
+
 		if ( list.size()==1 ) {
 			return list.get(0);
 		}
@@ -114,10 +117,11 @@ public class CollectionElementLoader extends OuterJoinLoader {
 				throw new HibernateException("More than one row was found");
 			}
 		}
-		
+
 	}
 
-	protected Object getResultColumnOrRow(
+	@Override
+    protected Object getResultColumnOrRow(
 		Object[] row,
 		ResultTransformer transformer,
 		ResultSet rs, SessionImplementor session)
@@ -125,8 +129,20 @@ public class CollectionElementLoader extends OuterJoinLoader {
 		return row[row.length-1];
 	}
 
-	protected boolean isSingleRowLoader() {
+	@Override
+    protected boolean isSingleRowLoader() {
 		return true;
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Static select for entity %s: %s" )
+        void staticSelectForEntity( String entityName,
+                                    String sqlString );
+    }
 }

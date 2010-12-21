@@ -23,18 +23,18 @@
  */
 package org.hibernate.service.jndi.internal;
 
+import static org.jboss.logging.Logger.Level.INFO;
 import java.util.Hashtable;
 import java.util.Map;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 import org.hibernate.internal.util.jndi.JndiException;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.jndi.spi.JndiService;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Standard implementation of JNDI services.
@@ -42,7 +42,9 @@ import org.hibernate.service.jndi.spi.JndiService;
  * @author Steve Ebersole
  */
 public class JndiServiceImpl implements JndiService {
-	private static final Logger log = LoggerFactory.getLogger( JndiServiceImpl.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                JndiServiceImpl.class.getPackage().getName());
 
 	private final Hashtable initialContextSettings;
 
@@ -61,7 +63,7 @@ public class JndiServiceImpl implements JndiService {
 				initialContext.close();
 			}
 			catch ( NamingException e ) {
-				log.info( "error closing InitialContext [" + e.toString() + "]" );
+                LOG.unableToCloseInitialContext(e.toString());
 			}
 		}
 	}
@@ -86,8 +88,19 @@ public class JndiServiceImpl implements JndiService {
 				initialContext.close();
 			}
 			catch ( NamingException e ) {
-				log.info( "error closing InitialContet [" + e.toString() + "]" );
+                LOG.unableToCloseInitialContext(e.toString());
 			}
 		}
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Error closing InitialContext [%s]" )
+        void unableToCloseInitialContext( String string );
+    }
 }

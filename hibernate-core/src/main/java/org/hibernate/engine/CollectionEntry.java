@@ -24,45 +24,48 @@
  */
 package org.hibernate.engine;
 
-import java.io.Serializable;
-import java.io.ObjectOutputStream;
+import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collection;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * We need an entry to tell us all about the current state
  * of a collection with respect to its persistent state
- * 
+ *
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
 
-	private static final Logger log = LoggerFactory.getLogger(CollectionEntry.class);
-	
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CollectionEntry.class.getPackage().getName());
+
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
-	
+
 	// session-start/post-flush persistent state
 	private Serializable snapshot;
 	// allow the CollectionSnapshot to be serialized
 	private String role;
-	
-	// "loaded" means the reference that is consistent 
+
+	// "loaded" means the reference that is consistent
 	// with the current database state
 	private transient CollectionPersister loadedPersister;
 	private Serializable loadedKey;
 
 	// ATTRIBUTES USED ONLY DURING FLUSH CYCLE
-	
+
 	// during flush, we navigate the object graph to
 	// collections and decide what to do with them
 	private transient boolean reached;
@@ -73,8 +76,8 @@ public final class CollectionEntry implements Serializable {
 	// if we instantiate a collection during the flush() process,
 	// we must ignore it for the rest of the flush()
 	private transient boolean ignore;
-	
-	// "current" means the reference that was found during flush() 
+
+	// "current" means the reference that was found during flush()
 	private transient CollectionPersister currentPersister;
 	private transient Serializable currentKey;
 
@@ -87,7 +90,7 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		collection.clearDirty(); //a newly wrapped collection is NOT dirty (or we get unnecessary version updates)
-		
+
 		snapshot = persister.isMutable() ?
 				collection.getSnapshot(persister) :
 				null;
@@ -98,15 +101,15 @@ public final class CollectionEntry implements Serializable {
 	 * For collections just loaded from the database
 	 */
 	public CollectionEntry(
-			final PersistentCollection collection, 
-			final CollectionPersister loadedPersister, 
-			final Serializable loadedKey, 
+			final PersistentCollection collection,
+			final CollectionPersister loadedPersister,
+			final Serializable loadedKey,
 			final boolean ignore
 	) {
 		this.ignore=ignore;
 
 		//collection.clearDirty()
-		
+
 		this.loadedKey = loadedKey;
 		setLoadedPersister(loadedPersister);
 
@@ -124,11 +127,11 @@ public final class CollectionEntry implements Serializable {
 		ignore = false;
 
 		//collection.clearDirty()
-		
+
 		this.loadedKey = loadedKey;
 		setLoadedPersister(loadedPersister);
 	}
-	
+
 	/**
 	 * For initialized detached collections
 	 */
@@ -141,7 +144,7 @@ public final class CollectionEntry implements Serializable {
 		loadedKey = collection.getKey();
 		setLoadedPersister( factory.getCollectionPersister( collection.getRole() ) );
 
-		snapshot = collection.getStoredSnapshot();		
+		snapshot = collection.getStoredSnapshot();
 	}
 
 	/**
@@ -168,40 +171,36 @@ public final class CollectionEntry implements Serializable {
 	 * of the collection elements, if necessary
 	 */
 	private void dirty(PersistentCollection collection) throws HibernateException {
-		
+
 		boolean forceDirty = collection.wasInitialized() &&
 				!collection.isDirty() && //optimization
 				getLoadedPersister() != null &&
 				getLoadedPersister().isMutable() && //optimization
 				( collection.isDirectlyAccessible() || getLoadedPersister().getElementType().isMutable() ) && //optimization
 				!collection.equalsSnapshot( getLoadedPersister() );
-		
+
 		if ( forceDirty ) {
 			collection.dirty();
 		}
-		
+
 	}
 
 	public void preFlush(PersistentCollection collection) throws HibernateException {
-		
-		boolean nonMutableChange = collection.isDirty() && 
-				getLoadedPersister()!=null && 
+
+		boolean nonMutableChange = collection.isDirty() &&
+				getLoadedPersister()!=null &&
 				!getLoadedPersister().isMutable();
 		if (nonMutableChange) {
 			throw new HibernateException(
-					"changed an immutable collection instance: " + 
+					"changed an immutable collection instance: " +
 					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
 				);
 		}
-		
+
 		dirty(collection);
-		
-		if ( log.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null ) {
-			log.debug(
-					"Collection dirty: " +
-					MessageHelper.collectionInfoString( getLoadedPersister().getRole(), getLoadedKey() )
-				);
-		}
+
+        if (LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null) LOG.collectionDirty(MessageHelper.collectionInfoString(getLoadedPersister().getRole(),
+                                                                                                                                                 getLoadedKey()));
 
 		setDoupdate(false);
 		setDoremove(false);
@@ -229,22 +228,22 @@ public final class CollectionEntry implements Serializable {
 		}
 		collection.setSnapshot(loadedKey, role, snapshot);
 	}
-	
+
 	/**
 	 * Called after execution of an action
 	 */
 	public void afterAction(PersistentCollection collection) {
 		loadedKey = getCurrentKey();
 		setLoadedPersister( getCurrentPersister() );
-		
-		boolean resnapshot = collection.wasInitialized() && 
+
+		boolean resnapshot = collection.wasInitialized() &&
 				( isDoremove() || isDorecreate() || isDoupdate() );
 		if ( resnapshot ) {
-			snapshot = loadedPersister==null || !loadedPersister.isMutable() ? 
-					null : 
+			snapshot = loadedPersister==null || !loadedPersister.isMutable() ?
+					null :
 					collection.getSnapshot(loadedPersister); //re-snapshot
 		}
-		
+
 		collection.postAction();
 	}
 
@@ -264,7 +263,7 @@ public final class CollectionEntry implements Serializable {
 		loadedPersister = persister;
 		setRole( persister == null ? null : persister.getRole() );
 	}
-	
+
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		loadedPersister = ( factory == null ? null : factory.getCollectionPersister(role) );
 	}
@@ -336,7 +335,7 @@ public final class CollectionEntry implements Serializable {
 	public void setCurrentKey(Serializable currentKey) {
 		this.currentKey = currentKey;
 	}
-	
+
 	/**
 	 * This is only available late during the flush cycle
 	 */
@@ -352,11 +351,12 @@ public final class CollectionEntry implements Serializable {
 		this.role = role;
 	}
 
-	public String toString() {
-		String result = "CollectionEntry" + 
+	@Override
+    public String toString() {
+		String result = "CollectionEntry" +
 				MessageHelper.collectionInfoString( loadedPersister.getRole(), loadedKey );
 		if (currentPersister!=null) {
-			result += "->" + 
+			result += "->" +
 					MessageHelper.collectionInfoString( currentPersister.getRole(), currentKey );
 		}
 		return result;
@@ -365,7 +365,7 @@ public final class CollectionEntry implements Serializable {
 	/**
 	 * Get the collection orphans (entities which were removed from the collection)
 	 */
-	public Collection getOrphans(String entityName, PersistentCollection collection) 
+	public Collection getOrphans(String entityName, PersistentCollection collection)
 	throws HibernateException {
 		if (snapshot==null) {
 			throw new AssertionFailure("no collection snapshot for orphan delete");
@@ -377,7 +377,7 @@ public final class CollectionEntry implements Serializable {
 		//TODO: does this really need to be here?
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
-		return collection.wasInitialized() && 
+		return collection.wasInitialized() &&
 			( getLoadedPersister()==null || getLoadedPersister().isMutable() ) &&
 			collection.isSnapshotEmpty( getSnapshot() );
 	}
@@ -417,4 +417,15 @@ public final class CollectionEntry implements Serializable {
 		        ( session == null ? null : session.getFactory() )
 		);
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "Collection dirty: %s" )
+        void collectionDirty( String collectionInfoString );
+    }
 }

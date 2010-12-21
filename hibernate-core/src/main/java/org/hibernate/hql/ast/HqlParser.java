@@ -24,10 +24,21 @@
  */
 package org.hibernate.hql.ast;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
-
+import org.hibernate.QueryException;
+import org.hibernate.hql.antlr.HqlBaseParser;
+import org.hibernate.hql.antlr.HqlTokenTypes;
+import org.hibernate.hql.ast.util.ASTPrinter;
+import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.util.StringHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;
 import antlr.RecognitionException;
@@ -35,14 +46,6 @@ import antlr.Token;
 import antlr.TokenStream;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.hql.antlr.HqlBaseParser;
-import org.hibernate.hql.antlr.HqlTokenTypes;
-import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.QueryException;
-import org.hibernate.util.StringHelper;
 
 /**
  * Implements the semantic action methods defined in the HQL base parser to keep the grammar
@@ -51,10 +54,9 @@ import org.hibernate.util.StringHelper;
  * @author Joshua Davis (pgmjsd@sourceforge.net)
  */
 public final class HqlParser extends HqlBaseParser {
-	/**
-	 * A logger for this class.
-	 */
-	private static final Logger log = LoggerFactory.getLogger( HqlParser.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                HqlBaseParser.class.getPackage().getName());
 
 	private ParseErrorHandler parseErrorHandler;
 	private ASTPrinter printer = getASTPrinter();
@@ -80,31 +82,32 @@ public final class HqlParser extends HqlBaseParser {
     private int traceDepth = 0;
 
 
-	public void traceIn(String ruleName) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
+	@Override
+    public void traceIn(String ruleName) {
+        if (inputState.guessing > 0) return;
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
 
-	public void traceOut(String ruleName) {
-		if ( inputState.guessing > 0 ) {
-			return;
-		}
+	@Override
+    public void traceOut(String ruleName) {
+        if (inputState.guessing > 0) return;
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
+        LOG.trace(prefix + ruleName);
 	}
 
-	public void reportError(RecognitionException e) {
+	@Override
+    public void reportError(RecognitionException e) {
 		parseErrorHandler.reportError( e ); // Use the delegate.
 	}
 
-	public void reportError(String s) {
+	@Override
+    public void reportError(String s) {
 		parseErrorHandler.reportError( s ); // Use the delegate.
 	}
 
-	public void reportWarning(String s) {
+	@Override
+    public void reportWarning(String s) {
 		parseErrorHandler.reportWarning( s );
 	}
 
@@ -121,7 +124,8 @@ public final class HqlParser extends HqlBaseParser {
 	 * @throws antlr.RecognitionException if the substitution was not possible.
 	 * @throws antlr.TokenStreamException if the substitution was not possible.
 	 */
-	public AST handleIdentifierError(Token token, RecognitionException ex) throws RecognitionException, TokenStreamException {
+	@Override
+    public AST handleIdentifierError(Token token, RecognitionException ex) throws RecognitionException, TokenStreamException {
 		// If the token can tell us if it could be an identifier...
 		if ( token instanceof HqlToken ) {
 			HqlToken hqlToken = ( HqlToken ) token;
@@ -157,8 +161,9 @@ public final class HqlParser extends HqlBaseParser {
 	 * @param x The sub tree to transform, the parent is assumed to be NOT.
 	 * @return AST - The equivalent sub-tree.
 	 */
-	public AST negateNode(AST x) {
-		//TODO: switch statements are always evil! We already had bugs because 
+	@Override
+    public AST negateNode(AST x) {
+		//TODO: switch statements are always evil! We already had bugs because
 		//      of forgotten token types. Use polymorphism for this!
 		switch ( x.getType() ) {
 			case OR:
@@ -244,9 +249,10 @@ public final class HqlParser extends HqlBaseParser {
 	 * @param x The equality expression.
 	 * @return AST - The clean sub-tree.
 	 */
-	public AST processEqualityExpression(AST x) {
+	@Override
+    public AST processEqualityExpression(AST x) {
 		if ( x == null ) {
-			log.warn( "processEqualityExpression() : No expression to process!" );
+            LOG.processEqualityExpression();
 			return null;
 		}
 
@@ -322,7 +328,8 @@ public final class HqlParser extends HqlBaseParser {
 		setASTFactory(new HqlASTFactory());	// Create nodes that track line and column number.
 	}
 
-	public void weakKeywords() throws TokenStreamException {
+	@Override
+    public void weakKeywords() throws TokenStreamException {
 
 		int t = LA( 1 );
 		switch ( t ) {
@@ -332,9 +339,7 @@ public final class HqlParser extends HqlBaseParser {
 				// The next token ( LT(2) ) should be 'by'... otherwise, this is just an ident.
 				if ( LA( 2 ) != LITERAL_by ) {
 					LT( 1 ).setType( IDENT );
-					if ( log.isDebugEnabled() ) {
-						log.debug( "weakKeywords() : new LT(1) token - " + LT( 1 ) );
-					}
+					LOG.weakKeywords( LT( 1 ) );
 				}
 				break;
 			default:
@@ -343,33 +348,31 @@ public final class HqlParser extends HqlBaseParser {
                     HqlToken hqlToken = (HqlToken)LT(1);
                     if (hqlToken.isPossibleID()) {
                         hqlToken.setType(IDENT);
-                        if ( log.isDebugEnabled() ) {
-                            log.debug( "weakKeywords() : new LT(1) token - " + LT( 1 ) );
-                        }
+                        LOG.weakKeywords(LT(1));
                     }
                 }
 				break;
 		}
 	}
 
+    @Override
     public void handleDotIdent() throws TokenStreamException {
         // This handles HHH-354, where there is a strange property name in a where clause.
         // If the lookahead contains a DOT then something that isn't an IDENT...
         if (LA(1) == DOT && LA(2) != IDENT) {
-            // See if the second lookahed token can be an identifier.
+            // See if the second lookahead token can be an identifier.
             HqlToken t = (HqlToken)LT(2);
             if (t.isPossibleID())
             {
                 // Set it!
                 LT( 2 ).setType( IDENT );
-                if ( log.isDebugEnabled() ) {
-                    log.debug( "handleDotIdent() : new LT(2) token - " + LT( 1 ) );
-                }
+                LOG.handleDotIdent(LT(1));
             }
         }
     }
 
-	public void processMemberOf(Token n, AST p, ASTPair currentAST) {
+	@Override
+    public void processMemberOf(Token n, AST p, ASTPair currentAST) {
 		AST inAst = n == null ? astFactory.create( IN, "in" ) : astFactory.create( NOT_IN, "not in" );
 		astFactory.makeASTRoot( currentAST, inAst );
 		AST ast = createSubquery( p );
@@ -381,4 +384,23 @@ public final class HqlParser extends HqlBaseParser {
 		//overriden to avoid System.exit
 		throw new QueryException("Parser: panic");
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "handleDotIdent() : new LT(2) token - %s" )
+        void handleDotIdent( Token lt );
+
+        @LogMessage( level = WARN )
+        @Message( value = "processEqualityExpression() : No expression to process!" )
+        void processEqualityExpression();
+
+        @LogMessage( level = DEBUG )
+        @Message( value = "weakKeywords() : new LT(1) token - %s" )
+        void weakKeywords( Token lt );
+    }
 }

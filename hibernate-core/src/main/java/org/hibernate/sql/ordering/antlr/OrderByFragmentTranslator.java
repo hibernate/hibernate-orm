@@ -25,12 +25,11 @@
 package org.hibernate.sql.ordering.antlr;
 
 import java.io.StringReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.hql.ast.util.ASTPrinter;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * A translator which coordinates translation of an <tt>order-by</tt> mapping.
@@ -38,7 +37,9 @@ import org.hibernate.hql.ast.util.ASTPrinter;
  * @author Steve Ebersole
  */
 public class OrderByFragmentTranslator {
-	private static final Logger log = LoggerFactory.getLogger( OrderByFragmentTranslator.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                OrderByFragmentTranslator.class.getPackage().getName());
 
 	public final TranslationContext context;
 
@@ -66,9 +67,9 @@ public class OrderByFragmentTranslator {
 			throw new HibernateException( "Unable to parse order-by fragment", t );
 		}
 
-		if ( log.isTraceEnabled() ) {
+        if (LOG.isTraceEnabled()) {
 			ASTPrinter printer = new ASTPrinter( OrderByTemplateTokenTypes.class );
-			log.trace( printer.showAsString( parser.getAST(), "--- {order-by fragment} ---" ) );
+            LOG.trace(printer.showAsString(parser.getAST(), LOG.orderByFragmentHeader()));
 		}
 
 		OrderByFragmentRenderer renderer = new OrderByFragmentRenderer();
@@ -84,4 +85,14 @@ public class OrderByFragmentTranslator {
 
 		return renderer.getRenderedFragment();
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @Message( value = "--- {order-by fragment} ---" )
+        String orderByFragmentHeader();
+    }
 }

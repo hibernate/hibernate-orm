@@ -24,22 +24,18 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.param.ParameterSpecification;
-import org.hibernate.persister.collection.CollectionPropertyNames;
-import org.hibernate.type.CollectionType;
-import org.hibernate.util.ArrayHelper;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.CollectionSubqueryFactory;
 import org.hibernate.hql.NameGenerator;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
+import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -47,10 +43,7 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * Delegate that handles the type and join sequence information for a FromElement.
@@ -58,7 +51,9 @@ import org.slf4j.LoggerFactory;
  * @author josh
  */
 class FromElementType {
-	private static final Logger log = LoggerFactory.getLogger( FromElementType.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                FromElementType.class.getPackage().getName());
 
 	private FromElement fromElement;
 	private EntityType entityType;
@@ -344,53 +339,39 @@ class FromElementType {
 			        enabledFilters,
 					propertyMapping.toColumns( tableAlias, path )
 			);
-			if ( log.isDebugEnabled() ) {
-				log.debug( "toColumns(" + tableAlias + "," + path + ") : subquery = " + subquery );
-			}
+            LOG.toColumns(tableAlias, path, subquery);
 			return new String[]{"(" + subquery + ")"};
 		}
-		else {
-			if ( forceAlias ) {
-				return propertyMapping.toColumns( tableAlias, path );
+        if (forceAlias) {
+            return propertyMapping.toColumns(tableAlias, path);
+        } else if (fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.SELECT) {
+            return propertyMapping.toColumns(tableAlias, path);
+        } else if (fromElement.getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SELECT) {
+            return propertyMapping.toColumns(tableAlias, path);
+        } else if (fromElement.getWalker().isSubQuery()) {
+            // for a subquery, the alias to use depends on a few things (we
+            // already know this is not an overall SELECT):
+            // 1) if this FROM_ELEMENT represents a correlation to the
+            // outer-most query
+            // A) if the outer query represents a multi-table
+            // persister, we need to use the given alias
+            // in anticipation of one of the multi-table
+            // executors being used (as this subquery will
+            // actually be used in the "id select" phase
+            // of that multi-table executor)
+            // B) otherwise, we need to use the persister's
+            // table name as the column qualification
+            // 2) otherwise (not correlated), use the given alias
+            if (isCorrelation()) {
+                if (isMultiTable()) return propertyMapping.toColumns(tableAlias, path);
+                return propertyMapping.toColumns(extractTableName(), path);
 			}
-			else if ( fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {
-				return propertyMapping.toColumns( tableAlias, path );
-			}
-			else if ( fromElement.getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SELECT ) {
-				return propertyMapping.toColumns( tableAlias, path );
-			}
-			else if ( fromElement.getWalker().isSubQuery() ) {
-				// for a subquery, the alias to use depends on a few things (we
-				// already know this is not an overall SELECT):
-				//      1) if this FROM_ELEMENT represents a correlation to the
-				//          outer-most query
-				//              A) if the outer query represents a multi-table
-				//                  persister, we need to use the given alias
-				//                  in anticipation of one of the multi-table
-				//                  executors being used (as this subquery will
-				//                  actually be used in the "id select" phase
-				//                  of that multi-table executor)
-				//              B) otherwise, we need to use the persister's
-				//                  table name as the column qualification
-				//      2) otherwise (not correlated), use the given alias
-				if ( isCorrelation() ) {
-					if ( isMultiTable() ) {
-						return propertyMapping.toColumns( tableAlias, path );
-					}
-					else {
-						return propertyMapping.toColumns( extractTableName(), path );
-					}
-				}
-				else {
-					return propertyMapping.toColumns( tableAlias, path );
-				}
-			}
-			else {
-				String[] columns = propertyMapping.toColumns( path );
-				log.trace( "Using non-qualified column reference [" + path + " -> (" + ArrayHelper.toString( columns ) + ")]" );
-				return columns;
-			}
-		}
+            return propertyMapping.toColumns(tableAlias, path);
+        } else {
+            String[] columns = propertyMapping.toColumns(path);
+            LOG.usingNonQualifiedColumnReference(path, ArrayHelper.toString(columns));
+            return columns;
+        }
 	}
 
 	private boolean isCorrelation() {

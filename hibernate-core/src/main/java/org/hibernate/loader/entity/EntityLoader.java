@@ -42,14 +42,14 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class EntityLoader extends AbstractEntityLoader {
-	
+
 	private final boolean batchLoader;
 	private final int[][] compositeKeyManyToOneTargetIndices;
-	
+
 	public EntityLoader(
-			OuterJoinLoadable persister, 
+			OuterJoinLoadable persister,
 			LockMode lockMode,
-			SessionFactoryImplementor factory, 
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		this( persister, 1, lockMode, factory, loadQueryInfluencers );
 	}
@@ -63,18 +63,18 @@ public class EntityLoader extends AbstractEntityLoader {
 	}
 
 	public EntityLoader(
-			OuterJoinLoadable persister, 
-			int batchSize, 
+			OuterJoinLoadable persister,
+			int batchSize,
 			LockMode lockMode,
-			SessionFactoryImplementor factory, 
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		this(
 				persister,
-				persister.getIdentifierColumnNames(), 
-				persister.getIdentifierType(), 
+				persister.getIdentifierColumnNames(),
+				persister.getIdentifierType(),
 				batchSize,
 				lockMode,
-				factory, 
+				factory,
 				loadQueryInfluencers
 			);
 	}
@@ -97,21 +97,21 @@ public class EntityLoader extends AbstractEntityLoader {
 	}
 
 	public EntityLoader(
-			OuterJoinLoadable persister, 
-			String[] uniqueKey, 
-			Type uniqueKeyType, 
-			int batchSize, 
+			OuterJoinLoadable persister,
+			String[] uniqueKey,
+			Type uniqueKeyType,
+			int batchSize,
 			LockMode lockMode,
-			SessionFactoryImplementor factory, 
+			SessionFactoryImplementor factory,
 			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
 
 		EntityJoinWalker walker = new EntityJoinWalker(
-				persister, 
-				uniqueKey, 
-				batchSize, 
-				lockMode, 
-				factory, 
+				persister,
+				uniqueKey,
+				batchSize,
+				lockMode,
+				factory,
 				loadQueryInfluencers
 		);
 		initFromWalker( walker );
@@ -119,8 +119,8 @@ public class EntityLoader extends AbstractEntityLoader {
 		postInstantiate();
 
 		batchLoader = batchSize > 1;
-		
-		log.debug( "Static select for entity " + entityName + " [" + lockMode + "]: " + getSQLString() );
+
+        LOG.staticSelectForEntity(entityName, lockMode, getSQLString());
 	}
 
 	public EntityLoader(
@@ -147,11 +147,7 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 
-		log.debug(
-				"Static select for entity " + entityName +
-						" [" + lockOptions.getLockMode() + ":" + lockOptions.getTimeOut() + "]: "
-						+ getSQLString() 
-		);
+        LOG.staticSelectForEntity(entityName, lockOptions.getLockMode(), lockOptions.getTimeOut(), getSQLString());
 
 	}
 
@@ -159,11 +155,13 @@ public class EntityLoader extends AbstractEntityLoader {
 		return load( session, key, null, null, LockOptions.NONE );
 	}
 
-	protected boolean isSingleRowLoader() {
+	@Override
+    protected boolean isSingleRowLoader() {
 		return !batchLoader;
 	}
 
-	public int[][] getCompositeKeyManyToOneTargetIndices() {
+	@Override
+    public int[][] getCompositeKeyManyToOneTargetIndices() {
 		return compositeKeyManyToOneTargetIndices;
 	}
 }

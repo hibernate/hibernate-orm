@@ -23,6 +23,9 @@
  */
 package org.hibernate.cfg;
 
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.WARN;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -32,15 +35,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ConfigHelper;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -532,7 +535,7 @@ public final class Environment {
 	public static final String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
 
 	/**
-	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the 
+	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the
 	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
 	 */
 	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
@@ -566,7 +569,8 @@ public final class Environment {
 	private static final Map OBSOLETE_PROPERTIES = new HashMap();
 	private static final Map RENAMED_PROPERTIES = new HashMap();
 
-	private static final Logger log = LoggerFactory.getLogger(Environment.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                Environment.class.getPackage().getName());
 
 	/**
 	 * Issues warnings to the user when any obsolete or renamed property names are used.
@@ -579,12 +583,10 @@ public final class Environment {
 		while ( iter.hasNext() ) {
 			final Object propertyName = iter.next();
 			Object newPropertyName = OBSOLETE_PROPERTIES.get( propertyName );
-			if ( newPropertyName != null ) {
-				log.warn( "Usage of obsolete property: " + propertyName + " no longer supported, use: " + newPropertyName );
-			}
+            if (newPropertyName != null) LOG.unsupportedProperty(propertyName, newPropertyName);
 			newPropertyName = RENAMED_PROPERTIES.get( propertyName );
 			if ( newPropertyName != null ) {
-				log.warn( "Property [" + propertyName + "] has been renamed to [" + newPropertyName + "]; update your properties appropriately" );
+                LOG.renamedProperty(propertyName, newPropertyName);
 				if ( ! props.containsKey( newPropertyName ) ) {
 					propertiesToAdd.put( newPropertyName, props.get( propertyName ) );
 				}
@@ -595,7 +597,7 @@ public final class Environment {
 
 	static {
 
-		log.info( "Hibernate " + Version.getVersionString() );
+        LOG.version(Version.getVersionString());
 
 		RENAMED_PROPERTIES.put( "hibernate.cglib.use_reflection_optimizer", USE_REFLECTION_OPTIMIZER );
 
@@ -613,29 +615,29 @@ public final class Environment {
 			InputStream stream = ConfigHelper.getResourceAsStream("/hibernate.properties");
 			try {
 				GLOBAL_PROPERTIES.load(stream);
-				log.info( "loaded properties from resource hibernate.properties: " + ConfigurationHelper.maskOut(GLOBAL_PROPERTIES, PASS) );
+                LOG.propertiesLoaded(ConfigurationHelper.maskOut(GLOBAL_PROPERTIES, PASS));
 			}
 			catch (Exception e) {
-				log.error("problem loading properties from hibernate.properties");
+                LOG.unableToloadProperties();
 			}
 			finally {
 				try{
 					stream.close();
 				}
 				catch (IOException ioe){
-					log.error("could not close stream on hibernate.properties", ioe);
+                    LOG.unableToCloseStream(ioe);
 				}
 			}
 		}
 		catch (HibernateException he) {
-			log.info("hibernate.properties not found");
+            LOG.propertiesNotFound();
 		}
 
 		try {
 			GLOBAL_PROPERTIES.putAll( System.getProperties() );
 		}
 		catch (SecurityException se) {
-			log.warn("could not copy system properties, system properties will be ignored");
+            LOG.unableToCopySystemProperties();
 		}
 
 		verifyProperties(GLOBAL_PROPERTIES);
@@ -643,12 +645,8 @@ public final class Environment {
 		ENABLE_BINARY_STREAMS = ConfigurationHelper.getBoolean(USE_STREAMS_FOR_BINARY, GLOBAL_PROPERTIES);
 		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
 
-		if (ENABLE_BINARY_STREAMS) {
-			log.info("using java.io streams to persist binary types");
-		}
-		if (ENABLE_REFLECTION_OPTIMIZER) {
-			log.info("using bytecode reflection optimizer");
-		}
+        if (ENABLE_BINARY_STREAMS) LOG.usingStreams();
+        if (ENABLE_REFLECTION_OPTIMIZER) LOG.usingReflectionOptimizer();
 		BYTECODE_PROVIDER_INSTANCE = buildBytecodeProvider( GLOBAL_PROPERTIES );
 
 		boolean getGeneratedKeysSupport;
@@ -660,9 +658,7 @@ public final class Environment {
 			getGeneratedKeysSupport = false;
 		}
 		JVM_SUPPORTS_GET_GENERATED_KEYS = getGeneratedKeysSupport;
-		if (!JVM_SUPPORTS_GET_GENERATED_KEYS) {
-			log.info("JVM does not support Statement.getGeneratedKeys()");
-		}
+        if (!JVM_SUPPORTS_GET_GENERATED_KEYS) LOG.generatedKeysNotSupported();
 
 		boolean linkedHashSupport;
 		try {
@@ -673,25 +669,17 @@ public final class Environment {
 			linkedHashSupport = false;
 		}
 		JVM_SUPPORTS_LINKED_HASH_COLLECTIONS = linkedHashSupport;
-		if (!JVM_SUPPORTS_LINKED_HASH_COLLECTIONS) {
-			log.info("JVM does not support LinkedHasMap, LinkedHashSet - ordered maps and sets disabled");
-		}
+        if (!JVM_SUPPORTS_LINKED_HASH_COLLECTIONS) LOG.linkedMapsAndSetsNotSupported();
 
 		long x = 123456789;
 		JVM_HAS_TIMESTAMP_BUG = new Timestamp(x).getTime() != x;
-		if (JVM_HAS_TIMESTAMP_BUG) {
-			log.info("using workaround for JVM bug in java.sql.Timestamp");
-		}
+        if (JVM_HAS_TIMESTAMP_BUG) LOG.usingTimestampWorkaround();
 
 		Timestamp t = new Timestamp(0);
 		t.setNanos(5 * 1000000);
 		JVM_HAS_JDK14_TIMESTAMP = t.getTime() == 5;
-		if (JVM_HAS_JDK14_TIMESTAMP) {
-			log.info("using JDK 1.4 java.sql.Timestamp handling");
-		}
-		else {
-			log.info("using pre JDK 1.4 java.sql.Timestamp handling");
-		}
+        if (JVM_HAS_JDK14_TIMESTAMP) LOG.usingJdk14TimestampHandling();
+        else LOG.usingPreJdk14TimestampHandling();
 	}
 
 	public static BytecodeProvider getBytecodeProvider() {
@@ -718,7 +706,8 @@ public final class Environment {
 	 *
 	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
 	 */
-	public static boolean jvmHasJDK14Timestamp() {
+	@Deprecated
+    public static boolean jvmHasJDK14Timestamp() {
 		return JVM_HAS_JDK14_TIMESTAMP;
 	}
 
@@ -733,7 +722,8 @@ public final class Environment {
 	 * @see java.util.LinkedHashSet
 	 * @see java.util.LinkedHashMap
 	 */
-	public static boolean jvmSupportsLinkedHashCollections() {
+	@Deprecated
+    public static boolean jvmSupportsLinkedHashCollections() {
 		return JVM_SUPPORTS_LINKED_HASH_COLLECTIONS;
 	}
 
@@ -747,7 +737,8 @@ public final class Environment {
 	 * @see Statement
 	 * @deprecated Starting with 3.3 Hibernate requires JDK 1.4 or higher
 	 */
-	public static boolean jvmSupportsGetGeneratedKeys() {
+	@Deprecated
+    public static boolean jvmSupportsGetGeneratedKeys() {
 		return JVM_SUPPORTS_GET_GENERATED_KEYS;
 	}
 
@@ -806,7 +797,7 @@ public final class Environment {
 
 	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
 		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, "javassist" );
-		log.info( "Bytecode provider name : " + provider );
+        LOG.bytecodeProvider(provider);
 		return buildBytecodeProvider( provider );
 	}
 
@@ -818,8 +809,84 @@ public final class Environment {
 			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
 		}
 
-		log.warn( "unrecognized bytecode provider [" + providerName + "], using javassist by default" );
+        LOG.unknownBytecodeProvider(providerName);
 		return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 	}
 
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = INFO )
+        @Message( value = "Bytecode provider name : %s" )
+        void bytecodeProvider( String provider );
+
+        @LogMessage( level = INFO )
+        @Message( value = "JVM does not support Statement.getGeneratedKeys()" )
+        void generatedKeysNotSupported();
+
+        @LogMessage( level = INFO )
+        @Message( value = "JVM does not support LinkedHashMap, LinkedHashSet - ordered maps and sets disabled" )
+        void linkedMapsAndSetsNotSupported();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Loaded properties from resource hibernate.properties: %s" )
+        void propertiesLoaded( Properties maskOut );
+
+        @LogMessage( level = INFO )
+        @Message( value = "hibernate.properties not found" )
+        void propertiesNotFound();
+
+        @LogMessage( level = WARN )
+        @Message( value = "Property [%s] has been renamed to [%s]; update your properties appropriately" )
+        void renamedProperty( Object propertyName,
+                              Object newPropertyName );
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Could not close stream on hibernate.properties: %s" )
+        void unableToCloseStream( IOException error );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Could not copy system properties, system properties will be ignored" )
+        void unableToCopySystemProperties();
+
+        @LogMessage( level = ERROR )
+        @Message( value = "Problem loading properties from hibernate.properties" )
+        void unableToloadProperties();
+
+        @LogMessage( level = WARN )
+        @Message( value = "unrecognized bytecode provider [%s], using javassist by default" )
+        void unknownBytecodeProvider( String providerName );
+
+        @LogMessage( level = WARN )
+        @Message( value = "Usage of obsolete property: %s no longer supported, use: %s" )
+        void unsupportedProperty( Object propertyName,
+                                  Object newPropertyName );
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using JDK 1.4 java.sql.Timestamp handling" )
+        void usingJdk14TimestampHandling();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using pre JDK 1.4 java.sql.Timestamp handling" )
+        void usingPreJdk14TimestampHandling();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using bytecode reflection optimizer" )
+        void usingReflectionOptimizer();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using java.io streams to persist binary types" )
+        void usingStreams();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Using workaround for JVM bug in java.sql.Timestamp" )
+        void usingTimestampWorkaround();
+
+        @LogMessage( level = INFO )
+        @Message( value = "Hibernate %s" )
+        void version( String versionString );
+    }
 }

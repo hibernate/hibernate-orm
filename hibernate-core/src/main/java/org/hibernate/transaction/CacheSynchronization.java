@@ -28,10 +28,6 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
@@ -44,7 +40,8 @@ import org.hibernate.util.JTAHelper;
  */
 public final class CacheSynchronization implements Synchronization {
 
-	private static final Logger log = LoggerFactory.getLogger(CacheSynchronization.class);
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                CacheSynchronization.class.getPackage().getName());
 
 	private final TransactionFactory.Context ctx;
 	private JDBCContext jdbcContext;
@@ -66,25 +63,25 @@ public final class CacheSynchronization implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void beforeCompletion() {
-		log.trace("transaction before completion callback");
+        LOG.transactionBeforeCompletionCallback();
 
 		boolean flush;
 		try {
 			flush = !ctx.isFlushModeNever() &&
-			        ctx.isFlushBeforeCompletionEnabled() && 
-			        !JTAHelper.isRollback( transaction.getStatus() ); 
-					//actually, this last test is probably unnecessary, since 
+			        ctx.isFlushBeforeCompletionEnabled() &&
+			        !JTAHelper.isRollback( transaction.getStatus() );
+					//actually, this last test is probably unnecessary, since
 					//beforeCompletion() doesn't get called during rollback
 		}
 		catch (SystemException se) {
-			log.error("could not determine transaction status", se);
+            LOG.error(LOG.unableToDetermineTransactionStatus(), se);
 			setRollbackOnly();
 			throw new TransactionException("could not determine transaction status in beforeCompletion()", se);
 		}
-		
+
 		try {
 			if (flush) {
-				log.trace("automatically flushing session");
+                LOG.automaticallyFlushingSession();
 				ctx.managedFlush();
 			}
 		}
@@ -102,7 +99,7 @@ public final class CacheSynchronization implements Synchronization {
 			transaction.setRollbackOnly();
 		}
 		catch (SystemException se) {
-			log.error("could not set transaction to rollback only", se);
+            LOG.error(LOG.unableToSetTransactionToRollbackOnly(), se);
 		}
 	}
 
@@ -110,25 +107,23 @@ public final class CacheSynchronization implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void afterCompletion(int status) {
-		if ( log.isTraceEnabled() ) {
-			log.trace("transaction after completion callback, status: " + status);
-		}
+        LOG.transactionAfterCompletionCallback(status);
 		try {
 			jdbcContext.afterTransactionCompletion(status==Status.STATUS_COMMITTED, hibernateTransaction);
 		}
 		finally {
 			if ( ctx.shouldAutoClose() && !ctx.isClosed() ) {
-				log.trace("automatically closing session");
+                LOG.automaticallyClosingSession();
 				ctx.managedClose();
 			}
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 */
-	public String toString() {
+	@Override
+    public String toString() {
 		return CacheSynchronization.class.getName();
 	}
-
 }

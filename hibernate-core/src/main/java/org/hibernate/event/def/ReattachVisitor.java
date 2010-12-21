@@ -23,10 +23,8 @@
  */
 package org.hibernate.event.def;
 
+import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.action.CollectionRemoveAction;
 import org.hibernate.event.EventSource;
@@ -34,6 +32,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+import org.jboss.logging.BasicLogger;
+import org.jboss.logging.LogMessage;
+import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -42,7 +44,8 @@ import org.hibernate.type.Type;
  */
 public abstract class ReattachVisitor extends ProxyVisitor {
 
-	private static final Logger log = LoggerFactory.getLogger( ReattachVisitor.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                ReattachVisitor.class.getPackage().getName());
 
 	private final Serializable ownerIdentifier;
 	private final Object owner;
@@ -74,7 +77,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	/**
 	 * {@inheritDoc}
 	 */
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	@Override
+    Object processComponent(Object component, CompositeType componentType) throws HibernateException {
 		Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
@@ -95,12 +99,9 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @throws HibernateException
 	 */
 	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source) throws HibernateException {
-		if ( log.isTraceEnabled() ) {
-			log.trace(
-					"collection dereferenced while transient " +
-					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() )
-			);
-		}
+        if (LOG.isTraceEnabled()) LOG.collectionDereferencedWhileTransient(MessageHelper.collectionInfoString(role,
+                                                                                                              ownerIdentifier,
+                                                                                                              source.getFactory()));
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}
 
@@ -114,12 +115,20 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @return
 	 */
 	final Serializable extractCollectionKeyFromOwner(CollectionPersister role) {
-		if ( role.getCollectionType().useLHSPrimaryKey() ) {
-			return ownerIdentifier;
-		}
-		else {
-			return ( Serializable ) role.getOwnerEntityPersister().getPropertyValue( owner, role.getCollectionType().getLHSPropertyName(), getSession().getEntityMode() );
-		}
-
+        if (role.getCollectionType().useLHSPrimaryKey()) return ownerIdentifier;
+        return (Serializable)role.getOwnerEntityPersister().getPropertyValue(owner,
+                                                                             role.getCollectionType().getLHSPropertyName(),
+                                                                             getSession().getEntityMode());
 	}
+
+    /**
+     * Interface defining messages that may be logged by the outer class
+     */
+    @MessageLogger
+    interface Logger extends BasicLogger {
+
+        @LogMessage( level = TRACE )
+        @Message( value = "Collection dereferenced while transient %s" )
+        void collectionDereferencedWhileTransient( String collectionInfoString );
+    }
 }

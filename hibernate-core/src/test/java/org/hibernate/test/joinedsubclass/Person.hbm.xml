@@ -38,8 +38,8 @@
 		<property name="heightInches">
 			<column name="height_centimeters" 
 				not-null="true" 
-				read="height_centimeters / 2.54" 
-				write="? * 2.54"/>
+				read="height_centimeters / 2.54E0"
+				write="? * 2.54E0"/>
 		</property>
 		
 		<component name="address">
@@ -58,8 +58,8 @@
 				<property name="passwordExpiryDays">
 					<column name="pwd_expiry_weeks" 
 						not-null="true" 
-						read="pwd_expiry_weeks * 7.0" 
-						write="? / 7.0"/>
+						read="pwd_expiry_weeks * 7.0E0"
+						write="? / 7.0E0"/>
 				</property>					
 				<many-to-one name="manager"/>
 		</joined-subclass>

@@ -28,21 +28,21 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
 	version="2.0">
 	<persistence-unit-metadata>
-		<xml-mapping-metadata-complete />
+		<xml-mapping-metadata-complete/>
 	</persistence-unit-metadata>
 	<package>org.hibernate.test.annotations.xml.ejb3</package>
 	<entity class="Entity1">
 		<attributes>
 			<many-to-one name="field1">
 				<join-table name="table1" catalog="cat1" schema="schema1">
-					<join-column />
+					<join-column/>
 					<join-column name="col1" referenced-column-name="col2"
 						table="table2" column-definition="int" insertable="false"
-						updatable="false" nullable="false" unique="true" />
-					<inverse-join-column />
+						updatable="false" nullable="false" unique="true"/>
+					<inverse-join-column/>
 					<inverse-join-column name="col3"
 						referenced-column-name="col4" table="table3" column-definition="int"
-						insertable="false" updatable="false" nullable="false" unique="true" />
+						insertable="false" updatable="false" nullable="false" unique="true"/>
 					<unique-constraint>
 						<column-name>col5</column-name>
 					</unique-constraint>

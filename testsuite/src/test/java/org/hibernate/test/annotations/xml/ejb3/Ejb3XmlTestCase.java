@@ -36,39 +36,40 @@ import org.hibernate.test.annotations.TestCase;
 
 abstract class Ejb3XmlTestCase extends TestCase {
 	protected JPAOverridenAnnotationReader reader;
-	
+
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
-		assertTrue(reader.isAnnotationPresent(annotationType));
+		assertTrue( reader.isAnnotationPresent( annotationType ) );
 	}
-	
+
 	protected void assertAnnotationNotPresent(Class<? extends Annotation> annotationType) {
-		assertFalse(reader.isAnnotationPresent(annotationType));
+		assertFalse( reader.isAnnotationPresent( annotationType ) );
 	}
-	
-	protected JPAOverridenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName) throws Exception {
-		AnnotatedElement el = getAnnotatedElement(entityClass, fieldName);
-		XMLContext xmlContext = getContext(ormResourceName);
-		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader(el, xmlContext);
+
+	protected JPAOverridenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)
+			throws Exception {
+		AnnotatedElement el = getAnnotatedElement( entityClass, fieldName );
+		XMLContext xmlContext = getContext( ormResourceName );
+		JPAOverridenAnnotationReader reader = new JPAOverridenAnnotationReader( el, xmlContext );
 		return reader;
 	}
-	
+
 	protected AnnotatedElement getAnnotatedElement(Class<?> entityClass, String fieldName) throws Exception {
-		return entityClass.getDeclaredField(fieldName);
+		return entityClass.getDeclaredField( fieldName );
 	}
-	
+
 	protected XMLContext getContext(String resourceName) throws Exception {
-		InputStream is = getClass().getResourceAsStream(resourceName);
-		assertNotNull("Could not load resource " + resourceName, is);
-		return getContext(is);
+		InputStream is = getClass().getResourceAsStream( resourceName );
+		assertNotNull( "Could not load resource " + resourceName, is );
+		return getContext( is );
 	}
-	
+
 	protected XMLContext getContext(InputStream is) throws Exception {
 		XMLContext xmlContext = new XMLContext();
-		Document doc = new SAXReader().read(is);
-		xmlContext.addDocument(doc);
+		Document doc = new SAXReader().read( is );
+		xmlContext.addDocument( doc );
 		return xmlContext;
 	}
-	
+
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[0];

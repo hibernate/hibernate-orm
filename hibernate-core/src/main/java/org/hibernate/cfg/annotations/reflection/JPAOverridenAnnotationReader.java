@@ -83,6 +83,7 @@ import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.MapKeyJoinColumns;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.MapsId;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -126,6 +127,7 @@ import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.Filter;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
+import org.hibernate.cfg.annotations.reflection.XMLContext.Default;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
@@ -183,6 +185,8 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( AttributeOverrides.class, "attribute-override" );
 		annotationToXml.put( AttributeOverride.class, "association-override" );
 		annotationToXml.put( AttributeOverrides.class, "association-override" );
+		annotationToXml.put( AttributeOverride.class, "map-key-attribute-override" );
+		annotationToXml.put( AttributeOverrides.class, "map-key-attribute-override" );
 		annotationToXml.put( Id.class, "id" );
 		annotationToXml.put( EmbeddedId.class, "embedded-id" );
 		annotationToXml.put( GeneratedValue.class, "generated-value" );
@@ -679,11 +683,14 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				getMapKey( annotationList, element );
 				getMapKeyClass( annotationList, element, defaults );
 				getMapKeyColumn(annotationList, element);
-				//TODO: support order-column
-				//TODO: support map-key-temporal
-				//TODO: support map-key-enumerated
-				//TODO: support map-key-attribute-override
-				//TODO: support map-key-join-column
+				getOrderColumn(annotationList, element);
+				getMapKeyTemporal(annotationList, element);
+				getMapKeyEnumerated(annotationList, element);
+				annotation = getMapKeyAttributeOverrides( element, defaults );
+				addIfNotNull( annotationList, annotation );
+				buildMapKeyJoinColumns( annotationList, element);
+				getAssociationId(annotationList, element);
+				getMapsId(annotationList, element);
 				annotationList.add( AnnotationFactory.create( ad ) );
 				getAccessType( annotationList, element );
 			}
@@ -815,6 +822,147 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				annotation = getJavaAnnotation( Columns.class );
 				addIfNotNull( annotationList, annotation );
 			}
+		}
+	}
+
+	private void buildMapKeyJoinColumns(List<Annotation> annotationList,
+			Element element) {
+		MapKeyJoinColumn[] joinColumns = getMapKeyJoinColumns( element );
+		if ( joinColumns.length > 0 ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyJoinColumns.class );
+			ad.setValue( "value", joinColumns );
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+	
+	private MapKeyJoinColumn[] getMapKeyJoinColumns(Element element) {
+		List<Element> subelements = element != null ?
+				element.elements( "map-key-join-column" ) :
+				null;
+		List<MapKeyJoinColumn> joinColumns = new ArrayList<MapKeyJoinColumn>();
+		if ( subelements != null ) {
+			for (Element subelement : subelements) {
+				AnnotationDescriptor column = new AnnotationDescriptor( MapKeyJoinColumn.class );
+				copyStringAttribute( column, subelement, "name", false );
+				copyStringAttribute( column, subelement, "referenced-column-name", false );
+				copyBooleanAttribute( column, subelement, "unique" );
+				copyBooleanAttribute( column, subelement, "nullable" );
+				copyBooleanAttribute( column, subelement, "insertable" );
+				copyBooleanAttribute( column, subelement, "updatable" );
+				copyStringAttribute( column, subelement, "column-definition", false );
+				copyStringAttribute( column, subelement, "table", false );
+				joinColumns.add( (MapKeyJoinColumn) AnnotationFactory.create( column ) );
+			}
+		}
+		return joinColumns.toArray( new MapKeyJoinColumn[joinColumns.size()] );
+	}
+
+	private Annotation getMapKeyAttributeOverrides(Element tree,
+			Default defaults) {
+		List<AttributeOverride> attributes = buildMapKeyAttributeOverrides( tree );
+		return mergeAttributeOverrides( defaults, attributes );
+	}
+	
+	private List<AttributeOverride> buildMapKeyAttributeOverrides(Element element) {
+		List<Element> subelements = element == null ? null : element.elements( "map-key-attribute-override" );
+		return buildMapKeyAttributeOverrides( subelements );
+	}
+	
+	private List<AttributeOverride> buildMapKeyAttributeOverrides(List<Element> subelements) {
+		List<AttributeOverride> overrides = new ArrayList<AttributeOverride>();
+		if ( subelements != null && subelements.size() > 0 ) {
+			for (Element current : subelements) {
+				if ( !current.getName().equals( "map-key-attribute-override" ) ) continue;
+				AnnotationDescriptor override = new AnnotationDescriptor( AttributeOverride.class );
+				copyStringAttribute( override, current, "name", true );
+				Element column = current.element( "column" );
+				override.setValue( "column", getColumn( column, true, current ) );
+				overrides.add( (AttributeOverride) AnnotationFactory.create( override ) );
+			}
+		}
+		return overrides;
+	}
+
+	/**
+	 * Adds a @MapKeyEnumerated annotation to the specified annotationList if
+	 * the specified element contains a map-key-enumerated sub-element.  This
+	 * should only be the case for element-collection, many-to-many, or
+	 * one-to-many associations.
+	 */
+	private void getMapKeyEnumerated(List<Annotation> annotationList,
+			Element element) {
+		Element subelement = element != null ? element.element( "map-key-enumerated" ) : null;
+		if ( subelement != null ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyEnumerated.class );
+			EnumType value = EnumType.valueOf(subelement.getTextTrim());
+			ad.setValue("value", value);
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+
+	}
+
+	/**
+	 * Adds a @MapKeyTemporal annotation to the specified annotationList if the
+	 * specified element contains a map-key-temporal sub-element.  This should
+	 * only be the case for element-collection, many-to-many, or one-to-many
+	 * associations.
+	 */
+	private void getMapKeyTemporal(List<Annotation> annotationList,
+			Element element) {
+		Element subelement = element != null ? element.element( "map-key-temporal" ) : null;
+		if ( subelement != null ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( MapKeyTemporal.class );
+			TemporalType value = TemporalType.valueOf(subelement.getTextTrim());
+			ad.setValue("value", value);
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+
+	/**
+	 * Adds an @OrderColumn annotation to the specified annotationList if the
+	 * specified element contains an order-column sub-element.  This should only
+	 * be the case for element-collection, many-to-many, or one-to-many
+	 * associations.
+	 */
+	private void getOrderColumn(List<Annotation> annotationList,
+			Element element) {
+		Element subelement = element != null ? element.element( "order-column" ) : null;
+		if ( subelement != null ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( OrderColumn.class );
+			copyStringAttribute( ad, subelement, "name", false );
+			copyBooleanAttribute( ad, subelement, "nullable" );
+			copyBooleanAttribute( ad, subelement, "insertable" );
+			copyBooleanAttribute( ad, subelement, "updatable" );
+			copyStringAttribute( ad, subelement, "column-definition", false );
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+
+	/**
+	 * Adds a @MapsId annotation to the specified annotationList if the
+	 * specified element has the maps-id attribute set.  This should only be the
+	 * case for many-to-one or one-to-one associations.
+	 */
+	private void getMapsId(List<Annotation> annotationList, Element element) {
+		String attrVal = element.attributeValue("maps-id");
+		if(attrVal != null) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( MapsId.class );
+			ad.setValue("value", attrVal);
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+
+	/**
+	 * Adds an @Id annotation to the specified annotationList if the specified
+	 * element has the id attribute set to true.  This should only be the case
+	 * for many-to-one or one-to-one associations.
+	 */
+	private void getAssociationId(List<Annotation> annotationList,
+			Element element) {
+		String attrVal = element.attributeValue("id");
+		if("true".equals(attrVal)) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( Id.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 

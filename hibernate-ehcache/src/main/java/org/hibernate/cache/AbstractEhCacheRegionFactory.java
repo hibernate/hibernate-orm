@@ -1,9 +1,9 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
- * statements applied by the authors. ÊAll third-party contributions are
+ * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
@@ -20,8 +20,8 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
+ *
  */
-
 package org.hibernate.cache;
 
 import org.hibernate.cache.access.AccessType;

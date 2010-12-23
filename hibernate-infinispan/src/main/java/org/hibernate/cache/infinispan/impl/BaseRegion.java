@@ -169,7 +169,7 @@ public abstract class BaseRegion implements Region {
    }
 
    public boolean checkValid() {
-      boolean valid = invalidateState.get() == InvalidateState.VALID;
+      boolean valid = isValid();
       if (!valid) {
          synchronized (invalidationMutex) {
             if (invalidateState.compareAndSet(InvalidateState.INVALID, InvalidateState.CLEARING)) {
@@ -188,26 +188,34 @@ public abstract class BaseRegion implements Region {
                }
             }
          }
-         valid = invalidateState.get() == InvalidateState.VALID;
+         valid = isValid();
       }
       
       return valid;
+   }
+
+   protected boolean isValid() {
+      return invalidateState.get() == InvalidateState.VALID;
    }
 
    /**
     * Performs a Infinispan <code>get(Fqn, Object)</code>
     *
     * @param key The key of the item to get
-    * @param opt any option to add to the get invocation. May be <code>null</code>
     * @param suppressTimeout should any TimeoutException be suppressed?
+    * @param flagAdapters flags to add to the get invocation
     * @return The retrieved object
-      * @throws CacheException issue managing transaction or talking to cache
+    * @throws CacheException issue managing transaction or talking to cache
     */
-   protected Object get(Object key, FlagAdapter opt, boolean suppressTimeout) throws CacheException {
+   protected Object get(Object key, boolean suppressTimeout, FlagAdapter... flagAdapters) throws CacheException {
+      CacheAdapter localCacheAdapter = cacheAdapter;
+      if (flagAdapters != null && flagAdapters.length > 0)
+         localCacheAdapter = cacheAdapter.withFlags(flagAdapters);
+
       if (suppressTimeout)
-         return cacheAdapter.getAllowingTimeout(key);
+         return localCacheAdapter.getAllowingTimeout(key);
       else
-         return cacheAdapter.get(key);
+         return localCacheAdapter.get(key);
    }
    
    public Object getOwnerForPut() {

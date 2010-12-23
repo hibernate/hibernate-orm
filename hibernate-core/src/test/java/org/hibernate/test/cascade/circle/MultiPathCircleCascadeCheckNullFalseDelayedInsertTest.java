@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -22,28 +22,31 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.jdbc;
+package org.hibernate.test.cascade.circle;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import junit.framework.Test;
 
+import org.hibernate.TransientObjectException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * A BatcherFactory implementation which constructs Batcher instances
- * that do not perform batch operations.
- *
- * @author Gavin King
+ * @author Gail Badner
  */
-public class NonBatchingBatcherFactory implements BatcherFactory {
+public class MultiPathCircleCascadeCheckNullFalseDelayedInsertTest extends MultiPathCircleCascadeDelayedInsertTest {
 
-	public void setJdbcBatchSize(int jdbcBatchSize) {
-		if ( jdbcBatchSize > 1 ) {
-			throw new AssertionFailure( "jdbcBatchSize must be 1 for " + getClass().getName() );
-		}
+	public MultiPathCircleCascadeCheckNullFalseDelayedInsertTest(String str) {
+		super( str );
 	}
 
-	public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
-		return new NonBatchingBatcher( exceptionHelper );
+	@Override
+	 public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.CHECK_NULLABILITY, "false" );
 	}
 
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( MultiPathCircleCascadeCheckNullFalseDelayedInsertTest.class );
+	}
 }

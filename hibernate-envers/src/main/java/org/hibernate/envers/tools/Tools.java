@@ -82,7 +82,6 @@ public class Tools {
 					proxy.getHibernateLazyInitializer().getEntityName(),
 					proxy.getHibernateLazyInitializer().getIdentifier()
 			);
-			proxy.getHibernateLazyInitializer().setImplementation( target );
 			return target;
         }
 		finally {

@@ -23,15 +23,15 @@
  */
 package org.hibernate.cache;
 
-import java.util.Properties;
-import java.net.URL;
-
 import net.sf.ehcache.CacheManager;
+import org.hibernate.cfg.Environment;
+import org.hibernate.util.ConfigHelper;
+import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hibernate.cfg.Environment;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.ConfigHelper;
+
+import java.net.URL;
+import java.util.Properties;
 
 /**
  * Cache Provider plugin for Hibernate

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Middleware LLC.
@@ -22,32 +22,30 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.jdbc;
+package org.hibernate.test.cascade.circle;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import junit.framework.Test;
 
-import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * An implementation of the <tt>Batcher</tt> interface that does no batching
- *
- * @author Gavin King
+ * @author Gail Badner
  */
-public class NonBatchingBatcher extends AbstractBatcher {
+public class MultiPathCircleCascadeCheckNullTrueDelayedInsertTest extends MultiPathCircleCascadeDelayedInsertTest {
 
-	public NonBatchingBatcher(SQLExceptionHelper exceptionHelper) {
-		super( exceptionHelper, 1 );
+	public MultiPathCircleCascadeCheckNullTrueDelayedInsertTest(String str) {
+		super( str );
 	}
 
-	public void addToBatch(Expectation expectation) throws SQLException, HibernateException {
-		PreparedStatement statement = getStatement();
-		final int rowCount = statement.executeUpdate();
-		expectation.verifyOutcome( rowCount, statement, 0 );
+	@Override
+	 public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
 	}
 
-	protected void doExecuteBatch(PreparedStatement ps) throws SQLException, HibernateException {
+	public static Test suite() {
+		return new FunctionalTestClassTestSuite( MultiPathCircleCascadeCheckNullTrueDelayedInsertTest.class );
 	}
-
 }

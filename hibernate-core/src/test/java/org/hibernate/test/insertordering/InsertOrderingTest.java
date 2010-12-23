@@ -3,22 +3,21 @@ package org.hibernate.test.insertordering;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.sql.SQLException;
 import java.sql.PreparedStatement;
 
 import junit.framework.Test;
 
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
+import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.Session;
-import org.hibernate.HibernateException;
-import org.hibernate.jdbc.BatchingBatcher;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.jdbc.BatcherFactory;
-import org.hibernate.jdbc.Batcher;
 
 /**
  * {@inheritDoc}
@@ -42,7 +41,7 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ORDER_INSERTS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "10" );
-		cfg.setProperty( Environment.BATCH_STRATEGY, StatsBatcherFactory.class.getName() );
+		cfg.setProperty( Environment.BATCH_STRATEGY, StatsBatchBuilder.class.getName() );
 	}
 
 	public void testBatchOrdering() {
@@ -56,11 +55,11 @@ public class InsertOrderingTest extends FunctionalTestCase {
 			s.save( group );
 			user.addMembership( group );
 		}
-		StatsBatcher.reset();
+		StatsBatch.reset();
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( 3, StatsBatcher.batchSizes.size() );
+		assertEquals( 3, StatsBatch.batchSizes.size() );
 
 		s = openSession();
 		s.beginTransaction();
@@ -76,13 +75,13 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		public int count = 0;
 	}
 
-	public static class StatsBatcher extends BatchingBatcher {
+	public static class StatsBatch extends BatchingBatch {
 		private static String batchSQL;
 		private static List batchSizes = new ArrayList();
 		private static int currentBatch = -1;
 
-		public StatsBatcher(SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
-			super( exceptionHelper, jdbcBatchSize );
+		public StatsBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
+			super( key, statementLogger, exceptionHelper, jdbcBatchSize );
 		}
 
 		static void reset() {
@@ -91,7 +90,7 @@ public class InsertOrderingTest extends FunctionalTestCase {
 			batchSQL = null;
 		}
 
-		public void setStatement(String sql, PreparedStatement ps) {
+		public void addBatchStatement(Object key, String sql, PreparedStatement ps) {
 			if ( batchSQL == null || ! batchSQL.equals( sql ) ) {
 				currentBatch++;
 				batchSQL = sql;
@@ -99,31 +98,31 @@ public class InsertOrderingTest extends FunctionalTestCase {
 				System.out.println( "--------------------------------------------------------" );
 				System.out.println( "Preparing statement [" + sql + "]" );
 			}
-			super.setStatement( sql, ps );
+			super.addBatchStatement( key, sql, ps );
 		}
 
-		public void addToBatch(Expectation expectation) throws SQLException, HibernateException {
+		public void addToBatch(Object key, String sql, Expectation expectation) {
 			Counter counter = ( Counter ) batchSizes.get( currentBatch );
 			counter.count++;
 			System.out.println( "Adding to batch [" + batchSQL + "]" );
-			super.addToBatch( expectation );
+			super.addToBatch( key, sql, expectation );
 		}
 
-		protected void doExecuteBatch(PreparedStatement ps) throws SQLException, HibernateException {
+		protected void doExecuteBatch() {
 			System.out.println( "executing batch [" + batchSQL + "]" );
 			System.out.println( "--------------------------------------------------------" );
-			super.doExecuteBatch( ps );
+			super.doExecuteBatch();
 		}
 	}
 
-	public static class StatsBatcherFactory implements BatcherFactory {
+	public static class StatsBatchBuilder extends BatchBuilder {
 		private int jdbcBatchSize;
 
 		public void setJdbcBatchSize(int jdbcBatchSize) {
 			this.jdbcBatchSize = jdbcBatchSize;
 		}
-		public Batcher createBatcher(SQLExceptionHelper exceptionHelper) {
-			return new StatsBatcher( exceptionHelper, jdbcBatchSize );
+		public Batch buildBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper) {
+			return new StatsBatch(key, statementLogger, exceptionHelper, jdbcBatchSize );
 		}
 	}
 }

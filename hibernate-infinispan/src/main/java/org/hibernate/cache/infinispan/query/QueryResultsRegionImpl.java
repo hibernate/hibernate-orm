@@ -47,6 +47,13 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
    }
 
    public Object get(Object key) throws CacheException {
+      // If the region is not valid, skip cache store to avoid going remote to retrieve the query.
+      // The aim of this is to maintain same logic/semantics as when state transfer was configured.
+      // TODO: Once https://issues.jboss.org/browse/ISPN-835 has been resolved, revert to state transfer and remove workaround
+      boolean skipCacheStore = false;
+      if (!isValid())
+         skipCacheStore = true;
+
       if (!checkValid())
          return null;
 
@@ -55,7 +62,10 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
       // to avoid holding locks that would prevent updates.
       // Add a zero (or low) timeout option so we don't block
       // waiting for tx's that did a put to commit
-      return get(key, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT, true);
+      if (skipCacheStore)
+         return get(key, true, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT, FlagAdapter.SKIP_CACHE_STORE);
+      else
+         return get(key, true, FlagAdapter.ZERO_LOCK_ACQUISITION_TIMEOUT);
    }   
 
    public void put(Object key, Object value) throws CacheException {
@@ -83,5 +93,4 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
                .putAllowingTimeout(key, value);
       }
    }
-
 }

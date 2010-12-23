@@ -30,7 +30,6 @@ import java.io.ObjectOutputStream;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
@@ -41,12 +40,11 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.ScrollMode;
-import org.hibernate.TransactionException;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
+import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.ConnectionManager;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
-import org.hibernate.jdbc.Batcher;
 import org.hibernate.jdbc.Expectation;
 
 /**
@@ -67,15 +65,13 @@ public class ConnectionManagerImpl implements ConnectionManager {
 
 	// TODO: check if it's ok to change the method names in Callback
 
-	private transient SessionFactoryImplementor factory;
-	private transient Connection proxiedConnection;
 	private transient Interceptor interceptor;
 
 	private final Callback callback;
-	private long transactionTimeout = -1;
-	boolean isTransactionTimeoutSet;
-
 	private transient LogicalConnectionImpl logicalConnection;
+	private transient StatementPreparer statementPreparer;
+	private final transient BatchBuilder batchBuilder;
+	private Batch batch;
 
 	/**
 	 * Constructs a ConnectionManager.
@@ -99,8 +95,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 						suppliedConnection,
 						releaseMode,
 						factory.getJdbcServices(),
-						factory.getStatistics() != null ? factory.getStatisticsImplementor() : null,
-						factory.getSettings().getBatcherFactory()
+						factory.getStatistics() != null ? factory.getStatisticsImplementor() : null
 				)
 		);
 	}
@@ -114,16 +109,12 @@ public class ConnectionManagerImpl implements ConnectionManager {
 			Interceptor interceptor,
 			LogicalConnectionImpl logicalConnection
 	) {
-		this.factory = factory;
 		this.callback = callback;
 		this.interceptor = interceptor;
-		setupConnection( logicalConnection );
-	}
-
-	private void setupConnection(LogicalConnectionImpl logicalConnection) {
 		this.logicalConnection = logicalConnection;
 		this.logicalConnection.addObserver( callback );
-		proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
+		this.statementPreparer = new StatementPreparer( logicalConnection, factory.getSettings() );
+		this.batchBuilder = factory.getSettings().getBatchBuilder();
 	}
 
 	/**
@@ -271,7 +262,9 @@ public class ConnectionManagerImpl implements ConnectionManager {
 				log.debug( "transaction completed on session with on_close connection release mode; be sure to close the session to release JDBC resources!" );
 			}
 		}
-		unsetTransactionTimeout();		
+		if ( statementPreparer != null ) {
+			statementPreparer.unsetTransactionTimeout();
+		}
 	}
 
 	private boolean isAfterTransactionRelease() {
@@ -282,36 +275,14 @@ public class ConnectionManagerImpl implements ConnectionManager {
 		return logicalConnection.getConnectionReleaseMode() == ConnectionReleaseMode.ON_CLOSE;
 	}
 
-	public boolean isLogicallyConnected() {
+	private boolean isLogicallyConnected() {
 		return logicalConnection != null && logicalConnection.isOpen();
 	}
 
 	@Override
 	public void setTransactionTimeout(int seconds) {
-		isTransactionTimeoutSet = true;
-		transactionTimeout = System.currentTimeMillis() / 1000 + seconds;
+		statementPreparer.setTransactionTimeout( seconds );
 	}
-
-	/**
-	 * Unset the transaction timeout, called after the end of a
-	 * transaction.
-	 */
-	private void unsetTransactionTimeout() {
-		isTransactionTimeoutSet = false;
-	}
-
-	private void setStatementTimeout(PreparedStatement preparedStatement) throws SQLException {
-		if ( isTransactionTimeoutSet ) {
-			int timeout = (int) ( transactionTimeout - ( System.currentTimeMillis() / 1000 ) );
-			if ( timeout <=  0) {
-				throw new TransactionException("transaction timeout expired");
-			}
-			else {
-				preparedStatement.setQueryTimeout(timeout);
-			}
-		}
-	}
-
 
 	/**
 	 * To be called after Session completion.  Used to release the JDBC
@@ -337,6 +308,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 		if ( ! isLogicallyConnected() ) {
 			throw new IllegalStateException( "cannot manually disconnect because not logically connected." );
 		}
+		releaseBatch();
 		return logicalConnection.manualDisconnect();
 	}
 
@@ -382,10 +354,14 @@ public class ConnectionManagerImpl implements ConnectionManager {
 		}
 		try {
 			log.trace( "performing cleanup" );
+			releaseBatch();
+			statementPreparer.close();
 			Connection c = logicalConnection.close();
 			return c;
 		}
 		finally {
+			batch = null;
+			statementPreparer = null;
 			logicalConnection = null;
 		}
 	}
@@ -412,105 +388,68 @@ public class ConnectionManagerImpl implements ConnectionManager {
 		afterStatement();
 	}
 
-	private abstract class StatementPreparer {
-		private final String sql;
-		StatementPreparer(String sql) {
-			this.sql = getSQL( sql );
-		}
-		public String getSqlToPrepare() {
-			return sql;
-		}
-		abstract PreparedStatement doPrepare() throws SQLException;
-		public void afterPrepare(PreparedStatement preparedStatement) throws SQLException {
-			setStatementTimeout( preparedStatement );
-		}
-	}
-
 	/**
 	 * Get a non-batchable prepared statement to use for inserting / deleting / updating,
 	 * using JDBC3 getGeneratedKeys ({@link java.sql.Connection#prepareStatement(String, int)}).
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()}, it will be
+	 * released when the session is closed or disconnected.
 	 */
+	@Override
 	public PreparedStatement prepareStatement(String sql, final int autoGeneratedKeys)
 			throws HibernateException {
-		if ( autoGeneratedKeys == PreparedStatement.RETURN_GENERATED_KEYS ) {
-			checkAutoGeneratedKeysSupportEnabled();
-		}
-		StatementPreparer statementPreparer = new StatementPreparer( sql ) {
-			public PreparedStatement doPrepare() throws SQLException {
-				return proxiedConnection.prepareStatement( getSqlToPrepare(), autoGeneratedKeys );
-			}
-		};
-		return prepareStatement( statementPreparer, true );
+		executeBatch();
+		return statementPreparer.prepareStatement( getSQL( sql ), autoGeneratedKeys );
 	}
 
 	/**
 	 * Get a non-batchable prepared statement to use for inserting / deleting / updating.
 	 * using JDBC3 getGeneratedKeys ({@link java.sql.Connection#prepareStatement(String, String[])}).
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()}, it will be
+	 * released when the session is closed or disconnected.
 	 */
+	@Override
 	public PreparedStatement prepareStatement(String sql, final String[] columnNames) {
-		checkAutoGeneratedKeysSupportEnabled();
-		StatementPreparer statementPreparer = new StatementPreparer( sql ) {
-			public PreparedStatement doPrepare() throws SQLException {
-				return proxiedConnection.prepareStatement( getSqlToPrepare(), columnNames );
-			}
-		};
-		return prepareStatement( statementPreparer, true );
-	}
-
-	private void checkAutoGeneratedKeysSupportEnabled() {
-		if ( ! factory.getSettings().isGetGeneratedKeysEnabled() ) {
-			throw new AssertionFailure("getGeneratedKeys() support is not enabled");
-		}
+		executeBatch();
+		return statementPreparer.prepareStatement( getSQL( sql ), columnNames );
 	}
 
 	/**
 	 * Get a non-batchable prepared statement to use for selecting. Does not
 	 * result in execution of the current batch.
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()},
+	 * it will be released when the session is closed or disconnected.
 	 */
+	@Override
 	public PreparedStatement prepareSelectStatement(String sql) {
-		return prepareStatement( sql, false, false );
+		return statementPreparer.prepareStatement( getSQL( sql ), false );
 	}
 
 	/**
 	 * Get a non-batchable prepared statement to use for inserting / deleting / updating.
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()}, it will be
+	 * released when the session is closed or disconnected.
 	 */
+	@Override
 	public PreparedStatement prepareStatement(String sql, final boolean isCallable) {
-		return prepareStatement( sql, isCallable, true );
+		executeBatch();
+		return statementPreparer.prepareStatement( getSQL( sql ), isCallable );
 	}
 
 	/**
 	 * Get a non-batchable callable statement to use for inserting / deleting / updating.
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()}, it will be
+	 * released when the session is closed or disconnected.
 	 */
+	@Override
 	public CallableStatement prepareCallableStatement(String sql) {
+		executeBatch();
 		log.trace("preparing callable statement");
-		return CallableStatement.class.cast( prepareStatement( sql, true, true ) );
-	}
-
-	public PreparedStatement prepareStatement(String sql, final boolean isCallable, boolean forceExecuteBatch) {
-		StatementPreparer statementPreparer = new StatementPreparer( sql ) {
-			public PreparedStatement doPrepare() throws SQLException {
-				return prepareStatementInternal( getSqlToPrepare(), isCallable );
-			}
-		};
-		return prepareStatement( statementPreparer, forceExecuteBatch );
-	}
-
-	private PreparedStatement prepareStatementInternal(String sql, boolean isCallable) throws SQLException {
-		return isCallable ?
-				proxiedConnection.prepareCall( sql ) :
-				proxiedConnection.prepareStatement( sql );
-	}
-
-	private PreparedStatement prepareScrollableStatementInternal(String sql,
-																 ScrollMode scrollMode,
-																 boolean isCallable) throws SQLException {
-		return isCallable ?
-				proxiedConnection.prepareCall(
-						sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY
-				) :
-				proxiedConnection.prepareStatement(
-						sql, scrollMode.toResultSetType(), ResultSet.CONCUR_READ_ONLY
-				);
+		return CallableStatement.class.cast( statementPreparer.prepareStatement( getSQL( sql ), true ) );
 	}
 
 	/**
@@ -518,105 +457,97 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	 * (might be called many times before a single call to <tt>executeBatch()</tt>).
 	 * After setting parameters, call <tt>addToBatch</tt> - do not execute the
 	 * statement explicitly.
-	 * @see org.hibernate.jdbc.Batcher#addToBatch
+	 * @see org.hibernate.engine.jdbc.batch.spi.Batch#addToBatch
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()}, it will be
+	 * released when the session is closed or disconnected.
 	 */
-	public PreparedStatement prepareBatchStatement(String sql, boolean isCallable) {
-		String batchUpdateSQL = getSQL( sql );
-
-		PreparedStatement batchUpdate = getBatcher().getStatement( batchUpdateSQL );
-		if ( batchUpdate == null ) {
-			batchUpdate = prepareStatement( batchUpdateSQL, isCallable, true ); // calls executeBatch()
-			getBatcher().setStatement( batchUpdateSQL, batchUpdate );
+	@Override
+	public PreparedStatement prepareBatchStatement(Object key, String sql, boolean isCallable) {
+		if ( key == null ) {
+			throw new IllegalArgumentException( "batch key must be non-null." );
 		}
-		else {
-			log.debug( "reusing prepared statement" );
-			factory.getJdbcServices().getSqlStatementLogger().logStatement( batchUpdateSQL );
+		String actualSQL = getSQL( sql );
+		PreparedStatement batchUpdate = null;
+		if ( batch != null ) {
+			if ( key.equals( batch.getKey() ) ) {
+				batchUpdate = batch.getBatchStatement( key, actualSQL );
+			}
+			else {
+				batch.execute();
+				batch = null;
+			}
+		}
+		if ( batch == null ) {
+			batch =  batchBuilder.buildBatch(
+					key,
+					logicalConnection.getJdbcServices().getSqlStatementLogger(),
+					logicalConnection.getJdbcServices().getSqlExceptionHelper()
+			);
+		}
+		if ( batchUpdate == null ) {
+			batchUpdate = statementPreparer.prepareStatement( actualSQL, isCallable );
+			batch.addBatchStatement( key, actualSQL, batchUpdate );
 		}
 		return batchUpdate;
 	}
 
-	private Batcher getBatcher() {
-		return logicalConnection.getBatcher();
-	}
-
 	/**
-	 * Get a prepared statement for use in loading / querying. If not explicitly
-	 * released by <tt>closeQueryStatement()</tt>, it will be released when the
-	 * session is closed or disconnected.
+	 * Get a prepared statement for use in loading / querying. Does not
+	 * result in execution of the current batch.
+	 * <p/>
+	 * If not explicitly closed via {@link java.sql.PreparedStatement#close()},
+	 * it will be released when the session is closed or disconnected.
 	 */
+	@Override
 	public PreparedStatement prepareQueryStatement(
 			String sql,
 			final boolean isScrollable,
 			final ScrollMode scrollMode,
-			final boolean isCallable
-	) {
-		if ( isScrollable && ! factory.getSettings().isScrollableResultSetsEnabled() ) {
-			throw new AssertionFailure("scrollable result sets are not enabled");
-		}
-		StatementPreparer statementPreparer = new StatementPreparer( sql ) {
-			public PreparedStatement doPrepare() throws SQLException {
-				PreparedStatement ps =
-						isScrollable ?
-								prepareScrollableStatementInternal( getSqlToPrepare(), scrollMode, isCallable ) :
-								prepareStatementInternal( getSqlToPrepare(), isCallable )
-						;
-				return ps;
-			}
-			public void afterPrepare(PreparedStatement preparedStatement) throws SQLException {
-				super.afterPrepare( preparedStatement );
-				setStatementFetchSize( preparedStatement, getSqlToPrepare() );
-				logicalConnection.getResourceRegistry().registerLastQuery( preparedStatement );
-			}
-		};
-		return prepareStatement( statementPreparer, false );
-	}
-
-	private void setStatementFetchSize(PreparedStatement statement, String sql) throws SQLException {
-		if ( factory.getSettings().getJdbcFetchSize() != null ) {
-			statement.setFetchSize( factory.getSettings().getJdbcFetchSize() );
-		}
-	}
-
-	private PreparedStatement prepareStatement(StatementPreparer preparer, boolean forceExecuteBatch) {
-		if ( forceExecuteBatch ) {
-			executeBatch();
-		}
-		try {
-			PreparedStatement ps = preparer.doPrepare();
-			preparer.afterPrepare( ps );
-			return ps;
-		}
-		catch ( SQLException sqle ) {
-			log.error( "sqlexception escaped proxy", sqle );
-			throw logicalConnection.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle, "could not prepare statement", preparer.getSqlToPrepare()
-			);
-		}
+			final boolean isCallable) {
+		PreparedStatement ps = (
+				isScrollable ?
+						statementPreparer.prepareScrollableQueryStatement(
+								getSQL( sql ), scrollMode, isCallable
+						) :
+						statementPreparer.prepareQueryStatement(
+								getSQL( sql ), isCallable
+						)
+		);
+		logicalConnection.getResourceRegistry().registerLastQuery( ps );
+		return ps;
 	}
 
 	/**
 	 * Cancel the current query statement
 	 */
+	@Override
 	public void cancelLastQuery() throws HibernateException {
 		logicalConnection.getResourceRegistry().cancelLastQuery();
 	}
 
-	public void abortBatch(SQLException sqle) {
-		getBatcher().abortBatch( sqle );
+	@Override
+	public void addToBatch(Object batchKey, String sql, Expectation expectation) {
+		batch.addToBatch( batchKey, sql, expectation );
 	}
 
-	public void addToBatch(Expectation expectation ) {
-		try {
-			getBatcher().addToBatch( expectation );
-		}
-		catch (SQLException sqle) {
-			throw logicalConnection.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle, "could not add to batch statement" );
-		}
-	}
-
+	@Override
 	public void executeBatch() throws HibernateException {
-		getBatcher().executeBatch();
+		if ( batch != null ) {
+			batch.execute();
+			batch.release(); // needed?
+		}
+	}
+
+	@Override
+	public void abortBatch() {
+		releaseBatch();
+	}
+
+	private void releaseBatch() {
+		if ( batch != null ) {
+			batch.release();
+		}
 	}
 
 	private String getSQL(String sql) {
@@ -673,8 +604,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 						ois,
 						factory.getJdbcServices(),
 						factory.getStatistics() != null ? factory.getStatisticsImplementor() : null,
-						connectionReleaseMode,
-						factory.getSettings().getBatcherFactory()
+						connectionReleaseMode
 				)
 		);
 	}

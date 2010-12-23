@@ -10,6 +10,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.cfg.Configuration;
@@ -49,16 +50,37 @@ public class BatchTest extends FunctionalTestCase {
 		final int N = 5000; //26 secs with batch flush, 26 without
 		//final int N = 100000; //53 secs with batch flush, OOME without
 		//final int N = 250000; //137 secs with batch flush, OOME without
+		int batchSize = ( ( SessionFactoryImplementor ) getSessions() ).getSettings().getJdbcBatchSize();
+		doBatchInsertUpdate( N, batchSize );
+		System.out.println( System.currentTimeMillis() - start );
+	}
 
+	public void testBatchInsertUpdateSizeEqJdbcBatchSize() {
+		int batchSize = ( ( SessionFactoryImplementor ) getSessions() ).getSettings().getJdbcBatchSize();
+		doBatchInsertUpdate( 50, batchSize );
+	}
+
+	public void testBatchInsertUpdateSizeLtJdbcBatchSize() {
+		int batchSize = ( ( SessionFactoryImplementor ) getSessions() ).getSettings().getJdbcBatchSize();
+		doBatchInsertUpdate( 50, batchSize - 1 );
+	}
+
+	public void testBatchInsertUpdateSizeGtJdbcBatchSize() {
+		long start = System.currentTimeMillis();
+		int batchSize = ( ( SessionFactoryImplementor ) getSessions() ).getSettings().getJdbcBatchSize();
+		doBatchInsertUpdate( 50, batchSize + 1 );
+	}
+
+	public void doBatchInsertUpdate(int nEntities, int nBeforeFlush) {
 		Session s = openSession();
 		s.setCacheMode( CacheMode.IGNORE );
 		Transaction t = s.beginTransaction();
-		for ( int i = 0; i < N; i++ ) {
+		for ( int i = 0; i < nEntities; i++ ) {
 			DataPoint dp = new DataPoint();
 			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
 			s.save( dp );
-			if ( i % 20 == 0 ) {
+			if ( i + 1 % nBeforeFlush == 0 ) {
 				s.flush();
 				s.clear();
 			}
@@ -75,15 +97,30 @@ public class BatchTest extends FunctionalTestCase {
 		while ( sr.next() ) {
 			DataPoint dp = ( DataPoint ) sr.get( 0 );
 			dp.setDescription( "done!" );
-			if ( ++i % 20 == 0 ) {
+			if ( ++i % nBeforeFlush == 0 ) {
 				s.flush();
 				s.clear();
 			}
 		}
 		t.commit();
 		s.close();
-		System.out.println( System.currentTimeMillis() - start );
-	}
 
+		s = openSession();
+		s.setCacheMode( CacheMode.IGNORE );
+		t = s.beginTransaction();
+		i = 0;
+		sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+				.scroll( ScrollMode.FORWARD_ONLY );
+		while ( sr.next() ) {
+			DataPoint dp = ( DataPoint ) sr.get( 0 );
+			s.delete( dp );
+			if ( ++i % nBeforeFlush == 0 ) {
+				s.flush();
+				s.clear();
+			}
+		}
+		t.commit();
+		s.close();
+	}
 }
 

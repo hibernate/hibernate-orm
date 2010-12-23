@@ -1939,7 +1939,7 @@ public class FooBarTest extends LegacyTestCase {
 			.addOrder( Order.asc("date") )
 			.list();
 		assertTrue( list.size()==1 && list.get(0)==f );
-		if(!(getDialect() instanceof TimesTenDialect)) {
+		if(!(getDialect() instanceof TimesTenDialect || getDialect() instanceof HSQLDialect)) {
 			list = s.createCriteria(Foo.class).setMaxResults(0).list();
 			assertTrue( list.size()==0 );
 		}

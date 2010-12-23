@@ -1,5 +1,5 @@
 dependencies {
-   infinispanVersion = '4.2.0.ALPHA3'
+   infinispanVersion = '4.2.0.CR4'
    jnpVersion = '5.0.3.GA'
 
    compile(project(':hibernate-core'))

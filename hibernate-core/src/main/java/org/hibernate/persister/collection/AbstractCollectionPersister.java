@@ -1083,7 +1083,7 @@ public abstract class AbstractCollectionPersister
 				boolean useBatch = expectation.canBeBatched();
 				String sql = getSQLDeleteString();
 				if ( useBatch ) {
-					st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+					st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
 				}
 				else {
 					st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
@@ -1095,7 +1095,7 @@ public abstract class AbstractCollectionPersister
 
 					writeKey( st, id, offset, session );
 					if ( useBatch ) {
-						session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+						session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 					}
 					else {
 						expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1103,7 +1103,7 @@ public abstract class AbstractCollectionPersister
 				}
 				catch ( SQLException sqle ) {
 					if ( useBatch ) {
-						session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+						session.getJDBCContext().getConnectionManager().abortBatch();
 					}
 					throw sqle;
 				}
@@ -1161,7 +1161,9 @@ public abstract class AbstractCollectionPersister
 							String sql = getSQLInsertRowString();
 
 							if ( useBatch ) {
-								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
+										this, sql, callable
+								);
 							}
 							else {
 								st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
@@ -1182,7 +1184,7 @@ public abstract class AbstractCollectionPersister
 								loc = writeElement(st, collection.getElement(entry), loc, session );
 
 								if ( useBatch ) {
-									session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+									session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 								}
 								else {
 									expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1193,7 +1195,7 @@ public abstract class AbstractCollectionPersister
 							}
 							catch ( SQLException sqle ) {
 								if ( useBatch ) {
-									session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+									session.getJDBCContext().getConnectionManager().abortBatch();
 								}
 								throw sqle;
 							}
@@ -1261,7 +1263,9 @@ public abstract class AbstractCollectionPersister
 						String sql = getSQLDeleteRowString();
 
 						if ( useBatch ) {
-							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
+									this, sql, callable
+							);
 						}
 						else {
 							st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
@@ -1286,7 +1290,7 @@ public abstract class AbstractCollectionPersister
 							}
 
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+								session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1295,7 +1299,7 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+								session.getJDBCContext().getConnectionManager().abortBatch();
 							}
 							throw sqle;
 						}
@@ -1361,7 +1365,9 @@ public abstract class AbstractCollectionPersister
 
 						if ( useBatch ) {
 							if ( st == null ) {
-								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( sql, callable );
+								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
+										this, sql, callable
+								);
 							}
 						}
 						else {
@@ -1381,7 +1387,7 @@ public abstract class AbstractCollectionPersister
 							writeElement(st, collection.getElement(entry), offset, session );
 
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().addToBatch( expectation );
+								session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1391,7 +1397,7 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().abortBatch( sqle );
+								session.getJDBCContext().getConnectionManager().abortBatch();
 							}
 							throw sqle;
 						}

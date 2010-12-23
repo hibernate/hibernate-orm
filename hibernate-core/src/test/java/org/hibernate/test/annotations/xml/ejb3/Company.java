@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * Copyright (c) 2010 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,19 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.jdbc;
 
-import org.hibernate.Interceptor;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+package org.hibernate.test.annotations.xml.ejb3;
 
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Factory for <tt>Batcher</tt> instances.
- * @author Gavin King
- */
-public interface BatcherFactory {
-	public void setJdbcBatchSize(int jdbcBatchSize);
-	public Batcher createBatcher(SQLExceptionHelper exceptionHelper);
+public class Company {
+	int id;
+	Map organization = new HashMap();
+	Map conferenceRoomExtensions = new HashMap();
 }

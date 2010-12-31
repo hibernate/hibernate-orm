@@ -352,7 +352,6 @@ public class Ejb3XmlOneToManyTest extends Ejb3XmlTestCase {
 		assertEquals( 0, joinTableAnno.joinColumns().length );
 		assertEquals( 0, joinTableAnno.inverseJoinColumns().length );
 		assertEquals( 0, joinTableAnno.uniqueConstraints().length );
-
 	}
 
 	public void testJoinTableAllChildren() throws Exception {

@@ -30,19 +30,48 @@ import java.lang.reflect.AnnotatedElement;
 
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
+import org.hibernate.Hibernate;
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
-abstract class Ejb3XmlTestCase extends TestCase {
+/**
+ * Test superclass to provide utility methods for testing the mapping of JPA
+ * XML to JPA annotations.  The configuration is built within each test, and no
+ * database is used.  Thus, no schema generation or cleanup will be performed.
+ */
+abstract class Ejb3XmlTestCase extends HibernateTestCase {
 	protected JPAOverridenAnnotationReader reader;
 
+	@Override
+	protected void buildConfiguration() throws Exception {
+		//Do nothing
+	}
+
+	@Override
+	protected void runSchemaGeneration() {
+		//Do nothing
+	}
+
+	@Override
+	protected void runSchemaDrop() {
+		//Do nothing
+	}
+
+	@Override
+	protected void handleUnclosedResources() {
+		//Do nothing
+	}
+
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
-		assertTrue( reader.isAnnotationPresent( annotationType ) );
+		assertTrue( "Expected annotation " + annotationType.getSimpleName() + " was not present",
+				reader.isAnnotationPresent( annotationType ) );
 	}
 
 	protected void assertAnnotationNotPresent(Class<? extends Annotation> annotationType) {
-		assertFalse( reader.isAnnotationPresent( annotationType ) );
+		assertFalse( "Unexpected annotation " + annotationType.getSimpleName() + " was present",
+				reader.isAnnotationPresent( annotationType ) );
 	}
 
 	protected JPAOverridenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)

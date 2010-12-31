@@ -38,7 +38,8 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.UniqueConstraint;
 
-public class Ejb3XmlOnetoOneTest extends Ejb3XmlTestCase {
+public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
+
 	public void testNoChildren() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm1.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -98,7 +99,6 @@ public class Ejb3XmlOnetoOneTest extends Ejb3XmlTestCase {
 		assertEquals( "col1", joinColumns[1].name() );
 		assertEquals( "col2", joinColumns[1].referencedColumnName() );
 		assertEquals( "int", joinColumns[1].columnDefinition() );
-
 	}
 
 	/**
@@ -224,8 +224,10 @@ public class Ejb3XmlOnetoOneTest extends Ejb3XmlTestCase {
 		UniqueConstraint[] uniqueConstraints = joinTableAnno
 				.uniqueConstraints();
 		assertEquals( 2, uniqueConstraints.length );
+		assertEquals( "", uniqueConstraints[0].name() );
 		assertEquals( 1, uniqueConstraints[0].columnNames().length );
 		assertEquals( "col5", uniqueConstraints[0].columnNames()[0] );
+		assertEquals( "uq1", uniqueConstraints[1].name() );
 		assertEquals( 2, uniqueConstraints[1].columnNames().length );
 		assertEquals( "col6", uniqueConstraints[1].columnNames()[0] );
 		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );

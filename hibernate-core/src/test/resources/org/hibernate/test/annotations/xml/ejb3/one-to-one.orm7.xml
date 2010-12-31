@@ -46,7 +46,7 @@
 					<unique-constraint>
 						<column-name>col5</column-name>
 					</unique-constraint>
-					<unique-constraint>
+					<unique-constraint name="uq1">
 						<column-name>col6</column-name>
 						<column-name>col7</column-name>
 					</unique-constraint>

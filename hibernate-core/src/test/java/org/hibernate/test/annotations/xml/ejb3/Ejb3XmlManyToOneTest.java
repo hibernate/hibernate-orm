@@ -169,8 +169,10 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		UniqueConstraint[] uniqueConstraints = joinTableAnno
 				.uniqueConstraints();
 		assertEquals( 2, uniqueConstraints.length );
+		assertEquals( "", uniqueConstraints[0].name() );
 		assertEquals( 1, uniqueConstraints[0].columnNames().length );
 		assertEquals( "col5", uniqueConstraints[0].columnNames()[0] );
+		assertEquals( "uq1", uniqueConstraints[1].name() );
 		assertEquals( 2, uniqueConstraints[1].columnNames().length );
 		assertEquals( "col6", uniqueConstraints[1].columnNames()[0] );
 		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );

@@ -31,27 +31,15 @@
 		<xml-mapping-metadata-complete/>
 	</persistence-unit-metadata>
 	<package>org.hibernate.test.annotations.xml.ejb3</package>
-	<entity class="Entity2">
+	<entity class="Entity3">
 		<attributes>
-			<one-to-many name="field1">
-				<join-table name="table1" catalog="cat1" schema="schema1">
-					<join-column/>
-					<join-column name="col1" referenced-column-name="col2"
-						table="table2" column-definition="int" insertable="false"
-						updatable="false" nullable="false" unique="true"/>
-					<inverse-join-column/>
-					<inverse-join-column name="col3"
-						referenced-column-name="col4" table="table3" column-definition="int"
-						insertable="false" updatable="false" nullable="false" unique="true"/>
-					<unique-constraint>
-						<column-name>col5</column-name>
-					</unique-constraint>
-					<unique-constraint name="uq1">
-						<column-name>col6</column-name>
-						<column-name>col7</column-name>
-					</unique-constraint>
-				</join-table>
-			</one-to-many>
+			<element-collection name="field1">
+				<map-key-join-column/>
+				<map-key-join-column name="col1"
+					column-definition="int" insertable="false" nullable="true"
+					referenced-column-name="col2" table="table1" unique="true"
+					updatable="false"/>
+			</element-collection>
 		</attributes>
 	</entity>
 </entity-mappings>

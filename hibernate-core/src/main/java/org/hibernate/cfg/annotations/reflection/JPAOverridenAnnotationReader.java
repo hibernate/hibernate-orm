@@ -31,9 +31,11 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -396,8 +398,6 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 					getElementCollection( annotationList, defaults );
 					addIfNotNull( annotationList, getSequenceGenerator( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getTableGenerator( elementsForProperty, defaults ) );
-					addIfNotNull( annotationList, getAttributeOverrides( elementsForProperty, defaults ) );
-
 				}
 				processEventAnnotations( annotationList, defaults );
 				//FIXME use annotationsMap rather than annotationList this will be faster since the annotation type is usually known at put() time
@@ -634,31 +634,36 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private void getJoinTable(List<Annotation> annotationList, Element tree, XMLContext.Default defaults) {
+		addIfNotNull( annotationList, buildJoinTable( tree, defaults ) );
+	}
+
 	/*
 	 * no partial overriding possible
 	 */
-	private void getJoinTable(List<Annotation> annotationList, Element tree, XMLContext.Default defaults) {
+	private JoinTable buildJoinTable(Element tree, XMLContext.Default defaults) {
 		Element subelement = tree == null ? null : tree.element( "join-table" );
 		final Class<JoinTable> annotationType = JoinTable.class;
-		if ( subelement != null ) {
-			//ignore java annotation, an element is defined
-			AnnotationDescriptor annotation = new AnnotationDescriptor( annotationType );
-			copyStringAttribute( annotation, subelement, "name", false );
-			copyStringAttribute( annotation, subelement, "catalog", false );
-			if ( StringHelper.isNotEmpty( defaults.getCatalog() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
-				annotation.setValue( "catalog", defaults.getCatalog() );
-			}
-			copyStringAttribute( annotation, subelement, "schema", false );
-			if ( StringHelper.isNotEmpty( defaults.getSchema() )
-					&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
-				annotation.setValue( "schema", defaults.getSchema() );
-			}
-			buildUniqueConstraints( annotation, subelement );
-			annotation.setValue( "joinColumns", getJoinColumns( subelement, false ) );
-			annotation.setValue( "inverseJoinColumns", getJoinColumns( subelement, true ) );
-			annotationList.add( AnnotationFactory.create( annotation ) );
+		if ( subelement == null ) {
+			return null;
 		}
+		//ignore java annotation, an element is defined
+		AnnotationDescriptor annotation = new AnnotationDescriptor( annotationType );
+		copyStringAttribute( annotation, subelement, "name", false );
+		copyStringAttribute( annotation, subelement, "catalog", false );
+		if ( StringHelper.isNotEmpty( defaults.getCatalog() )
+				&& StringHelper.isEmpty( (String) annotation.valueOf( "catalog" ) ) ) {
+			annotation.setValue( "catalog", defaults.getCatalog() );
+		}
+		copyStringAttribute( annotation, subelement, "schema", false );
+		if ( StringHelper.isNotEmpty( defaults.getSchema() )
+				&& StringHelper.isEmpty( (String) annotation.valueOf( "schema" ) ) ) {
+			annotation.setValue( "schema", defaults.getSchema() );
+		}
+		buildUniqueConstraints( annotation, subelement );
+		annotation.setValue( "joinColumns", getJoinColumns( subelement, false ) );
+		annotation.setValue( "inverseJoinColumns", getJoinColumns( subelement, true ) );
+		return AnnotationFactory.create( annotation );
 	}
 
 	private void getAssociation(
@@ -853,7 +858,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		return joinColumns.toArray( new MapKeyJoinColumn[joinColumns.size()] );
 	}
 
-	private Annotation getMapKeyAttributeOverrides(Element tree, Default defaults) {
+	private AttributeOverrides getMapKeyAttributeOverrides(Element tree, Default defaults) {
 		List<AttributeOverride> attributes = buildMapKeyAttributeOverrides( tree );
 		return mergeAttributeOverrides( defaults, attributes );
 	}
@@ -891,7 +896,6 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 			ad.setValue( "value", value );
 			annotationList.add( AnnotationFactory.create( ad ) );
 		}
-
 	}
 
 	/**
@@ -972,7 +976,6 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	//TODO: Complete parsing of all element-collection related xml
 	private void getElementCollection(List<Annotation> annotationList, XMLContext.Default defaults) {
 		for ( Element element : elementsForProperty ) {
 			if ( "element-collection".equals( element.getName() ) ) {
@@ -980,20 +983,21 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				addTargetClass( element, ad, "target-class", defaults );
 				getFetchType( ad, element );
 				getOrderBy( annotationList, element );
-				//TODO: support order-column
+				getOrderColumn( annotationList, element );
 				getMapKey( annotationList, element );
 				getMapKeyClass( annotationList, element, defaults );
-				//TODO: support map-key-temporal
-				//TODO: support map-key-enumerated
-				//TODO: support map-key-attribute-override
+				getMapKeyTemporal( annotationList, element );
+				getMapKeyEnumerated( annotationList, element );
 				getMapKeyColumn( annotationList, element );
-				//TODO: support map-key-join-column
+				buildMapKeyJoinColumns( annotationList, element );
 				Annotation annotation = getColumn( element.element( "column" ), false, element );
 				addIfNotNull( annotationList, annotation );
 				getTemporal( annotationList, element );
 				getEnumerated( annotationList, element );
 				getLob( annotationList, element );
-				annotation = getAttributeOverrides( element, defaults );
+				AttributeOverrides mapKeyAttributeOverridesAnno = getMapKeyAttributeOverrides( element, defaults );
+				AttributeOverrides attributeOverridesAnno = getAttributeOverrides( element, defaults );
+				annotation = mergeAttributeOverridesAnnotations( mapKeyAttributeOverridesAnno, attributeOverridesAnno );
 				addIfNotNull( annotationList, annotation );
 				annotation = getAssociationOverrides( element, defaults );
 				addIfNotNull( annotationList, annotation );
@@ -1002,6 +1006,23 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				getAccessType( annotationList, element );
 			}
 		}
+	}
+
+	private AttributeOverrides mergeAttributeOverridesAnnotations(AttributeOverrides overrides1, AttributeOverrides overrides2) {
+		//If either one is null, no need to merge, so just return
+		if(overrides1 == null) {
+			return overrides2;
+		}
+		if(overrides2 == null) {
+			return overrides1;
+		}
+		//Neither one is null
+		List<AttributeOverride> attributes = new LinkedList<AttributeOverride>();
+		attributes.addAll( Arrays.asList( overrides1.value() ) );
+		attributes.addAll( Arrays.asList( overrides2.value() ) );
+		AnnotationDescriptor ad = new AnnotationDescriptor( AttributeOverrides.class );
+		ad.setValue( "value", attributes.toArray( new AttributeOverride[attributes.size()] ) );
+		return AnnotationFactory.create( ad );
 	}
 
 	private void getOrderBy(List<Annotation> annotationList, Element element) {
@@ -1482,7 +1503,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 	}
 
 	private AssociationOverrides getAssociationOverrides(Element tree, XMLContext.Default defaults) {
-		List<AssociationOverride> attributes = buildAssociationOverrides( tree );
+		List<AssociationOverride> attributes = buildAssociationOverrides( tree, defaults );
 		if ( defaults.canUseJavaAnnotations() ) {
 			AssociationOverride annotation = getJavaAnnotation( AssociationOverride.class );
 			addAssociationOverrideIfNeeded( annotation, attributes );
@@ -1503,7 +1524,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private List<AssociationOverride> buildAssociationOverrides(Element element) {
+	private List<AssociationOverride> buildAssociationOverrides(Element element, XMLContext.Default defaults ) {
 		List<Element> subelements = element == null ? null : element.elements( "association-override" );
 		List<AssociationOverride> overrides = new ArrayList<AssociationOverride>();
 		if ( subelements != null && subelements.size() > 0 ) {
@@ -1511,6 +1532,10 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				AnnotationDescriptor override = new AnnotationDescriptor( AssociationOverride.class );
 				copyStringAttribute( override, current, "name", true );
 				override.setValue( "joinColumns", getJoinColumns( current, false ) );
+				JoinTable joinTable = buildJoinTable( current, defaults );
+				if ( joinTable != null ) {
+					override.setValue( "joinTable", joinTable );
+				}
 				overrides.add( (AssociationOverride) AnnotationFactory.create( override ) );
 			}
 		}
@@ -2347,6 +2372,7 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 				columnNames[columnNameIndex++] = columnNameElt.getTextTrim();
 			}
 			AnnotationDescriptor ucAnn = new AnnotationDescriptor( UniqueConstraint.class );
+			ucAnn.setValue( "name", subelement.attributeValue( "name", "" ) );
 			ucAnn.setValue( "columnNames", columnNames );
 			uniqueConstraints[ucIndex++] = AnnotationFactory.create( ucAnn );
 		}

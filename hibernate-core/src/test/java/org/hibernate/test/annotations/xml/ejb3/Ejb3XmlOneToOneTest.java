@@ -294,5 +294,4 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 				.value() );
 	}
 
-	//TODO: tests for merging/overriding
 }

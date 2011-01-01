@@ -234,5 +234,4 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.DETACH, relAnno.cascade()[5] );
 	}
 
-	//TODO: tests for merging/overriding
 }

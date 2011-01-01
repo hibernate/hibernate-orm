@@ -670,5 +670,4 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 				.value() );
 	}
 
-	//TODO: tests for merging/overriding
 }

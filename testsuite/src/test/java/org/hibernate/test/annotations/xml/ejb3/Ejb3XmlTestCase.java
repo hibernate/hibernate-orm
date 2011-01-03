@@ -30,10 +30,9 @@ import java.lang.reflect.AnnotatedElement;
 
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-import org.hibernate.Hibernate;
+
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
 /**
@@ -64,14 +63,23 @@ abstract class Ejb3XmlTestCase extends HibernateTestCase {
 		//Do nothing
 	}
 
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[0];
+	}
+
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
-		assertTrue( "Expected annotation " + annotationType.getSimpleName() + " was not present",
-				reader.isAnnotationPresent( annotationType ) );
+		assertTrue(
+				"Expected annotation " + annotationType.getSimpleName() + " was not present",
+				reader.isAnnotationPresent( annotationType )
+		);
 	}
 
 	protected void assertAnnotationNotPresent(Class<? extends Annotation> annotationType) {
-		assertFalse( "Unexpected annotation " + annotationType.getSimpleName() + " was present",
-				reader.isAnnotationPresent( annotationType ) );
+		assertFalse(
+				"Unexpected annotation " + annotationType.getSimpleName() + " was present",
+				reader.isAnnotationPresent( annotationType )
+		);
 	}
 
 	protected JPAOverridenAnnotationReader getReader(Class<?> entityClass, String fieldName, String ormResourceName)
@@ -97,10 +105,5 @@ abstract class Ejb3XmlTestCase extends HibernateTestCase {
 		Document doc = new SAXReader().read( is );
 		xmlContext.addDocument( doc );
 		return xmlContext;
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[0];
 	}
 }

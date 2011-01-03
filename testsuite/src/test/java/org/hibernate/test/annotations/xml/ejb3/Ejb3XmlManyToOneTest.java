@@ -193,8 +193,10 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertFalse( relAnno.optional() );
 		assertEquals( Entity3.class, relAnno.targetEntity() );
 		assertEquals( "col1", reader.getAnnotation( MapsId.class ).value() );
-		assertEquals( AccessType.PROPERTY, reader.getAnnotation( Access.class )
-				.value() );
+		assertEquals(
+				AccessType.PROPERTY, reader.getAnnotation( Access.class )
+				.value()
+		);
 	}
 
 	public void testCascadeAll() throws Exception {

@@ -1,4 +1,27 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011 by Red Hat Inc and/or its affiliates or by
+ * third-party contributors as indicated by either @author tags or express
+ * copyright attribution statements applied by the authors.  All
+ * third-party contributions are distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
 package org.hibernate.test.annotations.reflection;
 
 import java.io.BufferedInputStream;
@@ -17,6 +40,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.ExcludeDefaultListeners;
@@ -39,6 +63,9 @@ import javax.persistence.NamedQueries;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
+import javax.persistence.PostLoad;
+import javax.persistence.PostPersist;
+import javax.persistence.PrePersist;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.SecondaryTable;
@@ -51,28 +78,51 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.Version;
-import javax.persistence.PrePersist;
-import javax.persistence.EntityListeners;
-import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
 
-import junit.framework.TestCase;
 import org.dom4j.DocumentException;
 import org.dom4j.io.SAXReader;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXNotSupportedException;
+
 import org.hibernate.annotations.Columns;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 import org.hibernate.util.XMLHelper;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotSupportedException;
 
 
 /**
  * @author Emmanuel Bernard
  */
-public class JPAOverridenAnnotationReaderTest extends TestCase {
+public class JPAOverridenAnnotationReaderTest extends HibernateTestCase {
+
+	@Override
+	protected void buildConfiguration() throws Exception {
+		//Do nothing
+	}
+
+	@Override
+	protected void runSchemaGeneration() {
+		//Do nothing
+	}
+
+	@Override
+	protected void runSchemaDrop() {
+		//Do nothing
+	}
+
+	@Override
+	protected void handleUnclosedResources() {
+		//Do nothing
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[0];
+	}
+
 	public void testMappedSuperclassAnnotations() throws Exception {
 		XMLContext context = buildContext(
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
@@ -403,7 +453,7 @@ public class JPAOverridenAnnotationReaderTest extends TestCase {
 		assertFalse( reader.isAnnotationPresent( PostPersist.class ) );
 
 		assertEquals( 1, context.getDefaultEntityListeners().size() );
-		assertEquals( OtherLogListener.class.getName(), context.getDefaultEntityListeners().get(0) );
+		assertEquals( OtherLogListener.class.getName(), context.getDefaultEntityListeners().get( 0 ) );
 	}
 
 	private XMLContext buildContext(String ormfile) throws SAXException, DocumentException, IOException {
@@ -418,7 +468,7 @@ public class JPAOverridenAnnotationReaderTest extends TestCase {
 		try {
 			saxReader.setFeature( "http://apache.org/xml/features/validation/schema", true );
 		}
-		catch (SAXNotSupportedException e) {
+		catch ( SAXNotSupportedException e ) {
 			saxReader.setValidation( false );
 		}
 		org.dom4j.Document doc;
@@ -429,7 +479,7 @@ public class JPAOverridenAnnotationReaderTest extends TestCase {
 		finally {
 			is.close();
 		}
-		if (errors.size() > 0) {
+		if ( errors.size() > 0 ) {
 			System.out.println( errors.get( 0 ) );
 		}
 		assertEquals( 0, errors.size() );

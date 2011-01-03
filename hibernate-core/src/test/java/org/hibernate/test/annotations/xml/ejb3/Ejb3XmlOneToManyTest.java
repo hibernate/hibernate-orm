@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010 by Red Hat Inc and/or its affiliates or by
+ * Copyright (c) 2011 by Red Hat Inc and/or its affiliates or by
  * third-party contributors as indicated by either @author tags or express
  * copyright attribution statements applied by the authors.  All
  * third-party contributions are distributed under license by Red Hat Inc.
@@ -78,8 +78,10 @@ public class Ejb3XmlOneToManyTest extends Ejb3XmlTestCase {
 		assertAnnotationPresent( OneToMany.class );
 		assertAnnotationPresent( OrderBy.class );
 		assertAnnotationNotPresent( OrderColumn.class );
-		assertEquals( "col1 ASC, col2 DESC", reader.getAnnotation( OrderBy.class )
-				.value() );
+		assertEquals(
+				"col1 ASC, col2 DESC", reader.getAnnotation( OrderBy.class )
+				.value()
+		);
 	}
 
 	public void testOrderColumnNoAttributes() throws Exception {
@@ -144,8 +146,10 @@ public class Ejb3XmlOneToManyTest extends Ejb3XmlTestCase {
 		assertAnnotationNotPresent( MapKeyColumn.class );
 		assertAnnotationNotPresent( MapKeyJoinColumns.class );
 		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals( Entity2.class, reader.getAnnotation( MapKeyClass.class )
-				.value() );
+		assertEquals(
+				Entity2.class, reader.getAnnotation( MapKeyClass.class )
+				.value()
+		);
 	}
 
 	public void testMapKeyTemporal() throws Exception {
@@ -158,8 +162,11 @@ public class Ejb3XmlOneToManyTest extends Ejb3XmlTestCase {
 		assertAnnotationNotPresent( MapKeyColumn.class );
 		assertAnnotationNotPresent( MapKeyJoinColumns.class );
 		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals( TemporalType.DATE, reader.getAnnotation(
-				MapKeyTemporal.class ).value() );
+		assertEquals(
+				TemporalType.DATE, reader.getAnnotation(
+				MapKeyTemporal.class
+		).value()
+		);
 	}
 
 	public void testMapKeyEnumerated() throws Exception {
@@ -172,8 +179,11 @@ public class Ejb3XmlOneToManyTest extends Ejb3XmlTestCase {
 		assertAnnotationNotPresent( MapKeyColumn.class );
 		assertAnnotationNotPresent( MapKeyJoinColumns.class );
 		assertAnnotationNotPresent( MapKeyJoinColumn.class );
-		assertEquals( EnumType.STRING, reader.getAnnotation(
-				MapKeyEnumerated.class ).value() );
+		assertEquals(
+				EnumType.STRING, reader.getAnnotation(
+				MapKeyEnumerated.class
+		).value()
+		);
 	}
 
 	/**
@@ -522,8 +532,10 @@ public class Ejb3XmlOneToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "field2", relAnno.mappedBy() );
 		assertTrue( relAnno.orphanRemoval() );
 		assertEquals( Entity3.class, relAnno.targetEntity() );
-		assertEquals( AccessType.PROPERTY, reader.getAnnotation( Access.class )
-				.value() );
+		assertEquals(
+				AccessType.PROPERTY, reader.getAnnotation( Access.class )
+				.value()
+		);
 	}
 
 }

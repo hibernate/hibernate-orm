@@ -64,6 +64,11 @@ abstract class Ejb3XmlTestCase extends HibernateTestCase {
 	}
 
 	@Override
+	protected void closeResources() {
+		//Do nothing
+	}
+
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[0];
 	}

@@ -1,8 +1,7 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,42 +23,41 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
-import org.hibernate.test.annotations.TestCase;
+import javax.persistence.Lob;
+import javax.persistence.MappedSuperclass;
 
 /**
- * @author Emmanuel Bernard
+ * @author Gail Badner
  */
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-public class LobTest extends AbstractLobTest<Book, CompiledCode> {
+@MappedSuperclass
+public class AbstractCompiledCode {
+	private Byte[] header;
+	private byte[] fullCode;
+	private byte[] metadata;
 
-	public LobTest(String x) {
-		super( x );
+	public byte[] getMetadata() {
+		return metadata;
 	}
 
-	protected Class<Book> getBookClass() {
-		return Book.class;
+	public void setMetadata(byte[] metadata) {
+		this.metadata = metadata;
 	}
 
-	protected Integer getId(Book book) {
-		return book.getId();
+	@Lob
+	public Byte[] getHeader() {
+		return header;
 	}
 
-	protected Class<CompiledCode> getCompiledCodeClass() {
-		return CompiledCode.class;
+	public void setHeader(Byte[] header) {
+		this.header = header;
 	}
 
-	protected Integer getId(CompiledCode compiledCode) {
-		return compiledCode.getId();
+	@Lob
+	public byte[] getFullCode() {
+		return fullCode;
 	}
 
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class,
-				CompiledCode.class
-		};
+	public void setFullCode(byte[] fullCode) {
+		this.fullCode = fullCode;
 	}
 }

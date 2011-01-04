@@ -12,19 +12,8 @@ import javax.persistence.Lob;
  * @author Emmanuel Bernard
  */
 @Entity
-public class CompiledCode {
+public class CompiledCode extends AbstractCompiledCode {
 	private Integer id;
-	private Byte[] header;
-	private byte[] fullCode;
-	private byte[] metadata;
-
-	public byte[] getMetadata() {
-		return metadata;
-	}
-
-	public void setMetadata(byte[] metadata) {
-		this.metadata = metadata;
-	}
 
 	@Id
 	@GeneratedValue
@@ -36,21 +25,4 @@ public class CompiledCode {
 		this.id = id;
 	}
 
-	@Lob
-	public Byte[] getHeader() {
-		return header;
-	}
-
-	public void setHeader(Byte[] header) {
-		this.header = header;
-	}
-
-	@Lob
-	public byte[] getFullCode() {
-		return fullCode;
-	}
-
-	public void setFullCode(byte[] fullCode) {
-		this.fullCode = fullCode;
-	}
 }

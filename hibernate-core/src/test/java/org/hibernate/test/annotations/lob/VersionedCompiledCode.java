@@ -1,8 +1,7 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,42 +23,39 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
-import org.hibernate.test.annotations.TestCase;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Version;
 
 /**
- * @author Emmanuel Bernard
+ * Compiled code representation with a version
+ *
+ * @author Gail Badner
  */
-@RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-public class LobTest extends AbstractLobTest<Book, CompiledCode> {
+@Entity
+public class VersionedCompiledCode extends AbstractCompiledCode{
+	private Integer id;
+	private Integer version;
 
-	public LobTest(String x) {
-		super( x );
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
 	}
 
-	protected Class<Book> getBookClass() {
-		return Book.class;
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
-	protected Integer getId(Book book) {
-		return book.getId();
+	@Version
+	@Column(name = "ver")
+	public Integer getVersion() {
+		return version;
 	}
 
-	protected Class<CompiledCode> getCompiledCodeClass() {
-		return CompiledCode.class;
-	}
-
-	protected Integer getId(CompiledCode compiledCode) {
-		return compiledCode.getId();
-	}
-
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class,
-				CompiledCode.class
-		};
+	public void setVersion(Integer i) {
+		version = i;
 	}
 }

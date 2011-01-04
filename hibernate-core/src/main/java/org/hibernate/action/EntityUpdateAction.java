@@ -190,7 +190,8 @@ public final class EntityUpdateAction extends EntityAction {
 					getInstance(), 
 					getId(), 
 					state, 
-					previousState, 
+					previousState,
+					dirtyFields,
 					getPersister(),
 					(EventSource) getSession() 
 				);
@@ -208,7 +209,8 @@ public final class EntityUpdateAction extends EntityAction {
 					getInstance(), 
 					getId(), 
 					state, 
-					previousState, 
+					previousState,
+					dirtyFields,
 					getPersister(),
 					(EventSource) getSession()
 				);

@@ -244,6 +244,6 @@ public class InformixDialect extends Dialect {
 	}
 
 	public String toBooleanValueString(boolean bool) {
-		return bool ? "t" : "f";
+		return bool ? "'t'" : "'f'";
 	}
 }

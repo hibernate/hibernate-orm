@@ -82,8 +82,10 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
       // prevents reads and other updates
       Transaction tx = suspend();
       try {
-         // We ensure ASYNC semantics (JBCACHE-1175)
-         cacheAdapter.withFlags(FlagAdapter.FORCE_ASYNCHRONOUS).put(key, value);
+         // We ensure ASYNC semantics (JBCACHE-1175) and make sure previous
+         // value is not loaded from cache store cos it's not needed.
+         cacheAdapter.withFlags(FlagAdapter.FORCE_ASYNCHRONOUS,
+                                FlagAdapter.SKIP_CACHE_LOAD).put(key, value);
       } catch (Exception e) {
          throw new CacheException(e);
       } finally {

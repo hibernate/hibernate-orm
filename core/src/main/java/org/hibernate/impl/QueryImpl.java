@@ -132,7 +132,7 @@ public class QueryImpl extends AbstractQueryImpl {
 	public Query setLockOptions(LockOptions lockOption) {
 		this.lockOptions.setLockMode(lockOption.getLockMode());
 		this.lockOptions.setScope(lockOption.getScope());
-		this.lockOptions.setTimeOut(lockOptions.getTimeOut());
+		this.lockOptions.setTimeOut(lockOption.getTimeOut());
 		return this;
 	}
 

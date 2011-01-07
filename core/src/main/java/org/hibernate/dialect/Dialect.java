@@ -27,8 +27,11 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -66,6 +69,8 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
@@ -97,10 +102,11 @@ public abstract class Dialect {
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
 
+	private final List<BasicType> typeOverrides = new ArrayList<BasicType>();
+
 	private final Properties properties = new Properties();
 	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
 	private final Set<String> sqlKeywords = new HashSet<String>();
-
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -208,6 +214,21 @@ public abstract class Dialect {
 	 */
 	public final Properties getDefaultProperties() {
 		return properties;
+	}
+
+
+	/**
+	 * Retrieve dialect-specific types for overriding "basic" types.
+	 * @return the dialect-specific types
+	 */
+	public final List<BasicType> getTypeOverrides() {
+		return Collections.unmodifiableList( typeOverrides );
+	}
+
+	protected final void addTypeOverride(BasicType typeOverride) {
+		if ( typeOverride != null ) {
+			typeOverrides.add( typeOverride );
+		}
 	}
 
 	public String toString() {

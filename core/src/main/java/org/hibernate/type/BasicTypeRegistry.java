@@ -24,7 +24,9 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -163,5 +165,9 @@ public class BasicTypeRegistry implements Serializable {
 
 	public BasicTypeRegistry shallowCopy() {
 		return new BasicTypeRegistry( this.registry );
+	}
+
+	public Set<String> getRegistrationKeys() {
+		return Collections.unmodifiableSet( registry.keySet() );
 	}
 }

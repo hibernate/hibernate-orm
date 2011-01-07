@@ -28,10 +28,11 @@ import java.util.Arrays;
 import org.hibernate.Session;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.testing.junit.DialectChecks;
 import org.hibernate.testing.junit.RequiresDialectFeature;
+import org.hibernate.type.PostgresMaterializedBlobType;
 import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.Type;
 
@@ -56,7 +57,12 @@ public class MaterializedBlobTest extends TestCase {
 	public void testTypeSelection() {
 		int index = sfi().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
 		Type  type = sfi().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
-		assertEquals( MaterializedBlobType.INSTANCE, type );
+		if ( PostgreSQLDialect.class.isInstance( getDialect() )) {
+			assertEquals( PostgresMaterializedBlobType.INSTANCE, type );
+		}
+		else {
+			assertEquals( MaterializedBlobType.INSTANCE, type );
+		}
 	}
 
 	public void testSaving() {

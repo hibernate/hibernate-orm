@@ -40,6 +40,7 @@ import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.type.PostgresMaterializedBlobType;
 
 /**
  * An SQL dialect for Postgres
@@ -142,6 +143,8 @@ public class PostgreSQLDialect extends Dialect {
 		registerFunction( "locate", new PositionSubstringFunction() );
 
 		registerFunction( "str", new SQLFunctionTemplate(Hibernate.STRING, "cast(?1 as varchar)") );
+
+		addTypeOverride( PostgresMaterializedBlobType.INSTANCE );
 
 		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);
 	}
@@ -364,8 +367,19 @@ public class PostgreSQLDialect extends Dialect {
 		return false;
 	}
 
+	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		// seems to have spotty LOB suppport
+		return true;
+	}
+
+	@Override
+	public boolean supportsLobValueChangePropogation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
 	}
 

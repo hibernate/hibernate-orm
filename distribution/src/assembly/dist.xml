@@ -172,6 +172,7 @@
             <outputDirectory>project</outputDirectory>
             <excludes>
                 <exclude>**/target/**</exclude>
+                <exclude>**/.git/**</exclude>
                 <exclude>**/*.ipr</exclude>
                 <exclude>**/*.iml</exclude>
                 <exclude>**/*.iws</exclude>

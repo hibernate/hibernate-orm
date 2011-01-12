@@ -356,7 +356,7 @@ public final class SerializationHelper {
 
 			if ( different( loader1, loader3 ) && different( loader2, loader3 ) ) {
 				try {
-					return Class.forName( className, false, loader2 );
+					return Class.forName( className, false, loader3 );
 				}
 				catch ( ClassNotFoundException e ) {
 					log.trace( "Unable to locate class using given classloader" );

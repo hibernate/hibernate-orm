@@ -28,6 +28,7 @@ import java.io.Serializable;
 
 import junit.framework.TestCase;
 
+import org.hibernate.LockMode;
 import org.hibernate.bytecode.util.ByteCodeHelper;
 
 /**
@@ -68,12 +69,35 @@ public class SerializationHelperTest extends TestCase {
 		assertEquals( custom, instance2.getClass().getClassLoader() );
 	}
 
+	public void testSerDeserClassUnknownToCustomLoader() throws Exception {
+		Object instance = LockMode.OPTIMISTIC;
+		assertSame( 
+			SerializationHelper.hibernateClassLoader(),
+			instance.getClass().getClassLoader() 
+		);
+
+		// SerializableType.toBytes() logic, as called from SerializableType.disassemble()
+		byte[] bytes = SerializationHelper.serialize( (Serializable) instance );
+
+		// SerializableType.fromBytes() logic, as called from SerializableType.assemble
+		// NOTE : specifically we use custom so that LockType.class is not found
+		//        until the 3rd loader (because loader1 == loader2, the custom classloader)
+		Object instance2 = SerializationHelper.deserialize( bytes, custom );
+
+		assertSame( instance.getClass(), instance2.getClass() );
+		assertSame( instance.getClass().getClassLoader(), instance2.getClass().getClassLoader() );
+	}
+
+
 	public static class CustomClassLoader extends ClassLoader {
 		public CustomClassLoader(ClassLoader parent) {
 			super( parent );
 		}
 
 		public Class loadClass(String name) throws ClassNotFoundException {
+			if ( name.equals( "org.hibernate.LockMode" ) ) {
+				throw new ClassNotFoundException( "Could not find "+ name );
+			}
 			if ( ! name.equals( "org.hibernate.util.SerializableThing" ) ) {
 				return getParent().loadClass( name );
 			}

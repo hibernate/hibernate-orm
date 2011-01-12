@@ -151,7 +151,39 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().begin();
 		em.persist( new Order( "order-1", 1.0d ) );
 		em.persist( new Order( "order-2", 10.0d ) );
-		em.persist( new Order( "order-3", 100.0d ) );
+		em.persist( new Order( "order-3", new char[]{'r','u'} ) );
 		em.getTransaction().commit();
 	}
+
+	/**
+	 * Check predicate for field which has simple char array type (char[]).
+	 */
+	public void testCharArray() {
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		
+		orderCriteria.select( orderRoot );
+		Predicate p = builder.equal( orderRoot.get( "domen" ), new char[]{'r','u'} );
+		orderCriteria.where( p );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 1 );
+	}
+
+	/**
+	 * Check predicate for field which has simple char array type (byte[]).
+	 */
+	public void testByteArray() {
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+		
+		orderCriteria.select( orderRoot );
+		Predicate p = builder.equal( orderRoot.get( "number" ), new byte[]{'1','2'} );
+		orderCriteria.where( p );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 0 );
+	}
+
+
 }

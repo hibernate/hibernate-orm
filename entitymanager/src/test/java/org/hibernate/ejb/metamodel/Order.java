@@ -49,6 +49,9 @@ public class Order implements java.io.Serializable {
 	private LineItem sampleLineItem;
 	private Collection<LineItem> lineItems = new java.util.ArrayList<LineItem>();
 
+	private char[] domen;
+	private byte[] number;
+
 	public Order() {
 	}
 
@@ -61,6 +64,12 @@ public class Order implements java.io.Serializable {
 		this.id = id;
 		this.customer = customer;
 	}
+
+	public Order(String id, char[] domen) {
+		this.id = id;
+		this.domen = domen;
+	}
+
 
 	public Order(String id) {
 		this.id = id;
@@ -138,4 +147,22 @@ public class Order implements java.io.Serializable {
 	public void setLineItems(Collection<LineItem> c) {
 		this.lineItems = c;
 	}
+
+	public char[] getDomen() {
+		return domen;
+	}
+
+	public void setDomen(char[] d) {
+		domen = d;
+	}
+
+	public byte[] getNumber() {
+		return number;
+	}
+
+	public void setNumber(byte[] n) {
+		number = n;
+	}
+
+
 }

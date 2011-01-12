@@ -344,7 +344,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 					}
 				}
 			}
-			else if ( value.getClass().isArray() ) {
+			else if ( value.getClass().isArray() && value.getClass().equals( Object[].class ) ) {
 				final Object[] array = (Object[]) value;
 				for ( Object element : array ) {
 					if ( ! parameter.getParameterType().isInstance( element ) ) {

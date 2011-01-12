@@ -48,14 +48,14 @@ public class CacheHelper {
    private CacheHelper() {
    }
 
-   public static void initInternalEvict(CacheAdapter cacheAdapter, AddressAdapter member) {
+   public static void initInternalEvict(CacheAdapter cache, AddressAdapter member) {
       EvictAll eKey = new EvictAll(member == null ? NoAddress.INSTANCE : member);
-      cacheAdapter.withFlags(FlagAdapter.CACHE_MODE_LOCAL, FlagAdapter.SKIP_CACHE_LOAD).put(eKey, Internal.INIT);
+      cache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).put(eKey, Internal.INIT);
    }
 
-   public static void sendEvictAllNotification(CacheAdapter cacheAdapter, AddressAdapter member) {
+   public static void sendEvictAllNotification(CacheAdapter cache, AddressAdapter member) {
       EvictAll eKey = new EvictAll(member == null ? NoAddress.INSTANCE : member);
-      cacheAdapter.withFlags(FlagAdapter.SKIP_CACHE_LOAD).put(eKey, Internal.EVICT);
+      cache.put(eKey, Internal.EVICT);
    }
 
    public static boolean isEvictAllNotification(Object key) {

@@ -101,27 +101,25 @@ public interface CacheAdapter {
    Object getAllowingTimeout(Object key) throws CacheException;
 
    /**
-    * Performs a <code>put(Object, Object)</code> on the cache, wrapping any exception in a {@link CacheException}.
+    * Performs a <code>put(Object, Object)</code> on the cache,
+    * wrapping any exception in a {@link CacheException}.
     * 
     * @param key key whose value will be modified
     * @param value data to store in the cache entry
-    * @return the previous value associated with <tt>key</tt>, or <tt>null</tt> 
-    *         if there was no mapping for <tt>key</tt>.
     * @throws CacheException
     */
-   Object put(Object key, Object value) throws CacheException;
+   void put(Object key, Object value) throws CacheException;
 
    /**
-    * Performs a <code>put(Object, Object)</code> on the cache ignoring any {@link TimeoutException} 
-    * and wrapping any exception in a {@link CacheException}.
+    * Performs a <code>put(Object, Object)</code> on the cache ignoring
+    * any {@link TimeoutException} and wrapping any exception in a
+    * {@link CacheException}.
     * 
     * @param key key whose value will be modified
     * @param value data to store in the cache entry
-    * @return the previous value associated with <tt>key</tt>, or <tt>null</tt> 
-    *         if there was no mapping for <tt>key</tt>.
     * @throws CacheException
     */
-   Object putAllowingTimeout(Object key, Object value) throws CacheException;
+   void putAllowingTimeout(Object key, Object value) throws CacheException;
 
    /**
     * See {@link Cache#putForExternalRead(Object, Object)} for detailed documentation.
@@ -133,14 +131,13 @@ public interface CacheAdapter {
    void putForExternalRead(Object key, Object value) throws CacheException;
 
    /**
-    * Performs a <code>remove(Object)</code>, wrapping any exception in a {@link CacheException}.
+    * Performs a <code>remove(Object)</code>, wrapping any exception in
+    * a {@link CacheException}.
     * 
     * @param key key to be removed
-    * @return the previous value associated with <tt>key</tt>, or 
-    *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
     * @throws CacheException
     */
-   Object remove(Object key) throws CacheException;
+   void remove(Object key) throws CacheException;
 
    /**
     * Evict the given key from memory.

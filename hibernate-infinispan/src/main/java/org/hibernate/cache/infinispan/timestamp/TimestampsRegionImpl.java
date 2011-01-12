@@ -84,8 +84,7 @@ public class TimestampsRegionImpl extends BaseGeneralDataRegion implements Times
       try {
          // We ensure ASYNC semantics (JBCACHE-1175) and make sure previous
          // value is not loaded from cache store cos it's not needed.
-         cacheAdapter.withFlags(FlagAdapter.FORCE_ASYNCHRONOUS,
-                                FlagAdapter.SKIP_CACHE_LOAD).put(key, value);
+         cacheAdapter.withFlags(FlagAdapter.FORCE_ASYNCHRONOUS).put(key, value);
       } catch (Exception e) {
          throw new CacheException(e);
       } finally {

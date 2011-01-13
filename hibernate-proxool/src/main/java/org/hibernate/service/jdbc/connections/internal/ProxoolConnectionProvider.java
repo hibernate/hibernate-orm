@@ -202,7 +202,12 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 
 		// We have created the pool ourselves, so shut it down
 		try {
-			ProxoolFacade.removeConnectionPool(proxoolAlias.substring(PROXOOL_JDBC_STEM.length()));
+			if ( ProxoolFacade.getAliases().length == 1 ) {
+				ProxoolFacade.shutdown( 0 );
+			}
+			else {
+				ProxoolFacade.removeConnectionPool(proxoolAlias.substring(PROXOOL_JDBC_STEM.length()));
+			}
 		}
 		catch (Exception e) {
 			// If you're closing down the ConnectionProvider chances are an

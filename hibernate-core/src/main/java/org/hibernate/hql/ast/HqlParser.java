@@ -73,11 +73,11 @@ public final class HqlParser extends HqlBaseParser {
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    private int traceDepth = 0;
-
+	private int traceDepth = 0;
 
 	@Override
     public void traceIn(String ruleName) {
+        if (!LOG.isTraceEnabled()) return;
         if (inputState.guessing > 0) return;
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
         LOG.trace(prefix + ruleName);
@@ -85,6 +85,7 @@ public final class HqlParser extends HqlBaseParser {
 
 	@Override
     public void traceOut(String ruleName) {
+        if (!LOG.isTraceEnabled()) return;
         if (inputState.guessing > 0) return;
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
         LOG.trace(prefix + ruleName);

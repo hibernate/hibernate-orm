@@ -61,9 +61,9 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	/**
 	 * all append invocations on the buf should go through this Output instance variable.
-	 * The value of this variable may be temporarily substitued by sql function processing code
+	 * The value of this variable may be temporarily substituted by sql function processing code
 	 * to catch generated arguments.
-	 * This is because sql function templates need arguments as seperate string chunks
+	 * This is because sql function templates need arguments as separate string chunks
 	 * that will be assembled into the target dialect-specific function call.
 	 */
 	private SqlWriter writer = new DefaultWriter();
@@ -77,10 +77,11 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    private int traceDepth = 0;
+	private int traceDepth = 0;
 
 	@Override
     public void traceIn(String ruleName, AST tree) {
+        if (!LOG.isTraceEnabled()) return;
         if (inputState.guessing > 0) return;
 		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
 		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
@@ -95,6 +96,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	@Override
     public void traceOut(String ruleName, AST tree) {
+        if (!LOG.isTraceEnabled()) return;
         if (inputState.guessing > 0) return;
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
         LOG.trace(prefix + ruleName);

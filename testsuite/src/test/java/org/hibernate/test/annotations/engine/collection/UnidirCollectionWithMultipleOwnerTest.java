@@ -15,6 +15,8 @@ public class UnidirCollectionWithMultipleOwnerTest extends TestCase {
 		tx = s.beginTransaction();
 		Father father = new Father();
 		Mother mother = new Mother();
+		s.save( father );
+		s.save( mother );
 		Son son = new Son();
 		father.getOrderedSons().add( son );
 		son.setFather( father );
@@ -28,11 +30,12 @@ public class UnidirCollectionWithMultipleOwnerTest extends TestCase {
 
 		tx = s.beginTransaction();
 		son = (Son) s.get( Son.class, son.getId() );
+		s.delete( son );
+		s.flush();
 		father = (Father) s.get( Father.class, father.getId() );
 		mother = (Mother) s.get( Mother.class, mother.getId() );
 		s.delete( father );
 		s.delete( mother );
-		s.delete( son );
 		tx.commit();
 		s.close();
 	}

@@ -33,7 +33,6 @@ import antlr.RecognitionException;
 import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.tree.FunctionNode;
-import org.hibernate.hql.ast.tree.SqlNode;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
@@ -41,7 +40,6 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.SqlGeneratorBase;
 import org.hibernate.hql.antlr.SqlTokenTypes;
-import org.hibernate.hql.ast.tree.MethodNode;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.ParameterNode;
@@ -60,14 +58,15 @@ import org.slf4j.LoggerFactory;
  */
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	private static final Logger log = LoggerFactory.getLogger( SqlGenerator.class );
+	private final boolean trace = log.isTraceEnabled();
 
 	public static boolean REGRESSION_STYLE_CROSS_JOINS = false;
 
 	/**
 	 * all append invocations on the buf should go through this Output instance variable.
-	 * The value of this variable may be temporarily substitued by sql function processing code
+	 * The value of this variable may be temporarily substituted by sql function processing code
 	 * to catch generated arguments.
-	 * This is because sql function templates need arguments as seperate string chunks
+	 * This is because sql function templates need arguments as separate string chunks
 	 * that will be assembled into the target dialect-specific function call.
 	 */
 	private SqlWriter writer = new DefaultWriter();
@@ -81,15 +80,17 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    private int traceDepth = 0;
+	private int traceDepth = 0;
 
 	public void traceIn(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
+		if (trace) {
+			if ( inputState.guessing > 0 ) {
+				return;
+			}
+			String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+			String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
+			log.trace( prefix + traceText );
 		}
-		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		String traceText = ruleName + " (" + buildTraceNodeName(tree) + ")";
-		log.trace( prefix + traceText );
 	}
 
 	private String buildTraceNodeName(AST tree) {
@@ -99,11 +100,13 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	}
 
 	public void traceOut(String ruleName, AST tree) {
-		if ( inputState.guessing > 0 ) {
-			return;
+		if (trace) {
+			if ( inputState.guessing > 0 ) {
+				return;
+			}
+			String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+			log.trace( prefix + ruleName );
 		}
-		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
 	}
 
 	public List getCollectedParameters() {

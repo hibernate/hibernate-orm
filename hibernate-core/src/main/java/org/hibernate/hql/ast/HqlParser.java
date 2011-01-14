@@ -55,6 +55,7 @@ public final class HqlParser extends HqlBaseParser {
 	 * A logger for this class.
 	 */
 	private static final Logger log = LoggerFactory.getLogger( HqlParser.class );
+	private final boolean trace = log.isTraceEnabled();
 
 	private ParseErrorHandler parseErrorHandler;
 	private ASTPrinter printer = getASTPrinter();
@@ -77,23 +78,26 @@ public final class HqlParser extends HqlBaseParser {
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    private int traceDepth = 0;
-
+	private int traceDepth = 0;
 
 	public void traceIn(String ruleName) {
-		if ( inputState.guessing > 0 ) {
-			return;
+		if (trace) {
+			if ( inputState.guessing > 0 ) {
+				return;
+			}
+			String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
+			log.trace( prefix + ruleName );
 		}
-		String prefix = StringHelper.repeat( '-', (traceDepth++ * 2) ) + "-> ";
-		log.trace( prefix + ruleName );
 	}
 
 	public void traceOut(String ruleName) {
-		if ( inputState.guessing > 0 ) {
-			return;
+		if (trace) {
+			if ( inputState.guessing > 0 ) {
+				return;
+			}
+			String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
+			log.trace( prefix + ruleName );
 		}
-		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
-		log.trace( prefix + ruleName );
 	}
 
 	public void reportError(RecognitionException e) {

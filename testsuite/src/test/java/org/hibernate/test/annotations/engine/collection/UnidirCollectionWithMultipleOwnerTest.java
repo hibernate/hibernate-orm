@@ -16,7 +16,7 @@ public class UnidirCollectionWithMultipleOwnerTest extends TestCase {
 		Father father = new Father();
 		Mother mother = new Mother();
 		s.save( father );
-		s.save( mother );
+		//s.save( mother );
 		Son son = new Son();
 		father.getOrderedSons().add( son );
 		son.setFather( father );

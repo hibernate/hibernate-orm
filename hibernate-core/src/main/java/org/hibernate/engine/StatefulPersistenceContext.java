@@ -1141,15 +1141,20 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		final CollectionPersister collectionPersister = session.getFactory().getCollectionPersister( collectionRole );
 
 	    // try cache lookup first
-	    Object parent = parentsByChild.get(childEntity);
-		if (parent != null) {
-	       if (isFoundInParent(propertyName, childEntity, persister, collectionPersister, parent)) {
-		       return getEntry(parent).getId();
-		   }
-		   else {
-			  parentsByChild.remove(childEntity); // remove wrong entry
-		   }
+		Object parent = parentsByChild.get( childEntity );
+		if ( parent != null ) {
+			final EntityEntry entityEntry = ( EntityEntry ) entityEntries.get( parent );
+			//there maybe more than one parent, filter by type
+			if ( 	persister.isSubclassEntityName(entityEntry.getEntityName() )
+					&& isFoundInParent( propertyName, childEntity, persister, collectionPersister, parent ) ) {
+				return getEntry( parent ).getId();
+			}
+			else {
+				parentsByChild.remove( childEntity ); // remove wrong entry
+			}
 		}
+
+		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
 		Iterator entities = IdentityMap.entries(entityEntries).iterator();
 		while ( entities.hasNext() ) {
@@ -1257,21 +1262,28 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	    // try cache lookup first
 	    Object parent = parentsByChild.get(childEntity);
 		if (parent != null) {
-			Object index = getIndexInParent(property, childEntity, persister, cp, parent);
-			
-			if (index==null && mergeMap!=null) {
-				Object unmergedInstance = mergeMap.get(parent);
-				Object unmergedChild = mergeMap.get(childEntity);
-				if ( unmergedInstance!=null && unmergedChild!=null ) {
-					index = getIndexInParent(property, unmergedChild, persister, cp, unmergedInstance);
+			final EntityEntry entityEntry = (EntityEntry) entityEntries.get(parent);
+			//there maybe more than one parent, filter by type
+			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
+				Object index = getIndexInParent(property, childEntity, persister, cp, parent);
+
+				if (index==null && mergeMap!=null) {
+					Object unmergedInstance = mergeMap.get(parent);
+					Object unmergedChild = mergeMap.get(childEntity);
+					if ( unmergedInstance!=null && unmergedChild!=null ) {
+						index = getIndexInParent(property, unmergedChild, persister, cp, unmergedInstance);
+					}
+				}
+				if (index!=null) {
+					return index;
 				}
 			}
-			if (index!=null) {
-				return index;
+			else {
+				parentsByChild.remove(childEntity); // remove wrong entry
 			}
-			parentsByChild.remove(childEntity); // remove wrong entry
 		}
-		
+
+		//Not found in cache, proceed
 		Iterator entities = IdentityMap.entries(entityEntries).iterator();
 		while ( entities.hasNext() ) {
 			Map.Entry me = (Map.Entry) entities.next();

@@ -94,20 +94,21 @@ public class CacheAdapterImpl implements CacheAdapter {
       }
    }
 
-   public Object put(Object key, Object value) throws CacheException {
+   public void put(Object key, Object value) throws CacheException {
       try {
-         return cache.put(key, value);
+         // No previous value interest, so apply flags that avoid remote lookups.
+         getSkipRemoteGetLoadCache().put(key, value);
       } catch (Exception e) {
          throw new CacheException(e);
       }
    }
 
-   public Object putAllowingTimeout(Object key, Object value) throws CacheException {
+   public void putAllowingTimeout(Object key, Object value) throws CacheException {
       try {
-         return getFailSilentCache().put(key, value);
+         // No previous value interest, so apply flags that avoid remote lookups.
+         getFailSilentCacheSkipRemotes().put(key, value);
       } catch (TimeoutException allowed) {
          // ignore it
-         return null;
       } catch (Exception e) {
          throw new CacheException(e);
       }
@@ -115,15 +116,17 @@ public class CacheAdapterImpl implements CacheAdapter {
 
    public void putForExternalRead(Object key, Object value) throws CacheException {
       try {
-         cache.putForExternalRead(key, value);
+         // No previous value interest, so apply flags that avoid remote lookups.
+         getFailSilentCacheSkipRemotes().putForExternalRead(key, value);
       } catch (Exception e) {
          throw new CacheException(e);
       }
    }
 
-   public Object remove(Object key) throws CacheException {
+   public void remove(Object key) throws CacheException {
       try {
-         return cache.remove(key);
+         // No previous value interest, so apply flags that avoid remote lookups.
+         getSkipRemoteGetLoadCache().remove(key);
       } catch (Exception e) {
          throw new CacheException(e);
       }
@@ -214,4 +217,15 @@ public class CacheAdapterImpl implements CacheAdapter {
    private Cache getFailSilentCache() {
       return cache.getAdvancedCache().withFlags(Flag.FAIL_SILENTLY);
    }
+
+   private Cache getSkipRemoteGetLoadCache() {
+      return cache.getAdvancedCache().withFlags(
+            Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP);
+   }
+
+   private Cache getFailSilentCacheSkipRemotes() {
+      return cache.getAdvancedCache().withFlags(
+            Flag.FAIL_SILENTLY, Flag.SKIP_CACHE_LOAD, Flag.SKIP_REMOTE_LOOKUP);
+   }
+
 }

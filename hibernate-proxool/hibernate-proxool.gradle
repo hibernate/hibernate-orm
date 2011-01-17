@@ -4,4 +4,5 @@ dependencies {
     compile( project( ':hibernate-core' ) )
     compile( [group: 'proxool', name: 'proxool', version: '0.8.3'] )
     testCompile( project(':hibernate-core').sourceSets.test.classes )
+    testRuntime( libraries.h2 )
 }

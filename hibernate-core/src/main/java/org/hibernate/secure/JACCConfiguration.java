@@ -24,17 +24,13 @@
  */
 package org.hibernate.secure;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.StringTokenizer;
 import javax.security.jacc.EJBMethodPermission;
 import javax.security.jacc.PolicyConfiguration;
 import javax.security.jacc.PolicyConfigurationFactory;
 import javax.security.jacc.PolicyContextException;
 import org.hibernate.HibernateException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * Adds Hibernate permissions to roles via JACC
@@ -79,7 +75,7 @@ public class JACCConfiguration {
 					null // arguments
 				);
 
-            LOG.addingPermissionToRole(role, permission);
+            LOG.debug("Adding permission to role " + role + ": " + permission);
 			try {
 				policyConfiguration.addToRole( role, permission );
 			}
@@ -88,16 +84,4 @@ public class JACCConfiguration {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Adding permission to role %s: %s" )
-        void addingPermissionToRole( String role,
-                                     EJBMethodPermission permission );
-    }
 }

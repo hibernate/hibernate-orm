@@ -23,22 +23,18 @@
  */
 package org.hibernate.property;
 
-import static org.jboss.logging.Logger.Level.ERROR;
 import java.beans.Introspector;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Map;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Accesses property values via a get/set pair, which may be nonpublic.
@@ -386,26 +382,4 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 
 		return null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Expected type: %s, actual value: %s" )
-        void expectedType( String name,
-                           String string );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "IllegalArgumentException in class: %s, getter method of property: %s" )
-        void illegalPropertyGetterArgument( String name,
-                                            String propertyName );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "IllegalArgumentException in class: %s, setter method of property: %s" )
-        void illegalPropertySetterArgument( String name,
-                                            String propertyName );
-    }
 }

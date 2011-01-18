@@ -23,8 +23,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -34,6 +32,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
@@ -49,10 +48,6 @@ import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -336,60 +331,4 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return extractedMetaDataSupport;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        // @formatter:off
-        @Message( value = "Database ->\n" +
-                          "       name : %s\n" +
-                          "    version : %s\n" +
-                          "      major : %s\n" +
-                          "      minor : %s" )
-        // @formatter:on
-        void database( String databaseProductName,
-                       String databaseProductVersion,
-                       int databaseMajorVersion,
-                       int databaseMinorVersion );
-
-        @LogMessage( level = INFO )
-        // @formatter:off
-        @Message( value = "Driver ->\n" +
-                          "       name : %s\n" +
-                          "    version : %s\n" +
-                          "      major : %s\n" +
-                          "      minor : %s" )
-        // @formatter:on
-        void driver( String driverProductName,
-                     String driverProductVersion,
-                     int driverMajorVersion,
-                     int driverMinorVersion );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JDBC version : %d.%d" )
-        void jdbcVersion( int jdbcMajorVersion,
-                          int jdbcMinorVersion );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to instantiate configured schema name resolver [%s] %s" )
-        void unableToInstantiateConfiguredSchemaNameResolver( String resolverClassName,
-                                                              String message );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to locate configured schema name resolver class [%s] %s" )
-        void unableToLocateConfiguredSchemaNameResolver( String resolverClassName,
-                                                         String message );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Could not obtain connection metadata : %s" )
-        void unableToObtainConnectionMetadata( String message );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Could not obtain connection to query metadata : %s" )
-        void unableToObtainConnectionToQueryMetadata( String message );
-    }
 }

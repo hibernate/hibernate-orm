@@ -23,7 +23,7 @@
  */
 package org.hibernate.testing.junit.functional;
 
-import org.hibernate.testing.junit.SkipLog;
+import static org.hibernate.aTestLogger.LOG;
 
 /**
  * {@inheritDoc}
@@ -35,7 +35,8 @@ public abstract class DatabaseSpecificFunctionalTestCase extends FunctionalTestC
 		super( string );
 	}
 
-	protected void runTest() throws Throwable {
+	@Override
+    protected void runTest() throws Throwable {
 		// Note: this protection comes into play when running
 		// tests individually.  The suite as a whole is already
 		// "protected" by the fact that these tests are actually
@@ -44,7 +45,8 @@ public abstract class DatabaseSpecificFunctionalTestCase extends FunctionalTestC
 			super.runTest();
 		}
 		else {
-			SkipLog.LOG.warn( "skipping database-specific test [" + fullTestName() + "] for dialect [" + getDialect().getClass().getName() + "]" );
+            LOG.warn("skipping database-specific test [" + fullTestName() + "] for dialect [" + getDialect().getClass().getName()
+                     + "]");
 		}
 	}
 }

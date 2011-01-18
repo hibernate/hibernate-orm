@@ -26,6 +26,7 @@
 
 package org.hibernate.testing.junit.functional.annotations;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,7 +34,6 @@ import java.lang.reflect.Modifier;
 import java.sql.Connection;
 import java.sql.SQLException;
 import junit.framework.TestCase;
-import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -46,7 +46,6 @@ import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.testing.junit.RequiresDialectFeature;
 import org.hibernate.testing.junit.SkipForDialect;
-import org.hibernate.testing.junit.SkipLog;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.StringHelper;
 
@@ -57,8 +56,6 @@ import org.hibernate.util.StringHelper;
  * @author Hardy Ferentschik
  */
 public abstract class HibernateTestCase extends TestCase {
-
-    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	protected static Configuration cfg;
 	private static Class<?> lastTestClass;
@@ -124,7 +121,7 @@ public abstract class HibernateTestCase extends TestCase {
 				builder.append( " (" )
 						.append( failureExpected.jiraKey() )
 						.append( ")" );
-				SkipLog.LOG.warn( builder.toString(), t );
+                LOG.warn(builder.toString(), t);
 			}
 			else {
 				throw t;
@@ -334,7 +331,7 @@ public abstract class HibernateTestCase extends TestCase {
 		builder.append( testDescription );
 		builder.append( " : " );
 		builder.append( reason );
-		SkipLog.LOG.warn( builder.toString() );
+        LOG.warn(builder.toString());
 	}
 
 	public class RollbackWork implements Work {

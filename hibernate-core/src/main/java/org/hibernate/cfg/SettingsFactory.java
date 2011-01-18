@@ -23,11 +23,7 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.ConnectionReleaseMode;
@@ -51,10 +47,6 @@ import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.transaction.TransactionManagerLookupFactory;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Reads configuration properties and builds a {@link Settings} instance.
@@ -285,7 +277,7 @@ public class SettingsFactory implements Serializable {
 			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
 		}
 		else {
-            LOG.usingJavassist();
+            LOG.debug("Using javassist as bytecode provider by default");
 			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 		}
 	}
@@ -378,193 +370,4 @@ public class SettingsFactory implements Serializable {
 	protected TransactionManagerLookup createTransactionManagerLookup(Properties properties) {
 		return TransactionManagerLookupFactory.getTransactionManagerLookup(properties);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Automatic flush during beforeCompletion(): %s" )
-        void autoFlush( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Automatic session close at end of transaction: %s" )
-        void autoSessionClose( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Batcher factory: %s" )
-        void batcherFactory( String batcherClass );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Cache region factory : %s" )
-        void cacheRegionFactory( String regionFactoryClassName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Cache region prefix: %s" )
-        void cacheRegionPrefix( String prefix );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Check Nullability in Core (should be disabled when Bean Validation is on): %s" )
-        void checkNullability( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Connection release mode: %s" )
-        void connectionReleaseMode( String releaseModeName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor." )
-        void constructorWithPropertiesNotFound( String regionFactoryClassName );
-
-        @LogMessage( level = INFO )
-        // @formatter:off
-        @Message( value = "Database ->\n" +
-                          "       name : %s\n" +
-                          "    version : %s\n" +
-                          "      major : %s\n" +
-                          "      minor : %s" )
-        // @formatter:on
-        void database( String databaseProductName,
-                       String databaseProductVersion,
-                       int databaseMajorVersion,
-                       int databaseMinorVersion );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Default batch fetch size: %s" )
-        void defaultBatchFetchSize( int batchFetchSize );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Default catalog: %s" )
-        void defaultCatalog( String defaultCatalog );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Default entity-mode: %s" )
-        void defaultEntityMode( EntityMode defaultEntityMode );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Default schema: %s" )
-        void defaultSchema( String defaultSchema );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Deleted entity synthetic identifier rollback: %s" )
-        void deletedEntitySyntheticIdentifierRollback( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        // @formatter:off
-        @Message( value = "Driver ->\n" +
-                          "       name : %s\n" +
-                          "    version : %s\n" +
-                          "      major : %s\n" +
-                          "      minor : %s" )
-        // @formatter:on
-        void driver( String driverProductName,
-                     String driverProductVersion,
-                     int driverMajorVersion,
-                     int driverMinorVersion );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Echoing all SQL to stdout" )
-        void echoingSql();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Generate SQL with comments: %s" )
-        void generateSqlWithComments( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JDBC3 getGeneratedKeys(): %s" )
-        void jdbc3GeneratedKeys( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JDBC batch size: %s" )
-        void jdbcBatchSize( int batchSize );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JDBC batch updates for versioned data: %s" )
-        void jdbcBatchUpdates( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JDBC result set fetch size: %s" )
-        void jdbcResultSetFetchSize( Integer statementFetchSize );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JPA-QL strict compliance: %s" )
-        void jpaQlStrictCompliance( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Maximum outer join fetch depth: %s" )
-        void maxOuterJoinFetchDepth( Integer maxFetchDepth );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Named query checking : %s" )
-        void namedQueryChecking( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Optimize cache for minimal puts: %s" )
-        void optimizeCacheForMinimalInputs( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Order SQL inserts for batching: %s" )
-        void orderSqlInsertsForBatching( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Order SQL updates by primary key: %s" )
-        void orderSqlUpdatesByPrimaryKey( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Query cache: %s" )
-        void queryCache( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Query cache factory: %s" )
-        void queryCacheFactory( String queryCacheFactoryClassName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Query language substitutions: %s" )
-        void queryLanguageSubstitutions( Map<String, String> querySubstitutions );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Query translator: %s" )
-        void queryTranslator( String className );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Scrollable result sets: %s" )
-        void scrollabelResultSets( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Second-level cache: %s" )
-        void secondLevelCache( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Statistics: %s" )
-        void statistics( String enabledDisabled );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Structured second-level cache entries: %s" )
-        void structuredSecondLevelCacheEntries( String enabledDisabled );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Could not obtain connection metadata: %s" )
-        void unableToObjectConnectionMetadata( SQLException error );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Could not obtain connection to query metadata: %s" )
-        void unableToObjectConnectionToQueryMetadata( SQLException error );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Overriding release mode as connection provider does not support 'after_statement'" )
-        void unsupportedAfterStatement();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Using javassist as bytecode provider by default" )
-        void usingJavassist();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Error building SQLExceptionConverter; using minimal converter" )
-        void usingMinimalConverter();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Wrap result sets: %s" )
-        void wrapResultSets( String enabledDisabled );
-    }
 }

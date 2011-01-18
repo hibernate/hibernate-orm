@@ -53,7 +53,7 @@ public class CascadeEntityLoader extends AbstractEntityLoader {
 
 		postInstantiate();
 
-        LOG.staticSelectForAction(action, entityName, getSQLString());
+        LOG.debug("Static select for action " + action + " on entity " + entityName + ": " + getSQLString());
 	}
 
 }

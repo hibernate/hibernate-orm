@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
@@ -40,9 +41,6 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.SQLStatementLogger;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -209,20 +207,4 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 
 		return value;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Could not read a hi value" )
-        String unableToReadHiValue();
-
-        @Message( value = "Could not read a hi value - you need to populate the table: %s" )
-        String unableToReadHiValue( String tableName );
-
-        @Message( value = "Could not updateQuery hi value in: %s" )
-        Object unableToUpdateQueryHiValue( String tableName );
-    }
 }

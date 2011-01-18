@@ -60,13 +60,8 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Status;
-import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -117,7 +112,9 @@ import org.hibernate.util.ReflectHelper;
  */
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
-	private static final Logger log = LoggerFactory.getLogger( AbstractEntityManagerImpl.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();
 
@@ -211,7 +208,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			options.setScope( true );
 		}
 		else if ( lockScope instanceof PessimisticLockScope ) {
-			boolean extended = PessimisticLockScope.EXTENDED.equals( ( PessimisticLockScope ) lockScope );
+			boolean extended = PessimisticLockScope.EXTENDED.equals( lockScope );
 			options.setScope( extended );
 		}
 		else if ( lockScope != null ) {
@@ -427,7 +424,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			public List<TupleElement<?>> getElements() {
-				return ( List<TupleElement<?>> ) tupleElements;
+				return tupleElements;
 			}
 		}
 	}
@@ -777,10 +774,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( entityManagerSpecificProperties.contains( s ) ) {
 			properties.put( s, o );
 			applyProperties();
-		}
-		else {
-			log.debug( "Trying to set a property which is not supported on entity manager level" );
-		}
+        } else LOG.debug("Trying to set a property which is not supported on entity manager level");
 	}
 
 	public Map<String, Object> getProperties() {
@@ -945,7 +939,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	protected void markAsRollback() {
-		log.debug( "mark transaction for rollback" );
+        LOG.debug("Mark transaction for rollback");
 		if ( tx.isActive() ) {
 			tx.setRollbackOnly();
 		}
@@ -991,7 +985,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		getSession().isOpen(); //for sync
 		if ( transactionType == PersistenceUnitTransactionType.JTA ) {
 			try {
-				log.debug( "Looking for a JTA transaction to join" );
+                LOG.debug("Looking for a JTA transaction to join");
 				final Session session = getSession();
 				final Transaction transaction = session.getTransaction();
 				if ( transaction != null && transaction instanceof JoinableCMTTransaction ) {
@@ -999,14 +993,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					final JoinableCMTTransaction joinableCMTTransaction = ( JoinableCMTTransaction ) transaction;
 
 					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.JOINED ) {
-						log.debug( "Transaction already joined" );
+                        LOG.debug("Transaction already joined");
 						return; //no-op
 					}
 					joinableCMTTransaction.markForJoined();
 					session.isOpen(); //register to the Tx
 					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.NOT_JOINED ) {
 						if ( ignoreNotJoining ) {
-							log.debug( "No JTA transaction found" );
+                            LOG.debug("No JTA transaction found");
 							return;
 						}
 						else {
@@ -1020,7 +1014,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					}
 					//flush before completion and
 					//register clear on rollback
-					log.trace( "Adding flush() and close() synchronization" );
+                    LOG.trace("Adding flush() and close() synchronization");
 					CallbackCoordinator callbackCoordinator = ( (SessionImplementor ) getSession() ).getJDBCContext().getJtaSynchronizationCallbackCoordinator();
 					if ( callbackCoordinator == null ) {
 						throw new AssertionFailure( "Expecting CallbackCoordinator to be non-null" );
@@ -1029,9 +1023,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 							new BeforeCompletionManagedFlushChecker() {
 								public boolean shouldDoManagedFlush(TransactionFactory.Context ctx, javax.transaction.Transaction jtaTransaction)
 										throws SystemException {
-									if ( transaction == null ) {
-										log.warn( "Transaction not available on beforeCompletion: assuming valid" );
-									}
+                            if (transaction == null) LOG.transactionNotAvailableOnBeforeCompletion();
 									return !ctx.isFlushModeNever()
 											&& ( jtaTransaction == null || !JTAHelper.isRollback( jtaTransaction.getStatus() ) );
 								}
@@ -1075,18 +1067,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					);
 				}
 				else {
-					log.warn( "Cannot join transaction: do not override {}", Environment.TRANSACTION_STRATEGY );
+                    LOG.unableToJoinTransaction(Environment.TRANSACTION_STRATEGY);
 				}
 			}
 			catch ( HibernateException he ) {
 				throw convert( he );
 			}
-		}
-		else {
-			if ( !ignoreNotJoining ) {
-				log.warn( "Calling joinTransaction() on a non JTA EntityManager" );
-			}
-		}
+        } else if (!ignoreNotJoining) LOG.callingJoinTransactionOnNonJtaEntityManager();
 	}
 
 	/**
@@ -1127,7 +1114,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		catch ( Exception ne ) {
 			//we do not want the subsequent exception to swallow the original one
-			log.error( "Unable to mark for rollback on PersistenceException: ", ne );
+            LOG.error(LOG.unableToMarkForRollbackOnPersistenceException(), ne);
 		}
 	}
 
@@ -1206,7 +1193,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 			catch ( Exception ne ) {
 				//we do not want the subsequent exception to swallow the original one
-				log.error( "Unable to mark for rollback on TransientObjectException: ", ne );
+                LOG.error(LOG.unableToMarkForRollbackOnTransientObjectException(), ne);
 			}
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
@@ -1266,7 +1253,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
 			org.hibernate.PessimisticLockException ple = ( org.hibernate.PessimisticLockException ) e;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
-				// assume lock timeout occurred if a timeout or NO WAIT was specified 
+				// assume lock timeout occurred if a timeout or NO WAIT was specified
 				pe = new LockTimeoutException( ple.getMessage(), ple, ple.getEntity() );
 			}
 			else {

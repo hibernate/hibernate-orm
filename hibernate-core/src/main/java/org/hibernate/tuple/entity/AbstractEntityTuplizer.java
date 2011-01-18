@@ -23,13 +23,13 @@
  */
 package org.hibernate.tuple.entity;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
@@ -53,10 +53,6 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -371,7 +367,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							subId = pcEntry.getId();
 						}
 						else {
-                            LOG.performingImplicitDerivedIdentityCascade();
+                            LOG.debug("Performing implicit derived identity cascade");
 							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
 							for ( int x = 0; x < session.getListeners().getPersistEventListeners().length; x++ ) {
 								session.getListeners().getPersistEventListeners()[x].onPersist( event );
@@ -676,15 +672,4 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	public Getter getGetter(int i) {
 		return getters[i];
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Performing implicit derived identity cascade" )
-        void performingImplicitDerivedIdentityCascade();
-    }
 }

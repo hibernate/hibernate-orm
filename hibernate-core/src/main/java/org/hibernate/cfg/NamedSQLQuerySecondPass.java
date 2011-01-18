@@ -23,20 +23,16 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -120,19 +116,7 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 			);
 		}
 
-        LOG.namedSqlQuery(queryName, namedQuery.getQueryString());
+        LOG.debug("Named SQL query: " + queryName + " -> " + namedQuery.getQueryString());
 		mappings.addSQLQuery( queryName, namedQuery );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Named SQL query: %s -> %s" )
-        void namedSqlQuery( String queryName,
-                            String namedQuery );
-    }
 }

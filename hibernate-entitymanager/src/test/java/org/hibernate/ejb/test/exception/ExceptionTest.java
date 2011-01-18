@@ -6,10 +6,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.test.TestCase;
 import org.hibernate.exception.ConstraintViolationException;
@@ -19,8 +15,6 @@ import org.hibernate.exception.ConstraintViolationException;
  */
 @SuppressWarnings("unchecked")
 public class ExceptionTest extends TestCase {
-
-	private final Logger log = LoggerFactory.getLogger( ExceptionTest.class );
 
 	public void testOptimisticLockingException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -73,7 +67,7 @@ public class ExceptionTest extends TestCase {
 			fail( "Non existent entity should raise an exception when state is accessed" );
 		}
 		catch ( EntityNotFoundException e ) {
-			log.debug( "success" );
+            LOG.debug("success");
 		}
 		finally {
 			em.close();
@@ -131,7 +125,8 @@ public class ExceptionTest extends TestCase {
 		return config;
 	}
 
-	public Class[] getAnnotatedClasses() {
+	@Override
+    public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Music.class, Musician.class, Instrument.class
 		};

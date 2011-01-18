@@ -24,9 +24,9 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
 import org.hibernate.collection.PersistentCollection;
@@ -38,10 +38,6 @@ import org.hibernate.event.InitializeCollectionEvent;
 import org.hibernate.event.InitializeCollectionEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Gavin King
@@ -63,11 +59,12 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		CollectionEntry ce = source.getPersistenceContext().getCollectionEntry(collection);
 		if (ce==null) throw new HibernateException("collection was evicted");
 		if ( !collection.wasInitialized() ) {
-            if (LOG.isTraceEnabled()) LOG.initializingCollection(MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                                    ce.getLoadedKey(),
-                                                                                                    source.getFactory()));
+            if (LOG.isTraceEnabled()) LOG.trace("Initializing collection "
+                                                + MessageHelper.collectionInfoString(ce.getLoadedPersister(),
+                                                                                     ce.getLoadedKey(),
+                                                                                     source.getFactory()));
 
-            LOG.checkingSecondLevelCache();
+            LOG.trace("Checking second-level cache");
 			final boolean foundInCache = initializeCollectionFromCache(
 					ce.getLoadedKey(),
 					ce.getLoadedPersister(),
@@ -75,11 +72,11 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					source
 				);
 
-            if (foundInCache) LOG.collectionInitializedFromCache();
+            if (foundInCache) LOG.trace("Collection initialized from cache");
 			else {
-                LOG.collectionNotCached();
+                LOG.trace("Collection not cached");
 				ce.getLoadedPersister().initialize( ce.getLoadedKey(), source );
-                LOG.collectionInitialized();
+                LOG.trace("Collection initialized");
 
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
 					source.getFactory().getStatisticsImplementor().fetchCollection(
@@ -107,7 +104,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			SessionImplementor source) {
 
 		if ( !source.getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( source ) ) {
-            LOG.ignoringCachedVersionOfCollection();
+            LOG.trace("Disregarding cached version (if any) of collection due to enabled filters");
 			return false;
 		}
 
@@ -143,35 +140,4 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
         // addInitializedCollection(collection, persister, id);
         return true;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Checking second-level cache" )
-        void checkingSecondLevelCache();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Collection initialized" )
-        void collectionInitialized();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Collection initialized from cache" )
-        void collectionInitializedFromCache();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Collection not cached" )
-        void collectionNotCached();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Disregarding cached version (if any) of collection due to enabled filters " )
-        void ignoringCachedVersionOfCollection();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Initializing collection %s" )
-        void initializingCollection( String collectionInfoString );
-    }
 }

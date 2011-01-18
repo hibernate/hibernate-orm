@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.junit.functional;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.util.Collections;
 import java.util.Map;
 import junit.framework.Test;
@@ -38,8 +39,6 @@ import junit.framework.TestSuite;
  * @author Steve Ebersole
  */
 public class FunctionalTestClassTestSuite extends TestSuite {
-
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ExecutionEnvironment.Settings settings;
 	private ExecutionEnvironment environment;

@@ -24,17 +24,13 @@
  */
 package org.hibernate.persister.collection;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.collection.CollectionInitializer;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A wrapper around a named query.
@@ -57,7 +53,7 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 	public void initialize(Serializable key, SessionImplementor session)
 	throws HibernateException {
 
-        LOG.initializingCollection(persister.getRole(), queryName);
+        LOG.debug("Initializing collection: " + persister.getRole() + " using named query: " + queryName);
 
 		//TODO: is there a more elegant way than downcasting?
 		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedSQLQuery(queryName);
@@ -76,16 +72,4 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 				.list();
 
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Initializing collection: %s using named query: %s" )
-        void initializingCollection( String role,
-                                     String queryName );
-    }
 }

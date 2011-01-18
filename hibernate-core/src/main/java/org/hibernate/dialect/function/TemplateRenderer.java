@@ -23,14 +23,10 @@
  */
 package org.hibernate.dialect.function;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Delegate for handling function "templates".
@@ -119,16 +115,4 @@ public class TemplateRenderer {
 		}
 		return buf.toString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Function template anticipated %d arguments, but %d arguments encountered" )
-        void missingArguments( int anticipatedNumberOfArguments,
-                               int numberOfArguments );
-    }
 }

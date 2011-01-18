@@ -23,9 +23,6 @@
  */
 package org.hibernate.service.jmx.internal;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Map;
@@ -34,16 +31,13 @@ import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.Stoppable;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Standard implementation of JMX services
@@ -95,18 +89,18 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 				if ( registeredMBeans != null ) {
 					for ( ObjectName objectName : registeredMBeans ) {
 						try {
-                            LOG.unregisteringMBean(objectName);
+                            LOG.trace("Unregistering registered MBean [ON=" + objectName + "]");
 							mBeanServer.unregisterMBean( objectName );
 						}
 						catch ( Exception e ) {
-                            LOG.unableToUnregisterMBean(objectName, e.toString());
+                            LOG.debug("Unable to unregsiter registered MBean [ON=" + objectName + "] : " + e.toString());
 						}
 					}
 				}
 
 				// stop the MBean server if we started it
 				if ( startedServer ) {
-                    LOG.attemptingToReleaseCreatedMBeanServer();
+                    LOG.trace("Attempting to release created MBeanServer");
 					try {
 						MBeanServerFactory.releaseMBeanServer( mBeanServer );
 					}
@@ -222,32 +216,4 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 			throw new HibernateException( "Unable to start MBeanServer", e );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Attempting to release created MBeanServer" )
-        void attemptingToReleaseCreatedMBeanServer();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to locate MBeanServer on JMX service shutdown" )
-        void unableToLocateMBeanServer();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to release created MBeanServer : %s" )
-        void unableToReleaseCreatedMBeanServer( String string );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Unable to unregsiter registered MBean [ON=%s] : %s" )
-        void unableToUnregisterMBean( ObjectName objectName,
-                                      String string );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Unregistering registered MBean [ON=%s]" )
-        void unregisteringMBean( ObjectName objectName );
-    }
 }

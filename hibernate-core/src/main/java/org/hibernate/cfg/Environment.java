@@ -23,9 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -36,14 +33,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ConfigHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -812,81 +806,4 @@ public final class Environment {
         LOG.unknownBytecodeProvider(providerName);
 		return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Bytecode provider name : %s" )
-        void bytecodeProvider( String provider );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JVM does not support Statement.getGeneratedKeys()" )
-        void generatedKeysNotSupported();
-
-        @LogMessage( level = INFO )
-        @Message( value = "JVM does not support LinkedHashMap, LinkedHashSet - ordered maps and sets disabled" )
-        void linkedMapsAndSetsNotSupported();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Loaded properties from resource hibernate.properties: %s" )
-        void propertiesLoaded( Properties maskOut );
-
-        @LogMessage( level = INFO )
-        @Message( value = "hibernate.properties not found" )
-        void propertiesNotFound();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Property [%s] has been renamed to [%s]; update your properties appropriately" )
-        void renamedProperty( Object propertyName,
-                              Object newPropertyName );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Could not close stream on hibernate.properties: %s" )
-        void unableToCloseStream( IOException error );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Could not copy system properties, system properties will be ignored" )
-        void unableToCopySystemProperties();
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Problem loading properties from hibernate.properties" )
-        void unableToloadProperties();
-
-        @LogMessage( level = WARN )
-        @Message( value = "unrecognized bytecode provider [%s], using javassist by default" )
-        void unknownBytecodeProvider( String providerName );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Usage of obsolete property: %s no longer supported, use: %s" )
-        void unsupportedProperty( Object propertyName,
-                                  Object newPropertyName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Using JDK 1.4 java.sql.Timestamp handling" )
-        void usingJdk14TimestampHandling();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Using pre JDK 1.4 java.sql.Timestamp handling" )
-        void usingPreJdk14TimestampHandling();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Using bytecode reflection optimizer" )
-        void usingReflectionOptimizer();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Using java.io streams to persist binary types" )
-        void usingStreams();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Using workaround for JVM bug in java.sql.Timestamp" )
-        void usingTimestampWorkaround();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Hibernate %s" )
-        void version( String versionString );
-    }
 }

@@ -23,14 +23,11 @@
  */
 package org.hibernate.cache;
 
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 /**
  * EHCache plugin for Hibernate
@@ -45,7 +42,9 @@ import java.util.Map;
  * @author Emmanuel Bernard
  */
 public class EhCache implements Cache {
-	private static final Logger log = LoggerFactory.getLogger( EhCache.class );
+
+    private static final EhCacheLogger LOG = org.jboss.logging.Logger.getMessageLogger(EhCacheLogger.class,
+                                                                                     EhCacheLogger.class.getPackage().getName());
 
 	private static final int SIXTY_THOUSAND_MS = 60000;
 
@@ -70,24 +69,14 @@ public class EhCache implements Cache {
 	 */
 	public Object get(Object key) throws CacheException {
 		try {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "key: " + key );
-			}
-			if ( key == null ) {
+            LOG.debug("Key: " + key);
+            if (key == null) return null;
+            Element element = cache.get(key);
+            if (element == null) {
+                LOG.debug("Element for " + key + " is null");
 				return null;
 			}
-			else {
-				Element element = cache.get( key );
-				if ( element == null ) {
-					if ( log.isDebugEnabled() ) {
-						log.debug( "Element for " + key + " is null" );
-					}
-					return null;
-				}
-				else {
-					return element.getObjectValue();
-				}
-			}
+            return element.getObjectValue();
 		}
 		catch (net.sf.ehcache.CacheException e) {
 			throw new CacheException( e );
@@ -274,7 +263,8 @@ public class EhCache implements Cache {
 		}
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return "EHCache(" + getRegionName() + ')';
 	}
 

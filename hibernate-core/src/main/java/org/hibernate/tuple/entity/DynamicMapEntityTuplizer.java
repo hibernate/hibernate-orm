@@ -27,6 +27,7 @@ import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -38,9 +39,6 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
 import org.hibernate.tuple.DynamicMapInstantiator;
 import org.hibernate.tuple.Instantiator;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link EntityTuplizer} specific to the dynamic-map entity mode.
@@ -191,14 +189,4 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 			return getClass().hashCode();
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Could not create proxy factory for:%s" )
-        Object unableToCreateProxyFactory( String entityName );
-    }
 }

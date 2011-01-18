@@ -37,8 +37,8 @@ import net.sf.cglib.transform.impl.InterceptFieldEnabled;
 import net.sf.cglib.transform.impl.InterceptFieldFilter;
 import net.sf.cglib.transform.impl.InterceptFieldTransformer;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
-import org.hibernate.bytecode.Logger;
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.objectweb.asm.ClassReader;
@@ -82,7 +82,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 		ClassWriter w = new DebuggingClassWriter( ClassWriter.COMPUTE_MAXS  );
 		ClassTransformer t = getClassTransformer( names );
 		if ( t != null ) {
-            LOG.enhancingClass(className);
+            LOG.debug("Enhancing " + className);
 			ByteArrayOutputStream out;
 			byte[] result;
 			try {

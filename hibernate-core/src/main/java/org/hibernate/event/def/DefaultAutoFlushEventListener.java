@@ -24,16 +24,12 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.event.AutoFlushEvent;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.EventSource;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -52,39 +48,27 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
      * @throws HibernateException
      */
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
-
 		final EventSource source = event.getSession();
-
 		if ( flushMightBeNeeded(source) ) {
-
 			final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
-
 			flushEverythingToExecutions(event);
-
 			if ( flushIsReallyNeeded(event, source) ) {
-
-                LOG.needToExecuteFlush();
+                LOG.trace("Need to execute flush");
 
 				performExecutions(source);
 				postFlush(source);
 				// note: performExecutions() clears all collectionXxxxtion
 				// collections (the collection actions) in the session
 
-				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatisticsImplementor().flush();
-				}
-
+                if (source.getFactory().getStatistics().isStatisticsEnabled()) source.getFactory().getStatisticsImplementor().flush();
 			}
 			else {
-
-                LOG.dontNeedToExecuteFlush();
+                LOG.trace("Don't need to execute flush");
 				source.getActionQueue().clearFromFlushNeededCheck( oldSize );
 			}
 
 			event.setFlushRequired( flushIsReallyNeeded( event, source ) );
-
 		}
-
 	}
 
 	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
@@ -99,19 +83,4 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				( source.getPersistenceContext().getEntityEntries().size() > 0 ||
 						source.getPersistenceContext().getCollectionEntries().size() > 0 );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Don't need to execute flush" )
-        void dontNeedToExecuteFlush();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Need to execute flush" )
-        void needToExecuteFlush();
-    }
 }

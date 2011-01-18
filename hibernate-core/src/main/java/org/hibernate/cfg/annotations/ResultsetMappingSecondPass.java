@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +35,7 @@ import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Mappings;
@@ -49,10 +49,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -269,15 +265,4 @@ public class ResultsetMappingSecondPass implements QuerySecondPass {
 		}
 		return -1;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding result set mapping: %s" )
-        void bindingResultSetMapping( String mapping );
-    }
 }

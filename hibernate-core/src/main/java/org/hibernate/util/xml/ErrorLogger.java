@@ -23,12 +23,8 @@
  */
 package org.hibernate.util.xml;
 
-import static org.jboss.logging.Logger.Level.ERROR;
 import java.io.Serializable;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
@@ -79,21 +75,4 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	public void reset() {
 		error = null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Error parsing XML (%d) : %s" )
-        void parsingXmlError( int lineNumber,
-                              String message );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Warning parsing XML (%d) : %s" )
-        void parsingXmlWarning( int lineNumber,
-                                String message );
-    }
 }

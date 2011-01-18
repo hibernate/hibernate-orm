@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.HashMap;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
@@ -37,6 +36,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.cfg.BinderHelper;
@@ -46,10 +46,6 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Query binder
@@ -424,21 +420,4 @@ public abstract class QueryBinder {
 		}
 		return timeout;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding named native query: %s => %s" )
-        void bindingNamedNativeQuery( String name,
-                                      String query );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding named query: %s => %s" )
-        void bindingNamedQuery( String name,
-                                String query );
-    }
 }

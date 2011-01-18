@@ -23,10 +23,10 @@
  */
 package org.hibernate.id.factory;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.Assigned;
@@ -47,10 +47,6 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Basic <tt>templated</tt> support for {@link IdentifierGeneratorFactory} implementations.
@@ -90,14 +86,14 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	 * {@inheritDoc}
 	 */
 	public void setDialect(Dialect dialect) {
-        LOG.settingDialect(dialect);
+        LOG.debug("Setting dialect [" + dialect + "]");
 		this.dialect = dialect;
 	}
 
 	public void register(String strategy, Class generatorClass) {
 		Object old = generatorStrategyToClassNameMap.put( strategy, generatorClass );
-        String msg = LOG.registeringIdentifierGeneratorStrategy(strategy, generatorClass);
-        if (old != null) msg += LOG.overriding(old);
+        String msg = "Registering IdentifierGenerator strategy [" + strategy + "] -> [" + generatorClass + "]";
+        if (old != null) msg += ", overriding [" + old + "]";
         LOG.debug(msg);
 	}
 
@@ -139,22 +135,4 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 		}
 		return generatorClass;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = ", overriding [%s]" )
-        String overriding( Object old );
-
-        @Message( value = "Registering IdentifierGenerator strategy [%s] -> [%s]" )
-        String registeringIdentifierGeneratorStrategy( String strategy,
-                                                       Class generatorClass );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Setting dialect [%s]" )
-        void settingDialect( Dialect dialect );
-    }
 }

@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test;
 
+import static org.hibernate.ejb.TestEntityManagerLogger.LOG;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -8,7 +9,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -23,9 +23,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * @author Emmanuel Bernard
  */
@@ -33,12 +30,10 @@ import org.slf4j.LoggerFactory;
 @Entity
 @EntityListeners( LastUpdateListener.class )
 public class Cat implements Serializable {
-	
-	private static final Logger log = LoggerFactory.getLogger(Cat.class);
 
 	private static final List ids = new ArrayList(); 	// used for assertions
 	public static int postVersion = 0;	// used for assertions
-	
+
 	private Integer id;
 	private String name;
 	private Date dateOfBirth;
@@ -103,7 +98,7 @@ public class Cat implements Serializable {
 
 	@PostUpdate
 	private void someLateUpdateWorking() {
-		log.debug("PostUpdate for: {}", this.toString());
+        LOG.debug("PostUpdate for: " + this.toString());
 		postVersion++;
 	}
 
@@ -136,7 +131,7 @@ public class Cat implements Serializable {
 	public void setLength(long length) {
 		this.length = length;
 	}
-	
+
 	@OneToMany(cascade = CascadeType.ALL)
 	public List<Kitten> getKittens() {
 		return kittens;
@@ -150,15 +145,16 @@ public class Cat implements Serializable {
 	 * Constructs a <code>String</code> with all attributes
 	 * in name = value format.
 	 *
-	 * @return a <code>String</code> representation 
+	 * @return a <code>String</code> representation
 	 * of this object.
 	 */
-	public String toString()
+	@Override
+    public String toString()
 	{
 	    final String TAB = "    ";
-	    
+
 	    String retValue = "";
-	    
+
 	    retValue = "Cat ( "
 	        + super.toString() + TAB
 	        + "id = " + this.id + TAB
@@ -171,7 +167,7 @@ public class Cat implements Serializable {
 	        + "postVersion = " + Cat.postVersion + TAB
 	        + "kittens = " + this.kittens + TAB
 	        + " )";
-	
+
 	    return retValue;
-	}	
+	}
 }

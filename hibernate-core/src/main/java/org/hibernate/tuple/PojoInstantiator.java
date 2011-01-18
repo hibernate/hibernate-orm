@@ -24,20 +24,16 @@
  */
 package org.hibernate.tuple;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import org.hibernate.InstantiationException;
+import org.hibernate.Logger;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines a POJO-based instantiator for use from the tuplizers.
@@ -122,15 +118,4 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		return mappedClass.isInstance(object) ||
 				( proxyInterface!=null && proxyInterface.isInstance(object) ); //this one needed only for guessEntityMode()
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "No default (no-argument) constructor for class: %s (class must be instantiated by Interceptor)" )
-        void noDefaultConstructor( String name );
-    }
 }

@@ -24,13 +24,13 @@
  */
 package org.hibernate.loader.custom.sql;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
@@ -59,10 +59,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Responsible for processing the series of {@link org.hibernate.engine.query.sql.NativeSQLQueryReturn returns}
@@ -387,7 +383,7 @@ public class SQLQueryReturnProcessor {
 	private void addPersister(String alias, Map propertyResult, SQLLoadable persister) {
 		alias2Persister.put( alias, persister );
 		String suffix = generateEntitySuffix();
-        LOG.mappingAliasToEntitySuffix(alias, suffix);
+        LOG.trace("Mapping alias [" + alias + "] to entity-suffix [" + suffix + "]");
 		alias2Suffix.put( alias, suffix );
 		entityPropertyResultMaps.put( alias, propertyResult );
 	}
@@ -396,7 +392,7 @@ public class SQLQueryReturnProcessor {
 		SQLLoadableCollection collectionPersister = ( SQLLoadableCollection ) factory.getCollectionPersister( role );
 		alias2CollectionPersister.put( alias, collectionPersister );
 		String suffix = generateCollectionSuffix();
-        LOG.mappingAliasToCollectionSuffix(alias, suffix);
+        LOG.trace("Mapping alias [" + alias + "] to collection-suffix [" + suffix + "]");
 		alias2CollectionSuffix.put( alias, suffix );
 		collectionPropertyResultMaps.put( alias, propertyResults );
 
@@ -524,21 +520,4 @@ public class SQLQueryReturnProcessor {
 //	public Map getAlias2Return() {
 //		return alias2Return;
 //	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Mapping alias [%s] to collection-suffix [%s]" )
-        void mappingAliasToCollectionSuffix( String alias,
-                                             String suffix );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Mapping alias [%s] to entity-suffix [%s]" )
-        void mappingAliasToEntitySuffix( String alias,
-                                         String suffix );
-    }
 }

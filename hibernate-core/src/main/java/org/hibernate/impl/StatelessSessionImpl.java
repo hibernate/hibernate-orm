@@ -21,7 +21,6 @@
  */
 package org.hibernate.impl;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
@@ -38,6 +37,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -70,10 +70,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Gavin King
@@ -203,7 +199,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
 		final EntityPersister persister = this.getEntityPersister( entityName, entity );
 		final Serializable id = persister.getIdentifier( entity, this );
-        if (LOG.isTraceEnabled()) LOG.refreshingTransient(MessageHelper.infoString(persister, id, this.getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Refreshing transient " + MessageHelper.infoString(persister, id, this.getFactory()));
 		// TODO : can this ever happen???
 //		EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
 //		if ( source.getPersistenceContext().getEntry( key ) != null ) {
@@ -689,15 +685,4 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		temporaryPersistenceContext.clear();
 		return result;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Refreshing transient %s" )
-        void refreshingTransient( String infoString );
-    }
 }

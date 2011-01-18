@@ -24,7 +24,6 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +33,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
@@ -43,10 +43,6 @@ import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Gavin King
@@ -281,9 +277,9 @@ public final class QueryParameters {
 
 	public void traceParameters(SessionFactoryImplementor factory) throws HibernateException {
 		Printer print = new Printer( factory );
-        if (positionalParameterValues.length != 0) LOG.parameters(print.toString(positionalParameterTypes,
-                                                                                 positionalParameterValues));
-        if (namedParameters != null) LOG.namedParameters(print.toString(namedParameters));
+        if (positionalParameterValues.length != 0) LOG.trace("Parameters: "
+                                                             + print.toString(positionalParameterTypes, positionalParameterValues));
+        if (namedParameters != null) LOG.trace("Named parameters: " + print.toString(namedParameters));
 	}
 
 	public boolean isCacheable() {
@@ -563,19 +559,4 @@ public final class QueryParameters {
 		copy.processedPositionalParameterValues = this.processedPositionalParameterValues;
 		return copy;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Named parameters: %s" )
-        void namedParameters( String string );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Parameters: %s" )
-        void parameters( String string );
-    }
 }

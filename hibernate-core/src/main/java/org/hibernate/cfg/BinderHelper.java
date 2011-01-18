@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +35,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.AnyMetaDefs;
@@ -63,10 +63,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -691,20 +687,7 @@ public class BinderHelper {
 			}
 			return pd;
 		}
-		else {
-			String propertyPath = isId ? "" : propertyName;
-			return mappings.getPropertyAnnotatedWithMapsId( persistentXClass, propertyPath );
-		}
+        String propertyPath = isId ? "" : propertyName;
+        return mappings.getPropertyAnnotatedWithMapsId(persistentXClass, propertyPath);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding Any Meta definition: %s" )
-        void bindingAnyMetaDefinition( String name );
-    }
 }

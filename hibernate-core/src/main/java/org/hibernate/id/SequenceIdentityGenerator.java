@@ -24,12 +24,12 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -38,10 +38,6 @@ import org.hibernate.id.insert.IdentifierGeneratingInsert;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.sql.Insert;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A generator which combines sequence generation with immediate retrieval
@@ -128,15 +124,4 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 			return this;
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Disallowing insert statement comment for select-identity due to Oracle driver bug" )
-        void disallowingInsertStatementComment();
-    }
 }

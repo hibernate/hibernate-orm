@@ -27,17 +27,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.util.StringHelper;
 import org.hibernate.util.ConfigHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.util.StringHelper;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
 import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
@@ -50,10 +45,10 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
  */
 public class ProxoolConnectionProvider implements ConnectionProvider {
 
+    public static final ProxoolLogger LOG = org.jboss.logging.Logger.getMessageLogger(ProxoolLogger.class,
+                                                                                      ProxoolConnectionProvider.class.getPackage().getName());
 
 	private static final String PROXOOL_JDBC_STEM = "proxool.";
-
-	private static final Logger log = LoggerFactory.getLogger(ProxoolConnectionProvider.class);
 
 	private String proxoolAlias;
 
@@ -63,7 +58,7 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 	// Not null if the Isolation level has been specified in the configuration file.
 	// Otherwise, it is left to the Driver's default value.
 	private Integer isolation;
-	
+
 	private boolean autocommit;
 
 	/**
@@ -114,8 +109,8 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
-				String msg = "Cannot configure Proxool Provider to use an existing in memory pool without the " + Environment.PROXOOL_POOL_ALIAS + " property set.";
-				log.error( msg );
+                String msg = LOG.unableToConfigureProxoolProviderToUseExistingInMemoryPool(Environment.PROXOOL_POOL_ALIAS);
+                LOG.error(msg);
 				throw new HibernateException( msg );
 			}
 			// Append the stem to the proxool pool alias
@@ -124,18 +119,18 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 			// Set the existing pool flag to true
 			existingPool = true;
 
-			log.info( "Configuring Proxool Provider using existing pool in memory: " + proxoolAlias );
+            LOG.configuringProxoolProviderUsingExistingPool(proxoolAlias);
 
 			// Configured using the JAXP Configurator
 		}
 		else if ( StringHelper.isNotEmpty( jaxpFile ) ) {
 
-			log.info( "Configuring Proxool Provider using JAXPConfigurator: " + jaxpFile );
+            LOG.configuringProxoolProviderUsingJaxpConfigurator(jaxpFile);
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
-				String msg = "Cannot configure Proxool Provider to use JAXP without the " + Environment.PROXOOL_POOL_ALIAS + " property set.";
-				log.error( msg );
+                String msg = LOG.unableToConfigureProxoolProviderToUseJaxp(Environment.PROXOOL_POOL_ALIAS);
+                LOG.error(msg);
 				throw new HibernateException( msg );
 			}
 
@@ -143,25 +138,25 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 				JAXPConfigurator.configure( ConfigHelper.getConfigStreamReader( jaxpFile ), false );
 			}
 			catch ( ProxoolException e ) {
-				String msg = "Proxool Provider unable to load JAXP configurator file: " + jaxpFile;
-				log.error( msg, e );
+                String msg = LOG.unableToLoadJaxpConfiguratorFile(jaxpFile);
+                LOG.error(msg, e);
 				throw new HibernateException( msg, e );
 			}
 
 			// Append the stem to the proxool pool alias
 			proxoolAlias = PROXOOL_JDBC_STEM + proxoolAlias;
-			log.info("Configuring Proxool Provider to use pool alias: " + proxoolAlias);
+            LOG.configuringProxoolProviderToUsePoolAlias(proxoolAlias);
 
 			// Configured using the Properties File Configurator
 		}
 		else if ( StringHelper.isNotEmpty( propFile ) ) {
 
-			log.info( "Configuring Proxool Provider using Properties File: " + propFile );
+            LOG.configuringProxoolProviderUsingPropertiesFile(propFile);
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
-				String msg = "Cannot configure Proxool Provider to use Properties File without the " + Environment.PROXOOL_POOL_ALIAS + " property set.";
-				log.error( msg );
+                String msg = LOG.unableToConfigureProxoolProviderToUsePropertiesFile(Environment.PROXOOL_POOL_ALIAS);
+                LOG.error(msg);
 				throw new HibernateException( msg );
 			}
 
@@ -169,24 +164,22 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 				PropertyConfigurator.configure( ConfigHelper.getConfigProperties( propFile ) );
 			}
 			catch ( ProxoolException e ) {
-				String msg = "Proxool Provider unable to load load Property configurator file: " + propFile;
-				log.error( msg, e );
+                String msg = LOG.unableToLoadPropertyConfiguratorFile(propFile);
+                LOG.error(msg, e);
 				throw new HibernateException( msg, e );
 			}
 
 			// Append the stem to the proxool pool alias
 			proxoolAlias = PROXOOL_JDBC_STEM + proxoolAlias;
-			log.info("Configuring Proxool Provider to use pool alias: " + proxoolAlias);
+            LOG.configuringProxoolProviderToUsePoolAlias(proxoolAlias);
 		}
 
 		// Remember Isolation level
 		isolation = ConfigurationHelper.getInteger(Environment.ISOLATION, props);
-		if (isolation!=null) {
-		    log.info("JDBC isolation level: " + Environment.isolationLevelToString( isolation.intValue() ) );
-		}
-		
+        if (isolation != null) LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
+
 		autocommit = ConfigurationHelper.getBoolean(Environment.AUTOCOMMIT, props);
-		log.info("autocommit mode: " + autocommit);
+        LOG.autoCommmitMode(autocommit);
 	}
 
 	/**
@@ -212,8 +205,9 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 		catch (Exception e) {
 			// If you're closing down the ConnectionProvider chances are an
 			// is not a real big deal, just warn
-			log.warn("Exception occured when closing the Proxool pool", e);
-			throw new HibernateException("Exception occured when closing the Proxool pool", e);
+            String msg = LOG.exceptionClosingProxoolPool();
+            LOG.warn(msg, e);
+            throw new HibernateException(msg, e);
 		}
 	}
 

@@ -25,6 +25,7 @@
 package org.hibernate.cache;
 
 import java.util.Comparator;
+import org.hibernate.Logger;
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -46,10 +47,10 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	}
 
 	public Object get(Object key, long txTimestamp) throws CacheException {
-        LOG.lookup(key);
+        LOG.debug("Cache lookup: " + key);
 		Object result = cache.read( key );
-        if (result == null) LOG.miss(key);
-        else LOG.hit(key);
+        if (result == null) LOG.debug("Cache miss: " + key);
+        else LOG.debug("Cache hit: " + key);
 		return result;
 	}
 
@@ -61,10 +62,10 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	        Comparator versionComparator,
 	        boolean minimalPut) throws CacheException {
 		if ( minimalPut && cache.read( key ) != null ) {
-            LOG.exists(key);
+            LOG.debug("Item already cached: " + key);
 			return false;
 		}
-        LOG.caching(key);
+        LOG.debug("Caching: " + key);
 		if ( cache instanceof OptimisticCache ) {
 			( ( OptimisticCache ) cache ).writeLoad( key, value, version );
 		}
@@ -94,7 +95,7 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	        Object value,
 	        Object currentVersion,
 	        Object previousVersion) throws CacheException {
-        LOG.updating(key);
+        LOG.debug("Updating: " + key);
 		if ( cache instanceof OptimisticCache ) {
 			( ( OptimisticCache ) cache ).writeUpdate( key, value, currentVersion, previousVersion );
 		}
@@ -108,7 +109,7 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 			Object key,
 	        Object value,
 	        Object currentVersion) throws CacheException {
-        LOG.inserting(key);
+        LOG.debug("Inserting: " + key);
 		if ( cache instanceof OptimisticCache ) {
 			( ( OptimisticCache ) cache ).writeInsert( key, value, currentVersion );
 		}
@@ -123,12 +124,12 @@ public class TransactionalCache implements CacheConcurrencyStrategy {
 	}
 
 	public void remove(Object key) throws CacheException {
-        LOG.removing(key);
+        LOG.debug("Removing: " + key);
 		cache.remove( key );
 	}
 
 	public void clear() throws CacheException {
-        LOG.clearing();
+        LOG.debug("Clearing");
 		cache.clear();
 	}
 

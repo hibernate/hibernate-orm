@@ -26,6 +26,7 @@ package org.hibernate.hql.ast.tree;
 
 import java.util.List;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
@@ -339,7 +340,7 @@ class FromElementType {
 			        enabledFilters,
 					propertyMapping.toColumns( tableAlias, path )
 			);
-            LOG.toColumns(tableAlias, path, subquery);
+            LOG.debug("toColumns(" + tableAlias + "," + path + ") : subquery = " + subquery);
 			return new String[]{"(" + subquery + ")"};
 		}
         if (forceAlias) {
@@ -369,7 +370,7 @@ class FromElementType {
             return propertyMapping.toColumns(tableAlias, path);
         } else {
             String[] columns = propertyMapping.toColumns(path);
-            LOG.usingNonQualifiedColumnReference(path, ArrayHelper.toString(columns));
+            LOG.trace("Using non-qualified column reference [" + path + " -> (" + ArrayHelper.toString(columns) + ")]");
             return columns;
         }
 	}

@@ -23,9 +23,9 @@
  */
 package org.hibernate.dialect;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.Types;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
@@ -41,10 +41,6 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -365,15 +361,4 @@ public class RDMSOS2200Dialect extends Dialect {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "RDMSOS2200Dialect version: 1.0" )
-        void rdmsOs2200Dialect();
-    }
 }

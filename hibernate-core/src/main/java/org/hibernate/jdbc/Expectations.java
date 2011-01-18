@@ -24,20 +24,16 @@
  */
 package org.hibernate.jdbc;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.util.JDBCExceptionReporter;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Holds various often used {@link Expectation} definitions.
@@ -76,7 +72,7 @@ public class Expectations {
 		}
 
 		private void checkBatched(int rowCount, int batchPosition) {
-            if (rowCount == -2) LOG.successOfBatchUpdateUnknown(batchPosition);
+            if (rowCount == -2) LOG.debug("Success of batch update unknown: " + batchPosition);
             else if (rowCount == -3) throw new BatchFailedException("Batch update failed: " + batchPosition);
 			else {
                 if (expectedRowCount > rowCount) throw new StaleStateException(
@@ -193,15 +189,4 @@ public class Expectations {
 
 	private Expectations() {
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Success of batch update unknown: %s" )
-        void successOfBatchUpdateUnknown( int batchPosition );
-    }
 }

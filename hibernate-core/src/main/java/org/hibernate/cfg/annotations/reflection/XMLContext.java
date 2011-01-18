@@ -26,9 +26,6 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,11 +35,8 @@ import javax.persistence.AccessType;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
+import org.hibernate.Logger;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -159,7 +153,7 @@ public class XMLContext implements Serializable {
 			setAccess( access, localDefault );
 			defaultsOverriding.put( className, localDefault );
 
-            LOG.addingOverridingInformation(className);
+            LOG.debug("Adding XML overriding information for " + className);
 			addEntityListenerClasses( element, packageName, addedClasses );
 		}
 	}
@@ -186,7 +180,7 @@ public class XMLContext implements Serializable {
 				classOverriding.put( listenerClassName, listener );
 			}
 		}
-        LOG.addingListenerOverridingInformation(localAddedClasses);
+        LOG.debug("Adding XML overriding information for listeners: " + localAddedClasses);
 		addedClasses.addAll( localAddedClasses );
 		return localAddedClasses;
 	}
@@ -312,27 +306,4 @@ public class XMLContext implements Serializable {
 	public List<String> getDefaultEntityListeners() {
 		return defaultEntityListeners;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Adding XML overriding information for %s" )
-        void addingOverridingInformation( String className );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Adding XML overriding information for listeners: %s" )
-        void addingListenerOverridingInformation( List<String> classNames );
-
-        @LogMessage( level = INFO )
-        @Message( value = "entity-listener duplication, first event definition will be used: %s" )
-        void duplicateListener( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Found more than one <persistence-unit-metadata>, subsequent ignored" )
-        void duplicateMetadata();
-    }
 }

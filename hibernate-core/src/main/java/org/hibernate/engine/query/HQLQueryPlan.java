@@ -24,8 +24,6 @@
  */
 package org.hibernate.engine.query;
 
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
@@ -51,10 +50,6 @@ import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.EmptyIterator;
 import org.hibernate.util.IdentitySet;
 import org.hibernate.util.JoinedIterator;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines a query execution plan for an HQL query (or filter).
@@ -175,7 +170,7 @@ public class HQLQueryPlan implements Serializable {
 			QueryParameters queryParameters,
 	        SessionImplementor session) throws HibernateException {
         if (LOG.isTraceEnabled()) {
-            LOG.find(getSourceQuery());
+            LOG.trace("Find: " + getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		boolean hasLimit = queryParameters.getRowSelection() != null &&
@@ -234,7 +229,7 @@ public class HQLQueryPlan implements Serializable {
 			QueryParameters queryParameters,
 	        EventSource session) throws HibernateException {
         if (LOG.isTraceEnabled()) {
-            LOG.iterate(getSourceQuery());
+            LOG.trace("Iterate: " + getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length == 0 ) {
@@ -260,7 +255,7 @@ public class HQLQueryPlan implements Serializable {
 			QueryParameters queryParameters,
 	        SessionImplementor session) throws HibernateException {
         if (LOG.isTraceEnabled()) {
-            LOG.iterate(getSourceQuery());
+            LOG.trace("Iterate: " + getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
 		if ( translators.length != 1 ) {
@@ -276,7 +271,7 @@ public class HQLQueryPlan implements Serializable {
 	public int performExecuteUpdate(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
         if (LOG.isTraceEnabled()) {
-            LOG.executeUpdate(getSourceQuery());
+            LOG.trace("Execute update: " + getSourceQuery());
 			queryParameters.traceParameters( session.getFactory() );
 		}
         if (translators.length != 1) LOG.splitQueries(getSourceQuery(), translators.length);
@@ -291,7 +286,7 @@ public class HQLQueryPlan implements Serializable {
 		long start = System.currentTimeMillis();
 		ParamLocationRecognizer recognizer = ParamLocationRecognizer.parseLocations( hql );
 		long end = System.currentTimeMillis();
-        LOG.hqlParamLocationRecognition(end - start, hql);
+        LOG.trace("HQL param location recognition took " + (end - start) + " mills (" + hql + ")");
 
 		int ordinalParamCount = parameterTranslations.getOrdinalParameterCount();
 		int[] locations = ArrayHelper.toIntArray( recognizer.getOrdinalParameterLocationList() );
@@ -336,37 +331,4 @@ public class HQLQueryPlan implements Serializable {
 		System.arraycopy(translators, 0, copy, 0, copy.length);
 		return copy;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Execute update: %s" )
-        void executeUpdate( String sourceQuery );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Find: %s" )
-        void find( String sourceQuery );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "HQL param location recognition took %d mills (%s)" )
-        void hqlParamLocationRecognition( long l,
-                                          String hql );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Iterate: %s" )
-        void iterate( String sourceQuery );
-
-        @LogMessage( level = WARN )
-        @Message( value = "FirstResult/maxResults specified on polymorphic query; applying in memory!" )
-        void needsLimit();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Manipulation query [%s] resulted in [%d] split queries" )
-        void splitQueries( String sourceQuery,
-                           int length );
-    }
 }

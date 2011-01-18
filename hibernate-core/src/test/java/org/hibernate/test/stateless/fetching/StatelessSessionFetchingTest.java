@@ -21,6 +21,7 @@
  */
 package org.hibernate.test.stateless.fetching;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.util.Date;
 import junit.framework.Test;
 import org.hibernate.Hibernate;

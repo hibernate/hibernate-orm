@@ -23,17 +23,13 @@
  */
 package org.hibernate.type.descriptor;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * TODO : javadoc
@@ -79,17 +75,4 @@ public class JdbcTypeNameMapper {
 		}
 		return name;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "java.sql.Types mapped the same code [%d] multiple times; was [%s]; now [%s]" )
-        void JavaSqlTypesMappedSameCodeMultipleTimes( int code,
-                                                      String old,
-                                                      String name );
-    }
 }

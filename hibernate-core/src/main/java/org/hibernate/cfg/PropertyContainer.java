@@ -26,7 +26,6 @@
 
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +38,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import org.hibernate.AnnotationException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
@@ -46,10 +46,6 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A helper class to keep the {@code XProperty}s of a class ordered by access type.
@@ -278,17 +274,6 @@ class PropertyContainer {
 				|| "net.sf.cglib.transform.impl.InterceptFieldCallback".equals( property.getType().getName() )
 				|| "org.hibernate.bytecode.javassist.FieldHandler".equals( property.getType().getName() );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Placing @Access(AccessType.%s) on a field does not have any effect." )
-        void annotationHasNoEffect( AccessType type );
-    }
 }
 
 

@@ -23,19 +23,15 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A help for dealing with BLOB and CLOB data
@@ -253,24 +249,4 @@ public class DataHelper {
 	public static InputStream subStream(InputStream inputStream, long start, int length) {
 		return new BinaryStreamImpl( extractBytes( inputStream, start, length ) );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "IOException occurred closing input stream" )
-        Object unableToCloseInputStream();
-
-        @Message( value = "IOException occurred closing output stream" )
-        Object unableToCloseOutputStream();
-
-        @Message( value = "IOException occurred closing stream" )
-        Object unableToCloseStream();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Could not locate 'java.sql.NClob' class; assuming JDBC 3" )
-        void unableToLocateNClobClass();
-    }
 }

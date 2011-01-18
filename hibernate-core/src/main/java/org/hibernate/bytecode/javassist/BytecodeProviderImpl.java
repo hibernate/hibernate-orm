@@ -25,9 +25,9 @@
 package org.hibernate.bytecode.javassist;
 
 import java.lang.reflect.Modifier;
+import org.hibernate.Logger;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ClassTransformer;
-import org.hibernate.bytecode.Logger;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.ClassFilter;
@@ -74,13 +74,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
             if (LOG.isDebugEnabled()) {
                 int index = 0;
                 if (t instanceof BulkAccessorException) index = ((BulkAccessorException)t).getIndex();
-                if (index >= 0) LOG.reflectionOptimizerDisabledForBulkException(clazz.getName(),
-                                                                                StringHelper.unqualify(t.getClass().getName()),
-                                                                                t.getMessage(),
-                                                                                setterNames[index]);
-                else LOG.reflectionOptimizerDisabled(clazz.getName(),
-                                                     StringHelper.unqualify(t.getClass().getName()),
-                                                     t.getMessage());
+                if (index >= 0) LOG.debug("Reflection optimizer disabled for: " + clazz.getName() + " ["
+                                          + StringHelper.unqualify(t.getClass().getName()) + ": " + t.getMessage() + " (property "
+                                          + setterNames[index] + ")");
+                else LOG.debug("Reflection optimizer disabled for: " + clazz.getName() + " ["
+                               + StringHelper.unqualify(t.getClass().getName()) + ": " + t.getMessage());
             }
 		}
 
@@ -90,9 +88,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			        new AccessOptimizerAdapter( bulkAccessor, clazz )
 			);
 		}
-		else {
-			return null;
-		}
+        return null;
 	}
 
 	public ClassTransformer getTransformer(ClassFilter classFilter, FieldFilter fieldFilter) {

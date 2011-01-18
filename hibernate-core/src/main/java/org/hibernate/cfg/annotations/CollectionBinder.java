@@ -23,8 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -46,6 +44,7 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -110,10 +109,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -376,7 +371,7 @@ public abstract class CollectionBinder {
 	public void bind() {
 		this.collection = createCollection( propertyHolder.getPersistentClass() );
         String role = StringHelper.qualify(propertyHolder.getPath(), propertyName);
-        LOG.collectionRole(role);
+        LOG.debug("Collection role: " + role);
         collection.setRole(role);
 		collection.setNodeName( propertyName );
 
@@ -720,7 +715,7 @@ public abstract class CollectionBinder {
 			String hqlOrderBy,
 			Mappings mappings,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-        LOG.bindingOneToMany(propertyHolder.getEntityName(), propertyName);
+        LOG.debug("Binding a OneToMany: " + propertyHolder.getEntityName() + "." + propertyName + " through a foreign key");
 		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( mappings, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
@@ -1151,10 +1146,10 @@ public abstract class CollectionBinder {
 		ManyToAny anyAnn = property.getAnnotation( ManyToAny.class );
         if (LOG.isDebugEnabled()) {
 			String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
-            if (isCollectionOfEntities && unique) LOG.bindingOneToMany(path);
-            else if (isCollectionOfEntities) LOG.bindingManyToMany(path);
-            else if (anyAnn != null) LOG.bindingManyToAny(path);
-            else LOG.bindingCollection(path);
+            if (isCollectionOfEntities && unique) LOG.debug("Binding a OneToMany: " + path + " through an association table");
+            else if (isCollectionOfEntities) LOG.debug("Binding as ManyToMany: " + path);
+            else if (anyAnn != null) LOG.debug("Binding a ManyToAny: " + path);
+            else LOG.debug("Binding a collection of element: " + path);
 		}
 		//check for user error
 		if ( !isCollectionOfEntities ) {
@@ -1541,41 +1536,4 @@ public abstract class CollectionBinder {
 	public void setLocalGenerators(HashMap<String, IdGenerator> localGenerators) {
 		this.localGenerators = localGenerators;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding a collection of element: %s" )
-        void bindingCollection( String property );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding a ManyToAny: %s" )
-        void bindingManyToAny( String property );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding as ManyToMany: %s" )
-        void bindingManyToMany( String property );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding a OneToMany: %s through an association table" )
-        void bindingOneToMany( String property );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding a OneToMany: %s.%s through a foreign key" )
-        void bindingOneToMany( String entity,
-                               String property );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Collection role: %s" )
-        void collectionRole( String role );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping collection: %s -> %s" )
-        void mappingCollection( String role,
-                          String collectionTable );
-    }
 }

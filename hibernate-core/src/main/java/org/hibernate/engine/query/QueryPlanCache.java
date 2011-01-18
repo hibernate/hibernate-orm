@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine.query;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,6 +31,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.Environment;
@@ -42,10 +42,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.SimpleMRUCache;
 import org.hibernate.util.SoftLimitMRUCache;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
@@ -120,9 +116,9 @@ public class QueryPlanCache implements Serializable {
 		HQLQueryPlan plan = ( HQLQueryPlan ) planCache.get ( key );
 
 		if ( plan == null ) {
-            LOG.unableToLocateHqlQuery(queryString);
+            LOG.trace("Unable to locate HQL query plan in cache; generating (" + queryString + ")");
 			plan = new HQLQueryPlan(queryString, shallow, enabledFilters, factory );
-        } else LOG.locatedHqlQuery(queryString);
+        } else LOG.trace("Located HQL query plan in cache (" + queryString + ")");
 
 		planCache.put( key, plan );
 
@@ -135,9 +131,10 @@ public class QueryPlanCache implements Serializable {
 		FilterQueryPlan plan = ( FilterQueryPlan ) planCache.get ( key );
 
 		if ( plan == null ) {
-            LOG.unableToLocateCollectionFilter(collectionRole, filterString);
+            LOG.trace("Unable to locate collection-filter query plan in cache; generating (" + collectionRole + " : "
+                      + filterString + ")");
 			plan = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters, factory );
-        } else LOG.locatedCollectionFilter(collectionRole, filterString);
+        } else LOG.trace("Located collection-filter query plan in cache (" + collectionRole + " : " + filterString + ")");
 
 		planCache.put( key, plan );
 
@@ -148,9 +145,9 @@ public class QueryPlanCache implements Serializable {
 		NativeSQLQueryPlan plan = ( NativeSQLQueryPlan ) planCache.get( spec );
 
 		if ( plan == null ) {
-            LOG.unableToLocationNativeSqlQueryPlan(spec.getQueryString());
+            LOG.trace("Unable to locate native-sql query plan in cache; generating (" + spec.getQueryString() + ")");
 			plan = new NativeSQLQueryPlan( spec, factory );
-        } else LOG.locatedNativeSqlQueryPlan(spec.getQueryString());
+        } else LOG.trace("Located native-sql query plan in cache (" + spec.getQueryString() + ")");
 
 		planCache.put( spec, plan );
 		return plan;
@@ -345,37 +342,4 @@ public class QueryPlanCache implements Serializable {
 			return hashCode;
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Located collection-filter query plan in cache (%s : %s)" )
-        void locatedCollectionFilter( String collectionRole,
-                                      String filterString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Located HQL query plan in cache (%s)" )
-        void locatedHqlQuery( String queryString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Located native-sql query plan in cache (%s)" )
-        void locatedNativeSqlQueryPlan( String queryString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Unable to locate collection-filter query plan in cache; generating (%s : %s)" )
-        void unableToLocateCollectionFilter( String collectionRole,
-                                             String filterString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Unable to locate HQL query plan in cache; generating (%s)" )
-        void unableToLocateHqlQuery( String queryString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Unable to locate native-sql query plan in cache; generating (%s)" )
-        void unableToLocationNativeSqlQueryPlan( String queryString );
-    }
 }

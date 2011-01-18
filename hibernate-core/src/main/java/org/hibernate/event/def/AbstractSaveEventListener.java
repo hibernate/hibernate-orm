@@ -23,11 +23,10 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Map;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.EntityIdentityInsertAction;
 import org.hibernate.action.EntityInsertAction;
@@ -51,10 +50,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A convenience bas class for listeners responding to save events.
@@ -133,9 +128,9 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		}
 		else {
             // TODO: define toString()s for generators
-            if (LOG.isDebugEnabled()) LOG.generatedIdentifier(persister.getIdentifierType().toLoggableString(generatedId,
-                                                                                                             source.getFactory()),
-                                                              persister.getIdentifierGenerator().getClass().getName());
+            if (LOG.isDebugEnabled()) LOG.debug("Generated identifier: "
+                                                + persister.getIdentifierType().toLoggableString(generatedId, source.getFactory())
+                                                + ", using strategy: " + persister.getIdentifierGenerator().getClass().getName());
 
 			return performSave( entity, generatedId, persister, false, anything, source, true );
 		}
@@ -168,7 +163,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
 
-        if (LOG.isTraceEnabled()) LOG.saving(MessageHelper.infoString(persister, id, source.getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Saving " + MessageHelper.infoString(persister, id, source.getFactory()));
 
 		EntityKey key;
 		if ( !useIdentityColumn ) {
@@ -207,9 +202,9 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle( source.getEntityMode() ) ) {
-            LOG.callingOnSave();
+            LOG.debug("Calling onSave()");
 			if ( ( ( Lifecycle ) entity ).onSave( source ) ) {
-                LOG.insertionVetoed();
+                LOG.debug("Insertion vetoed by onSave()");
 				return true;
 			}
 		}
@@ -274,7 +269,7 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		cascadeBeforeSave( source, persister, entity, anything );
 
 		if ( useIdentityColumn && !shouldDelayIdentityInserts ) {
-            LOG.executingInsertions();
+            LOG.trace("Executing insertions");
 			source.getActionQueue().executeInserts();
 		}
 
@@ -308,14 +303,14 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 					values, entity, persister, source, shouldDelayIdentityInserts
 			);
 			if ( !shouldDelayIdentityInserts ) {
-                LOG.executingIdentityInsert();
+                LOG.debug("Executing identity-insert immediately");
 				source.getActionQueue().execute( insert );
 				id = insert.getGeneratedId();
 				key = new EntityKey( id, persister, source.getEntityMode() );
 				source.getPersistenceContext().checkUniqueness( key, entity );
 			}
 			else {
-                LOG.delayingIdentityInsert();
+                LOG.debug("Delaying identity-insert due to no transaction in progress");
 				source.getActionQueue().addAction( insert );
 				key = insert.getDelayedEntityKey();
 			}
@@ -495,31 +490,25 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			//the entity is associated with the session, so check its status
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
-                if (LOG.isTraceEnabled()) LOG.persistentInstanceOf(getLoggableName(entityName, entity));
+                if (LOG.isTraceEnabled()) LOG.trace("Persistent instance of: " + getLoggableName(entityName, entity));
 				return PERSISTENT;
 			}
-			else {
-				//ie. e.status==DELETED
-                if (LOG.isTraceEnabled()) LOG.deletedInstanceOf(getLoggableName(entityName, entity));
-				return DELETED;
-			}
+            // ie. e.status==DELETED
+            if (LOG.isTraceEnabled()) LOG.trace("Deleted instance of: " + getLoggableName(entityName, entity));
+            return DELETED;
 
 		}
-		else { // the object is transient or detached
+        // the object is transient or detached
 
-			//the entity is not associated with the session, so
-			//try interceptor and unsaved-value
+		// the entity is not associated with the session, so
+        // try interceptor and unsaved-value
 
-			if ( ForeignKeys.isTransient( entityName, entity, getAssumedUnsaved(), source ) ) {
-                if (LOG.isTraceEnabled()) LOG.transientInstanceOf(getLoggableName(entityName, entity));
-				return TRANSIENT;
-			}
-			else {
-                if (LOG.isTraceEnabled()) LOG.detachedInstanceOf(getLoggableName(entityName, entity));
-				return DETACHED;
-			}
-
+		if (ForeignKeys.isTransient(entityName, entity, getAssumedUnsaved(), source)) {
+            if (LOG.isTraceEnabled()) LOG.trace("Transient instance of: " + getLoggableName(entityName, entity));
+            return TRANSIENT;
 		}
+        if (LOG.isTraceEnabled()) LOG.trace("Detached instance of: " + getLoggableName(entityName, entity));
+        return DETACHED;
 	}
 
 	protected String getLoggableName(String entityName, Object entity) {
@@ -529,56 +518,4 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	protected Boolean getAssumedUnsaved() {
 		return null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Calling onSave()" )
-        void callingOnSave();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Delaying identity-insert due to no transaction in progress" )
-        void delayingIdentityInsert();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deleted instance of: %s" )
-        void deletedInstanceOf( String loggableName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Detached instance of: %s" )
-        void detachedInstanceOf( String loggableName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Executing identity-insert immediately" )
-        void executingIdentityInsert();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Executing insertions" )
-        void executingInsertions();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Generated identifier: %s, using strategy: %s" )
-        void generatedIdentifier( String loggableString,
-                                  String name );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Insertion vetoed by onSave()" )
-        void insertionVetoed();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Persistent instance of: %s" )
-        void persistentInstanceOf( String loggableName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Saving %s" )
-        void saving( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Transient instance of: %s" )
-        void transientInstanceOf( String loggableName );
-    }
 }

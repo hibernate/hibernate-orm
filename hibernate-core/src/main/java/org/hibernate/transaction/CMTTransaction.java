@@ -28,6 +28,7 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
@@ -66,7 +67,7 @@ public class CMTTransaction implements Transaction {
 			return;
 		}
 
-        LOG.begin();
+        LOG.debug("Begin");
 
 		boolean synchronization = jdbcContext.registerSynchronizationIfPossible();
 
@@ -87,7 +88,7 @@ public class CMTTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.commit();
+        LOG.debug("Commit");
 
 		boolean flush = !transactionContext.isFlushModeNever() &&
 		        !transactionContext.isFlushBeforeCompletionEnabled();
@@ -108,7 +109,7 @@ public class CMTTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.rollback();
+        LOG.debug("Rollback");
 
 		try {
 			getTransaction().setRollbackOnly();

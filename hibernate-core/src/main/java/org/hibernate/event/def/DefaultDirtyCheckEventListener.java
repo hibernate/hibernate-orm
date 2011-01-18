@@ -24,14 +24,10 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.event.DirtyCheckEvent;
 import org.hibernate.event.DirtyCheckEventListener;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default dirty-check event listener used by hibernate for
@@ -57,8 +53,8 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 		try {
 			flushEverythingToExecutions(event);
 			boolean wasNeeded = event.getSession().getActionQueue().hasAnyQueuedActions();
-			if (wasNeeded) LOG.sessionDirty();
-            else LOG.sessionNotDirty();
+            if (wasNeeded) LOG.debug("Session dirty");
+            else LOG.debug("Session not dirty");
 			event.setDirty( wasNeeded );
 		}
 		finally {
@@ -66,19 +62,4 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 		}
 
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Session dirty" )
-        void sessionDirty();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Session not dirty" )
-        void sessionNotDirty();
-    }
 }

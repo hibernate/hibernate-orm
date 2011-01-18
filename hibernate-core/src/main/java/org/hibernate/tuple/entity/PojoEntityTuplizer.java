@@ -23,7 +23,6 @@
  */
 package org.hibernate.tuple.entity;
 
-import static org.jboss.logging.Logger.Level.ERROR;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
@@ -33,6 +32,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
@@ -53,10 +53,6 @@ import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
@@ -380,24 +376,4 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Getters of lazy classes cannot be final: %s.%s" )
-        void gettersOfLazyClassesCannotBeFinal( String entityName,
-                                                String name );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Setters of lazy classes cannot be final: %s.%s" )
-        void settersOfLazyClassesCannotBeFinal( String entityName,
-                                                String name );
-
-        @Message( value = "Could not create proxy factory for:%s" )
-        Object unableToCreateProxyFactory( String entityName );
-    }
 }

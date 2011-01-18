@@ -26,6 +26,7 @@ package org.hibernate.transaction;
 
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ReflectHelper;
 

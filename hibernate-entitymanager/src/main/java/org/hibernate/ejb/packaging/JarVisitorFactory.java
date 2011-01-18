@@ -27,16 +27,16 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Emmanuel Bernard
  */
 public class JarVisitorFactory {
-	private static final Logger log = LoggerFactory.getLogger( JarVisitorFactory.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	/**
 	 * Get the JAR URL of the JAR containing the given entry
@@ -91,7 +91,7 @@ public class JarVisitorFactory {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		log.trace("JAR URL from URL Entry: {} >> {}", url, jarUrl);
+        LOG.trace("JAR URL from URL Entry: " + url + " >> " + jarUrl);
 		return jarUrl;
 	}
 

@@ -23,16 +23,12 @@
  */
 package org.hibernate.dialect;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Types;
+import org.hibernate.Logger;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An SQL dialect for Oracle, compatible with Oracle 8.
@@ -121,15 +117,4 @@ public class OracleDialect extends Oracle9Dialect {
     public String getCurrentTimestampSQLFunctionName() {
 		return "sysdate";
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "The OracleDialect dialect has been deprecated; use Oracle8iDialect instead" )
-        void deprecatedOracleDialect();
-    }
 }

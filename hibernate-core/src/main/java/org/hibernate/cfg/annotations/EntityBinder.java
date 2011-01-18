@@ -23,9 +23,6 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,6 +37,7 @@ import javax.persistence.SecondaryTables;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -87,10 +85,6 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Stateful holder and processor for binding Entity information
@@ -345,7 +339,7 @@ public class EntityBinder {
 				persistentClass.addFilter( filterName, cond );
 			}
         } else if (filters.size() > 0) LOG.filterAnnotationOnSubclass(persistentClass.getEntityName());
-        LOG.importWithEntityName(name);
+        LOG.debug("Import with entity name " + name);
 		try {
 			mappings.addImport( persistentClass.getEntityName(), name );
 			String entityName = persistentClass.getEntityName();
@@ -922,37 +916,4 @@ public class EntityBinder {
 
 		return accessType;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Adding secondary table to entity %s -> %s" )
-        void addingSecondaryTableToEntity( String entity,
-                                           String table );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Bind entity %s on table %s" )
-        void bindEntityOnTable( String entity,
-                                String table );
-
-        @LogMessage( level = WARN )
-        @Message( value = "@org.hibernate.annotations.Entity used on a non root entity: ignored for %s" )
-        void entityAnnotationOnNonRoot( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "@Filter not allowed on subclasses (ignored): %s" )
-        void filterAnnotationOnSubclass( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "@Immutable used on a non root entity: ignored for %s" )
-        void immutableAnnotationOnNonRoot( String className );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Import with entity name %s" )
-        void importWithEntityName( String entity );
-    }
 }

@@ -24,22 +24,17 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -158,31 +153,4 @@ public class SchemaValidator {
 
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Fetching database metadata" )
-        void fetchingDatabaseMetadata();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Running schema validator" )
-        void runningSchemaValidator();
-
-        @Message( value = "Error closing connection" )
-        Object unableToCloseConnection();
-
-        @Message( value = "Could not complete schema validation" )
-        Object unableToCompleteSchemaValidation();
-
-        @Message( value = "Could not get database metadata" )
-        Object unableToGetDatabaseMetadata();
-
-        @Message( value = "Error running schema update" )
-        Object unableToRunSchemaUpdate();
-    }
 }

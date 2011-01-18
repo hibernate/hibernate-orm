@@ -23,7 +23,6 @@
  */
 package org.hibernate.persister.collection;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -35,6 +34,7 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
@@ -84,10 +84,6 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -610,11 +606,11 @@ public abstract class AbstractCollectionPersister
 
 	protected void logStaticSQL() {
         if (LOG.isDebugEnabled()) {
-            LOG.staticSqlForCollection(getRole());
-            if (getSQLInsertRowString() != null) LOG.rowInsert(getSQLInsertRowString());
-            if (getSQLUpdateRowString() != null) LOG.rowUpdate(getSQLUpdateRowString());
-            if (getSQLDeleteRowString() != null) LOG.rowDelete(getSQLDeleteRowString());
-            if (getSQLDeleteString() != null) LOG.oneShotDelete(getSQLDeleteString());
+            LOG.debug("Static SQL for collection: " + getRole());
+            if (getSQLInsertRowString() != null) LOG.debug(" Row insert: " + getSQLInsertRowString());
+            if (getSQLUpdateRowString() != null) LOG.debug(" Row update: " + getSQLUpdateRowString());
+            if (getSQLDeleteRowString() != null) LOG.debug(" Row delete: " + getSQLDeleteRowString());
+            if (getSQLDeleteString() != null) LOG.debug(" One-shot delete: " + getSQLDeleteString());
 		}
 	}
 
@@ -1061,7 +1057,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.deletingCollection(MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debug("Deleting collection: "
+                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			// Remove all the old entries
 
@@ -1103,7 +1100,7 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 
-                LOG.deletingCollectionDone();
+                LOG.debug("Done deleting collection");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1123,7 +1120,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.insertingCollection(MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debug("Inserting collection: "
+                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			try {
 				//create all the new entries
@@ -1192,9 +1190,9 @@ public abstract class AbstractCollectionPersister
 						i++;
 					}
 
-                    LOG.insertingCollectionDone(count);
+                    LOG.debug("Done inserting collection: " + count + " rows inserted");
 
-                } else LOG.collectionWasEmpty();
+                } else LOG.debug("Collection was empty");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1216,7 +1214,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.deletingCollectionRows(MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debug("Deleting rows of collection: "
+                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
 
@@ -1280,9 +1279,9 @@ public abstract class AbstractCollectionPersister
 							}
 						}
 
-                        LOG.deletingCollectionRowsDone(count);
+                        LOG.debug("Done deleting collection rows: " + count + " deleted");
 					}
-                } else LOG.noRowsToDelete();
+                } else LOG.debug("No rows to delete");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1304,7 +1303,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.insertingCollectionRows(MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debug("Inserting rows of collection: "
+                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			try {
 				//insert all the new entries
@@ -1368,7 +1368,7 @@ public abstract class AbstractCollectionPersister
 					}
 					i++;
 				}
-                LOG.insertingCollectionRowsDone(count);
+                LOG.debug("Done inserting rows: " + count + " inserted");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1496,12 +1496,12 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && collection.isRowUpdatePossible() ) {
 
-            LOG.updatingCollectionRows(role, id);
+            LOG.debug("Updating rows of collection: " + role + "#" + id);
 
 			//update all the modified entries
 			int count = doUpdateRows( id, collection, session );
 
-            LOG.updatingCollectionRowsDone(count);
+            LOG.debug("Done updating rows: " + count + " updated");
 		}
 	}
 
@@ -1776,80 +1776,4 @@ public abstract class AbstractCollectionPersister
 	public CollectionInitializer getInitializer() {
 		return initializer;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Collection was empty" )
-        void collectionWasEmpty();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Deleting collection: %s" )
-        void deletingCollection( String collectionInfoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Done deleting collection" )
-        void deletingCollectionDone();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Deleting rows of collection: %s" )
-        void deletingCollectionRows( String collectionInfoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Done deleting collection rows: %d deleted" )
-        void deletingCollectionRowsDone( int count );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Inserting collection: %s" )
-        void insertingCollection( String collectionInfoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Done inserting collection: %d rows inserted" )
-        void insertingCollectionDone( int count );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Inserting rows of collection: %s" )
-        void insertingCollectionRows( String collectionInfoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Done inserting rows: %d inserted" )
-        void insertingCollectionRowsDone( int count );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "No rows to delete" )
-        void noRowsToDelete();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " One-shot delete: %s" )
-        void oneShotDelete( String sqlDeleteString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Row delete: %s" )
-        void rowDelete( String sqlDeleteRowString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Row insert: %s" )
-        void rowInsert( String sqlInsertRowString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Row update: %s" )
-        void rowUpdate( String sqlUpdateRowString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Static SQL for collection: %s" )
-        void staticSqlForCollection( String role );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Updating rows of collection: %s#%s" )
-        void updatingCollectionRows( String role,
-                                     Serializable id );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Done updating rows: %d updated" )
-        void updatingCollectionRowsDone( int count );
-    }
 }

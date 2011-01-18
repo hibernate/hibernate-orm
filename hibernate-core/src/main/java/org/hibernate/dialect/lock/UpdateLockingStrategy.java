@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;

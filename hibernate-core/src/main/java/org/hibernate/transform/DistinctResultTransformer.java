@@ -24,15 +24,11 @@
  */
 package org.hibernate.transform;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * Distinctions the result tuples in the final result based on the defined
@@ -97,7 +93,7 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 				result.add( entity );
 			}
 		}
-        LOG.transformed(list.size(), result.size());
+        LOG.debug("Transformed: " + list.size() + " rows to: " + result.size() + " distinct results");
 		return result;
 	}
 
@@ -109,16 +105,4 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 	private Object readResolve() {
 		return INSTANCE;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Transformed: %d rows to: %d distinct results" )
-        void transformed( int size,
-                          int size2 );
-    }
 }

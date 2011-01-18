@@ -23,20 +23,15 @@
  */
 package org.hibernate.type;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
+import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * <tt>dbtimestamp</tt>: An extension of {@link TimestampType} which
@@ -68,11 +63,11 @@ public class DbTimestampType extends TimestampType {
 	@Override
     public Date seed(SessionImplementor session) {
 		if ( session == null ) {
-            LOG.incomingSessionWasNull();
+            LOG.trace("Incoming session was null; using current jvm time");
 			return super.seed( session );
 		}
 		else if ( !session.getFactory().getDialect().supportsCurrentTimestampSelection() ) {
-            LOG.fallingBackToVmBasedTimestamp();
+            LOG.debug("Falling back to vm-based timestamp, as dialect does not support current timestamp selection");
 			return super.seed( session );
 		}
 		else {
@@ -98,7 +93,7 @@ public class DbTimestampType extends TimestampType {
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
-            LOG.currentTimestampRetrievedFromDatabase(ts, ts.getNanos(), ts.getTime());
+            LOG.trace("Current timestamp retreived from db : " + ts + " (nanos=" + ts.getNanos() + ", time=" + ts.getTime() + ")");
 			return ts;
 		}
 		catch( SQLException sqle ) {
@@ -127,7 +122,7 @@ public class DbTimestampType extends TimestampType {
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
 			cs.execute();
 			Timestamp ts = cs.getTimestamp( 1 );
-            LOG.currentTimestampRetrievedFromDatabase(ts, ts.getNanos(), ts.getTime());
+            LOG.trace("Current timestamp retreived from db : " + ts + " (nanos=" + ts.getNanos() + ", time=" + ts.getTime() + ")");
 			return ts;
 		}
 		catch( SQLException sqle ) {
@@ -148,31 +143,4 @@ public class DbTimestampType extends TimestampType {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" )
-        void fallingBackToVmBasedTimestamp();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Current timestamp retreived from db : %s (nanos=%d, time=%ld)" )
-        void currentTimestampRetrievedFromDatabase( Timestamp ts,
-                                                    int nanos,
-                                                    long time );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Incoming session was null; using current jvm time" )
-        void incomingSessionWasNull();
-
-        @Message( value = "Unable to clean up callable statement" )
-        Object unableToCleanUpCallableStatement();
-
-        @Message( value = "Unable to clean up prepared statement" )
-        Object unableToCleanUpPreparedStatement();
-    }
 }

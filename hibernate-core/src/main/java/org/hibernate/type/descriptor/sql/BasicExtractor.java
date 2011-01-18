@@ -23,16 +23,12 @@
  */
 package org.hibernate.type.descriptor.sql;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.hibernate.Logger;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Convenience base implementation of {@link org.hibernate.type.descriptor.ValueExtractor}
@@ -66,11 +62,11 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
 		if ( value == null || rs.wasNull() ) {
-			LOG.foundAsColumn( name );
+            LOG.trace("Found [null] as column [" + name + "]");
 			return null;
 		}
 		else {
-            LOG.foundAsColumn(getJavaDescriptor().extractLoggableRepresentation(value), name);
+            LOG.trace("Found [" + getJavaDescriptor().extractLoggableRepresentation(value) + "] as column [" + name + "]");
 			return value;
 		}
 	}
@@ -90,20 +86,4 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	 * @throws SQLException Indicates a problem access the result set
 	 */
 	protected abstract J doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException;
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Found [null] as column [%s]" )
-        void foundAsColumn( String name );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Found [%s] as column [%s]" )
-        void foundAsColumn( String extractLoggableRepresentation,
-                            String name );
-    }
 }

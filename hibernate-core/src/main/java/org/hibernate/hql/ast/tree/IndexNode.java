@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.QueryParameters;
@@ -67,7 +68,7 @@ public class IndexNode extends FromReferenceNode {
 
 			FromReferenceNode collectionNode = ( FromReferenceNode ) getFirstChild();
 			String path = collectionNode.getPath() + "[]." + propertyName;
-            LOG.creatingJoinForManyToManyElements(path);
+            LOG.debug("Creating join for many-to-many elements for " + path);
 			FromElementFactory factory = new FromElementFactory( fromElement.getFromClause(), fromElement, path );
 			// This will add the new from element to the origin.
 			FromElement elementJoin = factory.createElementJoin( queryableCollection );
@@ -108,8 +109,8 @@ public class IndexNode extends FromReferenceNode {
 		if ( elem == null ) {
 			FromElementFactory factory = new FromElementFactory( fromClause, fromElement, path );
 			elem = factory.createCollectionElementsJoin( queryableCollection, elementTable );
-            LOG.noFromElementFound(path, elem);
-        } else LOG.fromElementFound(path);
+            LOG.debug("No FROM element found for the elements of collection join path " + path + ", created " + elem);
+        } else LOG.debug("FROM element found for collection join path " + path);
 
 		// The 'from element' that represents the elements of the collection.
 		setFromElement( fromElement );

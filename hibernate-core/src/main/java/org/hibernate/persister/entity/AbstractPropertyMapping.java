@@ -24,9 +24,9 @@
  */
 package org.hibernate.persister.entity;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.HashMap;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
@@ -37,10 +37,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Basic implementation of the {@link PropertyMapping} contract.
@@ -140,7 +136,8 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			String[] formulaTemplates) {
 		// TODO : not quite sure yet of the difference, but this is only needed from annotations for @Id @ManyToOne support
 		if ( typesByPropertyPath.containsKey( path ) ) {
-            LOG.skippingDuplicatePathRegistration(path, typesByPropertyPath.get(path), type);
+            LOG.trace("Skipping duplicate registration of path [" + path + "], existing type = [" + typesByPropertyPath.get(path)
+                      + "], incoming type = [" + type + "]");
 			return;
 		}
 		typesByPropertyPath.put(path, type);
@@ -298,17 +295,4 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 			return StringHelper.qualify(path, property);
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Skipping duplicate registration of path [%s], existing type = [%s], incoming type = [%s]" )
-        void skippingDuplicatePathRegistration( String path,
-                                                Object object,
-                                                Type type );
-    }
 }

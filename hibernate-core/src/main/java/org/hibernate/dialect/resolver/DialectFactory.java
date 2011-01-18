@@ -23,19 +23,15 @@
  */
 package org.hibernate.dialect.resolver;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A factory for generating Dialect instances.
@@ -163,19 +159,4 @@ public class DialectFactory {
 			throw new HibernateException( "Could not instantiate dialect class", e );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Dialect resolver class not found: %s" )
-        void dialectResolverNotFound( String resolverName );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Could not instantiate dialect resolver class : %s" )
-        void unableToInstantiateDialectResolver( String message );
-    }
 }

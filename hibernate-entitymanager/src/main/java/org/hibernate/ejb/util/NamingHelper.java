@@ -31,13 +31,10 @@ import javax.naming.event.NamespaceChangeListener;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
-
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Emmanuel Bernard
@@ -45,52 +42,51 @@ import org.slf4j.LoggerFactory;
 public class NamingHelper {
 	private NamingHelper() {}
 
-	private static final Logger log = LoggerFactory.getLogger( NamingHelper.class );
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	/** bind the configuration to the JNDI */
 	public static void bind(Ejb3Configuration cfg) {
 		String name = cfg.getHibernateConfiguration().getProperty( AvailableSettings.CONFIGURATION_JNDI_NAME );
-		if ( name == null ) {
-			log.debug( "No JNDI name configured for binding Ejb3Configuration" );
-		}
+        if (name == null) LOG.debug("No JNDI name configured for binding Ejb3Configuration");
 		else {
-			log.info( "Ejb3Configuration name: {}", name );
+            LOG.ejb3ConfigurationName(name);
 
 			try {
 				Context ctx = JndiHelper.getInitialContext( cfg.getProperties() );
 				JndiHelper.bind( ctx, name, cfg );
-				log.info( "Bound Ejb3Configuration to JNDI name: {}", name );
+                LOG.boundEjb3ConfigurationToJndiName(name);
 				( (EventContext) ctx ).addNamingListener( name, EventContext.OBJECT_SCOPE, LISTENER );
 			}
 			catch (InvalidNameException ine) {
-				log.error( "Invalid JNDI name: " + name, ine );
+                LOG.error(LOG.invalidJndiName(name), ine);
 			}
 			catch (NamingException ne) {
-				log.warn( "Could not bind Ejb3Configuration to JNDI", ne );
+                LOG.warn(LOG.unableToBindEjb3ConfigurationToJndi(), ne);
 			}
 			catch (ClassCastException cce) {
-				log.warn( "InitialContext did not implement EventContext" );
+                LOG.initialContextDoesNotImplementEventContext();
 			}
 		}
 	}
 
 	private static final NamingListener LISTENER = new NamespaceChangeListener() {
 		public void objectAdded(NamingEvent evt) {
-			log.debug( "An Ejb3Configuration was successfully bound to name: {}", evt.getNewBinding().getName() );
+            LOG.debug("An Ejb3Configuration was successfully bound to name: " + evt.getNewBinding().getName());
 		}
 
 		public void objectRemoved(NamingEvent evt) {
 			String name = evt.getOldBinding().getName();
-			log.info( "An Ejb3Configuration was unbound from name: {}", name );
+            LOG.ejb3ConfigurationUnboundFromName(name);
 		}
 
 		public void objectRenamed(NamingEvent evt) {
 			String name = evt.getOldBinding().getName();
-			log.info( "An Ejb3Configuration was renamed from name: {}", name );
+            LOG.ejb3ConfigurationRenamedFromName(name);
 		}
 
 		public void namingExceptionThrown(NamingExceptionEvent evt) {
-			log.warn( "Naming exception occurred accessing Ejb3Configuration", evt.getException() );
+            LOG.warn(LOG.unableToAccessEjb3Configuration(), evt.getException());
 		}
 	};
 

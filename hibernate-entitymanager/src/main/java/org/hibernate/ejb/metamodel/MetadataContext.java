@@ -33,12 +33,8 @@ import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -60,7 +56,9 @@ import org.hibernate.mapping.Property;
  * @author Emmanuel Bernard
  */
 class MetadataContext {
-	private static final Logger log = LoggerFactory.getLogger( MetadataContext.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final AttributeFactory attributeFactory = new AttributeFactory( this );
@@ -79,7 +77,7 @@ class MetadataContext {
 	private List<Object> orderedMappings = new ArrayList<Object>();
 	/**
 	 * Stack of PersistentClass being process. Last in the list is the highest in the stack.
-	 * 
+	 *
 	 */
 	private List<PersistentClass> stackOfPersistentClassesBeingProcessed
 			= new ArrayList<PersistentClass>();
@@ -160,18 +158,18 @@ class MetadataContext {
 
 	@SuppressWarnings({ "unchecked" })
 	public void wrapUp() {
-		log.trace( "Wrapping up metadata context..." );
+        LOG.trace("Wrapping up metadata context...");
 		//we need to process types from superclasses to subclasses
 		for (Object mapping : orderedMappings) {
 			if ( PersistentClass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings( "unchecked" )
 				final PersistentClass safeMapping = (PersistentClass) mapping;
-				log.trace( "Starting entity [{}]", safeMapping.getEntityName() );
+                LOG.trace("Starting entity [" + safeMapping.getEntityName() + "]");
 				try {
 					final EntityTypeImpl<?> jpa2Mapping = entityTypesByPersistentClass.get( safeMapping );
 					applyIdMetadata( safeMapping, jpa2Mapping );
 					applyVersionAttribute( safeMapping, jpa2Mapping );
-					Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
+					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
 					while ( properties.hasNext() ) {
 						final Property property = properties.next();
 						if ( property.getValue() == safeMapping.getIdentifierMapper() ) {
@@ -189,20 +187,20 @@ class MetadataContext {
 					populateStaticMetamodel( jpa2Mapping );
 				}
 				finally {
-					log.trace( "Completed entity [{}]", safeMapping.getEntityName() );
+                    LOG.trace("Completed entity [" + safeMapping.getEntityName() + "]");
 				}
 			}
 			else if ( MappedSuperclass.class.isAssignableFrom( mapping.getClass() ) ) {
 				@SuppressWarnings( "unchecked" )
 				final MappedSuperclass safeMapping = (MappedSuperclass) mapping;
-				log.trace( "Starting mapped superclass [{}]", safeMapping.getMappedClass().getName() );
+                LOG.trace("Starting mapped superclass [" + safeMapping.getMappedClass().getName() + "]");
 				try {
 					final MappedSuperclassTypeImpl<?> jpa2Mapping = mappedSuperclassByMappedSuperclassMapping.get(
 							safeMapping
 					);
 					applyIdMetadata( safeMapping, jpa2Mapping );
 					applyVersionAttribute( safeMapping, jpa2Mapping );
-					Iterator<Property> properties = ( Iterator<Property> ) safeMapping.getDeclaredPropertyIterator();
+					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
 					while ( properties.hasNext() ) {
 						final Property property = properties.next();
 						final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
@@ -214,7 +212,7 @@ class MetadataContext {
 					populateStaticMetamodel( jpa2Mapping );
 				}
 				finally {
-					log.trace( "Completed mapped superclass [{}]", safeMapping.getMappedClass().getName() );
+                    LOG.trace("Completed mapped superclass [" + safeMapping.getMappedClass().getName() + "]");
 				}
 			}
 			else {
@@ -310,7 +308,7 @@ class MetadataContext {
 	private <X> Set<SingularAttribute<? super X, ?>> buildIdClassAttributes(
 			MappedSuperclassTypeImpl<X> jpaMappingType,
 			MappedSuperclass mappingType) {
-		log.trace( "Building old-school composite identifier [{}]", mappingType.getMappedClass().getName() );
+        LOG.trace("Building old-school composite identifier [" + mappingType.getMappedClass().getName() + "]");
 		Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
 		@SuppressWarnings( "unchecked" )
 		Iterator<Property> properties = mappingType.getIdentifierMapper().getPropertyIterator();
@@ -402,15 +400,14 @@ class MetadataContext {
 //								+ "; expected type :  " + attribute.getClass().getName()
 //								+ "; encountered type : " + field.getType().getName()
 //				);
-				log.error(
-						"Illegal argument on static metamodel field injection : " + metamodelClass.getName() + '#' + name
-								+ "; expected type :  " + attribute.getClass().getName()
-								+ "; encountered type : " + field.getType().getName()
-				);
+                LOG.illegalArgumentOnStaticMetamodelFieldInjection(metamodelClass.getName(),
+                                                                   name,
+                                                                   attribute.getClass().getName(),
+                                                                   field.getType().getName());
 			}
 		}
 		catch ( NoSuchFieldException e ) {
-			log.error( "Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name );
+            LOG.unableToLocateStaticMetamodelField(metamodelClass.getName(), name);
 //			throw new AssertionFailure(
 //					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
 //			);

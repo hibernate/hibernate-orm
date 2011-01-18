@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.Logger;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
@@ -124,7 +125,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	        String pathAlias,
 	        FromElement parentFromElement,
 	        String classAlias) throws SemanticException {
-        LOG.createFromElementInSubselect(path);
+        LOG.debug("createFromElementInSubselect() : path = " + path);
 		// Create an DotNode AST for the path and resolve it.
 		FromElement fromElement = evaluateFromElementPath( path, classAlias );
 		EntityPersister entityPersister = fromElement.getEntityPersister();
@@ -143,7 +144,7 @@ public class FromElementFactory implements SqlTokenTypes {
 
 		// If the from element isn't in the same clause, create a new from element.
 		if ( fromElement.getFromClause() != fromClause ) {
-            LOG.createFromElementInSubselect();
+            LOG.debug("createFromElementInSubselect() : creating a new FROM element...");
 			fromElement = createFromElement( entityPersister );
 			initializeAndAddFromElement( fromElement,
 					path,
@@ -153,7 +154,7 @@ public class FromElementFactory implements SqlTokenTypes {
 					tableAlias
 			);
 		}
-        LOG.createFromElementInSubselect(path, fromElement);
+        LOG.debug("createFromElementInSubselect() : " + path + " -> " + fromElement);
 		return fromElement;
 	}
 
@@ -252,7 +253,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		EntityPersister entityPersister = elem.getEntityPersister();
 		int numberOfTables = entityPersister.getQuerySpaces().length;
 		if ( numberOfTables > 1 && implied && !elem.useFromFragment() ) {
-            LOG.createEntityJoin();
+            LOG.debug("createEntityJoin() : Implied multi-table entity join");
 			elem.setUseFromFragment( true );
 		}
 
@@ -371,13 +372,14 @@ public class FromElementFactory implements SqlTokenTypes {
 		String associatedEntityName = entityPersister.getEntityName();
 		// Get the class name of the associated entity.
 		if ( queryableCollection.isOneToMany() ) {
-            LOG.createEntityAssociation(path, role, associatedEntityName);
+            LOG.debug("createEntityAssociation() : One to many - path = " + path + " role = " + role + " associatedEntityName = "
+                      + associatedEntityName);
 			JoinSequence joinSequence = createJoinSequence( roleAlias, joinType );
 
 			elem = createJoin( associatedEntityName, roleAlias, joinSequence, ( EntityType ) queryableCollection.getElementType(), false );
 		}
 		else {
-            LOG.createManyToMany(path, role, associatedEntityName);
+            LOG.debug("createManyToMany() : path = " + path + " role = " + role + " associatedEntityName = " + associatedEntityName);
 			elem = createManyToMany( role, associatedEntityName,
 					roleAlias, entityPersister, ( EntityType ) queryableCollection.getElementType(), joinType );
 			fromClause.getWalker().addQuerySpaces( queryableCollection.getCollectionSpaces() );

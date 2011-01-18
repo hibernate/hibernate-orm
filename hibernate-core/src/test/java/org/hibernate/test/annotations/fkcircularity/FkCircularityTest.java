@@ -1,6 +1,7 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import junit.framework.TestCase;
@@ -16,8 +17,6 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  * @author Hardy Ferentschik
  */
 public class FkCircularityTest extends TestCase {
-
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ServiceRegistryHolder serviceRegistryHolder;
 

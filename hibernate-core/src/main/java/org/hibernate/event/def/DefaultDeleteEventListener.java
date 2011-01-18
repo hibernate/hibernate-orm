@@ -23,14 +23,12 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.EntityDeleteAction;
 import org.hibernate.classic.Lifecycle;
@@ -50,10 +48,6 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.util.IdentitySet;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -98,7 +92,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		final Object version;
 
 		if ( entityEntry == null ) {
-            LOG.entityNotpersistentInDeleteProcessing();
+            LOG.trace("Entity was not persistent in delete processing");
 
 			persister = source.getEntityPersister( event.getEntityName(), entity );
 
@@ -107,9 +101,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				// EARLY EXIT!!!
 				return;
 			}
-			else {
-				performDetachedEntityDeletionCheck( event );
-			}
+            performDetachedEntityDeletionCheck(event);
 
 			id = persister.getIdentifier( entity, source );
 
@@ -141,10 +133,10 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			);
 		}
 		else {
-            LOG.deletingPersistentInstance();
+            LOG.trace("Deleting a persistent instance");
 
 			if ( entityEntry.getStatus() == Status.DELETED || entityEntry.getStatus() == Status.GONE ) {
-                LOG.objectAlreadyDeleted();
+                LOG.trace("Object was already deleted");
 				return;
 			}
 			persister = entityEntry.getPersister();
@@ -206,7 +198,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			Set transientEntities) {
         LOG.handlingTransientEntity();
 		if ( transientEntities.contains( entity ) ) {
-            LOG.alreadyHandledTransientEntity();
+            LOG.trace("Already handled transient entity; skipping");
 			return;
 		}
 		transientEntities.add( entity );
@@ -234,7 +226,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			final EntityPersister persister,
 			final Set transientEntities) {
 
-        if (LOG.isTraceEnabled()) LOG.deleting(MessageHelper.infoString(persister, entityEntry.getId(), session.getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Deleting "
+                                            + MessageHelper.infoString(persister, entityEntry.getId(), session.getFactory()));
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final Type[] propTypes = persister.getPropertyTypes();
@@ -303,9 +296,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
 		if ( persister.implementsLifecycle( session.getEntityMode() ) ) {
-            LOG.callingOnDelete();
+            LOG.debug("Calling onDelete()");
 			if ( ( ( Lifecycle ) entity ).onDelete( session ) ) {
-                LOG.deletionVetoed();
+                LOG.debug("Deletion vetoed by onDelete()");
 				return true;
 			}
 		}
@@ -352,43 +345,4 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			session.setCacheMode( cacheMode );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Already handled transient entity; skipping" )
-        void alreadyHandledTransientEntity();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Calling onDelete()" )
-        void callingOnDelete();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deleting %s" )
-        void deleting( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deleting a persistent instance" )
-        void deletingPersistentInstance();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Deletion vetoed by onDelete()" )
-        void deletionVetoed();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Entity was not persistent in delete processing" )
-        void entityNotpersistentInDeleteProcessing();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Handling transient entity in delete processing" )
-        void handlingTransientEntity();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Object was already deleted" )
-        void objectAlreadyDeleted();
-    }
 }

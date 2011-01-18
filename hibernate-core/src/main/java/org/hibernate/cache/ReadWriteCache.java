@@ -26,6 +26,7 @@ package org.hibernate.cache;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import org.hibernate.Logger;
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -92,15 +93,15 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * the data is versioned or timestamped.
 	 */
 	public synchronized Object get(Object key, long txTimestamp) throws CacheException {
-        LOG.lookup(key);
+        LOG.debug("Cache lookup: " + key);
 		Lockable lockable = (Lockable)cache.get(key);
 		boolean gettable = lockable != null && lockable.isGettable(txTimestamp);
 		if (gettable) {
-            LOG.hit(key);
+            LOG.debug("Cache hit: " + key);
             return ((Item)lockable).getValue();
         }
-        if (lockable == null) LOG.miss(key);
-        else LOG.locked(key);
+        if (lockable == null) LOG.debug("Cache miss: " + key);
+        else LOG.debug("Cached item was locked: " + key);
         return null;
 	}
 
@@ -112,7 +113,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * item.
 	 */
 	public synchronized SoftLock lock(Object key, Object version) throws CacheException {
-        LOG.invalidating(key);
+        LOG.debug("Invalidating: " + key);
 		try {
 			cache.lock(key);
 
@@ -146,7 +147,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 			Comparator versionComparator,
 			boolean minimalPut)
 	throws CacheException {
-        LOG.caching(key);
+        LOG.debug("Caching: " + key);
 
 		try {
 			cache.lock(key);
@@ -158,14 +159,12 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 
 			if (puttable) {
 				cache.put( key, new Item( value, version, cache.nextTimestamp() ) );
-                LOG.cached(key);
+                LOG.debug("Cached: " + key);
 				return true;
 			}
-			else {
-                if (lockable.isLock()) LOG.locked(key);
-                else LOG.exists(key);
-				return false;
-			}
+            if (lockable.isLock()) LOG.debug("Cached item was locked: " + key);
+            else LOG.debug("Item already cached: " + key);
+            return false;
 		}
 		finally {
 			cache.unlock(key);
@@ -187,7 +186,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * simultaneous lock).
 	 */
 	public synchronized void release(Object key, SoftLock clientLock) throws CacheException {
-        LOG.releasing(key);
+        LOG.debug("Releasing: " + key);
 
 		try {
 			cache.lock(key);
@@ -238,7 +237,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	public synchronized boolean afterUpdate(Object key, Object value, Object version, SoftLock clientLock)
 	throws CacheException {
 
-        LOG.updating(key);
+        LOG.debug("Updating: " + key);
 
 		try {
 			cache.lock(key);
@@ -252,18 +251,13 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 					decrementLock(key, lock);
 					return false;
 				}
-				else {
-					//recache the updated state
-					cache.update( key, new Item( value, version, cache.nextTimestamp() ) );
-                    LOG.updated(key);
-					return true;
-				}
+                // recache the updated state
+                cache.update(key, new Item(value, version, cache.nextTimestamp()));
+                LOG.debug("Updated: " + key);
+                return true;
 			}
-			else {
-				handleLockExpiry(key);
-				return false;
-			}
-
+            handleLockExpiry(key);
+            return false;
 		}
 		finally {
 			cache.unlock(key);
@@ -277,19 +271,17 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	public synchronized boolean afterInsert(Object key, Object value, Object version)
 	throws CacheException {
 
-        LOG.inserting(key);
+        LOG.debug("Inserting: " + key);
 		try {
 			cache.lock(key);
 
 			Lockable lockable = (Lockable) cache.get(key);
 			if (lockable==null) {
 				cache.update( key, new Item( value, version, cache.nextTimestamp() ) );
-                LOG.inserted(key);
+                LOG.debug("Inserted: " + key);
 				return true;
 			}
-			else {
-				return false;
-			}
+            return false;
 		}
 		finally {
 			cache.unlock(key);

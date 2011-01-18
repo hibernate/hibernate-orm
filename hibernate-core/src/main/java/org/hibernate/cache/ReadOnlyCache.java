@@ -25,6 +25,7 @@
 package org.hibernate.cache;
 
 import java.util.Comparator;
+import org.hibernate.Logger;
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -53,7 +54,7 @@ public class ReadOnlyCache implements CacheConcurrencyStrategy {
 
 	public synchronized Object get(Object key, long timestamp) throws CacheException {
 		Object result = cache.get(key);
-        if (result != null) LOG.hit(key);
+        if (result != null) LOG.debug("Cache hit: " + key);
 		return result;
 	}
 
@@ -74,10 +75,10 @@ public class ReadOnlyCache implements CacheConcurrencyStrategy {
 			boolean minimalPut)
 	throws CacheException {
 		if ( minimalPut && cache.get(key)!=null ) {
-            LOG.exists(key);
+            LOG.debug("Item already cached: " + key);
 			return false;
 		}
-        LOG.caching(key);
+        LOG.debug("Caching: " + key);
 		cache.put(key, value);
 		return true;
 	}
@@ -119,7 +120,7 @@ public class ReadOnlyCache implements CacheConcurrencyStrategy {
 	 * Do nothing.
 	 */
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-        LOG.cachingAfterInsert(key);
+        LOG.debug("Caching after insert: " + key);
 		cache.update(key, value);
 		return true;
 	}

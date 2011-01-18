@@ -23,23 +23,19 @@
  */
 package org.hibernate.service.internal;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Basic Hibernate implementation of the service registry.
@@ -113,16 +109,4 @@ public class ServicesRegistryImpl implements ServicesRegistry {
 		serviceList.add( service );
 		serviceMap.put( serviceRole, service );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Error stopping service [%s] : %s" )
-        void unableToStopService( Class<? extends Service> class1,
-                                  String string );
-    }
 }

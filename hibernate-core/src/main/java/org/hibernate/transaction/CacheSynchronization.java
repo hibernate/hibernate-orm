@@ -28,6 +28,7 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
+import org.hibernate.Logger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
@@ -49,9 +50,9 @@ public final class CacheSynchronization implements Synchronization {
 	private final org.hibernate.Transaction hibernateTransaction;
 
 	public CacheSynchronization(
-			TransactionFactory.Context ctx, 
+			TransactionFactory.Context ctx,
 			JDBCContext jdbcContext,
-			Transaction transaction, 
+			Transaction transaction,
 			org.hibernate.Transaction tx) {
 		this.ctx = ctx;
 		this.jdbcContext = jdbcContext;
@@ -63,7 +64,7 @@ public final class CacheSynchronization implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void beforeCompletion() {
-        LOG.transactionBeforeCompletionCallback();
+        LOG.trace("Transaction before completion callback");
 
 		boolean flush;
 		try {
@@ -81,7 +82,7 @@ public final class CacheSynchronization implements Synchronization {
 
 		try {
 			if (flush) {
-                LOG.automaticallyFlushingSession();
+                LOG.trace("Automatically flushing session");
 				ctx.managedFlush();
 			}
 		}
@@ -107,13 +108,13 @@ public final class CacheSynchronization implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void afterCompletion(int status) {
-        LOG.transactionAfterCompletionCallback(status);
+        LOG.trace("Transaction after completion callback, status: " + status);
 		try {
 			jdbcContext.afterTransactionCompletion(status==Status.STATUS_COMMITTED, hibernateTransaction);
 		}
 		finally {
 			if ( ctx.shouldAutoClose() && !ctx.isClosed() ) {
-                LOG.automaticallyClosingSession();
+                LOG.trace("Automatically closing session");
 				ctx.managedClose();
 			}
 		}

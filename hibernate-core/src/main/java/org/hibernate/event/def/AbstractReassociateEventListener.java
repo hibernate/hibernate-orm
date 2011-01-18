@@ -23,9 +23,9 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Status;
@@ -35,10 +35,6 @@ import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A convenience base class for listeners that respond to requests to reassociate an entity
@@ -64,9 +60,8 @@ public class AbstractReassociateEventListener implements Serializable {
 	 */
 	protected final EntityEntry reassociate(AbstractEvent event, Object object, Serializable id, EntityPersister persister) {
 
-        if (LOG.isTraceEnabled()) LOG.reassociatingTransientInstance(MessageHelper.infoString(persister,
-                                                                                              id,
-                                                                                              event.getSession().getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Reassociating transient instance: "
+                                            + MessageHelper.infoString(persister, id, event.getSession().getFactory()));
 
 		EventSource source = event.getSession();
 		EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
@@ -104,15 +99,4 @@ public class AbstractReassociateEventListener implements Serializable {
 		return newEntry;
 
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Reassociating transient instance: %s" )
-        void reassociatingTransientInstance( String infoString );
-    }
 }

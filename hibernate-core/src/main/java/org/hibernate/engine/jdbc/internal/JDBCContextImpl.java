@@ -24,9 +24,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import java.io.ObjectOutputStream;
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -37,6 +34,7 @@ import javax.transaction.TransactionManager;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Logger;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -45,17 +43,6 @@ import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.synchronization.CallbackCoordinator;
 import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.synchronization.CallbackCoordinator;
-import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
-import org.hibernate.util.JTAHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Acts as the intermediary between "entity-mode related" sessions in terms of their interaction with the JDBC data store.
@@ -199,13 +186,13 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
         if (tm == null) return false;
         try {
             if (!isTransactionInProgress()) {
-                LOG.noActiveTransaction();
+                LOG.trace("TransactionFactory reported no active transaction; Synchronization not registered");
                 return false;
             }
             javax.transaction.Transaction tx = tm.getTransaction();
             if (JTAHelper.isMarkedForRollback(tx)) {
                 // transactions marked for rollback-only cause some TM impls to throw exceptions
-                LOG.transactionMarkedForRollback();
+                LOG.debug("Transaction is marked for rollback; skipping Synchronization registration");
                 return false;
             }
             if (hibernateTransaction == null) hibernateTransaction = owner.getFactory().getSettings().getTransactionFactory().createTransaction(this,
@@ -213,7 +200,7 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
             tx.registerSynchronization(new HibernateSynchronizationImpl(getJtaSynchronizationCallbackCoordinator(tx)));
 //						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, hibernateTransaction) );
             isTransactionCallbackRegistered = true;
-            LOG.successfullyRegisteredSynchronization();
+            LOG.debug("Successfully registered Synchronization");
             return true;
         } catch (HibernateException e) {
             throw e;
@@ -221,7 +208,7 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
             throw new TransactionException("could not register synchronization with JTA TransactionManager", e);
         }
 	}
-	
+
 	@Override
 	public boolean isTransactionInProgress() {
 		return owner.getFactory().getSettings().getTransactionFactory()
@@ -237,10 +224,10 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 		}
 		return hibernateTransaction;
 	}
-	
+
 	@Override
 	public void beforeTransactionCompletion(Transaction tx) {
-        LOG.beforeTransactionCompletion();
+        LOG.trace("Before transaction completion");
 		owner.beforeTransactionCompletion(tx);
 	}
 
@@ -250,13 +237,13 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 	 */
 	@Override
 	public void afterTransactionBegin(Transaction tx) {
-        LOG.afterTransactionBegin();
+        LOG.trace("After transaction begin");
 		owner.afterTransactionBegin(tx);
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
-        LOG.afterTransactionCompletion();
+        LOG.trace("After transaction completion");
 
 		if ( getFactory().getStatistics().isStatisticsEnabled() ) {
 			getFactory().getStatisticsImplementor().endTransaction(success);
@@ -275,7 +262,7 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 	 */
 	@Override
 	public void afterNontransactionalQuery(boolean success) {
-        LOG.afterAutoCommit();
+        LOG.trace("After autocommit");
 		try {
 			// check to see if the connection is in auto-commit
 			// mode (no connection means aggressive connection
@@ -358,39 +345,4 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 		);
 		return jdbcContext;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "After autocommit" )
-        void afterAutoCommit();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "After transaction begin" )
-        void afterTransactionBegin();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "After transaction completion" )
-        void afterTransactionCompletion();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Before transaction completion" )
-        void beforeTransactionCompletion();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "TransactionFactory reported no active transaction; Synchronization not registered" )
-        void noActiveTransaction();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Successfully registered Synchronization" )
-        void successfullyRegisteredSynchronization();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Transaction is marked for rollback; skipping Synchronization registration" )
-        void transactionMarkedForRollback();
-    }
 }

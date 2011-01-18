@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.legacy;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;

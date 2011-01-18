@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,6 +30,7 @@ import java.util.Iterator;
 import java.util.Stack;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -42,10 +42,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -142,7 +138,7 @@ public final class Cascade {
 			throws HibernateException {
 
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
-            LOG.processingCascade(action, persister.getEntityName());
+            LOG.trace("Processing cascade " + action + " for: " + persister.getEntityName());
 
 			Type[] types = persister.getPropertyTypes();
 			CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
@@ -178,7 +174,7 @@ public final class Cascade {
 				}
 			}
 
-            LOG.processingCascadeEnded(action, persister.getEntityName());
+            LOG.trace("Done processing cascade " + action + " for: " + persister.getEntityName());
 		}
 	}
 
@@ -250,7 +246,7 @@ public final class Cascade {
                             if (LOG.isTraceEnabled()) {
 								final Serializable id = entry.getPersister().getIdentifier( loadedValue, eventSource );
 								final String description = MessageHelper.infoString( entityName, id );
-                                LOG.deletingOrphanedEntity(description);
+                                LOG.trace("Deleting orphaned entity instance: " + description);
 							}
 							eventSource.delete( entityName, loadedValue, false, new HashSet() );
 						}
@@ -413,7 +409,7 @@ public final class Cascade {
 			embeddedElements && child!=CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
-            LOG.cascadeActionForCollection(action, collectionType.getRole());
+            LOG.trace("Cascade " + action + " for collection: " + collectionType.getRole());
 
 			Iterator iter = action.getCascadableChildrenIterator(eventSource, collectionType, child);
 			while ( iter.hasNext() ) {
@@ -428,7 +424,7 @@ public final class Cascade {
 					);
 			}
 
-            LOG.cascadeActionForColectionEnded(action, collectionType.getRole());
+            LOG.trace("Done cascade " + action + " for collection: " + collectionType.getRole());
 		}
 
 		final boolean deleteOrphans = style.hasOrphanDelete() &&
@@ -437,7 +433,7 @@ public final class Cascade {
 				child instanceof PersistentCollection; //a newly instantiated collection can't have orphans
 
 		if ( deleteOrphans ) { // handle orphaned entities!!
-            LOG.deletingOrphansForCollection(collectionType.getRole());
+            LOG.trace("Deleting orphans for collection: " + collectionType.getRole());
 
 			// we can do the cast since orphan-delete does not apply to:
 			// 1. newly instantiated collections
@@ -445,7 +441,7 @@ public final class Cascade {
 			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
 			deleteOrphans( entityName, (PersistentCollection) child );
 
-            LOG.deletingOrphansForCollectionEnded(collectionType.getRole());
+            LOG.trace("Done deleting orphans for collection: " + collectionType.getRole());
 		}
 	}
 
@@ -469,48 +465,9 @@ public final class Cascade {
 		while ( orphanIter.hasNext() ) {
 			Object orphan = orphanIter.next();
 			if (orphan!=null) {
-                LOG.deletingOrphanedEntity(entityName);
+                LOG.trace("Deleting orphaned entity instance: " + entityName);
 				eventSource.delete( entityName, orphan, false, new HashSet() );
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascade %s for collection: %s" )
-        void cascadeActionForCollection( CascadingAction action,
-                                         String role );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Done cascade %s for collection: %s" )
-        void cascadeActionForColectionEnded( CascadingAction action,
-                                             String role );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deleting orphaned entity instance: %s" )
-        void deletingOrphanedEntity( String description );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deleting orphans for collection: %s" )
-        void deletingOrphansForCollection( String role );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Done deleting orphans for collection: %s" )
-        void deletingOrphansForCollectionEnded( String role );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Processing cascade %s for: %s" )
-        void processingCascade( CascadingAction action,
-                                String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Done processing cascade %s for: %s" )
-        void processingCascadeEnded( CascadingAction action,
-                                     String entityName );
-    }
 }

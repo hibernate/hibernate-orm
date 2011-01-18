@@ -24,8 +24,8 @@
  */
 package org.hibernate.hql.ast.util;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.FromElement;
@@ -38,10 +38,6 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.collections.AST;
 
 /**
@@ -91,7 +87,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			whereFragment = whereFragment.substring( 4 );
 		}
 
-        LOG.usingUnprocessedWhereFragment(whereFragment);
+        LOG.debug("Using unprocessed WHERE-fragment [" + whereFragment + "]");
 
 		SqlFragment fragment = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
 		fragment.setJoinFragment( joinFragment );
@@ -122,7 +118,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				hqlSqlWalker
 		);
 
-        LOG.usingProcessedWhereFragment(fragment.getText());
+        LOG.debug("Using processed WHERE-fragment [" + fragment.getText() + "]");
 
 		// Filter conditions need to be inserted before the HQL where condition and the
 		// theta join node.  This is because org.hibernate.loader.Loader binds the filter parameters first,
@@ -204,19 +200,4 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			statement.getWhereClause().setFirstChild( and );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Using processed WHERE-fragment [%s]" )
-        void usingProcessedWhereFragment( String whereFragment );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Using unprocessed WHERE-fragment [%s]" )
-        void usingUnprocessedWhereFragment( String whereFragment );
-    }
 }

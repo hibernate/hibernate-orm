@@ -24,7 +24,6 @@
  */
 package org.hibernate.context;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Hashtable;
 import java.util.Map;
 import javax.transaction.Synchronization;
@@ -32,13 +31,10 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.JTAHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An implementation of {@link CurrentSessionContext} which scopes the notion
@@ -121,7 +117,7 @@ public class JTASessionContext implements CurrentSessionContext {
 					currentSession.close();
 				}
 				catch ( Throwable ignore ) {
-                    LOG.unableToReleaseSession(ignore.getMessage());
+                    LOG.debug("Unable to release generated current-session on failed synch registration", ignore);
 				}
 				throw new HibernateException( "Unable to register cleanup Synchronization with TransactionManager" );
 			}
@@ -212,15 +208,4 @@ public class JTASessionContext implements CurrentSessionContext {
 			context.currentSessionMap.remove( transactionIdentifier );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Unable to release generated current-session on failed synch registration\n%s" )
-        void unableToReleaseSession( String message );
-    }
 }

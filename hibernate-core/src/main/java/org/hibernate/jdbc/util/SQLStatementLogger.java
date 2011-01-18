@@ -24,8 +24,7 @@
  */
 package org.hibernate.jdbc.util;
 
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * Centralize logging handling for SQL statements.
@@ -117,11 +116,4 @@ public class SQLStatementLogger {
 	private FormatStyle determineActualStyle(FormatStyle style) {
 		return formatSql ? style : FormatStyle.NONE;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-    }
 }

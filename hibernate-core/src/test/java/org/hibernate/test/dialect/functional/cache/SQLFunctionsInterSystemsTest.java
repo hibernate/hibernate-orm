@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.dialect.functional.cache;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 import junit.framework.Test;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
@@ -63,8 +63,6 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  */
 public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTestCase {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
-
 	public SQLFunctionsInterSystemsTest(String name) {
 		super(name);
 	}
@@ -82,7 +80,8 @@ public class SQLFunctionsInterSystemsTest extends DatabaseSpecificFunctionalTest
 		return new FunctionalTestClassTestSuite( SQLFunctionsInterSystemsTest.class );
 	}
 
-	public boolean appliesTo(Dialect dialect) {
+	@Override
+    public boolean appliesTo(Dialect dialect) {
 		// all these test case apply only to testing InterSystems' CacheSQL dialect
 		return dialect instanceof Cache71Dialect;
 	}

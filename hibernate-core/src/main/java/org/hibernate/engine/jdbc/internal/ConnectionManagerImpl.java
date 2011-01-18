@@ -31,14 +31,11 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
@@ -57,7 +54,7 @@ import org.hibernate.jdbc.Expectation;
  */
 public class ConnectionManagerImpl implements ConnectionManager {
 
-	private static final Logger log = LoggerFactory.getLogger( ConnectionManagerImpl.class );
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	public static interface Callback extends ConnectionObserver {
 		public boolean isTransactionInProgress();
@@ -77,11 +74,11 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	 * Constructs a ConnectionManager.
 	 * <p/>
 	 * This is the form used internally.
-	 * 
+	 *
 	 * @param callback An observer for internal state change.
 	 * @param releaseMode The mode by which to release JDBC connections.
 	 * @param suppliedConnection An externally supplied connection.
-	 */ 
+	 */
 	public ConnectionManagerImpl(
 	        SessionFactoryImplementor factory,
 	        Callback callback,
@@ -254,17 +251,11 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	 */
 	public void afterTransaction() {
 		if ( logicalConnection != null ) {
-			if ( isAfterTransactionRelease() || isAggressiveReleaseNoTransactionCheck() ) {
-				logicalConnection.afterTransaction();
-			}
-			else if ( isOnCloseRelease() ) {
-				// log a message about potential connection leaks
-				log.debug( "transaction completed on session with on_close connection release mode; be sure to close the session to release JDBC resources!" );
-			}
+            if (isAfterTransactionRelease() || isAggressiveReleaseNoTransactionCheck()) logicalConnection.afterTransaction();
+            // log a message about potential connection leaks
+            else if (isOnCloseRelease()) LOG.debug("Transaction completed on session with on_close connection release mode; be sure to close the session to release JDBC resources!");
 		}
-		if ( statementPreparer != null ) {
-			statementPreparer.unsetTransactionTimeout();
-		}
+        if (statementPreparer != null) statementPreparer.unsetTransactionTimeout();
 	}
 
 	private boolean isAfterTransactionRelease() {
@@ -349,11 +340,11 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	 */
 	private Connection cleanup() throws HibernateException {
 		if ( logicalConnection == null ) {
-			log.trace( "connection already null in cleanup : no action");
+            LOG.trace("Connection already null in cleanup : no action");
 			return null;
 		}
 		try {
-			log.trace( "performing cleanup" );
+            LOG.trace("Performing cleanup");
 			releaseBatch();
 			statementPreparer.close();
 			Connection c = logicalConnection.close();
@@ -373,7 +364,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	 */
 	@Override
 	public void flushBeginning() {
-		log.trace( "registering flush begin" );
+        LOG.trace("Registering flush begin");
 		logicalConnection.disableReleases();
 	}
 
@@ -383,7 +374,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	 */
 	@Override
 	public void flushEnding() {
-		log.trace( "registering flush end" );
+        LOG.trace("Registering flush end");
 		logicalConnection.enableReleases();
 		afterStatement();
 	}
@@ -448,7 +439,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 	@Override
 	public CallableStatement prepareCallableStatement(String sql) {
 		executeBatch();
-		log.trace("preparing callable statement");
+        LOG.trace("Preparing callable statement");
 		return CallableStatement.class.cast( statementPreparer.prepareStatement( getSQL( sql ), true ) );
 	}
 

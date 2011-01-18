@@ -24,11 +24,11 @@
  */
 package org.hibernate.hql.ast;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -43,10 +43,6 @@ import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 
@@ -366,15 +362,4 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			out( d );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Evicting %s" )
-        void evicting( String infoString );
-    }
 }

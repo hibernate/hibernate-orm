@@ -25,7 +25,6 @@
 package org.hibernate.util;
 
 import static org.hibernate.LogUtil.TMP_LOG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,11 +35,8 @@ import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
 import org.hibernate.Hibernate;
+import org.hibernate.Logger;
 import org.hibernate.type.SerializationException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * <p>Assists with the serialization process and performs additional functionality based
@@ -91,7 +87,7 @@ public final class SerializationHelper {
 	 * @throws SerializationException (runtime) if the serialization fails
 	 */
 	public static Object clone(Serializable object) throws SerializationException {
-        LOG.startingCloneThroughSerialization();
+        LOG.trace("Starting clone through serialization");
 		if ( object == null ) {
 			return null;
 		}
@@ -123,8 +119,8 @@ public final class SerializationHelper {
 		}
 
         if (TMP_LOG.isTraceEnabled()) {
-            if (Hibernate.isInitialized(obj)) LOG.startingSerializationOfObject(obj);
-            else LOG.startingSerializationOfUninitializedProxy();
+            if (Hibernate.isInitialized(obj)) LOG.trace("Starting serialization of object [" + obj + "]");
+            else LOG.trace("Starting serialization of [uninitialized proxy]");
 		}
 
 		ObjectOutputStream out = null;
@@ -230,7 +226,7 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The InputStream must not be null" );
 		}
 
-        LOG.startingDeserializationOfObject();
+        LOG.trace("Starting deserialization of object");
 
 		try {
 			CustomObjectInputStream in = new CustomObjectInputStream(
@@ -336,13 +332,13 @@ public final class SerializationHelper {
 		@Override
         protected Class resolveClass(ObjectStreamClass v) throws IOException, ClassNotFoundException {
 			String className = v.getName();
-            LOG.attemptingToLocateClass(className);
+            LOG.trace("Attempting to locate class [" + className + "]");
 
 			try {
 				return Class.forName( className, false, loader1 );
 			}
 			catch ( ClassNotFoundException e ) {
-                LOG.unableToLocateClass();
+                LOG.trace("Unable to locate class using given classloader");
 			}
 
 			if ( different( loader1, loader2 ) ) {
@@ -350,7 +346,7 @@ public final class SerializationHelper {
 					return Class.forName( className, false, loader2 );
 				}
 				catch ( ClassNotFoundException e ) {
-                    LOG.unableToLocateClass();
+                    LOG.trace("Unable to locate class using given classloader");
 				}
 			}
 
@@ -359,7 +355,7 @@ public final class SerializationHelper {
 					return Class.forName( className, false, loader3 );
 				}
 				catch ( ClassNotFoundException e ) {
-                    LOG.unableToLocateClass();
+                    LOG.trace("Unable to locate class using given classloader");
 				}
 			}
 
@@ -373,35 +369,4 @@ public final class SerializationHelper {
             return !one.equals(other);
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Attempting to locate class [%s]" )
-        void attemptingToLocateClass( String className );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Starting deserialization of object" )
-        void startingDeserializationOfObject();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Starting clone through serialization" )
-        void startingCloneThroughSerialization();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Starting serialization of object [%s]" )
-        void startingSerializationOfObject( Serializable obj );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Starting serialization of [uninitialized proxy]" )
-        void startingSerializationOfUninitializedProxy();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Unable to locate class using given classloader" )
-        void unableToLocateClass();
-    }
 }

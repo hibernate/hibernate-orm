@@ -23,12 +23,8 @@
  */
 package org.hibernate.transaction.synchronization;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import javax.transaction.Synchronization;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * The {@link Synchronization} implementation Hibernate registers with the JTA {@link javax.transaction.Transaction}
@@ -51,7 +47,7 @@ public class HibernateSynchronizationImpl implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void beforeCompletion() {
-        LOG.jtaSyncBeforeCompletion();
+        LOG.trace("JTA sync : beforeCompletion()");
 		coordinator.beforeCompletion();
 	}
 
@@ -59,22 +55,7 @@ public class HibernateSynchronizationImpl implements Synchronization {
 	 * {@inheritDoc}
 	 */
 	public void afterCompletion(int status) {
-        LOG.jtaSyncAfterCompletion(status);
+        LOG.trace("JTA sync : afterCompletion(" + status + ")");
 		coordinator.afterCompletion( status );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "JTA sync : afterCompletion(%d)" )
-        void jtaSyncAfterCompletion( int status );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "JTA sync : beforeCompletion()" )
-        void jtaSyncBeforeCompletion();
-    }
 }

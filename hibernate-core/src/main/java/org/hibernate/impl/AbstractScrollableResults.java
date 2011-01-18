@@ -24,7 +24,6 @@
  */
 package org.hibernate.impl;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -38,6 +37,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
@@ -45,10 +45,6 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Implementation of the <tt>ScrollableResults</tt> interface
@@ -135,7 +131,7 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 			}
 			catch( Throwable ignore ) {
 				// ignore this error for now
-                LOG.unableToCleanupLoadContext(ignore.getMessage());
+                LOG.trace("Exception trying to cleanup load context : " + ignore.getMessage());
 			}
 		}
 	}
@@ -289,15 +285,4 @@ public abstract class AbstractScrollableResults implements ScrollableResults {
 	protected void afterScrollOperation() {
 		session.afterScrollOperation();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Exception trying to cleanup load context : %s" )
-        void unableToCleanupLoadContext( String message );
-    }
 }

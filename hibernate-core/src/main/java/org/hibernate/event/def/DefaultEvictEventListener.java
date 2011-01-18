@@ -24,9 +24,9 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
@@ -39,10 +39,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default evict event listener used by hibernate for evicting entities
@@ -104,7 +100,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		final EventSource session)
 	throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.evicting(MessageHelper.infoString(persister));
+        if (LOG.isTraceEnabled()) LOG.trace("Evicting " + MessageHelper.infoString(persister));
 
 		// remove all collections for the entity from the session-level cache
 		if ( persister.hasCollections() ) {
@@ -120,15 +116,4 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		new Cascade( CascadingAction.EVICT, Cascade.AFTER_EVICT, session )
 				.cascade( persister, object );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Evicting %s" )
-        void evicting( String infoString );
-    }
 }

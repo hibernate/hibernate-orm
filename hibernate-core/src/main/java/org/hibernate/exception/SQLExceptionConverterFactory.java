@@ -24,21 +24,16 @@
  */
 package org.hibernate.exception;
 
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A factory for building SQLExceptionConverter instances.
@@ -76,7 +71,7 @@ public class SQLExceptionConverterFactory {
 		}
 
 		if ( converter == null ) {
-            LOG.usingDialectDefinedConverter();
+            LOG.trace("Using dialect defined converter");
 			converter = dialect.buildSQLExceptionConverter();
 		}
 
@@ -109,7 +104,7 @@ public class SQLExceptionConverterFactory {
 
 	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtracter violatedConstraintNameExtracter) {
 		try {
-            LOG.attemptingToConstructSqlExceptionConverter(converterClassName);
+            LOG.trace("Attempting to construct instance of specified SQLExceptionConverter [" + converterClassName + "]");
 			Class converterClass = ReflectHelper.classForName( converterClassName );
 
 			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtracter param...
@@ -138,27 +133,4 @@ public class SQLExceptionConverterFactory {
 
 		return null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Attempting to construct instance of specified SQLExceptionConverter [%s]" )
-        void attemptingToConstructSqlExceptionConverter( String converterClassName );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to configure SQLExceptionConverter : %s" )
-        void unableToConfigureSqlExceptionConverter( HibernateException e );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to construct instance of specified SQLExceptionConverter : %s" )
-        void unableToConstructSqlExceptionConverter( Throwable t );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Using dialect defined converter" )
-        void usingDialectDefinedConverter();
-    }
 }

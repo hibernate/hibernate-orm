@@ -23,9 +23,9 @@
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
 
+import static org.hibernate.test.cache.infinispan.TestInfinispanLogger.LOG;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.hibernate.cache.infinispan.util.CacheHelper;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -34,78 +34,76 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Listener
 public class CacheAccessListener {
-   protected final Logger log = LoggerFactory.getLogger(getClass());
-   
-   HashSet modified = new HashSet();
-   HashSet accessed = new HashSet();
 
-   public void clear() {
-      modified.clear();
-      accessed.clear();
-   }
+    HashSet modified = new HashSet();
+    HashSet accessed = new HashSet();
 
-   @CacheEntryModified
-   public void nodeModified(CacheEntryModifiedEvent event) {
-      if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
-         Object key = event.getKey();
-         log.info("Modified node " + key);
-         modified.add(key.toString());
-      }
-   }
-   
-   @CacheEntryCreated
-   public void nodeCreated(CacheEntryCreatedEvent event) {
-      if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
-         Object key = event.getKey();
-         log.info("Created node " + key);
-         modified.add(key.toString());
-      }
-   }
+    public void clear() {
+        modified.clear();
+        accessed.clear();
+    }
 
-   @CacheEntryVisited
-   public void nodeVisited(CacheEntryVisitedEvent event) {
-      if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
-         Object key = event.getKey();
-         log.info("Visited node " + key);
-         accessed.add(key.toString());
-      }
-   }
+    @CacheEntryModified
+    public void nodeModified( CacheEntryModifiedEvent event ) {
+        if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
+            Object key = event.getKey();
+            LOG.info("Modified node " + key);
+            modified.add(key.toString());
+        }
+    }
 
-   public boolean getSawRegionModification(Object key) {
-      return getSawRegion(key, modified);
-   }
-   
-   public int getSawRegionModificationCount() {
-      return modified.size();
-   }
-   
-   public void clearSawRegionModification() {
-      modified.clear();
-   }
+    @CacheEntryCreated
+    public void nodeCreated( CacheEntryCreatedEvent event ) {
+        if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
+            Object key = event.getKey();
+            LOG.info("Created node " + key);
+            modified.add(key.toString());
+        }
+    }
 
-   public boolean getSawRegionAccess(Object key) {
-      return getSawRegion(key, accessed);
-   }
+    @CacheEntryVisited
+    public void nodeVisited( CacheEntryVisitedEvent event ) {
+        if (!event.isPre() && !CacheHelper.isEvictAllNotification(event.getKey())) {
+            Object key = event.getKey();
+            LOG.info("Visited node " + key);
+            accessed.add(key.toString());
+        }
+    }
 
-   public int getSawRegionAccessCount() {
-      return accessed.size();
-   }
-   
-   public void clearSawRegionAccess() {
-      accessed.clear();
-   }
+    public boolean getSawRegionModification( Object key ) {
+        return getSawRegion(key, modified);
+    }
 
-   private boolean getSawRegion(Object key, Set sawEvents) {
-      if (sawEvents.contains(key)) {
-         sawEvents.remove(key);
-         return true;
-      }
-      return false;
-  }
+    public int getSawRegionModificationCount() {
+        return modified.size();
+    }
+
+    public void clearSawRegionModification() {
+        modified.clear();
+    }
+
+    public boolean getSawRegionAccess( Object key ) {
+        return getSawRegion(key, accessed);
+    }
+
+    public int getSawRegionAccessCount() {
+        return accessed.size();
+    }
+
+    public void clearSawRegionAccess() {
+        accessed.clear();
+    }
+
+    private boolean getSawRegion( Object key,
+                                  Set sawEvents ) {
+        if (sawEvents.contains(key)) {
+            sawEvents.remove(key);
+            return true;
+        }
+        return false;
+    }
 
 }

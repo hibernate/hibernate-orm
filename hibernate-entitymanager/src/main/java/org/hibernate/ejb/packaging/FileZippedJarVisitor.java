@@ -22,18 +22,16 @@
 package org.hibernate.ejb.packaging;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.net.URL;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.ejb.EntityManagerLogger;
 
 /**
  * Work on a JAR that can be accessed through a File
@@ -41,8 +39,11 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 public class FileZippedJarVisitor extends AbstractJarVisitor {
-	private final Logger log = LoggerFactory.getLogger( FileZippedJarVisitor.class );
-	private String entry;
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
+
+    private String entry;
 
 	public FileZippedJarVisitor(String fileName, Filter[] filters) {
 		super( fileName, filters );
@@ -53,7 +54,8 @@ public class FileZippedJarVisitor extends AbstractJarVisitor {
 		this.entry = entry;
 	}
 
-	protected void doProcessElements() throws IOException {
+	@Override
+    protected void doProcessElements() throws IOException {
 		JarFile jarFile;
 		try {
 			String filePart = jarUrl.getFile();
@@ -66,11 +68,11 @@ public class FileZippedJarVisitor extends AbstractJarVisitor {
 			}
 		}
 		catch (IOException ze) {
-			log.warn( "Unable to find file (ignored): " + jarUrl, ze );
+            LOG.warn(LOG.unableToFindFile(jarUrl), ze);
 			return;
 		}
 		catch (URISyntaxException e) {
-			log.warn( "Malformed url: " + jarUrl, e );
+            LOG.warn(LOG.malformedUrl(jarUrl), e);
 			return;
 		}
 

@@ -57,13 +57,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
-
 import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -73,7 +67,6 @@ import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.Settings;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
@@ -94,7 +87,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.transaction.JDBCTransactionFactory;
 import org.hibernate.util.CollectionHelper;
@@ -103,6 +95,8 @@ import org.hibernate.util.StringHelper;
 import org.hibernate.util.xml.MappingReader;
 import org.hibernate.util.xml.OriginImpl;
 import org.hibernate.util.xml.XmlDocument;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
@@ -122,7 +116,9 @@ import org.hibernate.util.xml.XmlDocument;
  * @author Emmanuel Bernard
  */
 public class Ejb3Configuration implements Serializable, Referenceable {
-	private final Logger log = LoggerFactory.getLogger( Ejb3Configuration.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();
 	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
 	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";
@@ -189,7 +185,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(PersistenceMetadata metadata, Map overridesIn) {
-		log.debug( "Creating Factory: {}", metadata.getName() );
+        LOG.debug("Creating Factory: " + metadata.getName());
 
 		Map overrides = new HashMap();
 		if ( overridesIn != null ) {
@@ -299,26 +295,24 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(String persistenceUnitName, Map integration) {
 		try {
-			log.debug( "Look up for persistence unit: {}", persistenceUnitName );
+            LOG.debug("Look up for persistence unit: " + persistenceUnitName);
 			integration = integration == null ?
 					CollectionHelper.EMPTY_MAP :
 					Collections.unmodifiableMap( integration );
 			Enumeration<URL> xmls = Thread.currentThread()
 					.getContextClassLoader()
 					.getResources( "META-INF/persistence.xml" );
-			if ( ! xmls.hasMoreElements() ) {
-				log.info( "Could not find any META-INF/persistence.xml file in the classpath");
-			}
+            if (!xmls.hasMoreElements()) LOG.unableToFindPersistenceXmlInClasspath();
 			while ( xmls.hasMoreElements() ) {
 				URL url = xmls.nextElement();
-				log.trace( "Analysing persistence.xml: {}", url );
+                LOG.trace("Analyzing persistence.xml: " + url);
 				List<PersistenceMetadata> metadataFiles = PersistenceXmlLoader.deploy(
 						url,
 						integration,
 						cfg.getEntityResolver(),
 						PersistenceUnitTransactionType.RESOURCE_LOCAL );
 				for ( PersistenceMetadata metadata : metadataFiles ) {
-					log.trace( "{}", metadata );
+                    LOG.trace(metadata);
 
 					if ( metadata.getProvider() == null || IMPLEMENTATION_NAME.equalsIgnoreCase(
 							metadata.getProvider()
@@ -514,12 +508,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(PersistenceUnitInfo info, Map integration) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Processing {}", LogHelper.logPersistenceUnitInfo( info ) );
-		}
-		else {
-			log.info( "Processing PersistenceUnitInfo [\n\tname: {}\n\t...]", info.getPersistenceUnitName() );
-		}
+        if (LOG.isDebugEnabled()) LOG.debug("Processing " + LogHelper.logPersistenceUnitInfo(info));
+        else LOG.processingPersistenceUnitInfoName(info.getPersistenceUnitName());
 
 		// Spec says the passed map may be null, so handle that to make further processing easier...
 		integration = integration != null ? Collections.unmodifiableMap( integration ) : CollectionHelper.EMPTY_MAP;
@@ -530,7 +520,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			provider = info.getPersistenceProviderClassName();
 		}
 		if ( provider != null && ! provider.trim().startsWith( IMPLEMENTATION_NAME ) ) {
-			log.info( "Required a different provider: {}", provider );
+            LOG.requiredDifferentProvider(provider);
 			return null;
 		}
 
@@ -715,16 +705,13 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		//TODO handle inputstream related hbm files
 		ClassLoader classLoaderToUse = info.getNewTempClassLoader();
 		if ( classLoaderToUse == null ) {
-			log.warn(
-					"Persistence provider caller does not implement the EJB3 spec correctly." +
-							"PersistenceUnitInfo.getNewTempClassLoader() is null."
-			);
+            LOG.persistenceProviderCallerDoesNotImplementEjb3SpecCorrectly();
 			return;
 		}
 		for ( final String xmlFile : xmlFiles ) {
 			final InputStream fileInputStream = classLoaderToUse.getResourceAsStream( xmlFile );
 			if ( fileInputStream == null ) {
-				log.info( "Unable to resolve mapping file [{}]", xmlFile );
+                LOG.unableToResolveMappingFile(xmlFile);
 				continue;
 			}
 			final InputSource inputSource = new InputSource( fileInputStream );
@@ -771,7 +758,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					fileInputStream.close();
 				}
 				catch (IOException ioe) {
-					log.warn( "Could not close input stream", ioe );
+                    LOG.warn(LOG.unableToCloseInputStream(), ioe);
 				}
 			}
 		}
@@ -836,13 +823,13 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			if ( "class".equalsIgnoreCase( element ) ) detectClasses = true;
 			if ( "hbm".equalsIgnoreCase( element ) ) detectHbm = true;
 		}
-		log.debug( "Detect class: {}; detect hbm: {}", detectClasses, detectHbm );
+        LOG.debug("Detect class: " + detectClasses + "; detect hbm: " + detectHbm);
 		context.detectClasses( detectClasses ).detectHbmFiles( detectHbm );
 	}
 
 	private void scanForClasses(ScanningContext scanningContext, List<String> packages, List<String> entities, List<NamedInputStream> hbmFiles) {
 		if (scanningContext.url == null) {
-			log.error( "Container is providing a null PersistenceUnitRootUrl: discovery impossible");
+            LOG.containerProvidingNullPersistenceUnitRootUrl();
 			return;
 		}
 		try {
@@ -867,7 +854,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 * @deprecated use the Java Persistence API
 	 */
 	// This is used directly by JBoss so don't remove until further notice.  bill@jboss.org
-	public EntityManagerFactory createEntityManagerFactory(Map workingVars) {
+	@Deprecated
+    public EntityManagerFactory createEntityManagerFactory(Map workingVars) {
 		Properties props = new Properties();
 		if ( workingVars != null ) {
 			props.putAll( workingVars );
@@ -885,7 +873,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 * Process configuration and build an EntityManagerFactory <b>when</b> the configuration is ready
 	 * @deprecated
 	 */
-	public EntityManagerFactory createEntityManagerFactory() {
+	@Deprecated
+    public EntityManagerFactory createEntityManagerFactory() {
 		configure( cfg.getProperties(), new HashMap() );
 		return buildEntityManagerFactory();
 	}
@@ -939,14 +928,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				throw new PersistenceException( getExceptionHeader() + "Unable to instanciate "
 						+ AvailableSettings.SESSION_INTERCEPTOR + ": " + sessionInterceptorClassname, e);
 			}
-		}
-		else {
-			return null;
-		}
+        }
+        return null;
 	}
 
 	public Reference getReference() throws NamingException {
-		log.debug("Returning a Reference to the Ejb3Configuration");
+        LOG.debug("Returning a Reference to the Ejb3Configuration");
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ObjectOutput out = null;
 		byte[] serialized;
@@ -1099,9 +1086,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 		//some spec compliance checking
 		//TODO centralize that?
-		if ( ! "true".equalsIgnoreCase( cfg.getProperty( Environment.AUTOCOMMIT ) ) ) {
-			log.warn( "{} = false break the EJB3 specification", Environment.AUTOCOMMIT );
-		}
+        if (!"true".equalsIgnoreCase(cfg.getProperty(Environment.AUTOCOMMIT))) LOG.jdbcAutoCommitFalseBreaksEjb3Spec(Environment.AUTOCOMMIT);
 		discardOnClose = preparedProperties.getProperty( AvailableSettings.DISCARD_PC_ON_CLOSE )
 				.equals( "true" );
 		return this;
@@ -1162,14 +1147,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					throw new PersistenceException( getExceptionHeader()
 								+ "Error while reading JPA XML file: " + xmlFile, me);
 				}
-				if ( log.isInfoEnabled() ) {
-					if ( Boolean.TRUE.equals( useMetaInf ) ) {
-						log.info( "{} {} found", getExceptionHeader(), META_INF_ORM_XML);
-					}
-					else if (Boolean.FALSE.equals( useMetaInf ) ) {
-						log.info( "{} No {} found", getExceptionHeader(), META_INF_ORM_XML);
-					}
-				}
+                if (Boolean.TRUE.equals(useMetaInf)) LOG.exceptionHeaderFound(getExceptionHeader(), META_INF_ORM_XML);
+                else if (Boolean.FALSE.equals(useMetaInf)) LOG.exceptionHeaderNotFound(getExceptionHeader(), META_INF_ORM_XML);
 			}
 		}
 		if ( workingVars.containsKey( AvailableSettings.HBXML_FILES ) ) {
@@ -1195,12 +1174,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	private String getExceptionHeader() {
-		if ( StringHelper.isNotEmpty( persistenceUnitName ) ) {
-			return "[PersistenceUnit: " + persistenceUnitName + "] ";
-		}
-		else {
-			return "";
-		}
+        return (StringHelper.isNotEmpty(persistenceUnitName)) ? "[PersistenceUnit: " + persistenceUnitName + "] " : "";
 	}
 
 	private Properties prepareProperties(Properties properties, Map workingVars) {
@@ -1245,15 +1219,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		else if ( ! hasTxStrategy && transactionType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
 			preparedProperties.setProperty( Environment.TRANSACTION_STRATEGY, JDBCTransactionFactory.class.getName() );
 		}
-		if ( hasTxStrategy ) {
-			log.warn(
-					"Overriding {} is dangerous, this might break the EJB3 specification implementation",
-					Environment.TRANSACTION_STRATEGY
-			);
-		}
+        if (hasTxStrategy) LOG.overridingTransactionStrategyDangerous(Environment.TRANSACTION_STRATEGY);
 		if ( preparedProperties.getProperty( Environment.FLUSH_BEFORE_COMPLETION ).equals( "true" ) ) {
 			preparedProperties.setProperty( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-			log.warn( "Defining {}=true ignored in HEM", Environment.FLUSH_BEFORE_COMPLETION );
+            LOG.definingFlushBeforeCompletionIgnoredInHem(Environment.FLUSH_BEFORE_COMPLETION);
 		}
 		return preparedProperties;
 	}
@@ -1297,7 +1266,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	private void addSecurity(List<String> keys, Map properties, Map workingVars) {
-		log.debug( "Adding security" );
+        LOG.debug("Adding security");
 		if ( !properties.containsKey( AvailableSettings.JACC_CONTEXT_ID ) ) {
 			throw new PersistenceException( getExceptionHeader() +
 					"Entities have been configured for JACC, but "

@@ -23,9 +23,6 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -38,11 +35,7 @@ import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
 import org.jboss.logging.Logger.Level;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Standard implementation of the {@link org.hibernate.engine.jdbc.spi.JdbcResourceRegistry} contract
@@ -65,7 +58,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public void register(Statement statement) {
-        LOG.registeringStatement(statement);
+        LOG.trace("Registering statement [" + statement + "]");
 		if ( xref.containsKey( statement ) ) {
 			throw new HibernateException( "statement already registered with JDBCContainer" );
 		}
@@ -74,7 +67,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 
 	@SuppressWarnings({ "unchecked" })
 	public void registerLastQuery(Statement statement) {
-		log.trace( "registering last query statement [{}]", statement );		
+        LOG.trace("Registering last query statement [" + statement + "]");
 		if ( statement instanceof JdbcWrapper ) {
 			JdbcWrapper<Statement> wrapper = ( JdbcWrapper<Statement> ) statement;
 			registerLastQuery( wrapper.getWrappedObject() );
@@ -101,7 +94,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public void release(Statement statement) {
-        LOG.releasingStatement(statement);
+        LOG.trace("Releasing statement [" + statement + "]");
 		Set<ResultSet> resultSets = xref.get( statement );
 		if ( resultSets != null ) {
 			for ( ResultSet resultSet : resultSets ) {
@@ -114,7 +107,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public void register(ResultSet resultSet) {
-        LOG.registeringResultSet(resultSet);
+        LOG.trace("Registering result set [" + resultSet + "]");
 		Statement statement;
 		try {
 			statement = resultSet.getStatement();
@@ -137,7 +130,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public void release(ResultSet resultSet) {
-        LOG.releasingResultSet(resultSet);
+        LOG.trace("Releasing result set [" + resultSet + "]");
 		Statement statement;
 		try {
 			statement = resultSet.getStatement();
@@ -167,7 +160,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public void releaseResources() {
-        LOG.releasingJdbcContainerResources(this);
+        LOG.trace("Releasing JDBC container resources [" + this + "]");
 		cleanup();
 	}
 
@@ -243,13 +236,13 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 	}
 
 	public void close() {
-        LOG.closingJdbcContainer(this);
+        LOG.trace("Closing JDBC container [" + this + "]");
 		cleanup();
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	protected void close(Statement statement) {
-        LOG.closingPreparedStatement(statement);
+        LOG.trace("Closing prepared statement [" + statement + "]");
 
 		if ( statement instanceof InvalidatableWrapper ) {
 			InvalidatableWrapper<Statement> wrapper = ( InvalidatableWrapper<Statement> ) statement;
@@ -271,7 +264,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			}
 			catch( SQLException sqle ) {
 				// there was a problem "cleaning" the prepared statement
-                LOG.unableToClearMaxRowsQueryTimeout(sqle.getMessage());
+                LOG.debug("Exception clearing maxRows/queryTimeout [" + sqle.getMessage() + "]");
 				return; // EARLY EXIT!!!
 			}
 			statement.close();
@@ -280,13 +273,13 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			}
 		}
 		catch( SQLException sqle ) {
-            LOG.unableToReleaseStatement(sqle.getMessage());
+            LOG.debug("Unable to release statement [" + sqle.getMessage() + "]");
 		}
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	protected void close(ResultSet resultSet) {
-        LOG.closingResultSet(resultSet);
+        LOG.trace("Closing result set [" + resultSet + "]");
 
 		if ( resultSet instanceof InvalidatableWrapper ) {
 			InvalidatableWrapper<ResultSet> wrapper = (InvalidatableWrapper<ResultSet>) resultSet;
@@ -298,66 +291,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			resultSet.close();
 		}
 		catch( SQLException e ) {
-            LOG.unableToReleaseResultSet(e.getMessage());
+            LOG.debug("Unable to release result set [" + e.getMessage() + "]");
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Closing JDBC container [%s]" )
-        void closingJdbcContainer( JdbcResourceRegistryImpl jdbcResourceRegistryImpl );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Closing prepared statement [%s]" )
-        void closingPreparedStatement( Statement statement );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Closing result set [%s]" )
-        void closingResultSet( ResultSet resultSet );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Registering result set [%s]" )
-        void registeringResultSet( ResultSet resultSet );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Registering statement [%s]" )
-        void registeringStatement( Statement statement );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Releasing JDBC container resources [%s]" )
-        void releasingJdbcContainerResources( JdbcResourceRegistryImpl jdbcResourceRegistryImpl );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Releasing result set [%s]" )
-        void releasingResultSet( ResultSet resultSet );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Releasing statement [%s]" )
-        void releasingStatement( Statement statement );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Exception clearing maxRows/queryTimeout [%s]" )
-        void unableToClearMaxRowsQueryTimeout( String message );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Unable to release result set [%s]" )
-        void unableToReleaseResultSet( String message );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Unable to release statement [%s]" )
-        void unableToReleaseStatement( String message );
-
-        @LogMessage( level = WARN )
-        @Message( value = "ResultSet's statement was not registered" )
-        void unregisteredStatement();
-
-        @LogMessage( level = WARN )
-        @Message( value = "ResultSet had no statement associated with it, but was not yet registered" )
-        void unregisteredResultSetWithoutStatement();
-    }
 }

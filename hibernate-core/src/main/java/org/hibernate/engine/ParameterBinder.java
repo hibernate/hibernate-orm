@@ -24,17 +24,13 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Centralizes the commonality regarding binding of parameter values into
@@ -122,7 +118,7 @@ public class ParameterBinder {
 				TypedValue typedval = ( TypedValue ) e.getValue();
 				int[] locations = source.getNamedParameterLocations( name );
 				for ( int i = 0; i < locations.length; i++ ) {
-                    LOG.bindNamedParameters(typedval.getValue(), name, locations[i] + start);
+                    LOG.debug("bindNamedParameters() " + typedval.getValue() + " -> " + name + " [" + (locations[i] + start) + "]");
 					typedval.getType().nullSafeSet( ps, typedval.getValue(), locations[i] + start, session );
 				}
 				result += locations.length;
@@ -131,17 +127,4 @@ public class ParameterBinder {
 		}
         return 0;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "bindNamedParameters() %s -> %s [%d]" )
-        void bindNamedParameters( Object value,
-                                  String name,
-                                  int i );
-    }
 }

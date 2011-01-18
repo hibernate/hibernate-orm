@@ -24,7 +24,6 @@
  */
 package org.hibernate.pretty;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,15 +31,12 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Renders entities to a nicely readable string.
@@ -106,11 +102,11 @@ public final class Printer {
 
 	public void toString(Iterator iter, EntityMode entityMode) throws HibernateException {
         if (!LOG.isDebugEnabled() || !iter.hasNext()) return;
-        LOG.listingEntities();
+        LOG.debug("Listing entities:");
 		int i=0;
 		while ( iter.hasNext() ) {
 			if (i++>20) {
-                LOG.more();
+                LOG.debug("More......");
 				break;
 			}
             LOG.debug(toString(iter.next(), entityMode));
@@ -120,19 +116,4 @@ public final class Printer {
 	public Printer(SessionFactoryImplementor factory) {
 		this.factory = factory;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Listing entities:" )
-        void listingEntities();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "More......" )
-        void more();
-    }
 }

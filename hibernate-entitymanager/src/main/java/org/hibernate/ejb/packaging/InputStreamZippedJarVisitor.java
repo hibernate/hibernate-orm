@@ -27,9 +27,7 @@ import java.net.URL;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.ejb.EntityManagerLogger;
 
 
 /**
@@ -39,8 +37,11 @@ import org.slf4j.LoggerFactory;
  * @author Emmanuel Bernard
  */
 public class InputStreamZippedJarVisitor extends AbstractJarVisitor {
-	private final Logger log = LoggerFactory.getLogger( InputStreamZippedJarVisitor.class );
-	private String entry;
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
+
+    private String entry;
 
 	public InputStreamZippedJarVisitor(URL url, Filter[] filters, String entry) {
 		super( url, filters );
@@ -51,14 +52,15 @@ public class InputStreamZippedJarVisitor extends AbstractJarVisitor {
 		super( fileName, filters );
 	}
 
-	protected void doProcessElements() throws IOException {
+	@Override
+    protected void doProcessElements() throws IOException {
 		JarInputStream jis;
 		try {
 			jis = new JarInputStream( jarUrl.openStream() );
 		}
 		catch (Exception ze) {
 			//really should catch IOException but Eclipse is buggy and raise NPE...
-			log.warn( "Unable to find file (ignored): " + jarUrl, ze );
+            LOG.warn(LOG.unableToFindFile(jarUrl), ze);
 			return;
 		}
 		if ( entry != null && entry.length() == 1 ) entry = null; //no entry

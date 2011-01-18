@@ -23,11 +23,11 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.UUID;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -35,10 +35,6 @@ import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -117,19 +113,4 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	public Serializable generate(SessionImplementor session, Object object) throws HibernateException {
 		return valueTransformer.transform( strategy.generateUUID( session ) );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to instantiate UUID generation strategy class : %s" )
-        void unableToInstantiateUuidGenerationStrategy( Exception ignore );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to locate requested UUID generation strategy class : %s" )
-        void unableToLocateUuidGenerationStrategy( String strategyClassName );
-    }
 }

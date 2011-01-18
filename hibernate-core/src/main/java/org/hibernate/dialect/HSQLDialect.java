@@ -23,12 +23,12 @@
  */
 package org.hibernate.dialect;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -50,10 +50,6 @@ import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -666,15 +662,4 @@ public class HSQLDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "HSQLDB supports only READ_UNCOMMITTED isolation" )
-        void hsqldbSupportsOnlyReadCommittedIsolation();
-    }
 }

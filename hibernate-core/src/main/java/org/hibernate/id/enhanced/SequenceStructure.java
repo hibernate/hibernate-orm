@@ -24,19 +24,15 @@
  */
 package org.hibernate.id.enhanced;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Describes a sequence.
@@ -112,7 +108,7 @@ public class SequenceStructure implements DatabaseStructure {
 							rs.next();
 							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
-                            LOG.sequenceValueObtained(value.makeValue());
+                            LOG.debug("Sequence value obtained: " + value.makeValue());
 							return value;
 						}
 						finally {
@@ -161,15 +157,4 @@ public class SequenceStructure implements DatabaseStructure {
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return dialect.getDropSequenceStrings( sequenceName );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Sequence value obtained: %s" )
-        void sequenceValueObtained( Number makeValue );
-    }
 }

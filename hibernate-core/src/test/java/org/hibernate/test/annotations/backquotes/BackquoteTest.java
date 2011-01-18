@@ -16,8 +16,8 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  *
  */
 public class BackquoteTest extends TestCase {
-	
-	private ServiceRegistryHolder serviceRegistryHolder;
+
+    private ServiceRegistryHolder serviceRegistryHolder;
 
 	@Override
     protected void setUp() {

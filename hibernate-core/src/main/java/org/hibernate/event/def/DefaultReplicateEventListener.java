@@ -24,10 +24,10 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.Cascade;
@@ -41,10 +41,6 @@ import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -67,14 +63,14 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 	public void onReplicate(ReplicateEvent event) {
 		final EventSource source = event.getSession();
 		if ( source.getPersistenceContext().reassociateIfUninitializedProxy( event.getObject() ) ) {
-            LOG.uninitializedProxy();
+            LOG.trace("Uninitialized proxy passed to replicate()");
 			return;
 		}
 
 		Object entity = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
 
 		if ( source.getPersistenceContext().isEntryFor( entity ) ) {
-            LOG.ignoringPersistentInstance();
+            LOG.trace("Ignoring persistent instance passed to replicate()");
 			//hum ... should we cascade anyway? throw an exception? fine like it is?
 			return;
 		}
@@ -103,7 +99,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 		}
 
 		if ( oldVersion != null ) {
-            if (LOG.isTraceEnabled()) LOG.foundExistingRow(MessageHelper.infoString(persister, id, source.getFactory()));
+            if (LOG.isTraceEnabled()) LOG.trace("Found existing row for "
+                                                + MessageHelper.infoString(persister, id, source.getFactory()));
 
 			/// HHH-2378
 			final Object realOldVersion = persister.isVersioned() ? oldVersion : null;
@@ -118,13 +115,14 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
             // if can replicate, will result in a SQL UPDATE
             // else do nothing (don't even reassociate object!)
             if (canReplicate) performReplication(entity, id, realOldVersion, persister, replicationMode, source);
-            else LOG.noNeedToReplicate();
+            else LOG.trace("No need to replicate");
 
 			//TODO: would it be better to do a refresh from db?
 		}
 		else {
 			// no existing row - do an insert
-            if (LOG.isTraceEnabled()) LOG.noExistingRow(MessageHelper.infoString(persister, id, source.getFactory()));
+            if (LOG.isTraceEnabled()) LOG.trace("No existing row, replicating new instance "
+                                                + MessageHelper.infoString(persister, id, source.getFactory()));
 
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final EntityKey key = regenerate ?
@@ -174,7 +172,8 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			ReplicationMode replicationMode,
 			EventSource source) throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.replicatingChanges(MessageHelper.infoString(persister, id, source.getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Replicating changes to "
+                                            + MessageHelper.infoString(persister, id, source.getFactory()));
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );
 
@@ -213,35 +212,4 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
     protected CascadingAction getCascadeAction() {
 		return CascadingAction.REPLICATE;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Found existing row for %s" )
-        void foundExistingRow( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Ignoring persistent instance passed to replicate()" )
-        void ignoringPersistentInstance();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "No existing row, replicating new instance %s" )
-        void noExistingRow( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "No need to replicate" )
-        void noNeedToReplicate();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Replicating changes to %s" )
-        void replicatingChanges( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Uninitialized proxy passed to replicate()" )
-        void uninitializedProxy();
-    }
 }

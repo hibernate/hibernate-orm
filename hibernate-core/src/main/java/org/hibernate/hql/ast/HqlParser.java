@@ -24,21 +24,16 @@
  */
 package org.hibernate.hql.ast;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.hql.antlr.HqlBaseParser;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;
 import antlr.RecognitionException;
@@ -339,7 +334,7 @@ public final class HqlParser extends HqlBaseParser {
 				// The next token ( LT(2) ) should be 'by'... otherwise, this is just an ident.
 				if ( LA( 2 ) != LITERAL_by ) {
 					LT( 1 ).setType( IDENT );
-					LOG.weakKeywords( LT( 1 ) );
+                    LOG.debug("weakKeywords() : new LT(1) token - " + LT(1));
 				}
 				break;
 			default:
@@ -348,7 +343,7 @@ public final class HqlParser extends HqlBaseParser {
                     HqlToken hqlToken = (HqlToken)LT(1);
                     if (hqlToken.isPossibleID()) {
                         hqlToken.setType(IDENT);
-                        LOG.weakKeywords(LT(1));
+                        LOG.debug("weakKeywords() : new LT(1) token - " + LT(1));
                     }
                 }
 				break;
@@ -366,7 +361,7 @@ public final class HqlParser extends HqlBaseParser {
             {
                 // Set it!
                 LT( 2 ).setType( IDENT );
-                LOG.handleDotIdent(LT(1));
+                LOG.debug("handleDotIdent() : new LT(2) token - " + LT(1));
             }
         }
     }
@@ -384,23 +379,4 @@ public final class HqlParser extends HqlBaseParser {
 		//overriden to avoid System.exit
 		throw new QueryException("Parser: panic");
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "handleDotIdent() : new LT(2) token - %s" )
-        void handleDotIdent( Token lt );
-
-        @LogMessage( level = WARN )
-        @Message( value = "processEqualityExpression() : No expression to process!" )
-        void processEqualityExpression();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "weakKeywords() : new LT(1) token - %s" )
-        void weakKeywords( Token lt );
-    }
 }

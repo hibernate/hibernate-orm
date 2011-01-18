@@ -23,19 +23,13 @@
  */
 package org.hibernate.type;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A registry of {@link BasicType} instances
@@ -142,7 +136,7 @@ public class BasicTypeRegistry implements Serializable {
 		for ( String key : type.getRegistrationKeys() ) {
 			// be safe...
             if (key == null) continue;
-            LOG.addingTypeRegistration(key, type);
+            LOG.debug("Adding type registration " + key + " -> " + type);
 			final Type old = registry.put( key, type );
             if (old != null && old != type) LOG.typeRegistrationOverridesPrevious(key, old);
 		}
@@ -163,25 +157,4 @@ public class BasicTypeRegistry implements Serializable {
 	public BasicTypeRegistry shallowCopy() {
 		return new BasicTypeRegistry( this.registry );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Adding type registration %s -> %s" )
-        void addingTypeRegistration( String key,
-                                     BasicType type );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Type [%s] defined no registration keys; ignoring" )
-        void typeDefinedNoRegistrationKeys( BasicType type );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Type registration [%s] overrides previous : %s" )
-        void typeRegistrationOverridesPrevious( String key,
-                                                Type old );
-    }
 }

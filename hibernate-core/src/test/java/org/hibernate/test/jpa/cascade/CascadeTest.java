@@ -1,5 +1,6 @@
 package org.hibernate.test.jpa.cascade;
 
+import static org.hibernate.aTestLogger.LOG;
 import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;

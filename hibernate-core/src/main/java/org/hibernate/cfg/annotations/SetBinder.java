@@ -23,15 +23,11 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.WARN;
+import org.hibernate.Logger;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Bind a set.
@@ -62,15 +58,4 @@ public class SetBinder extends CollectionBinder {
             else LOG.orderByAttributeIgnored();
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Attribute \"order-by\" ignored in JDK1.3 or less" )
-        void orderByAttributeIgnored();
-    }
 }

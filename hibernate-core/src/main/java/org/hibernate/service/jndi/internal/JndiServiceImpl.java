@@ -23,18 +23,14 @@
  */
 package org.hibernate.service.jndi.internal;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.Hashtable;
 import java.util.Map;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import org.hibernate.Logger;
 import org.hibernate.internal.util.jndi.JndiException;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.jndi.spi.JndiService;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Standard implementation of JNDI services.
@@ -92,15 +88,4 @@ public class JndiServiceImpl implements JndiService {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Error closing InitialContext [%s]" )
-        void unableToCloseInitialContext( String string );
-    }
 }

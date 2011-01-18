@@ -25,9 +25,9 @@
  */
 package org.hibernate.test.annotations.fetchprofile;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.io.InputStream;
 import junit.framework.TestCase;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -41,15 +41,15 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  */
 public class FetchProfileTest extends TestCase {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
-
 	private ServiceRegistryHolder serviceRegistryHolder;
 
-	protected void setUp() {
+	@Override
+    protected void setUp() {
 		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
 	}
 
-	protected void tearDown() {
+	@Override
+    protected void tearDown() {
 		if ( serviceRegistryHolder != null ) {
 			serviceRegistryHolder.destroy();
 		}

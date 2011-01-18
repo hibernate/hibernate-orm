@@ -33,25 +33,25 @@ import javax.persistence.ExcludeDefaultListeners;
 import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
-
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.ejb.EntityManagerLogger;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
 public final class CallbackResolver {
-	private static Logger log = LoggerFactory.getLogger(CallbackResolver.class);	
-	
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
+
 	private static boolean useAnnotationAnnotatedByListener;
 
 	static {
 		//check whether reading annotations of annotations is useful or not
 		useAnnotationAnnotatedByListener = false;
-		Target target = (Target) EntityListeners.class.getAnnotation( Target.class );
+		Target target = EntityListeners.class.getAnnotation( Target.class );
 		if ( target != null ) {
 			for ( ElementType type : target.value() ) {
 				if ( type.equals( ElementType.ANNOTATION_TYPE ) ) useAnnotationAnnotatedByListener = true;
@@ -90,10 +90,9 @@ public final class CallbackResolver {
 												.getName() + " - " + xMethod
 								);
 							}
-							if ( ! method.isAccessible() ) {
-								method.setAccessible( true );
-							}
-							log.debug("Adding {} as {} callback for entity {}.", new String[]{methodName, annotation.getSimpleName(), beanClass.getName()});
+                            if (!method.isAccessible()) method.setAccessible(true);
+                            LOG.debug("Adding " + methodName + " as " + annotation.getSimpleName() + " callback for entity "
+                                      + beanClass.getName() + ".");
 							callbacks.add( 0, callback ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
@@ -173,10 +172,9 @@ public final class CallbackResolver {
 														.getName() + " - " + method
 										);
 									}
-									if ( ! method.isAccessible() ) {
-										method.setAccessible( true );
-									}
-									log.debug("Adding {} as {} callback for entity {}.", new String[]{methodName, annotation.getSimpleName(), beanClass.getName()});
+                                    if (!method.isAccessible()) method.setAccessible(true);
+                                    LOG.debug("Adding " + methodName + " as " + annotation.getSimpleName()
+                                              + " callback for entity " + beanClass.getName() + ".");
 									callbacks.add( 0, callback ); // listeners first
 								}
 								else {
@@ -198,7 +196,7 @@ public final class CallbackResolver {
 	}
 
 	private static void getListeners(XClass currentClazz, List<Class> orderedListeners) {
-		EntityListeners entityListeners = (EntityListeners) currentClazz.getAnnotation( EntityListeners.class );
+		EntityListeners entityListeners = currentClazz.getAnnotation( EntityListeners.class );
 		if ( entityListeners != null ) {
 			Class[] classes = entityListeners.value();
 			int size = classes.length;

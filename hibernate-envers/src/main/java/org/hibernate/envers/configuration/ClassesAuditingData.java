@@ -1,24 +1,24 @@
 package org.hibernate.envers.configuration;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.hibernate.MappingException;
+import org.hibernate.envers.EnversLogger;
 import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.MappingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 
 /**
  * A helper class holding auditing meta-data for all persistent classes.
  * @author Adam Warski (adam at warski dot org)
  */
 public class ClassesAuditingData {
-    private static final Logger log = LoggerFactory.getLogger(ClassesAuditingData.class);
+
+    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
+                                                                                     ClassesAuditingData.class.getPackage().getName());
 
     private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<String, ClassAuditingData>();
     private final Map<PersistentClass, ClassAuditingData> persistentClassToAuditingData = new LinkedHashMap<PersistentClass, ClassAuditingData>();
@@ -51,7 +51,7 @@ public class ClassesAuditingData {
     /**
      * After all meta-data is read, updates calculated fields. This includes:
      * <ul>
-     * <li>setting {@code forceInsertable} to {@code true} for properties specified by {@code @AuditMappedBy}</li> 
+     * <li>setting {@code forceInsertable} to {@code true} for properties specified by {@code @AuditMappedBy}</li>
      * </ul>
      */
     public void updateCalculatedFields() {
@@ -84,9 +84,8 @@ public class ClassesAuditingData {
                     referencedEntityName + "." + propertyName);
             }
 
-            log.debug("Non-insertable property " + referencedEntityName + "." + propertyName +
-                    " will be made insertable because a matching @AuditMappedBy was found in the " +
-                    entityName + " entity.");
+            LOG.debug("Non-insertable property " + referencedEntityName + "." + propertyName
+                      + " will be made insertable because a matching @AuditMappedBy was found in the " + entityName + " entity.");
 
             classAuditingData
                     .getPropertyAuditingData(propertyName)

@@ -23,12 +23,8 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
+import org.hibernate.Logger;
 import org.hibernate.jdbc.util.FormatStyle;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Centralize logging for SQL statements.
@@ -95,19 +91,8 @@ public class SQLStatementLogger {
 	public void logStatement(String statement) {
 		// for now just assume a DML log for formatting
         if (format && (logToStdout || LOG.isDebugEnabled())) statement = FormatStyle.BASIC.getFormatter().format(statement);
-        LOG.statement(statement);
+        LOG.debug(statement);
         if (logToStdout) System.out.println("Hibernate: " + statement);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "%s" )
-        void statement( String statement );
-    }
 }
 

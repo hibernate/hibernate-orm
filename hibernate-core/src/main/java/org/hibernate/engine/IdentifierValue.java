@@ -24,12 +24,8 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -52,7 +48,7 @@ public class IdentifierValue {
 	public static final IdentifierValue ANY = new IdentifierValue() {
 		@Override
         public final Boolean isUnsaved(Serializable id) {
-            LOG.idUnsavedValueStrategy("ANY");
+            LOG.trace("ID unsaved-value strategy ANY");
 			return Boolean.TRUE;
 		}
 		@Override
@@ -71,7 +67,7 @@ public class IdentifierValue {
 	public static final IdentifierValue NONE = new IdentifierValue() {
 		@Override
         public final Boolean isUnsaved(Serializable id) {
-            LOG.idUnsavedValueStrategy("NONE");
+            LOG.trace("ID unsaved-value strategy NONE");
 			return Boolean.FALSE;
 		}
 		@Override
@@ -91,7 +87,7 @@ public class IdentifierValue {
 	public static final IdentifierValue NULL = new IdentifierValue() {
 		@Override
         public final Boolean isUnsaved(Serializable id) {
-            LOG.idUnsavedValueStrategy("NULL");
+            LOG.trace("ID unsaved-value strategy NULL");
 			return id==null ? Boolean.TRUE : Boolean.FALSE;
 		}
 		@Override
@@ -110,7 +106,7 @@ public class IdentifierValue {
 	public static final IdentifierValue UNDEFINED = new IdentifierValue() {
 		@Override
         public final Boolean isUnsaved(Serializable id) {
-            LOG.idUnsavedValueStrategy("UNDEFINED");
+            LOG.trace("ID unsaved-value strategy UNDEFINED");
 			return null;
 		}
 		@Override
@@ -139,7 +135,7 @@ public class IdentifierValue {
 	 * Does the given identifier belong to a new instance?
 	 */
 	public Boolean isUnsaved(Serializable id) {
-        LOG.idUnsavedValue(value);
+        LOG.trace("ID unsaved-value: " + value);
 		return id==null || id.equals(value) ? Boolean.TRUE : Boolean.FALSE;
 	}
 
@@ -151,19 +147,4 @@ public class IdentifierValue {
     public String toString() {
 		return "identifier unsaved-value: " + value;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "ID unsaved-value: %s" )
-        void idUnsavedValue( Serializable value );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "ID unsaved-value strategy %s" )
-        void idUnsavedValueStrategy( String name );
-    }
 }

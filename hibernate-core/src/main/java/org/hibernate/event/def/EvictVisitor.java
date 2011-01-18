@@ -24,18 +24,14 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.event.EventSource;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Evict any collections referenced by the object from the session cache.
@@ -80,9 +76,10 @@ public class EvictVisitor extends AbstractVisitor {
 
 	private void evictCollection(PersistentCollection collection) {
 		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove(collection);
-        if (LOG.isDebugEnabled()) LOG.evictingCollection(MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                            ce.getLoadedKey(),
-                                                                                            getSession().getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debug("Evicting collection: "
+                                            + MessageHelper.collectionInfoString(ce.getLoadedPersister(),
+                                                                                 ce.getLoadedKey(),
+                                                                                 getSession().getFactory()));
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(
@@ -90,15 +87,4 @@ public class EvictVisitor extends AbstractVisitor {
 			);
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Evicting collection: %s" )
-        void evictingCollection( String infoString );
-    }
 }

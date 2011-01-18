@@ -24,13 +24,9 @@
  */
 package org.hibernate.hql.ast.util;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
+import org.hibernate.Logger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.ASTFactory;
 import antlr.collections.AST;
 
@@ -67,23 +63,11 @@ public final class PathHelper {
 				lhs = ASTUtil.createBinarySubtree( factory, HqlSqlTokenTypes.DOT, ".", lhs, child );
 			}
 		}
-        if (LOG.isDebugEnabled()) LOG.parsePath(path, ASTUtil.getDebugString(lhs));
+        if (LOG.isDebugEnabled()) LOG.debug("parsePath() : " + path + " -> " + ASTUtil.getDebugString(lhs));
 		return lhs;
 	}
 
 	public static String getAlias(String path) {
 		return StringHelper.root( path );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "parsePath() : %s -> %s" )
-        void parsePath( String path,
-                        String debugString );
-    }
 }

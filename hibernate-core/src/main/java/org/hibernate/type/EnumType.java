@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.util.ReflectHelper;
@@ -79,7 +80,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
 		Object object = rs.getObject( names[0] );
 		if ( rs.wasNull() ) {
-            if (LOG.isTraceEnabled()) LOG.returningAsColumn(names[0]);
+            if (LOG.isTraceEnabled()) LOG.trace("Returning null as column " + names[0]);
 			return null;
 		}
 		if ( object instanceof Number ) {
@@ -87,12 +88,12 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 			int ordinal = ( ( Number ) object ).intValue();
             if (ordinal < 0 || ordinal >= enumValues.length) throw new IllegalArgumentException("Unknown ordinal value for enum "
                                                                                                 + enumClass + ": " + ordinal);
-            if (LOG.isTraceEnabled()) LOG.returningAsColumn(ordinal, names[0]);
+            if (LOG.isTraceEnabled()) LOG.trace("Returning '" + ordinal + "' as column " + names[0]);
 			return enumValues[ordinal];
 		}
 		else {
 			String name = ( String ) object;
-            if (LOG.isTraceEnabled()) LOG.returningAsColumn(name, names[0]);
+            if (LOG.isTraceEnabled()) LOG.trace("Returning '" + name + "' as column " + names[0]);
 			try {
 				return Enum.valueOf( enumClass, name );
 			}
@@ -104,19 +105,19 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
 		if ( value == null ) {
-            if (LOG.isTraceEnabled()) LOG.bindingToParameter(index);
+            if (LOG.isTraceEnabled()) LOG.trace("Binding null to parameter: " + index);
 			st.setNull( index, sqlType );
 		}
 		else {
 			boolean isOrdinal = isOrdinal( sqlType );
 			if ( isOrdinal ) {
 				int ordinal = ( ( Enum<?> ) value ).ordinal();
-                if (LOG.isTraceEnabled()) LOG.bindingToParameter(ordinal, index);
+                if (LOG.isTraceEnabled()) LOG.trace("Binding '" + ordinal + "' to parameter: " + index);
 				st.setObject( index, Integer.valueOf( ordinal ), sqlType );
 			}
 			else {
 				String enumString = ( ( Enum<?> ) value ).name();
-                if (LOG.isTraceEnabled()) LOG.bindingToParameter(enumString, index);
+                if (LOG.isTraceEnabled()) LOG.trace("Binding '" + enumString + "' to parameter: " + index);
 				st.setObject( index, enumString, sqlType );
 			}
 		}

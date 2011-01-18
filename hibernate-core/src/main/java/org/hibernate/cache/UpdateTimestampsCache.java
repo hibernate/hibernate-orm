@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Settings;
 
 /**
@@ -43,7 +44,8 @@ import org.hibernate.cfg.Settings;
  */
 public class UpdateTimestampsCache {
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                UpdateTimestampsCache.class.getPackage().getName());
 
 	private final TimestampsRegion region;
 
@@ -58,7 +60,7 @@ public class UpdateTimestampsCache {
 		//TODO: to handle concurrent writes correctly, this should return a Lock to the client
 		Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
 		for ( int i=0; i<spaces.length; i++ ) {
-            LOG.preInvalidatingSpace(spaces[i]);
+            LOG.debug("Pre-invalidating space [" + spaces[i] + "]");
 			//put() has nowait semantics, is this really appropriate?
 			//note that it needs to be async replication, never local or sync
 			region.put( spaces[i], ts );
@@ -71,7 +73,7 @@ public class UpdateTimestampsCache {
 		Long ts = new Long( region.nextTimestamp() );
 		//TODO: if lock.getTimestamp().equals(ts)
 		for ( int i=0; i<spaces.length; i++ ) {
-            LOG.invalidatingSpace(spaces[i], ts);
+            LOG.debug("Invalidating space [" + spaces[i] + "], timestamp: " + ts);
 			//put() has nowait semantics, is this really appropriate?
 			//note that it needs to be async replication, never local or sync
 			region.put( spaces[i], ts );
@@ -90,7 +92,7 @@ public class UpdateTimestampsCache {
 				//result = false; // safer
 			}
 			else {
-                LOG.spaceLastUpdated(space, lastUpdate, timestamp);
+                LOG.debug("[" + space + "] last update timestamp: " + lastUpdate + ", result set timestamp: " + timestamp);
 				if ( lastUpdate.longValue() >= timestamp.longValue() ) {
 					return false;
 				}

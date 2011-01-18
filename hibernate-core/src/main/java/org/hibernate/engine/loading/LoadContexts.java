@@ -24,8 +24,6 @@
  */
 package org.hibernate.engine.loading;
 
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -33,6 +31,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
+import org.hibernate.Logger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.PersistenceContext;
@@ -40,10 +39,6 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.util.IdentityMap;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Maps {@link ResultSet result-sets} to specific contextual data
@@ -184,14 +179,10 @@ public class LoadContexts {
 	 */
 	public CollectionLoadContext getCollectionLoadContext(ResultSet resultSet) {
 		CollectionLoadContext context = null;
-		if ( collectionLoadContexts == null ) {
-			collectionLoadContexts = IdentityMap.instantiate( 8 );
-		}
-		else {
-			context = ( CollectionLoadContext ) collectionLoadContexts.get( resultSet );
-		}
+        if (collectionLoadContexts == null) collectionLoadContexts = IdentityMap.instantiate(8);
+        else context = (CollectionLoadContext)collectionLoadContexts.get(resultSet);
 		if ( context == null ) {
-            LOG.constructingCollectionLoadContext(resultSet);
+            LOG.trace("Constructing collection load context for result set [" + resultSet + "]");
 			context = new CollectionLoadContext( this, resultSet );
 			collectionLoadContexts.put( resultSet, context );
 		}
@@ -209,15 +200,13 @@ public class LoadContexts {
 	public PersistentCollection locateLoadingCollection(CollectionPersister persister, Serializable ownerKey) {
 		LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey, getEntityMode() ) );
 		if ( lce != null ) {
-            if (LOG.isTraceEnabled()) LOG.returningLoadingCollection(MessageHelper.collectionInfoString(persister,
-                                                                                                        ownerKey,
-                                                                                                        getSession().getFactory()));
+            if (LOG.isTraceEnabled()) LOG.trace("Returning loading collection: "
+                                                + MessageHelper.collectionInfoString(persister, ownerKey, getSession().getFactory()));
 			return lce.getCollection();
 		}
         // TODO : should really move this log statement to CollectionType, where this is used from...
-        if (LOG.isTraceEnabled()) LOG.creatingCollectionWrapper(MessageHelper.collectionInfoString(persister,
-                                                                                                   ownerKey,
-                                                                                                   getSession().getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Creating collection wrapper: "
+                                            + MessageHelper.collectionInfoString(persister, ownerKey, getSession().getFactory()));
         return null;
 	}
 
@@ -283,13 +272,11 @@ public class LoadContexts {
 	 * @return The located entry; or null.
 	 */
 	LoadingCollectionEntry locateLoadingCollectionEntry(CollectionKey key) {
-		if ( xrefLoadingCollectionEntries == null ) {
-			return null;
-		}
-        LOG.locatingLoadingCollectionEntry(key);
+        if (xrefLoadingCollectionEntries == null) return null;
+        LOG.trace("Attempting to locate loading collection entry [" + key + "] in any result-set context");
 		LoadingCollectionEntry rtn = ( LoadingCollectionEntry ) xrefLoadingCollectionEntries.get( key );
-        if (rtn == null) LOG.collectionNotLocated(key);
-        else LOG.collectionLocated(key);
+        if (rtn == null) LOG.trace("Collection [" + key + "] not located in load context");
+        else LOG.trace("Collection [" + key + "] located in load context");
 		return rtn;
 	}
 
@@ -319,43 +306,4 @@ public class LoadContexts {
 		}
 		return context;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Collection [%s] located in load context" )
-        void collectionLocated( CollectionKey key );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Collection [%s] not located in load context" )
-        void collectionNotLocated( CollectionKey key );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Constructing collection load context for result set [%s]" )
-        void constructingCollectionLoadContext( ResultSet resultSet );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Creating collection wrapper: %s" )
-        void creatingCollectionWrapper( String collectionInfoString );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Fail-safe cleanup (collections) : %s" )
-        void failSafeCleanup( CollectionLoadContext collectionLoadContext );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Fail-safe cleanup (entities) : %s" )
-        void failSafeCleanup( EntityLoadContext entityLoadContext );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Attempting to locate loading collection entry [%s] in any result-set context" )
-        void locatingLoadingCollectionEntry( CollectionKey key );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Returning loading collection: %s" )
-        void returningLoadingCollection( String collectionInfoString );
-    }
 }

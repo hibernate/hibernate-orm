@@ -1,7 +1,6 @@
 //$Id: HibernateService.java 6100 2005-03-17 10:48:03Z turin42 $
 package org.hibernate.jmx;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.Map;
 import java.util.Properties;
 import javax.naming.InitialContext;
@@ -12,10 +11,6 @@ import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.ExternalSessionFactoryConfig;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -42,7 +37,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 		}
 		catch (HibernateException he) {
             LOG.unableToBuildSessionFactoryUsingMBeanClasspath(he.getMessage());
-            LOG.debug(LOG.errorWas(), he);
+            LOG.debug("Error was", he);
 			new SessionFactoryStub(this);
 		}
 	}
@@ -169,33 +164,4 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	public Properties getProperties() {
 		return buildProperties();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Error was" )
-        Object errorWas();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Service properties: %s" )
-        void serviceProperties( Properties properties );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Starting service at JNDI name: %s" )
-        void startingServiceAtJndiName( String boundName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Stopping service" )
-        void stoppingService();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Could not build SessionFactory using the MBean classpath - will try again using client classpath: %s" )
-        void unableToBuildSessionFactoryUsingMBeanClasspath( String message );
-
-        @Message( value = "Exception while stopping service" )
-        Object unableToStopService();
-    }
 }

@@ -23,22 +23,19 @@
  */
 package org.hibernate.cache;
 
+import java.net.URL;
+import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.StringHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.net.URL;
-import java.util.Properties;
 
 /**
  * Cache Provider plugin for Hibernate
  *
  * Use <code>hibernate.cache.provider_class=org.hibernate.cache.EhCacheProvider</code>
  * in Hibernate 3.x or later
- * 
+ *
  * Taken from EhCache 0.9 distribution
  * @author Greg Luck
  * @author Emmanuel Bernard
@@ -69,7 +66,8 @@ import java.util.Properties;
  */
 public class EhCacheProvider implements CacheProvider {
 
-    private static final Logger log = LoggerFactory.getLogger(EhCacheProvider.class);
+    private static final EhCacheLogger LOG = org.jboss.logging.Logger.getMessageLogger(EhCacheLogger.class,
+                                                                                       EhCacheLogger.class.getPackage().getName());
 
 	private CacheManager manager;
 
@@ -90,10 +88,10 @@ public class EhCacheProvider implements CacheProvider {
 	    try {
             net.sf.ehcache.Cache cache = manager.getCache(name);
             if (cache == null) {
-                log.warn("Could not find configuration [" + name + "]; using defaults.");
+                LOG.unableToFindConfiguration(name);
                 manager.addCache(name);
                 cache = manager.getCache(name);
-                log.debug("started EHCache region: " + name);
+                LOG.debug("Started EHCache region: " + name);
             }
             return new EhCache(cache);
 	    }
@@ -117,9 +115,7 @@ public class EhCacheProvider implements CacheProvider {
 	 */
 	public void start(Properties properties) throws CacheException {
 		if (manager != null) {
-            log.warn("Attempt to restart an already started EhCacheProvider. Use sessionFactory.close() " +
-                    " between repeated calls to buildSessionFactory. Using previously created EhCacheProvider." +
-                    " If this behaviour is required, consider using net.sf.ehcache.hibernate.SingletonEhCacheProvider.");
+            LOG.attemptToRestartAlreadyStartedEhCacheProvider();
             return;
         }
         try {
@@ -141,18 +137,14 @@ public class EhCacheProvider implements CacheProvider {
                 throw new CacheException("Attempt to restart an already started EhCacheProvider. Use sessionFactory.close() " +
                     " between repeated calls to buildSessionFactory. Consider using net.sf.ehcache.hibernate.SingletonEhCacheProvider."
 						, e );
-            } else {
-                throw e;
             }
+            throw e;
         }
 	}
 
 	private URL loadResource(String configurationResourceName) {
 		URL url = ConfigHelper.locateConfig( configurationResourceName );
-        if (log.isDebugEnabled()) {
-            log.debug("Creating EhCacheProvider from a specified resource: "
-                    + configurationResourceName + " Resolved to URL: " + url);
-        }
+        LOG.debug("Creating EhCacheProvider from a specified resource: " + configurationResourceName + " Resolved to URL: " + url);
         return url;
     }
 

@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.hibernate.Logger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTUtil;
@@ -276,7 +277,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addJoinByPathMap(String path, FromElement destination) {
-        LOG.addJoinByPathMap(path, destination.getDisplayText());
+        LOG.debug("addJoinByPathMap() : " + path + " -> " + destination.getDisplayText());
 		fromElementsByPath.put( path, destination );
 	}
 
@@ -346,7 +347,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	public void promoteJoin(FromElement elem) {
-        LOG.promoting(elem, this);
+        LOG.debug("Promoting [" + elem + "] to [" + this + "]");
 		//TODO: implement functionality
 		//  this might be painful to do here, as the "join post processing" for
 		//  the subquery has already been performed (meaning that for
@@ -362,7 +363,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addCollectionJoinFromElementByPath(String path, FromElement destination) {
-        LOG.addCollectionJoinFromElementByPath(path, destination);
+        LOG.debug("addCollectionJoinFromElementByPath() : " + path + " -> " + destination);
 		collectionJoinFromElementsByPath.put( path, destination );	// Add the new node to the map so that we don't create it twice.
 	}
 

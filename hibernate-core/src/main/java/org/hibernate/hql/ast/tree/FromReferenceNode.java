@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -69,7 +70,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 
 	public void setResolved() {
 		this.resolved = true;
-        LOG.resolved(this.getPath(), this.getText());
+        LOG.debug("Resolved :  " + this.getPath() + " -> " + this.getText());
 	}
 
 	public String getDisplayText() {

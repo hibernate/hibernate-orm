@@ -23,9 +23,9 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Map;
 import org.hibernate.AnnotationException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
 import org.hibernate.annotations.Sort;
@@ -45,10 +45,6 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Bind a list to the underlying Hibernate configuration
@@ -147,19 +143,4 @@ public class ListBinder extends CollectionBinder {
 			);
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "@OrderBy not allowed for an indexed collection, annotation ignored." )
-        void orderByAnnotationIndexedCollection();
-
-        @LogMessage( level = WARN )
-        @Message( value = "@Sort not allowed for an indexed collection, annotation ignored." )
-        void sortAnnotationIndexedCollection();
-    }
 }

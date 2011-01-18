@@ -25,9 +25,7 @@ package org.hibernate.metamodel.relational;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.Logger;
 
 /**
  * Models the notion of a foreign key.
@@ -39,7 +37,8 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class ForeignKey extends AbstractConstraint implements Constraint, Exportable {
-	private static final Logger log = LoggerFactory.getLogger( ForeignKey.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
 
 	private final TableSpecification targetTable;
 	private List<Column> targetColumns;
@@ -78,25 +77,13 @@ public class ForeignKey extends AbstractConstraint implements Constraint, Export
 
 	public void addColumnMapping(Column sourceColumn, Column targetColumn) {
 		if ( targetColumn == null ) {
-			if ( targetColumns != null ) {
-				if ( log.isWarnEnabled() ) {
-					log.warn(
-							"Attempt to map column [" + sourceColumn.toLoggableString()
-									+ "] to no target column after explicit target column(s) named for FK [name="
-									+ getName() + "]"
-					);
-				}
-			}
+            if (targetColumns != null) LOG.attemptToMapColumnToNoTargetColumn(sourceColumn.toLoggableString(), getName());
 		}
 		else {
 			if ( targetColumns == null ) {
-				if ( !internalColumnAccess().isEmpty() ) {
-					log.warn(
-							"Value mapping mismatch as part of FK [table=" + getTable().toLoggableString()
-									+ ", name=" + getName() + "] while adding source column ["
-									+ sourceColumn.toLoggableString() + "]"
-					);
-				}
+                if (!internalColumnAccess().isEmpty()) LOG.valueMappingMismatch(getTable().toLoggableString(),
+                                                                                getName(),
+                                                                                sourceColumn.toLoggableString());
 				targetColumns = new ArrayList<Column>();
 			}
 			targetColumns.add( targetColumn );

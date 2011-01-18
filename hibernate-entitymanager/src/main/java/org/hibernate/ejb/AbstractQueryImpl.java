@@ -23,6 +23,15 @@
  */
 package org.hibernate.ejb;
 
+import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
+import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
+import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
+import static org.hibernate.ejb.QueryHints.HINT_COMMENT;
+import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
+import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.ejb.QueryHints.HINT_READONLY;
+import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,25 +42,11 @@ import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TypeMismatchException;
-import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.ejb.QueryHints.HINT_COMMENT;
-import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
-import static org.hibernate.ejb.QueryHints.HINT_READONLY;
-import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
-import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
-
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
@@ -67,7 +62,9 @@ import org.hibernate.hql.QueryExecutionRequestException;
  * @author Steve Ebersole
  */
 public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
-	private static final Logger log = LoggerFactory.getLogger( AbstractQueryImpl.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	private final HibernateEntityManagerImplementor entityManager;
 
@@ -207,7 +204,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 			}
 			else if ( SPEC_HINT_TIMEOUT.equals( hintName ) ) {
 				// convert milliseconds to seconds
-				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 ); 
+				int timeout = (int)Math.round(ConfigurationHelper.getInteger( value ).doubleValue() / 1000.0 );
 				applyTimeout( new Integer(timeout) );
 			}
 			else if ( HINT_COMMENT.equals( hintName ) ) {
@@ -272,14 +269,14 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 						applyAliasSpecificLockMode( alias, lockMode );
 					}
 					catch ( Exception e ) {
-						log.info( "Unable to determine lock mode value : {} -> {}", hintName, value );
+                        LOG.unableToDetermineLockModeValue(hintName, value);
 						skipped = true;
 					}
 				}
 			}
 			else {
 				skipped = true;
-				log.info( "Ignoring unrecognized query hint [" + hintName + "]" );
+                LOG.ignoringUnrecognizedQueryHint(hintName);
 			}
 		}
 		catch ( ClassCastException e ) {

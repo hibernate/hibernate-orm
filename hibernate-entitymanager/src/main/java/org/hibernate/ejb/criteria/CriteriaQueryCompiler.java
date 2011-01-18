@@ -24,28 +24,24 @@
 package org.hibernate.ejb.criteria;
 
 import java.io.Serializable;
-import java.util.Set;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.TypedQuery;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.Parameter;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.StringHelper;
 
 /**
@@ -58,7 +54,9 @@ import org.hibernate.util.StringHelper;
  * @author Steve Ebersole
  */
 public class CriteriaQueryCompiler implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( CriteriaQueryCompiler.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	/**
 	 * Used to describe implicit (not defined in criteria query) parameters.
@@ -222,7 +220,7 @@ public class CriteriaQueryCompiler implements Serializable {
 
 		final RenderedCriteriaQuery renderedCriteriaQuery = criteriaQueryImpl.render( renderingContext );
 
-		log.debug( "Rendered criteria query -> {}", renderedCriteriaQuery.getQueryString() );
+        LOG.debug("Rendered criteria query -> " + renderedCriteriaQuery.getQueryString());
 
 		TypedQuery<T> jpaqlQuery = entityManager.createQuery(
 				renderedCriteriaQuery.getQueryString(),
@@ -332,7 +330,7 @@ public class CriteriaQueryCompiler implements Serializable {
 			@SuppressWarnings({ "RedundantCast" })
 			private Parameter mapToNamedParameter(Parameter criteriaParameter) {
 				return jpaqlQuery.getParameter(
-						explicitParameterMapping.get( (ParameterExpression) criteriaParameter )
+						explicitParameterMapping.get( criteriaParameter )
 				);
 			}
 
@@ -373,7 +371,7 @@ public class CriteriaQueryCompiler implements Serializable {
 			public <T> Parameter<T> getParameter(String name, Class<T> type) {
 				Parameter parameter = resolveExplicitCriteriaParameterName( name );
 				if ( type.isAssignableFrom( parameter.getParameterType() ) ) {
-					return (Parameter<T>) parameter;
+					return parameter;
 				}
 				throw new IllegalArgumentException(
 						"Named parameter [" + name + "] type is not assignanle to request type ["

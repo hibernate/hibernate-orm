@@ -24,15 +24,11 @@
  */
 package org.hibernate.hql.ast;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.RecognitionException;
 
 /**
@@ -82,17 +78,6 @@ public class ErrorCounter implements ParseErrorHandler {
             if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert((RecognitionException)recognitionExceptions.get(0));
             throw new QueryException(getErrorString());
         }
-        LOG.throwQueryException();
+        LOG.debug("throwQueryException() : no errors");
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "throwQueryException() : no errors" )
-        void throwQueryException();
-    }
 }

@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import org.dom4j.Node;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -123,12 +124,12 @@ public abstract class NullableType extends AbstractType implements StringReprese
 	throws HibernateException, SQLException {
 		try {
 			if ( value == null ) {
-                if (LOG.isTraceEnabled()) LOG.bindingToParameter(index);
+                if (LOG.isTraceEnabled()) LOG.trace("Binding null to parameter: " + index);
 
 				st.setNull( index, sqlType() );
 			}
 			else {
-                if (LOG.isTraceEnabled()) LOG.bindingToParameter(toString(value), index);
+                if (LOG.isTraceEnabled()) LOG.trace("Binding '" + toString(value) + "' to parameter: " + index);
 
 				set( st, value, index );
 			}
@@ -162,10 +163,10 @@ public abstract class NullableType extends AbstractType implements StringReprese
 		try {
 			Object value = get(rs, name);
 			if ( value == null || rs.wasNull() ) {
-                if (LOG.isTraceEnabled()) LOG.returningAsColumn(name);
+                if (LOG.isTraceEnabled()) LOG.trace("Returning null as column " + name);
 				return null;
 			}
-            if (LOG.isTraceEnabled()) LOG.returningAsColumn(toString(value), name);
+            if (LOG.isTraceEnabled()) LOG.trace("Returning '" + toString(value) + "' as column " + name);
             return value;
 		}
 		catch ( RuntimeException re ) {

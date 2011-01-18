@@ -23,19 +23,15 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.action.CollectionRemoveAction;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -99,9 +95,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @throws HibernateException
 	 */
 	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source) throws HibernateException {
-        if (LOG.isTraceEnabled()) LOG.collectionDereferencedWhileTransient(MessageHelper.collectionInfoString(role,
-                                                                                                              ownerIdentifier,
-                                                                                                              source.getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Collection dereferenced while transient "
+                                            + MessageHelper.collectionInfoString(role, ownerIdentifier, source.getFactory()));
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}
 
@@ -120,15 +115,4 @@ public abstract class ReattachVisitor extends ProxyVisitor {
                                                                              role.getCollectionType().getLHSPropertyName(),
                                                                              getSession().getEntityMode());
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Collection dereferenced while transient %s" )
-        void collectionDereferencedWhileTransient( String collectionInfoString );
-    }
 }

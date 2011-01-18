@@ -24,13 +24,9 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.TRACE;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A strategy for determining if a version value is an version of
@@ -53,7 +49,7 @@ public class VersionValue {
 	public static final VersionValue NULL = new VersionValue() {
 		@Override
         public final Boolean isUnsaved(Object version) {
-            LOG.versionUnsavedValueStrategy("NULL");
+            LOG.trace("Version unsaved-value strategy NULL");
 			return version==null ? Boolean.TRUE : Boolean.FALSE;
 		}
 		@Override
@@ -72,7 +68,7 @@ public class VersionValue {
 	public static final VersionValue UNDEFINED = new VersionValue() {
 		@Override
         public final Boolean isUnsaved(Object version) {
-            LOG.versionUnsavedValueStrategy("UNDEFINED");
+            LOG.trace("Version unsaved-value strategy UNDEFINED");
 			return version==null ? Boolean.TRUE : null;
 		}
 		@Override
@@ -92,7 +88,7 @@ public class VersionValue {
 
 		@Override
         public final Boolean isUnsaved(Object version) throws MappingException {
-            LOG.versionUnsavedValueStrategy("NEGATIVE");
+            LOG.trace("Version unsaved-value strategy NEGATIVE");
 			if (version==null) return Boolean.TRUE;
             if (version instanceof Number) return ((Number)version).longValue() < 0l ? Boolean.TRUE : Boolean.FALSE;
             throw new MappingException("unsaved-value NEGATIVE may only be used with short, int and long types");
@@ -129,7 +125,7 @@ public class VersionValue {
 	 * @return true is unsaved, false is saved, null is undefined
 	 */
 	public Boolean isUnsaved(Object version) throws MappingException  {
-        LOG.versionUnsavedValue(value);
+        LOG.trace("Version unsaved-value: " + value);
 		return version==null || version.equals(value) ? Boolean.TRUE : Boolean.FALSE;
 	}
 
@@ -141,19 +137,4 @@ public class VersionValue {
     public String toString() {
 		return "version unsaved-value: " + value;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Version unsaved-value: %s" )
-        void versionUnsavedValue( Object value );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Version unsaved-value strategy %s" )
-        void versionUnsavedValueStrategy( String string );
-    }
 }

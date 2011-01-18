@@ -24,7 +24,6 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -119,6 +118,7 @@ import javax.persistence.Version;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
+import org.hibernate.Logger;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
@@ -129,10 +129,6 @@ import org.hibernate.annotations.common.reflection.Filter;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor.
@@ -2504,15 +2500,4 @@ public class JPAOverridenAnnotationReader implements AnnotationReader {
 	private Annotation[] getJavaAnnotations() {
 		return element.getAnnotations();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Property %s not found in class but described in <mapping-file/> (possible typo error)" )
-        void propertyNotFound( String property );
-    }
 }

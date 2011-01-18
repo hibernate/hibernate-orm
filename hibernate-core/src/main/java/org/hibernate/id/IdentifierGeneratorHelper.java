@@ -24,7 +24,6 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -32,12 +31,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -89,7 +85,7 @@ public final class IdentifierGeneratorHelper {
 			throw new HibernateException( "The database returned no natively generated identity value" );
 		}
 		final Serializable id = IdentifierGeneratorHelper.get( rs, type );
-        LOG.nativelyGeneratedIdentity(id);
+        LOG.debug("Natively generated identity: " + id);
 		return id;
 	}
 
@@ -685,15 +681,4 @@ public final class IdentifierGeneratorHelper {
 	 */
 	private IdentifierGeneratorHelper() {
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Natively generated identity: %s" )
-        void nativelyGeneratedIdentity( Serializable id );
-    }
 }

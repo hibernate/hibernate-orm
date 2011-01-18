@@ -1,16 +1,14 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
 
+import static org.hibernate.aTestLogger.LOG;
 import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
-import org.hibernate.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class OtherLogListener {
-
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	@PrePersist
 	@PostPersist

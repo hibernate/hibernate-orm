@@ -25,107 +25,109 @@ package org.hibernate.test.cache.infinispan.entity;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import junit.framework.AssertionFailedError;
-
 import org.hibernate.cache.access.AccessType;
+import org.hibernate.test.cache.infinispan.TestInfinispanLogger;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 /**
  * Base class for tests of TRANSACTIONAL access.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class AbstractTransactionalAccessTestCase extends AbstractEntityRegionAccessStrategyTestCase {
 
-   public AbstractTransactionalAccessTestCase(String name) {
-      super(name);
-   }
+    private static final TestInfinispanLogger LOG = TestInfinispanLogger.LOG;
 
-   @Override
-   protected AccessType getAccessType() {
-      return AccessType.TRANSACTIONAL;
-   }
+    public AbstractTransactionalAccessTestCase( String name ) {
+        super(name);
+    }
 
-   public void testContestedPutFromLoad() throws Exception {
+    @Override
+    protected AccessType getAccessType() {
+        return AccessType.TRANSACTIONAL;
+    }
 
-      final String KEY = KEY_BASE + testCount++;
+    public void testContestedPutFromLoad() throws Exception {
 
-      localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+        final String KEY = KEY_BASE + testCount++;
 
-      final CountDownLatch pferLatch = new CountDownLatch(1);
-      final CountDownLatch pferCompletionLatch = new CountDownLatch(1);
-      final CountDownLatch commitLatch = new CountDownLatch(1);
-      final CountDownLatch completionLatch = new CountDownLatch(1);
+        localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
 
-      Thread blocker = new Thread("Blocker") {
+        final CountDownLatch pferLatch = new CountDownLatch(1);
+        final CountDownLatch pferCompletionLatch = new CountDownLatch(1);
+        final CountDownLatch commitLatch = new CountDownLatch(1);
+        final CountDownLatch completionLatch = new CountDownLatch(1);
 
-         public void run() {
+        Thread blocker = new Thread("Blocker") {
 
-            try {
-               long txTimestamp = System.currentTimeMillis();
-               BatchModeTransactionManager.getInstance().begin();
+            @Override
+            public void run() {
 
-               assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(KEY,
-                        txTimestamp));
+                try {
+                    long txTimestamp = System.currentTimeMillis();
+                    BatchModeTransactionManager.getInstance().begin();
 
-               localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
+                    assertEquals("Correct initial value", VALUE1, localAccessStrategy.get(KEY, txTimestamp));
 
-               pferLatch.countDown();
-               commitLatch.await();
+                    localAccessStrategy.update(KEY, VALUE2, new Integer(2), new Integer(1));
 
-               BatchModeTransactionManager.getInstance().commit();
-            } catch (Exception e) {
-               log.error("node1 caught exception", e);
-               node1Exception = e;
-               rollback();
-            } catch (AssertionFailedError e) {
-               node1Failure = e;
-               rollback();
-            } finally {
-               completionLatch.countDown();
+                    pferLatch.countDown();
+                    commitLatch.await();
+
+                    BatchModeTransactionManager.getInstance().commit();
+                } catch (Exception e) {
+                    LOG.error("node1 caught exception", e);
+                    node1Exception = e;
+                    rollback();
+                } catch (AssertionFailedError e) {
+                    node1Failure = e;
+                    rollback();
+                } finally {
+                    completionLatch.countDown();
+                }
             }
-         }
-      };
+        };
 
-      Thread putter = new Thread("Putter") {
+        Thread putter = new Thread("Putter") {
 
-         public void run() {
+            @Override
+            public void run() {
 
-            try {
-               long txTimestamp = System.currentTimeMillis();
-               BatchModeTransactionManager.getInstance().begin();
+                try {
+                    long txTimestamp = System.currentTimeMillis();
+                    BatchModeTransactionManager.getInstance().begin();
 
-               localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
+                    localAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
 
-               BatchModeTransactionManager.getInstance().commit();
-            } catch (Exception e) {
-               log.error("node1 caught exception", e);
-               node1Exception = e;
-               rollback();
-            } catch (AssertionFailedError e) {
-               node1Failure = e;
-               rollback();
-            } finally {
-               pferCompletionLatch.countDown();
+                    BatchModeTransactionManager.getInstance().commit();
+                } catch (Exception e) {
+                    LOG.error("node1 caught exception", e);
+                    node1Exception = e;
+                    rollback();
+                } catch (AssertionFailedError e) {
+                    node1Failure = e;
+                    rollback();
+                } finally {
+                    pferCompletionLatch.countDown();
+                }
             }
-         }
-      };
+        };
 
-      blocker.start();
-      assertTrue("Active tx has done an update", pferLatch.await(1, TimeUnit.SECONDS));
-      putter.start();
-      assertTrue("putFromLoadreturns promtly", pferCompletionLatch.await(10, TimeUnit.MILLISECONDS));
+        blocker.start();
+        assertTrue("Active tx has done an update", pferLatch.await(1, TimeUnit.SECONDS));
+        putter.start();
+        assertTrue("putFromLoadreturns promtly", pferCompletionLatch.await(10, TimeUnit.MILLISECONDS));
 
-      commitLatch.countDown();
+        commitLatch.countDown();
 
-      assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
+        assertTrue("Threads completed", completionLatch.await(1, TimeUnit.SECONDS));
 
-      assertThreadsRanCleanly();
+        assertThreadsRanCleanly();
 
-      long txTimestamp = System.currentTimeMillis();
-      assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
-   }
+        long txTimestamp = System.currentTimeMillis();
+        assertEquals("Correct node1 value", VALUE2, localAccessStrategy.get(KEY, txTimestamp));
+    }
 
 }

@@ -23,7 +23,6 @@
  */
 package org.hibernate.jmx;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -37,6 +36,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.TypeHelper;
@@ -47,10 +47,6 @@ import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A flyweight for <tt>SessionFactory</tt>. If the MBean itself does not
@@ -117,8 +113,8 @@ public class SessionFactoryStub implements SessionFactory {
 			// (alternatively we could do an actual JNDI lookup here....)
 			result = SessionFactoryObjectFactory.getNamedInstance(name);
             if (result == null) throw new InvalidObjectException("Could not find a stub SessionFactory named: " + name);
-            LOG.resolvedStubSessionFactoryByName();
-        } else LOG.resolvedStubSessionFactoryByUid();
+            LOG.debug("Resolved stub SessionFactory by name");
+        } else LOG.debug("Resolved stub SessionFactory by uid");
 		return result;
 	}
 
@@ -228,19 +224,4 @@ public class SessionFactoryStub implements SessionFactory {
 	public TypeHelper getTypeHelper() {
 		return getImpl().getTypeHelper();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Resolved stub SessionFactory by name" )
-        void resolvedStubSessionFactoryByName();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Resolved stub SessionFactory by uid" )
-        void resolvedStubSessionFactoryByUid();
-    }
 }

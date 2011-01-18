@@ -23,10 +23,10 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Logger;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
@@ -38,10 +38,6 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Wrap state of an EJB3 @Column annotation
@@ -186,7 +182,7 @@ public class Ejb3Column {
 
 	public void bind() {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
-            LOG.bindingFormula(formulaString);
+            LOG.debug("Binding formula " + formulaString);
 			formula = new Formula();
 			formula.setFormula( formulaString );
 		}
@@ -194,7 +190,7 @@ public class Ejb3Column {
 			initMappingColumn(
 					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
 			);
-            LOG.bindingColumn(toString());
+            LOG.debug("Binding column: " + toString());
 		}
 	}
 
@@ -425,7 +421,7 @@ public class Ejb3Column {
 					throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
 				}
 				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
-                LOG.columnsOverridden(inferredData.getPropertyName());
+                LOG.debug("Column(s) overridden for property " + inferredData.getPropertyName());
 			}
 			if ( actualCols == null ) {
 				columns = buildImplicitColumn(
@@ -631,23 +627,4 @@ public class Ejb3Column {
 		sb.append( '}' );
 		return sb.toString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding column: %s" )
-        void bindingColumn( String column );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Binding formula %s" )
-        void bindingFormula( String formula );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Column(s) overridden for property %s" )
-        void columnsOverridden( String propertyName );
-    }
 }

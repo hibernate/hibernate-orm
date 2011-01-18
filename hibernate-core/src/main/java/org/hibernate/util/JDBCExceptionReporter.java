@@ -24,16 +24,12 @@
 package org.hibernate.util;
 
 import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 public final class JDBCExceptionReporter {
 
@@ -237,26 +233,4 @@ public final class JDBCExceptionReporter {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Evicting %s" )
-        void evicting( String infoString );
-
-        @LogMessage( level = WARN )
-        @Message( value = "SQL Error: %d, SQLState: %s" )
-        void sqlError( int errorCode,
-                       String sqlState );
-
-        @Message( value = "Could not clear warnings" )
-        Object unableToClearWarnings();
-
-        @Message( value = "Could not log warnings" )
-        Object unableToLogWarnings();
-    }
 }

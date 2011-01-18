@@ -33,6 +33,7 @@ import java.sql.Types;
 import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -41,9 +42,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An <tt>IdentifierGenerator</tt> that uses a database
@@ -230,20 +228,4 @@ public class TableGenerator extends TransactionHelper
 	protected IntegralDataTypeHolder buildHolder() {
 		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Could not read a hi value" )
-        String unableToReadHiValue();
-
-        @Message( value = "Could not read a hi value - you need to populate the table: %s" )
-        String unableToReadHiValue( String tableName );
-
-        @Message( value = "Could not update hi value in: %s" )
-        Object unableToUpdateHiValue( String tableName );
-    }
 }

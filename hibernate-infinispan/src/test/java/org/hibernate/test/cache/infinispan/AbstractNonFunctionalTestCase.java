@@ -24,48 +24,40 @@
 package org.hibernate.test.cache.infinispan;
 
 import java.util.Set;
-
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.ServicesRegistry;
-import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
+import org.hibernate.testing.junit.UnitTestCase;
 import org.infinispan.Cache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for all non-functional tests of Infinispan integration.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class AbstractNonFunctionalTestCase extends UnitTestCase {
 
     public static final String REGION_PREFIX = "test";
-    
+
     private CacheTestSupport testSupport;
-    protected final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     public AbstractNonFunctionalTestCase(String name) {
         super(name);
-        testSupport = new CacheTestSupport(log);
+        testSupport = new CacheTestSupport();
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         testSupport.setUp();
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        
+
         testSupport.tearDown();
     }
 
@@ -94,10 +86,10 @@ public abstract class AbstractNonFunctionalTestCase extends UnitTestCase {
             Thread.sleep(ms);
         }
         catch (InterruptedException e) {
-            log.warn("Interrupted during sleep", e);
+            TestInfinispanLogger.LOG.warn("Interrupted during sleep", e);
         }
     }
-    
+
     protected void avoidConcurrentFlush() {
         testSupport.avoidConcurrentFlush();
     }

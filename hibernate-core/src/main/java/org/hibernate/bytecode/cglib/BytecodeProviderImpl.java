@@ -28,8 +28,8 @@ import java.lang.reflect.Modifier;
 import net.sf.cglib.beans.BulkBean;
 import net.sf.cglib.beans.BulkBeanException;
 import net.sf.cglib.reflect.FastClass;
+import org.hibernate.Logger;
 import org.hibernate.bytecode.BytecodeProvider;
-import org.hibernate.bytecode.Logger;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.FieldFilter;
@@ -82,25 +82,17 @@ public class BytecodeProviderImpl implements BytecodeProvider {
             if (LOG.isDebugEnabled()) {
                 int index = 0;
                 if (t instanceof BulkBeanException) index = ((BulkBeanException)t).getIndex();
-                if (index >= 0) LOG.reflectionOptimizerDisabledForBulkException(clazz.getName(),
-                                                                                StringHelper.unqualify(t.getClass().getName()),
-                                                                                t.getMessage(),
-                                                                                setterNames[index]);
-                else LOG.reflectionOptimizerDisabled(clazz.getName(),
-                                                     StringHelper.unqualify(t.getClass().getName()),
-                                                     t.getMessage());
+                if (index >= 0) LOG.debug("Reflection optimizer disabled for: " + clazz.getName() + " ["
+                                          + StringHelper.unqualify(t.getClass().getName()) + ": " + t.getMessage() + " (property "
+                                          + setterNames[index] + ")");
+                else LOG.debug("Reflection optimizer disabled for: " + clazz.getName() + " ["
+                               + StringHelper.unqualify(t.getClass().getName()) + ": " + t.getMessage());
             }
         }
 
-        if ( fastClass != null && bulkBean != null ) {
-            return new ReflectionOptimizerImpl(
-                                               new InstantiationOptimizerAdapter( fastClass ),
-                                               new AccessOptimizerAdapter( bulkBean, clazz )
-            );
-        }
-        else {
-            return null;
-        }
+        if (fastClass != null && bulkBean != null) return new ReflectionOptimizerImpl(new InstantiationOptimizerAdapter(fastClass),
+                                                                                      new AccessOptimizerAdapter(bulkBean, clazz));
+        return null;
     }
 
     public org.hibernate.bytecode.ClassTransformer getTransformer(org.hibernate.bytecode.util.ClassFilter classFilter, FieldFilter fieldFilter) {

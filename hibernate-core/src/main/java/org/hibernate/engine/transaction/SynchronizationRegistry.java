@@ -23,15 +23,10 @@
  */
 package org.hibernate.engine.transaction;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.LinkedHashSet;
 import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * Manages a registry of {@link Synchronization Synchronizations}.
@@ -100,20 +95,4 @@ public class SynchronizationRegistry {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Synchronization [%s] was already registered" )
-        void synchronizationAlreadyRegistered( Synchronization synchronization );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Exception calling user Synchronization [%s] : %s" )
-        void synchronizationFailed( Synchronization synchronization,
-                                    Throwable t );
-    }
 }

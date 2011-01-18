@@ -23,18 +23,14 @@
  */
 package org.hibernate.dialect;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.Method;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
@@ -238,15 +234,4 @@ public String getForUpdateString() {
     public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to load/access derby driver class sysinfo to check versions : %s" )
-        void unableToLoadDerbyDriver( String message );
-    }
 }

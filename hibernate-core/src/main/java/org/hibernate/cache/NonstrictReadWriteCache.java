@@ -25,6 +25,7 @@
 package org.hibernate.cache;
 
 import java.util.Comparator;
+import org.hibernate.Logger;
 import org.hibernate.cache.access.SoftLock;
 
 /**
@@ -58,15 +59,11 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Get the most recent version, if available.
 	 */
 	public Object get(Object key, long txTimestamp) throws CacheException {
-        LOG.lookup(key);
+        LOG.debug("Cache lookup: " + key);
 
 		Object result = cache.get( key );
-		if ( result != null ) {
-            LOG.hit(key);
-		}
-		else {
-            LOG.miss(key);
-		}
+        if (result != null) LOG.debug("Cache hit: " + key);
+        else LOG.debug("Cache miss: " + key);
 		return result;
 	}
 
@@ -81,10 +78,10 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	        Comparator versionComparator,
 	        boolean minimalPut) throws CacheException {
 		if ( minimalPut && cache.get( key ) != null ) {
-            LOG.exists(key);
+            LOG.debug("Item already cached: " + key);
 			return false;
 		}
-        LOG.caching(key);
+        LOG.debug("Caching: " + key);
 
 		cache.put( key, value );
 		return true;
@@ -101,12 +98,12 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	}
 
 	public void remove(Object key) throws CacheException {
-        LOG.removing(key);
+        LOG.debug("Removing: " + key);
 		cache.remove( key );
 	}
 
 	public void clear() throws CacheException {
-        LOG.clearing();
+        LOG.debug("Clearing");
 		cache.clear();
 	}
 
@@ -123,7 +120,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Invalidate the item
 	 */
 	public void evict(Object key) throws CacheException {
-        LOG.invalidating(key);
+        LOG.debug("Invalidating: " + key);
 		cache.remove( key );
 	}
 
@@ -146,7 +143,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Invalidate the item (again, for safety).
 	 */
 	public void release(Object key, SoftLock lock) throws CacheException {
-        LOG.invalidating(key);
+        LOG.debug("Invalidating: " + key);
 		cache.remove( key );
 	}
 

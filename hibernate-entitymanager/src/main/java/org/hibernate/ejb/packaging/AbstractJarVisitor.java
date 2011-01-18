@@ -29,11 +29,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.ejb.EntityManagerLogger;
 
 /**
  * Parse a JAR of any form (zip file, exploded directory, ...)
@@ -46,7 +44,9 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 
 	//TODO shortcut when filters are null or empty
 
-	private final Logger log = LoggerFactory.getLogger( AbstractJarVisitor.class );
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
+
 	protected String unqualifiedJarName;
 	protected URL jarUrl;
 	protected boolean done = false;
@@ -120,7 +120,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 			fileName = fileName.substring( 0, fileName.length() - 4 );
 		}
 		unqualifiedJarName = fileName;
-		log.debug( "Searching mapped entities in jar/par: {}", jarUrl );
+        LOG.debug("Searching mapped entities in jar/par: " + jarUrl);
 	}
 
 	/**
@@ -166,7 +166,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 		}
 		else if ( entryName.endsWith( ".class" ) ) {
 			String name = entryName.substring( 0, entryNameLength - ".class".length() ).replace( '/', '.' );
-			log.debug( "Filtering: {}", name );
+            LOG.debug("Filtering: " + name);
 			executeJavaElementFilter( name, classFilters, is, secondIs );
 		}
 		else {
@@ -184,7 +184,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 						secondIs.close();
 					}
 					is.close();
-					log.debug( "File Filter matched for {}", name );
+                    LOG.debug("File Filter matched for " + name);
 					Entry entry = new Entry( name, localIs );
 					int index = this.filters.indexOf( filter );
 					this.entries[index].add( entry );
@@ -217,7 +217,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 						localIs = null;
 						secondIs.close();
 					}
-					log.debug( "Java element filter matched for {}", name );
+                    LOG.debug("Java element filter matched for " + name);
 					Entry entry = new Entry( name, localIs );
 					int index = this.filters.indexOf( filter );
 					this.entries[index].add( entry );

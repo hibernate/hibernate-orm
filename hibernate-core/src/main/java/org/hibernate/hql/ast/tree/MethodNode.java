@@ -25,6 +25,7 @@
 package org.hibernate.hql.ast.tree;
 
 import java.util.Arrays;
+import org.hibernate.Logger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.antlr.SqlTokenTypes;
@@ -142,7 +143,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 
 		SqlNode expr = ( SqlNode ) path;
 		Type type = expr.getDataType();
-        LOG.collectionProperty(name, type);
+        LOG.debug("collectionProperty() :  name=" + name + " type=" + type);
 
 		resolveCollectionProperty( expr );
 	}
@@ -204,7 +205,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		QueryableCollection queryableCollection = collectionFromElement.getQueryableCollection();
 
 		String path = collectionNode.getPath() + "[]." + propertyName;
-        LOG.creatingElements(path);
+        LOG.debug("Creating elements for " + path);
 
 		fromElement = collectionFromElement;
 		if ( !collectionFromElement.isCollectionOfValuesOrComponents() ) {

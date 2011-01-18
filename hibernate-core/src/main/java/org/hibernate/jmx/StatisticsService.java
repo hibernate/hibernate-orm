@@ -5,6 +5,7 @@ import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
+import org.hibernate.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.stat.CollectionStatistics;
@@ -13,9 +14,6 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImpl;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * JMX service for Hibernate statistics<br>
@@ -315,20 +313,4 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public String getQueryExecutionMaxTimeQueryString() {
 		return stats.getQueryExecutionMaxTimeQueryString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "JNDI name %s does not handle a session factory reference" )
-        Object jndiNameDoesNotHandleSessionFactoryReference( String sfJNDIName );
-
-        @Message( value = "No session factory with JNDI name %s" )
-        Object noSessionFactoryWithJndiName( String sfJNDIName );
-
-        @Message( value = "Error while accessing session factory with JNDI name %s" )
-        Object unableToAccessSessionFactory( String sfJNDIName );
-    }
 }

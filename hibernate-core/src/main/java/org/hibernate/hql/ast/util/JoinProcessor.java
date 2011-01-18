@@ -24,8 +24,6 @@
  */
 package org.hibernate.hql.ast.util;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -33,6 +31,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -50,10 +49,6 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -127,25 +122,25 @@ public class JoinProcessor implements SqlTokenTypes {
 		while ( iter.hasNext() ) {
 			final FromElement fromElement = ( FromElement ) iter.next();
 			JoinSequence join = fromElement.getJoinSequence();
-			join.setSelector(
-					new JoinSequence.Selector() {
-						public boolean includeSubclasses(String alias) {
-							// The uber-rule here is that we need to include  subclass joins if
-							// the FromElement is in any way dereferenced by a property from
-							// the subclass table; otherwise we end up with column references
-							// qualified by a non-existent table reference in the resulting SQL...
-							boolean containsTableAlias = fromClause.containsTableAlias( alias );
-							if ( fromElement.isDereferencedBySubclassProperty() ) {
-								// TODO : or should we return 'containsTableAlias'??
-                        LOG.forcingInclusionOfExtraJoins(alias, containsTableAlias);
-								return true;
-							}
-							boolean shallowQuery = walker.isShallowQuery();
-							boolean includeSubclasses = fromElement.isIncludeSubclasses();
-							boolean subQuery = fromClause.isSubQuery();
-							return includeSubclasses && containsTableAlias && !subQuery && !shallowQuery;
-						}
+            join.setSelector(new JoinSequence.Selector() {
+                public boolean includeSubclasses( String alias ) {
+                    // The uber-rule here is that we need to include subclass joins if
+                    // the FromElement is in any way dereferenced by a property from
+                    // the subclass table; otherwise we end up with column references
+                    // qualified by a non-existent table reference in the resulting SQL...
+                    boolean containsTableAlias = fromClause.containsTableAlias(alias);
+                    if (fromElement.isDereferencedBySubclassProperty()) {
+                        // TODO : or should we return 'containsTableAlias'??
+                        LOG.trace("Forcing inclusion of extra joins [alias=" + alias + ", containsTableAlias=" + containsTableAlias
+                                  + "]");
+                        return true;
+                    }
+                    boolean shallowQuery = walker.isShallowQuery();
+                    boolean includeSubclasses = fromElement.isIncludeSubclasses();
+                    boolean subQuery = fromClause.isSubQuery();
+                    return includeSubclasses && containsTableAlias && !subQuery && !shallowQuery;
 					}
+            }
 			);
 			addJoinNodes( query, join, fromElement );
 		}
@@ -175,7 +170,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
 		if ( fromElement.useFromFragment() /*&& StringHelper.isNotEmpty( frag )*/ ) {
 			String fromFragment = processFromFragment( frag, join ).trim();
-            LOG.usingFromFragment(fromFragment);
+            LOG.debug("Using FROM fragment [" + fromFragment + "]");
 			processDynamicFilterParameters(
 					fromFragment,
 					fromElement,
@@ -252,20 +247,4 @@ public class JoinProcessor implements SqlTokenTypes {
 	private static boolean hasCollectionFilterParam(String sqlFragment) {
 		return sqlFragment.indexOf( "?" ) < 0;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Forcing inclusion of extra joins [alias=%s, containsTableAlias=%s]" )
-        void forcingInclusionOfExtraJoins( String alias,
-                                           boolean containsTableAlias );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Using FROM fragment [%s]" )
-        void usingFromFragment( String fromFragment );
-    }
 }

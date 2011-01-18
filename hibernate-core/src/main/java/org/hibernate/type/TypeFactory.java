@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.classic.Validatable;
@@ -64,7 +65,7 @@ public final class TypeFactory implements Serializable {
 
 		public void injectSessionFactory(SessionFactoryImplementor factory) {
             if (this.factory != null) LOG.scopingTypesToSessionFactoryAfterAlreadyScoped(this.factory, factory);
-            else LOG.scopingTypesToSessionFactory(factory);
+            else LOG.trace("Scoping types to session factory " + factory);
 			this.factory = factory;
 		}
 

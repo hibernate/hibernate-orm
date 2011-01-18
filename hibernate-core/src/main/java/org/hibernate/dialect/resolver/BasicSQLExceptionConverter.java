@@ -25,11 +25,9 @@ package org.hibernate.dialect.resolver;
 
 import java.sql.SQLException;
 import org.hibernate.JDBCException;
+import org.hibernate.Logger;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A helper to centralize conversion of {@link java.sql.SQLException}s to {@link org.hibernate.JDBCException}s.
@@ -63,14 +61,4 @@ public class BasicSQLExceptionConverter {
 			return "???";
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Unable to query java.sql.DatabaseMetaData" )
-        String unableToQueryDatabaseMetadata();
-    }
 }

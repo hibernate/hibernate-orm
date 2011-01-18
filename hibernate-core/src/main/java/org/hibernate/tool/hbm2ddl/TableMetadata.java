@@ -23,19 +23,14 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
+import org.hibernate.Logger;
 import org.hibernate.mapping.ForeignKey;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * JDBC table metadata
@@ -210,27 +205,4 @@ public class TableMetadata {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Columns: %s" )
-        void columns( Set keySet );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Foreign keys: %s" )
-        void foreignKeys( Set keySet );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Indexes: %s" )
-        void indexes( Set keySet );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Table found: %s" )
-        void tableFound( String string );
-    }
 }

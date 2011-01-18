@@ -24,13 +24,9 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.TRACE;
+import org.hibernate.Logger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Utilities for dealing with optimisitic locking values.
@@ -79,7 +75,7 @@ public final class Versioning {
 	 */
 	private static Object seed(VersionType versionType, SessionImplementor session) {
 		Object seed = versionType.seed( session );
-        LOG.seeding(seed);
+        LOG.trace("Seeding: " + seed);
 		return seed;
 	}
 
@@ -112,10 +108,8 @@ public final class Versioning {
 			fields[versionProperty] = seed( versionType, session );
 			return true;
 		}
-		else {
-            LOG.usingInitialVersion(initialVersion);
-			return false;
-		}
+        LOG.trace("Using initial version: " + initialVersion);
+        return false;
 	}
 
 
@@ -130,8 +124,8 @@ public final class Versioning {
 	 */
 	public static Object increment(Object version, VersionType versionType, SessionImplementor session) {
 		Object next = versionType.next( version, session );
-        if (LOG.isTraceEnabled()) LOG.incrementing(versionType.toLoggableString(version, session.getFactory()),
-                                                   versionType.toLoggableString(next, session.getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Incrementing: " + versionType.toLoggableString(version, session.getFactory()) + " to "
+                                            + versionType.toLoggableString(next, session.getFactory()));
 		return next;
 	}
 
@@ -185,24 +179,4 @@ public final class Versioning {
 		}
 	    return false;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Incrementing: %s to %s" )
-        void incrementing( String loggableString,
-                           String loggableString2 );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Seeding: %s" )
-        void seeding( Object seed );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Using initial version: %s" )
-        void usingInitialVersion( Object initialVersion );
-    }
 }

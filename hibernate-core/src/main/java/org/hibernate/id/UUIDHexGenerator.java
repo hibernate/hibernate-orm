@@ -23,17 +23,13 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Properties;
+import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * <b>uuid</b><br>
@@ -96,16 +92,4 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 		buf.replace( 4 - formatted.length(), 4, formatted );
 		return buf.toString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Using %s which does not generate IETF RFC 4122 compliant UUID values; consider using %s instead" )
-        void usingUuidHexGenerator( String name,
-                                    String name2 );
-    }
 }

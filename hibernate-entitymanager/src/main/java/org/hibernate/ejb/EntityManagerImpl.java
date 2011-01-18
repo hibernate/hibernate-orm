@@ -26,15 +26,12 @@ import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Synchronization;
-
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.Interceptor;
+import org.hibernate.Session;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionImplementor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -42,7 +39,9 @@ import org.slf4j.LoggerFactory;
  * @author Gavin King
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl {
-	private static final Logger log = LoggerFactory.getLogger( EntityManagerImpl.class );
+
+    public static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                            EntityManagerImpl.class.getPackage().getName());
 
 	protected Session session;
 	protected boolean open;
@@ -53,7 +52,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 			EntityManagerFactoryImpl entityManagerFactory,
 			PersistenceContextType pcType,
 			PersistenceUnitTransactionType transactionType,
-			boolean discardOnClose, 
+			boolean discardOnClose,
 			Class sessionInterceptorClass,
 			Map properties) {
 		super( entityManagerFactory, pcType, transactionType, properties );
@@ -84,14 +83,16 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		postInit();
 	}
 
-	public Session getSession() {
+	@Override
+    public Session getSession() {
 		if ( !open ) {
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
 		return getRawSession();
 	}
 
-	protected Session getRawSession() {
+	@Override
+    protected Session getRawSession() {
 		if ( session == null ) {
 			Interceptor interceptor = null;
 			if (sessionInterceptorClass != null) {
@@ -122,27 +123,19 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 		}
 		if ( !discardOnClose && isTransactionInProgress() ) {
 			//delay the closing till the end of the enlisted transaction
-			getSession().getTransaction().registerSynchronization(
-					new Synchronization() {
-						public void beforeCompletion() {
-							//nothing to do
-						}
+            getSession().getTransaction().registerSynchronization(new Synchronization() {
+                public void beforeCompletion() {
+                    // nothing to do
+                }
 
-						public void afterCompletion(int i) {
-							if ( session != null ) {
-								if ( session.isOpen() ) {
-									log.debug( "Closing entity manager after transaction completion" );
-									session.close();
-								}
-								else {
-									log.warn( "Entity Manager closed by someone else ({} must not be used)",
-											Environment.AUTO_CLOSE_SESSION);
-								}
-							}
-							//TODO session == null should not happen
-						}
-					}
-			);
+				public void afterCompletion( int i ) {
+                    if (session != null) if (session.isOpen()) {
+                        LOG.debug("Closing entity manager after transaction completion");
+                        session.close();
+                    } else LOG.entityManagerClosedBySomeoneElse(Environment.AUTO_CLOSE_SESSION);
+                    // TODO session == null should not happen
+                }
+            });
 		}
 		else {
 			//close right now

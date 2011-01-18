@@ -23,8 +23,6 @@
  */
 package org.hibernate.service.jdbc.connections.internal;
 
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -40,10 +38,6 @@ import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -110,7 +104,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 
 		ConnectionProvider connectionProvider = null;
-		String providerClassName = (String) getConfiguredConnectionProviderName( configurationValues );
+		String providerClassName = getConfiguredConnectionProviderName( configurationValues );
 		if ( providerClassName != null ) {
 			connectionProvider = instantiateExplicitConnectionProvider( providerClassName, classLoaderService );
 		}
@@ -285,27 +279,4 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		SPECIAL_PROPERTIES.add( Environment.USER );
 
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "c3p0 properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored." )
-        void c3p0ProviderClassNotFound( String c3p0ProviderClassName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Instantiating explicit connection provider: %s" )
-        void instantiatingExplicitConnectinProvider( String providerClassName );
-
-        @LogMessage( level = WARN )
-        @Message( value = "No appropriate connection provider encountered, assuming application will be supplying connections" )
-        void noAppropriateConnectionProvider();
-
-        @LogMessage( level = WARN )
-        @Message( value = "proxool properties were encountered, but the %s provider class was not found on the classpath; these properties are going to be ignored." )
-        void proxoolProviderClassNotFound( String proxoolProviderClassName );
-    }
 }

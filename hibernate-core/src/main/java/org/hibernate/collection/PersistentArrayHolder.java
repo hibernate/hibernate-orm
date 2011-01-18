@@ -24,7 +24,6 @@
  */
 package org.hibernate.collection;
 
-import static org.jboss.logging.Logger.Level.ERROR;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
@@ -34,14 +33,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A persistent wrapper for an array. Lazy initialization
@@ -257,15 +253,4 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 	public boolean entryExists(Object entry, int i) {
 		return entry!=null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Array element type error\n%s" )
-        void invalidArrayElementType( String message );
-    }
 }

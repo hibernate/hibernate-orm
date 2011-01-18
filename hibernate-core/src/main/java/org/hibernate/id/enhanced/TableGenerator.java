@@ -23,7 +23,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,6 +35,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -51,10 +51,6 @@ import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An enhanced version of table-based id generation.
@@ -583,23 +579,4 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		}
 		return new String[] { sqlDropString.toString() };
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Could not read or init a hi value" )
-        Object unableToReadOrInitHiValue();
-
-        @Message( value = "Could not updateQuery hi value in: %s" )
-        Object unableToUpdateQueryHiValue( String tableName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]" )
-        void usingDefaultIdGeneratorSegmentValue( String tableName,
-                                                  String segmentColumnName,
-                                                  String defaultToUse );
-    }
 }

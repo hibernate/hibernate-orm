@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.junit;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,8 +32,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.hibernate.Logger;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -46,8 +45,6 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  * @author Steve Ebersole
  */
 public abstract class UnitTestCase extends junit.framework.TestCase {
-
-    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ServiceRegistryHolder serviceRegistryHolder;
 
@@ -146,7 +143,7 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 	}
 
 	protected void reportSkip(String reason, String testDescription) {
-		SkipLog.LOG.warn( "*** skipping [" + fullTestName() + "] - " + testDescription + " : " + reason, new Exception()  );
+        LOG.warn("*** skipping [" + fullTestName() + "] - " + testDescription + " : " + reason, new Exception());
 	}
 
 	// testsuite utitities ---------------------------------------------------

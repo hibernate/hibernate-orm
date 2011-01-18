@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.HqlSqlWalker;
@@ -65,7 +66,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 		this.persister = fromElement.getQueryable();
 
 		this.idInsertSelect = generateIdInsertSelect( persister, bulkTargetAlias, deleteStatement.getWhereClause() );
-        LOG.generatedIdInsertSelectDelete(idInsertSelect);
+        LOG.trace("Generated ID-INSERT-SELECT SQL (multi-table delete) : " + idInsertSelect);
 
 		String[] tableNames = persister.getConstraintOrderedTableNameClosure();
 		String[][] columnNames = persister.getContraintOrderedTableKeyColumnClosure();

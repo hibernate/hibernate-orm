@@ -24,7 +24,6 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -35,15 +34,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * JDBC database metadata
@@ -200,15 +196,4 @@ public class DatabaseMetadata {
     public String toString() {
 		return "DatabaseMetadata" + tables.keySet().toString() + sequences.toString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Table not found: %s" )
-        void tableNotFound( String name );
-    }
 }

@@ -118,7 +118,7 @@ public abstract class AbstractBatchImpl implements Batch {
 		}
 		PreparedStatement statement = statements.get( sql );
 		if ( statement != null ) {
-			log.debug( "reusing prepared statement" );
+            LOG.debug("Reusing prepared statement");
 			statementLogger.logStatement( sql );
 		}		
 		return statement;

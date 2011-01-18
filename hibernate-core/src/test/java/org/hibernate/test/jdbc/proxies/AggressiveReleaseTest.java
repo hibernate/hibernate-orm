@@ -23,18 +23,15 @@
  */
 package org.hibernate.test.jdbc.proxies;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
+import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 
@@ -45,7 +42,6 @@ import org.hibernate.testing.junit.UnitTestCase;
  */
 public class AggressiveReleaseTest extends UnitTestCase {
 
-	private static final Logger log = LoggerFactory.getLogger( AggressiveReleaseTest.class );
 	private BasicTestingJdbcServiceImpl services = new BasicTestingJdbcServiceImpl();
 
 	private static class ConnectionCounter implements ConnectionObserver {
@@ -68,7 +64,8 @@ public class AggressiveReleaseTest extends UnitTestCase {
 		super( string );
 	}
 
-	public void setUp() throws SQLException {
+	@Override
+    public void setUp() throws SQLException {
 		services.prepare( true );
 
 		Connection connection = null;
@@ -85,7 +82,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 					stmnt.close();
 				}
 				catch ( SQLException ignore ) {
-					log.warn( "could not close statement used to set up schema", ignore );
+                    LOG.warn("could not close statement used to set up schema", ignore);
 				}
 			}
 			if ( connection != null ) {
@@ -93,13 +90,14 @@ public class AggressiveReleaseTest extends UnitTestCase {
 					connection.close();
 				}
 				catch ( SQLException ignore ) {
-					log.warn( "could not close connection used to set up schema", ignore );
+                    LOG.warn("could not close connection used to set up schema", ignore);
 				}
 			}
 		}
 	}
 
-	public void tearDown() throws SQLException {
+	@Override
+    public void tearDown() throws SQLException {
 		Connection connection = null;
 		Statement stmnt = null;
 		try {
@@ -113,7 +111,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 					stmnt.close();
 				}
 				catch ( SQLException ignore ) {
-					log.warn( "could not close statement used to set up schema", ignore );
+                    LOG.warn("could not close statement used to set up schema", ignore);
 				}
 			}
 			if ( connection != null ) {
@@ -121,7 +119,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 					connection.close();
 				}
 				catch ( SQLException ignore ) {
-					log.warn( "could not close connection used to set up schema", ignore );
+                    LOG.warn("could not close connection used to set up schema", ignore);
 				}
 			}
 		}

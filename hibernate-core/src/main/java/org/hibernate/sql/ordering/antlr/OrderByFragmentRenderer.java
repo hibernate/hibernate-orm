@@ -24,10 +24,9 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
+import org.hibernate.Logger;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.MessageLogger;
 import antlr.collections.AST;
 
 /**
@@ -75,11 +74,4 @@ public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 		String prefix = "<-" + StringHelper.repeat( '-', (--traceDepth * 2) ) + " ";
         LOG.trace(prefix + ruleName);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-    }
 }

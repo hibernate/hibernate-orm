@@ -30,17 +30,18 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import org.hibernate.ejb.EntityManagerLogger;
 
 
 /**
  * @author Emmanuel Bernard
  */
 public class ExplodedJarVisitor extends AbstractJarVisitor {
-	private final Logger log = LoggerFactory.getLogger( ExplodedJarVisitor.class );
-	private String entry;
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
+
+    private String entry;
 
 	public ExplodedJarVisitor(URL url, Filter[] filters, String entry) {
 		super( url, filters );
@@ -51,7 +52,8 @@ public class ExplodedJarVisitor extends AbstractJarVisitor {
 		super( fileName, filters );
 	}
 
-	protected void doProcessElements() throws IOException {
+	@Override
+    protected void doProcessElements() throws IOException {
 		File jarFile;
 		try {
 			String filePart = jarUrl.getFile();
@@ -64,16 +66,16 @@ public class ExplodedJarVisitor extends AbstractJarVisitor {
 			}
 		}
 		catch (URISyntaxException e) {
-			log.warn( "Malformed url: " + jarUrl, e );
+            LOG.error(LOG.malformedUrl(jarUrl), e);
 			return;
 		}
-		
+
 		if ( !jarFile.exists() ) {
-			log.warn( "Exploded jar does not exists (ignored): {}", jarUrl );
+            LOG.explodedJarDoesNotExist(jarUrl);
 			return;
 		}
 		if ( !jarFile.isDirectory() ) {
-			log.warn( "Exploded jar file not a directory (ignored): {}", jarUrl );
+            LOG.explodedJarNotDirectory(jarUrl);
 			return;
 		}
 		File rootFile;

@@ -23,17 +23,13 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionImplementor;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Generates <tt>string</tt> values using the SQL Server NEWID() function.
@@ -84,20 +80,4 @@ public class GUIDGenerator implements IdentifierGenerator {
 				);
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "DEPRECATED : use {} instead with custom {} implementation" )
-        void deprecatedUuidGenerator( String name,
-                                      String name2 );
-
-        @LogMessage( level = WARN )
-        @Message( value = "GUID identifier generated: %s" )
-        void guidGenerated( String result );
-    }
 }

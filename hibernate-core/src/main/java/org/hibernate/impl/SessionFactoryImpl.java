@@ -23,10 +23,6 @@
  */
 package org.hibernate.impl;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -54,6 +50,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
@@ -74,10 +71,6 @@ import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.exception.SQLExceptionConverter;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.context.CurrentSessionContext;
 import org.hibernate.context.JTASessionContext;
 import org.hibernate.context.ManagedSessionContext;
@@ -90,12 +83,15 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventListeners;
+import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -111,6 +107,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
@@ -126,10 +123,6 @@ import org.hibernate.type.TypeResolver;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.EmptyIterator;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -210,7 +203,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 		this.statistics = new ConcurrentStatisticsImpl( this );
 		getStatistics().setStatisticsEnabled( settings.isStatisticsEnabled() );
-        LOG.statisticsInitialized(settings.isStatisticsEnabled());
+        LOG.debug("Statistics initialized [enabled=" + settings.isStatisticsEnabled() + "]}");
 
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
@@ -232,8 +225,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		this.filters = new HashMap();
 		this.filters.putAll( cfg.getFilterDefinitions() );
 
-        LOG.sessionFactoryConstructedWithFilterConfigurations(filters);
-        LOG.instantiatingSessionFactory(properties);
+        LOG.debug("Session factory constructed with filter configurations : " + filters);
+        LOG.debug("Instantiating session factory with properties: " + properties);
 
 		// Caches
 		settings.getRegionFactory().start( settings, properties );
@@ -277,7 +270,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			if ( accessStrategy == null && settings.isSecondLevelCacheEnabled() ) {
 				final AccessType accessType = AccessType.parse( model.getCacheConcurrencyStrategy() );
 				if ( accessType != null ) {
-                    LOG.buildingCacheForEntityData(model.getEntityName());
+                    LOG.trace("Building cache for entity data [" + model.getEntityName() + "]");
 					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 					accessStrategy = entityRegion.buildAccessStrategy( accessType );
 					entityAccessStrategies.put( cacheRegionName, accessStrategy );
@@ -299,7 +292,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			final AccessType accessType = AccessType.parse( model.getCacheConcurrencyStrategy() );
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-                LOG.buildingCacheForCollectionData(model.getRole());
+                LOG.trace("Building cache for collection data [" + model.getRole() + "]");
 				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion( cacheRegionName, properties, CacheDataDescriptionImpl.decode( model ) );
 				accessStrategy = collectionRegion.buildAccessStrategy( accessType );
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
@@ -367,7 +360,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 		SessionFactoryObjectFactory.addInstance(uuid, name, this, properties);
 
-        LOG.instantiatedSessionFactory();
+        LOG.debug("Instantiated session factory");
 
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( getJdbcServices(), cfg ).create( false, true );
@@ -383,7 +376,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 
 		if ( settings.getTransactionManagerLookup()!=null ) {
-            LOG.obtainingJtaTransactionManager();
+            LOG.debug("Obtaining JTA TransactionManager");
 			transactionManager = settings.getTransactionManagerLookup().getTransactionManager(properties);
 		}
 		else {
@@ -535,7 +528,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		Map errors = new HashMap();
 
 		// Check named HQL queries
-        LOG.checkingNamedHqlQueries(namedQueries.size());
+        LOG.debug("Checking " + namedQueries.size() + " named HQL queries");
 		Iterator itr = namedQueries.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
@@ -543,7 +536,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			final NamedQueryDefinition qd = ( NamedQueryDefinition ) entry.getValue();
 			// this will throw an error if there's something wrong.
 			try {
-                LOG.checkingNamedQuery(queryName);
+                LOG.debug("Checking named query: " + queryName);
 				//TODO: BUG! this currently fails for named queries for non-POJO entities
 				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, CollectionHelper.EMPTY_MAP );
 			}
@@ -555,7 +548,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			}
 		}
 
-        LOG.checkingNamedSqlQueries(namedSqlQueries.size());
+        LOG.debug("Checking " + namedSqlQueries.size() + " named SQL queries");
 		itr = namedSqlQueries.entrySet().iterator();
 		while ( itr.hasNext() ) {
 			final Map.Entry entry = ( Map.Entry ) itr.next();
@@ -563,7 +556,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			final NamedSQLQueryDefinition qd = ( NamedSQLQueryDefinition ) entry.getValue();
 			// this will throw an error if there's something wrong.
 			try {
-                LOG.checkingNamedSqlQuery(queryName);
+                LOG.debug("Checking named SQL query: " + queryName);
 				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
 				// currently not doable though because of the resultset-ref stuff...
 				NativeSQLQuerySpecification spec;
@@ -744,7 +737,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 
 	// from javax.naming.Referenceable
 	public Reference getReference() throws NamingException {
-        LOG.returningReferenceToSessionFactory();
+        LOG.debug("Returning a Reference to the SessionFactory");
 		return new Reference(
 			SessionFactoryImpl.class.getName(),
 		    new StringRefAddr("uuid", uuid),
@@ -754,7 +747,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	}
 
 	private Object readResolve() throws ObjectStreamException {
-        LOG.resolvingSerializedSessionFactory();
+        LOG.trace("Resolving serialized SessionFactory");
 		// look for the instance by uuid
 		Object result = SessionFactoryObjectFactory.getInstance(uuid);
 		if (result==null) {
@@ -762,8 +755,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			// (alternatively we could do an actual JNDI lookup here....)
 			result = SessionFactoryObjectFactory.getNamedInstance(name);
             if (result == null) throw new InvalidObjectException("Could not find a SessionFactory named: " + name);
-            LOG.resolvedSessionFactoryByName();
-        } else LOG.resolvedSessionFactoryByUid();
+            LOG.debug("Resolved SessionFactory by name");
+        } else LOG.debug("Resolved SessionFactory by UID");
 		return result;
 	}
 
@@ -787,15 +780,15 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	}
 
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        LOG.deserializing();
+        LOG.trace("Deserializing");
 		in.defaultReadObject();
-        LOG.deserialized(uuid);
+        LOG.debug("Deserialized: " + uuid);
 	}
 
 	private void writeObject(ObjectOutputStream out) throws IOException {
-        LOG.serializing(uuid);
+        LOG.debug("Serializing: " + uuid);
 		out.defaultWriteObject();
-        LOG.serialized();
+        LOG.trace("Serialized");
 	}
 
 	public Type[] getReturnTypes(String queryString) throws HibernateException {
@@ -923,7 +916,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	public void close() throws HibernateException {
 
 		if ( isClosed ) {
-            LOG.alreadyClosed();
+            LOG.trace("Already closed");
 			return;
 		}
 
@@ -988,9 +981,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		public void evictEntity(String entityName, Serializable identifier) {
 			EntityPersister p = getEntityPersister( entityName );
 			if ( p.hasCache() ) {
-                if (LOG.isDebugEnabled()) LOG.evictingSecondLevelCache(MessageHelper.infoString(p,
-                                                                                                identifier,
-                                                                                                SessionFactoryImpl.this));
+                if (LOG.isDebugEnabled()) LOG.debug("Evicting second-level cache: "
+                                                    + MessageHelper.infoString(p, identifier, SessionFactoryImpl.this));
 				p.getCacheAccessStrategy().evict( buildCacheKey( identifier, p ) );
 			}
 		}
@@ -1012,7 +1004,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		public void evictEntityRegion(String entityName) {
 			EntityPersister p = getEntityPersister( entityName );
 			if ( p.hasCache() ) {
-                LOG.evictingSecondLevelCache(p.getEntityName());
+                LOG.debug("Evicting second-level cache: " + p.getEntityName());
 				p.getCacheAccessStrategy().evictAll();
 			}
 		}
@@ -1033,9 +1025,10 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		public void evictCollection(String role, Serializable ownerIdentifier) {
 			CollectionPersister p = getCollectionPersister( role );
 			if ( p.hasCache() ) {
-                if (LOG.isDebugEnabled()) LOG.evictingSecondLevelCache(MessageHelper.collectionInfoString(p,
-                                                                                                          ownerIdentifier,
-                                                                                                          SessionFactoryImpl.this));
+                if (LOG.isDebugEnabled()) LOG.debug("Evicting second-level cache: "
+                                                    + MessageHelper.collectionInfoString(p,
+                                                                                         ownerIdentifier,
+                                                                                         SessionFactoryImpl.this));
 				CacheKey cacheKey = buildCacheKey( ownerIdentifier, p );
 				p.getCacheAccessStrategy().evict( cacheKey );
 			}
@@ -1054,7 +1047,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		public void evictCollectionRegion(String role) {
 			CollectionPersister p = getCollectionPersister( role );
 			if ( p.hasCache() ) {
-                LOG.evictingSecondLevelCache(p.getRole());
+                LOG.debug("Evicting second-level cache: " + p.getRole());
 				p.getCacheAccessStrategy().evictAll();
 			}
 		}
@@ -1296,7 +1289,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 		Object result = SessionFactoryObjectFactory.getInstance( uuid );
 		if ( result == null ) {
-            LOG.unableToLocateSessionFactoryByUuid(uuid);
+            LOG.trace("Could not locate session factory by uuid [" + uuid + "] during session deserialization; trying name");
 			if ( isNamed ) {
 				result = SessionFactoryObjectFactory.getNamedInstance( name );
 			}
@@ -1306,117 +1299,4 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 		return ( SessionFactoryImpl ) result;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Already closed" )
-        void alreadyClosed();
-
-        @LogMessage( level = WARN )
-        @Message( value = "JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()" )
-        void autoFlushWillNotWork();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Building cache for collection data [%s]" )
-        void buildingCacheForCollectionData( String role );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Building cache for entity data [%s]" )
-        void buildingCacheForEntityData( String entityName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Building session factory" )
-        void buildingSessionFactory();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Checking %d named HQL queries" )
-        void checkingNamedHqlQueries( int size );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Checking named query: %s" )
-        void checkingNamedQuery( String queryName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Checking %d named SQL queries" )
-        void checkingNamedSqlQueries( int size );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Checking named SQL query: %s" )
-        void checkingNamedSqlQuery( String queryName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Closing" )
-        void closing();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Deserialized: %s" )
-        void deserialized( String uuid );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deserializing" )
-        void deserializing();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Evicting second-level cache: %s" )
-        void evictingSecondLevelCache( String infoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Instantiated session factory" )
-        void instantiatedSessionFactory();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Instantiating session factory with properties: %s" )
-        void instantiatingSessionFactory( Properties properties );
-
-        @Message( value = "Error in named query: %s" )
-        Object namedQueryError( String queryName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Obtaining JTA TransactionManager" )
-        void obtainingJtaTransactionManager();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Resolved SessionFactory by name" )
-        void resolvedSessionFactoryByName();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Resolved SessionFactory by UID" )
-        void resolvedSessionFactoryByUid();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Resolving serialized SessionFactory" )
-        void resolvingSerializedSessionFactory();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Returning a Reference to the SessionFactory" )
-        void returningReferenceToSessionFactory();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Serializing: %s" )
-        void serializing( String uuid );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Serialized" )
-        void serialized();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Session factory constructed with filter configurations : %s" )
-        void sessionFactoryConstructedWithFilterConfigurations( Map filters );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Statistics initialized [enabled=%s]}" )
-        void statisticsInitialized( boolean statisticsEnabled );
-
-        @Message( value = "Unable to construct current session context [%s]" )
-        Object unableToConstructCurrentSessionContext( String impl );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Could not locate session factory by uuid [%s] during session deserialization; trying name" )
-        void unableToLocateSessionFactoryByUuid( String uuid );
-    }
 }

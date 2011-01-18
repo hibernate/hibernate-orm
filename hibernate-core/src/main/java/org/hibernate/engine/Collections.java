@@ -24,20 +24,15 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Implements book-keeping for the collection persistence by reachability algorithm
@@ -75,9 +70,10 @@ public final class Collections {
 		CollectionEntry entry = persistenceContext.getCollectionEntry(coll);
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
-        if (LOG.isDebugEnabled() && loadedPersister != null) LOG.collectionDereferenced(MessageHelper.collectionInfoString(loadedPersister,
-                                                                                                                           entry.getLoadedKey(),
-                                                                                                                           session.getFactory()));
+        if (LOG.isDebugEnabled() && loadedPersister != null) LOG.debug("Collection dereferenced: "
+                                                                       + MessageHelper.collectionInfoString(loadedPersister,
+                                                                                                            entry.getLoadedKey(),
+                                                                                                            session.getFactory()));
 
 		// do a check
 		boolean hasOrphanDelete = loadedPersister != null &&
@@ -133,9 +129,8 @@ public final class Collections {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		CollectionEntry entry = persistenceContext.getCollectionEntry(coll);
 
-        LOG.foundCollectionWithUnloadedOwner(MessageHelper.collectionInfoString(entry.getLoadedPersister(),
-                                                                                entry.getLoadedKey(),
-                                                                                session.getFactory()));
+        LOG.debug("Found collection with unloaded owner: "
+                  + MessageHelper.collectionInfoString(entry.getLoadedPersister(), entry.getLoadedKey(), session.getFactory()));
 
 		entry.setCurrentPersister( entry.getLoadedPersister() );
 		entry.setCurrentKey( entry.getLoadedKey() );
@@ -146,7 +141,7 @@ public final class Collections {
 
     /**
      * Initialize the role of the collection.
-     * 
+     *
      * @param collection The collection to be updated by reachability.
      * @param type The type of the collection.
      * @param entity The owner of the collection.
@@ -188,16 +183,15 @@ public final class Collections {
 		ce.setCurrentKey( type.getKeyOfOwner(entity, session) ); //TODO: better to pass the id in as an argument?
 
         if (LOG.isDebugEnabled()) {
-            if (collection.wasInitialized()) LOG.collectionFound(MessageHelper.collectionInfoString(persister,
-                                                                                                    ce.getCurrentKey(),
-                                                                                                    factory),
-                                                                 MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                                    ce.getLoadedKey(),
-                                                                                                    factory),
-                                                                 LOG.initialized());
-            else LOG.collectionFound(MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory),
-                                     MessageHelper.collectionInfoString(ce.getLoadedPersister(), ce.getLoadedKey(), factory),
-                                     LOG.uninitialized());
+            if (collection.wasInitialized()) LOG.debug("Collection found: "
+                                                       + MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory)
+                                                       + ", was: "
+                                                       + MessageHelper.collectionInfoString(ce.getLoadedPersister(),
+                                                                                            ce.getLoadedKey(),
+                                                                                            factory) + " (initialized)");
+            else LOG.debug("Collection found: " + MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory)
+                           + ", was: " + MessageHelper.collectionInfoString(ce.getLoadedPersister(), ce.getLoadedKey(), factory)
+                           + " (uninitialized)");
         }
 
 		prepareCollectionForUpdate( collection, ce, session.getEntityMode(), factory );
@@ -255,7 +249,7 @@ public final class Collections {
 				if ( loadedPersister != null ) {
 					entry.setDoremove(true);											// we will need to remove ye olde entries
 					if ( entry.isDorecreate() ) {
-                        LOG.forcingCollectionInitialization();
+                        LOG.trace("Forcing collection initialization");
 						collection.forceInitialization();								// force initialize!
 					}
 				}
@@ -268,35 +262,4 @@ public final class Collections {
 		}
 
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Collection dereferenced: %s" )
-        void collectionDereferenced( String collectionInfoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Collection found: %s, was: %s (%s)" )
-        void collectionFound( String collectionInfoString,
-                              String collectionInfoString2,
-                              String initialized );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Forcing collection initialization" )
-        void forcingCollectionInitialization();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Found collection with unloaded owner: %s" )
-        void foundCollectionWithUnloadedOwner( String collectionInfoString );
-
-        @Message( value = "initialized" )
-        String initialized();
-
-        @Message( value = "uninitialized" )
-        String uninitialized();
-    }
 }

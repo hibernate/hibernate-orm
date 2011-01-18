@@ -30,6 +30,7 @@ import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
@@ -80,13 +81,13 @@ public class JTATransaction implements Transaction {
 			throw new TransactionException( "cannot re-start transaction after failed commit" );
 		}
 
-        LOG.begin();
+        LOG.debug("Begin");
 
 		try {
 			newTransaction = userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION;
 			if ( newTransaction ) {
 				userTransaction.begin();
-				LOG.beganNewJtaTransaction();
+                LOG.debug("Began a new JTA transaction");
 			}
 		}
 		catch ( Exception e ) {
@@ -129,7 +130,7 @@ public class JTATransaction implements Transaction {
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-        LOG.commit();
+        LOG.debug("Commit");
 
 		boolean flush = !transactionContext.isFlushModeNever()
 				&& ( callback || !transactionContext.isFlushBeforeCompletionEnabled() );
@@ -148,7 +149,7 @@ public class JTATransaction implements Transaction {
 			try {
 				userTransaction.commit();
 				commitSucceeded = true;
-                LOG.commitedJtaUserTransaction();
+                LOG.debug("Committed JTA UserTransaction");
 			}
 			catch ( Exception e ) {
 				commitFailed = true; // so the transaction is already rolled back, by JTA spec
@@ -177,7 +178,7 @@ public class JTATransaction implements Transaction {
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-        LOG.rollback();
+        LOG.debug("Rollback");
 
 		try {
 			closeIfRequired();
@@ -191,12 +192,12 @@ public class JTATransaction implements Transaction {
 			if ( newTransaction ) {
 				if ( !commitFailed ) {
 					userTransaction.rollback();
-                    LOG.rolledBackJtaUserTransaction();
+                    LOG.debug("Rolled back JTA UserTransaction");
 				}
 			}
 			else {
 				userTransaction.setRollbackOnly();
-                LOG.jtaUserTransactionSetToRollbackOnly();
+                LOG.debug("Set JTA UserTransaction to rollback only");
 			}
 		}
 		catch ( Exception e ) {

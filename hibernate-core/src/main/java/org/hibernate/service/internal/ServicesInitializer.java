@@ -23,11 +23,11 @@
  */
 package org.hibernate.service.internal;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
@@ -38,10 +38,6 @@ import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistryAwareService;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.UnknownServiceException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Delegate responsible for initializing services
@@ -92,7 +88,7 @@ public class ServicesInitializer {
 	 * @return The intiialized instance of the service
 	 */
 	public <T extends Service> T initializeService(Class<T> serviceRole) {
-        LOG.initializingService(serviceRole.getName());
+        LOG.trace("Initializing service [role=" + serviceRole.getName() + "]");
 
 		// PHASE 1 : create service
 		T service = createService( serviceRole );
@@ -191,15 +187,4 @@ public class ServicesInitializer {
 			servicesRegistry.getService( JmxService.class ).registerService( (Manageable) service, serviceRole );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Initializing service [role=%s]" )
-        void initializingService( String name );
-    }
 }

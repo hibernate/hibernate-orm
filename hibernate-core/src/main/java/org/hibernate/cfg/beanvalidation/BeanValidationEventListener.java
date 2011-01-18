@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -35,6 +34,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import org.hibernate.EntityMode;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.Initializable;
@@ -45,10 +45,6 @@ import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -142,7 +138,7 @@ public class BeanValidationEventListener implements
 						new HashSet<ConstraintViolation<?>>( constraintViolations.size() );
 				Set<String> classNames = new HashSet<String>();
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
-                    LOG.violation(violation);
+                    LOG.trace(violation);
 					propagatedViolations.add( violation );
 					classNames.add( violation.getLeafBean().getClass().getName() );
 				}
@@ -174,15 +170,4 @@ public class BeanValidationEventListener implements
 		toString.append( "]" );
 		return toString.toString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "%s" )
-        void violation( ConstraintViolation<?> violation );
-    }
 }

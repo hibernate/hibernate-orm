@@ -30,11 +30,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.hibernate.Logger;
 import org.hibernate.util.JDBCExceptionReporter;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -115,7 +112,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 			catch ( NoSuchMethodException ex ) {
                 if (LOG.isEnabled(WARN)) {
                     StringBuffer buf = new StringBuffer().append("Exception switching from method: [").append(method).append("] to a method using the column index. Reverting to using: [").append(method).append("]");
-                    LOG.missingMethod(buf.toString());
+                    LOG.warn(buf.toString());
 				}
 			}
 		}
@@ -189,15 +186,4 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 			throw e.getTargetException();
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "%s" )
-        void missingMethod( String string );
-    }
 }

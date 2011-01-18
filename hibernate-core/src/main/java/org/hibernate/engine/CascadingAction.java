@@ -24,13 +24,13 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.collection.PersistentCollection;
@@ -40,10 +40,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A session action that may be cascaded from parent entity to its children
@@ -143,7 +139,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToDelete(entityName);
+            LOG.trace("Cascading to delete: " + entityName);
 			session.delete( entityName, child, isCascadeDeleteEnabled, ( Set ) anything );
 		}
 		@Override
@@ -169,7 +165,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToLock(entityName);
+            LOG.trace("Cascading to lock: " + entityName);
 			LockMode lockMode = LockMode.NONE;
 			LockOptions lr = new LockOptions();
 			if ( anything instanceof LockOptions) {
@@ -205,7 +201,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToRefresh(entityName);
+            LOG.trace("Cascading to refresh: " + entityName);
 			session.refresh( child, (Map) anything );
 		}
 		@Override
@@ -230,7 +226,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToEvict(entityName);
+            LOG.trace("Cascading to evict: " + entityName);
 			session.evict(child);
 		}
 		@Override
@@ -259,7 +255,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToSaveOrUpdate(entityName);
+            LOG.trace("Cascading to save or update: " + entityName);
 			session.saveOrUpdate(entityName, child);
 		}
 		@Override
@@ -289,7 +285,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToMerge(entityName);
+            LOG.trace("Cascading to merge: " + entityName);
 			session.merge( entityName, child, (Map) anything );
 		}
 		@Override
@@ -317,7 +313,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToSaveOrUpdateCopy(entityName);
+            LOG.trace("Cascading to save or update copy: " + entityName);
 			session.saveOrUpdateCopy( entityName, child, (Map) anything );
 		}
 		@Override
@@ -343,7 +339,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToPersist(entityName);
+            LOG.trace("Cascading to persist: " + entityName);
 			session.persist( entityName, child, (Map) anything );
 		}
 		@Override
@@ -374,7 +370,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToPersistOnFlush(entityName);
+            LOG.trace("Cascading to persist on flush: " + entityName);
 			session.persistOnFlush( entityName, child, (Map) anything );
 		}
 		@Override
@@ -441,7 +437,7 @@ public abstract class CascadingAction {
 		@Override
         public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
 		throws HibernateException {
-            LOG.cascadingToReplicate(entityName);
+            LOG.trace("Cascading to replicate: " + entityName);
 			session.replicate( entityName, child, (ReplicationMode) anything );
 		}
 		@Override
@@ -497,51 +493,4 @@ public abstract class CascadingAction {
 	private static boolean collectionIsInitialized(Object collection) {
 		return !(collection instanceof PersistentCollection) || ( (PersistentCollection) collection ).wasInitialized();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to delete: %s" )
-        void cascadingToDelete( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to evict: %s" )
-        void cascadingToEvict( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to lock: %s" )
-        void cascadingToLock( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to merge: %s" )
-        void cascadingToMerge( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to persist: %s" )
-        void cascadingToPersist( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to persist on flush: %s" )
-        void cascadingToPersistOnFlush( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to refresh: %s" )
-        void cascadingToRefresh( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to replicate: %s" )
-        void cascadingToReplicate( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to save or update: %s" )
-        void cascadingToSaveOrUpdate( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Cascading to save or update copy: %s" )
-        void cascadingToSaveOrUpdateCopy( String entityName );
-    }
 }

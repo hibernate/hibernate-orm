@@ -23,9 +23,9 @@
  */
 package org.hibernate.dialect;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.SQLException;
 import java.sql.Types;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
@@ -35,10 +35,6 @@ import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A dialect compatible with the H2 database.
@@ -345,17 +341,4 @@ public class H2Dialect extends Dialect {
 		// see http://groups.google.com/group/h2-database/browse_thread/thread/562d8a49e2dabe99?hl=en
 		return true;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "The %d.%d.%d version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk hql/jpaql will not work properly" )
-        void unsupportedMultiTableBulkHqlJpaql( int majorVersion,
-                                                int minorVersion,
-                                                int buildId );
-    }
 }

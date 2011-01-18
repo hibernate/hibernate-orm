@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.tm;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -34,7 +35,6 @@ import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.xa.XAResource;
-import org.hibernate.Logger;
 
 /**
  * SimpleJtaTransactionImpl implementation
@@ -42,8 +42,6 @@ import org.hibernate.Logger;
  * @author Steve Ebersole
  */
 public class SimpleJtaTransactionImpl implements Transaction {
-
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private int status;
 	private LinkedList synchronizations;

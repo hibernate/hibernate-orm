@@ -24,18 +24,14 @@
  */
 package org.hibernate.hql;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Provides query splitting methods, which were originally in QueryTranslator.
@@ -157,15 +153,4 @@ public final class QuerySplitter {
 	public static String getImportedClass(String name, SessionFactoryImplementor factory) {
 		return factory.getImportedClassName( name );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "no persistent classes found for query class: %s" )
-        void noPersistentClassesFound( String query );
-    }
 }

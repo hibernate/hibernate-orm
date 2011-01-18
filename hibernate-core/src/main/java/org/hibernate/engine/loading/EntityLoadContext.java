@@ -24,14 +24,10 @@
  */
 package org.hibernate.engine.loading;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.Logger;
 
 /**
  * {@inheritDoc}
@@ -62,15 +58,4 @@ public class EntityLoadContext {
     public String toString() {
 		return super.toString() + "<rs=" + resultSet + ">";
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "On EntityLoadContext#clear, hydratingEntities contained [%d] entries" )
-        void hydratingEntitiesCount( int size );
-    }
 }

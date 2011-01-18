@@ -24,16 +24,12 @@
  */
 package org.hibernate.loader.collection;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Loads a collection of values or a many-to-many association.
@@ -83,18 +79,6 @@ public class BasicCollectionLoader extends CollectionLoader {
 
 		postInstantiate();
 
-        LOG.staticSelectForCollection(collectionPersister.getRole(), getSQLString());
+        LOG.debug("Static select for collection " + collectionPersister.getRole() + ": " + getSQLString());
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Static select for collection %s: %s" )
-        void staticSelectForCollection( String role,
-                                        String sqlString );
-    }
 }

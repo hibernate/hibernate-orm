@@ -23,13 +23,13 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -37,10 +37,6 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * <b>increment</b><br>
@@ -123,7 +119,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private void initializePreviousValueHolder(SessionImplementor session) {
 		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 
-        LOG.fetchingInitialValue(sql);
+        LOG.debug("Fetching initial value: " + sql);
 		try {
 			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
@@ -132,7 +128,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
                     if (rs.next()) previousValueHolder.initialize(rs, 0L).increment();
                     else previousValueHolder.initialize(1L);
 					sql = null;
-                    LOG.firstFreeId(previousValueHolder.makeValue());
+                    LOG.debug("First free id: " + previousValueHolder.makeValue());
 				}
 				finally {
 					rs.close();
@@ -150,19 +146,4 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 			);
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Fetching initial value: %s" )
-        void fetchingInitialValue( String sql );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "First free id: %s" )
-        void firstFreeId( Number makeValue );
-    }
 }

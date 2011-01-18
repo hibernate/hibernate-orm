@@ -24,7 +24,6 @@
  */
 package org.hibernate.loader.custom.sql;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,15 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Implements Hibernate's built-in support for native SQL queries.
@@ -85,7 +81,7 @@ public class SQLCustomQuery implements CustomQuery {
 			final Collection additionalQuerySpaces,
 			final SessionFactoryImplementor factory) throws HibernateException {
 
-        LOG.processingSqlQery(sqlQuery);
+        LOG.trace("Starting processing of sql query [" + sqlQuery + "]");
 		SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(queryReturns, factory);
 		SQLQueryReturnProcessor.ResultAliasContext aliasContext = processor.process();
 
@@ -255,15 +251,4 @@ public class SQLCustomQuery implements CustomQuery {
 			return aliasContext.getPropertyResultsMap( alias );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Starting processing of sql query [%s]" )
-        void processingSqlQery( String sqlQuery );
-    }
 }

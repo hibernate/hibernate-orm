@@ -23,11 +23,10 @@
  */
 package org.hibernate.id.enhanced;
 
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.Serializable;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -38,10 +37,6 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Generates identifier values based on an sequence-style database structure.
@@ -371,21 +366,4 @@ public class SequenceStyleGenerator implements PersistentIdentifierGenerator, Co
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		return databaseStructure.sqlDropStrings( dialect );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Forcing table use for sequence-style generator due to pooled optimizer selection where db does not support pooled sequences" )
-        void forcingTableUse();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Config specified explicit optimizer of [%s], but [%s=%d; honoring optimizer setting" )
-        void honoringOptimizerSetting( String none,
-                                       String incrementParam,
-                                       int incrementSize );
-    }
 }

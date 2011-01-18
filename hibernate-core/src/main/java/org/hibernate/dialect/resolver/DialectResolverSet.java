@@ -23,7 +23,6 @@
  */
 package org.hibernate.dialect.resolver;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,10 +30,7 @@ import java.util.List;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCConnectionException;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to its
@@ -92,15 +88,4 @@ public class DialectResolverSet implements DialectResolver {
 	public void addResolverAtFirst(DialectResolver resolver) {
 		resolvers.add( 0, resolver );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "sub-resolver threw unexpected exception, continuing to next : %s" )
-        void subResolverException( String message );
-    }
 }

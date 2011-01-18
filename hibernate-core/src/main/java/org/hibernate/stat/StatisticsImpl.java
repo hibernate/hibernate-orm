@@ -26,6 +26,7 @@ package org.hibernate.stat;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.ArrayHelper;

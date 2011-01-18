@@ -23,9 +23,6 @@
  */
 package org.hibernate.internal.util.jndi;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
@@ -35,11 +32,8 @@ import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 public final class JndiHelper {
 
@@ -118,7 +112,7 @@ public final class JndiHelper {
 	 */
 	public static void bind(String jndiName, Object value, Context context) {
 		try {
-            LOG.binding(jndiName);
+            LOG.trace("Binding : " + jndiName);
 			context.rebind( jndiName, value );
 		}
 		catch ( Exception initialException ) {
@@ -131,7 +125,7 @@ public final class JndiHelper {
 
 				Context intermediateContext = null;
 				try {
-                    LOG.intermediateLookup(intermediateContextName);
+                    LOG.trace("Intermediate lookup: " + intermediateContextName);
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -141,9 +135,9 @@ public final class JndiHelper {
 					throw new JndiException( "Unaniticipated error doing intermediate lookup", e );
 				}
 
-                if (intermediateContext != null) LOG.foundIntermediateContext(intermediateContextName);
+                if (intermediateContext != null) LOG.trace("Found intermediate context: " + intermediateContextName);
 				else {
-                    LOG.creatingSubcontextTrace(intermediateContextName);
+                    LOG.trace("Creating subcontext: " + intermediateContextName);
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -154,7 +148,7 @@ public final class JndiHelper {
 				intermediateContextBase = intermediateContext;
 				n = n.getSuffix( 1 );
 			}
-            LOG.binding(n);
+            LOG.trace("Binding : " + n);
 			try {
 				intermediateContextBase.rebind( n, value );
 			}
@@ -162,7 +156,7 @@ public final class JndiHelper {
 				throw new JndiException( "Error performing intermediate bind [" + n + "]", e );
 			}
 		}
-        LOG.boundName(jndiName);
+        LOG.debug("Bound name: " + jndiName);
 	}
 
 	private static Name tokenizeName(String jndiName, Context context) {
@@ -210,7 +204,7 @@ public final class JndiHelper {
 	 */
 	public static void bind(Context ctx, String name, Object val) throws NamingException {
 		try {
-            LOG.binding(name);
+            LOG.trace("Binding : " + name);
 			ctx.rebind(name, val);
 		}
 		catch (Exception e) {
@@ -220,13 +214,13 @@ public final class JndiHelper {
 
 				Context subctx=null;
 				try {
-                    LOG.lookup(ctxName);
+                    LOG.trace("Lookup: " + ctxName);
 					subctx = (Context) ctx.lookup(ctxName);
 				}
 				catch (NameNotFoundException nfe) {}
 
 				if (subctx!=null) {
-                    LOG.foundSubcontext(ctxName);
+                    LOG.debug("Found subcontext: " + ctxName);
 					ctx = subctx;
 				}
 				else {
@@ -235,56 +229,10 @@ public final class JndiHelper {
 				}
 				n = n.getSuffix(1);
 			}
-            LOG.binding(n);
+            LOG.trace("Binding : " + n);
 			ctx.rebind(n, val);
 		}
-        LOG.boundName(name);
+        LOG.debug("Bound name: " + name);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Binding : %s" )
-        void binding( Object jndiName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Bound name: %s" )
-        void boundName( String jndiName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Creating subcontext: %s" )
-        void creatingSubcontextInfo( String intermediateContextName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Creating subcontext: %s" )
-        void creatingSubcontextTrace( String intermediateContextName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Found intermediate context: %s" )
-        void foundIntermediateContext( String intermediateContextName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Found subcontext: %s" )
-        void foundSubcontext( String ctxName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Intermediate lookup: %s" )
-        void intermediateLookup( String intermediateContextName );
-
-        @LogMessage( level = INFO )
-        @Message( value = "JNDI InitialContext properties:%s" )
-        void jndiInitialContextProperties( Hashtable hash );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Lookup: %s" )
-        void lookup( String ctxName );
-
-        @Message( value = "Could not obtain initial context" )
-        Object unableToObtainInitialContext();
-    }
 }
 

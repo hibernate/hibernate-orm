@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
@@ -73,13 +74,13 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("cannot re-start transaction after failed commit");
 		}
 
-        LOG.begin();
+        LOG.debug("Begin");
 
 		try {
 			toggleAutoCommit = jdbcContext.connection().getAutoCommit();
-            LOG.currentAutoCommitStatus(toggleAutoCommit);
+            LOG.debug("current autocommit status: " + toggleAutoCommit);
 			if (toggleAutoCommit) {
-                LOG.disablingAutoCommit();
+                LOG.debug("Disabling autocommit");
 				jdbcContext.connection().setAutoCommit(false);
 			}
 		}
@@ -122,7 +123,7 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.commit();
+        LOG.debug("Commit");
 
 		if ( !transactionContext.isFlushModeNever() && callback ) {
 			transactionContext.managedFlush(); //if an exception occurs during flush, user must call rollback()
@@ -135,7 +136,7 @@ public class JDBCTransaction implements Transaction {
 
 		try {
 			commitAndResetAutoCommit();
-            LOG.commitedJdbcConnection();
+            LOG.debug("Committed JDBC Connection");
 			committed = true;
 			if ( callback ) {
 				jdbcContext.afterTransactionCompletion( true, this );
@@ -174,7 +175,7 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.rollback();
+        LOG.debug("Rollback");
 
 		if (!commitFailed) {
 
@@ -185,7 +186,7 @@ public class JDBCTransaction implements Transaction {
 
 			try {
 				rollbackAndResetAutoCommit();
-                LOG.rolledBackJdbcConnection();
+                LOG.debug("Rolled back JDBC Connection");
 				rolledBack = true;
 				notifySynchronizationsAfterTransactionCompletion(Status.STATUS_ROLLEDBACK);
 			}
@@ -215,7 +216,7 @@ public class JDBCTransaction implements Transaction {
 	private void toggleAutoCommit() {
 		try {
 			if (toggleAutoCommit) {
-                LOG.reenablingAutoCommit();
+                LOG.debug("Re-enabling autocommit");
 				jdbcContext.connection().setAutoCommit( true );
 			}
 		}

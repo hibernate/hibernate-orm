@@ -22,119 +22,115 @@
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
 import javax.transaction.TransactionManager;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.test.cache.infinispan.TestInfinispanLogger;
 import org.hibernate.test.cache.infinispan.functional.classloader.Account;
 import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.test.TestingUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * SessionRefreshTestCase.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class SessionRefreshTestCase extends DualNodeTestCase {
 
-   public static final String OUR_PACKAGE = SessionRefreshTestCase.class.getPackage().getName();
-   
-   protected final Logger log = LoggerFactory.getLogger(getClass());
+    private static final TestInfinispanLogger LOG = TestInfinispanLogger.LOG;
 
-   static int test = 0;
-   
-   private Cache localCache;
+    public static final String OUR_PACKAGE = SessionRefreshTestCase.class.getPackage().getName();
 
-   public SessionRefreshTestCase(String string) {
-      super(string);
-   }
+    static int test = 0;
 
-   protected String getEntityCacheConfigName() {
-      return "entity";
-   }
-   
-   /**
-    * Disables use of the second level cache for this session factory.
-    * 
-    * {@inheritDoc} 
-    */
-   @Override
-   protected void configureSecondNode(Configuration cfg) {
-      super.configureSecondNode(cfg);
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
-   }
-   
-   @Override
-   protected void standardConfigure(Configuration cfg) {
-      super.standardConfigure(cfg);
-      cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getEntityCacheConfigName()); 
-   }
+    private Cache localCache;
 
-   @Override
-   public String[] getMappings() {
-      return new String[] { "cache/infinispan/functional/classloader/Account.hbm.xml" };
-   }
+    public SessionRefreshTestCase( String string ) {
+        super(string);
+    }
 
-   @Override
-   protected void cleanupTransactionManagement() {
-      // Don't clean up the managers, just the transactions
-      // Managers are still needed by the long-lived caches
-      DualNodeJtaTransactionManagerImpl.cleanupTransactions();
-   }
+    protected String getEntityCacheConfigName() {
+        return "entity";
+    }
 
-   public void testRefreshAfterExternalChange() throws Exception {
-      // First session factory uses a cache
-      CacheContainer localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
-      localCache = localManager.getCache(Account.class.getName());
-      TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
-      SessionFactory localFactory = getEnvironment().getSessionFactory();
+    /**
+     * Disables use of the second level cache for this session factory. {@inheritDoc}
+     */
+    @Override
+    protected void configureSecondNode( Configuration cfg ) {
+        super.configureSecondNode(cfg);
+        cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
+    }
 
-      // Second session factory doesn't; just needs a transaction manager
-      // However, start at least the cache to avoid issues with replication and cache not being there
-      ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE).getCache(Account.class.getName());
-      TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.REMOTE);
-      SessionFactory remoteFactory = getSecondNodeEnvironment().getSessionFactory();
+    @Override
+    protected void standardConfigure( Configuration cfg ) {
+        super.standardConfigure(cfg);
+        cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getEntityCacheConfigName());
+    }
 
-      ClassLoaderTestDAO dao0 = new ClassLoaderTestDAO(localFactory, localTM);
-      ClassLoaderTestDAO dao1 = new ClassLoaderTestDAO(remoteFactory, remoteTM);
+    @Override
+    public String[] getMappings() {
+        return new String[] {"cache/infinispan/functional/classloader/Account.hbm.xml"};
+    }
 
-      Integer id = new Integer(1);
-      dao0.createAccount(dao0.getSmith(), id, new Integer(5), DualNodeTestCase.LOCAL);
+    @Override
+    protected void cleanupTransactionManagement() {
+        // Don't clean up the managers, just the transactions
+        // Managers are still needed by the long-lived caches
+        DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+    }
 
-      // Basic sanity check
-      Account acct1 = dao1.getAccount(id);
-      assertNotNull(acct1);
-      assertEquals(DualNodeTestCase.LOCAL, acct1.getBranch());
+    public void testRefreshAfterExternalChange() throws Exception {
+        // First session factory uses a cache
+        CacheContainer localManager = ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.LOCAL);
+        localCache = localManager.getCache(Account.class.getName());
+        TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.LOCAL);
+        SessionFactory localFactory = getEnvironment().getSessionFactory();
 
-      // This dao's session factory isn't caching, so cache won't see this change
-      dao1.updateAccountBranch(id, DualNodeTestCase.REMOTE);
+        // Second session factory doesn't; just needs a transaction manager
+        // However, start at least the cache to avoid issues with replication and cache not being there
+        ClusterAwareRegionFactory.getCacheManager(DualNodeTestCase.REMOTE).getCache(Account.class.getName());
+        TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance(DualNodeTestCase.REMOTE);
+        SessionFactory remoteFactory = getSecondNodeEnvironment().getSessionFactory();
 
-      // dao1's session doesn't touch the cache,
-      // so reading from dao0 should show a stale value from the cache
-      // (we check to confirm the cache is used)
-      Account acct0 = dao0.getAccount(id);
-      assertNotNull(acct0);
-      assertEquals(DualNodeTestCase.LOCAL, acct0.getBranch());
-      log.debug("Contents when re-reading from local: " + TestingUtil.printCache(localCache));
+        ClassLoaderTestDAO dao0 = new ClassLoaderTestDAO(localFactory, localTM);
+        ClassLoaderTestDAO dao1 = new ClassLoaderTestDAO(remoteFactory, remoteTM);
 
-      // Now call session.refresh and confirm we get the correct value
-      acct0 = dao0.getAccountWithRefresh(id);
-      assertNotNull(acct0);
-      assertEquals(DualNodeTestCase.REMOTE, acct0.getBranch());
-      log.debug("Contents after refreshing in remote: " + TestingUtil.printCache(localCache));
+        Integer id = new Integer(1);
+        dao0.createAccount(dao0.getSmith(), id, new Integer(5), DualNodeTestCase.LOCAL);
 
-      // Double check with a brand new session, in case the other session
-      // for some reason bypassed the 2nd level cache
-      ClassLoaderTestDAO dao0A = new ClassLoaderTestDAO(localFactory, localTM);
-      Account acct0A = dao0A.getAccount(id);
-      assertNotNull(acct0A);
-      assertEquals(DualNodeTestCase.REMOTE, acct0A.getBranch());
-      log.debug("Contents after creating a new session: " + TestingUtil.printCache(localCache));
-   }
+        // Basic sanity check
+        Account acct1 = dao1.getAccount(id);
+        assertNotNull(acct1);
+        assertEquals(DualNodeTestCase.LOCAL, acct1.getBranch());
+
+        // This dao's session factory isn't caching, so cache won't see this change
+        dao1.updateAccountBranch(id, DualNodeTestCase.REMOTE);
+
+        // dao1's session doesn't touch the cache,
+        // so reading from dao0 should show a stale value from the cache
+        // (we check to confirm the cache is used)
+        Account acct0 = dao0.getAccount(id);
+        assertNotNull(acct0);
+        assertEquals(DualNodeTestCase.LOCAL, acct0.getBranch());
+        LOG.debug("Contents when re-reading from local: " + TestingUtil.printCache(localCache));
+
+        // Now call session.refresh and confirm we get the correct value
+        acct0 = dao0.getAccountWithRefresh(id);
+        assertNotNull(acct0);
+        assertEquals(DualNodeTestCase.REMOTE, acct0.getBranch());
+        LOG.debug("Contents after refreshing in remote: " + TestingUtil.printCache(localCache));
+
+        // Double check with a brand new session, in case the other session
+        // for some reason bypassed the 2nd level cache
+        ClassLoaderTestDAO dao0A = new ClassLoaderTestDAO(localFactory, localTM);
+        Account acct0A = dao0A.getAccount(id);
+        assertNotNull(acct0A);
+        assertEquals(DualNodeTestCase.REMOTE, acct0A.getBranch());
+        LOG.debug("Contents after creating a new session: " + TestingUtil.printCache(localCache));
+    }
 }

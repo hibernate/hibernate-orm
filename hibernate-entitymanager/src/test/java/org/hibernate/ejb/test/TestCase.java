@@ -35,15 +35,12 @@ import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.TestEntityManagerLogger;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
 /**
@@ -53,7 +50,8 @@ import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
  * @author Hardy Ferentschik
  */
 public abstract class TestCase extends HibernateTestCase {
-	private static final Logger log = LoggerFactory.getLogger( TestCase.class );
+
+    public static final TestEntityManagerLogger LOG = TestEntityManagerLogger.LOG;
 
 	protected static EntityManagerFactory factory;
 	private EntityManager em;
@@ -69,18 +67,19 @@ public abstract class TestCase extends HibernateTestCase {
 	}
 
 
-	public void tearDown() throws Exception {
+	@Override
+    public void tearDown() throws Exception {
 		super.tearDown();
 	}
 
 	@Override
 	protected void buildConfiguration() throws Exception {
 		Ejb3Configuration ejbconfig = new Ejb3Configuration();
-		TestCase.cfg = ejbconfig.getHibernateConfiguration();
+		HibernateTestCase.cfg = ejbconfig.getHibernateConfiguration();
 		if ( recreateSchema() ) {
 			cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		}
-		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		cfg.setProperty( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 
 		for ( String mappingFile : getMappings() ) {
 			cfg.addResource( mappingFile );
@@ -95,17 +94,18 @@ public abstract class TestCase extends HibernateTestCase {
 		}
 		if ( em.getTransaction().isActive() ) {
 			em.getTransaction().rollback();
-			log.warn( "You left an open transaction! Fix your test case. For now, we are closing it for you." );
+            LOG.warn("You left an open transaction! Fix your test case. For now, we are closing it for you.");
 		}
 		if ( em.isOpen() ) {
 			// as we open an EM before the test runs, it will still be open if the test uses a custom EM.
 			// or, the person may have forgotten to close. So, do not raise a "fail", but log the fact.
 			em.close();
-			log.warn( "The EntityManager is not closed. Closing it." );
+            LOG.warn("The EntityManager is not closed. Closing it.");
 		}
 	}
 
-	protected void handleUnclosedResources() {
+	@Override
+    protected void handleUnclosedResources() {
 		cleanUnclosed( this.em );
 		for ( Iterator iter = isolatedEms.iterator(); iter.hasNext(); ) {
 			cleanUnclosed( ( EntityManager ) iter.next() );
@@ -114,7 +114,8 @@ public abstract class TestCase extends HibernateTestCase {
 		cfg = null;
 	}
 
-	protected void closeResources() {
+	@Override
+    protected void closeResources() {
 		if ( factory != null ) {
 			factory.close();
 		}

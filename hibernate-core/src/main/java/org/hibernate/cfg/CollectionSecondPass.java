@@ -23,20 +23,16 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Collection second pass
@@ -64,7 +60,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	public void doSecondPass(java.util.Map persistentClasses)
 			throws MappingException {
-        LOG.secondPass(collection.getRole());
+        LOG.debug("Second pass for collection: " + collection.getRole());
 
 		secondPass( persistentClasses, localInheritedMetas ); // using local since the inheritedMetas at this point is not the correct map since it is always the empty map
 		collection.createAllKeys();
@@ -80,7 +76,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-            LOG.mappedCollection(msg);
+            LOG.debug(msg);
 		}
 	}
 
@@ -96,19 +92,4 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 		return columns.toString();
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "%s" )
-        void mappedCollection( String message );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Second pass for collection: %s" )
-        void secondPass( String role );
-    }
 }

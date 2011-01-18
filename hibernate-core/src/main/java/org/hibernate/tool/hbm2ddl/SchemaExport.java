@@ -24,10 +24,6 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +42,7 @@ import java.util.List;
 import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -58,10 +55,6 @@ import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -259,7 +252,7 @@ public class SchemaExport {
 					importFileReaders.add( new NamedReader( resourceName, stream ) );
 				}
 				catch ( HibernateException e ) {
-                    LOG.importFileNotFound(currentFile);
+                    LOG.debug("Import file not found: " + currentFile);
 				}
 			}
 
@@ -403,7 +396,7 @@ public class SchemaExport {
 			}
 			catch ( SQLException e ) {
 				exceptions.add( e );
-                LOG.unsuccessfulDrop(dropSQL[i]);
+                LOG.debug("Unsuccessful: " + dropSQL[i]);
                 LOG.debug(e.getMessage());
 			}
 		}
@@ -542,62 +535,4 @@ public class SchemaExport {
 	public List getExceptions() {
 		return exceptions;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Executing import script: %s" )
-        void executingImportScript( String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Exporting generated schema to database" )
-        void exportingGeneratedSchemaToDatabase();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Import file not found: %s" )
-        void importFileNotFound( String currentFile );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Running hbm2ddl schema export" )
-        void runningHbm2ddlSchemaExport();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Schema export complete" )
-        void schemaExportComplete();
-
-        @Message( value = "Schema export unsuccessful" )
-        Object schemaExportUnsuccessful();
-
-        @Message( value = "Could not close connection" )
-        Object unableToCloseConnection();
-
-        @Message( value = "Error closing imput files: %s" )
-        Object unableToCloseInputFiles( String name );
-
-        @Message( value = "Error closing output file: %s" )
-        Object unableToCloseOutputFile( String outputFile );
-
-        @Message( value = "Error creating schema " )
-        Object unableToCreateSchema();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to log SQLWarnings : %s" )
-        void unableToLogSqlWarnings( SQLException sqle );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Unsuccessful: %s" )
-        void unsuccessfulCreate( String string );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Unsuccessful: %s" )
-        void unsuccessfulDrop( String string );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Writing generated schema to file: %s" )
-        void writingGeneratedSchemaToFile( String outputFile );
-    }
 }

@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -301,7 +302,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		);
 		FromElement elem = factory.createCollection( queryableCollection, role, joinType, fetch, indexed );
 
-        LOG.dereferenceCollection(propName, elem);
+        LOG.debug("dereferenceCollection() : Created new FROM element for " + propName + " : " + elem);
 
 		setImpliedJoin( elem );
 		setFromElement( elem );	// This 'dot' expression now refers to the resulting from element.
@@ -382,10 +383,10 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean impliedJoin, AST parent)
 	throws SemanticException {
 		dereferenceType = DEREF_ENTITY;
-        if (LOG.isDebugEnabled()) LOG.dereferenceEntityJoin(propertyName,
-                                                            getFromElement().getClassName(),
-                                                            (classAlias == null) ? LOG.noAlias() : classAlias,
-                                                            ASTUtil.getDebugString(parent));
+        if (LOG.isDebugEnabled()) LOG.debug("dereferenceEntityJoin() : generating join for " + propertyName + " in "
+                                            + getFromElement().getClassName() + " ("
+                                            + (classAlias == null ? "<no alias>" : classAlias) + ") parent = "
+                                            + ASTUtil.getDebugString(parent));
 		// Create a new FROM node for the referenced class.
 		String associatedEntityName = propertyType.getAssociatedEntityName();
 		String tableAlias = getAliasGenerator().createName( associatedEntityName );
@@ -536,7 +537,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 	private void checkForCorrelatedSubquery(String methodName) {
-        if (isCorrelatedSubselect()) LOG.correlatedSubquery(methodName);
+        if (isCorrelatedSubselect()) LOG.debug(methodName + "() : correlated subquery");
 	}
 
 	private boolean isCorrelatedSubselect() {
@@ -557,7 +558,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private void dereferenceEntityIdentifier(String propertyName, DotNode dotParent) {
 		// special shortcut for id properties, skip the join!
 		// this must only occur at the _end_ of a path expression
-        LOG.dereferenceShortcut(propertyName, getFromElement().getClassName());
+        LOG.debug("dereferenceShortcut() : property " + propertyName + " in " + getFromElement().getClassName()
+                  + " does not require a join.");
 
 		initText();
 		setPropertyNameAndPath( dotParent ); // Set the unresolved path in this node and the parent.
@@ -577,8 +579,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			propertyName = rhs.getText();
 			propertyPath = propertyPath + "." + propertyName; // Append the new property name onto the unresolved path.
 			dotNode.propertyPath = propertyPath;
-            LOG.unresolvedPropertyPathIsNow(dotNode.propertyPath);
-        } else LOG.terminalPropertyPath(propertyPath);
+            LOG.debug("Unresolved property path is now '" + dotNode.propertyPath + "'");
+        } else LOG.debug("Terminal propertyPath = [" + propertyPath + "]");
 	}
 
 	@Override
@@ -588,7 +590,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
             if (fromElement == null) return null;
 			// If the lhs is a collection, use CollectionPropertyMapping
 			Type propertyType = fromElement.getPropertyType( propertyName, propertyPath );
-            LOG.getDataType(propertyPath, propertyType);
+            LOG.debug("getDataType() : " + propertyPath + " -> " + propertyType);
 			super.setDataType( propertyType );
 		}
 		return super.getDataType();

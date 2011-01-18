@@ -30,6 +30,7 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -156,7 +157,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 					}
 				}
 				catch( Exception e ) {
-                    LOG.unableToCreateTemporaryIdTable(e.getMessage());
+                    LOG.debug("Unable to create temporary id table [" + e.getMessage() + "]");
 				}
 			}
 		};

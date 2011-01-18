@@ -23,25 +23,20 @@
  */
 package org.hibernate.id;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * <b>sequence</b><br>
@@ -118,7 +113,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 					rs.next();
 					IntegralDataTypeHolder result = buildHolder();
 					result.initialize( rs, 1 );
-                    LOG.sequenceIdentifierGenerated(result);
+                    LOG.debug("Sequence identifier generated: " + result);
 					return result;
 				}
 				finally {
@@ -162,15 +157,4 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 	public String getSequenceName() {
 		return sequenceName;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Sequence identifier generated: %s" )
-        void sequenceIdentifierGenerated( IntegralDataTypeHolder result );
-    }
 }

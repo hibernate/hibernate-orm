@@ -24,9 +24,9 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
@@ -35,10 +35,6 @@ import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A convenience base class for listeners that respond to requests to perform a
@@ -76,8 +72,9 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 
 			final EntityPersister persister = entry.getPersister();
 
-            if (LOG.isTraceEnabled()) LOG.locking(MessageHelper.infoString(persister, entry.getId(), source.getFactory()),
-                                                  requestedLockMode);
+            if (LOG.isTraceEnabled()) LOG.trace("Locking "
+                                                + MessageHelper.infoString(persister, entry.getId(), source.getFactory())
+                                                + " in mode: " + requestedLockMode);
 
 			final SoftLock lock;
 			final CacheKey ck;
@@ -119,16 +116,4 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Locking %s in mode: %s" )
-        void locking( String infoString,
-                      LockMode requestedLockMode );
-    }
 }

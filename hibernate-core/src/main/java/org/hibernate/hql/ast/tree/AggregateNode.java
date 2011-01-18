@@ -23,15 +23,11 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import static org.jboss.logging.Logger.Level.INFO;
+import org.hibernate.Logger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -96,15 +92,4 @@ public class AggregateNode extends AbstractSelectExpression implements SelectExp
 		// functions in a SELECT should always be considered scalar.
 		return true;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Could not resolve aggregate function {}; using standard definition" )
-        void unableToResolveAggregateFunction( String name );
-    }
 }

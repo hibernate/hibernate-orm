@@ -27,19 +27,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Properties;
-
 import javax.sql.DataSource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.mchange.v2.c3p0.DataSources;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.util.ReflectHelper;
+import com.mchange.v2.c3p0.DataSources;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by
@@ -50,7 +44,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class C3P0ConnectionProvider implements ConnectionProvider {
 
-	private static final Logger log = LoggerFactory.getLogger( C3P0ConnectionProvider.class );
+    private static final C3P0Logger LOG = org.jboss.logging.Logger.getMessageLogger(C3P0Logger.class, C3P0Logger.class.getPackage().getName());
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
@@ -61,7 +55,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 	private final static String C3P0_STYLE_MAX_STATEMENTS = "c3p0.maxStatements";
 	private final static String C3P0_STYLE_ACQUIRE_INCREMENT = "c3p0.acquireIncrement";
 	private final static String C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD = "c3p0.idleConnectionTestPeriod";
-	private final static String C3P0_STYLE_TEST_CONNECTION_ON_CHECKOUT = "c3p0.testConnectionOnCheckout";
+    // private final static String C3P0_STYLE_TEST_CONNECTION_ON_CHECKOUT = "c3p0.testConnectionOnCheckout";
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for initialPoolSize, which
 	//                     hibernate sensibly lets default to minPoolSize, but we'll let users
@@ -93,23 +87,22 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 		conn.close();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+    /**
+     * @param props
+     * @throws HibernateException
+     */
 	public void configure(Properties props) throws HibernateException {
 		String jdbcDriverClass = props.getProperty( Environment.DRIVER );
 		String jdbcUrl = props.getProperty( Environment.URL );
 		Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
-		log.info( "C3P0 using driver: " + jdbcDriverClass + " at URL: " + jdbcUrl );
-		log.info( "Connection properties: " + ConfigurationHelper.maskOut( connectionProps, "password" ) );
+        LOG.c3p0UsingDriver(jdbcDriverClass, jdbcUrl);
+        LOG.connectionProperties(ConfigurationHelper.maskOut(connectionProps, "password"));
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
-		log.info( "autocommit mode: " + autocommit );
+        LOG.autoCommitMode(autocommit);
 
-		if ( jdbcDriverClass == null ) {
-			log.warn( "No JDBC Driver class was specified by property " + Environment.DRIVER );
-		}
+        if (jdbcDriverClass == null) LOG.jdbcDriverNotSpecified(Environment.DRIVER);
 		else {
 			try {
 				Class.forName( jdbcDriverClass );
@@ -119,8 +112,8 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 					ReflectHelper.classForName( jdbcDriverClass );
 				}
 				catch ( ClassNotFoundException e ) {
-					String msg = "JDBC Driver class not found: " + jdbcDriverClass;
-					log.error( msg, e );
+                    String msg = LOG.jdbcDriverNotFound(jdbcDriverClass);
+                    LOG.error(msg, e);
 					throw new HibernateException( msg, e );
 				}
 			}
@@ -182,30 +175,28 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 			ds = DataSources.pooledDataSource( unpooled, allProps );
 		}
 		catch ( Exception e ) {
-			log.error( "could not instantiate C3P0 connection pool", e );
+            LOG.error(LOG.unableToInstantiateC3p0ConnectionPool(), e);
 			throw new HibernateException( "Could not instantiate C3P0 connection pool", e );
 		}
 
 		String i = props.getProperty( Environment.ISOLATION );
-		if ( i == null ) {
-			isolation = null;
-		}
+        if (i == null) isolation = null;
 		else {
 			isolation = new Integer( i );
-			log.info( "JDBC isolation level: " + Environment.isolationLevelToString( isolation.intValue() ) );
+            LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation.intValue()));
 		}
 
 	}
 
-	/**
-	 * {@inheritDoc}
+    /**
+	 *
 	 */
 	public void close() {
 		try {
 			DataSources.destroy( ds );
 		}
 		catch ( SQLException sqle ) {
-			log.warn( "could not destroy C3P0 connection pool", sqle );
+            LOG.warn(LOG.unableToDestroyC3p0ConnectionPool(), sqle);
 		}
 	}
 
@@ -230,12 +221,6 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 	}
 
 	private void warnPropertyConflict(String hibernateStyle, String c3p0Style) {
-		log.warn(
-				"Both hibernate-style property '" + hibernateStyle +
-						"' and c3p0-style property '" + c3p0Style +
-						"' have been set in hibernate.properties. " +
-						"Hibernate-style property '" + hibernateStyle + "' will be used " +
-						"and c3p0-style property '" + c3p0Style + "' will be ignored!"
-		);
+        LOG.bothHibernateAndC3p0StylesSet(hibernateStyle, c3p0Style, hibernateStyle, c3p0Style);
 	}
 }

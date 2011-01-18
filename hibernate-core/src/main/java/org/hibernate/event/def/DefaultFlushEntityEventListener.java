@@ -24,11 +24,11 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.DelayedPostInsertIdentifier;
 import org.hibernate.action.EntityUpdateAction;
@@ -47,10 +47,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An event that occurs for each entity instance at flush time
@@ -256,15 +252,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
         if (LOG.isTraceEnabled()) {
 			if ( status == Status.DELETED ) {
-                if (!persister.isMutable()) LOG.updatingImmutableDeletedEntity(MessageHelper.infoString(persister,
-                                                                                                        entry.getId(),
-                                                                                                        session.getFactory()));
-                else if (!entry.isModifiableEntity()) LOG.updatingNonModifiableDeletedEntity(MessageHelper.infoString(persister,
-                                                                                                                      entry.getId(),
-                                                                                                                      session.getFactory()));
-                else LOG.updatingDeletedEntity(MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
-			}
- else LOG.updatingEntity(MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
+                if (!persister.isMutable()) LOG.trace("Updating immutable, deleted entity: "
+                                                      + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
+                else if (!entry.isModifiableEntity()) LOG.trace("Updating non-modifiable, deleted entity: "
+                                                                + MessageHelper.infoString(persister,
+                                                                                           entry.getId(),
+                                                                                           session.getFactory()));
+                else LOG.trace("Updating deleted entity: "
+                               + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
+            } else LOG.trace("Updating entity: " + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
 		}
 
 		final boolean intercepted;
@@ -558,7 +554,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
 				dirtyPropertyNames[i] = allPropertyNames[ dirtyProperties[i]];
 			}
-            LOG.foundDirtyProperties(MessageHelper.infoString(persister.getEntityName(), id), dirtyPropertyNames);
+            LOG.trace("Found dirty properties [" + MessageHelper.infoString(persister.getEntityName(), id) + "] : "
+                      + dirtyPropertyNames);
 		}
 	}
 
@@ -580,32 +577,4 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
         EntityKey entityKey = new EntityKey(id, persister, session.getEntityMode());
         return session.getPersistenceContext().getCachedDatabaseSnapshot(entityKey);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Found dirty properties [%s] : %s" )
-        void foundDirtyProperties( String infoString,
-                                   String[] dirtyPropertyNames );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Updating deleted entity: %s" )
-        void updatingDeletedEntity( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Updating entity: %s" )
-        void updatingEntity( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Updating immutable, deleted entity: %s" )
-        void updatingImmutableDeletedEntity( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Updating non-modifiable, deleted entity: %s" )
-        void updatingNonModifiableDeletedEntity( String infoString );
-    }
 }

@@ -24,7 +24,6 @@
  */
 package org.hibernate.engine;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -32,14 +31,11 @@ import java.io.Serializable;
 import java.util.Collection;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * We need an entry to tell us all about the current state
@@ -199,8 +195,9 @@ public final class CollectionEntry implements Serializable {
 
 		dirty(collection);
 
-        if (LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null) LOG.collectionDirty(MessageHelper.collectionInfoString(getLoadedPersister().getRole(),
-                                                                                                                                                 getLoadedKey()));
+        if (LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null) LOG.debug("Collection dirty: "
+                                                                                                    + MessageHelper.collectionInfoString(getLoadedPersister().getRole(),
+                                                                                                                                         getLoadedKey()));
 
 		setDoupdate(false);
 		setDoremove(false);
@@ -417,15 +414,4 @@ public final class CollectionEntry implements Serializable {
 		        ( session == null ? null : session.getFactory() )
 		);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Collection dirty: %s" )
-        void collectionDirty( String collectionInfoString );
-    }
 }

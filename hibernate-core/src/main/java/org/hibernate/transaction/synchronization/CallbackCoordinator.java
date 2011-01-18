@@ -23,19 +23,14 @@
  */
 package org.hibernate.transaction.synchronization;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.TRACE;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
+import org.hibernate.Logger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.util.JTAHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
@@ -102,7 +97,7 @@ public class CallbackCoordinator {
 	// sync callbacks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void beforeCompletion() {
-        LOG.transactionBeforeCompletionCallback();
+        LOG.trace("Transaction before completion callback");
 
 		boolean flush;
 		try {
@@ -115,7 +110,7 @@ public class CallbackCoordinator {
 
 		try {
 			if ( flush ) {
-                LOG.automaticallyFlushingSession();
+                LOG.trace("Automatically flushing session");
 				ctx.managedFlush();
 			}
 		}
@@ -139,7 +134,7 @@ public class CallbackCoordinator {
 	}
 
 	public void afterCompletion(int status) {
-        LOG.transactionAfterCompletionCallback(status);
+        LOG.trace("Transaction after completion callback [status=" + status + "]");
 
 		try {
 			afterCompletionAction.doAction( ctx, status );
@@ -151,7 +146,7 @@ public class CallbackCoordinator {
 			reset();
 			jdbcContext.cleanUpJtaSynchronizationCallbackCoordinator();
 			if ( ctx.shouldAutoClose() && !ctx.isClosed() ) {
-                LOG.automaticallyClosingSession();
+                LOG.trace("Automatically closing session");
 				ctx.managedClose();
 			}
 		}
@@ -186,38 +181,4 @@ public class CallbackCoordinator {
 			// nothing to do by default.
 		}
 	};
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Automatically closing session" )
-        void automaticallyClosingSession();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Automatically flushing session" )
-        void automaticallyFlushingSession();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Transaction after completion callback [status=%d]" )
-        void transactionAfterCompletionCallback( int status );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Transaction before completion callback" )
-        void transactionBeforeCompletionCallback();
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Could not determine transaction status [%s]" )
-        void unableToDetermineTransactionStatus( String message );
-
-        @LogMessage( level = ERROR )
-        @Message( value = "Error during managed flush [%s]" )
-        void unableToPerformManagedFlush( String message );
-
-        @Message( value = "Could not set transaction to rollback only" )
-        Object unableToSetTransactionToRollbackOnly();
-    }
 }

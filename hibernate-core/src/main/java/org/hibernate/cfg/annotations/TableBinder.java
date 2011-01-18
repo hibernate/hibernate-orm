@@ -23,13 +23,13 @@
  */
 package org.hibernate.cfg.annotations;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.persistence.UniqueConstraint;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Logger;
 import org.hibernate.annotations.Index;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Ejb3JoinColumn;
@@ -51,10 +51,6 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Table related operations
@@ -343,7 +339,7 @@ public class TableBinder {
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
 			 */
-            LOG.retreivingProperty(associatedClass.getEntityName(), mappedByProperty);
+            LOG.debug("Retrieving property " + associatedClass.getEntityName() + "." + mappedByProperty);
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
 			Iterator mappedByColumns;
@@ -450,7 +446,7 @@ public class TableBinder {
 					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
 					org.hibernate.mapping.Column col;
 					Table table = referencedEntity.getTable(); //works cause the pk has to be on the primary table
-                    if (!idColItr.hasNext()) LOG.noColumnInIdentifier();
+                    if (!idColItr.hasNext()) LOG.debug("No column in the identifier!");
 					while ( idColItr.hasNext() ) {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
@@ -578,20 +574,4 @@ public class TableBinder {
 		this.propertyName = propertyName;
 		this.name = null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Retrieving property %s.%s" )
-        void retreivingProperty( String entityName,
-                                 String propertyName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "No column in the identifier!" )
-        void noColumnInIdentifier();
-    }
 }

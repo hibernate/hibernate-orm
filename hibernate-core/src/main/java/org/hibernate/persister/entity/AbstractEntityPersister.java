@@ -23,8 +23,6 @@
  */
 package org.hibernate.persister.entity;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,6 +41,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
@@ -109,10 +108,6 @@ import org.hibernate.type.VersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -796,7 +791,8 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "entity is not associated with the session: " + id );
 		}
 
-        if (LOG.isTraceEnabled()) LOG.initializingLazyProperties(MessageHelper.infoString(this, id, getFactory()), fieldName);
+        if (LOG.isTraceEnabled()) LOG.trace("Initializing lazy properties of: " + MessageHelper.infoString(this, id, getFactory())
+                                            + ", field access: " + fieldName);
 
 		if ( hasCache() ) {
 			CacheKey cacheKey = new CacheKey(id, getIdentifierType(), getEntityName(), session.getEntityMode(), getFactory() );
@@ -823,7 +819,7 @@ public abstract class AbstractEntityPersister
 
         if (!hasLazyProperties()) throw new AssertionFailure("no lazy properties");
 
-        LOG.initializingLazyPropertiesFromDataStore();
+        LOG.trace("Initializing lazy properties from datastore");
 
 		try {
 
@@ -862,7 +858,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 
-            LOG.initializingLazyPropertiesDone();
+            LOG.trace("Done initializing lazy properties");
 
 			return result;
 
@@ -885,7 +881,7 @@ public abstract class AbstractEntityPersister
 			final CacheEntry cacheEntry
 	) {
 
-        LOG.initializingLazyPropertiesFromSecondLevelCache();
+        LOG.trace("Initializing lazy properties from second-level cache");
 
 		Object result = null;
 		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
@@ -901,7 +897,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-        LOG.initializingLazyPropertiesDone();
+        LOG.trace("Done initializing lazy properties");
 
 		return result;
 	}
@@ -1079,7 +1075,8 @@ public abstract class AbstractEntityPersister
 	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session)
 			throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.gettingCurrentPersistentState(MessageHelper.infoString(this, id, getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Getting current persistent state for: "
+                                            + MessageHelper.infoString(this, id, getFactory()));
 
 		try {
 			PreparedStatement ps = session.getJDBCContext().getConnectionManager().prepareSelectStatement( getSQLSnapshotSelectString() );
@@ -1280,7 +1277,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		Object nextVersion = getVersionType().next( currentVersion, session );
-        if (LOG.isTraceEnabled()) LOG.forcingVersionIncrement(MessageHelper.infoString( this, id, getFactory() ), getVersionType().toLoggableString( currentVersion, getFactory() ), getVersionType().toLoggableString( nextVersion, getFactory() ));
+        if (LOG.isTraceEnabled()) LOG.trace("Forcing version increment [" + MessageHelper.infoString(this, id, getFactory()) + "; "
+                                            + getVersionType().toLoggableString(currentVersion, getFactory()) + " -> "
+                                            + getVersionType().toLoggableString(nextVersion, getFactory()) + "]");
 
 		// todo : cache this sql...
 		String versionIncrementString = generateVersionIncrementUpdateString();
@@ -1329,7 +1328,7 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object getCurrentVersion(Serializable id, SessionImplementor session) throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.gettingVersion(MessageHelper.infoString(this, id, getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Getting version: " + MessageHelper.infoString(this, id, getFactory()));
 
 		try {
 
@@ -2137,7 +2136,7 @@ public abstract class AbstractEntityPersister
 	        final SessionImplementor session,
 	        int index) throws SQLException, HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.dehydratingEntity(MessageHelper.infoString(this, id, getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Dehydrating entity: " + MessageHelper.infoString(this, id, getFactory()));
 
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
 			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
@@ -2174,7 +2173,7 @@ public abstract class AbstractEntityPersister
 	        final boolean allProperties,
 	        final SessionImplementor session) throws SQLException, HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.hydratingEntity(MessageHelper.infoString(this, id, getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Hydrating entity: " + MessageHelper.infoString(this, id, getFactory()));
 
 		final AbstractEntityPersister rootPersister = (AbstractEntityPersister) rootLoadable;
 
@@ -2286,8 +2285,8 @@ public abstract class AbstractEntityPersister
 	        final SessionImplementor session) throws HibernateException {
 
         if (LOG.isTraceEnabled()) {
-            LOG.insertingEntityWithNativeId(getEntityName());
-            if (isVersioned()) LOG.version(Versioning.getVersion(fields, this));
+            LOG.trace("Inserting entity: " + getEntityName() + " (native id)");
+            if (isVersioned()) LOG.trace("Version: " + Versioning.getVersion(fields, this));
 		}
 
 		Binder binder = new Binder() {
@@ -2344,8 +2343,8 @@ public abstract class AbstractEntityPersister
 		}
 
         if (LOG.isTraceEnabled()) {
-            LOG.insertingEntity(MessageHelper.infoString(this, id, getFactory()));
-            if (j == 0 && isVersioned()) LOG.version(Versioning.getVersion(fields, this));
+            LOG.trace("Inserting entity: " + MessageHelper.infoString(this, id, getFactory()));
+            if (j == 0 && isVersioned()) LOG.trace("Version: " + Versioning.getVersion(fields, this));
 		}
 
 		Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
@@ -2466,8 +2465,8 @@ public abstract class AbstractEntityPersister
 		final boolean useBatch = j == 0 && expectation.canBeBatched() && isBatchable(); //note: updates to joined tables can't be batched...
 
         if (LOG.isTraceEnabled()) {
-            LOG.updatingEntity(MessageHelper.infoString(this, id, getFactory()));
-            if (useVersion) LOG.updateVersion(oldVersion, fields[getVersionProperty()]);
+            LOG.trace("Updating entity: " + MessageHelper.infoString(this, id, getFactory()));
+            if (useVersion) LOG.trace("Existing version: " + oldVersion + " -> New version:" + fields[getVersionProperty()]);
 		}
 
 		try {
@@ -2570,12 +2569,12 @@ public abstract class AbstractEntityPersister
 		final boolean useBatch = j == 0 && isBatchable() && expectation.canBeBatched();
 
         if (LOG.isTraceEnabled()) {
-            LOG.deletingEntity(MessageHelper.infoString(this, id, getFactory()));
-            if (useVersion) LOG.version(version);
+            LOG.trace("Deleting entity: " + MessageHelper.infoString(this, id, getFactory()));
+            if (useVersion) LOG.trace("Version: " + version);
 		}
 
 		if ( isTableCascadeDeleteEnabled( j ) ) {
-            LOG.deleteHandledByForeignKeyConstraint(getTableName(j));
+            LOG.trace("Delete handled by foreign key constraint: " + getTableName(j));
 			return; //EARLY EXIT!
 		}
 
@@ -2864,20 +2863,22 @@ public abstract class AbstractEntityPersister
 
 	protected void logStaticSQL() {
         if (LOG.isDebugEnabled()) {
-            LOG.staticSqlForEntity(getEntityName());
-            if (sqlLazySelectString != null) LOG.lazySelect(sqlLazySelectString);
-            if (sqlVersionSelectString != null) LOG.versionSelect(sqlVersionSelectString);
-            if (sqlSnapshotSelectString != null) LOG.snapshotSelect(sqlSnapshotSelectString);
+            LOG.debug("Static SQL for entity: " + getEntityName());
+            if (sqlLazySelectString != null) LOG.debug(" Lazy select: " + sqlLazySelectString);
+            if (sqlVersionSelectString != null) LOG.debug(" Version select: " + sqlVersionSelectString);
+            if (sqlSnapshotSelectString != null) LOG.debug(" Snapshot select: " + sqlSnapshotSelectString);
 			for ( int j = 0; j < getTableSpan(); j++ ) {
-                LOG.insert(j, getSQLInsertStrings()[j]);
-                LOG.update(j, getSQLUpdateStrings()[j]);
-                LOG.delete(j, getSQLDeleteStrings()[j]);
+                LOG.debug(" Insert " + j + ": " + getSQLInsertStrings()[j]);
+                LOG.debug(" Update " + j + ": " + getSQLUpdateStrings()[j]);
+                LOG.debug(" Delete " + j + ": " + getSQLDeleteStrings()[j]);
 			}
-            if (sqlIdentityInsertString != null) LOG.identityInsert(sqlIdentityInsertString);
-            if (sqlUpdateByRowIdString != null) LOG.updateAllFieldsByRowId(sqlUpdateByRowIdString);
-            if (sqlLazyUpdateByRowIdString != null) LOG.updateNonLazyFieldsByRowId(sqlLazyUpdateByRowIdString);
-            if (sqlInsertGeneratedValuesSelectString != null) LOG.insertGeneratedPropertySelect(sqlInsertGeneratedValuesSelectString);
-            if (sqlUpdateGeneratedValuesSelectString != null) LOG.updateGeneratedPropertySelect(sqlUpdateGeneratedValuesSelectString);
+            if (sqlIdentityInsertString != null) LOG.debug(" Identity insert: " + sqlIdentityInsertString);
+            if (sqlUpdateByRowIdString != null) LOG.debug(" Update by row id (all fields): " + sqlUpdateByRowIdString);
+            if (sqlLazyUpdateByRowIdString != null) LOG.debug(" Update by row id (non-lazy fields): " + sqlLazyUpdateByRowIdString);
+            if (sqlInsertGeneratedValuesSelectString != null) LOG.debug("Insert-generated property select: "
+                                                                        + sqlInsertGeneratedValuesSelectString);
+            if (sqlUpdateGeneratedValuesSelectString != null) LOG.debug("Update-generated property select: "
+                                                                        + sqlUpdateGeneratedValuesSelectString);
 		}
 	}
 
@@ -3173,7 +3174,7 @@ public abstract class AbstractEntityPersister
 	public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session)
 			throws HibernateException {
 
-        if (LOG.isTraceEnabled()) LOG.fetchingEntity(MessageHelper.infoString(this, id, getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Fetching entity: " + MessageHelper.infoString(this, id, getFactory()));
 
 		final UniqueEntityLoader loader = getAppropriateLoader(lockOptions, session );
 		return loader.load( id, optionalObject, session, lockOptions );
@@ -3346,7 +3347,7 @@ public abstract class AbstractEntityPersister
         if (LOG.isTraceEnabled()) {
 			for ( int i = 0; i < props.length; i++ ) {
 				String propertyName = entityMetamodel.getProperties()[ props[i] ].getName();
-                LOG.propertyIsDirty(StringHelper.qualify(getEntityName(), propertyName));
+                LOG.trace(StringHelper.qualify(getEntityName(), propertyName) + " is dirty");
 			}
 		}
 	}
@@ -3945,7 +3946,8 @@ public abstract class AbstractEntityPersister
 		if ( !hasNaturalIdentifier() ) {
 			throw new MappingException( "persistent class did not define a natural-id : " + MessageHelper.infoString( this ) );
 		}
-        if (LOG.isTraceEnabled()) LOG.gettingNaturalIdSnapshotState(MessageHelper.infoString(this, id, getFactory()));
+        if (LOG.isTraceEnabled()) LOG.trace("Getting current natural-id snapshot state for: "
+                                            + MessageHelper.infoString(this, id, getFactory()));
 
 		int[] naturalIdPropertyIndexes = getNaturalIdentifierProperties();
 		int naturalIdPropertyCount = naturalIdPropertyIndexes.length;
@@ -4034,142 +4036,4 @@ public abstract class AbstractEntityPersister
 			throws HibernateException {
 		getTuplizer( entityMode ).setPropertyValue( object, propertyName, value );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Dehydrating entity: %s" )
-        void dehydratingEntity( String infoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Delete %d: %s" )
-        void delete( int j,
-                     String string );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Delete handled by foreign key constraint: %s" )
-        void deleteHandledByForeignKeyConstraint( String tableName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deleting entity: %s" )
-        void deletingEntity( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Fetching entity: %s" )
-        void fetchingEntity( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Forcing version increment [%s; %s -> %s]" )
-        void forcingVersionIncrement( String infoString,
-                                      String loggableString,
-                                      String loggableString2 );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Getting current persistent state for: %s" )
-        void gettingCurrentPersistentState( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Getting current natural-id snapshot state for: %s" )
-        void gettingNaturalIdSnapshotState( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Getting version: %s" )
-        void gettingVersion( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Hydrating entity: %s" )
-        void hydratingEntity( String infoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Identity insert: %s" )
-        void identityInsert( String sqlIdentityInsertString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Initializing lazy properties of: %s, field access: %s" )
-        void initializingLazyProperties( String infoString,
-                                         String fieldName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Done initializing lazy properties" )
-        void initializingLazyPropertiesDone();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Initializing lazy properties from datastore" )
-        void initializingLazyPropertiesFromDataStore();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Initializing lazy properties from second-level cache" )
-        void initializingLazyPropertiesFromSecondLevelCache();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Insert %d: %s" )
-        void insert( int j,
-                     String string );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Insert-generated property select: %s" )
-        void insertGeneratedPropertySelect( String sqlInsertGeneratedValuesSelectString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Inserting entity: %s" )
-        void insertingEntity( String entityName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Inserting entity: %s (native id)" )
-        void insertingEntityWithNativeId( String entityName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Lazy select: %s" )
-        void lazySelect( String sqlLazySelectString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "%s is dirty" )
-        void propertyIsDirty( String qualify );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Snapshot select: %s" )
-        void snapshotSelect( String sqlSnapshotSelectString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Static SQL for entity: %s" )
-        void staticSqlForEntity( String entityName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Update %d: %s" )
-        void update( int j,
-                     String string );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Update by row id (all fields): %s" )
-        void updateAllFieldsByRowId( String sqlUpdateByRowIdString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Update-generated property select: %s" )
-        void updateGeneratedPropertySelect( String sqlUpdateGeneratedValuesSelectString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Update by row id (non-lazy fields): %s" )
-        void updateNonLazyFieldsByRowId( String sqlLazyUpdateByRowIdString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Existing version: %s -> New version: %s" )
-        void updateVersion( Object oldVersion,
-                            Object object );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Updating entity: %s" )
-        void updatingEntity( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Version: %s" )
-        void version( Object version );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = " Version select: %s" )
-        void versionSelect( String sqlVersionSelectString );
-    }
 }

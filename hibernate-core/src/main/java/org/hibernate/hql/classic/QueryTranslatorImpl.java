@@ -24,7 +24,6 @@
  */
 package org.hibernate.hql.classic;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
@@ -42,6 +41,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -71,10 +71,6 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * An instance of <tt>QueryTranslator</tt> translates a Hibernate
@@ -236,7 +232,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	 */
 	private void compile() throws QueryException, MappingException {
 
-        LOG.compilingQuery();
+        LOG.trace("Compiling query");
 		try {
 			ParserHelper.parse( new PreprocessingParser( tokenReplacements ),
 					queryString,
@@ -252,7 +248,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			throw me;
 		}
 		catch ( Exception e ) {
-            LOG.debug(LOG.unexpectedQueryCompilationProblem(), e);
+            LOG.debug("Unexpected query compilation problem", e);
 			e.printStackTrace();
 			QueryException qe = new QueryException( "Incorrect query syntax", e );
 			qe.setQueryString( queryString );
@@ -1235,18 +1231,4 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			}
 		};
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Compiling query" )
-        void compilingQuery();
-
-        @Message( value = "Unexpected query compilation problem" )
-        Object unexpectedQueryCompilationProblem();
-    }
 }

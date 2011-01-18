@@ -23,10 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,6 +83,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -173,10 +170,6 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * JSR 175 annotation binder which reads the annotations from classes, applies the
@@ -272,7 +265,7 @@ public final class AnnotationBinder {
 			SequenceGenerator ann = pckg.getAnnotation( SequenceGenerator.class );
 			IdGenerator idGen = buildIdGenerator( ann, mappings );
 			mappings.addGenerator( idGen );
-            LOG.addSequenceGenerator(idGen.getName());
+            LOG.trace("Add sequence generator with name: " + idGen.getName());
 		}
 		if ( pckg.isAnnotationPresent( TableGenerator.class ) ) {
 			TableGenerator ann = pckg.getAnnotation( TableGenerator.class );
@@ -413,7 +406,7 @@ public final class AnnotationBinder {
 						org.hibernate.id.enhanced.TableGenerator.INITIAL_PARAM,
 						String.valueOf( tabGen.initialValue() + 1 )
 				);
-                if (tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0) LOG.tableGenerator(tabGen.name());
+                if (tabGen.uniqueConstraints() != null && tabGen.uniqueConstraints().length > 0) LOG.warn(tabGen.name());
 			}
 			else {
 				idGen.setIdentifierGeneratorStrategy( MultipleHiLoPerTableGenerator.class.getName() );
@@ -441,7 +434,7 @@ public final class AnnotationBinder {
 				}
 				idGen.addParam( TableHiLoGenerator.MAX_LO, String.valueOf( tabGen.allocationSize() - 1 ) );
 			}
-            LOG.addTableGenerator(idGen.getName());
+            LOG.trace("Add table generator with name: " + idGen.getName());
 		}
 		else if ( ann instanceof SequenceGenerator ) {
 			SequenceGenerator seqGen = ( SequenceGenerator ) ann;
@@ -471,7 +464,7 @@ public final class AnnotationBinder {
 				//		steve : or just use o.h.id.enhanced.SequenceStyleGenerator
                 if (seqGen.initialValue() != 1) LOG.unsupportedInitialValue(Configuration.USE_NEW_ID_GENERATOR_MAPPINGS);
 				idGen.addParam( SequenceHiLoGenerator.MAX_LO, String.valueOf( seqGen.allocationSize() - 1 ) );
-                LOG.addSequenceGenerator(idGen.getName());
+                LOG.trace("Add sequence generator with name: " + idGen.getName());
 			}
 		}
 		else if ( ann instanceof GenericGenerator ) {
@@ -482,7 +475,7 @@ public final class AnnotationBinder {
 			for ( Parameter parameter : params ) {
 				idGen.addParam( parameter.name(), parameter.value() );
 			}
-            LOG.addGenericGenerator(idGen.getName());
+            LOG.trace("Add generic generator with name: " + idGen.getName());
 		}
 		else {
 			throw new AssertionFailure( "Unknown Generator annotation: " + ann );
@@ -996,7 +989,7 @@ public final class AnnotationBinder {
 		SharedCacheMode mode;
 		final Object value = mappings.getConfigurationProperties().get( "javax.persistence.sharedCache.mode" );
 		if ( value == null ) {
-            LOG.sharedCacheModeNotFound();
+            LOG.debug("No value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED");
 			mode = SharedCacheMode.UNSPECIFIED;
 		}
 		else {
@@ -1008,7 +1001,7 @@ public final class AnnotationBinder {
 					mode = SharedCacheMode.valueOf( value.toString() );
 				}
 				catch ( Exception e ) {
-                    LOG.invalidSharedCacheMode(value, e);
+                    LOG.debug("Unable to resolve given mode name [" + value + "]; using UNSPECIFIED : " + e);
 					mode = SharedCacheMode.UNSPECIFIED;
 				}
 			}
@@ -1024,24 +1017,24 @@ public final class AnnotationBinder {
 
 	static void prepareDefaultCacheConcurrencyStrategy(Properties properties) {
 		if ( DEFAULT_CACHE_CONCURRENCY_STRATEGY != null ) {
-            LOG.defaultCacheConcurrencyStrategyAlreadyDefined();
+            LOG.trace("Default cache concurrency strategy already defined");
 			return;
 		}
 
 		if ( !properties.containsKey( Configuration.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) ) {
-            LOG.defaultCacheConcurrencyStrategyNotFound();
+            LOG.trace("Given properties did not contain any default cache concurrency strategy setting");
 			return;
 		}
 
 		final String strategyName = properties.getProperty( Configuration.DEFAULT_CACHE_CONCURRENCY_STRATEGY );
-        LOG.defaultCacheConcurrencyStrategyDiscovered(strategyName);
+        LOG.trace("Discovered default cache concurrency strategy via config [" + strategyName + "]");
 		CacheConcurrencyStrategy strategy = CacheConcurrencyStrategy.parse( strategyName );
 		if ( strategy == null ) {
-            LOG.defaultCacheConcurrencyStrategySpecifiedNothing();
+            LOG.trace("Discovered default cache concurrency strategy specified nothing");
 			return;
 		}
 
-        LOG.defaultCacheConcurrencyStrategy(strategy.name());
+        LOG.debug("Setting default cache concurrency strategy via config [" + strategy.name() + "]");
 		DEFAULT_CACHE_CONCURRENCY_STRATEGY = strategy;
 	}
 
@@ -1136,7 +1129,7 @@ public final class AnnotationBinder {
 						( Map<String, Join> ) null, ( PropertyHolder ) null, mappings
 				);
 			}
-            LOG.subclassJoinedColumnsCreated();
+            LOG.trace("Subclass joined column(s) created");
 		}
 		else {
             if (clazzToProcess.isAnnotationPresent(PrimaryKeyJoinColumns.class)
@@ -1326,7 +1319,7 @@ public final class AnnotationBinder {
 			discriminatorColumn.linkWithValue( discrim );
 			discrim.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
 			rootClass.setPolymorphic( true );
-            LOG.settingDiscriminator(rootClass.getEntityName());
+            LOG.trace("Setting discriminator for entity " + rootClass.getEntityName());
 		}
 	}
 
@@ -1445,7 +1438,7 @@ public final class AnnotationBinder {
 		 * ordering does not matter
 		 */
 
-        LOG.processingAnnotations(propertyHolder.getEntityName(), inferredData.getPropertyName());
+        LOG.trace("Processing annotations of " + propertyHolder.getEntityName() + "." + inferredData.getPropertyName());
 
 		final XProperty property = inferredData.getProperty();
 		if ( property.isAnnotationPresent( Parent.class ) ) {
@@ -1509,7 +1502,7 @@ public final class AnnotationBinder {
 								+ propertyHolder.getEntityName()
 				);
 			}
-            LOG.versionProperty(inferredData.getPropertyName());
+            LOG.trace(inferredData.getPropertyName() + " is a version property");
 			RootClass rootClass = ( RootClass ) propertyHolder.getPersistentClass();
 			propertyBinder.setColumns( columns );
 			Property prop = propertyBinder.makePropertyValueAndBind();
@@ -1533,7 +1526,8 @@ public final class AnnotationBinder {
 			SimpleValue simpleValue = ( SimpleValue ) prop.getValue();
 			simpleValue.setNullValue( "undefined" );
 			rootClass.setOptimisticLockMode( Versioning.OPTIMISTIC_LOCK_VERSION );
-            LOG.version(rootClass.getVersion().getName(), ((SimpleValue)rootClass.getVersion().getValue()).getNullValue());
+            LOG.trace("Version name: " + rootClass.getVersion().getName() + ", unsavedValue: "
+                      + ((SimpleValue)rootClass.getVersion().getValue()).getNullValue());
 		}
 		else {
 			final boolean forcePersist = property.isAnnotationPresent( MapsId.class )
@@ -2141,7 +2135,7 @@ public final class AnnotationBinder {
 		} //a component must not have any generator
 		BinderHelper.makeIdGenerator( idValue, generatorType, generatorName, mappings, localGenerators );
 
-        LOG.bindAnnotationToProperty((isComponent ? "@EmbeddedId" : "@Id"), inferredData.getPropertyName());
+        LOG.trace("Bind " + (isComponent ? "@EmbeddedId" : "@Id") + " on " + inferredData.getPropertyName());
 	}
 
 	//TODO move that to collection binder?
@@ -2323,7 +2317,7 @@ public final class AnnotationBinder {
 		 */
 		Component comp = createComponent( propertyHolder, inferredData, isComponentEmbedded, isIdentifierMapper, mappings );
 		String subpath = BinderHelper.getPath( propertyHolder, inferredData );
-        LOG.bindingComponent(subpath);
+        LOG.trace("Binding component with path: " + subpath);
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
 				comp, subpath,
 				inferredData, propertyHolder, mappings
@@ -2752,7 +2746,7 @@ public final class AnnotationBinder {
 			Mappings mappings) {
 		//column.getTable() => persistentClass.getTable()
 		final String propertyName = inferredData.getPropertyName();
-        LOG.fetching(propertyName, fetchMode);
+        LOG.trace("Fetching " + propertyName + " with " + fetchMode);
 		boolean mapToPK = true;
 		if ( !trueOneToOne ) {
 			//try to find a hidden true one to one (FK == PK columns)
@@ -3075,144 +3069,4 @@ public final class AnnotationBinder {
 		}
 		return false;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Add generic generator with name: %s" )
-        void addGenericGenerator( String name );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Add sequence generator with name: %s" )
-        void addSequenceGenerator( String name );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Add table generator with name: %s" )
-        void addTableGenerator( String name );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Bind %s on %s" )
-        void bindAnnotationToProperty( String annotation,
-                                       String propertyName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Binding component with path: %s" )
-        void bindingComponent( String subpath );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding entity from annotated class: %s" )
-        void bindingEntityFromClass( String className );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding filter definition: %s" )
-        void bindingFilterDefinition( String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Binding type definition: %s" )
-        void bindingTypeDefinition( String name );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Setting default cache concurrency strategy via config [%s]" )
-        void defaultCacheConcurrencyStrategy( String strategy );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Default cache concurrency strategy already defined" )
-        void defaultCacheConcurrencyStrategyAlreadyDefined();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Discovered default cache concurrency strategy via config [%s]" )
-        void defaultCacheConcurrencyStrategyDiscovered( String strategy );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Given properties did not contain any default cache concurrency strategy setting" )
-        void defaultCacheConcurrencyStrategyNotFound();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Discovered default cache concurrency strategy specified nothing" )
-        void defaultCacheConcurrencyStrategySpecifiedNothing();
-
-        @LogMessage( level = WARN )
-        @Message( value = "@ForceDiscriminator is deprecated use @DiscriminatorOptions instead." )
-        void deprecatedForceDescriminatorAnnotation();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Fetching %s with %s" )
-        void fetching( String propertyName,
-                       FetchMode fetchMode );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Ignoring unique constraints specified on table generator [%s]" )
-        void ignoringTableGeneratorConstraints(String name);
-
-        @LogMessage( level = WARN )
-        @Message( value = "Discriminator column has to be defined in the root entity, it will be ignored in subclass: %s" )
-        void invalidDescriminatorAnnotation( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Inapropriate use of @OnDelete on entity, annotation ignored: %s" )
-        void invalidOnDeleteAnnotation( String entityName );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Root entity should not hold an PrimaryKeyJoinColum(s), will be ignored" )
-        void invalidPrimaryKeyJoinColumnAnnotation();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Unable to resolve given mode name [%s]; using UNSPECIFIED : %s" )
-        void invalidSharedCacheMode( Object value,
-                                     Exception error );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Mixing inheritance strategy in a entity hierarchy is not allowed, ignoring sub strategy in: %s" )
-        void invalidSubStrategy( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Illegal use of @Table in a subclass of a SINGLE_TABLE hierarchy: %s" )
-        void invalidTableAnnotation( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Class annotated @org.hibernate.annotations.Entity but not javax.persistence.Entity (most likely a user error): %s" )
-        void missingEntityAnnotation( String className );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Package not found or wo package-info.java: %s" )
-        void packageNotFound( String packageName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Processing annotations of %s.%s" )
-        void processingAnnotations( String entityName,
-                                    String propertyName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Setting discriminator for entity %s" )
-        void settingDiscriminator( String entityName );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "No value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED" )
-        void sharedCacheModeNotFound();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Subclass joined column(s) created" )
-        void subclassJoinedColumnsCreated();
-
-        @LogMessage( level = WARN )
-        @Message( value = "%s" )
-        void tableGenerator( String name );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Hibernate does not support SequenceGenerator.initialValue() unless '%s' set" )
-        void unsupportedInitialValue( String propertyName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Version name: %s, unsavedValue: %s" )
-        void version( String name,
-                      String nullValue );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "%s is a version property" )
-        void versionProperty( String propertyName );
-    }
 }

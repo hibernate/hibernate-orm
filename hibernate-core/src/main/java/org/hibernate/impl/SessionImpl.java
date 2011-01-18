@@ -24,9 +24,6 @@
  */
 package org.hibernate.impl;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -59,6 +56,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.Query;
@@ -140,10 +138,6 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 
 /**
@@ -215,7 +209,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
         if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-		LOG.openedSession(entityMode);
+        LOG.debug("Opened session [" + entityMode + "]");
 	}
 
 	/**
@@ -259,7 +253,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
         if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-        LOG.openedSessionAt(timestamp);
+        LOG.debug("Opened session at timestamp: " + timestamp);
 	}
 
 	public Session getSession(EntityMode entityMode) {
@@ -303,7 +297,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public Connection close() throws HibernateException {
-        LOG.closingSession();
+        LOG.trace("Closing session");
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed" );
 		}
@@ -364,10 +358,10 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void managedFlush() {
 		if ( isClosed() ) {
-            LOG.skippingAutoFlush();
+            LOG.trace("Skipping auto-flush due to session closed");
 			return;
 		}
-        LOG.automaticallyFlushingSession();
+        LOG.trace("Automatically flushing session");
 		flush();
 
 		if ( childSessionsByEntityMode != null ) {
@@ -515,7 +509,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void managedClose() {
-        LOG.automaticallyClosingSession();
+        LOG.trace("Automatically closing session");
 		close();
 	}
 
@@ -536,26 +530,26 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
-        LOG.disconnectingSession();
+        LOG.debug("Disconnecting session");
 		return jdbcContext.getConnectionManager().manualDisconnect();
 	}
 
 	public void reconnect() throws HibernateException {
 		errorIfClosed();
-        LOG.reconnectingSession();
+        LOG.debug("Reconnecting session");
 		checkTransactionSynchStatus();
 		jdbcContext.getConnectionManager().manualReconnect();
 	}
 
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
-        LOG.reconnectingSession();
+        LOG.debug("Reconnecting session");
 		checkTransactionSynchStatus();
 		jdbcContext.getConnectionManager().manualReconnect( conn );
 	}
 
 	public void beforeTransactionCompletion(Transaction tx) {
-        LOG.beforeTransactionCompletion();
+        LOG.trace("Before transaction completion");
 		actionQueue.beforeTransactionCompletion();
 		if ( rootSession == null ) {
 			try {
@@ -585,7 +579,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void afterTransactionCompletion(boolean success, Transaction tx) {
-        LOG.afterTransactionCompletion();
+        LOG.trace("After transaction completion");
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion(success);
 		if ( rootSession == null && tx != null ) {
@@ -1007,7 +1001,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
         if (LOG.isDebugEnabled()) {
 			EntityPersister persister = getFactory().getEntityPersister(entityName);
-            LOG.initializingProxy(MessageHelper.infoString(persister, id, getFactory()));
+            LOG.debug("Initializing proxy: " + MessageHelper.infoString(persister, id, getFactory()));
 		}
 
 		LoadEvent event = new LoadEvent(id, entityName, true, this);
@@ -1178,19 +1172,17 @@ public final class SessionImpl extends AbstractSessionImpl
 	public boolean isDirty() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.checkingSessionDirtiness();
+        LOG.debug("Checking session dirtiness");
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-            LOG.sessionDirty();
+            LOG.debug("Session dirty (scheduled updates and insertions)");
 			return true;
 		}
-		else {
-			DirtyCheckEvent event = new DirtyCheckEvent(this);
-			DirtyCheckEventListener[] dirtyCheckEventListener = listeners.getDirtyCheckEventListeners();
-			for ( int i = 0; i < dirtyCheckEventListener.length; i++ ) {
-				dirtyCheckEventListener[i].onDirtyCheck(event);
-			}
-			return event.isDirty();
+        DirtyCheckEvent event = new DirtyCheckEvent(this);
+        DirtyCheckEventListener[] dirtyCheckEventListener = listeners.getDirtyCheckEventListeners();
+        for (int i = 0; i < dirtyCheckEventListener.length; i++) {
+            dirtyCheckEventListener[i].onDirtyCheck(event);
 		}
+        return event.isDirty();
 	}
 
 	public void flush() throws HibernateException {
@@ -1207,9 +1199,10 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
 		errorIfClosed();
-        if (LOG.isDebugEnabled()) LOG.flushingToForceDeletion(MessageHelper.infoString(entityEntry.getPersister(),
-                                                                                       entityEntry.getId(),
-                                                                                       getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debug("Flushing to force deletion of re-saved object: "
+                                            + MessageHelper.infoString(entityEntry.getPersister(),
+                                                                       entityEntry.getId(),
+                                                                       getFactory()));
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(
@@ -1358,8 +1351,8 @@ public final class SessionImpl extends AbstractSessionImpl
 		}
 
         if (LOG.isTraceEnabled()) {
-            LOG.delete(query);
-            if (values.length != 0) LOG.parameters(StringHelper.toString(values));
+            LOG.trace("delete: " + query);
+            if (values.length != 0) LOG.trace("Parameters: " + StringHelper.toString(values));
 		}
 
 		List list = find( query, values, types );
@@ -1415,7 +1408,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	public void setFlushMode(FlushMode flushMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.settingFlushMode(flushMode);
+        LOG.trace("Setting flush mode to: " + flushMode);
 		this.flushMode = flushMode;
 	}
 
@@ -1432,7 +1425,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	public void setCacheMode(CacheMode cacheMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.settingCacheMode(cacheMode);
+        LOG.trace("Setting cache mode to: " + cacheMode);
 		this.cacheMode= cacheMode;
 	}
 
@@ -1783,7 +1776,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 
-        LOG.scrollSqlQuery(customQuery.getSQL());
+        LOG.trace("Scroll SQL query: " + customQuery.getSQL());
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
@@ -1804,7 +1797,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 
-        LOG.sqlQuery(customQuery.getSQL());
+        LOG.trace("SQL query: " + customQuery.getSQL());
 
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
 
@@ -2095,7 +2088,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * @throws ClassNotFoundException Indicates a class resolution issue
 	 */
 	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-        LOG.deserializingSession();
+        LOG.trace("Deserializing session");
 
 		ois.defaultReadObject();
 
@@ -2156,7 +2149,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 
-        LOG.serializingSession();
+        LOG.trace("Serializing session");
 
 		oos.defaultWriteObject();
 
@@ -2342,109 +2335,4 @@ public final class SessionImpl extends AbstractSessionImpl
 			fireLock( object, lockOptions );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "After transaction completion" )
-        void afterTransactionCompletion();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Automatically closing session" )
-        void automaticallyClosingSession();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Automatically flushing session" )
-        void automaticallyFlushingSession();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Before transaction completion" )
-        void beforeTransactionCompletion();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Checking session dirtiness" )
-        void checkingSessionDirtiness();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Closing session" )
-        void closingSession();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "delete: %s" )
-        void delete( String query );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Deserializing session" )
-        void deserializingSession();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Disconnecting session" )
-        void disconnectingSession();
-
-        @Message( value = "Exception in interceptor afterTransactionCompletion()" )
-        Object exceptionInAfterTransactionCompletionInterceptor();
-
-        @Message( value = "Exception in interceptor beforeTransactionCompletion()" )
-        Object exceptionInBeforeTransactionCompletionInterceptor();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Flushing to force deletion of re-saved object: %s" )
-        void flushingToForceDeletion( String infoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Initializing proxy: %s" )
-        void initializingProxy( String infoString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Opened session [%s]" )
-        void openedSession( EntityMode entityMode );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Opened session at timestamp: %ld" )
-        void openedSessionAt( long timestamp );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Parameters: %s" )
-        void parameters( String string );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Reconnecting session" )
-        void reconnectingSession();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Scroll SQL query: %s" )
-        void scrollSqlQuery( String sql );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Serializing session" )
-        void serializingSession();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Session dirty (scheduled updates and insertions)" )
-        void sessionDirty();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Setting cache mode to: %s" )
-        void settingCacheMode( CacheMode cacheMode );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Setting flush mode to: %s" )
-        void settingFlushMode( FlushMode flushMode );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Skipping auto-flush due to session closed" )
-        void skippingAutoFlush();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "SQL query: %s" )
-        void sqlQuery( String sql );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Transaction started on non-root session" )
-        void transactionStartedOnNonRootSession();
-    }
 }

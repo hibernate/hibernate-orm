@@ -24,11 +24,6 @@
  */
 package org.hibernate;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
-
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.
  *
@@ -49,17 +44,5 @@ public class AssertionFailure extends RuntimeException {
                              Throwable t ) {
         super(s, t);
         LOG.failed(t);
-    }
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger {
-
-        @LogMessage( level = ERROR )
-        @Message( value = "an assertion failure occured" + " (this may indicate a bug in Hibernate, but is more likely due"
-                          + " to unsafe use of the session): %s" )
-        void failed( Throwable throwable );
     }
 }

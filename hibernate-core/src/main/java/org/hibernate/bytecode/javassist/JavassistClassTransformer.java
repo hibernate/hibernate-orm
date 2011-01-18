@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.security.ProtectionDomain;
 import javassist.bytecode.ClassFile;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
-import org.hibernate.bytecode.Logger;
 import org.hibernate.bytecode.util.ClassFilter;
 
 /**
@@ -69,7 +69,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 		}
 		FieldTransformer transformer = getFieldTransformer( classfile );
 		if ( transformer != null ) {
-            LOG.enhancingClass("Enhancing " + className);
+            LOG.debug("Enhancing " + className);
 			DataOutputStream out = null;
 			try {
 				transformer.transform( classfile );

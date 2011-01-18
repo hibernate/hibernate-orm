@@ -53,7 +53,7 @@ public class BatchBuilder {
 	public Batch buildBatch(Object key,
 							SQLStatementLogger statementLogger,
 							SQLExceptionHelper exceptionHelper) {
-		log.trace( "building batch [size={}]", size );
+        LOG.trace("Building batch [size=" + size + "]");
 		return size > 1
 				? new BatchingBatch( key, statementLogger, exceptionHelper, size )
 				: new NonBatchingBatch( key, statementLogger, exceptionHelper );

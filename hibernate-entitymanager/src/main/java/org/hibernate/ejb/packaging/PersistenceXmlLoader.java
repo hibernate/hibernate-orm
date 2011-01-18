@@ -40,13 +40,10 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-
 import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.util.StringHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -63,7 +60,9 @@ import org.xml.sax.SAXParseException;
  * @author Emmanuel Bernard
  */
 public final class PersistenceXmlLoader {
-	private static final Logger log = LoggerFactory.getLogger( PersistenceXmlLoader.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	private PersistenceXmlLoader() {
 	}
@@ -109,12 +108,12 @@ public final class PersistenceXmlLoader {
 
 		if (errors.size() == 0) {
 			v2Validator.setErrorHandler( new ErrorLogger( errors ) );
-			log.trace("Validate with persistence_2_0.xsd schema on file {}", configURL);
+            LOG.trace("Validate with persistence_2_0.xsd schema on file " + configURL);
 			v2Validator.validate( new DOMSource( doc ) );
 			boolean isV1Schema = false;
 			if ( errors.size() != 0 ) {
 				//v2 fails, it could be because the file is v1.
-				log.trace("Found error with persistence_2_0.xsd schema on file {}", configURL);
+                LOG.trace("Found error with persistence_2_0.xsd schema on file " + configURL);
 				SAXParseException exception = errors.get( 0 );
 				final String errorMessage = exception.getMessage();
 				//is it a validation error due to a v1 schema validated by a v2
@@ -124,7 +123,7 @@ public final class PersistenceXmlLoader {
 
 			}
 			if (isV1Schema) {
-				log.trace("Validate with persistence_1_0.xsd schema on file {}", configURL);
+                LOG.trace("Validate with persistence_1_0.xsd schema on file " + configURL);
 				errors.clear();
 				v1Validator.setErrorHandler( new ErrorLogger( errors ) );
 				v1Validator.validate( new DOMSource( doc ) );
@@ -236,7 +235,7 @@ public final class PersistenceXmlLoader {
 		PersistenceMetadata metadata = new PersistenceMetadata();
 		String puName = top.getAttribute( "name" );
 		if ( StringHelper.isNotEmpty( puName ) ) {
-			log.trace( "Persistent Unit name from persistence.xml: {}", puName );
+            LOG.trace("Persistent Unit name from persistence.xml: " + puName);
 			metadata.setName( puName );
 		}
 		NodeList children = top.getChildNodes();

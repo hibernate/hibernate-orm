@@ -1,21 +1,15 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
 
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.ejb.test.TestCase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
-import java.util.Map;
+import org.hibernate.ejb.test.TestCase;
 
 /**
  * @author Emmanuel Bernard
  */
 public class RemoveTest extends TestCase {
-
-    private static final Logger log = LoggerFactory.getLogger(RemoveTest.class);
 
 	public void testRemove() {
 		Race race = new Race();
@@ -75,9 +69,9 @@ public class RemoveTest extends TestCase {
 			em2.flush();
 			fail("should have an optimistic lock exception");
 		}
-         
+
         catch( OptimisticLockException e ) {
-			log.debug("success");
+            LOG.debug("success");
 		}
 		finally {
 			em2.getTransaction().rollback();
@@ -91,7 +85,8 @@ public class RemoveTest extends TestCase {
 		em.close();
 	}
 
-	public Class[] getAnnotatedClasses() {
+	@Override
+    public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Race.class,
 				Competitor.class,
@@ -100,7 +95,8 @@ public class RemoveTest extends TestCase {
 	}
 
 
-	public Map getConfig() {
+	@Override
+    public Map getConfig() {
 		Map cfg =  super.getConfig();
 		cfg.put( "hibernate.jdbc.batch_size", "0");
 		return cfg;

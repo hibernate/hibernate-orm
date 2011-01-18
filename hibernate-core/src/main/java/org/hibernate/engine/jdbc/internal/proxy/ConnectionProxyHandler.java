@@ -102,7 +102,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	@Override
     protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
 		String methodName = method.getName();
-        LOG.handlingInvocationOfConnectionMethod(methodName);
+        LOG.trace("Handling invocation of connection method [" + methodName + "]");
 
 		// other methods allowed while invalid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		if ( "close".equals( methodName ) ) {
@@ -196,7 +196,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	}
 
 	private void invalidateHandle() {
-        LOG.invalidatingConnectionHandle();
+        LOG.trace("Invalidating connection handle");
 		logicalConnection = null;
 		invalidate();
 	}
@@ -222,33 +222,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		invalidateHandle();
 	}
 
-	/* package-protected */
-	StatisticsImplementor getStatisticsImplementorOrNull() {
-		return getLogicalConnection().getStatisticsImplementor();
-	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    /*
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Handling invocation of connection method [%s]" )
-        void handlingInvocationOfConnectionMethod( String methodName );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Invalidating connection handle" )
-        void invalidatingConnectionHandle();
-
-        @LogMessage( level = INFO )
-        @Message( value = "*** Logical connection closed ***" )
-        void logicalConnectionClosed();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Logical connection releasing its physical connection" )
-        void logicalConnectionReleasingPhysicalConnection();
+    StatisticsImplementor getStatisticsImplementorOrNull() {
+        return getLogicalConnection().getStatisticsImplementor();
     }
-    */
 }

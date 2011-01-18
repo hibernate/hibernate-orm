@@ -23,7 +23,6 @@
  */
 package org.hibernate.service.jdbc.dialect.internal;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import org.hibernate.dialect.DB2Dialect;
@@ -45,10 +44,6 @@ import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * The standard Hibernate Dialect resolver.
@@ -148,27 +143,4 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		return null;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Ingres %d is not yet fully supported; using Ingres 9.3 dialect" )
-        void ingresVersionNotFullySupported( int databaseMajorVersion );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Oracle 11g is not yet fully supported; using 10g dialect" )
-        void oracleVersionNotFullySupported();
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unknown Ingres major version [%d] using Ingres 9.2 dialect" )
-        void unknownIngresVersion( int databaseMajorVersion );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unknown Oracle major version [%d]" )
-        void unknownOracleVersion( int databaseMajorVersion );
-    }
 }

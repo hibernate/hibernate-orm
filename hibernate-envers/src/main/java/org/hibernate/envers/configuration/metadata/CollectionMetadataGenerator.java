@@ -32,11 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
 import javax.persistence.JoinColumn;
-
 import org.dom4j.Element;
 import org.hibernate.MappingException;
+import org.hibernate.envers.EnversLogger;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
@@ -85,8 +84,6 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generates metadata for a collection-valued property.
@@ -94,7 +91,9 @@ import org.slf4j.LoggerFactory;
  * @author Hern�n Chanfreau
  */
 public final class CollectionMetadataGenerator {
-    private static final Logger log = LoggerFactory.getLogger(CollectionMetadataGenerator.class);
+
+    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
+                                                                                     CollectionMetadataGenerator.class.getPackage().getName());
 
     private final AuditMetadataGenerator mainGenerator;
     private final String propertyName;
@@ -120,7 +119,7 @@ public final class CollectionMetadataGenerator {
      * be created using this object.
      * @param propertyAuditingData Property auditing (meta-)data. Among other things, holds the name of the
      * property that references the collection in the referencing entity, the user data for middle (join)
-     * table and the value of the <code>@MapKey</code> annotation, if there was one. 
+     * table and the value of the <code>@MapKey</code> annotation, if there was one.
      */
     public CollectionMetadataGenerator(AuditMetadataGenerator mainGenerator,
                                        Collection propertyValue, CompositeMapperBuilder currentMapper,
@@ -166,8 +165,7 @@ public final class CollectionMetadataGenerator {
 
     @SuppressWarnings({"unchecked"})
     private void addOneToManyAttached(boolean fakeOneToManyBidirectional) {
-        log.debug("Adding audit mapping for property " + referencingEntityName + "." + propertyName +
-                ": one-to-many collection, using a join column on the referenced entity.");
+        LOG.debug("Adding audit mapping for property " + referencingEntityName+ "." + propertyName+ ": one-to-many collection, using a join column on the referenced entity.");
 
         String mappedBy = getMappedBy(propertyValue);
 
@@ -270,16 +268,16 @@ public final class CollectionMetadataGenerator {
             // This must be a @JoinColumn+@OneToMany mapping. Generating the table name, as Hibernate doesn't use a
             // middle table for mapping this relation.
             return StringTools.getLastComponent(entityName) + "_" + StringTools.getLastComponent(MappingTools.getReferencedEntityName(value.getElement()));
-        } else {
-            // Hibernate uses a middle table for mapping this relation, so we get it's name directly.
-            return value.getCollectionTable().getName();
         }
+        // Hibernate uses a middle table for mapping this relation, so we get it's name directly.
+        return value.getCollectionTable().getName();
     }
 
     @SuppressWarnings({"unchecked"})
     private void addWithMiddleTable() {
-        log.debug("Adding audit mapping for property " + referencingEntityName + "." + propertyName +
-                ": collection with a join table.");
+
+        LOG.debug("Adding audit mapping for property " + referencingEntityName + "." + propertyName
+                  + ": collection with a join table.");
 
         // Generating the name of the middle table
         String auditMiddleTableName;
@@ -293,18 +291,18 @@ public final class CollectionMetadataGenerator {
             auditMiddleEntityName = mainGenerator.getVerEntCfg().getAuditEntityName(middleTableName);
         }
 
-        log.debug("Using join table name: " + auditMiddleTableName);
+        LOG.debug("Using join table name: " + auditMiddleTableName);
 
         // Generating the XML mapping for the middle entity, only if the relation isn't inverse.
         // If the relation is inverse, will be later checked by comparing middleEntityXml with null.
         Element middleEntityXml;
-        if (!propertyValue.isInverse()) {            
+        if (!propertyValue.isInverse()) {
             // Generating a unique middle entity name
             auditMiddleEntityName = mainGenerator.getAuditEntityNameRegister().createUnique(auditMiddleEntityName);
 
             // Registering the generated name
             mainGenerator.getAuditEntityNameRegister().register(auditMiddleEntityName);
-                        
+
             middleEntityXml = createMiddleEntityXml(auditMiddleTableName, auditMiddleEntityName, propertyValue.getWhere());
         } else {
             middleEntityXml = null;
@@ -557,25 +555,25 @@ public final class CollectionMetadataGenerator {
 
         // searching in referenced class
         String mappedBy = this.searchMappedBy(referencedClass, collectionValue);
-        
+
         if(mappedBy == null) {
-            log.debug("Going to search the mapped by attribute for " + propertyName + " in superclasses of entity: " + referencedClass.getClassName());
-            
+            LOG.debug("Going to search the mapped by attribute for " + propertyName + " in superclasses of entity: " + referencedClass.getClassName());
+
             PersistentClass tempClass = referencedClass;
 			while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
-	            log.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
+                LOG.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
 				mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionValue);
 				tempClass = tempClass.getSuperclass();
 			}
         }
 
-        if(mappedBy == null) { 
+        if(mappedBy == null) {
 	        throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
 	                + referencedClass.getClassName() + "!");
         }
-        
+
         return mappedBy;
-    }        
+    }
 
     @SuppressWarnings({"unchecked"})
     private String searchMappedBy(PersistentClass referencedClass, Collection collectionValue) {
@@ -587,7 +585,7 @@ public final class CollectionMetadataGenerator {
                     collectionValue.getKey().getColumnIterator())) {
                 return property.getName();
             }
-        }    	
+        }
         return null;
     }
 
@@ -602,25 +600,26 @@ public final class CollectionMetadataGenerator {
         String mappedBy = this.searchMappedBy(referencedClass, collectionTable);
 
         // not found on referenced class, searching on superclasses
-        if(mappedBy == null) { 
-            log.debug("Going to search the mapped by attribute for " + propertyName + " in superclases of entity: " + referencedClass.getClassName());
+        if(mappedBy == null) {
+            LOG.debug("Going to search the mapped by attribute for " + propertyName + " in superclasses of entity: "
+                      + referencedClass.getClassName());
 
             PersistentClass tempClass = referencedClass;
 			while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
-	            log.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
+                LOG.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
 				mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionTable);
 				tempClass = tempClass.getSuperclass();
 			}
         }
 
-        if(mappedBy == null) { 
+        if(mappedBy == null) {
 	        throw new MappingException("Unable to read the mapped by attribute for " + propertyName + " in "
 	                + referencedClass.getClassName() + "!");
         }
-        
+
         return mappedBy;
     }
-    
+
     @SuppressWarnings({"unchecked"})
     private String searchMappedBy(PersistentClass referencedClass, Table collectionTable) {
         Iterator<Property> properties = referencedClass.getPropertyIterator();
@@ -633,8 +632,8 @@ public final class CollectionMetadataGenerator {
                     return property.getName();
                 }
             }
-        }   
+        }
         return null;
     }
-   
+
 }

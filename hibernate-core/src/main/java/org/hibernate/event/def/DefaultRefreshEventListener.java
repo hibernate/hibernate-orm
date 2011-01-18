@@ -23,10 +23,10 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.Map;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.CacheKey;
@@ -44,10 +44,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.util.IdentityMap;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -84,7 +80,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final Object object = source.getPersistenceContext().unproxyAndReassociate( event.getObject() );
 
 		if ( refreshedAlready.containsKey(object) ) {
-            LOG.alreadyRefreshed();
+            LOG.trace("Already refreshed");
 			return;
 		}
 
@@ -95,7 +91,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		if ( e == null ) {
 			persister = source.getEntityPersister(null, object); //refresh() does not pass an entityName
 			id = persister.getIdentifier( object, event.getSession() );
-            if (LOG.isTraceEnabled()) LOG.refreshingTransient(MessageHelper.infoString(persister, id, source.getFactory()));
+            if (LOG.isTraceEnabled()) LOG.trace("Refreshing transient "
+                                                + MessageHelper.infoString(persister, id, source.getFactory()));
 			EntityKey key = new EntityKey( id, persister, source.getEntityMode() );
 			if ( source.getPersistenceContext().getEntry(key) != null ) {
 				throw new PersistentObjectException(
@@ -105,7 +102,8 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 		else {
-            if (LOG.isTraceEnabled()) LOG.refreshing(MessageHelper.infoString(e.getPersister(), e.getId(), source.getFactory()));
+            if (LOG.isTraceEnabled()) LOG.trace("Refreshing "
+                                                + MessageHelper.infoString(e.getPersister(), e.getId(), source.getFactory()));
 			if ( !e.isExistsInDatabase() ) {
 				throw new HibernateException( "this instance does not yet exist as a row in the database" );
 			}
@@ -174,23 +172,4 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Already refreshed" )
-        void alreadyRefreshed();
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Refreshing %s" )
-        void refreshing( String infoString );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Refreshing transient %s" )
-        void refreshingTransient( String infoString );
-    }
 }

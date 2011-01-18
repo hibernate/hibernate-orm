@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.Logger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
@@ -97,7 +98,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 
 			// if there is no order by, make one
 			if ( orderByClause == null ) {
-                LOG.getOrderByClause();
+                LOG.debug("getOrderByClause() : Creating a new ORDER BY clause");
 				orderByClause = ( OrderByClause ) ASTUtil.create( getWalker().getASTFactory(), SqlTokenTypes.ORDER, "ORDER" );
 
 				// Find the WHERE; if there is no WHERE, find the FROM...

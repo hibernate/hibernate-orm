@@ -1,6 +1,7 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
@@ -18,8 +19,6 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  * @author Hardy Ferentschik
  */
 public class NamingStrategyTest extends TestCase {
-
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	private ServiceRegistryHolder serviceRegistryHolder;
 

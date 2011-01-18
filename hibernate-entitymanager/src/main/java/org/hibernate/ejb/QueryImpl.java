@@ -23,6 +23,9 @@
  */
 package org.hibernate.ejb;
 
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,36 +34,27 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
-import javax.persistence.TypedQuery;
-import javax.persistence.PersistenceException;
 import javax.persistence.TransactionRequiredException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import javax.persistence.TypedQuery;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.QueryParameterException;
-import org.hibernate.TypeMismatchException;
 import org.hibernate.SQLQuery;
+import org.hibernate.TypeMismatchException;
 import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.NamedParameterDescriptor;
 import org.hibernate.engine.query.OrdinalParameterDescriptor;
 import org.hibernate.hql.QueryExecutionRequestException;
 import org.hibernate.impl.AbstractQueryImpl;
-import org.hibernate.type.TypeFactory;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -70,7 +64,9 @@ import org.hibernate.type.TypeFactory;
  * @author Steve Ebersole
  */
 public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> implements TypedQuery<X>, HibernateQuery {
-	private static final Logger log = LoggerFactory.getLogger( QueryImpl.class );
+
+    public static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                            QueryImpl.class.getPackage().getName());
 
 	private org.hibernate.Query query;
 	private Set<Integer> jpaPositionalIndices;
@@ -133,9 +129,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			);
 			parameters.add( parameter );
 			Integer position = descriptor.getOrdinalPosition();
-			if ( jpaPositionalIndices != null && jpaPositionalIndices.contains( position ) ) {
-				log.warn( "Parameter position [" + position + "] occurred as both JPA and Hibernate positional parameter" );
-			}
+            if (jpaPositionalIndices != null && jpaPositionalIndices.contains(position)) LOG.parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(position);
 		}
 
 		this.parameters = java.util.Collections.unmodifiableSet( parameters );
@@ -184,51 +178,63 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		return query;
 	}
 
-	protected int internalExecuteUpdate() {
+	@Override
+    protected int internalExecuteUpdate() {
 		return query.executeUpdate();
 	}
 
-	protected void applyMaxResults(int maxResults) {
+	@Override
+    protected void applyMaxResults(int maxResults) {
 		query.setMaxResults( maxResults );
 	}
 
-	protected void applyFirstResult(int firstResult) {
+	@Override
+    protected void applyFirstResult(int firstResult) {
 		query.setFirstResult( firstResult );
 	}
 
-	protected void applyTimeout(int timeout) {
+	@Override
+    protected void applyTimeout(int timeout) {
 		query.setTimeout( timeout );
 	}
 
-	protected void applyComment(String comment) {
+	@Override
+    protected void applyComment(String comment) {
 		query.setComment( comment );
 	}
 
-	protected void applyFetchSize(int fetchSize) {
+	@Override
+    protected void applyFetchSize(int fetchSize) {
 		query.setFetchSize( fetchSize );
 	}
 
-	protected void applyCacheable(boolean isCacheable) {
+	@Override
+    protected void applyCacheable(boolean isCacheable) {
 		query.setCacheable( isCacheable );
 	}
 
-	protected void applyCacheRegion(String regionName) {
+	@Override
+    protected void applyCacheRegion(String regionName) {
 		query.setCacheRegion( regionName );
 	}
 
-	protected void applyReadOnly(boolean isReadOnly) {
+	@Override
+    protected void applyReadOnly(boolean isReadOnly) {
 		query.setReadOnly( isReadOnly );
 	}
 
-	protected void applyCacheMode(CacheMode cacheMode) {
+	@Override
+    protected void applyCacheMode(CacheMode cacheMode) {
 		query.setCacheMode( cacheMode );
 	}
 
-	protected void applyFlushMode(FlushMode flushMode) {
+	@Override
+    protected void applyFlushMode(FlushMode flushMode) {
 		query.setFlushMode( flushMode );
 	}
 
-	protected boolean canApplyLockModes() {
+	@Override
+    protected boolean canApplyLockModes() {
 		return org.hibernate.impl.QueryImpl.class.isInstance( query );
 	}
 
@@ -243,7 +249,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public List<X> getResultList() {
 		try {
-			return (List<X>) query.list();
+			return query.list();
 		}
 		catch (QueryExecutionRequestException he) {
 			throw new IllegalStateException(he);
@@ -271,7 +277,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				mucked = true;
 				query.setMaxResults( 2 ); //avoid OOME if the list is huge
 			}
-			List<X> result = (List<X>) query.list();
+			List<X> result = query.list();
 			if ( mucked ) {
 				query.setMaxResults( getSpecifiedMaxResults() );
 			}
@@ -608,7 +614,8 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 
 	private javax.persistence.LockModeType jpaLockMode = javax.persistence.LockModeType.NONE;
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
+    @SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
 		if (! getEntityManager().isTransactionInProgress()) {
 			throw new TransactionRequiredException( "no transaction is in progress" );
@@ -623,7 +630,8 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		return this;
 	}
 
-	public javax.persistence.LockModeType getLockMode() {
+	@Override
+    public javax.persistence.LockModeType getLockMode() {
 		return jpaLockMode;
 	}
 

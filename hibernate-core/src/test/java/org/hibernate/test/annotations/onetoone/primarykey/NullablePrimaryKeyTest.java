@@ -1,6 +1,7 @@
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
 
+import static org.hibernate.aTestLogger.LOG;
 import junit.framework.TestCase;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
@@ -14,8 +15,6 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  *
  */
 public class NullablePrimaryKeyTest extends TestCase {
-
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, "Test Logger");
 
 	public void testGeneratedSql() {
 
@@ -41,6 +40,6 @@ public class NullablePrimaryKeyTest extends TestCase {
 			if ( serviceRegistryHolder != null ) {
 				serviceRegistryHolder.destroy();
 			}
-		}		
+		}
 	}
 }

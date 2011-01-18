@@ -23,10 +23,9 @@
  */
 package org.hibernate.cfg.search;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.Properties;
 import org.hibernate.AnnotationException;
+import org.hibernate.Logger;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.event.PostCollectionRemoveEventListener;
@@ -35,10 +34,6 @@ import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Helper methods initializing Hibernate Search event listeners.
@@ -231,7 +226,7 @@ public class HibernateSearchEventListenerRegister {
 					FULL_TEXT_INDEX_EVENT_LISTENER_CLASS,
 					HibernateSearchEventListenerRegister.class);
 		} catch (ClassNotFoundException e) {
-            LOG.unableToFindListenerClass();
+            LOG.debug("Search not present in classpath, ignoring event listener registration.");
 		}
 		return searchEventListenerClass;
 	}
@@ -246,23 +241,4 @@ public class HibernateSearchEventListenerRegister {
 		}
 		return searchEventListener;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Property hibernate.search.autoregister_listeners is set to false. No attempt will be made to register Hibernate Search event listeners." )
-        void willNotRegisterListeners();
-
-        @LogMessage( level = INFO )
-        @Message( value = "Unable to find %s on the classpath. Hibernate Search is not enabled." )
-        void unableToFindListenerClass( String className );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Search not present in classpath, ignoring event listener registration." )
-        void unableToFindListenerClass();
-    }
 }

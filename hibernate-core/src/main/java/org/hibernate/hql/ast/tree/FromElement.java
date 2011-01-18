@@ -27,6 +27,7 @@ package org.hibernate.hql.ast.tree;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -151,7 +152,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.elementType = new FromElementType( this, persister, type );
 		// Register the FromElement with the FROM clause, now that we have the names and aliases.
 		fromClause.registerFromElement( this );
-        LOG.fromClause(fromClause, className, classAlias == null ? LOG.noAlias() : classAlias, tableAlias);
+        LOG.debug(fromClause + " :  " + className + " (" + (classAlias == null ? "<no alias>" : classAlias) + ") -> " + tableAlias);
 	}
 
 	public EntityPersister getEntityPersister() {
@@ -308,8 +309,9 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	}
 
 	public void setIncludeSubclasses(boolean includeSubclasses) {
-        if (LOG.isTraceEnabled() && isDereferencedBySuperclassOrSubclassProperty() && !includeSubclasses) LOG.attemptToDisableSubclassInclusions(new Exception(
-                                                                                                                                                               LOG.stackTraceSource()));
+        if (LOG.isTraceEnabled() && isDereferencedBySuperclassOrSubclassProperty() && !includeSubclasses) LOG.trace("Attempt to disable subclass-inclusions : "
+                                                                                                                    + new Exception(
+                                                                                                                                    "Stack-trace source"));
 		this.includeSubclasses = includeSubclasses;
 	}
 
@@ -617,7 +619,8 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		if ( persister != null ) {
 			try {
 				Queryable.Declarer propertyDeclarer = persister.getSubclassPropertyDeclarer( propertyName );
-                LOG.handlingPropertyDereference(persister.getEntityName(), getClassAlias(), propertyName, propertyDeclarer);
+                LOG.trace("Handling property dereference [" + persister.getEntityName() + " (" + getClassAlias() + ") -> "
+                          + propertyName + " (" + propertyDeclarer + ")]");
 				if ( propertyDeclarer == Queryable.Declarer.SUBCLASS ) {
 					dereferencedBySubclassProperty = true;
 					includeSubclasses = true;

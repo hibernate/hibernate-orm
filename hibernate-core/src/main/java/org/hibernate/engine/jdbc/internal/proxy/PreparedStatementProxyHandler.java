@@ -23,13 +23,11 @@
  */
 package org.hibernate.engine.jdbc.internal.proxy;
 
+import static org.hibernate.engine.jdbc.internal.proxy.AbstractStatementProxyHandler.LOG;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Invocation handler for {@link java.sql.PreparedStatement} proxies
@@ -51,7 +49,8 @@ public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler
 		this.sql = sql;
 	}
 
-	protected void beginningInvocationHandling(Method method, Object[] args) {
+	@Override
+    protected void beginningInvocationHandling(Method method, Object[] args) {
 		if ( isExecution( method ) ) {
 			logExecution();
 		}
@@ -69,13 +68,13 @@ public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler
 	}
 
 	private void journalParameterBind(Method method, Object[] args) {
-		log.trace( "binding via {}: []", method.getName(), Arrays.asList( args ) );
+        LOG.trace("Binding via " + method.getName() + ": " + Arrays.asList(args));
 	}
 
 	private boolean isExecution(Method method) {
 		return false;
 	}
 
-	private void logExecution() {
-	}
+    private void logExecution() {
+    }
 }

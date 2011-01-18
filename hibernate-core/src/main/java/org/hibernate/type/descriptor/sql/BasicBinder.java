@@ -25,12 +25,11 @@ package org.hibernate.type.descriptor.sql;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.hibernate.Logger;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Convenience base implementation of {@link ValueBinder}
@@ -89,11 +88,4 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 	 * @throws SQLException Indicates a problem binding to the prepared statement.
 	 */
 	protected abstract void doBind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException;
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-    }
 }

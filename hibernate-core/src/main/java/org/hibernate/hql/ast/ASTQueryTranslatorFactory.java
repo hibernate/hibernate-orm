@@ -24,16 +24,12 @@
  */
 package org.hibernate.hql.ast;
 
-import static org.jboss.logging.Logger.Level.INFO;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Generates translators which uses the Antlr-based parser to perform
@@ -71,15 +67,4 @@ public class ASTQueryTranslatorFactory implements QueryTranslatorFactory {
 	        SessionFactoryImplementor factory) {
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = INFO )
-        @Message( value = "Using ASTQueryTranslatorFactory" )
-        void usingAstQueryTranslatorFactory();
-    }
 }

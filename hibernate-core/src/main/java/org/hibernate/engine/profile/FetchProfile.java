@@ -23,17 +23,12 @@
  */
 package org.hibernate.engine.profile;
 
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.HashMap;
 import java.util.Map;
+import org.hibernate.Logger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A 'fetch profile' allows a user to dynamically modify the fetching strategy used for particular associations at
@@ -96,7 +91,7 @@ public class FetchProfile {
 	public void addFetch(Fetch fetch) {
 		Type associationType = fetch.getAssociation().getOwner().getPropertyType( fetch.getAssociation().getAssociationPath() );
 		if ( associationType.isCollectionType() ) {
-            LOG.addingFetch(fetch.getAssociation().getRole());
+            LOG.trace("Handling request to add collection fetch [" + fetch.getAssociation().getRole() + "]");
 
 			// couple of things for which to account in the case of collection
 			// join fetches
@@ -170,23 +165,4 @@ public class FetchProfile {
 	public boolean isContainsJoinFetchedBag() {
 		return containsJoinFetchedBag;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Handling request to add collection fetch [%s]" )
-        void addingFetch( String role );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Ignoring bag join fetch [%s] due to prior collection join fetch" )
-        void containsJoinFetchedCollection( String role );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to erase previously added bag join fetch" )
-        void unableToRemoveBagJoinFetch();
-    }
 }

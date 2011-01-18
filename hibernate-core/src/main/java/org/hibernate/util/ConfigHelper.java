@@ -32,10 +32,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * A simple class to centralize logic needed to locate config files on the system.
@@ -202,14 +200,4 @@ public final class ConfigHelper {
 
 		return stream;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @Message( value = "Unable to locate config file: %s" )
-        String unableToLocateConfigFile( String path );
-    }
 }

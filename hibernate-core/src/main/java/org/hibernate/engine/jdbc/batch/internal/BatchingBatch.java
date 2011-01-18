@@ -106,15 +106,10 @@ public class BatchingBatch extends AbstractBatchImpl {
 	 */
 	@Override
     protected void doExecuteBatch() {
-		if ( maxBatchPosition == 0 ) {
-			log.debug( "no batched statements to execute" );
-		}
+        if (maxBatchPosition == 0) LOG.debug("No batched statements to execute");
 		else {
-			if ( log.isDebugEnabled() ) {
-				log.debug( "Executing {} statements with maximum batch size {} ",
-						getStatements().size(), maxBatchPosition
-				);
-			}
+            LOG.debug("Executing " + getStatements().size() + " statements with maximum batch size " + maxBatchPosition);
+
 			try {
 				executeStatements();
 			}
@@ -145,17 +140,10 @@ public class BatchingBatch extends AbstractBatchImpl {
 				);
 			}
 			if ( expectations.size() > 0 ) {
-				if ( log.isDebugEnabled() ) {
-					log.debug( "Executing with batch of size {}: {}", expectations.size(), sql  );
-				}
+                LOG.debug("Executing with batch of size " + expectations.size() + ": " + sql);
 				executeStatement( sql, statement, expectations );
 				expectations.clear();
-			}
-			else {
-				if ( log.isDebugEnabled() ) {
-					log.debug( "Skipped executing because batch size is 0: ", sql );
-				}
-			}
+            } else LOG.debug("Skipped executing because batch size is 0: " + sql);
 		}
 	}
 

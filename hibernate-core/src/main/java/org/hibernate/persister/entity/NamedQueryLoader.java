@@ -24,18 +24,14 @@
  */
 package org.hibernate.persister.entity;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.io.Serializable;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Not really a <tt>Loader</tt>, just a wrapper around a
@@ -58,12 +54,12 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	}
 
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
-        if (lockOptions != null) LOG.ignoringLockOptions();
+        if (lockOptions != null) LOG.debug("Ignoring lock-options passed to named query loader");
 		return load( id, optionalObject, session );
 	}
 
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
-        LOG.loadingEntity(persister.getEntityName(), queryName);
+        LOG.debug("Loading entity: " + persister.getEntityName() + " using named query: " + queryName);
 
 		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedQuery(queryName);
 		if ( query.hasNamedParameters() ) {
@@ -89,20 +85,4 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 				.getEntity( new EntityKey( id, persister, session.getEntityMode() ) );
 
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Ignoring lock-options passed to named query loader" )
-        void ignoringLockOptions();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Loading entity: %s using named query: %s" )
-        void loadingEntity( String entityName,
-                            String queryName );
-    }
 }

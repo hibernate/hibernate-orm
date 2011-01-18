@@ -24,13 +24,11 @@
  */
 package org.hibernate.hql.ast.util;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
@@ -47,10 +45,6 @@ import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -138,7 +132,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setSQLValue(DotNode node, String text, String value) {
-        LOG.setSqlValue(text, value);
+        LOG.debug("setSQLValue() " + text + " -> " + value);
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		node.setType( SqlTokenTypes.SQL_TOKEN );
 		node.setText(value);
@@ -146,7 +140,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setConstantValue(DotNode node, String text, Object value) {
-        LOG.setConstantValue(text, value, value.getClass().getName());
+        LOG.debug("setConstantValue() " + text + " -> " + value + " " + value.getClass().getName());
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		if ( value instanceof String ) {
 			node.setType( SqlTokenTypes.QUOTED_STRING );
@@ -214,7 +208,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	private void processLiteral(AST constant) {
 		String replacement = ( String ) walker.getTokenReplacements().get( constant.getText() );
 		if ( replacement != null ) {
-            LOG.processConstant(constant.getText(), replacement);
+            LOG.debug("processConstant() : Replacing '" + constant.getText() + "' with '" + replacement + "'");
 			constant.setText( replacement );
 		}
 	}
@@ -245,7 +239,8 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 					return Integer.valueOf( text ).toString();
 				}
 				catch( NumberFormatException e ) {
-                    LOG.unableToFormatIncomingText(text);
+                    LOG.trace("Could not format incoming text [" + text
+                              + "] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG");
 				}
 			}
 			String literalValue = text;
@@ -321,35 +316,4 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 			new ExactDecimalFormatter(),
 			new ApproximateDecimalFormatter()
 	};
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "processConstant() : Replacing '%s' with '%s'" )
-        void processConstant( String text,
-                              String replacement );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "setConstantValue() %s -> %s %s" )
-        void setConstantValue( String text,
-                               Object value,
-                               String name );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "setSQLValue() %s -> %s" )
-        void setSqlValue( String text,
-                          String value );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Could not format incoming text [%s] as a NUM_INT; assuming numeric overflow and attempting as NUM_LONG" )
-        void unableToFormatIncomingText( String text );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unexpected literal token type [%d] passed for numeric processing" )
-        void unexpectedLiteralTokenType( int type );
-    }
 }

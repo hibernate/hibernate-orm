@@ -23,9 +23,9 @@
  */
 package org.hibernate.event.def;
 
-import static org.jboss.logging.Logger.Level.TRACE;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
@@ -35,10 +35,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Wrap collections in a Hibernate collection
@@ -111,7 +107,7 @@ public class WrapVisitor extends ProxyVisitor {
 				PersistentCollection persistentCollection = collectionType.wrap(session, collection);
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
-                if (LOG.isTraceEnabled()) LOG.wrappedCollectionInRole(collectionType.getRole());
+                if (LOG.isTraceEnabled()) LOG.trace("Wrapped collection in role: " + collectionType.getRole());
 
 				return persistentCollection; //Force a substitution!
 
@@ -163,15 +159,4 @@ public class WrapVisitor extends ProxyVisitor {
 			persister.setPropertyValues( object, values, entityMode );
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Wrapped collection in role: %s" )
-        void wrappedCollectionInRole( String role );
-    }
 }

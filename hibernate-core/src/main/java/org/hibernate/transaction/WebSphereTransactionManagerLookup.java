@@ -28,6 +28,7 @@ import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 
 /**
  * {@link TransactionManagerLookup} strategy for WebSphere (versions 4, 5.0 and 5.1)

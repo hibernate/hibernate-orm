@@ -24,22 +24,21 @@
 //$Id$
 package org.hibernate.ejb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * @author Emmanuel Bernard
  */
 public class Version {
-	private static Logger log = LoggerFactory.getLogger( Version.class );
+
+    public static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                            Version.class.getPackage().getName());
 
 	public static String getVersionString() {
 		return "[WORKING]";
 	}
 
 	static {
-		log.info( "Hibernate EntityManager {}", getVersionString() );
+        LOG.entityManagerVersion(getVersionString());
 	}
 
 	public static void touch() {

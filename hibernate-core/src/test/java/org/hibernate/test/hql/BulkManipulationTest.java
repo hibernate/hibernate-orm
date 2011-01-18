@@ -1,6 +1,7 @@
 // $Id: BulkManipulationTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
 
+import static org.hibernate.aTestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

@@ -23,7 +23,6 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,10 +56,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * @author Emmanuel Bernard
@@ -387,16 +382,4 @@ class TypeSafeActivator {
 		}
 		return factory;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = WARN )
-        @Message( value = "Unable to apply constraints on DDL for %s\n%s" )
-        void unableToApplyConstraints( String className,
-                                       String message );
-    }
 }

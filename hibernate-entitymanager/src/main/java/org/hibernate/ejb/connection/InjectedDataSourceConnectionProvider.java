@@ -21,17 +21,14 @@
  */
 package org.hibernate.ejb.connection;
 
-import java.util.Properties;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Properties;
 import javax.sql.DataSource;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 
 /**
  * A specialization of {@link DatasourceConnectionProviderImpl} which uses the {@link DataSource} specified vi
@@ -44,12 +41,15 @@ import org.slf4j.Logger;
  * @author Emmanuel Bernard
  */
 public class InjectedDataSourceConnectionProvider extends DatasourceConnectionProviderImpl {
-	private final Logger log = LoggerFactory.getLogger( InjectedDataSourceConnectionProvider.class );
+
+    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                                             EntityManagerLogger.class.getPackage().getName());
 
 	private String user;
 	private String pass;
 
-	public void setDataSource(DataSource ds) {
+	@Override
+    public void setDataSource(DataSource ds) {
 		super.setDataSource( ds );
 	}
 
@@ -57,19 +57,13 @@ public class InjectedDataSourceConnectionProvider extends DatasourceConnectionPr
 		user = props.getProperty( Environment.USER );
 		pass = props.getProperty( Environment.PASS );
 
-		if ( getDataSource() == null ) {
-			throw new HibernateException( "No datasource provided" );
-		}
-		log.info( "Using provided datasource" );
+        if (getDataSource() == null) throw new HibernateException("No datasource provided");
+        LOG.usingProvidedDataSource();
 	}
 
 	@Override
 	public Connection getConnection() throws SQLException {
-		if (user != null || pass != null) {
-			return getDataSource().getConnection(user, pass);
-		}
-		else {
-			return getDataSource().getConnection();
-		}
+        if (user != null || pass != null) return getDataSource().getConnection(user, pass);
+        return getDataSource().getConnection();
 	}
 }

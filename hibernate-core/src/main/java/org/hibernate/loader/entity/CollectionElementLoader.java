@@ -24,12 +24,12 @@
  */
 package org.hibernate.loader.entity;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -41,10 +41,6 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  *
@@ -87,7 +83,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 
 		postInstantiate();
 
-        LOG.staticSelectForEntity(entityName, getSQLString());
+        LOG.debug("Static select for entity " + entityName + ": " + getSQLString());
 
 	}
 
@@ -133,16 +129,4 @@ public class CollectionElementLoader extends OuterJoinLoader {
     protected boolean isSingleRowLoader() {
 		return true;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Static select for entity %s: %s" )
-        void staticSelectForEntity( String entityName,
-                                    String sqlString );
-    }
 }

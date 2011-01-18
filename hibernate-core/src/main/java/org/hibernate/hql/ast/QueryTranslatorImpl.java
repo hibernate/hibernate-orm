@@ -24,8 +24,6 @@
  */
 package org.hibernate.hql.ast;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -64,10 +63,6 @@ import org.hibernate.type.Type;
 import org.hibernate.util.IdentitySet;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.ANTLRException;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
@@ -167,7 +162,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private synchronized void doCompile(Map replacements, boolean shallow, String collectionRole) {
 		// If the query is already compiled, skip the compilation.
 		if ( compiled ) {
-            LOG.compile();
+            LOG.debug("compile() : The query is already compiled, skipping...");
 			return;
 		}
 
@@ -216,13 +211,13 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		catch ( RecognitionException e ) {
             // we do not actually propagate ANTLRExceptions as a cause, so
 			// log it here for diagnostic purposes
-            LOG.trace(LOG.convertedRecognitionException(), e);
+            LOG.trace("Converted antlr.RecognitionException", e);
 			throw QuerySyntaxException.convert( e, hql );
 		}
 		catch ( ANTLRException e ) {
             // we do not actually propagate ANTLRExceptions as a cause, so
 			// log it here for diagnostic purposes
-            LOG.trace(LOG.convertedAntlrException(), e);
+            LOG.trace("Converted antlr.ANTLRException", e);
 			throw new QueryException( e.getMessage(), hql );
 		}
 
@@ -594,25 +589,4 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			}
 		}
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "compile() : The query is already compiled, skipping..." )
-        void compile();
-
-        @Message( value = "Converted antlr.ANTLRException" )
-        Object convertedAntlrException();
-
-        @Message( value = "Converted antlr.RecognitionException" )
-        Object convertedRecognitionException();
-
-        @LogMessage( level = WARN )
-        @Message( value = "firstResult/maxResults specified with collection fetch; applying in memory!" )
-        void firstOrMaxResultsSpecifiedWithCollectionFetch();
-    }
 }

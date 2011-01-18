@@ -24,8 +24,6 @@
  */
 package org.hibernate.hql.ast;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.TRACE;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.ParameterBinder;
@@ -99,10 +98,6 @@ import org.hibernate.type.VersionType;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 import antlr.ASTFactory;
 import antlr.RecognitionException;
 import antlr.SemanticException;
@@ -254,7 +249,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				ASTUtil.createSibling( inputAstFactory, HqlTokenTypes.ALIAS, "this", fromElement );
 				fromClauseInput.addChild( fromElement );
 				// Show the modified AST.
-                LOG.prepareFromClauseInputTree();
+                LOG.debug("prepareFromClauseInputTree() : Filter - Added 'this' as a from element...");
 				queryTranslatorImpl.showHqlAst( hqlParser.getAST() );
 
 				// Create a parameter specification for the collection filter...
@@ -351,7 +346,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		join.addCondition( fkTableAlias, keyColumnNames, " = ?" );
 		fromElement.setJoinSequence( join );
 		fromElement.setFilter( true );
-        LOG.createFromFilterElement();
+        LOG.debug("createFromFilterElement() : processed filter FROM element.");
 		return fromElement;
 	}
 
@@ -403,13 +398,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 		}
 
-        if (LOG.isDebugEnabled()) LOG.createFromJoinElement(getASTPrinter().showAsString(fromElement, LOG.joinTreeHeader()));
+        if (LOG.isDebugEnabled()) LOG.debug("createFromJoinElement() : "
+                                            + getASTPrinter().showAsString(fromElement, "-- join tree --"));
 	}
+
 	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException {
 		try {
 			withClause( hqlWithNode );
 			AST hqlSqlWithNode = returnAST;
-            if (LOG.isDebugEnabled()) LOG.handleWithFragment(getASTPrinter().showAsString(hqlSqlWithNode, LOG.withClauseHeader()));
+            if (LOG.isDebugEnabled()) LOG.debug("handleWithFragment() : "
+                                                + getASTPrinter().showAsString(hqlSqlWithNode, "-- with clause --"));
 			WithClauseVisitor visitor = new WithClauseVisitor( fromElement );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
@@ -560,7 +558,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		switch ( rhs.getType() ) {
 			case SqlTokenTypes.ELEMENTS:
 			case SqlTokenTypes.INDICES:
-                if (LOG.isDebugEnabled()) LOG.lookupProperty(dotNode.getPath(), rhs.getText(), lhs.getPath());
+                if (LOG.isDebugEnabled()) LOG.debug("lookupProperty() " + dotNode.getPath() + " => " + rhs.getText() + "("
+                                                    + lhs.getPath() + ")");
 				CollectionFunction f = ( CollectionFunction ) rhs;
 				// Re-arrange the tree so that the collection function is the root and the lhs is the path.
 				f.setFirstChild( lhs );
@@ -587,7 +586,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		if ( fromElements.size() == 1 ) {
 			final FromElement fromElement = ( FromElement ) fromElements.get( 0 );
 			try {
-                LOG.resolvingPropertyAsNonQualifiedReference(identText);
+                LOG.trace("Attempting to resolve property [" + identText + "] as a non-qualified ref");
 				return fromElement.getPropertyMapping( identText ).toType( identText ) != null;
 			}
 			catch( QueryException e ) {
@@ -622,7 +621,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	@Override
     protected void processQuery(AST select, AST query) throws SemanticException {
-        LOG.processQuery(query.toStringTree());
+        LOG.debug("processQuery() : " + query.toStringTree());
 
 		try {
 			QueryNode qn = ( QueryNode ) query;
@@ -866,7 +865,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		select.setNextSibling( sibling );
 		selectClause = ( SelectClause ) select;
 		selectClause.initializeDerivedSelectClause( currentFromClause );
-        LOG.derivedSelectClauseCreated();
+        LOG.debug("Derived SELECT clause created.");
 	}
 
 	@Override
@@ -1243,51 +1242,4 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	public static void panic() {
 		throw new QueryException( "TreeWalker: panic" );
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "createFromFilterElement() : processed filter FROM element." )
-        void createFromFilterElement();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "createFromJoinElement() : %s" )
-        void createFromJoinElement( String showAsString );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Derived SELECT clause created." )
-        void derivedSelectClauseCreated();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "handleWithFragment() : %s" )
-        void handleWithFragment( String showAsString );
-
-        @Message( value = "-- join tree --" )
-        String joinTreeHeader();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "lookupProperty() %s => %s(%s)" )
-        void lookupProperty( String path,
-                             String text,
-                             String path2 );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "prepareFromClauseInputTree() : Filter - Added 'this' as a from element..." )
-        void prepareFromClauseInputTree();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "processQuery() : %s" )
-        void processQuery( String stringTree );
-
-        @LogMessage( level = TRACE )
-        @Message( value = "Attempting to resolve property [%s] as a non-qualified ref" )
-        void resolvingPropertyAsNonQualifiedReference( String identText );
-
-        @Message( value = "-- with clause --" )
-        String withClauseHeader();
-    }
 }

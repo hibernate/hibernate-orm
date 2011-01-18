@@ -23,9 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import static org.jboss.logging.Logger.Level.DEBUG;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.WARN;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +36,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.FilterDefinition;
@@ -99,10 +97,6 @@ import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.xml.XmlDocument;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
 
 /**
  * Walks an XML mapping document and produces the Hibernate configuration-time metamodel (the
@@ -234,7 +228,7 @@ public final class HbmBinder {
 		String rename = ( renameNode == null ) ?
 						StringHelper.unqualify( className ) :
 						renameNode.getValue();
-		LOG.bindImport( rename, className );
+        LOG.debug("Import: " + rename + " -> " + className);
 		mappings.addImport( className, rename );
 	}
 
@@ -1324,7 +1318,7 @@ public final class HbmBinder {
 			if ( columns.length() > 0 ) msg += " -> " + columns;
 			// TODO: this fails if we run with debug on!
 			// if ( model.getType()!=null ) msg += ", type: " + model.getType().getName();
-            LOG.mappedProperty(msg);
+            LOG.debug(msg);
 		}
 
 		property.setMetaAttributes( getMetas( node, inheritedMetas ) );
@@ -2606,7 +2600,7 @@ public final class HbmBinder {
 			if ( condition==null) {
 				throw new MappingException("no filter condition found for filter: " + name);
 			}
-            LOG.applyingManyToManyFilter(name, condition, collection.getRole());
+            LOG.debug("Applying many-to-many filter [" + name + "] as [" + condition + "] to role [" + collection.getRole() + "]");
 			collection.addManyToManyFilter( name, condition );
 		}
 	}
@@ -2639,7 +2633,7 @@ public final class HbmBinder {
 		String queryName = queryElem.attributeValue( "name" );
 		if (path!=null) queryName = path + '.' + queryName;
 		String query = queryElem.getText();
-        LOG.namedQuery(queryName, query);
+        LOG.debug("Named query: " + queryName + " -> " + query);
 
 		boolean cacheable = "true".equals( queryElem.attributeValue( "cacheable" ) );
 		String region = queryElem.attributeValue( "cache-region" );
@@ -2972,7 +2966,7 @@ public final class HbmBinder {
 
 	private static void parseFilterDef(Element element, Mappings mappings) {
 		String name = element.attributeValue( "name" );
-        LOG.parsingFilterDefinition(name);
+        LOG.debug("Parsing filter-def [" + name + "]");
 		String defaultCondition = element.getTextTrim();
 		if ( StringHelper.isEmpty( defaultCondition ) ) {
 			defaultCondition = element.attributeValue( "condition" );
@@ -2983,12 +2977,12 @@ public final class HbmBinder {
 			final Element param = (Element) params.next();
 			final String paramName = param.attributeValue( "name" );
 			final String paramType = param.attributeValue( "type" );
-            LOG.addingFilterParameter(paramName, paramType);
+            LOG.debug("Adding filter parameter : " + paramName + " -> " + paramType);
 			final Type heuristicType = mappings.getTypeResolver().heuristicType( paramType );
-            LOG.parameterHeuristicType(heuristicType);
+            LOG.debug("Parameter heuristic type : " + heuristicType);
 			paramMappings.put( paramName, heuristicType );
 		}
-        LOG.parsedFilterDefinition(name);
+        LOG.debug("Parsed filter-def [" + name + "]");
 		FilterDefinition def = new FilterDefinition( name, defaultCondition, paramMappings );
 		mappings.addFilterDefinition( def );
 	}
@@ -3011,7 +3005,7 @@ public final class HbmBinder {
 		if ( condition==null) {
 			throw new MappingException("no filter condition found for filter: " + name);
 		}
-        LOG.applyingFilter(name, condition);
+        LOG.debug("Applying filter [" + name + "] as [" + condition + "]");
 		filterable.addFilter( name, condition );
 	}
 
@@ -3147,87 +3141,4 @@ public final class HbmBinder {
 	private static interface EntityElementHandler {
 		public void handleEntity(String entityName, String className, Mappings mappings);
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Applying filter [%s] as [%s]" )
-        void applyingFilter( String name,
-                             String condition );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Adding filter parameter : %s -> %s" )
-        void addingFilterParameter( String paramName,
-                                    String paramType );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Applying many-to-many filter [%s] as [%s] to role [%s]" )
-        void applyingManyToManyFilter( String name,
-                                       String condition,
-                                       String role );
-
-        @LogMessage( level = WARN )
-        @Message( value = "Attribute \"order-by\" ignored in JDK1.3 or less" )
-        void attributeIgnored();
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Import: %s -> %s" )
-        void bindImport( String rename,
-                         String className );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "%s" )
-        void mappedProperty( String message );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping class: %s -> %s" )
-        void mappingClass( String entityName,
-                           String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping class join: %s -> %s" )
-        void mappingClassJoin( String entityName,
-                               String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping collection: %s -> %s" )
-        void mappingCollection( String entityName,
-                                String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping joined-subclass: %s -> %s" )
-        void mappingJoinedSubclass( String entityName,
-                                    String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping subclass: %s -> %s" )
-        void mappingSubclass( String entityName,
-                              String name );
-
-        @LogMessage( level = INFO )
-        @Message( value = "Mapping union-subclass: %s -> %s" )
-        void mappingUnionSubclass( String entityName,
-                                   String name );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Named query: %s -> %s" )
-        void namedQuery( String queryName,
-                         String query );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Parameter heuristic type : %s" )
-        void parameterHeuristicType( Type heuristicType );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Parsed filter-def [%s]" )
-        void parsedFilterDefinition( String name );
-
-        @LogMessage( level = DEBUG )
-        @Message( value = "Parsing filter-def [%s]" )
-        void parsingFilterDefinition( String name );
-    }
 }

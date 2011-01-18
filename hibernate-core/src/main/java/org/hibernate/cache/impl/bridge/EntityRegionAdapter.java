@@ -24,6 +24,7 @@
  */
 package org.hibernate.cache.impl.bridge;
 
+import org.hibernate.Logger;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.CacheDataDescription;

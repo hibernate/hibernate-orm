@@ -25,11 +25,10 @@
 package org.hibernate.sql.ordering.antlr;
 
 import java.util.ArrayList;
+import org.hibernate.Logger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.sql.Template;
 import org.hibernate.util.StringHelper;
-import org.jboss.logging.BasicLogger;
-import org.jboss.logging.MessageLogger;
 import antlr.CommonAST;
 import antlr.TokenStream;
 import antlr.collections.AST;
@@ -237,11 +236,4 @@ public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 		}
 		return ( SortSpecification ) sortSpecification;
 	}
-
-    /**
-     * Interface defining messages that may be logged by the outer class
-     */
-    @MessageLogger
-    interface Logger extends BasicLogger {
-    }
 }

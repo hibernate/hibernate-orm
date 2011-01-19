@@ -520,7 +520,7 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-binary">
+            <section id="types-basic-value-binary" revision="1">
                 <title>byte[]</title>
                 <variablelist>
                     <varlistentry>
@@ -547,10 +547,22 @@
                             </para>
                         </listitem>
                     </varlistentry>
+                    <varlistentry>
+                        <term><classname>org.hibernate.type.ImageType</classname></term>
+                        <listitem>
+                            <para>
+                                Maps a primitive byte[] to a JDBC LONGVARBINARY
+                            </para>
+                            <para>
+                                Registered under <literal>image</literal> in the type registry (see
+                                <xref linkend="types-registry"/>).
+                            </para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-wrapperbinary">
-                <title>byte[]</title>
+            <section id="types-basic-value-wrapperbinary" revision="1">
+                <title>Byte[]</title>
                 <variablelist>
                     <varlistentry>
                         <term><classname>org.hibernate.type.BinaryType</classname></term>
@@ -583,8 +595,8 @@
                     </varlistentry>
                 </variablelist>
             </section>
-            <section id="types-basic-value-characterarray">
-                <title>char[]</title>
+            <section id="types-basic-value-characterarray" revision="1">
+                <title>Character[]</title>
                 <variablelist>
                     <varlistentry>
                         <term><classname>org.hibernate.type.CharacterArrayType</classname></term>

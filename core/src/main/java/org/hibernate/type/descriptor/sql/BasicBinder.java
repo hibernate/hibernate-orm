@@ -78,14 +78,16 @@ public abstract class BasicBinder<J> implements ValueBinder<J> {
 			st.setNull( index, sqlDescriptor.getSqlType() );
 		}
 		else {
-			log.trace(
-					String.format(
-							BIND_MSG_TEMPLATE,
-							index,
-							JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() ),
-							getJavaDescriptor().extractLoggableRepresentation( value )
-					)
-			);
+			if ( log.isTraceEnabled() ) {
+				log.trace(
+						String.format(
+								BIND_MSG_TEMPLATE,
+								index,
+								JdbcTypeNameMapper.getTypeName( sqlDescriptor.getSqlType() ),
+								getJavaDescriptor().extractLoggableRepresentation( value )
+						)
+				);
+			}
 			doBind( st, value, index, options );
 		}
 	}

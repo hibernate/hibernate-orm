@@ -35,6 +35,7 @@ import java.util.HashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.EntityMode;
@@ -315,7 +316,28 @@ public class CollectionLoadContext {
 
 		final Object version;
 		if ( persister.isVersioned() ) {
-			final Object collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( lce.getKey(), persister );
+			Object collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( lce.getKey(), persister );
+			if ( collectionOwner == null ) {
+				// generally speaking this would be caused by the collection key being defined by a property-ref, thus
+				// the collection key and the owner key would not match up.  In this case, try to use the key of the
+				// owner instance associated with the collection itself, if one.  If the collection does already know
+				// about its owner, that owner should be the same instance as associated with the PC, but we do the
+				// resolution against the PC anyway just to be safe since the lookup should not be costly.
+				if ( lce.getCollection() != null ) {
+					Object linkedOwner = lce.getCollection().getOwner();
+					if ( linkedOwner != null ) {
+						final Serializable ownerKey = persister.getOwnerEntityPersister().getIdentifier( linkedOwner, session );
+						collectionOwner = getLoadContext().getPersistenceContext().getCollectionOwner( ownerKey, persister );
+					}
+				}
+				if ( collectionOwner == null ) {
+					throw new HibernateException(
+							"Unable to resolve owner of loading collection [" +
+									MessageHelper.collectionInfoString( persister, lce.getKey(), factory ) +
+									"] for second level caching"
+					);
+				}
+			}
 			version = getLoadContext().getPersistenceContext().getEntry( collectionOwner ).getVersion();
 		}
 		else {

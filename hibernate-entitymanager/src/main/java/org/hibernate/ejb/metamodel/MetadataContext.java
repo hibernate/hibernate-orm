@@ -178,6 +178,10 @@ class MetadataContext {
 							// #buildIdClassAttributes
 							continue;
 						}
+						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+							// skip the version property, it was already handled previously.
+							continue;
+						}
 						final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
 						if ( attribute != null ) {
 							jpa2Mapping.getBuilder().addAttribute( attribute );
@@ -203,6 +207,10 @@ class MetadataContext {
 					Iterator<Property> properties = safeMapping.getDeclaredPropertyIterator();
 					while ( properties.hasNext() ) {
 						final Property property = properties.next();
+						if ( safeMapping.isVersioned() && property == safeMapping.getVersion() ) {
+							// skip the version property, it was already handled previously.
+							continue;
+						}
 						final Attribute attribute = attributeFactory.buildAttribute( jpa2Mapping, property );
 						if ( attribute != null ) {
 							jpa2Mapping.getBuilder().addAttribute( attribute );

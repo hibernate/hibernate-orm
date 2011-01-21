@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.metamodel;
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.SingularAttribute;
 import org.hibernate.ejb.test.TestCase;
 
@@ -35,7 +36,7 @@ public class EmbeddedTypeTest extends TestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
-				Product.class, ShelfLife.class
+				Product.class, ShelfLife.class, VersionedEntity.class
 		};
 	}
 
@@ -53,4 +54,16 @@ public class EmbeddedTypeTest extends TestCase {
 		em.getTransaction().commit();
 		em.close();
 	}
+
+	public void testVersionAttributeMetadata() {
+		// HHH-5821
+		EntityManager em = getOrCreateEntityManager();
+		EntityType<VersionedEntity> metadata = em.getMetamodel().entity( VersionedEntity.class );
+		assertNotNull( metadata.getDeclaredVersion( int.class ) );
+		assertTrue( metadata.getDeclaredVersion( int.class ).isVersion() );
+		assertEquals( 3, metadata.getDeclaredSingularAttributes().size() );
+		assertTrue( metadata.getDeclaredSingularAttributes().contains( metadata.getDeclaredVersion( int.class ) ) );
+		em.close();
+	}
+
 }

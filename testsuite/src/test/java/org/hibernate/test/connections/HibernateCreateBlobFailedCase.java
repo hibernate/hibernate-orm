@@ -29,8 +29,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.SQLException;
 
 /**
@@ -56,14 +54,10 @@ public class HibernateCreateBlobFailedCase extends FunctionalTestCase {
 	public void testLobCreation() throws SQLException {
 		Session session = sfi().getCurrentSession();
 		session.beginTransaction();
-		Blob blob = Hibernate.getLobCreator( session ).createBlob( new byte[] {} );
-		blob.free();
-		blob = Hibernate.createBlob( new byte[] {}, session );
-		blob.free();
-		Clob clob = Hibernate.getLobCreator( session ).createClob( "Steve" );
-		clob.free();
-		clob = Hibernate.createClob( "Steve", session );
-		clob.free();
+		Hibernate.getLobCreator( session ).createBlob( new byte[] {} );
+		Hibernate.createBlob( new byte[] {}, session );
+		Hibernate.getLobCreator( session ).createClob( "Steve" );
+		Hibernate.createClob( "Steve", session );
 		session.getTransaction().commit();
 		assertFalse( session.isOpen() );
 	}

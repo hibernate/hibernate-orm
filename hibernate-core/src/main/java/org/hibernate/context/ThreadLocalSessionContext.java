@@ -73,11 +73,12 @@ import org.hibernate.engine.SessionFactoryImplementor;
 public class ThreadLocalSessionContext implements CurrentSessionContext {
 
 	private static final Logger log = LoggerFactory.getLogger( ThreadLocalSessionContext.class );
-	private static final Class[] SESS_PROXY_INTERFACES = new Class[] {
+	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
 			org.hibernate.classic.Session.class,
 	        org.hibernate.engine.SessionImplementor.class,
 	        org.hibernate.engine.jdbc.spi.JDBCContext.Context.class,
-	        org.hibernate.event.EventSource.class
+	        org.hibernate.event.EventSource.class,
+			org.hibernate.engine.jdbc.LobCreationContext.class
 	};
 
 	/**
@@ -86,7 +87,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	 * the possibility for multiple SessionFactorys being used during execution
 	 * of the given thread.
 	 */
-	private static final ThreadLocal context = new ThreadLocal();
+	private static final ThreadLocal<Map> context = new ThreadLocal<Map>();
 
 	protected final SessionFactoryImplementor factory;
 
@@ -101,7 +102,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 		Session current = existingSession( factory );
 		if (current == null) {
 			current = buildOrObtainSession();
-			// register a cleanup synch
+			// register a cleanup sync
 			current.getTransaction().registerSynchronization( buildCleanupSynch() );
 			// wrap the session in the transaction-protection proxy
 			if ( needsWrapping( current ) ) {
@@ -182,7 +183,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 		TransactionProtectionWrapper wrapper = new TransactionProtectionWrapper( session );
 		Session wrapped = ( Session ) Proxy.newProxyInstance(
 				Session.class.getClassLoader(),
-		        SESS_PROXY_INTERFACES,
+				SESSION_PROXY_INTERFACES,
 		        wrapper
 			);
 		// yick!  need this for proper serialization/deserialization handling...
@@ -223,8 +224,9 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	}
 
 	/**
-	 * Unassociate a previously bound session from the current thread of execution.
+	 * Disassociates a previously bound session from the current thread of execution.
 	 *
+	 * @param factory The factory for which the session should be unbound.
 	 * @return The session which was unbound.
 	 */
 	public static Session unbind(SessionFactory factory) {
@@ -242,9 +244,10 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 	}
 
 	protected static Map sessionMap() {
-		return ( Map ) context.get();
+		return context.get();
 	}
 
+	@SuppressWarnings({"unchecked"})
 	private static void doBind(org.hibernate.Session session, SessionFactory factory) {
 		Map sessionMap = sessionMap();
 		if ( sessionMap == null ) {

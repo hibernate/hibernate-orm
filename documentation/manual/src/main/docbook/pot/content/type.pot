@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: http://bugs.kde.org\n"
-"POT-Creation-Date: 2010-07-21 04:35+0000\n"
+"POT-Creation-Date: 2011-01-21 21:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <kde-i18n-doc@kde.org>\n"
@@ -611,377 +611,431 @@ msgstr ""
 #. Tag: classname
 #: type.xml:456
 #, no-c-format
-msgid "java.lang.Class"
+msgid "java.net.URL"
 msgstr ""
 
 #. Tag: classname
 #: type.xml:459
 #, no-c-format
-msgid "org.hibernate.type.ClassType"
+msgid "org.hibernate.type.UrlType"
 msgstr ""
 
 #. Tag: para
 #: type.xml:461
 #, no-c-format
-msgid "Maps a <classname>java.lang.Class</classname> to a JDBC VARCHAR (using the Class name)"
+msgid "Maps a <classname>java.net.URL</classname> to a JDBC VARCHAR (using the external form)"
 msgstr ""
 
 #. Tag: para
 #: type.xml:464
 #, no-c-format
-msgid "Registered under <literal>class</literal> and <literal>java.lang.Class</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgid "Registered under <literal>url</literal> and <literal>java.net.URL</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: classname
 #: type.xml:473
 #, no-c-format
-msgid "java.sql.Blob"
+msgid "java.lang.Class"
 msgstr ""
 
 #. Tag: classname
 #: type.xml:476
 #, no-c-format
-msgid "org.hibernate.type.BlobType"
+msgid "org.hibernate.type.ClassType"
 msgstr ""
 
 #. Tag: para
 #: type.xml:478
 #, no-c-format
-msgid "Maps a <classname>java.sql.Blob</classname> to a JDBC BLOB"
+msgid "Maps a <classname>java.lang.Class</classname> to a JDBC VARCHAR (using the Class name)"
 msgstr ""
 
 #. Tag: para
 #: type.xml:481
 #, no-c-format
-msgid "Registered under <literal>blob</literal> and <literal>java.sql.Blob</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgid "Registered under <literal>class</literal> and <literal>java.lang.Class</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: classname
 #: type.xml:490
 #, no-c-format
-msgid "java.sql.Clob"
+msgid "java.sql.Blob"
 msgstr ""
 
 #. Tag: classname
 #: type.xml:493
 #, no-c-format
-msgid "org.hibernate.type.ClobType"
+msgid "org.hibernate.type.BlobType"
 msgstr ""
 
 #. Tag: para
 #: type.xml:495
 #, no-c-format
-msgid "Maps a <classname>java.sql.Clob</classname> to a JDBC CLOB"
+msgid "Maps a <classname>java.sql.Blob</classname> to a JDBC BLOB"
 msgstr ""
 
 #. Tag: para
 #: type.xml:498
 #, no-c-format
-msgid "Registered under <literal>clob</literal> and <literal>java.sql.Clob</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
-msgstr ""
-
-#. Tag: title
-#: type.xml:507 type.xml:536
-#, no-c-format
-msgid "byte[]"
+msgid "Registered under <literal>blob</literal> and <literal>java.sql.Blob</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: classname
-#: type.xml:510 type.xml:539
+#: type.xml:507
 #, no-c-format
-msgid "org.hibernate.type.BinaryType"
+msgid "java.sql.Clob"
+msgstr ""
+
+#. Tag: classname
+#: type.xml:510
+#, no-c-format
+msgid "org.hibernate.type.ClobType"
 msgstr ""
 
 #. Tag: para
 #: type.xml:512
 #, no-c-format
-msgid "Maps a primitive byte[] to a JDBC VARBINARY"
+msgid "Maps a <classname>java.sql.Clob</classname> to a JDBC CLOB"
 msgstr ""
 
 #. Tag: para
 #: type.xml:515
 #, no-c-format
+msgid "Registered under <literal>clob</literal> and <literal>java.sql.Clob</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgstr ""
+
+#. Tag: title
+#: type.xml:524
+#, no-c-format
+msgid "byte[]"
+msgstr ""
+
+#. Tag: classname
+#: type.xml:527 type.xml:568
+#, no-c-format
+msgid "org.hibernate.type.BinaryType"
+msgstr ""
+
+#. Tag: para
+#: type.xml:529
+#, no-c-format
+msgid "Maps a primitive byte[] to a JDBC VARBINARY"
+msgstr ""
+
+#. Tag: para
+#: type.xml:532
+#, no-c-format
 msgid "Registered under <literal>binary</literal> and <literal>byte[]</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: classname
-#: type.xml:522
+#: type.xml:539
 #, no-c-format
 msgid "org.hibernate.type.MaterializedBlobType"
 msgstr ""
 
 #. Tag: para
-#: type.xml:524
+#: type.xml:541
 #, no-c-format
 msgid "Maps a primitive byte[] to a JDBC BLOB"
 msgstr ""
 
 #. Tag: para
-#: type.xml:527
+#: type.xml:544
 #, no-c-format
 msgid "Registered under <literal>materialized_blob</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
+#. Tag: classname
+#: type.xml:551
+#, no-c-format
+msgid "org.hibernate.type.ImageType"
+msgstr ""
+
 #. Tag: para
-#: type.xml:541
+#: type.xml:553
+#, no-c-format
+msgid "Maps a primitive byte[] to a JDBC LONGVARBINARY"
+msgstr ""
+
+#. Tag: para
+#: type.xml:556
+#, no-c-format
+msgid "Registered under <literal>image</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgstr ""
+
+#. Tag: title
+#: type.xml:565
+#, no-c-format
+msgid "Byte[]"
+msgstr ""
+
+#. Tag: para
+#: type.xml:570
 #, no-c-format
 msgid "Maps a java.lang.Byte[] to a JDBC VARBINARY"
 msgstr ""
 
 #. Tag: para
-#: type.xml:544
+#: type.xml:573
 #, no-c-format
 msgid "Registered under <literal>wrapper-binary</literal>, <literal>Byte[]</literal> and <literal>java.lang.Byte[]</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: title
-#: type.xml:553 type.xml:570
+#: type.xml:582
 #, no-c-format
 msgid "char[]"
 msgstr ""
 
 #. Tag: classname
-#: type.xml:556
+#: type.xml:585
 #, no-c-format
 msgid "org.hibernate.type.CharArrayType"
 msgstr ""
 
 #. Tag: para
-#: type.xml:558
+#: type.xml:587
 #, no-c-format
 msgid "Maps a char[] to a JDBC VARCHAR"
 msgstr ""
 
 #. Tag: para
-#: type.xml:561
+#: type.xml:590
 #, no-c-format
 msgid "Registered under <literal>characters</literal> and <literal>char[]</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
-#. Tag: classname
-#: type.xml:573
+#. Tag: title
+#: type.xml:599
 #, no-c-format
-msgid "org.hibernate.type.CharacterArrayType"
-msgstr ""
-
-#. Tag: para
-#: type.xml:575
-#, no-c-format
-msgid "Maps a java.lang.Character[] to a JDBC VARCHAR"
-msgstr ""
-
-#. Tag: para
-#: type.xml:578
-#, no-c-format
-msgid "Registered under <literal>wrapper-characters</literal>, <literal>Character[]</literal> and <literal>java.lang.Character[]</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
-msgstr ""
-
-#. Tag: classname
-#: type.xml:587
-#, no-c-format
-msgid "java.util.UUID"
-msgstr ""
-
-#. Tag: classname
-#: type.xml:590
-#, no-c-format
-msgid "org.hibernate.type.UUIDBinaryType"
-msgstr ""
-
-#. Tag: para
-#: type.xml:592
-#, no-c-format
-msgid "Maps a java.util.UUID to a JDBC BINARY"
-msgstr ""
-
-#. Tag: para
-#: type.xml:595
-#, no-c-format
-msgid "Registered under <literal>uuid-binary</literal> and <literal>java.util.UUID</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgid "Character[]"
 msgstr ""
 
 #. Tag: classname
 #: type.xml:602
 #, no-c-format
-msgid "org.hibernate.type.UUIDCharType"
+msgid "org.hibernate.type.CharacterArrayType"
 msgstr ""
 
 #. Tag: para
 #: type.xml:604
 #, no-c-format
-msgid "Maps a java.util.UUID to a JDBC CHAR (though VARCHAR is fine too for existing schemas)"
+msgid "Maps a java.lang.Character[] to a JDBC VARCHAR"
 msgstr ""
 
 #. Tag: para
 #: type.xml:607
 #, no-c-format
+msgid "Registered under <literal>wrapper-characters</literal>, <literal>Character[]</literal> and <literal>java.lang.Character[]</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgstr ""
+
+#. Tag: classname
+#: type.xml:616
+#, no-c-format
+msgid "java.util.UUID"
+msgstr ""
+
+#. Tag: classname
+#: type.xml:619
+#, no-c-format
+msgid "org.hibernate.type.UUIDBinaryType"
+msgstr ""
+
+#. Tag: para
+#: type.xml:621
+#, no-c-format
+msgid "Maps a java.util.UUID to a JDBC BINARY"
+msgstr ""
+
+#. Tag: para
+#: type.xml:624
+#, no-c-format
+msgid "Registered under <literal>uuid-binary</literal> and <literal>java.util.UUID</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
+msgstr ""
+
+#. Tag: classname
+#: type.xml:631
+#, no-c-format
+msgid "org.hibernate.type.UUIDCharType"
+msgstr ""
+
+#. Tag: para
+#: type.xml:633
+#, no-c-format
+msgid "Maps a java.util.UUID to a JDBC CHAR (though VARCHAR is fine too for existing schemas)"
+msgstr ""
+
+#. Tag: para
+#: type.xml:636
+#, no-c-format
 msgid "Registered under <literal>uuid-char</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: classname
-#: type.xml:614
+#: type.xml:643
 #, no-c-format
 msgid "org.hibernate.type.PostgresUUIDType"
 msgstr ""
 
 #. Tag: para
-#: type.xml:616
+#: type.xml:645
 #, no-c-format
 msgid "Maps a java.util.UUID to the PostgreSQL UUID data type (through <literal>Types#OTHER</literal> which is how the PostgreSQL JDBC driver defines it)."
 msgstr ""
 
 #. Tag: para
-#: type.xml:620
+#: type.xml:649
 #, no-c-format
 msgid "Registered under <literal>pg-uuid</literal> in the type registry (see <xref linkend=\"types-registry\"/>)."
 msgstr ""
 
 #. Tag: interfacename
-#: type.xml:629
+#: type.xml:658
 #, no-c-format
 msgid "java.io.Serializable"
 msgstr ""
 
 #. Tag: classname
-#: type.xml:632
+#: type.xml:661
 #, no-c-format
 msgid "org.hibernate.type.SerializableType"
 msgstr ""
 
 #. Tag: para
-#: type.xml:634
+#: type.xml:663
 #, no-c-format
 msgid "Maps implementors of java.lang.Serializable to a JDBC VARBINARY"
 msgstr ""
 
 #. Tag: para
-#: type.xml:637
+#: type.xml:666
 #, no-c-format
 msgid "Unlike the other value types, there are multiple instances of this type. It gets registered once under <interfacename>java.io.Serializable</interfacename>. Additionally it gets registered under the specific <interfacename>java.io.Serializable</interfacename> implementation class names."
 msgstr ""
 
 #. Tag: title
-#: type.xml:650
+#: type.xml:679
 #, no-c-format
 msgid "Composite types"
 msgstr ""
 
 #. Tag: para
-#: type.xml:652
+#: type.xml:681
 #, no-c-format
 msgid "The Java Persistence API calls these embedded types, while Hibernate traditionally called them components. Just be aware that both terms are used and mean the same thing in the scope of discussing Hibernate."
 msgstr ""
 
 #. Tag: para
-#: type.xml:658
+#: type.xml:687
 #, no-c-format
 msgid "Components represent aggregations of values into a single Java type. For example, you might have an Address class that aggregates street, city, state, etc information or a Name class that aggregates the parts of a person's Name. In many ways a component looks exactly like an entity. They are both (generally speaking) classes written specifically for the application. They both might have references to other application-specific classes, as well as to collections and simple JDK types. As discussed before, the only distinguishing factory is the fact that a component does not own its own lifecycle nor does it define an identifier."
 msgstr ""
 
 #. Tag: title
-#: type.xml:670
+#: type.xml:699
 #, no-c-format
 msgid "Collection types"
 msgstr ""
 
 #. Tag: para
-#: type.xml:672
+#: type.xml:701
 #, no-c-format
 msgid "It is critical understand that we mean the collection itself, not its contents. The contents of the collection can in turn be basic, component or entity types (though not collections), but the collection itself is owned."
 msgstr ""
 
 #. Tag: para
-#: type.xml:678
+#: type.xml:707
 #, no-c-format
 msgid "Collections are covered in <xref linkend=\"collections\"/>."
 msgstr ""
 
 #. Tag: title
-#: type.xml:686
+#: type.xml:715
 #, no-c-format
 msgid "Entity types"
 msgstr ""
 
 #. Tag: para
-#: type.xml:687
+#: type.xml:716
 #, no-c-format
 msgid "The definition of entities is covered in detail in <xref linkend=\"persistent-classes\"/>. For the purpose of this discussion, it is enough to say that entities are (generally application-specific) classes which correlate to rows in a table. Specifically they correlate to the row by means of a unique identifier. Because of this unique identifier, entities exist independently and define their own lifecycle. As an example, when we delete a <classname>Membership</classname>, both the <classname>User</classname> and <classname>Group</classname> entities remain."
 msgstr ""
 
 #. Tag: para
-#: type.xml:695
+#: type.xml:724
 #, no-c-format
 msgid "This notion of entity independence can be modified by the application developer using the concept of cascades. Cascades allow certain operations to continue (or \"cascade\") across an association from one entity to another. Cascades are covered in detail in <xref linkend=\"associations\"/>."
 msgstr ""
 
 #. Tag: title
-#: type.xml:705
+#: type.xml:734
 #, no-c-format
 msgid "Significance of type categories"
 msgstr ""
 
 #. Tag: para
-#: type.xml:706
+#: type.xml:735
 #, no-c-format
 msgid "Why do we spend so much time categorizing the various types of types? What is the significance of the distinction?"
 msgstr ""
 
 #. Tag: para
-#: type.xml:710
+#: type.xml:739
 #, no-c-format
 msgid "The main categorization was between entity types and value types. To review we said that entities, by nature of their unique identifier, exist independently of other objects whereas values do not. An application cannot \"delete\" a Product sku; instead, the sku is removed when the Product itself is deleted (obviously you can <emphasis>update</emphasis> the sku of that Product to null to make it \"go away\", but even there the access is done through the Product)."
 msgstr ""
 
 #. Tag: para
-#: type.xml:717
+#: type.xml:746
 #, no-c-format
 msgid "Nor can you define an association <emphasis>to</emphasis> that Product sku. You <emphasis>can</emphasis> define an association to Product <emphasis>based on</emphasis> its sku, assuming sku is unique, but that is totally different."
 msgstr ""
 
 #. Tag: para
-#: type.xml:722
+#: type.xml:751
 #, no-c-format
 msgid "TBC..."
 msgstr ""
 
 #. Tag: title
-#: type.xml:728
+#: type.xml:757
 #, no-c-format
 msgid "Custom types"
 msgstr ""
 
 #. Tag: para
-#: type.xml:729
+#: type.xml:758
 #, no-c-format
 msgid "Hibernate makes it relatively easy for developers to create their own <emphasis>value</emphasis> types. For example, you might want to persist properties of type <classname>java.lang.BigInteger</classname> to <literal>VARCHAR</literal> columns. Custom types are not limited to mapping values to a single table column. So, for example, you might want to concatenate together <literal>FIRST_NAME</literal>, <literal>INITIAL</literal> and <literal>SURNAME</literal> columns into a <classname>java.lang.String</classname>."
 msgstr ""
 
 #. Tag: para
-#: type.xml:737
+#: type.xml:766
 #, no-c-format
 msgid "There are 3 approaches to developing a custom Hibernate type. As a means of illustrating the different approaches, lets consider a use case where we need to compose a <classname>java.math.BigDecimal</classname> and <classname>java.util.Currency</classname> together into a custom <classname>Money</classname> class."
 msgstr ""
 
 #. Tag: title
-#: type.xml:744
+#: type.xml:773
 #, no-c-format
 msgid "Custom types using <interfacename>org.hibernate.type.Type</interfacename>"
 msgstr ""
 
 #. Tag: para
-#: type.xml:745
+#: type.xml:774
 #, no-c-format
 msgid "The first approach is to directly implement the <interfacename>org.hibernate.type.Type</interfacename> interface (or one of its derivatives). Probably, you will be more interested in the more specific <interfacename>org.hibernate.type.BasicType</interfacename> contract which would allow registration of the type (see <xref linkend=\"types-registry\"/>). The benefit of this registration is that whenever the metadata for a particular property does not specify the Hibernate type to use, Hibernate will consult the registry for the exposed property type. In our example, the property type would be <classname>Money</classname>, which is the key we would use to register our type in the registry:"
 msgstr ""
 
 #. Tag: title
-#: type.xml:756
+#: type.xml:785
 #, no-c-format
 msgid "Defining and registering the custom Type"
 msgstr ""
 
 #. Tag: programlisting
-#: type.xml:757
+#: type.xml:786
 #, no-c-format
 msgid ""
       "<![CDATA[public class MoneyType implements BasicType {\n"
@@ -1039,37 +1093,37 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: type.xml:760
+#: type.xml:789
 #, no-c-format
 msgid "It is important that we registered the type <emphasis>before</emphasis> adding mappings."
 msgstr ""
 
 #. Tag: title
-#: type.xml:767
+#: type.xml:796
 #, no-c-format
 msgid "Custom types using <interfacename>org.hibernate.usertype.UserType</interfacename>"
 msgstr ""
 
 #. Tag: para
-#: type.xml:769
+#: type.xml:798
 #, no-c-format
 msgid "Both <interfacename>org.hibernate.usertype.UserType</interfacename> and <interfacename>org.hibernate.usertype.CompositeUserType</interfacename> were originally added to isolate user code from internal changes to the <interfacename>org.hibernate.type.Type</interfacename> interfaces."
 msgstr ""
 
 #. Tag: para
-#: type.xml:776
+#: type.xml:805
 #, no-c-format
 msgid "The second approach is the use the <interfacename>org.hibernate.usertype.UserType</interfacename> interface, which presents a somewhat simplified view of the <interfacename>org.hibernate.type.Type</interfacename> interface. Using a <interfacename>org.hibernate.usertype.UserType</interfacename>, our <classname>Money</classname> custom type would look as follows:"
 msgstr ""
 
 #. Tag: title
-#: type.xml:783
+#: type.xml:812
 #, no-c-format
 msgid "Defining the custom UserType"
 msgstr ""
 
 #. Tag: programlisting
-#: type.xml:784
+#: type.xml:813
 #, no-c-format
 msgid ""
       "<![CDATA[public class MoneyType implements UserType {\n"
@@ -1110,31 +1164,31 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: type.xml:786
+#: type.xml:815
 #, no-c-format
 msgid "There is not much difference between the <interfacename>org.hibernate.type.Type</interfacename> example and the <interfacename>org.hibernate.usertype.UserType</interfacename> example, but that is only because of the snippets shown. If you choose the <interfacename>org.hibernate.type.Type</interfacename> approach there are quite a few more methods you would need to implement as compared to the <interfacename>org.hibernate.usertype.UserType</interfacename>."
 msgstr ""
 
 #. Tag: title
-#: type.xml:796
+#: type.xml:825
 #, no-c-format
 msgid "Custom types using <interfacename>org.hibernate.usertype.CompositeUserType</interfacename>"
 msgstr ""
 
 #. Tag: para
-#: type.xml:797
+#: type.xml:826
 #, no-c-format
 msgid "The third and final approach is the use the <interfacename>org.hibernate.usertype.CompositeUserType</interfacename> interface, which differs from <interfacename>org.hibernate.usertype.UserType</interfacename> in that it gives us the ability to provide Hibernate the information to handle the composition within the <classname>Money</classname> class (specifically the 2 attributes). This would give us the capability, for example, to reference the <literal>amount</literal> attribute in an HQL query. Using a <interfacename>org.hibernate.usertype.CompositeUserType</interfacename>, our <classname>Money</classname> custom type would look as follows:"
 msgstr ""
 
 #. Tag: title
-#: type.xml:808
+#: type.xml:837
 #, no-c-format
 msgid "Defining the custom CompositeUserType"
 msgstr ""
 
 #. Tag: programlisting
-#: type.xml:809
+#: type.xml:838
 #, no-c-format
 msgid ""
       "<![CDATA[public class MoneyType implements CompositeUserType {\n"
@@ -1217,31 +1271,31 @@ msgid ""
 msgstr ""
 
 #. Tag: title
-#: type.xml:816
+#: type.xml:845
 #, no-c-format
 msgid "Type registry"
 msgstr ""
 
 #. Tag: para
-#: type.xml:817
+#: type.xml:846
 #, no-c-format
 msgid "Internally Hibernate uses a registry of basic types (see <xref linkend=\"types-value-basic\"/>) when it needs to resolve the specific <interfacename>org.hibernate.type.Type</interfacename> to use in certain situations. It also provides a way for applications to add extra basic type registrations as well as override the standard basic type registrations."
 msgstr ""
 
 #. Tag: para
-#: type.xml:823
+#: type.xml:852
 #, no-c-format
 msgid "To register a new type or to override an existing type registration, applications would make use of the <methodname>registerTypeOverride</methodname> method of the <classname>org.hibernate.cfg.Configuration</classname> class when bootstrapping Hibernate. For example, lets say you want Hibernate to use your custom <classname>SuperDuperStringType</classname>; during bootstrap you would call:"
 msgstr ""
 
 #. Tag: title
-#: type.xml:830
+#: type.xml:859
 #, no-c-format
 msgid "Overriding the standard <classname>StringType</classname>"
 msgstr ""
 
 #. Tag: programlisting
-#: type.xml:831
+#: type.xml:860
 #, no-c-format
 msgid ""
       "<![CDATA[Configuration cfg = ...;\n"
@@ -1249,19 +1303,19 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: type.xml:833
+#: type.xml:862
 #, no-c-format
 msgid "The argument to <methodname>registerTypeOverride</methodname> is a <interfacename>org.hibernate.type.BasicType</interfacename> which is a specialization of the <interfacename>org.hibernate.type.Type</interfacename> we saw before. It adds a single method:"
 msgstr ""
 
 #. Tag: title
-#: type.xml:839
+#: type.xml:868
 #, no-c-format
 msgid "Snippet from BasicType.java"
 msgstr ""
 
 #. Tag: programlisting
-#: type.xml:840
+#: type.xml:869
 #, no-c-format
 msgid ""
       "/**\n"
@@ -1273,7 +1327,7 @@ msgid ""
 msgstr ""
 
 #. Tag: para
-#: type.xml:842
+#: type.xml:871
 #, no-c-format
 msgid "One approach is to use inheritance (<classname>SuperDuperStringType</classname> extends <classname>org.hibernate.type.StringType</classname>); another is to use delegation."
 msgstr ""

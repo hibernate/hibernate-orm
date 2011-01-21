@@ -5473,7 +5473,7 @@ class Home {
       support null semantics.</para>
     </section>
 
-    <section id="mapping-types-basictypes" revision="3">
+    <section id="mapping-types-basictypes" revision="4">
       <title>Basic value types</title>
 
       <para>The built-in <emphasis>basic mapping types</emphasis> can be
@@ -5573,8 +5573,16 @@ class Home {
             <term><literal>text</literal></term>
 
             <listitem>
-              <para>Maps long Java strings to a SQL <literal>CLOB</literal> or
+              <para>Maps long Java strings to a SQL <literal>LONGVARCHAR</literal> or
               <literal>TEXT</literal> type.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><literal>image</literal></term>
+
+            <listitem>
+              <para>Maps long byte arrays to a SQL <literal>LONGVARBINARY</literal>.</para>
             </listitem>
           </varlistentry>
 
@@ -5600,6 +5608,32 @@ class Home {
               inconvenient for some applications, since the blob or clob
               object cannot be reused outside of a transaction. Driver support
               is patchy and inconsistent.</para>
+            </listitem>
+          </varlistentry>
+
+           <varlistentry>
+            <term><literal>materialized_clob</literal></term>
+
+            <listitem>
+              <para>Maps long Java strings to a SQL <literal>CLOB</literal> 
+              type. When read, the <literal>CLOB</literal> value is
+              immediately materialized into a Java string. Some drivers 
+              require the <literal>CLOB</literal> value to be read within
+              a transaction. Once materialized, the Java string is 
+              available outside of the transaction.</para>
+            </listitem>
+          </varlistentry>
+
+           <varlistentry>
+            <term><literal>materialized_blob</literal></term>
+
+            <listitem>
+              <para>Maps long Java byte arrays to a SQL <literal>BLOB</literal> 
+              type. When read, the <literal>BLOB</literal> value is
+              immediately materialized into a byte array. Some drivers 
+              require the <literal>BLOB</literal> value to be read within
+              a transaction. Once materialized, the byte array is 
+              available outside of the transaction.</para>
             </listitem>
           </varlistentry>
 

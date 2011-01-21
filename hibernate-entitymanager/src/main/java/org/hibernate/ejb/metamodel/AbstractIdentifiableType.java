@@ -260,6 +260,7 @@ public abstract class AbstractIdentifiableType<X>
 
 			public void applyVersionAttribute(SingularAttributeImpl<X, ?> versionAttribute) {
 				AbstractIdentifiableType.this.version = versionAttribute;
+				managedBuilder.addAttribute( versionAttribute );
 			}
 
 			public void addAttribute(Attribute<X, ?> attribute) {

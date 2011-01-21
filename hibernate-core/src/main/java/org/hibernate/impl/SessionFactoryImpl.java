@@ -38,6 +38,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -176,8 +178,8 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient TransactionManager transactionManager;
 	private final transient QueryCache queryCache;
 	private final transient UpdateTimestampsCache updateTimestampsCache;
-	private final transient Map queryCaches;
-	private final transient Map allCacheRegions = new HashMap();
+	private final transient Map<String,QueryCache> queryCaches;
+	private final transient ConcurrentMap<String,Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
 	private final transient Statistics statistics;
 	private final transient EventListeners eventListeners;
 	private final transient CurrentSessionContext currentSessionContext;
@@ -391,7 +393,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			updateTimestampsCache = new UpdateTimestampsCache(settings, properties);
 			queryCache = settings.getQueryCacheFactory()
 			        .getQueryCache(null, updateTimestampsCache, settings, properties);
-			queryCaches = new HashMap();
+			queryCaches = new HashMap<String,QueryCache>();
 			allCacheRegions.put( updateTimestampsCache.getRegion().getName(), updateTimestampsCache.getRegion() );
 			allCacheRegions.put( queryCache.getRegion().getName(), queryCache.getRegion() );
 		}
@@ -1069,23 +1071,17 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		public void evictQueryRegion(String regionName) {
             if (regionName == null) throw new NullPointerException(
                                                                    "Region-name cannot be null (use Cache#evictDefaultQueryRegion to evict the default query cache)");
-            synchronized (allCacheRegions) {
-                if (settings.isQueryCacheEnabled()) {
-                    QueryCache namedQueryCache = (QueryCache)queryCaches.get(regionName);
-                    // TODO : cleanup entries in queryCaches + allCacheRegions ?
-                    if (namedQueryCache != null) namedQueryCache.clear();
-				}
+            if (settings.isQueryCacheEnabled()) {
+                QueryCache namedQueryCache = queryCaches.get(regionName);
+                // TODO : cleanup entries in queryCaches + allCacheRegions ?
+                if (namedQueryCache != null) namedQueryCache.clear();
 			}
 		}
 
 		public void evictQueryRegions() {
-			synchronized ( allCacheRegions ) {
-				Iterator regions = queryCaches.values().iterator();
-				while ( regions.hasNext() ) {
-					QueryCache cache = ( QueryCache ) regions.next();
-					cache.clear();
-					// TODO : cleanup entries in queryCaches + allCacheRegions ?
-				}
+			for ( QueryCache queryCache : queryCaches.values() ) {
+				queryCache.clear();
+				// TODO : cleanup entries in queryCaches + allCacheRegions ?
 			}
 		}
 	}
@@ -1145,27 +1141,22 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			return null;
 		}
 
-		synchronized ( allCacheRegions ) {
-			QueryCache currentQueryCache = ( QueryCache ) queryCaches.get( regionName );
-			if ( currentQueryCache == null ) {
-				currentQueryCache = settings.getQueryCacheFactory().getQueryCache( regionName, updateTimestampsCache, settings, properties );
-				queryCaches.put( regionName, currentQueryCache );
-				allCacheRegions.put( currentQueryCache.getRegion().getName(), currentQueryCache.getRegion() );
-			}
-			return currentQueryCache;
+		QueryCache currentQueryCache = queryCaches.get( regionName );
+		if ( currentQueryCache == null ) {
+			currentQueryCache = settings.getQueryCacheFactory().getQueryCache( regionName, updateTimestampsCache, settings, properties );
+			queryCaches.put( regionName, currentQueryCache );
+			allCacheRegions.put( currentQueryCache.getRegion().getName(), currentQueryCache.getRegion() );
 		}
+
+		return currentQueryCache;
 	}
 
 	public Region getSecondLevelCacheRegion(String regionName) {
-		synchronized ( allCacheRegions ) {
-			return ( Region ) allCacheRegions.get( regionName );
-		}
+		return allCacheRegions.get( regionName );
 	}
 
 	public Map getAllSecondLevelCacheRegions() {
-		synchronized ( allCacheRegions ) {
-			return new HashMap( allCacheRegions );
-		}
+		return new HashMap( allCacheRegions );
 	}
 
 	public boolean isClosed() {

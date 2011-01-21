@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache;
 import java.io.Serializable;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Settings;
@@ -48,6 +47,7 @@ public class UpdateTimestampsCache {
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
                                                                                 UpdateTimestampsCache.class.getName());
 
+	private ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 	private final TimestampsRegion region;
 
 	public UpdateTimestampsCache(Settings settings, Properties props) throws HibernateException {
@@ -57,49 +57,71 @@ public class UpdateTimestampsCache {
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
 	}
 
-	public synchronized void preinvalidate(Serializable[] spaces) throws CacheException {
-		//TODO: to handle concurrent writes correctly, this should return a Lock to the client
-		Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
-		for ( int i=0; i<spaces.length; i++ ) {
-            LOG.debugf("Pre-invalidating space [%s]", spaces[i]);
-			//put() has nowait semantics, is this really appropriate?
-			//note that it needs to be async replication, never local or sync
-			region.put( spaces[i], ts );
-		}
-		//TODO: return new Lock(ts);
-	}
+	@SuppressWarnings({"UnnecessaryBoxing"})
+	public void preinvalidate(Serializable[] spaces) throws CacheException {
+		// TODO: to handle concurrent writes correctly, this should return a Lock to the client
 
-	 public synchronized void invalidate(Serializable[] spaces) throws CacheException {
-	 	//TODO: to handle concurrent writes correctly, the client should pass in a Lock
-		Long ts = new Long( region.nextTimestamp() );
-		//TODO: if lock.getTimestamp().equals(ts)
-		for ( int i=0; i<spaces.length; i++ ) {
-            LOG.debugf("Invalidating space [%s], timestamp: %s", spaces[i], ts);
-			//put() has nowait semantics, is this really appropriate?
-			//note that it needs to be async replication, never local or sync
-			region.put( spaces[i], ts );
-		}
-	}
+		readWriteLock.writeLock().lock();
 
-	public synchronized boolean isUpToDate(Set spaces, Long timestamp) throws HibernateException {
-		Iterator iter = spaces.iterator();
-		while ( iter.hasNext() ) {
-			Serializable space = (Serializable) iter.next();
-			Long lastUpdate = (Long) region.get(space);
-			if ( lastUpdate==null ) {
-				//the last update timestamp was lost from the cache
-				//(or there were no updates since startup!)
-				//updateTimestamps.put( space, new Long( updateTimestamps.nextTimestamp() ) );
-				//result = false; // safer
+		try {
+			Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
+			for ( Serializable space : spaces ) {
+	            LOG.debugf("Pre-invalidating space [%s]", space);
+				//put() has nowait semantics, is this really appropriate?
+				//note that it needs to be async replication, never local or sync
+				region.put( space, ts );
 			}
-			else {
-                LOG.debugf("[%s] last update timestamp: %s", space, lastUpdate + ", result set timestamp: " + timestamp);
-				if ( lastUpdate.longValue() >= timestamp.longValue() ) {
-					return false;
+			//TODO: return new Lock(ts);
+		}
+		finally {
+			readWriteLock.writeLock().unlock();
+		}
+	}
+
+	 @SuppressWarnings({"UnnecessaryBoxing"})
+	public void invalidate(Serializable[] spaces) throws CacheException {
+		//TODO: to handle concurrent writes correctly, the client should pass in a Lock
+
+		readWriteLock.writeLock().lock();
+
+		try {
+			Long ts = new Long( region.nextTimestamp() );
+			//TODO: if lock.getTimestamp().equals(ts)
+			for (Serializable space : spaces) {
+		        LOG.debugf("Invalidating space [%s], timestamp: %s", space, ts);
+		        //put() has nowait semantics, is this really appropriate?
+				//note that it needs to be async replication, never local or sync
+				region.put( space, ts );
+			}
+		}
+		finally {
+		    readWriteLock.writeLock().unlock();
+		}
+	}
+
+	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
+	public boolean isUpToDate(Set spaces, Long timestamp) throws HibernateException {
+		readWriteLock.readLock().lock();
+
+		try {
+			for ( Serializable space : (Set<Serializable>) spaces ) {
+				Long lastUpdate = (Long) region.get( space );
+				if ( lastUpdate == null ) {
+					//the last update timestamp was lost from the cache
+					//(or there were no updates since startup!)
+					//updateTimestamps.put( space, new Long( updateTimestamps.nextTimestamp() ) );
+					//result = false; // safer
+				}
+				else {
+	                LOG.debugf("[%s] last update timestamp: %s", space, lastUpdate + ", result set timestamp: " + timestamp);
+					if ( lastUpdate.longValue() >= timestamp.longValue() ) return false;
 				}
 			}
+			return true;
 		}
-		return true;
+		finally {
+			readWriteLock.readLock().unlock();
+		}
 	}
 
 	public void clear() throws CacheException {
@@ -121,7 +143,7 @@ public class UpdateTimestampsCache {
 
 	@Override
     public String toString() {
-		return "UpdateTimestampeCache";
+        return "UpdateTimestampsCache";
 	}
 
 }

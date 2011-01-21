@@ -46,21 +46,26 @@
     <files>
         <file>
             <source>../lgpl.txt</source>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <source>../hibernate_logo.gif</source>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <!-- todo : this should eventually become the release-notes bawany is working on -->
             <source>../changelog.txt</source>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <source>target/${project.artifactId}-${project.version}-all.jar</source>
             <destName>hibernate3.jar</destName>
+            <fileMode>0644</fileMode>
         </file>
         <file>
             <source>../testing/target/hibernate-testing-${project.version}.jar</source>
             <destName>hibernate-testing.jar</destName>
+            <fileMode>0644</fileMode>
         </file>
     </files>
 

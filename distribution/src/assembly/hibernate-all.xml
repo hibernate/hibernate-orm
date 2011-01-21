@@ -49,6 +49,7 @@
             <excludes>
                 <exclude>org.hibernate:hibernate-tools:*</exclude>
                 <exclude>org.hibernate:jtidy:*</exclude>
+                <exclude>org.hibernate:hibernate-distribution:*</exclude>
             </excludes>
         </dependencySet>
     </dependencySets>

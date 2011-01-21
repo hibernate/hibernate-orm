@@ -529,6 +529,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		list.add( new Id("123456789", order.getId().getOrderNumber(), "1234") );
 		query.setParameterList( "idList", list );
 		assertEquals( 2, query.list().size() );
+
+		query = s.createQuery( "from LineItem l where l.id in :idList" );
+		query.setParameterList( "idList", list );
+		assertEquals( 2, query.list().size() );
+
 		s.getTransaction().rollback();
 		s.close();
 		
@@ -695,6 +700,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.createQuery( "from Human where name.last in (?1)" )
 				.setParameterList( "1", params )
 				.list();
+
+		s.createQuery( "from Human where name.last in ?1" )
+				.setParameterList( "1", params )
+				.list();
+
 		s.getTransaction().commit();
 		s.close();
 	}

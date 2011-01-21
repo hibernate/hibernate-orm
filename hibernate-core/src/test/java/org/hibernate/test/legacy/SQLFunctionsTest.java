@@ -169,10 +169,18 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		q.setProperties(single);
 		assertTrue( q.list().get(0)==simple );
 
+		q = s.createQuery("from Simple s where s.name in :several");
+		q.setProperties(single);
+		assertTrue( q.list().get(0)==simple );
 
 		q = s.createQuery("from Simple s where s.name in (:stuff)");
 		q.setProperties(single);
 		assertTrue( q.list().get(0)==simple );
+
+		q = s.createQuery("from Simple s where s.name in :stuff");
+		q.setProperties(single);
+		assertTrue( q.list().get(0)==simple );
+
 		s.delete(simple);
 		t.commit();
 		s.close();

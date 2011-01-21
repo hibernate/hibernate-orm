@@ -282,7 +282,7 @@ public class CompositeIdTest extends TestCase {
         ids.add( new SomeEntityId(1,12) );
         ids.add( new SomeEntityId(10,23) );
         ids.add( new SomeEntityId(10,22) );
-        Query query=s.createQuery( "from SomeEntity e where e.id in (:idList)" );
+        Query query=s.createQuery( "from SomeEntity e where e.id in :idList" );
         query.setParameterList( "idList", ids );
         List list=query.list();
         assertEquals( 3, list.size() );

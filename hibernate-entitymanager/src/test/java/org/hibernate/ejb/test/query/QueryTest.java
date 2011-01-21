@@ -3,6 +3,9 @@ package org.hibernate.ejb.test.query;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
@@ -11,7 +14,6 @@ import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.TestCase;
 import org.hibernate.ejb.test.Wallet;
-
 
 /**
  * @author Emmanuel Bernard
@@ -63,6 +65,54 @@ public class QueryTest extends TestCase {
 		em.getTransaction().commit();
 
 		em.getTransaction().begin();
+		Query q = em.createQuery( "select item from Item item where item.name in :names" );
+		//test hint in value and string
+		q.setHint( "org.hibernate.fetchSize", 10 );
+		q.setHint( "org.hibernate.fetchSize", "10" );
+		List params = new ArrayList();
+		params.add( item.getName() );
+		q.setParameter( "names", params );
+		List result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 1, result.size() );
+
+		q = em.createQuery( "select item from Item item where item.name in :names" );
+		//test hint in value and string
+		q.setHint( "org.hibernate.fetchSize", 10 );
+		q.setHint( "org.hibernate.fetchSize", "10" );
+		params.add( item2.getName() );
+		q.setParameter( "names", params );
+		result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 2, result.size() );
+
+		q = em.createQuery( "select item from Item item where item.name in ?1" );
+		params = new ArrayList();
+		params.add( item.getName() );
+		params.add( item2.getName() );
+		q.setParameter( "1", params );
+		result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 2, result.size() );
+		em.remove( result.get( 0 ) );
+		em.remove( result.get( 1 ) );
+		em.getTransaction().commit();
+
+		em.close();
+	}
+
+	public void testParameterListInExistingParens() throws Exception {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( item );
+		em.persist( item2 );
+		assertTrue( em.contains( item ) );
+		em.getTransaction().commit();
+
+		em.getTransaction().begin();
 		Query q = em.createQuery( "select item from Item item where item.name in (:names)" );
 		//test hint in value and string
 		q.setHint( "org.hibernate.fetchSize", 10 );
@@ -72,6 +122,18 @@ public class QueryTest extends TestCase {
 		params.add( item2.getName() );
 		q.setParameter( "names", params );
 		List result = q.getResultList();
+		assertNotNull( result );
+		assertEquals( 2, result.size() );
+
+		q = em.createQuery( "select item from Item item where item.name in ( \n :names \n)\n" );
+		//test hint in value and string
+		q.setHint( "org.hibernate.fetchSize", 10 );
+		q.setHint( "org.hibernate.fetchSize", "10" );
+		params = new ArrayList();
+		params.add( item.getName() );
+		params.add( item2.getName() );
+		q.setParameter( "names", params );
+		result = q.getResultList();
 		assertNotNull( result );
 		assertEquals( 2, result.size() );
 
@@ -199,7 +261,7 @@ public class QueryTest extends TestCase {
 		em.persist( w );
 		em.getTransaction().commit();
 		em.getTransaction().begin();
-		Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.brand in (?1)" );
+		Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.brand in ?1" );
 		List brands = new ArrayList();
 		brands.add( "Lacoste" );
 		query.setParameter( 1, brands );

@@ -748,8 +748,35 @@ public abstract class AbstractQueryImpl implements Query {
 	private String expandParameterList(String query, String name, TypedValue typedList, Map namedParamsCopy) {
 		Collection vals = (Collection) typedList.getValue();
 		Type type = typedList.getType();
-		if ( vals.size() == 1 ) {
-			// short-circuit for performance...
+
+		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();
+		String paramPrefix = isJpaPositionalParam ? "?" : ParserHelper.HQL_VARIABLE_PREFIX;
+		String placeholder =
+				new StringBuffer( paramPrefix.length() + name.length() )
+						.append( paramPrefix ).append(  name )
+						.toString();
+
+		if ( query == null ) {
+			return query;
+		}
+		int loc = query.indexOf( placeholder );
+
+		if ( loc < 0 ) {
+			return query;
+		}
+
+		String beforePlaceholder = query.substring( 0, loc );
+		String afterPlaceholder =  query.substring( loc + placeholder.length() );
+
+		// check if placeholder is already immediately enclosed in parentheses
+		// (ignoring whitespace)
+		boolean isEnclosedInParens =
+				StringHelper.getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' &&
+				StringHelper.getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')';
+
+		if ( vals.size() == 1  && isEnclosedInParens ) {
+			// short-circuit for performance when only 1 value and the
+			// placeholder is already enclosed in parentheses...
 			namedParamsCopy.put( name, new TypedValue( type, vals.iterator().next(), session.getEntityMode() ) );
 			return query;
 		}
@@ -757,7 +784,6 @@ public abstract class AbstractQueryImpl implements Query {
 		StringBuffer list = new StringBuffer( 16 );
 		Iterator iter = vals.iterator();
 		int i = 0;
-		boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor( name ).isJpaStyle();
 		while ( iter.hasNext() ) {
 			String alias = ( isJpaPositionalParam ? 'x' + name : name ) + i++ + '_';
 			namedParamsCopy.put( alias, new TypedValue( type, iter.next(), session.getEntityMode() ) );
@@ -766,8 +792,14 @@ public abstract class AbstractQueryImpl implements Query {
 				list.append( ", " );
 			}
 		}
-		String paramPrefix = isJpaPositionalParam ? "?" : ParserHelper.HQL_VARIABLE_PREFIX;
-		return StringHelper.replace( query, paramPrefix + name, list.toString(), true );
+		return StringHelper.replace(
+				beforePlaceholder,
+				afterPlaceholder,
+				placeholder.toString(),
+				list.toString(),
+				true,
+				true
+		);
 	}
 
 	public Query setParameterList(String name, Collection vals) throws HibernateException {

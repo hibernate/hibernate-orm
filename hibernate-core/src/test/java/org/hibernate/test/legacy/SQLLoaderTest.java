@@ -109,9 +109,21 @@ public class SQLLoaderTest extends LegacyTestCase {
 			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in (:names)", "category", Category.class);
 			String[] str = new String[] { "WannaBeFound", "NotThere" };
 			query.setParameterList("names", str);
-			
 			query.uniqueResult();
-			
+
+			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in :names", "category", Category.class);
+			query.setParameterList("names", str);
+			query.uniqueResult();
+
+			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in (:names)", "category", Category.class);
+			str = new String[] { "WannaBeFound" };
+			query.setParameterList("names", str);
+			query.uniqueResult();
+
+			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in :names", "category", Category.class);
+			query.setParameterList("names", str);			
+			query.uniqueResult();
+
 			session.connection().commit();
 			session.close();
 			

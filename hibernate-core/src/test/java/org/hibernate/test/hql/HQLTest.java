@@ -103,6 +103,7 @@ public class HQLTest extends QueryTranslatorTestCase {
      */
     public void testRowValueConstructorSyntaxInInListFailureExpected() {
         assertTranslation( "from LineItem l where l.id in (:idList)" );
+		assertTranslation( "from LineItem l where l.id in :idList" );
     }
 
     public void testRowValueConstructorSyntaxInInList() {
@@ -110,9 +111,13 @@ public class HQLTest extends QueryTranslatorTestCase {
     		return;
 		QueryTranslatorImpl translator = createNewQueryTranslator("from LineItem l where l.id in (?)");
 		assertInExist("'in' should be translated to 'and'", false, translator);
+		translator = createNewQueryTranslator("from LineItem l where l.id in ?");
+		assertInExist("'in' should be translated to 'and'", false, translator);
 		translator = createNewQueryTranslator("from LineItem l where l.id in (('a1',1,'b1'),('a2',2,'b2'))");
 		assertInExist("'in' should be translated to 'and'", false, translator);
 		translator = createNewQueryTranslator("from Animal a where a.id in (?)");
+		assertInExist("only translate tuple with 'in' syntax", true, translator);
+		translator = createNewQueryTranslator("from Animal a where a.id in ?");
 		assertInExist("only translate tuple with 'in' syntax", true, translator);
 		translator = createNewQueryTranslator("from LineItem l where l.id in (select a1 from Animal a1 left join a1.offspring o where a1.id = 1)");
 		assertInExist("do not translate subqueries", true, translator);

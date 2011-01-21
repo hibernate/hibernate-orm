@@ -106,6 +106,14 @@ public final class StringHelper {
 	}
 
 	public static String replace(String template, String placeholder, String replacement, boolean wholeWords) {
+		return replace( template, placeholder, replacement, wholeWords, false );
+	}
+
+	public static String replace(String template,
+								 String placeholder,
+								 String replacement,
+								 boolean wholeWords,
+								 boolean encloseInParensIfNecessary) {
 		if ( template == null ) {
 			return template;
 		}
@@ -114,19 +122,71 @@ public final class StringHelper {
 			return template;
 		}
 		else {
-			final boolean actuallyReplace = !wholeWords ||
-					loc + placeholder.length() == template.length() ||
-					!Character.isJavaIdentifierPart( template.charAt( loc + placeholder.length() ) );
-			String actualReplacement = actuallyReplace ? replacement : placeholder;
-			return new StringBuffer( template.substring( 0, loc ) )
-					.append( actualReplacement )
-					.append( replace( template.substring( loc + placeholder.length() ),
-							placeholder,
-							replacement,
-							wholeWords ) ).toString();
+			String beforePlaceholder = template.substring( 0, loc );
+			String afterPlaceholder = template.substring( loc + placeholder.length() );
+			return replace( beforePlaceholder, afterPlaceholder, placeholder, replacement, wholeWords, encloseInParensIfNecessary );
 		}
 	}
 
+
+	public static String replace(String beforePlaceholder,
+								 String afterPlaceholder,
+								 String placeholder,
+								 String replacement,
+								 boolean wholeWords,
+								 boolean encloseInParensIfNecessary) {
+		final boolean actuallyReplace =
+				! wholeWords ||
+				afterPlaceholder.length() == 0 ||
+				! Character.isJavaIdentifierPart( afterPlaceholder.charAt( 0 ) );
+		boolean encloseInParens =
+				actuallyReplace &&
+				encloseInParensIfNecessary &&
+				! ( getLastNonWhitespaceCharacter( beforePlaceholder ) == '(' ) &&
+				! ( getFirstNonWhitespaceCharacter( afterPlaceholder ) == ')' );		
+		StringBuilder buf = new StringBuilder( beforePlaceholder );
+		if ( encloseInParens ) {
+			buf.append( '(' );
+		}
+		buf.append( actuallyReplace ? replacement : placeholder );
+		if ( encloseInParens ) {
+			buf.append( ')' );
+		}
+		buf.append(
+				replace(
+						afterPlaceholder,
+						placeholder,
+						replacement,
+						wholeWords,
+						encloseInParensIfNecessary
+				)
+		);
+		return buf.toString();
+	}
+
+	public static char getLastNonWhitespaceCharacter(String str) {
+		if ( str != null && str.length() > 0 ) {
+			for ( int i = str.length() - 1 ; i >= 0 ; i-- ) {
+				char ch = str.charAt( i );
+				if ( ! Character.isWhitespace( ch ) ) {
+					return ch;
+				}
+			}
+		}
+		return '\0';
+	}
+
+	public static char getFirstNonWhitespaceCharacter(String str) {
+		if ( str != null && str.length() > 0 ) {
+			for ( int i = 0 ; i < str.length() ; i++ ) {
+				char ch = str.charAt( i );
+				if ( ! Character.isWhitespace( ch ) ) {
+					return ch;
+				}
+			}
+		}
+		return '\0';
+	}
 
 	public static String replaceOnce(String template, String placeholder, String replacement) {
 		if ( template == null ) {

@@ -73,11 +73,12 @@ import org.hibernate.engine.SessionFactoryImplementor;
 public class ThreadLocalSessionContext implements CurrentSessionContext {
 
 	private static final Logger log = LoggerFactory.getLogger( ThreadLocalSessionContext.class );
-	private static final Class[] SESS_PROXY_INTERFACES = new Class[] {
+	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
 			org.hibernate.classic.Session.class,
 	        org.hibernate.engine.SessionImplementor.class,
 	        org.hibernate.jdbc.JDBCContext.Context.class,
-	        org.hibernate.event.EventSource.class
+	        org.hibernate.event.EventSource.class,
+			org.hibernate.engine.jdbc.LobCreationContext.class
 	};
 
 	/**
@@ -182,7 +183,7 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 		TransactionProtectionWrapper wrapper = new TransactionProtectionWrapper( session );
 		Session wrapped = ( Session ) Proxy.newProxyInstance(
 				Session.class.getClassLoader(),
-		        SESS_PROXY_INTERFACES,
+				SESSION_PROXY_INTERFACES,
 		        wrapper
 			);
 		// yick!  need this for proper serialization/deserialization handling...

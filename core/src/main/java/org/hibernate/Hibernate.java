@@ -453,7 +453,8 @@ public final class Hibernate {
 	 * @param bytes a byte array
 	 * @param session The session in which the {@link Blob} will be used.
 	 * @return the Blob
-	 * @deprecated Use {@link LobHelper#createBlob(byte[])} instead.
+	 * @deprecated Use {@link LobHelper#createBlob(byte[])} instead on the {@link LobHelper} obtained from
+	 * {@link Session#getLobHelper()}
 	 */
 	public static Blob createBlob(byte[] bytes, Session session) {
 		return getLobCreator( session ).createBlob( bytes );
@@ -553,7 +554,8 @@ public final class Hibernate {
 	 * @param string The string data
 	 * @param session The session in which the {@link Clob} will be used.
 	 * @return The created {@link Clob}
-	 * @deprecated Use {@link LobHelper#createClob(String)} instead
+	 * @deprecated Use {@link LobHelper#createClob(String)} instead on the {@link LobHelper} obtained from
+	 * {@link Session#getLobHelper()}
 	 */
 	@Deprecated
 	public static Clob createClob(String string, Session session) {

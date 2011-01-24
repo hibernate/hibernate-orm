@@ -174,6 +174,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
       assertEquals(1, contactsCollectionSlcs.getElementCountInMemory());
       assertEquals(1, contactsCollectionSlcs.getEntries().size());
 
+      log.info("Add contact to customer {0}", customerId);
       final Contact contact = addContact(customerId);
       assertNotNull("contact returned by addContact is null", contact);
       assertEquals("Customer.contacts cache was not invalidated after addContact", 0,

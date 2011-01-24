@@ -43,6 +43,8 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
          commitOrRollbackTx();
       }
 
+      log.info("Entry persisted, let's load and delete it.");
+
       beginTx();
       try {
          Session s = openSession();
@@ -246,7 +248,7 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
    }
    
    public void testQueryCache() throws Exception {
-      Session s = null;
+      Session s;
       Item item = new Item("chris", "Chris's Item");
       
       beginTx();

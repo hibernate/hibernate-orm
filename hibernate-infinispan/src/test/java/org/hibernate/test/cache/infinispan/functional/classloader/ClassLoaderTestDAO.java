@@ -159,16 +159,11 @@ public class ClassLoaderTestDAO {
 
    public Account getAccount(Integer id) throws Exception {
       log.debug("Getting account " + id);
-      tm.begin();
+      Session session = sessionFactory.openSession();
       try {
-         Session session = sessionFactory.getCurrentSession();
-         Account acct = (Account) session.get(acctClass, id);
-         tm.commit();
-         return acct;
-      } catch (Exception e) {
-         log.error("rolling back", e);
-         tm.rollback();
-         throw e;
+         return (Account) session.get(acctClass, id);
+      } finally {
+         session.close();
       }
    }
 

@@ -47,6 +47,8 @@ import org.infinispan.util.logging.LogFactory;
 
 /**
  * SimpleJtaTransactionImpl variant that works with DualNodeTransactionManagerImpl.
+ *
+ * TODO: Merge with single node transaction manager
  * 
  * @author Brian Stansberry
  */
@@ -77,12 +79,12 @@ public class DualNodeJtaTransactionImpl implements Transaction {
          rollback();
       } else {
          status = Status.STATUS_PREPARING;
-         
+
          for (int i = 0; i < synchronizations.size(); i++) {
             Synchronization s = (Synchronization) synchronizations.get(i);
             s.beforeCompletion();
          }
-         
+
          if (!runXaResourcePrepare()) {
             status = Status.STATUS_ROLLING_BACK;
          } else {
@@ -100,7 +102,6 @@ public class DualNodeJtaTransactionImpl implements Transaction {
                throw new SystemException();
             }
          }
-         
 
          runXaResourceCommitTx();
 
@@ -168,7 +169,7 @@ public class DualNodeJtaTransactionImpl implements Transaction {
 
    public boolean enlistResource(XAResource xaResource) throws RollbackException,
             IllegalStateException, SystemException {
-      enlistedResources.add(xaResource);
+      enlistedResources.add(new WrappedXaResource(xaResource));
       try {
          xaResource.start(xid, 0);
       } catch (XAException e) {
@@ -182,11 +183,11 @@ public class DualNodeJtaTransactionImpl implements Transaction {
             SystemException {
       throw new SystemException("not supported");
    }
-   
+
    public Collection<XAResource> getEnlistedResources() {
       return enlistedResources;
    }
-   
+
    private boolean runXaResourcePrepare() throws SystemException {
       Collection<XAResource> resources = getEnlistedResources();
       for (XAResource res : resources) {
@@ -194,7 +195,7 @@ public class DualNodeJtaTransactionImpl implements Transaction {
             res.prepare(xid);
          } catch (XAException e) {
             log.trace("The resource wants to rollback!", e);
-            throw new SystemException(e.getMessage());
+            return false;
          } catch (Throwable th) {
             log.error("Unexpected error from resource manager!", th);
             throw new SystemException(th.getMessage());
@@ -202,7 +203,7 @@ public class DualNodeJtaTransactionImpl implements Transaction {
       }
       return true;
    }
-   
+
    private void runXaResourceRollback() {
       Collection<XAResource> resources = getEnlistedResources();
       for (XAResource res : resources) {
@@ -226,7 +227,7 @@ public class DualNodeJtaTransactionImpl implements Transaction {
       }
       return true;
    }
-   
+
    private static class DualNodeJtaTransactionXid implements Xid {
       private static AtomicInteger txIdCounter = new AtomicInteger(0);
       private int id = txIdCounter.incrementAndGet();
@@ -248,6 +249,70 @@ public class DualNodeJtaTransactionImpl implements Transaction {
          return getClass().getSimpleName() + "{" +
                "id=" + id +
                '}';
+      }
+   }
+
+   private class WrappedXaResource implements XAResource {
+      private final XAResource xaResource;
+      private int prepareResult;
+
+      public WrappedXaResource(XAResource xaResource) {
+         this.xaResource = xaResource;
+      }
+
+      @Override
+      public void commit(Xid xid, boolean b) throws XAException {
+         // Commit only if not read only.
+         if (prepareResult != XAResource.XA_RDONLY)
+            xaResource.commit(xid, b);
+         else
+            log.trace("Not committing {0} due to readonly.", xid);
+      }
+
+      @Override
+      public void end(Xid xid, int i) throws XAException {
+         xaResource.end(xid, i);
+      }
+
+      @Override
+      public void forget(Xid xid) throws XAException {
+         xaResource.forget(xid);
+      }
+
+      @Override
+      public int getTransactionTimeout() throws XAException {
+         return xaResource.getTransactionTimeout();
+      }
+
+      @Override
+      public boolean isSameRM(XAResource xaResource) throws XAException {
+         return xaResource.isSameRM(xaResource);
+      }
+
+      @Override
+      public int prepare(Xid xid) throws XAException {
+         prepareResult = xaResource.prepare(xid);
+         return prepareResult;
+      }
+
+      @Override
+      public Xid[] recover(int i) throws XAException {
+         return xaResource.recover(i);
+      }
+
+      @Override
+      public void rollback(Xid xid) throws XAException {
+         xaResource.rollback(xid);
+      }
+
+      @Override
+      public boolean setTransactionTimeout(int i) throws XAException {
+         return xaResource.setTransactionTimeout(i);
+      }
+
+      @Override
+      public void start(Xid xid, int i) throws XAException {
+         xaResource.start(xid, i);
       }
    }
 }

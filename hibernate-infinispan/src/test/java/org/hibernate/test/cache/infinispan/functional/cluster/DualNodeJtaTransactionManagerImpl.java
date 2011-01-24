@@ -35,13 +35,16 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.hibernate.test.cache.infinispan.tm.XaTransactionManagerImpl;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
  * Variant of SimpleJtaTransactionManagerImpl that doesn't use a VM-singleton, but rather a set of
  * impls keyed by a node id.
- * 
+ *
+ * TODO: Merge with single node transaction manager as much as possible
+ *
  * @author Brian Stansberry
  */
 public class DualNodeJtaTransactionManagerImpl implements TransactionManager {

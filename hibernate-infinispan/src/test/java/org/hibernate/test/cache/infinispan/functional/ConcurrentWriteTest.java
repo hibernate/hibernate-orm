@@ -175,6 +175,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
       assertEquals(customerSlcs.getElementCountInMemory(), 1);
       assertEquals(customerSlcs.getEntries().size(), 1);
 
+      log.info("Add contact to customer {0}", customerId);
       SecondLevelCacheStatistics contactsCollectionSlcs = getEnvironment().getSessionFactory()
                .getStatistics().getSecondLevelCacheStatistics(Customer.class.getName() + ".contacts");
       assertEquals(1, contactsCollectionSlcs.getPutCount());

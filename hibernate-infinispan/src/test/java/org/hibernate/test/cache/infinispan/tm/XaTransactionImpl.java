@@ -48,6 +48,7 @@ import org.infinispan.util.logging.LogFactory;
  */
 public class XaTransactionImpl implements Transaction {
    private static final Log log = LogFactory.getLog(XaTransactionImpl.class);
+
    private int status;
    private LinkedList synchronizations;
    private Connection connection; // the only resource we care about is jdbc connection
@@ -58,6 +59,12 @@ public class XaTransactionImpl implements Transaction {
    public XaTransactionImpl(XaTransactionManagerImpl jtaTransactionManager) {
       this.jtaTransactionManager = jtaTransactionManager;
       this.status = Status.STATUS_ACTIVE;
+   }
+
+   public XaTransactionImpl(XaTransactionManagerImpl jtaTransactionManager, Xid xid) {
+      this.jtaTransactionManager = jtaTransactionManager;
+      this.status = Status.STATUS_ACTIVE;
+      this.xid = xid;
    }
 
    public int getStatus() {
@@ -78,7 +85,11 @@ public class XaTransactionImpl implements Transaction {
             s.beforeCompletion();
          }
          
-         runXaResourcePrepare();
+         if (!runXaResourcePrepare()) {
+            status = Status.STATUS_ROLLING_BACK;
+         } else {
+            status = Status.STATUS_PREPARED;
+         }
 
          status = Status.STATUS_COMMITTING;
 
@@ -107,6 +118,8 @@ public class XaTransactionImpl implements Transaction {
    }
 
    public void rollback() throws IllegalStateException, SystemException {
+      status = Status.STATUS_ROLLING_BACK;
+      runXaResourceRollback();
       status = Status.STATUS_ROLLEDBACK;
 
       if (connection != null) {
@@ -119,11 +132,11 @@ public class XaTransactionImpl implements Transaction {
          }
       }
       
-      runXaResourceRollback();
-
-      for (int i = 0; i < synchronizations.size(); i++) {
-         Synchronization s = (Synchronization) synchronizations.get(i);
-         s.afterCompletion(status);
+      if (synchronizations != null) {
+         for (int i = 0; i < synchronizations.size(); i++) {
+            Synchronization s = (Synchronization) synchronizations.get(i);
+            s.afterCompletion(status);
+         }
       }
 
       // status = Status.STATUS_NO_TRANSACTION;
@@ -156,7 +169,7 @@ public class XaTransactionImpl implements Transaction {
 
    public boolean enlistResource(XAResource xaResource) throws RollbackException, IllegalStateException,
             SystemException {
-      enlistedResources.add(xaResource);
+      enlistedResources.add(new WrappedXaResource(xaResource));
       try {
          xaResource.start(xid, 0);
       } catch (XAException e) {
@@ -235,6 +248,70 @@ public class XaTransactionImpl implements Transaction {
          return getClass().getSimpleName() + "{" +
                "id=" + id +
                '}';
+      }
+   }
+
+   private class WrappedXaResource implements XAResource {
+      private final XAResource xaResource;
+      private int prepareResult;
+
+      public WrappedXaResource(XAResource xaResource) {
+         this.xaResource = xaResource;
+      }
+
+      @Override
+      public void commit(Xid xid, boolean b) throws XAException {
+         // Commit only if not read only.
+         if (prepareResult != XAResource.XA_RDONLY)
+            xaResource.commit(xid, b);
+         else
+            log.trace("Not committing {0} due to readonly.", xid);
+      }
+
+      @Override
+      public void end(Xid xid, int i) throws XAException {
+         xaResource.end(xid, i);
+      }
+
+      @Override
+      public void forget(Xid xid) throws XAException {
+         xaResource.forget(xid);
+      }
+
+      @Override
+      public int getTransactionTimeout() throws XAException {
+         return xaResource.getTransactionTimeout();
+      }
+
+      @Override
+      public boolean isSameRM(XAResource xaResource) throws XAException {
+         return xaResource.isSameRM(xaResource);
+      }
+
+      @Override
+      public int prepare(Xid xid) throws XAException {
+         prepareResult = xaResource.prepare(xid);
+         return prepareResult;
+      }
+
+      @Override
+      public Xid[] recover(int i) throws XAException {
+         return xaResource.recover(i);
+      }
+
+      @Override
+      public void rollback(Xid xid) throws XAException {
+         xaResource.rollback(xid);
+      }
+
+      @Override
+      public boolean setTransactionTimeout(int i) throws XAException {
+         return xaResource.setTransactionTimeout(i);
+      }
+
+      @Override
+      public void start(Xid xid, int i) throws XAException {
+         xaResource.start(xid, i);
       }
    }
 }

@@ -38,7 +38,9 @@ import org.infinispan.util.logging.LogFactory;
 /**
  * Variant of SimpleJtaTransactionManagerImpl that doesn't use a VM-singleton, but rather a set of
  * impls keyed by a node id.
- * 
+ *
+ * TODO: Merge with single node transaction manager as much as possible
+ *
  * @author Brian Stansberry
  */
 public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
@@ -106,7 +108,7 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
 
    public void resume(Transaction transaction) throws InvalidTransactionException,
             IllegalStateException, SystemException {
-      currentTransaction.set((DualNodeJtaTransactionImpl) transaction);
+      currentTransaction.set(transaction);
       log.trace(nodeId + ": Resumed " + transaction + " for thread "
                + Thread.currentThread().getName());
    }
@@ -145,7 +147,8 @@ public class DualNodeJtaTransactionManagerImpl implements TransactionManager {
       }
    }
 
-   public String toString() {
+   @Override
+public String toString() {
       StringBuffer sb = new StringBuffer(getClass().getName());
       sb.append("[nodeId=");
       sb.append(nodeId);

@@ -556,7 +556,7 @@ public final class SessionImpl extends AbstractSessionImpl
 				interceptor.beforeTransactionCompletion(tx);
 			}
 			catch (Throwable t) {
-                LOG.error(LOG.exceptionInBeforeTransactionCompletionInterceptor(), t);
+                LOG.exceptionInBeforeTransactionCompletionInterceptor(t);
 			}
 		}
 	}
@@ -587,7 +587,7 @@ public final class SessionImpl extends AbstractSessionImpl
 				interceptor.afterTransactionCompletion(tx);
 			}
 			catch (Throwable t) {
-                LOG.error(LOG.exceptionInAfterTransactionCompletionInterceptor(), t);
+                LOG.exceptionInAfterTransactionCompletionInterceptor(t);
 			}
 		}
 		if ( autoClear ) {

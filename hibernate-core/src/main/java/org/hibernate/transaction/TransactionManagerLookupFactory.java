@@ -83,7 +83,7 @@ public final class TransactionManagerLookupFactory {
             LOG.instantiatedTransactionManagerLookup();
             return lookup;
         } catch (Exception e) {
-            LOG.error(LOG.unableToInstantiateTransactionManagerLookup(), e);
+            LOG.error(LOG.unableToInstantiateTransactionManagerLookup(tmLookupClass), e);
             throw new HibernateException(LOG.unableToInstantiateTransactionManagerLookup(tmLookupClass));
 		}
 	}

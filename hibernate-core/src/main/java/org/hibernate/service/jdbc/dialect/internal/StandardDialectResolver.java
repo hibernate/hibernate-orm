@@ -25,6 +25,7 @@ package org.hibernate.service.jdbc.dialect.internal;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import org.hibernate.Logger;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -98,14 +99,14 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 
 		if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
 			switch ( databaseMajorVersion ) {
-			case 8:
-				return new SQLServerDialect();
-			case 9:
-				return new SQLServer2005Dialect();
-			case 10:
-				return new SQLServer2008Dialect();
-			default:
-				log.warn( "Unknown Microsoft SQL Server major version [" + databaseMajorVersion + "] using SQL Server 2000 dialect" );
+                case 8:
+                    return new SQLServerDialect();
+                case 9:
+                    return new SQLServer2005Dialect();
+                case 10:
+                    return new SQLServer2008Dialect();
+                default:
+                    LOG.unknownSqlServerVersion(databaseMajorVersion);
 			}
 			return new SQLServerDialect();
 		}

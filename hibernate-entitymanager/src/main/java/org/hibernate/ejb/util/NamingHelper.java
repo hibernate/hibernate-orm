@@ -31,9 +31,9 @@ import javax.naming.event.NamespaceChangeListener;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
+import org.hibernate.Logger;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
 
 /**
@@ -42,8 +42,7 @@ import org.hibernate.internal.util.jndi.JndiHelper;
 public class NamingHelper {
 	private NamingHelper() {}
 
-    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                             EntityManagerLogger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, NamingHelper.class.getName());
 
 	/** bind the configuration to the JNDI */
 	public static void bind(Ejb3Configuration cfg) {
@@ -59,7 +58,7 @@ public class NamingHelper {
 				( (EventContext) ctx ).addNamingListener( name, EventContext.OBJECT_SCOPE, LISTENER );
 			}
 			catch (InvalidNameException ine) {
-                LOG.error(LOG.invalidJndiName(name), ine);
+                LOG.invalidJndiName(name, ine);
 			}
 			catch (NamingException ne) {
                 LOG.warn(LOG.unableToBindEjb3ConfigurationToJndi(), ne);

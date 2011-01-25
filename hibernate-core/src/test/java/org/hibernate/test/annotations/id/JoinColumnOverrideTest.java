@@ -1,7 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.id;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.hibernate.cfg.AnnotationConfiguration;

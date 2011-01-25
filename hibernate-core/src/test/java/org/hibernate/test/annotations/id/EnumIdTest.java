@@ -1,7 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.id;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;

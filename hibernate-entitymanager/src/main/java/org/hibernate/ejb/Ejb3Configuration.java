@@ -60,6 +60,7 @@ import javax.sql.DataSource;
 import org.dom4j.Element;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
@@ -117,8 +118,7 @@ import org.xml.sax.InputSource;
  */
 public class Ejb3Configuration implements Serializable, Referenceable {
 
-    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                             EntityManagerLogger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Ejb3Configuration.class.getName());
 	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();
 	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
 	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";

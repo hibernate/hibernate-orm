@@ -413,7 +413,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 					HibernateException e = ( HibernateException ) errors.get( queryName );
 					failingQueries.append( queryName );
                     if (iterator.hasNext()) failingQueries.append(", ");
-                    LOG.error(LOG.namedQueryError(queryName), e);
+                    LOG.namedQueryError(queryName, e);
 				}
 				throw new HibernateException( failingQueries.toString() );
 			}
@@ -1231,7 +1231,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 						.newInstance( new Object[] { this } );
 			}
 			catch( Throwable t ) {
-                LOG.error(LOG.unableToConstructCurrentSessionContext(impl), t);
+                LOG.unableToConstructCurrentSessionContext(impl, t);
 				return null;
 			}
 		}

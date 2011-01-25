@@ -115,7 +115,7 @@ public class CMTTransaction implements Transaction {
 			getTransaction().setRollbackOnly();
 		}
 		catch (SystemException se) {
-            LOG.error(LOG.unableToSetTransactionToRollbackOnly(), se);
+            LOG.unableToSetTransactionToRollbackOnly(se);
 			throw new TransactionException("Could not set transaction to rollback only", se);
 		}
 

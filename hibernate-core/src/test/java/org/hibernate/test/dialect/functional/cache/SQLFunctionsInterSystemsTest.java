@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.dialect.functional.cache;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;

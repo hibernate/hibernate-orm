@@ -198,7 +198,7 @@ public class TableGenerator extends TransactionHelper
 				rs.close();
 			}
 			catch (SQLException sqle) {
-                LOG.error(LOG.unableToReadHiValue(), sqle);
+                LOG.error(LOG.unableToReadHiValue(tableName), sqle);
 				throw sqle;
 			}
 			finally {

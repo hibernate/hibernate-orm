@@ -139,7 +139,7 @@ public class SchemaUpdate {
 			new SchemaUpdate( cfg ).execute( script, doUpdate );
 		}
 		catch ( Exception e ) {
-            LOG.error(LOG.unableToRunSchemaUpdate(), e);
+            LOG.unableToRunSchemaUpdate(e);
 			e.printStackTrace();
 		}
 	}
@@ -171,7 +171,7 @@ public class SchemaUpdate {
 			}
 			catch ( SQLException sqle ) {
 				exceptions.add( sqle );
-                LOG.error(LOG.unableToGetDatabaseMetadata(), sqle);
+                LOG.unableToGetDatabaseMetadata(sqle);
 				throw sqle;
 			}
 
@@ -218,7 +218,7 @@ public class SchemaUpdate {
 		}
 		catch ( Exception e ) {
 			exceptions.add( e );
-            LOG.error(LOG.unableToCompleteSchemaUpdate(), e);
+            LOG.unableToCompleteSchemaUpdate(e);
 		}
 		finally {
 
@@ -230,7 +230,7 @@ public class SchemaUpdate {
 			}
 			catch ( Exception e ) {
 				exceptions.add( e );
-                LOG.error(LOG.unableToCloseConnection(), e);
+                LOG.unableToCloseConnection(e);
 			}
 			try {
 				if( outputFileWriter != null ) {
@@ -239,7 +239,7 @@ public class SchemaUpdate {
 			}
 			catch(Exception e) {
 				exceptions.add(e);
-                LOG.error(LOG.unableToCloseConnection(), e);
+                LOG.unableToCloseConnection(e);
 			}
 		}
 	}

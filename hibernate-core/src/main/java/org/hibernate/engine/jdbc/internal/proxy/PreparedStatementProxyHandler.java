@@ -23,11 +23,11 @@
  */
 package org.hibernate.engine.jdbc.internal.proxy;
 
-import static org.hibernate.engine.jdbc.internal.proxy.AbstractStatementProxyHandler.LOG;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
+import org.hibernate.Logger;
 
 /**
  * Invocation handler for {@link java.sql.PreparedStatement} proxies
@@ -35,7 +35,9 @@ import java.util.Arrays;
  * @author Steve Ebersole
  */
 public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler {
-	private static final Logger log = LoggerFactory.getLogger( ConnectionProxyHandler.class );
+
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                PreparedStatementProxyHandler.class.getPackage().getName());
 
 	private final String sql;
 

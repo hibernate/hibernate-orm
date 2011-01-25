@@ -32,6 +32,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.hibernate.Logger;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -46,7 +47,7 @@ import org.hibernate.stat.StatisticsImplementor;
 public class ConnectionProxyHandler extends AbstractProxyHandler implements InvocationHandler, ConnectionObserver {
 
     private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractProxyHandler.class.getPackage().getName());
+                                                                                ConnectionProxyHandler.class.getPackage().getName());
 
 	private LogicalConnectionImplementor logicalConnection;
 

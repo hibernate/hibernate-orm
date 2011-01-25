@@ -108,7 +108,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 				( (EventContext) ctx ).addNamingListener(name, EventContext.OBJECT_SCOPE, LISTENER);
 			}
 			catch (InvalidNameException ine) {
-                LOG.error(LOG.invalidJndiName(name), ine);
+                LOG.invalidJndiName(name, ine);
 			}
 			catch (NamingException ne) {
                 LOG.warn(LOG.unableToBindFactoryToJndi(), ne);
@@ -131,7 +131,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
                 LOG.factoryUnboundFromJndiName(name);
 			}
 			catch (InvalidNameException ine) {
-                LOG.error(LOG.invalidJndiName(name), ine);
+                LOG.invalidJndiName(name, ine);
 			}
 			catch (NamingException ne) {
                 LOG.warn(LOG.unableToUnbindFactoryFromJndi(), ne);

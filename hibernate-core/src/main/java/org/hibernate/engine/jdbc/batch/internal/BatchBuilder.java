@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import org.hibernate.Logger;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;

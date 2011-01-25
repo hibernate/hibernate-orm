@@ -27,7 +27,6 @@ package org.hibernate.engine.jdbc.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.transaction.TransactionManager;
@@ -38,6 +37,7 @@ import org.hibernate.Logger;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.ConnectionManager;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.synchronization.CallbackCoordinator;
@@ -144,12 +144,6 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 	public Connection borrowConnection() {
 		return connectionManager.borrowConnection();
 	}
-	
-	@Override
-	public Connection connection() throws HibernateException {
-		if ( owner.isClosed() ) {
-			throw new SessionException( "Session is closed" );
-		}
 
 	public Connection connection() throws HibernateException {
         if (owner.isClosed()) throw new SessionException("Session is closed");

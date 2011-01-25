@@ -33,6 +33,7 @@ import java.util.List;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.Logger;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -361,21 +362,12 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * This form is used for user-supplied connections.
 	 */
 	public void reconnect(Connection suppliedConnection) {
-		if ( isClosed ) {
-			throw new IllegalStateException( "cannot manually reconnect because logical connection is already closed" );
-		}
+        if (isClosed) throw new IllegalStateException("cannot manually reconnect because logical connection is already closed");
 		if ( isUserSuppliedConnection ) {
-			if ( suppliedConnection == null ) {
-				throw new IllegalArgumentException( "cannot reconnect a null user-supplied connection" );
-			}
-			else if ( suppliedConnection == physicalConnection ) {
-				log.warn( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
-			}
-			else if ( physicalConnection != null ) {
-				throw new IllegalArgumentException(
-						"cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
-				);
-			}
+            if (suppliedConnection == null) throw new IllegalArgumentException("cannot reconnect a null user-supplied connection");
+            else if (suppliedConnection == physicalConnection) LOG.reconnectingConnectedConnection();
+            else if (physicalConnection != null) throw new IllegalArgumentException(
+                                                                                    "cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting.");
 			physicalConnection = suppliedConnection;
             LOG.debug("Reconnected JDBC connection");
 		}

@@ -1,7 +1,7 @@
 // $Id: ASTParserLoadingTest.java 11373 2007-03-29 19:09:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;

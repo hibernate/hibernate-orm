@@ -24,7 +24,6 @@
  */
 package org.hibernate.util;
 
-import static org.hibernate.LogUtil.TMP_LOG;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -118,7 +117,7 @@ public final class SerializationHelper {
 			throw new IllegalArgumentException( "The OutputStream must not be null" );
 		}
 
-        if (TMP_LOG.isTraceEnabled()) {
+        if (LOG.isTraceEnabled()) {
             if (Hibernate.isInitialized(obj)) LOG.trace("Starting serialization of object [" + obj + "]");
             else LOG.trace("Starting serialization of [uninitialized proxy]");
 		}

@@ -1,7 +1,7 @@
 // $Id: DynamicFilterTest.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.filter;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;

@@ -130,7 +130,7 @@ public class SQLExceptionHelper {
 			}
 			catch ( SQLException sqle ) {
 				//workaround for WebLogic
-                LOG.unableToLogWarnings(sqle);
+                LOG.warn(LOG.unableToLogWarnings(), sqle);
 			}
 		}
 		try {
@@ -193,12 +193,7 @@ public class SQLExceptionHelper {
         if (LOG.isEnabled(ERROR)) {
             LOG.debug((StringHelper.isNotEmpty(message) ? message : DEFAULT_EXCEPTION_MSG) + " : " + sqlException);
 			while ( sqlException != null ) {
-				StringBuffer buf = new StringBuffer( 30 )
-						.append( "SQL Error: " )
-						.append( sqlException.getErrorCode() )
-						.append( ", SQLState: " )
-						.append( sqlException.getSQLState() );
-                LOG.warn(buf.toString());
+                LOG.sqlException(sqlException.getErrorCode(), sqlException.getSQLState());
                 LOG.error(sqlException.getMessage());
 				sqlException = sqlException.getNextException();
 			}

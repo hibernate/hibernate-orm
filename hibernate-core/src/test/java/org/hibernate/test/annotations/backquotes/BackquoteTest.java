@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.backquotes;
 
+import static org.hibernate.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import junit.framework.TestCase;

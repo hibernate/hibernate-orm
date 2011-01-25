@@ -59,7 +59,7 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 			expectation.verifyOutcome( rowCount, statement, 0 );
 		}
 		catch ( SQLException e ) {
-			log.error( "sqlexception escaped proxy", e );
+            LOG.sqlExceptionEscapedProxy(e);
 			throw getSqlExceptionHelper().convert( e, "could not execute batch statement", sql );
 		}
 	}

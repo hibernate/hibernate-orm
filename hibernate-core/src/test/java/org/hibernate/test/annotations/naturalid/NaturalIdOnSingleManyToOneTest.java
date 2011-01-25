@@ -1,7 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.naturalid;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Session;

@@ -169,7 +169,7 @@ public class MultipleHiLoPerTableGenerator
 				rs.close();
 			}
 			catch (SQLException sqle) {
-                LOG.error(LOG.unableToReadOrInitHiValue(), sqle);
+                LOG.unableToReadOrInitHiValue(sqle);
 				throw sqle;
 			}
 			finally {

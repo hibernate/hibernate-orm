@@ -109,7 +109,7 @@ public class JDBCTransaction implements Transaction {
 				transactionContext.managedClose();
 			}
 			catch (HibernateException he) {
-                LOG.error(LOG.unableToCloseSession(), he);
+                LOG.unableToCloseSession(he);
 				//swallow, the transaction was finished
 			}
 		}
@@ -221,7 +221,7 @@ public class JDBCTransaction implements Transaction {
 			}
 		}
 		catch (Exception sqle) {
-            LOG.error(LOG.unableToToggleAutoCommit(), sqle);
+            LOG.unableToToggleAutoCommit(sqle);
 			//swallow it (the transaction _was_ successful or successfully rolled back)
 		}
 	}

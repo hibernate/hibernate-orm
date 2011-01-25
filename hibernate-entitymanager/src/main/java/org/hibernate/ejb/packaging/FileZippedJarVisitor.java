@@ -31,7 +31,7 @@ import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.Logger;
 
 /**
  * Work on a JAR that can be accessed through a File
@@ -40,8 +40,7 @@ import org.hibernate.ejb.EntityManagerLogger;
  */
 public class FileZippedJarVisitor extends AbstractJarVisitor {
 
-    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                             EntityManagerLogger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, FileZippedJarVisitor.class.getName());
 
     private String entry;
 
@@ -72,7 +71,7 @@ public class FileZippedJarVisitor extends AbstractJarVisitor {
 			return;
 		}
 		catch (URISyntaxException e) {
-            LOG.warn(LOG.malformedUrl(jarUrl), e);
+            LOG.malformedUrlWarning(jarUrl, e);
 			return;
 		}
 

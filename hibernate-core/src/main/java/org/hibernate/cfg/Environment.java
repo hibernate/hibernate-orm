@@ -619,7 +619,7 @@ public final class Environment {
 					stream.close();
 				}
 				catch (IOException ioe){
-                    LOG.unableToCloseStream(ioe);
+                    LOG.unableToCloseStreamError(ioe);
 				}
 			}
 		}

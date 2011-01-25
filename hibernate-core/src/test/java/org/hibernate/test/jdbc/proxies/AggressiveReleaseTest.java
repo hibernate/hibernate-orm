@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.jdbc.proxies;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

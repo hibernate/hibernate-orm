@@ -129,7 +129,7 @@ public class CallbackCoordinator {
 		}
 		catch ( SystemException se ) {
 			// best effort
-			LOG.error( LOG.unableToSetTransactionToRollbackOnly(), se );
+            LOG.unableToSetTransactionToRollbackOnly(se);
 		}
 	}
 
@@ -166,7 +166,7 @@ public class CallbackCoordinator {
 
 	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
 		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-            LOG.unableToDetermineTransactionStatus(systemException.getMessage());
+            LOG.error(LOG.unableToDetermineTransactionStatus(), systemException);
 			return new TransactionException( "could not determine transaction status in beforeCompletion()", systemException );
 		}
 

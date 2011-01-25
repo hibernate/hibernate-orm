@@ -23,7 +23,7 @@
  */
 package org.hibernate.testing.junit.functional;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 
 /**
  * {@inheritDoc}

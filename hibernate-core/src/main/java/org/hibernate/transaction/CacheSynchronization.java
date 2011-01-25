@@ -100,7 +100,7 @@ public final class CacheSynchronization implements Synchronization {
 			transaction.setRollbackOnly();
 		}
 		catch (SystemException se) {
-            LOG.error(LOG.unableToSetTransactionToRollbackOnly(), se);
+            LOG.unableToSetTransactionToRollbackOnly(se);
 		}
 	}
 

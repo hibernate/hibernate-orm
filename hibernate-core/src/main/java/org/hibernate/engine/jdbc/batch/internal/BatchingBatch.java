@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.jdbc.Expectation;
@@ -81,7 +82,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 			statement.addBatch();
 		}
 		catch ( SQLException e ) {
-			LOG.error( LOG.sqlExceptionEscapedProxy(), e );
+            LOG.sqlExceptionEscapedProxy(e);
 			throw getSqlExceptionHelper().convert( e, "could not perform addBatch", sql );
 		}
 		List<Expectation> expectations = expectationsBySql.get( sql );
@@ -152,7 +153,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 			checkRowCounts( sql, ps.executeBatch(), ps, expectations );
 		}
 		catch ( SQLException e ) {
-			log.error( "sqlexception escaped proxy", e );
+            LOG.sqlExceptionEscapedProxy(e);
 			throw getSqlExceptionHelper()
 					.convert( e, "could not execute statement: " + sql );
 		}
@@ -160,16 +161,14 @@ public class BatchingBatch extends AbstractBatchImpl {
 
 	private void checkRowCounts(String sql, int[] rowCounts, PreparedStatement ps, List<Expectation> expectations) {
 		int numberOfRowCounts = rowCounts.length;
-		if ( numberOfRowCounts != expectations.size() ) {
-			log.warn( "JDBC driver did not return the expected number of row counts" );
-		}
+        if (numberOfRowCounts != expectations.size()) LOG.unexpectedRowCounts();
 		try {
 			for ( int i = 0; i < numberOfRowCounts; i++ ) {
 				expectations.get( i ).verifyOutcome( rowCounts[i], ps, i );
 			}
 		}
 		catch ( SQLException e ) {
-			log.error( "sqlexception escaped proxy", e );
+            LOG.sqlExceptionEscapedProxy(e);
 			throw getSqlExceptionHelper()
 					.convert( e, "row count verification failed for statement: ", sql );
 		}

@@ -46,6 +46,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.Logger;
 import org.hibernate.QueryParameterException;
 import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
@@ -65,8 +66,7 @@ import org.hibernate.impl.AbstractQueryImpl;
  */
 public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> implements TypedQuery<X>, HibernateQuery {
 
-    public static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                            QueryImpl.class.getPackage().getName());
+    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, QueryImpl.class.getPackage().getName());
 
 	private org.hibernate.Query query;
 	private Set<Integer> jpaPositionalIndices;

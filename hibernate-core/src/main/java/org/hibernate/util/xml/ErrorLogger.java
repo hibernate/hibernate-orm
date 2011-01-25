@@ -69,7 +69,7 @@ public class ErrorLogger implements ErrorHandler, Serializable {
 	 * {@inheritDoc}
 	 */
 	public void warning(SAXParseException warn) {
-        LOG.parsingXmlError(error.getLineNumber(), error.getMessage());
+        LOG.parsingXmlWarning(error.getLineNumber(), error.getMessage());
 	}
 
 	public void reset() {

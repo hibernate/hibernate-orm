@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.naming.InitialContext;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
@@ -50,7 +51,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 			//context.unbind(boundName);
 		}
 		catch (Exception e) {
-            LOG.warn(LOG.unableToStopService(), e);
+            LOG.warn(LOG.unableToStopHibernateService(), e);
 		}
 	}
 

@@ -1,7 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import javax.persistence.PostPersist;
 import javax.persistence.PrePersist;
 

@@ -23,7 +23,7 @@
  */
 package org.hibernate.testing.junit;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;

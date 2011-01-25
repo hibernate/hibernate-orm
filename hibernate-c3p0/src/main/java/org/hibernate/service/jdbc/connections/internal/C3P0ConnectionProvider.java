@@ -176,7 +176,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 		}
 		catch ( Exception e ) {
             LOG.error(LOG.unableToInstantiateC3p0ConnectionPool(), e);
-			throw new HibernateException( "Could not instantiate C3P0 connection pool", e );
+            throw new HibernateException(LOG.unableToInstantiateC3p0ConnectionPool(), e);
 		}
 
 		String i = props.getProperty( Environment.ISOLATION );

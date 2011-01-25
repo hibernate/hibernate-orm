@@ -85,7 +85,7 @@ public class StatementPreparer {
 				return ps;
 			}
 			catch ( SQLException sqle ) {
-                LOG.error(LOG.sqlExceptionEscapedProxy(), sqle);
+                LOG.sqlExceptionEscapedProxy(sqle);
 				throw sqlExceptionHelper.convert(
 						sqle, "could not prepare statement", sql
 				);
@@ -109,7 +109,7 @@ public class StatementPreparer {
 			proxiedConnection.close();
 		}
 		catch (SQLException sqle) {
-            LOG.error(LOG.sqlExceptionEscapedProxy(), sqle);
+            LOG.sqlExceptionEscapedProxy(sqle);
 			throw sqlExceptionHelper.convert( sqle, "could not close connection proxy" );
 		}
 	}

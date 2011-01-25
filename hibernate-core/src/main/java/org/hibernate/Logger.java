@@ -14,6 +14,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -21,9 +22,11 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+import javax.naming.InvalidNameException;
+import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.dialect.Dialect;
@@ -33,23 +36,26 @@ import org.hibernate.engine.loading.CollectionLoadContext;
 import org.hibernate.engine.loading.EntityLoadContext;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.service.jdbc.dialect.internal.AbstractDialectResolver;
-import org.hibernate.service.spi.Service;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Cause;
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
 import org.jboss.logging.MessageLogger;
 
 /**
- * Interface defining messages that may be logged by the outer class
+ * Defines internationalized messages for hibernate-core. New messages must be added after the last message defined to ensure
+ * message codes are unique.
  */
-@MessageLogger
+// TODO: @cause, errorv because of var args and reordering of parameters, combine loggers in hibernate-core,
+// formattable, message codes, register project code, category=class, rename Log
+@MessageLogger( projectCode = "HHH" )
 public interface Logger extends BasicLogger {
 
     @LogMessage( level = INFO )
-    @Message( value = "Adding secondary table to entity %s -> %s" )
+    @Message( "Adding secondary table to entity %s -> %s" )
     void addingSecondaryTableToEntity( String entity,
                                        String table );
 
@@ -130,6 +136,10 @@ public interface Logger extends BasicLogger {
     void bindingTypeDefinition( String name );
 
     @LogMessage( level = INFO )
+    @Message( value = "Bound Ejb3Configuration to JNDI name: %s" )
+    void boundEjb3ConfigurationToJndiName( String name );
+
+    @LogMessage( level = INFO )
     @Message( value = "Building session factory" )
     void buildingSessionFactory();
 
@@ -158,6 +168,10 @@ public interface Logger extends BasicLogger {
     @Message( value = "Cache region prefix: %s" )
     void cacheRegionPrefix( String prefix );
 
+    @LogMessage( level = WARN )
+    @Message( value = "Calling joinTransaction() on a non JTA EntityManager" )
+    void callingJoinTransactionOnNonJtaEntityManager();
+
     @LogMessage( level = INFO )
     @Message( value = "Check Nullability in Core (should be disabled when Bean Validation is on): %s" )
     void checkNullability( String enabledDisabled );
@@ -171,40 +185,20 @@ public interface Logger extends BasicLogger {
     void closing();
 
     @LogMessage( level = INFO )
-    @Message( value = "Collections fetched (minimize this): %s" )
-    void collectionsFetched( AtomicLong collectionFetchCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Collections fetched (minimize this): %ld" )
     void collectionsFetched( long collectionFetchCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Collections loaded: %s" )
-    void collectionsLoaded( AtomicLong collectionLoadCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Collections loaded: %ld" )
     void collectionsLoaded( long collectionLoadCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Collections recreated: %s" )
-    void collectionsRecreated( AtomicLong collectionRecreateCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Collections recreated: %ld" )
     void collectionsRecreated( long collectionRecreateCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Collections removed: %s" )
-    void collectionsRemoved( AtomicLong collectionRemoveCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Collections removed: %ld" )
     void collectionsRemoved( long collectionRemoveCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Collections updated: %s" )
-    void collectionsUpdated( AtomicLong collectionUpdateCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Collections updated: %ld" )
@@ -247,16 +241,16 @@ public interface Logger extends BasicLogger {
     void connectionReleaseMode( String releaseModeName );
 
     @LogMessage( level = INFO )
-    @Message( value = "Connections obtained: %s" )
-    void connectionsObtained( AtomicLong connectCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Connections obtained: %ld" )
     void connectionsObtained( long connectCount );
 
     @LogMessage( level = INFO )
     @Message( value = "%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor." )
     void constructorWithPropertiesNotFound( String regionFactoryClassName );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Container is providing a null PersistenceUnitRootUrl: discovery impossible" )
+    void containerProvidingNullPersistenceUnitRootUrl();
 
     @LogMessage( level = WARN )
     @Message( value = "Ignoring bag join fetch [%s] due to prior collection join fetch" )
@@ -270,9 +264,7 @@ public interface Logger extends BasicLogger {
     void creatingSubcontextInfo( String intermediateContextName );
 
     @LogMessage( level = INFO )
-    // @formatter:off
     @Message( value = "Database ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s" )
-    // @formatter:on
     void database( String databaseProductName,
                    String databaseProductVersion,
                    int databaseMajorVersion,
@@ -293,6 +285,10 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Default schema: %s" )
     void defaultSchema( String defaultSchema );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Defining %s=true ignored in HEM" )
+    void definingFlushBeforeCompletionIgnoredInHem( String flushBeforeCompletion );
 
     @LogMessage( level = INFO )
     @Message( value = "Deleted entity synthetic identifier rollback: %s" )
@@ -328,9 +324,7 @@ public interface Logger extends BasicLogger {
     void disallowingInsertStatementComment();
 
     @LogMessage( level = INFO )
-    // @formatter:off
     @Message( value = "Driver ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s" )
-    // @formatter:on
     void driver( String driverProductName,
                  String driverProductVersion,
                  int driverMajorVersion,
@@ -366,40 +360,32 @@ public interface Logger extends BasicLogger {
     void echoingSql();
 
     @LogMessage( level = INFO )
-    @Message( value = "Entities deleted: %s" )
-    void entitiesDeleted( AtomicLong entityDeleteCount );
+    @Message( value = "Ejb3Configuration name: %s" )
+    void ejb3ConfigurationName( String name );
+
+    @LogMessage( level = INFO )
+    @Message( value = "An Ejb3Configuration was renamed from name: %s" )
+    void ejb3ConfigurationRenamedFromName( String name );
+
+    @LogMessage( level = INFO )
+    @Message( value = "An Ejb3Configuration was unbound from name: %s" )
+    void ejb3ConfigurationUnboundFromName( String name );
 
     @LogMessage( level = INFO )
     @Message( value = "Entities deleted: %ld" )
     void entitiesDeleted( long entityDeleteCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Entities fetched (minimize this): %s" )
-    void entitiesFetched( AtomicLong entityFetchCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Entities fetched (minimize this): %ld" )
     void entitiesFetched( long entityFetchCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Entities inserted: %s" )
-    void entitiesInserted( AtomicLong entityInsertCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Entities inserted: %ld" )
     void entitiesInserted( long entityInsertCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Entities loaded: %s" )
-    void entitiesLoaded( AtomicLong entityLoadCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Entities loaded: %ld" )
     void entitiesLoaded( long entityLoadCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Entities updated: %s" )
-    void entitiesUpdated( AtomicLong entityUpdateCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Entities updated: %ld" )
@@ -409,11 +395,35 @@ public interface Logger extends BasicLogger {
     @Message( value = "@org.hibernate.annotations.Entity used on a non root entity: ignored for %s" )
     void entityAnnotationOnNonRoot( String className );
 
-    @Message( value = "Exception in interceptor afterTransactionCompletion()" )
-    Object exceptionInAfterTransactionCompletionInterceptor();
+    @LogMessage( level = WARN )
+    @Message( value = "Entity Manager closed by someone else (%s must not be used)" )
+    void entityManagerClosedBySomeoneElse( String autoCloseSession );
 
+    @LogMessage( level = INFO )
+    @Message( value = "Hibernate EntityManager %s" )
+    void entityManagerVersion( String versionString );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names" )
+    void entityMappedAsNonAbstract( String name );
+
+    @LogMessage( level = INFO )
+    @Message( value = "%s %s found" )
+    void exceptionHeaderFound( String exceptionHeader,
+                               String metaInfOrmXml );
+
+    @LogMessage( level = INFO )
+    @Message( value = "%s No %s found" )
+    void exceptionHeaderNotFound( String exceptionHeader,
+                                  String metaInfOrmXml );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Exception in interceptor afterTransactionCompletion()" )
+    void exceptionInAfterTransactionCompletionInterceptor( @Cause Throwable e );
+
+    @LogMessage( level = ERROR )
     @Message( value = "Exception in interceptor beforeTransactionCompletion()" )
-    Object exceptionInBeforeTransactionCompletionInterceptor();
+    void exceptionInBeforeTransactionCompletionInterceptor( @Cause Throwable e );
 
     @LogMessage( level = INFO )
     @Message( value = "Sub-resolver threw unexpected exception, continuing to next : %s" )
@@ -431,6 +441,14 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "An item was expired by the cache while it was locked (increase your cache timeout): %s" )
     void expired( Object key );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Exploded jar file does not exist (ignored): %s" )
+    void explodedJarDoesNotExist( URL jarUrl );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Exploded jar file not a directory (ignored): %s" )
+    void explodedJarNotDirectory( URL jarUrl );
 
     @LogMessage( level = INFO )
     @Message( value = "Exporting generated schema to database" )
@@ -463,11 +481,11 @@ public interface Logger extends BasicLogger {
 
     @LogMessage( level = WARN )
     @Message( value = "Fail-safe cleanup (collections) : %s" )
-    void failSafeCleanup( CollectionLoadContext collectionLoadContext );
+    void failSafeCollectionsCleanup( CollectionLoadContext collectionLoadContext );
 
     @LogMessage( level = WARN )
     @Message( value = "Fail-safe cleanup (entities) : %s" )
-    void failSafeCleanup( EntityLoadContext entityLoadContext );
+    void failSafeEntitiesCleanup( EntityLoadContext entityLoadContext );
 
     @LogMessage( level = INFO )
     @Message( value = "Fetching database metadata" )
@@ -480,10 +498,6 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "firstResult/maxResults specified with collection fetch; applying in memory!" )
     void firstOrMaxResultsSpecifiedWithCollectionFetch();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Flushes: %s" )
-    void flushes( AtomicLong flushCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Flushes: %ld" )
@@ -512,6 +526,11 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Generate SQL with comments: %s" )
     void generateSqlWithComments( String enabledDisabled );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Getters of lazy classes cannot be final: %s.%s" )
+    void gettersOfLazyClassesCannotBeFinal( String entityName,
+                                            String name );
 
     @LogMessage( level = WARN )
     @Message( value = "GUID identifier generated: %s" )
@@ -549,6 +568,17 @@ public interface Logger extends BasicLogger {
     @Message( value = "Ignoring unique constraints specified on table generator [%s]" )
     void ignoringTableGeneratorConstraints( String name );
 
+    @LogMessage( level = INFO )
+    @Message( value = "Ignoring unrecognized query hint [%s]" )
+    void ignoringUnrecognizedQueryHint( String hintName );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s" )
+    void illegalArgumentOnStaticMetamodelFieldInjection( String name,
+                                                         String name2,
+                                                         String name3,
+                                                         String name4 );
+
     @LogMessage( level = ERROR )
     @Message( value = "IllegalArgumentException in class: %s, getter method of property: %s" )
     void illegalPropertyGetterArgument( String name,
@@ -575,6 +605,10 @@ public interface Logger extends BasicLogger {
     @Message( value = "InitialContext did not implement EventContext" )
     void initialContextDidNotImplementEventContext();
 
+    @LogMessage( level = WARN )
+    @Message( value = "InitialContext did not implement EventContext" )
+    void initialContextDoesNotImplementEventContext();
+
     @LogMessage( level = INFO )
     @Message( value = "Instantiated TransactionManagerLookup" )
     void instantiatedTransactionManagerLookup();
@@ -599,8 +633,10 @@ public interface Logger extends BasicLogger {
     @Message( value = "Application attempted to edit read only item: %s" )
     void invalidEditOfReadOnlyItem( Object key );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Invalid JNDI name: %s" )
-    Object invalidJndiName( String name );
+    void invalidJndiName( String name,
+                          @Cause InvalidNameException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Inapropriate use of @OnDelete on entity, annotation ignored: %s" )
@@ -623,8 +659,18 @@ public interface Logger extends BasicLogger {
     void jaccContextId( String contextId );
 
     @LogMessage( level = INFO )
+    @Message( value = "java.sql.Types mapped the same code [%d] multiple times; was [%s]; now [%s]" )
+    void JavaSqlTypesMappedSameCodeMultipleTimes( int code,
+                                                  String old,
+                                                  String name );
+
+    @LogMessage( level = INFO )
     @Message( value = "JDBC3 getGeneratedKeys(): %s" )
     void jdbc3GeneratedKeys( String enabledDisabled );
+
+    @LogMessage( level = WARN )
+    @Message( value = "%s = false break the EJB3 specification" )
+    void jdbcAutoCommitFalseBreaksEjb3Spec( String autocommit );
 
     @LogMessage( level = INFO )
     @Message( value = "JDBC batch size: %s" )
@@ -664,12 +710,18 @@ public interface Logger extends BasicLogger {
     @Message( value = "JNDI InitialContext properties:%s" )
     void jndiInitialContextProperties( Hashtable hash );
 
+    @LogMessage( level = ERROR )
     @Message( value = "JNDI name %s does not handle a session factory reference" )
-    Object jndiNameDoesNotHandleSessionFactoryReference( String sfJNDIName );
+    void jndiNameDoesNotHandleSessionFactoryReference( String sfJNDIName,
+                                                       @Cause ClassCastException e );
 
     @LogMessage( level = INFO )
     @Message( value = "JPA-QL strict compliance: %s" )
     void jpaQlStrictCompliance( String enabledDisabled );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Lazy property fetching available for: %s" )
+    void lazyPropertyFetchingAvailable( String name );
 
     @LogMessage( level = INFO )
     @Message( value = "JVM does not support LinkedHashMap, LinkedHashSet - ordered maps and sets disabled" )
@@ -694,6 +746,16 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Logical connection releasing its physical connection" )
     void logicalConnectionReleasingPhysicalConnection();
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Malformed URL: %s" )
+    void malformedUrl( URL jarUrl,
+                       @Cause URISyntaxException e );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Malformed URL: %s" )
+    void malformedUrlWarning( URL jarUrl,
+                              @Cause URISyntaxException e );
 
     @LogMessage( level = WARN )
     @Message( value = "You should set hibernate.transaction.manager_lookup_class if cache is enabled" )
@@ -738,10 +800,6 @@ public interface Logger extends BasicLogger {
     void maxOuterJoinFetchDepth( Integer maxFetchDepth );
 
     @LogMessage( level = INFO )
-    @Message( value = "Max query time: %sms" )
-    void maxQueryTime( AtomicLong queryExecutionMaxTime );
-
-    @LogMessage( level = INFO )
     @Message( value = "Max query time: %ldms" )
     void maxQueryTime( long queryExecutionMaxTime );
 
@@ -758,8 +816,10 @@ public interface Logger extends BasicLogger {
     @Message( value = "Named query checking : %s" )
     void namedQueryChecking( String enabledDisabled );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Error in named query: %s" )
-    Object namedQueryError( String queryName );
+    void namedQueryError( String queryName,
+                          @Cause HibernateException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Naming exception occurred accessing factory: %s" )
@@ -777,12 +837,18 @@ public interface Logger extends BasicLogger {
     @Message( value = "No appropriate connection provider encountered, assuming application will be supplying connections" )
     void noAppropriateConnectionProvider();
 
+    @LogMessage( level = INFO )
+    @Message( value = "No default (no-argument) constructor for class: %s (class must be instantiated by Interceptor)" )
+    void noDefaultConstructor( String name );
+
     @LogMessage( level = WARN )
     @Message( value = "no persistent classes found for query class: %s" )
     void noPersistentClassesFound( String query );
 
+    @LogMessage( level = ERROR )
     @Message( value = "No session factory with JNDI name %s" )
-    Object noSessionFactoryWithJndiName( String sfJNDIName );
+    void noSessionFactoryWithJndiName( String sfJNDIName,
+                                       @Cause NameNotFoundException e );
 
     @LogMessage( level = INFO )
     @Message( value = "Not binding factory to JNDI, no JNDI name configured" )
@@ -791,10 +857,6 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Obtaining TransactionManager" )
     void obtainingTransactionManager();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Optimistic lock failures: %s" )
-    void optimisticLockFailures( AtomicLong optimisticFailureCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Optimistic lock failures: %ld" )
@@ -821,8 +883,43 @@ public interface Logger extends BasicLogger {
     void orderSqlUpdatesByPrimaryKey( String enabledDisabled );
 
     @LogMessage( level = WARN )
+    @Message( value = "Overriding %s is dangerous, this might break the EJB3 specification implementation" )
+    void overridingTransactionStrategyDangerous( String transactionStrategy );
+
+    @LogMessage( level = WARN )
     @Message( value = "Package not found or wo package-info.java: %s" )
     void packageNotFound( String packageName );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Parameter position [%s] occurred as both JPA and Hibernate positional parameter" )
+    void parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter( Integer position );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Error parsing XML (%d) : %s" )
+    void parsingXmlError( int lineNumber,
+                          String message );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Error parsing XML: %s(%d) %s" )
+    void parsingXmlErrorForFile( String file,
+                                 int lineNumber,
+                                 String message );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Warning parsing XML (%d) : %s" )
+    void parsingXmlWarning( int lineNumber,
+                            String message );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Warning parsing XML: %s(%d) %s" )
+    void parsingXmlWarningForFile( String file,
+                                   int lineNumber,
+                                   String message );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Persistence provider caller does not implement the EJB3 spec correctly."
+                      + "PersistenceUnitInfo.getNewTempClassLoader() is null." )
+    void persistenceProviderCallerDoesNotImplementEjb3SpecCorrectly();
 
     @LogMessage( level = INFO )
     @Message( value = "Pooled optimizer source reported [%s] as the initial value; use of 1 or greater highly recommended" )
@@ -835,6 +932,10 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = WARN )
     @Message( value = "processEqualityExpression() : No expression to process!" )
     void processEqualityExpression();
+
+    @LogMessage( level = INFO )
+    @Message( value = "Processing PersistenceUnitInfo [\n\tname: %s\n\t...]" )
+    void processingPersistenceUnitInfoName( String persistenceUnitName );
 
     @LogMessage( level = INFO )
     @Message( value = "Loaded properties from resource hibernate.properties: %s" )
@@ -858,10 +959,6 @@ public interface Logger extends BasicLogger {
     void proxoolProviderClassNotFound( String proxoolProviderClassName );
 
     @LogMessage( level = INFO )
-    @Message( value = "Queries executed to database: %s" )
-    void queriesExecuted( AtomicLong queryExecutionCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Queries executed to database: %ld" )
     void queriesExecuted( long queryExecutionCount );
 
@@ -874,24 +971,12 @@ public interface Logger extends BasicLogger {
     void queryCacheFactory( String queryCacheFactoryClassName );
 
     @LogMessage( level = INFO )
-    @Message( value = "Query cache hits: %s" )
-    void queryCacheHits( AtomicLong queryCacheHitCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Query cache hits: %ld" )
     void queryCacheHits( long queryCacheHitCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Query cache misses: %s" )
-    void queryCacheMisses( AtomicLong queryCacheMissCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Query cache misses: %ld" )
     void queryCacheMisses( long queryCacheMissCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Query cache puts: %s" )
-    void queryCachePuts( AtomicLong queryCachePutCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Query cache puts: %ld" )
@@ -899,7 +984,7 @@ public interface Logger extends BasicLogger {
 
     @LogMessage( level = INFO )
     @Message( value = "Query language substitutions: %s" )
-    void queryLanguageSubstitutions( Map<String, String> querySubstitutions );
+    void queryLanguageSubstitutions( Map querySubstitutions );
 
     @LogMessage( level = INFO )
     @Message( value = "Query translator: %s" )
@@ -926,6 +1011,11 @@ public interface Logger extends BasicLogger {
     void readOnlyCacheConfiguredForMutableCollection( String name );
 
     @LogMessage( level = WARN )
+    @Message( value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide!" )
+    void recognizedObsoleteHibernateNamespace( String oldHibernateNamespace,
+                                               String hibernateNamespace );
+
+    @LogMessage( level = WARN )
     @Message( value = "Reconnecting the same connection that is already connected; should this connection have been disconnected?" )
     void reconnectingConnectedConnection();
 
@@ -933,6 +1023,10 @@ public interface Logger extends BasicLogger {
     @Message( value = "Property [%s] has been renamed to [%s]; update your properties appropriately" )
     void renamedProperty( Object propertyName,
                           Object newPropertyName );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Required a different provider: %s" )
+    void requiredDifferentProvider( String provider );
 
     @LogMessage( level = INFO )
     @Message( value = "Running hbm2ddl schema export" )
@@ -950,12 +1044,18 @@ public interface Logger extends BasicLogger {
     @Message( value = "Schema export complete" )
     void schemaExportComplete();
 
+    @LogMessage( level = ERROR )
     @Message( value = "Schema export unsuccessful" )
-    Object schemaExportUnsuccessful();
+    void schemaExportUnsuccessful( @Cause Exception e );
 
     @LogMessage( level = INFO )
     @Message( value = "Schema update complete" )
     void schemaUpdateComplete();
+
+    @LogMessage( level = WARN )
+    @Message( value = "Scoping types to session factory %s after already scoped %s" )
+    void scopingTypesToSessionFactoryAfterAlreadyScoped( SessionFactoryImplementor factory,
+                                                         SessionFactoryImplementor factory2 );
 
     @LogMessage( level = INFO )
     @Message( value = "Scrollable result sets: %s" )
@@ -970,24 +1070,12 @@ public interface Logger extends BasicLogger {
     void secondLevelCache( String enabledDisabled );
 
     @LogMessage( level = INFO )
-    @Message( value = "Second level cache hits: %s" )
-    void secondLevelCacheHits( AtomicLong secondLevelCacheHitCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Second level cache hits: %ld" )
     void secondLevelCacheHits( long secondLevelCacheHitCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Second level cache misses: %s" )
-    void secondLevelCacheMisses( AtomicLong secondLevelCacheMissCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Second level cache misses: %ld" )
     void secondLevelCacheMisses( long secondLevelCacheMissCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Second level cache puts: %s" )
-    void secondLevelCachePuts( AtomicLong secondLevelCachePutCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Second level cache puts: %ld" )
@@ -998,20 +1086,17 @@ public interface Logger extends BasicLogger {
     void serviceProperties( Properties properties );
 
     @LogMessage( level = INFO )
-    @Message( value = "Sessions closed: %s" )
-    void sessionsClosed( AtomicLong sessionCloseCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Sessions closed: %ld" )
     void sessionsClosed( long sessionCloseCount );
 
     @LogMessage( level = INFO )
-    @Message( value = "Sessions opened: %s" )
-    void sessionsOpened( AtomicLong sessionOpenCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Sessions opened: %ld" )
     void sessionsOpened( long sessionOpenCount );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Setters of lazy classes cannot be final: %s.%s" )
+    void settersOfLazyClassesCannotBeFinal( String entityName,
+                                            String name );
 
     @LogMessage( level = WARN )
     @Message( value = "@Sort not allowed for an indexed collection, annotation ignored." )
@@ -1022,8 +1107,19 @@ public interface Logger extends BasicLogger {
     void splitQueries( String sourceQuery,
                        int length );
 
+    @LogMessage( level = WARN )
+    @Message( value = "SQL Error: %d, SQLState: %s" )
+    void sqlError( int errorCode,
+                   String sqlState );
+
+    @LogMessage( level = WARN )
+    @Message( value = "SQL Error: %d, SQLState: %s" )
+    void sqlException( int errorCode,
+                       String sqlState );
+
+    @LogMessage( level = ERROR )
     @Message( value = "SQLException escaped proxy" )
-    Object sqlExceptionEscapedProxy();
+    void sqlExceptionEscapedProxy( @Cause SQLException e );
 
     @LogMessage( level = INFO )
     @Message( value = "Starting query cache at region: %s" )
@@ -1042,16 +1138,8 @@ public interface Logger extends BasicLogger {
     void startTime( long startTime );
 
     @LogMessage( level = INFO )
-    @Message( value = "Statements closed: %s" )
-    void statementsClosed( AtomicLong closeStatementCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Statements closed: %ld" )
     void statementsClosed( long closeStatementCount );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Statements prepared: %s" )
-    void statementsPrepared( AtomicLong prepareStatementCount );
 
     @LogMessage( level = INFO )
     @Message( value = "Statements prepared: %ld" )
@@ -1074,10 +1162,6 @@ public interface Logger extends BasicLogger {
     void subResolverException( String message );
 
     @LogMessage( level = INFO )
-    @Message( value = "Successful transactions: %s" )
-    void successfulTransactions( AtomicLong committedTransactionCount );
-
-    @LogMessage( level = INFO )
     @Message( value = "Successful transactions: %ld" )
     void successfulTransactions( long committedTransactionCount );
 
@@ -1098,9 +1182,6 @@ public interface Logger extends BasicLogger {
     @Message( value = "Table not found: %s" )
     void tableNotFound( String name );
 
-    @Message( value = "TransactionFactory class not found" )
-    String transactionFactoryClassNotFound();
-
     @Message( value = "TransactionFactory class not found: %s" )
     String transactionFactoryClassNotFound( String strategyClassName );
 
@@ -1108,9 +1189,9 @@ public interface Logger extends BasicLogger {
     @Message( value = "No TransactionManagerLookup configured (in JTA environment, use of read-write or transactional second-level cache is not recommended)" )
     void transactionManagerLookupNotConfigured();
 
-    @LogMessage( level = INFO )
-    @Message( value = "Transactions: %s" )
-    void transactions( AtomicLong transactionCount );
+    @LogMessage( level = WARN )
+    @Message( value = "Transaction not available on beforeCompletion: assuming valid" )
+    void transactionNotAvailableOnBeforeCompletion();
 
     @LogMessage( level = INFO )
     @Message( value = "Transactions: %ld" )
@@ -1124,8 +1205,22 @@ public interface Logger extends BasicLogger {
     @Message( value = "Transaction strategy: %s" )
     void transactionStrategy( String strategyClassName );
 
+    @LogMessage( level = WARN )
+    @Message( value = "Type [%s] defined no registration keys; ignoring" )
+    void typeDefinedNoRegistrationKeys( BasicType type );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Type registration [%s] overrides previous : %s" )
+    void typeRegistrationOverridesPrevious( String key,
+                                            Type old );
+
+    @Message( value = "Naming exception occurred accessing Ejb3Configuration" )
+    Object unableToAccessEjb3Configuration();
+
+    @LogMessage( level = ERROR )
     @Message( value = "Error while accessing session factory with JNDI name %s" )
-    Object unableToAccessSessionFactory( String sfJNDIName );
+    void unableToAccessSessionFactory( String sfJNDIName,
+                                       @Cause NamingException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Error accessing type info result set : %s" )
@@ -1134,16 +1229,20 @@ public interface Logger extends BasicLogger {
     @Message( value = "Unable to apply constraints on DDL for %s" )
     Object unableToApplyConstraints( String className );
 
-    @LogMessage( level = WARN )
-    @Message( value = "Unable to apply constraints on DDL for %s : %s" )
-    void unableToApplyConstraints( String className,
-                                   String message );
-
     @Message( value = "JTA transaction begin failed" )
     String unableToBeginJtaTransaction();
 
+    @Message( value = "Could not bind Ejb3Configuration to JNDI" )
+    Object unableToBindEjb3ConfigurationToJndi();
+
     @Message( value = "Could not bind factory to JNDI" )
     Object unableToBindFactoryToJndi();
+
+    @LogMessage( level = INFO )
+    @Message( value = "Could not bind value '%s' to parameter: %d; %s" )
+    void unableToBindValueToParameter( String nullSafeToString,
+                                       int index,
+                                       String message );
 
     @LogMessage( level = ERROR )
     @Message( value = "Unable to build enhancement metamodel for %s" )
@@ -1153,24 +1252,37 @@ public interface Logger extends BasicLogger {
     @Message( value = "Could not build SessionFactory using the MBean classpath - will try again using client classpath: %s" )
     void unableToBuildSessionFactoryUsingMBeanClasspath( String message );
 
+    @Message( value = "Unable to clean up callable statement" )
+    Object unableToCleanUpCallableStatement();
+
+    @Message( value = "Unable to clean up prepared statement" )
+    Object unableToCleanUpPreparedStatement();
+
     @LogMessage( level = WARN )
     @Message( value = "Unable to cleanup temporary id table after use [%s]" )
     void unableToCleanupTemporaryIdTable( Throwable t );
 
+    @Message( value = "Could not clear warnings" )
+    Object unableToClearWarnings();
+
+    @LogMessage( level = ERROR )
     @Message( value = "Error closing connection" )
-    Object unableToCloseConnection();
+    void unableToCloseConnection( @Cause Exception e );
 
     @LogMessage( level = INFO )
     @Message( value = "Error closing InitialContext [%s]" )
     void unableToCloseInitialContext( String string );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Error closing imput files: %s" )
-    Object unableToCloseInputFiles( String name );
+    Object unableToCloseInputFiles( String name,
+                                    @Cause IOException e );
 
-    @LogMessage( level = WARN )
-    @Message( value = "Could not close input stream for %s : %s" )
-    void unableToCloseInputStream( String resourceName,
-                                   String message );
+    @Message( value = "Could not close input stream" )
+    Object unableToCloseInputStream();
+
+    @Message( value = "Could not close input stream for %s" )
+    Object unableToCloseInputStreamForResource( String resourceName );
 
     @Message( value = "Unable to close iterator" )
     Object unableToCloseIterator();
@@ -1179,37 +1291,51 @@ public interface Logger extends BasicLogger {
     @Message( value = "Could not close jar: %s" )
     void unableToCloseJar( String message );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Error closing output file: %s" )
-    Object unableToCloseOutputFile( String outputFile );
+    void unableToCloseOutputFile( String outputFile,
+                                  @Cause IOException e );
+
+    @Message( value = "IOException occurred closing output stream" )
+    Object unableToCloseOutputStream();
 
     @Message( value = "Problem closing pooled connection" )
     Object unableToClosePooledConnection();
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not close session" )
-    String unableToCloseSession();
+    void unableToCloseSession( @Cause HibernateException e );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not close session during rollback" )
-    String unableToCloseSessionDuringRollback();
+    void unableToCloseSessionDuringRollback( @Cause Exception e );
+
+    @Message( value = "IOException occurred closing stream" )
+    Object unableToCloseStream();
 
     @LogMessage( level = ERROR )
     @Message( value = "Could not close stream on hibernate.properties: %s" )
-    void unableToCloseStream( IOException error );
+    void unableToCloseStreamError( IOException error );
 
     @Message( value = "JTA commit failed" )
     String unableToCommitJta();
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not complete schema update" )
-    Object unableToCompleteSchemaUpdate();
+    void unableToCompleteSchemaUpdate( @Cause Exception e );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not complete schema validation" )
-    Object unableToCompleteSchemaValidation();
+    void unableToCompleteSchemaValidation( @Cause SQLException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Unable to configure SQLExceptionConverter : %s" )
     void unableToConfigureSqlExceptionConverter( HibernateException e );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Unable to construct current session context [%s]" )
-    Object unableToConstructCurrentSessionContext( String impl );
+    void unableToConstructCurrentSessionContext( String impl,
+                                                 @Cause Throwable e );
 
     @LogMessage( level = WARN )
     @Message( value = "Unable to construct instance of specified SQLExceptionConverter : %s" )
@@ -1219,8 +1345,12 @@ public interface Logger extends BasicLogger {
     @Message( value = "Could not copy system properties, system properties will be ignored" )
     void unableToCopySystemProperties();
 
+    @Message( value = "Could not create proxy factory for:%s" )
+    Object unableToCreateProxyFactory( String entityName );
+
+    @LogMessage( level = ERROR )
     @Message( value = "Error creating schema " )
-    Object unableToCreateSchema();
+    void unableToCreateSchema( @Cause Exception e );
 
     @LogMessage( level = WARN )
     @Message( value = "Could not deserialize cache file: %s : %s" )
@@ -1241,12 +1371,13 @@ public interface Logger extends BasicLogger {
     void unableToDestroyUpdateTimestampsCache( String region,
                                                String message );
 
+    @LogMessage( level = INFO )
+    @Message( value = "Unable to determine lock mode value : %s -> %s" )
+    void unableToDetermineLockModeValue( String hintName,
+                                         Object value );
+
     @Message( value = "Could not determine transaction status" )
     String unableToDetermineTransactionStatus();
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Could not determine transaction status [%s]" )
-    void unableToDetermineTransactionStatus( String message );
 
     @Message( value = "Could not determine transaction status after commit" )
     String unableToDetermineTransactionStatusAfterCommit();
@@ -1264,17 +1395,20 @@ public interface Logger extends BasicLogger {
     void unableToExecuteResolver( AbstractDialectResolver abstractDialectResolver,
                                   String message );
 
-    @LogMessage( level = WARN )
-    @Message( value = "Error executing resolver [%s] : %s" )
-    void unableToExecuteResolver( org.hibernate.dialect.resolver.AbstractDialectResolver abstractDialectResolver,
-                                  String message );
+    @Message( value = "Unable to find file (ignored): %s" )
+    Object unableToFindFile( URL jarUrl );
 
     @LogMessage( level = INFO )
     @Message( value = "Unable to find %s on the classpath. Hibernate Search is not enabled." )
     void unableToFindListenerClass( String className );
 
+    @LogMessage( level = INFO )
+    @Message( value = "Could not find any META-INF/persistence.xml file in the classpath" )
+    void unableToFindPersistenceXmlInClasspath();
+
+    @LogMessage( level = ERROR )
     @Message( value = "Could not get database metadata" )
-    Object unableToGetDatabaseMetadata();
+    void unableToGetDatabaseMetadata( @Cause SQLException e );
 
     @LogMessage( level = WARN )
     @Message( value = "Unable to instantiate configured schema name resolver [%s] %s" )
@@ -1292,18 +1426,16 @@ public interface Logger extends BasicLogger {
     @Message( value = "Failed to instantiate TransactionFactory" )
     String unableToInstantiateTransactionFactory();
 
-    @Message( value = "Failed to instantiate TransactionFactory: %s" )
-    String unableToInstantiateTransactionFactory( Exception error );
-
-    @Message( value = "Failed to instantiate TransactionManagerLookup" )
-    String unableToInstantiateTransactionManagerLookup();
-
     @Message( value = "Failed to instantiate TransactionManagerLookup '%s'" )
     String unableToInstantiateTransactionManagerLookup( String tmLookupClass );
 
     @LogMessage( level = WARN )
     @Message( value = "Unable to instantiate UUID generation strategy class : %s" )
     void unableToInstantiateUuidGenerationStrategy( Exception ignore );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Cannot join transaction: do not override %s" )
+    void unableToJoinTransaction( String transactionStrategy );
 
     @LogMessage( level = INFO )
     @Message( value = "Error performing load command : %s" )
@@ -1317,6 +1449,9 @@ public interface Logger extends BasicLogger {
     @Message( value = "Problem loading properties from hibernate.properties" )
     void unableToloadProperties();
 
+    @Message( value = "Unable to locate config file: %s" )
+    String unableToLocateConfigFile( String path );
+
     @LogMessage( level = WARN )
     @Message( value = "Unable to locate configured schema name resolver class [%s] %s" )
     void unableToLocateConfiguredSchemaNameResolver( String resolverClassName,
@@ -1326,6 +1461,15 @@ public interface Logger extends BasicLogger {
     @Message( value = "Unable to locate MBeanServer on JMX service shutdown" )
     void unableToLocateMBeanServer();
 
+    @LogMessage( level = INFO )
+    @Message( value = "Could not locate 'java.sql.NClob' class; assuming JDBC 3" )
+    void unableToLocateNClobClass();
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Unable to locate static metamodel field : %s#%s" )
+    void unableToLocateStaticMetamodelField( String name,
+                                             String name2 );
+
     @LogMessage( level = WARN )
     @Message( value = "Unable to locate requested UUID generation strategy class : %s" )
     void unableToLocateUuidGenerationStrategy( String strategyClassName );
@@ -1334,9 +1478,16 @@ public interface Logger extends BasicLogger {
     @Message( value = "Unable to log SQLWarnings : %s" )
     void unableToLogSqlWarnings( SQLException sqle );
 
-    @LogMessage( level = WARN )
-    @Message( value = "Could not log warnings : %s" )
-    void unableToLogWarnings( SQLException sqle );
+    @Message( value = "Could not log warnings" )
+    Object unableToLogWarnings();
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Unable to mark for rollback on PersistenceException: " )
+    void unableToMarkForRollbackOnPersistenceException( @Cause Exception e );
+
+    @LogMessage( level = ERROR )
+    @Message( value = "Unable to mark for rollback on TransientObjectException: " )
+    void unableToMarkForRollbackOnTransientObjectException( @Cause Exception e );
 
     @LogMessage( level = WARN )
     @Message( value = "Could not obtain connection metadata: %s" )
@@ -1354,8 +1505,9 @@ public interface Logger extends BasicLogger {
     @Message( value = "Could not obtain connection to query metadata : %s" )
     void unableToObtainConnectionToQueryMetadata( String message );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not obtain initial context" )
-    Object unableToObtainInitialContext();
+    void unableToObtainInitialContext( @Cause NamingException e );
 
     @LogMessage( level = ERROR )
     @Message( value = "Could not parse the package-level metadata [%s]" )
@@ -1371,23 +1523,21 @@ public interface Logger extends BasicLogger {
     @Message( value = "Unable to query java.sql.DatabaseMetaData" )
     String unableToQueryDatabaseMetadata();
 
-    @LogMessage( level = WARN )
-    @Message( value = "%s : %s" )
-    void unableToQueryDatabaseMetadata( String message,
-                                        String errorMessage );
-
     @LogMessage( level = ERROR )
     @Message( value = "Unable to read class: %s" )
     void unableToReadClass( String message );
 
-    @Message( value = "Could not read a hi value" )
-    String unableToReadHiValue();
+    @LogMessage( level = INFO )
+    @Message( value = "Could not read column value from result set: %s; %s" )
+    void unableToReadColumnValueFromResultSet( String name,
+                                               String message );
 
     @Message( value = "Could not read a hi value - you need to populate the table: %s" )
     String unableToReadHiValue( String tableName );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not read or init a hi value" )
-    Object unableToReadOrInitHiValue();
+    void unableToReadOrInitHiValue( @Cause SQLException e );
 
     @LogMessage( level = ERROR )
     @Message( value = "Unable to release batch statement..." )
@@ -1426,6 +1576,10 @@ public interface Logger extends BasicLogger {
     void unableToResolveAggregateFunction( String name );
 
     @LogMessage( level = INFO )
+    @Message( value = "Unable to resolve mapping file [%s]" )
+    void unableToResolveMappingFile( String xmlFile );
+
+    @LogMessage( level = INFO )
     @Message( value = "Unable to retreive cache from JNDI [%s]: %s" )
     void unableToRetrieveCache( String namespace,
                                 String message );
@@ -1446,26 +1600,29 @@ public interface Logger extends BasicLogger {
     @Message( value = "JTA rollback failed" )
     String unableToRollbackJta();
 
+    @LogMessage( level = ERROR )
     @Message( value = "Error running schema update" )
-    Object unableToRunSchemaUpdate();
+    void unableToRunSchemaUpdate( @Cause Exception e );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not set transaction to rollback only" )
-    Object unableToSetTransactionToRollbackOnly();
+    void unableToSetTransactionToRollbackOnly( @Cause SystemException e );
 
     @Message( value = "Exception while stopping service" )
-    Object unableToStopService();
+    Object unableToStopHibernateService();
 
     @LogMessage( level = INFO )
     @Message( value = "Error stopping service [%s] : %s" )
-    void unableToStopService( Class<? extends Service> class1,
+    void unableToStopService( Class class1,
                               String string );
 
     @LogMessage( level = ERROR )
     @Message( value = "Could not synchronize database state with session: %s" )
     void unableToSynchronizeDatabaseStateWithSession( HibernateException he );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not toggle autocommit" )
-    Object unableToToggleAutoCommit();
+    void unableToToggleAutoCommit( @Cause Exception e );
 
     @LogMessage( level = ERROR )
     @Message( value = "Unable to transform class: %s" )
@@ -1477,8 +1634,10 @@ public interface Logger extends BasicLogger {
     @Message( value = "Could not update hi value in: %s" )
     Object unableToUpdateHiValue( String tableName );
 
+    @LogMessage( level = ERROR )
     @Message( value = "Could not updateQuery hi value in: %s" )
-    Object unableToUpdateQueryHiValue( String tableName );
+    void unableToUpdateQueryHiValue( String tableName,
+                                     @Cause SQLException error );
 
     @Message( value = "Error wrapping result set" )
     Object unableToWrapResultSet();
@@ -1594,9 +1753,17 @@ public interface Logger extends BasicLogger {
     @Message( value = "Using JDK 1.4 java.sql.Timestamp handling" )
     void usingJdk14TimestampHandling();
 
+    @LogMessage( level = ERROR )
+    @Message( value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!" )
+    void usingOldDtd();
+
     @LogMessage( level = INFO )
     @Message( value = "Using pre JDK 1.4 java.sql.Timestamp handling" )
     void usingPreJdk14TimestampHandling();
+
+    @LogMessage( level = INFO )
+    @Message( value = "Using provided datasource" )
+    void usingProvidedDataSource();
 
     @LogMessage( level = INFO )
     @Message( value = "Using bytecode reflection optimizer" )
@@ -1648,124 +1815,4 @@ public interface Logger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Writing generated schema to file: %s" )
     void writingGeneratedSchemaToFile( String outputFile );
-
-    @Message( value = "Could not create proxy factory for:%s" )
-    Object unableToCreateProxyFactory( String entityName );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Entity [%s] is abstract-class/interface explicitly mapped as non-abstract; be sure to supply entity-names" )
-    void entityMappedAsNonAbstract( String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Lazy property fetching available for: %s" )
-    void lazyPropertyFetchingAvailable( String name );
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Getters of lazy classes cannot be final: %s.%s" )
-    void gettersOfLazyClassesCannotBeFinal( String entityName,
-                                            String name );
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Setters of lazy classes cannot be final: %s.%s" )
-    void settersOfLazyClassesCannotBeFinal( String entityName,
-                                            String name );
-
-    @LogMessage( level = INFO )
-    @Message( value = "No default (no-argument) constructor for class: %s (class must be instantiated by Interceptor)" )
-    void noDefaultConstructor( String name );
-
-    @Message( value = "IOException occurred closing input stream" )
-    Object unableToCloseInputStream();
-
-    @Message( value = "IOException occurred closing output stream" )
-    Object unableToCloseOutputStream();
-
-    @Message( value = "IOException occurred closing stream" )
-    Object unableToCloseStream();
-
-    @LogMessage( level = INFO )
-    @Message( value = "Could not locate 'java.sql.NClob' class; assuming JDBC 3" )
-    void unableToLocateNClobClass();
-
-    @LogMessage( level = INFO )
-    @Message( value = "java.sql.Types mapped the same code [%d] multiple times; was [%s]; now [%s]" )
-    void JavaSqlTypesMappedSameCodeMultipleTimes( int code,
-                                                  String old,
-                                                  String name );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Type [%s] defined no registration keys; ignoring" )
-    void typeDefinedNoRegistrationKeys( BasicType type );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Type registration [%s] overrides previous : %s" )
-    void typeRegistrationOverridesPrevious( String key,
-                                            Type old );
-
-    @Message( value = "Unable to clean up callable statement" )
-    Object unableToCleanUpCallableStatement();
-
-    @Message( value = "Unable to clean up prepared statement" )
-    Object unableToCleanUpPreparedStatement();
-
-    @LogMessage( level = WARN )
-    @Message( value = "Scoping types to session factory %s after already scoped %s" )
-    void scopingTypesToSessionFactoryAfterAlreadyScoped( SessionFactoryImplementor factory,
-                                                         SessionFactoryImplementor factory2 );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Could not bind value '%s' to parameter: %d; %s" )
-    void unableToBindValueToParameter( String nullSafeToString,
-                                       int index,
-                                       String message );
-
-    @LogMessage( level = INFO )
-    @Message( value = "Could not read column value from result set: %s; %s" )
-    void unableToReadColumnValueFromResultSet( String name,
-                                               String message );
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Error parsing XML (%d) : %s" )
-    void parsingXmlError( int lineNumber,
-                          String message );
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Warning parsing XML (%d) : %s" )
-    void parsingXmlWarning( int lineNumber,
-                            String message );
-
-    @Message( value = "Unable to locate config file: %s" )
-    String unableToLocateConfigFile( String path );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Recognized obsolete hibernate namespace %s. Use namespace %s instead. Refer to Hibernate 3.6 Migration Guide!" )
-    void recognizedObsoleteHibernateNamespace( String oldHibernateNamespace,
-                                               String hibernateNamespace );
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide!" )
-    void usingOldDtd();
-
-    @LogMessage( level = WARN )
-    @Message( value = "SQL Error: %d, SQLState: %s" )
-    void sqlError( int errorCode,
-                   String sqlState );
-
-    @Message( value = "Could not clear warnings" )
-    Object unableToClearWarnings();
-
-    @Message( value = "Could not log warnings" )
-    Object unableToLogWarnings();
-
-    @LogMessage( level = ERROR )
-    @Message( value = "Error parsing XML: %s(%d) %s" )
-    void parsingXmlError( String file,
-                          int lineNumber,
-                          String message );
-
-    @LogMessage( level = WARN )
-    @Message( value = "Warning parsing XML: %s(%d) %s" )
-    void parsingXmlWarning( String file,
-                            int lineNumber,
-                            String message );
 }

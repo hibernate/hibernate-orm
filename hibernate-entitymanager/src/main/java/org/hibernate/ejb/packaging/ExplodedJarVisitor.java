@@ -30,7 +30,7 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.Logger;
 
 
 /**
@@ -38,8 +38,7 @@ import org.hibernate.ejb.EntityManagerLogger;
  */
 public class ExplodedJarVisitor extends AbstractJarVisitor {
 
-    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                             EntityManagerLogger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, ExplodedJarVisitor.class.getName());
 
     private String entry;
 
@@ -66,7 +65,7 @@ public class ExplodedJarVisitor extends AbstractJarVisitor {
 			}
 		}
 		catch (URISyntaxException e) {
-            LOG.error(LOG.malformedUrl(jarUrl), e);
+            LOG.malformedUrl(jarUrl, e);
 			return;
 		}
 

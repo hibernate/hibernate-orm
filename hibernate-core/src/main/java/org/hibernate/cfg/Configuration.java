@@ -68,6 +68,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.InvalidMappingException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
@@ -1650,7 +1651,7 @@ public class Configuration implements Serializable {
 						applyMethod.invoke( validator, persistentClazz );
 					}
 					catch ( Exception e ) {
-                        LOG.unableToApplyConstraints(className, e.getMessage());
+                        LOG.warn(LOG.unableToApplyConstraints(className), e);
 					}
 				}
 			}
@@ -2205,7 +2206,7 @@ public class Configuration implements Serializable {
 				stream.close();
 			}
 			catch (IOException ioe) {
-                LOG.unableToCloseInputStream(resourceName, ioe.getMessage());
+                LOG.warn(LOG.unableToCloseInputStreamForResource(resourceName), ioe);
 			}
 		}
 		return this;

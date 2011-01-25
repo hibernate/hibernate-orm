@@ -86,14 +86,14 @@ public final class XMLHelper {
 			this.errors = errors;
 		}
 		public void error(SAXParseException error) {
-            LOG.parsingXmlError(file, error.getLineNumber(), error.getMessage());
+            LOG.parsingXmlErrorForFile(file, error.getLineNumber(), error.getMessage());
 			errors.add(error);
 		}
 		public void fatalError(SAXParseException error) {
 			error(error);
 		}
 		public void warning(SAXParseException warn) {
-            LOG.parsingXmlWarning(file, warn.getLineNumber(), warn.getMessage());
+            LOG.parsingXmlWarningForFile(file, warn.getLineNumber(), warn.getMessage());
 		}
 	}
 

@@ -178,7 +178,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 				selectRS.close();
 			}
 			catch ( SQLException sqle ) {
-                LOG.error(LOG.unableToReadHiValue(), sqle);
+                LOG.error(LOG.unableToReadHiValue(tableName), sqle);
 				throw sqle;
 			}
 			finally {
@@ -195,7 +195,7 @@ public class TableStructure extends TransactionHelper implements DatabaseStructu
 				rows = updatePS.executeUpdate();
 			}
 			catch ( SQLException sqle ) {
-                LOG.error(LOG.unableToUpdateQueryHiValue(tableName), sqle);
+                LOG.unableToUpdateQueryHiValue(tableName, sqle);
 				throw sqle;
 			}
 			finally {

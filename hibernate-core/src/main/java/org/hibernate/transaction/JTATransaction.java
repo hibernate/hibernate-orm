@@ -185,7 +185,7 @@ public class JTATransaction implements Transaction {
 		}
 		catch ( Exception e ) {
 			// swallow it, and continue to roll back JTA transaction
-            LOG.error(LOG.unableToCloseSessionDuringRollback(), e);
+            LOG.unableToCloseSessionDuringRollback(e);
 		}
 
 		try {

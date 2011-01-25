@@ -189,7 +189,7 @@ public final class JndiHelper {
 					new InitialContext(hash);
 		}
 		catch (NamingException e) {
-            LOG.error(LOG.unableToObtainInitialContext(), e);
+            LOG.unableToObtainInitialContext(e);
 			throw e;
 		}
 	}

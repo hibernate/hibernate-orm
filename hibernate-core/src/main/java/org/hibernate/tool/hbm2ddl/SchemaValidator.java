@@ -108,7 +108,7 @@ public class SchemaValidator {
 			new SchemaValidator( cfg ).validate();
 		}
 		catch ( Exception e ) {
-            LOG.error(LOG.unableToRunSchemaUpdate(), e);
+            LOG.unableToRunSchemaUpdate(e);
 			e.printStackTrace();
 		}
 	}
@@ -132,7 +132,7 @@ public class SchemaValidator {
 				meta = new DatabaseMetadata( connection, dialect, false );
 			}
 			catch ( SQLException sqle ) {
-                LOG.error(LOG.unableToGetDatabaseMetadata(), sqle);
+                LOG.unableToGetDatabaseMetadata(sqle);
 				throw sqle;
 			}
 
@@ -140,7 +140,7 @@ public class SchemaValidator {
 
 		}
 		catch ( SQLException e ) {
-            LOG.error(LOG.unableToCompleteSchemaValidation(), e);
+            LOG.unableToCompleteSchemaValidation(e);
 		}
 		finally {
 
@@ -148,7 +148,7 @@ public class SchemaValidator {
 				connectionHelper.release();
 			}
 			catch ( Exception e ) {
-                LOG.error(LOG.unableToCloseConnection(), e);
+                LOG.unableToCloseConnection(e);
 			}
 
 		}

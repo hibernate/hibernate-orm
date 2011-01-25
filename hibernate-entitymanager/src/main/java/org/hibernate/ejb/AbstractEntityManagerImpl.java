@@ -68,6 +68,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
@@ -113,8 +114,8 @@ import org.hibernate.util.ReflectHelper;
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 
-    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                             EntityManagerLogger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
+                                                                                AbstractEntityManagerImpl.class.getName());
 
 	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();
 
@@ -1114,7 +1115,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		catch ( Exception ne ) {
 			//we do not want the subsequent exception to swallow the original one
-            LOG.error(LOG.unableToMarkForRollbackOnPersistenceException(), ne);
+            LOG.unableToMarkForRollbackOnPersistenceException(ne);
 		}
 	}
 
@@ -1193,7 +1194,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 			catch ( Exception ne ) {
 				//we do not want the subsequent exception to swallow the original one
-                LOG.error(LOG.unableToMarkForRollbackOnTransientObjectException(), ne);
+                LOG.unableToMarkForRollbackOnTransientObjectException(ne);
 			}
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}

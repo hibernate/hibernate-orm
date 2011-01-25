@@ -63,16 +63,16 @@ public final class TransactionFactoryFactory {
 			factory = ( TransactionFactory ) ReflectHelper.classForName( strategyClassName ).newInstance();
 		}
 		catch ( ClassNotFoundException e ) {
-            LOG.error(LOG.transactionFactoryClassNotFound(), e);
+            LOG.error(LOG.transactionFactoryClassNotFound(strategyClassName), e);
             throw new HibernateException(LOG.transactionFactoryClassNotFound(strategyClassName));
 		}
 		catch ( IllegalAccessException e ) {
             LOG.error(LOG.unableToInstantiateTransactionFactory(), e);
-            throw new HibernateException(LOG.unableToInstantiateTransactionFactory(e));
+            throw new HibernateException(LOG.unableToInstantiateTransactionFactory(), e);
 		}
 		catch ( java.lang.InstantiationException e ) {
             LOG.error(LOG.unableToInstantiateTransactionFactory(), e);
-            throw new HibernateException(LOG.unableToInstantiateTransactionFactory(e));
+            throw new HibernateException(LOG.unableToInstantiateTransactionFactory(), e);
 		}
 		factory.configure( transactionProps );
 		return factory;

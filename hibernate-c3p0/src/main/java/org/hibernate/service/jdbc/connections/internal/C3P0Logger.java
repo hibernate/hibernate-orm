@@ -57,5 +57,5 @@ public interface C3P0Logger extends BasicLogger {
     Object unableToDestroyC3p0ConnectionPool();
 
     @Message( value = "Could not instantiate C3P0 connection pool" )
-    Object unableToInstantiateC3p0ConnectionPool();
+    String unableToInstantiateC3p0ConnectionPool();
 }

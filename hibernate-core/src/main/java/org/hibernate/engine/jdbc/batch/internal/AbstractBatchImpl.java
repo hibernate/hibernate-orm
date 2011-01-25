@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import org.hibernate.Logger;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
@@ -120,7 +121,7 @@ public abstract class AbstractBatchImpl implements Batch {
 		if ( statement != null ) {
             LOG.debug("Reusing prepared statement");
 			statementLogger.logStatement( sql );
-		}		
+		}
 		return statement;
 	}
 
@@ -131,12 +132,8 @@ public abstract class AbstractBatchImpl implements Batch {
 	@Override
 	public void addBatchStatement(Object key, String sql, PreparedStatement preparedStatement) {
 		checkConsistentBatchKey( key );
-		if ( sql == null ) {
-			throw new IllegalArgumentException( "sql must be non-null." );
-		}
-		if ( statements.put( sql, preparedStatement ) != null ) {
-			log.error( "PreparedStatement was already in the batch, [" + sql + "]." );
-		}
+        if (sql == null) throw new IllegalArgumentException("sql must be non-null.");
+        if (statements.put(sql, preparedStatement) != null) LOG.preparedStatementAlreadyInBatch(sql);
 	}
 
 	protected void checkConsistentBatchKey(Object key) {
@@ -175,7 +172,7 @@ public abstract class AbstractBatchImpl implements Batch {
 			}
 			catch ( SQLException e ) {
                 LOG.unableToReleaseBatchStatement();
-                LOG.sqlExceptionEscapedProxy(e.getMessage());
+                LOG.sqlExceptionEscapedProxy(e);
 			}
 		}
 		getStatements().clear();

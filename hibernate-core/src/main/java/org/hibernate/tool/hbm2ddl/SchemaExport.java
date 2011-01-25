@@ -287,7 +287,7 @@ public class SchemaExport {
 
 		catch ( Exception e ) {
 			exceptions.add( e );
-            LOG.error(LOG.schemaExportUnsuccessful(), e);
+            LOG.schemaExportUnsuccessful(e);
 		}
 
 		finally {
@@ -302,7 +302,7 @@ public class SchemaExport {
 			}
 			catch ( Exception e ) {
 				exceptions.add( e );
-                LOG.error(LOG.unableToCloseConnection(), e);
+                LOG.unableToCloseConnection(e);
 			}
 
 			try {
@@ -312,19 +312,16 @@ public class SchemaExport {
 			}
 			catch ( IOException ioe ) {
 				exceptions.add( ioe );
-                LOG.error(LOG.unableToCloseOutputFile(outputFile), ioe);
+                LOG.unableToCloseOutputFile(outputFile, ioe);
 			}
-				for (NamedReader reader : importFileReaders) {
-					try {
-						reader.getReader().close();
-					}
-					catch ( IOException ioe ) {
-						exceptions.add( ioe );
-                    LOG.error(LOG.unableToCloseInputFiles(reader.getName()), ioe);
-					}
+            for (NamedReader reader : importFileReaders) {
+                try {
+                    reader.getReader().close();
+                } catch (IOException ioe) {
+                    exceptions.add(ioe);
+                    LOG.unableToCloseInputFiles(reader.getName(), ioe);
 				}
-
-
+            }
 		}
 	}
 
@@ -522,7 +519,7 @@ public class SchemaExport {
 
 		}
 		catch ( Exception e ) {
-            LOG.error(LOG.unableToCreateSchema(), e);
+            LOG.unableToCreateSchema(e);
 			e.printStackTrace();
 		}
 	}

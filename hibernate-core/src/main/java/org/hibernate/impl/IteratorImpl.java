@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.util.NoSuchElementException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.Logger;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.event.EventSource;
 import org.hibernate.hql.HolderInstantiator;
@@ -90,7 +91,7 @@ public final class IteratorImpl implements HibernateIterator {
 				hasNext = false;
 			}
 			catch (SQLException e) {
-				log.info( "Unable to close iterator", e );
+                LOG.info(LOG.unableToCloseIterator(), e);
 				throw session.getFactory().getSQLExceptionHelper().convert(
 				        e,
 				        "Unable to close iterator"

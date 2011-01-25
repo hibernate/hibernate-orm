@@ -44,6 +44,7 @@ import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PreDeleteEventListener;
@@ -125,7 +126,7 @@ class TypeSafeActivator {
 				applyDDL( "", persistentClass, clazz, factory, groups, true );
 			}
 			catch (Exception e) {
-                LOG.unableToApplyConstraints(className, e.getMessage());
+                LOG.warn(LOG.unableToApplyConstraints(className), e);
 			}
 		}
 	}

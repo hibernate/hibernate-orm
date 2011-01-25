@@ -128,7 +128,7 @@ public class LoadContexts {
 			Iterator itr = collectionLoadContexts.values().iterator();
 			while ( itr.hasNext() ) {
 				CollectionLoadContext collectionLoadContext = ( CollectionLoadContext ) itr.next();
-                LOG.failSafeCleanup(collectionLoadContext);
+                LOG.failSafeCollectionsCleanup(collectionLoadContext);
 				collectionLoadContext.cleanup();
 			}
 			collectionLoadContexts.clear();
@@ -137,7 +137,7 @@ public class LoadContexts {
 			Iterator itr = entityLoadContexts.values().iterator();
 			while ( itr.hasNext() ) {
 				EntityLoadContext entityLoadContext = ( EntityLoadContext ) itr.next();
-                LOG.failSafeCleanup(entityLoadContext);
+                LOG.failSafeEntitiesCleanup(entityLoadContext);
 				entityLoadContext.cleanup();
 			}
 			entityLoadContexts.clear();

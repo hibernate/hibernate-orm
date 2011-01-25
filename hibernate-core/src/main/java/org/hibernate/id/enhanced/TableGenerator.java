@@ -503,7 +503,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				selectRS.close();
 			}
 			catch ( SQLException sqle ) {
-                LOG.error(LOG.unableToReadOrInitHiValue(), sqle);
+                LOG.unableToReadOrInitHiValue(sqle);
 				throw sqle;
 			}
 			finally {
@@ -526,7 +526,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 				rows = updatePS.executeUpdate();
 			}
 			catch ( SQLException sqle ) {
-                LOG.error(LOG.unableToUpdateQueryHiValue(tableName), sqle);
+                LOG.unableToUpdateQueryHiValue(tableName, sqle);
 				throw sqle;
 			}
 			finally {

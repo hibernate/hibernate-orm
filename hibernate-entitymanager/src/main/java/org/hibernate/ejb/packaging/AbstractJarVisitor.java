@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;
-import org.hibernate.ejb.EntityManagerLogger;
+import org.hibernate.Logger;
 
 /**
  * Parse a JAR of any form (zip file, exploded directory, ...)
@@ -44,8 +44,7 @@ public abstract class AbstractJarVisitor implements JarVisitor {
 
 	//TODO shortcut when filters are null or empty
 
-    private static final EntityManagerLogger LOG = org.jboss.logging.Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                                             EntityManagerLogger.class.getPackage().getName());
+    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, AbstractJarVisitor.class.getName());
 
 	protected String unqualifiedJarName;
 	protected URL jarUrl;

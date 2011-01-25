@@ -73,15 +73,15 @@ public class StatisticsService implements StatisticsServiceMBean {
 			}
 		}
 		catch (NameNotFoundException e) {
-            LOG.error(LOG.noSessionFactoryWithJndiName(sfJNDIName), e);
+            LOG.noSessionFactoryWithJndiName(sfJNDIName, e);
 			setSessionFactory(null);
 		}
 		catch (NamingException e) {
-            LOG.error(LOG.unableToAccessSessionFactory(sfJNDIName), e);
+            LOG.unableToAccessSessionFactory(sfJNDIName, e);
 			setSessionFactory(null);
 		}
 		catch (ClassCastException e) {
-            LOG.error(LOG.jndiNameDoesNotHandleSessionFactoryReference(sfJNDIName), e);
+            LOG.jndiNameDoesNotHandleSessionFactoryReference(sfJNDIName, e);
 			setSessionFactory(null);
 		}
 	}

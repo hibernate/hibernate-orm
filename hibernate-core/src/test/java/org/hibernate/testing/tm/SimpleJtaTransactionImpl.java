@@ -23,7 +23,7 @@
  */
 package org.hibernate.testing.tm;
 
-import static org.hibernate.aTestLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedList;

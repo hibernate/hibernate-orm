@@ -1,8 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'antlr'
 
-// todo : we need to jar up hibernate-testing.jar from here
-
 dependencies {
 	compile( libraries.commons_collections )
     compile( libraries.jta )
@@ -48,6 +46,15 @@ sourceSets {
 
 ideaModule {
     sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
+}
+
+task testJar(type: Jar, dependsOn: compileJava) {
+    from sourceSets.test.allSource
+    classifier = 'test'
+}
+
+artifacts {
+  archives sourcesJar, testJar
 }
 
 // http://jira.codehaus.org/browse/GRADLE-1158

@@ -3150,7 +3150,14 @@ public abstract class AbstractEntityPersister
 
 	}
 
-	private void createLoaders() {
+	//needed by subclasses to override the createLoader strategy
+	protected Map getLoaders() {
+		return loaders;
+	}
+
+	//Relational based Persisters should be content with this implementation
+	protected void createLoaders() {
+		final Map loaders = getLoaders();
 		loaders.put( LockMode.NONE, createEntityLoader( LockMode.NONE ) );
 
 		UniqueEntityLoader readLoader = createEntityLoader( LockMode.READ );
@@ -3276,7 +3283,7 @@ public abstract class AbstractEntityPersister
 			// Next, we consider whether an 'internal' fetch profile has been set.
 			// This indicates a special fetch profile Hibernate needs applied
 			// (for its merge loading process e.g.).
-			return ( UniqueEntityLoader ) loaders.get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
+			return ( UniqueEntityLoader ) getLoaders().get( session.getLoadQueryInfluencers().getInternalFetchProfile() );
 		}
 		else if ( isAffectedByEnabledFetchProfiles( session ) ) {
 			// If the session has associated influencers we need to adjust the
@@ -3287,7 +3294,7 @@ public abstract class AbstractEntityPersister
 			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
 		}
 		else {
-			return ( UniqueEntityLoader ) loaders.get( lockOptions.getLockMode() );
+			return ( UniqueEntityLoader ) getLoaders().get( lockOptions.getLockMode() );
 		}
 	}
 

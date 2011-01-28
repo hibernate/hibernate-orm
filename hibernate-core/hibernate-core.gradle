@@ -50,7 +50,7 @@ ideaModule {
 
 task testJar(type: Jar, dependsOn: compileJava) {
     from sourceSets.test.allSource
-    classifier = 'test'
+    classifier = 'tests'
 }
 
 artifacts {

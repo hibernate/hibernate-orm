@@ -462,6 +462,10 @@ public abstract class AbstractEntityPersister
 		return propertyColumnInsertable;
 	}
 
+	protected boolean[] getPropertySelectable() {
+		return propertySelectable;
+	}
+
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,

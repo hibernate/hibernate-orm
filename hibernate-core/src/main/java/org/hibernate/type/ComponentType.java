@@ -88,6 +88,10 @@ public class ComponentType extends AbstractType implements CompositeType {
 		this.tuplizerMapping = metamodel.getTuplizerMapping();
 	}
 
+	public boolean isKey() {
+		return isKey;
+	}
+
 	public EntityModeToTuplizerMapping getTuplizerMapping() {
 		return tuplizerMapping;
 	}

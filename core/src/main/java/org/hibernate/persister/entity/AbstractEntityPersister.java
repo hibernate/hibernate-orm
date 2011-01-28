@@ -457,6 +457,15 @@ public abstract class AbstractEntityPersister
 		return rowIdName != null;
 	}
 
+	protected boolean[][] getPropertyColumnUpdateable() {
+		return propertyColumnUpdateable;
+	}
+
+	protected boolean[][] getPropertyColumnInsertable() {
+		return propertyColumnInsertable;
+	}
+
+
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
@@ -1871,13 +1880,15 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void initDiscriminatorPropertyPath(Mapping mapping) throws MappingException {
-		propertyMapping.initPropertyPaths( ENTITY_CLASS,
+		propertyMapping.initPropertyPaths(
+				ENTITY_CLASS,
 				getDiscriminatorType(),
-				new String[]{getDiscriminatorColumnName()},
-				new String[]{getDiscriminatorColumnReaders()},
-				new String[]{getDiscriminatorColumnReaderTemplate()},
-				new String[]{getDiscriminatorFormulaTemplate()},
-				getFactory() );
+				new String[] { getDiscriminatorColumnName() },
+				new String[] { getDiscriminatorColumnReaders() },
+				new String[] { getDiscriminatorColumnReaderTemplate() },
+				new String[] { getDiscriminatorFormulaTemplate() },
+				getFactory()
+		);
 	}
 
 	protected void initPropertyPaths(Mapping mapping) throws MappingException {
@@ -1909,7 +1920,7 @@ public abstract class AbstractEntityPersister
 		return BatchingEntityLoader.createBatchingEntityLoader(
 				this,
 				batchSize,
-			lockOptions,
+				lockOptions,
 				getFactory(),
 				loadQueryInfluencers
 		);
@@ -2330,8 +2341,8 @@ public abstract class AbstractEntityPersister
 	public String getIdentitySelectString() {
 		//TODO: cache this in an instvar
 		return getFactory().getDialect().getIdentitySelectString(
-				getTableName(0),
-				getKeyColumns(0)[0],
+				getTableName( 0 ),
+				getKeyColumns( 0 )[0],
 				getIdentifierType().sqlTypes( getFactory() )[0]
 		);
 	}

@@ -454,6 +454,14 @@ public abstract class AbstractEntityPersister
 		return rowIdName != null;
 	}
 
+	protected boolean[][] getPropertyColumnUpdateable() {
+		return propertyColumnUpdateable;
+	}
+
+	protected boolean[][] getPropertyColumnInsertable() {
+		return propertyColumnInsertable;
+	}
+
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,

@@ -22,15 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-import java.util.Iterator;
 import java.util.Properties;
 import org.dom4j.Element;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.Type;
 
 /**
@@ -43,7 +42,8 @@ public final class BasicMetadataGenerator {
 					 Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
 		Type type = value.getType();
 
-		if (type instanceof BasicType || "org.hibernate.type.PrimitiveByteArrayBlobType".equals(type.getClass().getName())) {
+		if (type instanceof BasicType || type instanceof SerializableToBlobType ||
+                "org.hibernate.type.PrimitiveByteArrayBlobType".equals(type.getClass().getName())) {
             if (parent != null) {
                 boolean addNestedType = (value instanceof SimpleValue) && ((SimpleValue) value).getTypeParameters() != null;
 
@@ -54,7 +54,7 @@ public final class BasicMetadataGenerator {
 
                 Element prop_mapping = MetadataTools.addProperty(parent, propertyAuditingData.getName(),
                         addNestedType ? null : typeName, propertyAuditingData.isForceInsertable() || insertable, key);
-                MetadataTools.addColumns(prop_mapping, (Iterator<Column>) value.getColumnIterator());
+                MetadataTools.addColumns(prop_mapping, value.getColumnIterator());
 
                 if (addNestedType) {
                     Properties typeParameters = ((SimpleValue) value).getTypeParameters();

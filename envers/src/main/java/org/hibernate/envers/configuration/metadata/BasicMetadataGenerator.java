@@ -33,10 +33,7 @@ import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.Type;
+import org.hibernate.type.*;
 
 /**
  * Generates metadata for basic properties: immutable types (including enums).
@@ -48,7 +45,8 @@ public final class BasicMetadataGenerator {
 					 Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
 		Type type = value.getType();
 
-		if (type instanceof BasicType || "org.hibernate.type.PrimitiveByteArrayBlobType".equals(type.getClass().getName())) {
+		if (type instanceof BasicType || type instanceof SerializableToBlobType ||
+                "org.hibernate.type.PrimitiveByteArrayBlobType".equals(type.getClass().getName())) {
             if (parent != null) {
                 boolean addNestedType = (value instanceof SimpleValue) && ((SimpleValue) value).getTypeParameters() != null;
 

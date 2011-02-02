@@ -42,9 +42,10 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.StreamUtils;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
-import org.hibernate.mapping.ManyToOne;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.type.CharacterArrayClobType;
+import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BigDecimalType;
 import org.hibernate.type.BigIntegerType;
@@ -66,6 +67,7 @@ import org.hibernate.type.LocaleType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.ObjectType;
+import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.ShortType;
 import org.hibernate.type.StringType;
@@ -76,11 +78,11 @@ import org.hibernate.type.TimestampType;
 import org.hibernate.type.TrueFalseType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeFactory;
+import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.type.YesNoType;
 import org.hibernate.type.CharArrayType;
 import org.hibernate.type.WrapperBinaryType;
 import org.hibernate.type.CharacterArrayType;
-import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.ImageType;
 import org.hibernate.type.MaterializedClobType;
 import org.hibernate.usertype.CompositeUserType;
@@ -236,6 +238,25 @@ public final class Hibernate {
 	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CLOB} instead.
 	 */
 	public static final ClobType CLOB = ClobType.INSTANCE;
+
+	/**
+	 * Hibernate <tt>wrapper_materialized_blob</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#WRAPPER_MATERIALIZED_BLOB} instead.
+	 */
+	public static final WrappedMaterializedBlobType WRAPPER_MATERIALIZED_BLOB = WrappedMaterializedBlobType.INSTANCE;
+
+	/**
+	 * Hibernate <tt>wrapper_characters_clob</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#WRAPPER_CHARACTERS_CLOB} instead.
+	 */
+	public static final CharacterArrayClobType WRAPPER_CHARACTERS_CLOB = CharacterArrayClobType.INSTANCE;
+
+	/**
+	 * Hibernate <tt>characters_clob</tt> type.
+	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CHARACTERS_CLOB} instead.
+	 */
+	public static final PrimitiveCharacterArrayClobType CHARACTERS_CLOB = PrimitiveCharacterArrayClobType.INSTANCE;
+
 	/**
 	 * Hibernate <tt>calendar</tt> type.
 	 * @deprecated Use {@link org.hibernate.type.StandardBasicTypes#CALENDAR} instead.

@@ -26,6 +26,7 @@ package org.hibernate.type;
 import java.sql.Blob;
 
 import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BLOB BLOB} and {@link Blob}
@@ -33,11 +34,20 @@ import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
+public class BlobType extends LobType<Blob> {
+
 	public static final BlobType INSTANCE = new BlobType();
 
 	public BlobType() {
-		super( org.hibernate.type.descriptor.sql.BlobTypeDescriptor.INSTANCE, BlobTypeDescriptor.INSTANCE );
+		this(
+				org.hibernate.type.descriptor.sql.BlobTypeDescriptor.DEFAULT,
+				new AlternativeLobTypes.BlobTypes<Blob,BlobType>( BlobType.class )
+		);
+	}
+
+	protected BlobType(SqlTypeDescriptor sqlTypeDescriptor,
+					   AlternativeLobTypes.BlobTypes<Blob,BlobType> blobTypes) {
+		super( sqlTypeDescriptor, BlobTypeDescriptor.INSTANCE, blobTypes );
 	}
 
 	/**

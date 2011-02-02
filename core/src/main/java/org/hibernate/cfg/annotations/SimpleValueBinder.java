@@ -182,13 +182,13 @@ public class SimpleValueBinder {
 				type = Hibernate.MATERIALIZED_CLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, Character.class ) && isArray ) {
-				type = CharacterArrayClobType.class.getName();
+				type = Hibernate.WRAPPER_CHARACTERS_CLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, char.class ) && isArray ) {
-				type = PrimitiveCharacterArrayClobType.class.getName();
+				type = Hibernate.CHARACTERS_CLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, Byte.class ) && isArray ) {
-				type = WrappedMaterializedBlobType.class.getName();
+				type = Hibernate.WRAPPER_MATERIALIZED_BLOB.getName();
 			}
 			else if ( mappings.getReflectionManager().equals( returnedClassOrElement, byte.class ) && isArray ) {
 				type = Hibernate.MATERIALIZED_BLOB.getName();

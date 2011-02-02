@@ -88,8 +88,11 @@ public class BasicTypeRegistry implements Serializable {
 		register( TextType.INSTANCE );
 		register( BlobType.INSTANCE );
 		register( MaterializedBlobType.INSTANCE );
+		register( WrappedMaterializedBlobType.INSTANCE );
 		register( ClobType.INSTANCE );
 		register( MaterializedClobType.INSTANCE );
+		register( CharacterArrayClobType.INSTANCE );
+		register( PrimitiveCharacterArrayClobType.INSTANCE );
 		register( SerializableType.INSTANCE );
 
 		register( ObjectType.INSTANCE );

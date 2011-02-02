@@ -27,8 +27,11 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -66,7 +69,15 @@ import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BlobType;
+import org.hibernate.type.CharacterArrayClobType;
+import org.hibernate.type.ClobType;
+import org.hibernate.type.MaterializedBlobType;
+import org.hibernate.type.MaterializedClobType;
+import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 
@@ -94,13 +105,29 @@ public abstract class Dialect {
 	public static final String QUOTE = "`\"[";
 	public static final String CLOSED_QUOTE = "`\"]";
 
+	private static final Set<BasicType> streamBindingLobTypes = new HashSet<BasicType>();
+
+	static {
+		// Blobs
+		streamBindingLobTypes.add( BlobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		streamBindingLobTypes.add( MaterializedBlobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		streamBindingLobTypes.add( WrappedMaterializedBlobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		// Clobs
+		streamBindingLobTypes.add( ClobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		streamBindingLobTypes.add( MaterializedClobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		streamBindingLobTypes.add( CharacterArrayClobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		streamBindingLobTypes.add( PrimitiveCharacterArrayClobType.INSTANCE.getAlternatives().getStreamBindingType() );
+		// TODO: shouldn't SerializableToBlobType be in this list???
+	}
+
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
+
+	private final List<BasicType> dialectSpecificOverrides = new ArrayList<BasicType>();
 
 	private final Properties properties = new Properties();
 	private final Map<String, SQLFunction> sqlFunctions = new HashMap<String, SQLFunction>();
 	private final Set<String> sqlKeywords = new HashSet<String>();
-
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -208,6 +235,26 @@ public abstract class Dialect {
 	 */
 	public final Properties getDefaultProperties() {
 		return properties;
+	}
+
+	/**
+	 * Retrieve dialect-specific types for overriding "basic" types.
+	 * @return the dialect-specific types
+	 */
+	public final List<BasicType> getTypeOverrides() {
+		List<BasicType> allOverrides = dialectSpecificOverrides;
+		if ( useInputStreamToInsertBlob() ) {
+			allOverrides = new ArrayList<BasicType>( streamBindingLobTypes.size() + dialectSpecificOverrides.size() );
+			allOverrides.addAll( streamBindingLobTypes );
+			allOverrides.addAll( dialectSpecificOverrides );
+		}
+		return Collections.unmodifiableList( allOverrides );
+	}
+
+	protected final void addTypeOverride(BasicType typeOverride) {
+		if ( typeOverride != null ) {
+			dialectSpecificOverrides.add( typeOverride );
+		}
 	}
 
 	public String toString() {

@@ -25,21 +25,31 @@ package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Map a char[] to a Clob
  *
  * @author Emmanuel Bernard
  */
-public class PrimitiveCharacterArrayClobType extends AbstractSingleColumnStandardBasicType<char[]> {
-	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
+public class PrimitiveCharacterArrayClobType extends LobType<char[]> {
+	public static final PrimitiveCharacterArrayClobType INSTANCE = new PrimitiveCharacterArrayClobType();
 
 	public PrimitiveCharacterArrayClobType() {
-		super( ClobTypeDescriptor.INSTANCE, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+		this(
+				ClobTypeDescriptor.DEFAULT,
+				new AlternativeLobTypes.ClobTypes<char[],PrimitiveCharacterArrayClobType>(
+						PrimitiveCharacterArrayClobType.class
+				)
+		);
+	}
+
+	protected PrimitiveCharacterArrayClobType(SqlTypeDescriptor sqlTypeDescriptor, AlternativeLobTypes.
+			ClobTypes<char[],PrimitiveCharacterArrayClobType> clobTypes) {
+		super( sqlTypeDescriptor, PrimitiveCharacterArrayTypeDescriptor.INSTANCE, clobTypes );
 	}
 
 	public String getName() {
-		// todo name these annotation types for addition to the registry
-		return null;
+		return "characters_clob";
 	}
 }

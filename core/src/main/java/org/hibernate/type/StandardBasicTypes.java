@@ -262,6 +262,12 @@ public class StandardBasicTypes {
 	public static final MaterializedBlobType MATERIALIZED_BLOB = MaterializedBlobType.INSTANCE;
 
 	/**
+	 * The standard Hibernate type for mapping {@code Byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}
+	 * @see WrappedMaterializedBlobType
+	 */
+	public static final WrappedMaterializedBlobType WRAPPER_MATERIALIZED_BLOB = WrappedMaterializedBlobType.INSTANCE;
+
+	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see CharArrayType
@@ -301,6 +307,18 @@ public class StandardBasicTypes {
 	 * @see #TEXT
 	 */
 	public static final MaterializedClobType MATERIALIZED_CLOB = MaterializedClobType.INSTANCE;
+
+	/**
+	 * The standard Hibernate type for mapping {@link Character[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
+	 * @see CharacterArrayClobType
+	 */
+	public static final CharacterArrayClobType WRAPPER_CHARACTERS_CLOB = CharacterArrayClobType.INSTANCE;
+
+	/**
+	 * The standard Hibernate type for mapping {@link Character[]} to JDBC {@link java.sql.Types#CLOB CLOB}.
+	 * @see PrimitiveCharacterArrayClobType
+	 */
+	public static final PrimitiveCharacterArrayClobType CHARACTERS_CLOB = PrimitiveCharacterArrayClobType.INSTANCE;
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.io.Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.

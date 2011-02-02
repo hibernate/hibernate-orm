@@ -48,7 +48,7 @@ public class StringValueMappingTest extends TestCase {
 	private final StringTypeDescriptor stringJavaDescriptor = new StringTypeDescriptor();
 
 	private final VarcharTypeDescriptor varcharSqlDescriptor = new VarcharTypeDescriptor();
-	private final ClobTypeDescriptor clobSqlDescriptor = new ClobTypeDescriptor();
+	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
 		public boolean useStreamForLobBinding() {

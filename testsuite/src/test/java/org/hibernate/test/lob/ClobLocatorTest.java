@@ -33,6 +33,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
  * Tests lazy materialization of data mapped by
@@ -166,14 +167,7 @@ public class ClobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 	private String extractData(Clob clob) throws Throwable {
-		if ( getDialect() instanceof H2Dialect ) {
-			return clob.getSubString( 1, ( int ) clob.length() );
-		}
-		else {
-			char[] data = new char[ (int) clob.length() ];
-			clob.getCharacterStream().read( data );
-			return new String( data );
-		}
+		return DataHelper.extractString( clob.getCharacterStream() );
 	}
 
 

@@ -23,35 +23,27 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
- * A type that maps JDBC {@link java.sql.Types#BLOB BLOB} and {@code Byte[]}.
- * A type that maps an SQL BLOB to Java Byte[].
+ * A base type used to define a LOB type; it also provides
+ * alternatives that can override this type via
+ * {@link org.hibernate.type.LobType#getAlternatives()}   getAlternatives()}
  *
- * @author Strong Liu
+ * @author Gail Badner
  */
-public class WrappedMaterializedBlobType extends LobType<Byte[]> {
+public abstract class LobType<T> extends AbstractSingleColumnStandardBasicType<T> {
+	private AlternativeLobTypes alternativeLobTypes;
 
-	public static final WrappedMaterializedBlobType INSTANCE = new WrappedMaterializedBlobType();
-
-	public WrappedMaterializedBlobType() {
-		this(
-				BlobTypeDescriptor.DEFAULT,
-				new AlternativeLobTypes.BlobTypes<Byte[],WrappedMaterializedBlobType>(
-						WrappedMaterializedBlobType.class
-				)
-		);
+	public LobType(SqlTypeDescriptor sqlTypeDescriptor,
+				   JavaTypeDescriptor<T> javaTypeDescriptor,
+				   AlternativeLobTypes alternativeLobTypes) {
+		super( sqlTypeDescriptor, javaTypeDescriptor );
+		this.alternativeLobTypes = alternativeLobTypes;
 	}
 
-	protected WrappedMaterializedBlobType(SqlTypeDescriptor sqlTypeDescriptor,
-										  AlternativeLobTypes.BlobTypes<Byte[],WrappedMaterializedBlobType> clobTypes) {
-		super( sqlTypeDescriptor, ByteArrayTypeDescriptor.INSTANCE, clobTypes );
-	}
-
-	public String getName() {
-		return "wrapper_materialized_blob";
+	public AlternativeLobTypes getAlternatives() {
+		return alternativeLobTypes;
 	}
 }

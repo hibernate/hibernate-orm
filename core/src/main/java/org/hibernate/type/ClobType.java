@@ -26,6 +26,7 @@ package org.hibernate.type;
 import java.sql.Clob;
 
 import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Clob}
@@ -33,11 +34,20 @@ import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
+public class ClobType extends LobType<Clob> {
+
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.INSTANCE, ClobTypeDescriptor.INSTANCE );
+		this(
+				org.hibernate.type.descriptor.sql.ClobTypeDescriptor.DEFAULT,
+				new AlternativeLobTypes.ClobTypes<Clob,ClobType>( ClobType.class )
+		);
+	}
+
+	protected ClobType(SqlTypeDescriptor sqlTypeDescriptor,
+					   AlternativeLobTypes.ClobTypes<Clob,ClobType> clobTypes) {
+		super( sqlTypeDescriptor, ClobTypeDescriptor.INSTANCE, clobTypes );
 	}
 
 	public String getName() {
@@ -53,5 +63,4 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 	protected Clob getReplacement(Clob original, Clob target) {
 		return target;
 	}
-
 }

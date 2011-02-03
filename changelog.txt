@@ -5,6 +5,80 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.1 (2010.02.02)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11170
+
+** Bug
+    * [HHH-3873] - DB2Dialect.getLimitString raise DB2 error message when called with limit=0
+    * [HHH-4617] - Using materialized blobs with Postgresql causes error
+    * [HHH-4646] - Inconsistent behavior with Audited and MappedSuperclass annotations
+    * [HHH-5126] - JPA Query with InExpression and Collection_valued_input_parameter Complains About Bad Syntax
+    * [HHH-5136] - map-key-column is broken
+    * [HHH-5168] - DB2Dialect generates CROSS JOINs which aren't supported
+    * [HHH-5177] - auditing a child of a mapped superclass forces auditing on siblings
+    * [HHH-5280] - Exception on unidirectional collection whose elements are owned by several collection: "java.lang.IllegalArgumentException: object is not an instance of declaring class"
+    * [HHH-5359] - Derived entity usecase fails when the association is bidirectional
+    * [HHH-5403] - Update to hsqldb 2.0.0 for testing
+    * [HHH-5534] - Regression in 3.5.5: Cascade on merge for Sets fails with transient entities
+    * [HHH-5550] - Hibernate.createBlob() fails when used in current_session_context_class=thread mode
+    * [HHH-5599] - NPE occurs when using Infinispan as L2 Cache
+    * [HHH-5657] - Assembly needs to exclude .git
+    * [HHH-5659] - Problem using Hibernate3.6.0.Final with BLOB and CLOB fields in Oracle.
+    * [HHH-5681] - Packaged JAR file shouldn't contain files with an absolute path
+    * [HHH-5686] - Collections should be loaded by default using "lazy collection fetch" instead of "extra lazy collection" fetch
+    * [HHH-5704] - New getSubString() handling in ClobProxy is incompatible with MySQL JDBC PS.setClob(int, Clob) for empty CLOB
+    * [HHH-5706] - Incorrect accounting for 1-based LOB offsets
+    * [HHH-5709] - JPA Metamodel: EntityType.getName != @Entity.name
+    * [HHH-5710] - incorrect test logic of org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest
+    * [HHH-5715] - Using row_number with the SQLServerDialect makes select distinct useless
+    * [HHH-5717] - LockOptions not being set correctly
+    * [HHH-5725] - SqlServerDialect should support SQL 2000 which does not support the row_number function
+    * [HHH-5727] - Collection member declaration not handling optional AS in HQL.
+    * [HHH-5729] - Only one check constraint is generated when @Min and @Max annotation is used on a single field
+    * [HHH-5736] - Problem with "not" function of CriteriaBuilder
+    * [HHH-5750] - Envers unset session on proxy
+    * [HHH-5756] - Envers creates new revisions when only collection changed for entity
+    * [HHH-5776] - Hibernate documentation: images missing due to links pointing to file:/NotBackedUp/gbadner
+    * [HHH-5791] - NullPointerException merging a transient entity with non-nullable properties that are null if insert is delayed and check_nullability is false
+    * [HHH-5793] - Query and timestamp caches to use cluster cache loader to avoid behaving like sync repl caches
+    * [HHH-5800] - Implement missing element-collection related xml in JPAOverridenAnnotationReader
+    * [HHH-5806] - mapping static inner class causes hsqldb tests fails
+    * [HHH-5817] - Passing char[] or byte[] to equal function of CriteriaBuilder throws java.lang.ClassCastException (Vyacheslav Dimitrov)
+    * [HHH-5821] - JPA EntityType's (or ManagedType's) getSingularAttributes() returns the version attribute with isVersion set to false.
+    * [HHH-5826] - org.hibernate.util.SerializationHelper#resolveClass never tries loader3
+    * [HHH-5830] - Improve LOB Type handling
+    * [HHH-5838] - Proxool connection pool should only close pools it opened
+    * [HHH-5853] - Problem loading cachable collections defined with a property-ref key with a versioned owner
+    * [HHH-5883] - @Lob annotated field throws MappingException
+
+** Improvement
+    * [HHH-3965] - Expose the ability to use varchar(max) or nvarchar(max)
+    * [HHH-4539] - Make UPPER and LOWER work on MS SQL Server text and ntext columns
+    * [HHH-4878] - Update documentation about "text" type and new "image", "materialized_blob", and "materialized_clob" types
+    * [HHH-5325] - Minor issues in test suite and suggestions for improvements (fixes HSQDB 2.0 failures)
+    * [HHH-5588] - Improve support for entityNames - determine the entityName for a retrieved object vía envers
+    * [HHH-5631] - Fix warnings reported by Maven 3
+    * [HHH-5701] - Add .metadata/* to .gitignore
+    * [HHH-5724] - Improve the error message on Bean Validation exception by showing the constraint violation data
+    * [HHH-5726] - SqlServer2005Dialect should support variable limit
+    * [HHH-5761] - Update source repository links in Envers documentation
+    * [HHH-5794] - Add support for additional orm.xml elements for Map handling and element collections
+    * [HHH-5816] - Expose list of modified properties in PostUpdateEvent
+    * [HHH-5823] - Poor multithread performance in UpdateTimestampsCache class
+    * [HHH-5824] - Poor multithread performance in SessionFactoryImpl.getQueryCache method
+    * [HHH-5859] - Upgrade to Infinispan 4.2.1.CR1
+
+** New Feature
+    * [HHH-2655] - SQLServer2005Dialect (ROW_NUMBER for Paging)
+    * [HHH-5371] - Add support for REVEND_TSTMP which will enable SQL table partitioning by time
+    * [HHH-5879] - Expose state from AbstractEntityPersister / Type / SessionFactoryImplementor for OGM usage
+
+**Task
+    * [HHH-5625] - Update Envers manual to reflect 'experimental' status of ValidityAuditStrategy and 'Revision-end-timestamp'
+    * [HHH-5768] - upgrade H2 version to 1.2.145 (was 1.2.140)
+
+
 Changes in version 3.6.0.CR2 (2010.09.29)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11131

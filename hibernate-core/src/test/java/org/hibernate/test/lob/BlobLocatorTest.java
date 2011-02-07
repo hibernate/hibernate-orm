@@ -71,6 +71,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 	public void testBoundedBlobLocatorAccess() throws Throwable {
 		byte[] original = buildRecursively( BLOB_SIZE, true );
 		byte[] changed = buildRecursively( BLOB_SIZE, false );
+		byte[] empty = new byte[] {};
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -121,11 +122,23 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
+		// test empty blob
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
 		assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( changed, extractData( entity.getBlobLocator() ) );
+		entity.setBlobLocator( s.getLobHelper().createBlob( empty ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
+		if ( entity.getBlobLocator() != null) {
+			assertEquals( empty.length, entity.getBlobLocator().length() );
+			assertEquals( empty, extractData( entity.getBlobLocator() ) );
+		}
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

@@ -45,6 +45,7 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 	public void testBoundedLongByteArrayAccess() {
 		byte[] original = buildRecursively( ARRAY_SIZE, true );
 		byte[] changed = buildRecursively( ARRAY_SIZE, false );
+		byte[] empty = new byte[] {};
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -83,6 +84,17 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s.beginTransaction();
 		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
 		assertNull( entity.getLongByteArray() );
+		entity.setLongByteArray( empty );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
+		if ( entity.getLongByteArray() != null ) {
+			assertEquals( empty.length, entity.getLongByteArray().length );
+			assertEquals( empty, entity.getLongByteArray() );
+		}
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

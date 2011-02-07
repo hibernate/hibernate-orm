@@ -5,7 +5,7 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 3.6.1 (2010.02.02)
+Changes in version 3.6.1 (2011.02.02)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11170
 

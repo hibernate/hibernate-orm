@@ -42,6 +42,7 @@ public abstract class LongStringTest extends DatabaseSpecificFunctionalTestCase 
 	public void testBoundedLongStringAccess() {
 		String original = buildRecursively( LONG_STRING_SIZE, 'x' );
 		String changed = buildRecursively( LONG_STRING_SIZE, 'y' );
+		String empty = "";
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -80,6 +81,17 @@ public abstract class LongStringTest extends DatabaseSpecificFunctionalTestCase 
 		s.beginTransaction();
 		entity = ( LongStringHolder ) s.get( LongStringHolder.class, entity.getId() );
 		assertNull( entity.getLongString() );
+		entity.setLongString( empty );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		entity = ( LongStringHolder ) s.get( LongStringHolder.class, entity.getId() );
+		if ( entity.getLongString() != null ) {
+			assertEquals( empty.length(), entity.getLongString().length() );
+			assertEquals( empty, entity.getLongString() );
+		}
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

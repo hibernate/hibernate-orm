@@ -32,6 +32,7 @@ public class SerializableTypeTest extends FunctionalTestCase {
 	public void testNewSerializableType() {
 		final String initialPayloadText = "Initial payload";
 		final String changedPayloadText = "Changed payload";
+		final String empty = "";
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -70,6 +71,15 @@ public class SerializableTypeTest extends FunctionalTestCase {
 		s.beginTransaction();
 		holder = ( SerializableHolder ) s.get( SerializableHolder.class, holder.getId() );
 		assertNull( holder.getSerialData() );
+		holder.setSerialData( new SerializableData( empty ) );
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		holder = ( SerializableHolder ) s.get( SerializableHolder.class, holder.getId() );
+		serialData = ( SerializableData ) holder.getSerialData();
+		assertEquals( empty, serialData.getPayload() );
 		s.delete( holder );
 		s.getTransaction().commit();
 		s.close();

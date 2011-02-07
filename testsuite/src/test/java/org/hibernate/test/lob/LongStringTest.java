@@ -89,8 +89,10 @@ public abstract class LongStringTest extends DatabaseSpecificFunctionalTestCase 
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LongStringHolder ) s.get( LongStringHolder.class, entity.getId() );
-		assertEquals( empty.length(), entity.getLongString().length() );
-		assertEquals( empty, entity.getLongString() );
+		if ( entity.getLongString() != null ) {
+			assertEquals( empty.length(), entity.getLongString().length() );
+			assertEquals( empty, entity.getLongString() );
+		}
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

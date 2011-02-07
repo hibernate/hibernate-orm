@@ -135,8 +135,10 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( empty.length, entity.getBlobLocator().length() );
-		assertEquals( empty, extractData( entity.getBlobLocator() ) );
+		if ( entity.getBlobLocator() != null) {
+			assertEquals( empty.length, entity.getBlobLocator().length() );
+			assertEquals( empty, extractData( entity.getBlobLocator() ) );
+		}
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

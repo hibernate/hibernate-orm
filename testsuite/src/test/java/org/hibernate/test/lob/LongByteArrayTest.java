@@ -91,8 +91,10 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
-		assertEquals( empty.length, entity.getLongByteArray().length );
-		assertEquals( empty, entity.getLongByteArray() );
+		if ( entity.getLongByteArray() != null ) {
+			assertEquals( empty.length, entity.getLongByteArray().length );
+			assertEquals( empty, entity.getLongByteArray() );
+		}
 		s.delete( entity );
 		s.getTransaction().commit();
 		s.close();

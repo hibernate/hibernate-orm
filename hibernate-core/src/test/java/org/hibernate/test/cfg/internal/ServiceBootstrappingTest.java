@@ -27,9 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.testing.junit.UnitTestCase;
 
 import org.hibernate.cfg.Environment;
@@ -41,7 +39,6 @@ import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.internal.ServicesRegistryImpl;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 
@@ -51,7 +48,7 @@ import org.hibernate.test.common.ConnectionProviderBuilder;
  * @author Steve Ebersole
  */
 public class ServiceBootstrappingTest extends UnitTestCase {
-	private ServicesRegistryImpl servicesRegistry;
+	private ServiceRegistryImpl servicesRegistry;
 
 	public ServiceBootstrappingTest(String string) {
 		super( string );
@@ -65,7 +62,7 @@ public class ServiceBootstrappingTest extends UnitTestCase {
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 
-		servicesRegistry = new ServicesRegistryImpl( serviceInitiators );
+		servicesRegistry = new ServiceRegistryImpl( serviceInitiators );
 	}
 
 	protected void tearDown() {

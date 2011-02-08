@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Iterator;
 import java.io.Serializable;
 import javax.persistence.EntityManager;
@@ -39,7 +38,6 @@ import javax.persistence.spi.LoadState;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.metadata.ClassMetadata;
@@ -49,8 +47,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
-import org.hibernate.service.internal.ServicesRegistryImpl;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.
@@ -60,7 +57,7 @@ import org.hibernate.service.spi.ServicesRegistry;
  * @author Steve Ebersole
  */
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
-	private final transient ServicesRegistryImpl serviceRegistry;
+	private final transient ServiceRegistryImpl serviceRegistry;
 	private final SessionFactory sessionFactory;
 	private final PersistenceUnitTransactionType transactionType;
 	private final boolean discardOnClose;

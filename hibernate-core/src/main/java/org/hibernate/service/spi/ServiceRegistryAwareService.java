@@ -24,15 +24,15 @@
 package org.hibernate.service.spi;
 
 /**
- * Allows services to be injected with the {@link ServicesRegistry} during configuration phase.
+ * Allows services to be injected with the {@link ServiceRegistry} during configuration phase.
  *
  * @author Steve Ebersole
  */
-public interface ServicesRegistryAwareService {
+public interface ServiceRegistryAwareService {
 	/**
-	 * Callback to inject the regsitry.
+	 * Callback to inject the registry.
 	 *
-	 * @param servicesRegistry The registry
+	 * @param serviceRegistry The registry
 	 */
-	public void injectServices(ServicesRegistry servicesRegistry);
+	public void injectServices(ServiceRegistry serviceRegistry);
 }

@@ -152,8 +152,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
-import org.hibernate.service.spi.ServicesRegistry;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -1823,7 +1822,7 @@ public class Configuration implements Serializable {
 	 *
 	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
 	 */
-	public SessionFactory buildSessionFactory(ServicesRegistry serviceRegistry) throws HibernateException {
+	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		log.debug( "Preparing to build session factory with filters : " + filterDefinitions );
 
 		secondPassCompile();

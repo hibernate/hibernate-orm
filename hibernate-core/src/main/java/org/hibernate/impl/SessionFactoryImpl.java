@@ -113,7 +113,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImplementor;
@@ -174,7 +174,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient Map fetchProfiles;
 	private final transient Map imports;
 	private final transient Interceptor interceptor;
-	private final transient ServicesRegistry serviceRegistry;
+	private final transient ServiceRegistry serviceRegistry;
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
@@ -199,7 +199,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	public SessionFactoryImpl(
 			Configuration cfg,
 	        Mapping mapping,
-			ServicesRegistry serviceRegistry,
+			ServiceRegistry serviceRegistry,
 	        Settings settings,
 	        EventListeners listeners,
 			SessionFactoryObserver observer) throws HibernateException {

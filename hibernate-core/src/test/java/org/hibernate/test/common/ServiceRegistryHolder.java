@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.common;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,15 +32,14 @@ import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.ServicesRegistryImpl;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * @author Gail Badner
  */
 public class ServiceRegistryHolder {
-	private final ServicesRegistryImpl serviceRegistry;
+	private final ServiceRegistryImpl serviceRegistry;
 	private final Properties properties;
 
 	public ServiceRegistryHolder(Map props) {
@@ -57,7 +55,7 @@ public class ServiceRegistryHolder {
 		return properties;
 	}
 
-	public ServicesRegistry getServiceRegistry() {
+	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}
 

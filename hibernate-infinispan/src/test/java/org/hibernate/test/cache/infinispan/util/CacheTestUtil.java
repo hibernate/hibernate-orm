@@ -37,8 +37,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.ServicesRegistry;
 
 /**
  * Utilities for cache testing.

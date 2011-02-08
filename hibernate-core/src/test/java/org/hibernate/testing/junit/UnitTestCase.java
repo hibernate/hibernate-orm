@@ -38,7 +38,7 @@ import junit.framework.TestSuite;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
@@ -96,7 +96,7 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 		}
 	}
 
-	protected ServicesRegistry getServiceRegistry() {
+	protected ServiceRegistry getServiceRegistry() {
 		if ( serviceRegistryHolder == null ) {
 			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
 		}

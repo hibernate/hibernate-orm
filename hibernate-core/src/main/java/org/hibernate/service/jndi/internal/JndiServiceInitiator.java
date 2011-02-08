@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Standard initiator for the standard {@link JndiService} service
@@ -43,7 +43,7 @@ public class JndiServiceInitiator implements ServiceInitiator<JndiService> {
 	}
 
 	@Override
-	public JndiService initiateService(Map configurationValues, ServicesRegistry registry) {
+	public JndiService initiateService(Map configurationValues, ServiceRegistry registry) {
 		return new JndiServiceImpl( configurationValues );
 	}
 }

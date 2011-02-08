@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
 
@@ -45,8 +45,8 @@ import org.hibernate.service.spi.UnknownServiceException;
  *
  * @author Steve Ebersole
  */
-public class ServicesRegistryImpl implements ServicesRegistry {
-	private static final Logger log = LoggerFactory.getLogger( ServicesRegistryImpl.class );
+public class ServiceRegistryImpl implements ServiceRegistry {
+	private static final Logger log = LoggerFactory.getLogger( ServiceRegistryImpl.class );
 
 	private final List<ServiceInitiator> serviceInitiators;
 	private ServicesInitializer initializer;
@@ -56,7 +56,7 @@ public class ServicesRegistryImpl implements ServicesRegistry {
 	// iterate it in reverse order which is only available through ListIterator
 	private List<Service> serviceList = new ArrayList<Service>();
 
-	public ServicesRegistryImpl(List<ServiceInitiator> serviceInitiators) {
+	public ServiceRegistryImpl(List<ServiceInitiator> serviceInitiators) {
 		this.serviceInitiators = Collections.unmodifiableList( serviceInitiators );
 	}
 

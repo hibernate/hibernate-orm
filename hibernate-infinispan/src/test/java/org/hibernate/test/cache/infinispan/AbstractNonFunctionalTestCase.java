@@ -27,10 +27,6 @@ import java.util.Set;
 
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 import org.infinispan.Cache;

@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 
 
 /**
@@ -44,7 +44,7 @@ public class ClassLoaderServiceInitiator implements ServiceInitiator<ClassLoader
 	}
 
 	@Override
-	public ClassLoaderService initiateService(Map configurationValues, ServicesRegistry registry) {
+	public ClassLoaderService initiateService(Map configurationValues, ServiceRegistry registry) {
 		return new ClassLoaderServiceImpl( configurationValues );
 	}
 }

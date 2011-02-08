@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.ExternalSessionFactoryConfig;

@@ -29,7 +29,7 @@ import java.util.Map;
 
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
-import org.hibernate.service.internal.ServicesRegistryImpl;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator;
@@ -60,8 +60,8 @@ public class ServicesRegistryBootstrap {
 		//serviceInitiators.add( TransactionFactoryInitiator.INSTANCE );
 	}
 
-	public ServicesRegistryImpl initiateServicesRegistry(Map configurationValues) {
-		final ServicesRegistryImpl servicesRegistry = new ServicesRegistryImpl( serviceInitiators );
+	public ServiceRegistryImpl initiateServicesRegistry(Map configurationValues) {
+		final ServiceRegistryImpl servicesRegistry = new ServiceRegistryImpl( serviceInitiators );
 		servicesRegistry.initialize( configurationValues );
 		return servicesRegistry;
 	}

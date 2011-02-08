@@ -40,8 +40,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -103,7 +103,7 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 	/**
 	 * {@inheritDoc}
 	 */
-	public ConnectionProvider initiateService(Map configurationValues, ServicesRegistry registry) {
+	public ConnectionProvider initiateService(Map configurationValues, ServiceRegistry registry) {
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 
 		ConnectionProvider connectionProvider = null;

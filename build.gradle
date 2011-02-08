@@ -2,10 +2,9 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 allprojects {
-    apply plugin: org.hibernate.build.gradle.maven.LocalMavenRepoSniffer
-
     repositories {
         mavenCentral()
+        mavenLocal()
         mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
         mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
     }
@@ -93,7 +92,7 @@ subprojects { subProject ->
     if ( ! subProject.name.startsWith( 'release' ) ) {
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
-        apply plugin: org.hibernate.build.gradle.upload.UploadManager
+        apply plugin: org.hibernate.build.gradle.upload.UploadAuthenticationManager
 
         configurations {
             provided {

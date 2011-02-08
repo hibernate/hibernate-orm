@@ -48,12 +48,20 @@ ideaModule {
     sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
 }
 
-task testJar(type: Jar, dependsOn: compileJava) {
+task testingJar(type: Jar, dependsOn: compileTestJava) {
+    from sourceSets.test.classes
+    includes += "org/hibernate/testing/*"
+    baseName = 'hibernate-testing'
+}
+
+task testingSourcesJar(type: Jar, dependsOn: compileTestJava) {
     from sourceSets.test.allSource
-    classifier = 'tests'
+    includes += "org/hibernate/testing/*"
+    baseName = 'hibernate-testing'
+    classifier = 'sources'
 }
 
 artifacts {
-  archives sourcesJar, testJar
+  testing testingJar, testingSourcesJar
 }
 

@@ -55,5 +55,3 @@ artifacts {
   archives sourcesJar, testJar
 }
 
-// http://jira.codehaus.org/browse/GRADLE-1158
-test.testReport = false

@@ -230,6 +230,6 @@ dependsOnChildren()
 //  2) /gradlew.bat which is the windows bat script for for executing builds
 //  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
 task wrapper(type: Wrapper) {
-    gradleVersion = '0.9-rc-1'
-    jarPath = 'wrapper'
+    gradleVersion = '0.9.2'
+    jarFile = 'wrapper'
 }

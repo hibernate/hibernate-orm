@@ -32,7 +32,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
 import org.jboss.logging.Logger;
@@ -42,9 +42,9 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class ServicesRegistryImpl implements ServicesRegistry {
+public class ServiceRegistryImpl implements ServiceRegistry {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServicesRegistryImpl.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServiceRegistryImpl.class.getName());
 
 	private final List<ServiceInitiator> serviceInitiators;
 	private ServicesInitializer initializer;
@@ -54,7 +54,7 @@ public class ServicesRegistryImpl implements ServicesRegistry {
 	// iterate it in reverse order which is only available through ListIterator
 	private List<Service> serviceList = new ArrayList<Service>();
 
-	public ServicesRegistryImpl(List<ServiceInitiator> serviceInitiators) {
+	public ServiceRegistryImpl(List<ServiceInitiator> serviceInitiators) {
 		this.serviceInitiators = Collections.unmodifiableList( serviceInitiators );
 	}
 

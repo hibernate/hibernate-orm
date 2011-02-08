@@ -25,7 +25,7 @@ package org.hibernate.service.jdbc.dialect.internal;
 import java.util.Map;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Standard initiator for the standard {@link DialectResolver} service
@@ -45,7 +45,7 @@ public class DialectResolverInitiator implements ServiceInitiator<DialectResolve
 	/**
 	 * {@inheritDoc}
 	 */
-	public DialectResolver initiateService(Map configVales, ServicesRegistry registry) {
+	public DialectResolver initiateService(Map configVales, ServiceRegistry registry) {
 		return new StandardDialectResolver();
 	}
 }

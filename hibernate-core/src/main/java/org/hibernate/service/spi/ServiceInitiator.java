@@ -45,5 +45,5 @@ public interface ServiceInitiator<T extends Service> {
 	 *
 	 * @return The initiated service.
 	 */
-	public T initiateService(Map configurationValues, ServicesRegistry registry);
+	public T initiateService(Map configurationValues, ServiceRegistry registry);
 }

@@ -34,7 +34,7 @@ import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.UnknownServiceException;
 import org.jboss.logging.Logger;
@@ -48,12 +48,12 @@ public class ServicesInitializer {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServicesInitializer.class.getName());
 
-	private final ServicesRegistryImpl servicesRegistry;
+	private final ServiceRegistryImpl servicesRegistry;
 	private final Map<Class,ServiceInitiator> serviceInitiatorMap;
 	private final Map configurationValues;
 
 	public ServicesInitializer(
-			ServicesRegistryImpl servicesRegistry,
+			ServiceRegistryImpl servicesRegistry,
 			List<ServiceInitiator> serviceInitiators,
 			Map configurationValues) {
 		this.servicesRegistry = servicesRegistry;
@@ -129,8 +129,8 @@ public class ServicesInitializer {
 			( (Configurable) service ).configure( configurationValues );
 		}
 
-		if ( ServicesRegistryAwareService.class.isInstance( service ) ) {
-			( (ServicesRegistryAwareService) service ).injectServices( servicesRegistry );
+		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
+			( (ServiceRegistryAwareService) service ).injectServices( servicesRegistry );
 		}
 	}
 

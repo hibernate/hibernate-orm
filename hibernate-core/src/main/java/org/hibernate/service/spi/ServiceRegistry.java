@@ -29,7 +29,7 @@ package org.hibernate.service.spi;
  *
  * @author Steve Ebersole
  */
-public interface ServicesRegistry {
+public interface ServiceRegistry {
 	/**
 	 * Retrieve a service by role.
 	 *

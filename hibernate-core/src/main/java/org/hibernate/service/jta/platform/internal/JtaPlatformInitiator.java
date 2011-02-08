@@ -27,7 +27,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Standard initiator for the standard {@link org.hibernate.service.jta.platform.spi.JtaPlatform}
@@ -49,7 +49,7 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public JtaPlatform initiateService(Map configVales, ServicesRegistry registry) {
+	public JtaPlatform initiateService(Map configVales, ServiceRegistry registry) {
 		final Object platform = configVales.get( JTA_PLATFORM );
 		if ( JtaPlatform.class.isInstance( platform ) ) {
 			return (JtaPlatform) platform;

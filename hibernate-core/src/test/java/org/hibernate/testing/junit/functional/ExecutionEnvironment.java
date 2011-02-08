@@ -38,7 +38,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**
@@ -78,7 +78,7 @@ public class ExecutionEnvironment {
 		return configuration;
 	}
 
-	public ServicesRegistry getServiceRegistry() {
+	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistryHolder.getServiceRegistry();
 	}
 

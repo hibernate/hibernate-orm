@@ -86,7 +86,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.transaction.JDBCTransactionFactory;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.ReflectHelper;
@@ -1470,7 +1470,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return cfg.getEventListeners();
 	}
 
-	SessionFactory buildSessionFactory(ServicesRegistry serviceRegistry) throws HibernateException {
+	SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		return cfg.buildSessionFactory( serviceRegistry );
 	}
 

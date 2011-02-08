@@ -30,7 +30,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
-import org.hibernate.service.internal.ServicesRegistryImpl;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
@@ -45,13 +45,14 @@ import org.hibernate.testing.junit.UnitTestCase;
  * @author Steve Ebersole
  */
 public class ServiceBootstrappingTest extends UnitTestCase {
-	private ServicesRegistryImpl servicesRegistry;
+	private ServiceRegistryImpl servicesRegistry;
 
 	public ServiceBootstrappingTest(String string) {
 		super( string );
 	}
 
-	protected void setUp() {
+	@Override
+    protected void setUp() {
 		List<ServiceInitiator> serviceInitiators = new ArrayList<ServiceInitiator>();
 		serviceInitiators.add( ClassLoaderServiceInitiator.INSTANCE );
 		serviceInitiators.add( ConnectionProviderInitiator.INSTANCE );
@@ -59,10 +60,11 @@ public class ServiceBootstrappingTest extends UnitTestCase {
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
 
-		servicesRegistry = new ServicesRegistryImpl( serviceInitiators );
+		servicesRegistry = new ServiceRegistryImpl( serviceInitiators );
 	}
 
-	protected void tearDown() {
+	@Override
+    protected void tearDown() {
 		servicesRegistry.destroy();
 	}
 

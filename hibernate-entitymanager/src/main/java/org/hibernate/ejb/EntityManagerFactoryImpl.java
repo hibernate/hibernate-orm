@@ -45,7 +45,7 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.service.internal.ServicesRegistryImpl;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.
@@ -55,7 +55,7 @@ import org.hibernate.service.internal.ServicesRegistryImpl;
  * @author Steve Ebersole
  */
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
-	private final transient ServicesRegistryImpl serviceRegistry;
+	private final transient ServiceRegistryImpl serviceRegistry;
 	private final SessionFactory sessionFactory;
 	private final PersistenceUnitTransactionType transactionType;
 	private final boolean discardOnClose;

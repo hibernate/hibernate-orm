@@ -25,7 +25,7 @@ package org.hibernate.engine.jdbc.internal;
 import java.util.Map;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Standard initiator for the standard {@link JdbcServices} service
@@ -45,7 +45,7 @@ public class JdbcServicesInitiator implements ServiceInitiator<JdbcServices> {
 	/**
 	 * {@inheritDoc}
 	 */
-	public JdbcServices initiateService(Map configValues, ServicesRegistry registry) {
+	public JdbcServices initiateService(Map configValues, ServiceRegistry registry) {
 		return new JdbcServicesImpl();
 	}
 }

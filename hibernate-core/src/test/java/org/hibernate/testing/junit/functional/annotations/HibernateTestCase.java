@@ -38,7 +38,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.Work;
-import org.hibernate.service.spi.ServicesRegistry;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.testing.junit.DialectChecks;
 import org.hibernate.testing.junit.FailureExpected;
@@ -145,7 +145,7 @@ public abstract class HibernateTestCase extends TestCase {
 		handleUnclosedResources();
 	}
 
-	protected ServicesRegistry getServiceRegistry() {
+	protected ServiceRegistry getServiceRegistry() {
 		if ( serviceRegistryHolder == null ) {
 			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
 		}

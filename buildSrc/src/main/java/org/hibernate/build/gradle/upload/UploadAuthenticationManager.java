@@ -49,7 +49,7 @@ public class UploadAuthenticationManager implements Plugin<Project> {
 				public void execute(final Upload uploadTask) {
 					// create a auth task for each upload task...
 					final AuthenticationHandler authenticationHandler = project.getTasks().add(
-							"uploadAuthenticationHandler",
+							"uploadAuthenticationHandler-" + uploadTask.getName(),
 							AuthenticationHandler.class
 					);
 

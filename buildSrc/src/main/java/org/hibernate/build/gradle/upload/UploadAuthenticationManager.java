@@ -21,48 +21,48 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.build.gradle.upload;
 
-import org.apache.maven.artifact.ant.RemoteRepository;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.maven.MavenDeployer;
 import org.gradle.api.tasks.Upload;
 
 /**
- * Plugin to manage authentication
+ * Manages authentication aspects of artifact uploading by delegation to registered {@link AuthenticationProvider}
+ * instances.
  *
  * @author Steve Ebersole
  */
-public class UploadManager implements Plugin<Project> {
+public class UploadAuthenticationManager implements Plugin<Project> {
 
 	@Override
-	public void apply(Project project) {
-		final Authenticator authenticator = project.getTasks().add( "nexusAuthHandler", Authenticator.class );
+	public void apply(final Project project) {
+		// todo : ideally the registry would be handled by a convention to allow configuration (aka, adding more providers)...
+		//		for our purposes here in Hibernate we only care about the Maven settings.xml based way so we
+		//		code for just that.
+		final AuthenticationProviderRegistry registry = new AuthenticationProviderRegistry();
+
 		project.getTasks().withType( Upload.class ).allTasks(
 			new Action<Upload>() {
 				@Override
 				public void execute(final Upload uploadTask) {
-					uploadTask.getRepositories().withType( MavenDeployer.class ).allObjects(
-							new Action<MavenDeployer>() {
-								public void execute(MavenDeployer deployer) {
-									RemoteRepository repository =  deployer.getRepository();
-									if ( repository != null ) {
-										authenticator.addRepository( repository );
-										uploadTask.getDependsOn().add( authenticator );
-									}
-									repository = deployer.getSnapshotRepository();
-									if ( repository != null ) {
-										authenticator.addRepository( repository );
-										uploadTask.getDependsOn().add( authenticator );
-									}
-								}
-							}
+					// create a auth task for each upload task...
+					final AuthenticationHandler authenticationHandler = project.getTasks().add(
+							"uploadAuthenticationHandler",
+							AuthenticationHandler.class
 					);
+
+					// link the auth task with the upload task
+					authenticationHandler.injectUploadTask( uploadTask );
+
+					// todo: Also in conjunction, would be best to have the handler lookup the registry rather than pushing it
+					authenticationHandler.injectProviderRegistry( registry );
+
+					uploadTask.getDependsOn().add( authenticationHandler );
 				}
 			}
 		);
 	}
+
 }

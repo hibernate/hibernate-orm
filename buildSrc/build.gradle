@@ -5,7 +5,7 @@ buildDir = "target"
 
 repositories {
     mavenCentral()
-    mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
+    mavenLocal()
 }
 
 
@@ -15,6 +15,7 @@ dependencies {
     compile 'org.apache.ant:ant:1.7.0'
     compile 'org.apache.maven:maven-ant-tasks:2.1.0'
     compile 'org.apache.maven.wagon:wagon-http:1.0-beta-6'
+    compile 'dom4j:dom4j:1.6.1@jar'
 
     groovy localGroovy()
 }

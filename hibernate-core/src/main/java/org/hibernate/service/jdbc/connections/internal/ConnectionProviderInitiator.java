@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
-
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -32,13 +31,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
+import org.jboss.logging.Logger;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -49,8 +49,8 @@ import org.hibernate.service.spi.ServicesRegistry;
 public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionProvider> {
 	public static final ConnectionProviderInitiator INSTANCE = new ConnectionProviderInitiator();
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ConnectionProviderInitiator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       ConnectionProviderInitiator.class.getName());
 
 	public static final String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
 	public static final String C3P0_PROVIDER_CLASS_NAME =

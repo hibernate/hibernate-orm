@@ -1,6 +1,5 @@
 //$Id: Product.java 4806 2004-11-25 14:37:00Z steveebersole $
 package org.hibernate.test.cid;
-
 import java.math.BigDecimal;
 
 /**

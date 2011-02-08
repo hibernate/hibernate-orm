@@ -22,21 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
-import java.sql.Types;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Comparator;
-
-import org.hibernate.HibernateException;
 import org.hibernate.EntityMode;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * Logic to bind stream of byte into a VARBINARY

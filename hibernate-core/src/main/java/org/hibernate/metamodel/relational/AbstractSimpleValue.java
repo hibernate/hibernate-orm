@@ -22,8 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Basic support for {@link SimpleValue} implementations.
@@ -32,7 +32,7 @@ import org.hibernate.Logger;
  */
 public abstract class AbstractSimpleValue implements SimpleValue {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AbstractSimpleValue.class.getName());
 
 	private final ValueContainer container;
 	private Datatype datatype;
@@ -59,8 +59,8 @@ public abstract class AbstractSimpleValue implements SimpleValue {
 	 * {@inheritDoc}
 	 */
 	public void setDatatype(Datatype datatype) {
-        LOG.debug("Setting datatype for column " + toLoggableString() + " : " + datatype);
-        if (this.datatype != null && !this.datatype.equals(datatype)) LOG.debug("Overriding previous datatype : " + this.datatype);
+        LOG.debugf("Setting datatype for column %s : %s", toLoggableString(), datatype);
+        if (this.datatype != null && !this.datatype.equals(datatype)) LOG.debugf("Overriding previous datatype : %s", this.datatype);
 		this.datatype = datatype;
 	}
 }

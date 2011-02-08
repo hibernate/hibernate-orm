@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.classloading.spi;
-
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
-
 import org.hibernate.service.spi.Service;
 
 /**

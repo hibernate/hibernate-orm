@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate;
-
 import org.hibernate.util.StringHelper;
 
 /**

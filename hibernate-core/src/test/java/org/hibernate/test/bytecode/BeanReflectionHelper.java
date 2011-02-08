@@ -1,10 +1,8 @@
 package org.hibernate.test.bytecode;
-
+import java.util.Date;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
-
-import java.util.Date;
 
 /**
  * @author Steve Ebersole

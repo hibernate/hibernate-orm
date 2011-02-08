@@ -1,10 +1,7 @@
 //$Id: MutableNaturalIdTest.java 11645 2007-06-06 21:33:31Z steve.ebersole@jboss.com $
 package org.hibernate.test.naturalid.mutable;
-
 import java.lang.reflect.Field;
-
 import junit.framework.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

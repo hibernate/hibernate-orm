@@ -1,9 +1,6 @@
 package org.hibernate.test.bytecode.cglib;
-
 import java.lang.reflect.Field;
-
 import junit.framework.TestSuite;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.proxy.HibernateProxy;

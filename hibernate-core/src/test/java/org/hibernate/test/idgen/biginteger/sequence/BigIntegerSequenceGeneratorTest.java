@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.idgen.biginteger.sequence;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;

@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
@@ -48,6 +47,7 @@ import org.hibernate.transaction.TransactionManagerLookup;
 import org.hibernate.transaction.TransactionManagerLookupFactory;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Reads configuration properties and builds a {@link Settings} instance.
@@ -58,8 +58,7 @@ public class SettingsFactory implements Serializable {
 
     private static final long serialVersionUID = -1194386144994524825L;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SettingsFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SettingsFactory.class.getName());
 
 	public static final String DEF_CACHE_REG_FACTORY = NoCachingRegionFactory.class.getName();
 
@@ -278,7 +277,7 @@ public class SettingsFactory implements Serializable {
 			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
 		}
 		else {
-            LOG.debug("Using javassist as bytecode provider by default");
+            LOG.debugf("Using javassist as bytecode provider by default");
 			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 		}
 	}

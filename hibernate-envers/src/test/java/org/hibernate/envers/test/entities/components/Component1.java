@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components;
-
 import javax.persistence.Embeddable;
 
 /**

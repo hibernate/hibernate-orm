@@ -23,11 +23,8 @@
  *
  */
 package org.hibernate.connection;
-
 import java.util.Properties;
-
 import junit.framework.TestCase;
-
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 
 /**

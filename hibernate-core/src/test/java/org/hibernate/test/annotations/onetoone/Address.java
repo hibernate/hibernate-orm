@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

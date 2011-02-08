@@ -23,13 +23,10 @@
  *
  */
 package org.hibernate.id.factory;
-
 import java.util.Properties;
-import java.io.Serializable;
-
+import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.type.Type;
-import org.hibernate.dialect.Dialect;
 
 /**
  * Contract for a <tt>factory</tt> of {@link IdentifierGenerator} instances.

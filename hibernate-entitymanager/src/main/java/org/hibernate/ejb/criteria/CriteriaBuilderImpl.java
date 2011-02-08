@@ -22,35 +22,33 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
-
 import java.io.Serializable;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Selection;
-import javax.persistence.criteria.CompoundSelection;
-import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
-import javax.persistence.Tuple;
-
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.ejb.criteria.expression.CoalesceExpression;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.ejb.criteria.expression.ConcatExpression;
-import org.hibernate.ejb.criteria.expression.NullLiteralExpression;
-import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.LiteralExpression;
+import org.hibernate.ejb.criteria.expression.NullLiteralExpression;
 import org.hibernate.ejb.criteria.expression.NullifExpression;
+import org.hibernate.ejb.criteria.expression.ParameterExpressionImpl;
 import org.hibernate.ejb.criteria.expression.SearchedCaseExpression;
 import org.hibernate.ejb.criteria.expression.SimpleCaseExpression;
 import org.hibernate.ejb.criteria.expression.SizeOfCollectionExpression;
@@ -71,19 +69,19 @@ import org.hibernate.ejb.criteria.expression.function.SubstringFunction;
 import org.hibernate.ejb.criteria.expression.function.TrimFunction;
 import org.hibernate.ejb.criteria.expression.function.UpperFunction;
 import org.hibernate.ejb.criteria.path.PluralAttributePath;
+import org.hibernate.ejb.criteria.predicate.BetweenPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanAssertionPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanExpressionPredicate;
 import org.hibernate.ejb.criteria.predicate.BooleanStaticAssertionPredicate;
-import org.hibernate.ejb.criteria.predicate.NullnessPredicate;
-import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
-import org.hibernate.ejb.criteria.predicate.InPredicate;
-import org.hibernate.ejb.criteria.predicate.BetweenPredicate;
+import org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
+import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ExistsPredicate;
+import org.hibernate.ejb.criteria.predicate.InPredicate;
 import org.hibernate.ejb.criteria.predicate.IsEmptyPredicate;
 import org.hibernate.ejb.criteria.predicate.LikePredicate;
 import org.hibernate.ejb.criteria.predicate.MemberOfPredicate;
-import static org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
+import org.hibernate.ejb.criteria.predicate.NullnessPredicate;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.

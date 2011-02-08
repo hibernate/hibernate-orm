@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
-
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
 

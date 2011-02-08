@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
 import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;

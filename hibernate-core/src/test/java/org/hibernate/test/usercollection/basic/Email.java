@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.usercollection.basic;
 
+
 /**
  * @author Gavin King
  */

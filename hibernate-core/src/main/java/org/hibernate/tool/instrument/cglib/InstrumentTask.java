@@ -72,7 +72,8 @@ public class InstrumentTask extends BasicInstrumentationTask {
 		System.err.println( "Per HHH-5451 support for cglib as a bytecode provider has been deprecated." );
 	}
 
-	protected Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options) {
+	@Override
+    protected Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options) {
 		return new CGLIBInstrumenter( logger, options );
 	}
 }

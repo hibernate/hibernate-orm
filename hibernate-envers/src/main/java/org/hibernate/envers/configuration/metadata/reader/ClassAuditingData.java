@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata.reader;
-
+import static org.hibernate.envers.tools.Tools.newHashMap;
 import java.util.Map;
-
 import org.hibernate.envers.AuditTable;
-import static org.hibernate.envers.tools.Tools.*;
 
 /**
  * @author Adam Warski (adam at warski dot org)

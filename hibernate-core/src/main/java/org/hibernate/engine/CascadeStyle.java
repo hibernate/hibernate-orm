@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.util.ArrayHelper;
 

@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cid;
-
 import java.io.Serializable;
-
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.IdentityGenerator;
 

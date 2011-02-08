@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.event;
-
 import java.io.Serializable;
 
 /** 

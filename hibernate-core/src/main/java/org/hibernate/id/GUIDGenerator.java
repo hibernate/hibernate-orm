@@ -22,14 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Generates <tt>string</tt> values using the SQL Server NEWID() function.
@@ -38,8 +38,7 @@ import org.hibernate.engine.SessionImplementor;
  */
 public class GUIDGenerator implements IdentifierGenerator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                GUIDGenerator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, GUIDGenerator.class.getName());
 	private static boolean warned = false;
 
 	public GUIDGenerator() {

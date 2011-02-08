@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria.predicate;
 
+
 /**
  * Models what ANSI-SQL terms a <i>truth value</i>.  Specifically, ANSI-SQL defines <tt>TRUE</tt>, <tt>FALSE</tt> and
  * <tt>UNKNOWN</tt> as <i>truth values</i>.  These <i>truth values</i> are used to explicitly check the result of a

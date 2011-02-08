@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode.util;
 
+
 /**
  * Used to determine whether a class should be instrumented.
  *

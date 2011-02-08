@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.emops.cascade;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

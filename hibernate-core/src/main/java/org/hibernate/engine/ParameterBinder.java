@@ -23,14 +23,14 @@
  *
  */
 package org.hibernate.engine;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Centralizes the commonality regarding binding of parameter values into
@@ -43,8 +43,7 @@ import org.hibernate.type.Type;
  */
 public class ParameterBinder {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ParameterBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ParameterBinder.class.getName());
 
 	public static interface NamedParameterSource {
 		public int[] getNamedParameterLocations(String name);
@@ -118,7 +117,7 @@ public class ParameterBinder {
 				TypedValue typedval = ( TypedValue ) e.getValue();
 				int[] locations = source.getNamedParameterLocations( name );
 				for ( int i = 0; i < locations.length; i++ ) {
-                    LOG.debug("bindNamedParameters() " + typedval.getValue() + " -> " + name + " [" + (locations[i] + start) + "]");
+                    LOG.debugf("bindNamedParameters() %s -> %s [%s]", typedval.getValue(), name, locations[i] + start);
 					typedval.getType().nullSafeSet( ps, typedval.getValue(), locations[i] + start, session );
 				}
 				result += locations.length;

@@ -20,26 +20,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
-
-import antlr.SemanticException;
-
 import org.hibernate.HibernateException;
-import org.hibernate.sql.SelectExpression;
-import org.hibernate.sql.AliasGenerator;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.NameGenerator;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.sql.AliasGenerator;
+import org.hibernate.sql.SelectExpression;
+import org.hibernate.sql.SelectFragment;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.type.Type;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.Type;
+import antlr.SemanticException;
 
 /**
  * TODO : javadoc

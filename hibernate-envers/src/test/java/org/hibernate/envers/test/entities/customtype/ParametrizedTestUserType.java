@@ -22,15 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.customtype;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.type.StringType;
 import org.hibernate.usertype.ParameterizedType;

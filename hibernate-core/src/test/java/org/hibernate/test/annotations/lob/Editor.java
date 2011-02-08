@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.lob;
-
 import java.io.Serializable;
 
 /**

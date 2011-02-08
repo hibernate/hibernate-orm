@@ -20,37 +20,32 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
-import java.util.Iterator;
-import java.io.Serializable;
+import javax.persistence.Cache;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContextType;
-import javax.persistence.Cache;
 import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.EntityMode;
-import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.internal.ServicesRegistryImpl;
-import org.hibernate.service.spi.ServicesRegistry;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.

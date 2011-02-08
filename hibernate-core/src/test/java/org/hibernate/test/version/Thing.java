@@ -1,6 +1,7 @@
 //$Id: Thing.java 7715 2005-08-01 16:46:57Z oneovthafew $
 package org.hibernate.test.version;
 
+
 public class Thing {
 	private String description;
 	private Person person;

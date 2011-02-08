@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.id;
-
+import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
-
-import java.io.Serializable;
 
 /**
  * The general contract between a class that generates unique

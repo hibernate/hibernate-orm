@@ -1,8 +1,7 @@
 package org.hibernate.ejb.test.util;
-
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

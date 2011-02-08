@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Represent a discriminator value associated to a given entity type
  * @author Emmanuel Bernard

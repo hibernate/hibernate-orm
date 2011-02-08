@@ -25,6 +25,7 @@
  */
 package org.hibernate.test.lob;
 
+
 /**
  * An entity containing data that is materialized into a String immediately.
  *

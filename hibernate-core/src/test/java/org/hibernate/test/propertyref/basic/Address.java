@@ -1,6 +1,7 @@
 //$Id: Address.java 4390 2004-08-20 07:54:48Z oneovthafew $
 package org.hibernate.test.propertyref.basic;
 
+
 /**
  * @author gavin
  */

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.association;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;

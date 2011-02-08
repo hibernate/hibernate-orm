@@ -23,18 +23,16 @@
  *
  */
 package org.hibernate.engine;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.Iterator;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.io.Serializable;
-
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.type.Type;
 import org.hibernate.impl.FilterImpl;
+import org.hibernate.type.Type;
 
 /**
  * Centralize all options which can influence the SQL query needed to load an

@@ -1,9 +1,7 @@
 package org.hibernate.envers.configuration.metadata.reader;
-
-import org.hibernate.mapping.Property;
-import org.hibernate.annotations.common.reflection.XClass;
-
 import java.util.Iterator;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.mapping.Property;
 
 /**
  * A source of data on persistent properties of a class or component.

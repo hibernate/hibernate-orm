@@ -23,9 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.idclassgeneratedvalue;
-
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 

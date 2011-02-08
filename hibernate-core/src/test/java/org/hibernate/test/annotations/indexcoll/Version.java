@@ -1,12 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Column;
 
 /**
  * @author Emmanuel Bernard

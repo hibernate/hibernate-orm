@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.idgen.biginteger.sequence;
-
 import java.math.BigInteger;
 
 /**

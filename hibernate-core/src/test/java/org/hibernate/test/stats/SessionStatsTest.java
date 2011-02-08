@@ -1,17 +1,14 @@
 //$Id: SessionStatsTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.stats;
-
 import java.util.HashSet;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Emmanuel Bernard

@@ -20,7 +20,6 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.cache.infinispan.timestamp;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.TypeOverrides;
 import org.infinispan.config.Configuration;

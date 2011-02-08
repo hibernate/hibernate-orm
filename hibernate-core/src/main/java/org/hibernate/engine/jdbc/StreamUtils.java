@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 

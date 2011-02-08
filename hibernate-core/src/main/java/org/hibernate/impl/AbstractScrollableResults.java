@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.impl;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -37,7 +36,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
@@ -45,6 +44,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of the <tt>ScrollableResults</tt> interface
@@ -53,8 +53,8 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractScrollableResults implements ScrollableResults {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractScrollableResults.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractScrollableResults.class.getName());
 
 	private final ResultSet resultSet;
 	private final PreparedStatement ps;

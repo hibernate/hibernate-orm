@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.jdbc;
-
-import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
-
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
+import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 
 /**
  * A proxy for <i>borrowed</i> connections which funnels all requests back

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.jdbc.util;
-
 import java.util.StringTokenizer;
 
 /**

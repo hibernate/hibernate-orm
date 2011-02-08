@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.sql.Types;
-
 import org.hibernate.LockMode;
+import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**

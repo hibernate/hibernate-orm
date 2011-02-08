@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.ejb3configuration;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;

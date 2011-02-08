@@ -1,7 +1,5 @@
 package org.hibernate.test.deletetransient;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

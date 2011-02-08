@@ -1,10 +1,7 @@
 //$Id: CompositeElementTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.compositeelement;
-
 import java.util.ArrayList;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -12,11 +9,11 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King

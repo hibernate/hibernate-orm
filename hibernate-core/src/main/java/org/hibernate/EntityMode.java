@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate;
-
-import java.util.Map;
-import java.util.HashMap;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Defines the representation modes available for entities.

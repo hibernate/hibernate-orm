@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models what ANSI SQL terms a table specification which is a table or a view or an inline view.
  *

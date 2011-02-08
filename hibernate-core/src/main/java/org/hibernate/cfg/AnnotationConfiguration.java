@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;

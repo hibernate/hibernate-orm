@@ -1,6 +1,5 @@
 // $Id: Silly.java 9595 2006-03-10 18:14:21Z steve.ebersole@jboss.com $
 package org.hibernate.test.connections;
-
 import java.io.Serializable;
 
 /**

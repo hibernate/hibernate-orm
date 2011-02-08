@@ -23,6 +23,7 @@
  */
 package org.hibernate.service.spi;
 
+
 /**
  * Marker interface for services.
  *

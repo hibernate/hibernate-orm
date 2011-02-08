@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jndi.internal;
-
 import java.util.Map;
-
 import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;

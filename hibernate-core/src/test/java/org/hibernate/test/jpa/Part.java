@@ -1,5 +1,4 @@
 package org.hibernate.test.jpa;
-
 import java.math.BigDecimal;
 
 /**

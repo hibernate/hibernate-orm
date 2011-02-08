@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  *
  * Throw when an optimistic locking conflict occurs.

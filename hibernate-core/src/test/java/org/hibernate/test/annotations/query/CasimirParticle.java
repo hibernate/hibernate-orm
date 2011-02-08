@@ -1,9 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.query;
-
 import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 /**
  * @author Emmanuel Bernard

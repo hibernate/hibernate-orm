@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Contract for entities (in the ERD sense) which can be exported via {@code CREATE}, {@code ALTER}, etc
  *

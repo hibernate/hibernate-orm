@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.embedded.one2many;
-
 import java.util.List;
-
 import org.hibernate.Session;
-import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.FailureExpected;
 
 /**
  * TODO : javadoc

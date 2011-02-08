@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
-
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

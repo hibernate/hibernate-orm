@@ -1,6 +1,5 @@
 //$Id: NumberedNode.java 7236 2005-06-20 03:19:34Z oneovthafew $
 package org.hibernate.test.nonflushedchanges;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;

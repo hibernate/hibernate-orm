@@ -1,6 +1,7 @@
 // $Id: Joiner.java 6021 2005-03-06 02:02:30Z steveebersole $
 package org.hibernate.test.hql;
 
+
 /**
  * Implementation of Joiner.
  *

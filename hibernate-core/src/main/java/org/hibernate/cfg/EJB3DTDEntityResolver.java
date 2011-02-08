@@ -22,10 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.io.InputStream;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.util.DTDEntityResolver;
+import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
@@ -37,8 +37,7 @@ import org.xml.sax.InputSource;
 public class EJB3DTDEntityResolver extends DTDEntityResolver {
 	public static final EntityResolver INSTANCE = new EJB3DTDEntityResolver();
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                EJB3DTDEntityResolver.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EJB3DTDEntityResolver.class.getName());
 
 	boolean resolved = false;
 

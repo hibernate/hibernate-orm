@@ -23,17 +23,14 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
-
+import javax.transaction.SystemException;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
-
-import javax.transaction.SystemException;
 
 /**
  * Factory for {@link CMTTransaction} instances.

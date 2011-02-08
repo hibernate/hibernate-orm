@@ -1,10 +1,7 @@
 package org.hibernate.cache.infinispan.query;
-
 import java.util.Properties;
-
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.RegionFactory;

@@ -22,17 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.impl;
-
 import java.util.Properties;
-
-import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.EntityRegion;
-import org.hibernate.cache.CollectionRegion;
-import org.hibernate.cache.QueryResultsRegion;
-import org.hibernate.cache.TimestampsRegion;
-import org.hibernate.cache.NoCachingEnabledException;
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.CollectionRegion;
+import org.hibernate.cache.EntityRegion;
+import org.hibernate.cache.NoCachingEnabledException;
+import org.hibernate.cache.QueryResultsRegion;
+import org.hibernate.cache.RegionFactory;
+import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Settings;
 

@@ -1,5 +1,4 @@
 package org.hibernate.test.proxy;
-
 import java.io.Serializable;
 
 /**

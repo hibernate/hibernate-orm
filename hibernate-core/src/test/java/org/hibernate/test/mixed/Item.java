@@ -3,6 +3,7 @@
 package org.hibernate.test.mixed;
 
 
+
 /**
  * @author Gavin King
  */

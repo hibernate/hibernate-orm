@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.access;
-
 import javax.persistence.Entity;
 import javax.persistence.Transient;
 

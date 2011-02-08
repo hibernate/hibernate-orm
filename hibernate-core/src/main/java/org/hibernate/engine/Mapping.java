@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine;
-
 import org.hibernate.MappingException;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.Type;

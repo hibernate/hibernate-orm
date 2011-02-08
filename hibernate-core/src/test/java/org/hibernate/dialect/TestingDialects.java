@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.dialect;
-
-import java.sql.SQLException;
 import java.sql.DatabaseMetaData;
-
-import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
+import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.dialect.internal.AbstractDialectResolver;
+import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
 
 /**
  * TODO : javadoc

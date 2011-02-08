@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.various;
-
 import java.util.Date;
-
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import antlr.RecognitionException;
 
 /**

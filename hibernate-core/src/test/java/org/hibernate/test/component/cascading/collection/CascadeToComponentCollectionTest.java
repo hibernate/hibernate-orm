@@ -1,10 +1,7 @@
 package org.hibernate.test.component.cascading.collection;
-
 import java.util.Iterator;
 import java.util.Locale;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

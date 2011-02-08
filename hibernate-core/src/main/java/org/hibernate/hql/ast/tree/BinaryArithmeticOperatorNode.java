@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import org.hibernate.Hibernate;
-import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
-
 import antlr.SemanticException;
 
 /**

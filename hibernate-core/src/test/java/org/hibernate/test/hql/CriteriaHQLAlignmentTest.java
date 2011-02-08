@@ -1,23 +1,20 @@
 //$Id: HQLTest.java 9873 2006-05-04 13:42:48Z max.andersen@jboss.com $
 package org.hibernate.test.hql;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Transaction;
-import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Projections;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests cases for ensuring alignment between HQL and Criteria behavior. 

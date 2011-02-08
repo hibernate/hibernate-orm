@@ -1,5 +1,4 @@
 package org.hibernate.test.querycache;
-
 import java.io.Serializable;
 
 /**

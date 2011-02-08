@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.collection;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,11 +33,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.loader.CollectionAliases;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 

@@ -1,5 +1,6 @@
 package org.hibernate.envers.configuration.metadata.reader;
 
+
 /**
  * Implementations hold other audited properties.
  * @author Adam Warski (adam at warski dot org)

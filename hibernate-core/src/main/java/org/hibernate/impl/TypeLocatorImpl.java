@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
-
 import java.io.Serializable;
 import java.util.Properties;
-
 import org.hibernate.TypeHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;

@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.metadata;
-
 import java.io.Serializable;
 import java.util.Map;
-
-import org.hibernate.HibernateException;
 import org.hibernate.EntityMode;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.stat;
 
+
 /**
  * Statistics SPI for the Hibernate core.  This is essentially the "statistic collector" API, its the contract
  * called to collect various stats.

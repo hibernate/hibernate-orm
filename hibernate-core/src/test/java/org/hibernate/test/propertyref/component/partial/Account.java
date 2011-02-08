@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.propertyref.component.partial;
 
+
 public class Account {
 	private String number;
 	private Person owner;

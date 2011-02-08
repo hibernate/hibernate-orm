@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Parameter invalid or not found in the query
  * 

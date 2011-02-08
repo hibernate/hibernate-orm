@@ -22,11 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
-
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;

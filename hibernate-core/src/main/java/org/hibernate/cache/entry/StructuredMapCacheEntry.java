@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.cache.entry;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**

@@ -1,9 +1,4 @@
 package org.hibernate.envers.test.integration.onetomany.inverseToSuperclass;
-
-/**
- * @author Hern�n Chanfreau
- *
- */
 import org.hibernate.envers.Audited;
 
 @Audited

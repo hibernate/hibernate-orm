@@ -23,18 +23,18 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -44,8 +44,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class SchemaValidator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SchemaValidator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaValidator.class.getName());
 
 	private ConnectionHelper connectionHelper;
 	private Configuration configuration;

@@ -1,6 +1,5 @@
 //$Id: DataPoint.java 10223 2006-08-04 20:29:21Z steve.ebersole@jboss.com $
 package org.hibernate.test.proxy;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 

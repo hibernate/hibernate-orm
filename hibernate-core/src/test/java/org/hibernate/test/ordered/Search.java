@@ -1,6 +1,5 @@
 //$Id: Search.java 7772 2005-08-05 23:03:46Z oneovthafew $
 package org.hibernate.test.ordered;
-
 import java.util.HashSet;
 import java.util.Set;
 

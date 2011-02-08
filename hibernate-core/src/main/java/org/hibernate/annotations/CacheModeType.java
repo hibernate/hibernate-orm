@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Enumeration for the different interaction modes between the session and
  * the Level 2 Cache.

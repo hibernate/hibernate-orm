@@ -1,10 +1,7 @@
 package org.hibernate.test.util;
-
 import java.util.Properties;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.testing.junit.UnitTestCase;
 

@@ -22,10 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.event;
-
 import java.io.Serializable;
 import java.util.List;
-
+import org.hibernate.cfg.Configuration;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.RelationDescription;
@@ -33,14 +36,14 @@ import org.hibernate.envers.entities.RelationType;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 import org.hibernate.envers.synchronization.AuditProcess;
-import org.hibernate.envers.synchronization.work.*;
+import org.hibernate.envers.synchronization.work.AddWorkUnit;
+import org.hibernate.envers.synchronization.work.AuditWorkUnit;
+import org.hibernate.envers.synchronization.work.CollectionChangeWorkUnit;
+import org.hibernate.envers.synchronization.work.DelWorkUnit;
+import org.hibernate.envers.synchronization.work.FakeBidirectionalRelationWorkUnit;
+import org.hibernate.envers.synchronization.work.ModWorkUnit;
+import org.hibernate.envers.synchronization.work.PersistentCollectionChangeWorkUnit;
 import org.hibernate.envers.tools.Tools;
-import org.hibernate.envers.RevisionType;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.AbstractCollectionEvent;
 import org.hibernate.event.Initializable;
 import org.hibernate.event.PostCollectionRecreateEvent;
@@ -55,8 +58,8 @@ import org.hibernate.event.PreCollectionRemoveEvent;
 import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 
 /**

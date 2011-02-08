@@ -24,6 +24,7 @@
  */
 package org.hibernate.transaction;
 
+
 /**
  * {@link TransactionManagerLookup} strategy for Sun ONE Application Server 7 and above
  * 

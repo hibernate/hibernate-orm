@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.superclass.auditedAtSuperclassLevel;
-
 import javax.persistence.MappedSuperclass;
-
 import org.hibernate.envers.Audited;
 
 /**

@@ -22,20 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.naming;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import javax.persistence.EntityManager;
-
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
+import org.hibernate.mapping.Column;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.mapping.Column;
 
 /**
  * @author Adam Warski (adam at warski dot org)

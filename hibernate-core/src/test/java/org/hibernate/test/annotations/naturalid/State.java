@@ -1,9 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.naturalid;
-
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

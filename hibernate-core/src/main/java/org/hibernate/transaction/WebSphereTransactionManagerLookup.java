@@ -23,12 +23,12 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * {@link TransactionManagerLookup} strategy for WebSphere (versions 4, 5.0 and 5.1)
@@ -37,8 +37,8 @@ import org.hibernate.Logger;
  */
 public class WebSphereTransactionManagerLookup implements TransactionManagerLookup {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                WebSphereTransactionManagerLookup.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       WebSphereTransactionManagerLookup.class.getName());
 	private final int wsVersion;
 	private final Class tmfClass;
 

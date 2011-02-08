@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.stat;
-
 import java.io.Serializable;
 
 /**

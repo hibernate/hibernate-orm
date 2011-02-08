@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-
-import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Cache;
+import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cfg.Settings;
 
 /**

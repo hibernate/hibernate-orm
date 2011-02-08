@@ -17,9 +17,7 @@
 */
 package org.hibernate.test.annotations.access.xml;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+
 
 /**
  * @author Hardy Ferentschik

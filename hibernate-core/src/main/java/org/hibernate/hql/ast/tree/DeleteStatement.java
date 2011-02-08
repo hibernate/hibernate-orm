@@ -23,10 +23,10 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
+import org.jboss.logging.Logger;
 
 /**
  * Defines a top-level AST node representing an HQL delete statement.
@@ -35,8 +35,7 @@ import org.hibernate.hql.antlr.SqlTokenTypes;
  */
 public class DeleteStatement extends AbstractRestrictableStatement {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DeleteStatement.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DeleteStatement.class.getName());
 
 	/**
 	 * @see org.hibernate.hql.ast.tree.Statement#getStatementType()
@@ -58,7 +57,7 @@ public class DeleteStatement extends AbstractRestrictableStatement {
 	}
 
     @Override
-    protected Logger getLog() {
+    protected HibernateLogger getLog() {
         return LOG;
 	}
 }

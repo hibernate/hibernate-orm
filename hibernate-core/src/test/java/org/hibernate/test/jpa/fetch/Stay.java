@@ -1,5 +1,4 @@
 package org.hibernate.test.jpa.fetch;
-
 import java.io.Serializable;
 import java.util.Date;
 

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Comparator;
-
 import org.hibernate.cache.access.SoftLock;
 
 /**

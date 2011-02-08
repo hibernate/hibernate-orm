@@ -23,14 +23,11 @@
  *
  */
 package org.hibernate.intercept.cglib;
-
 import java.io.Serializable;
 import java.util.Set;
-
 import net.sf.cglib.transform.impl.InterceptFieldCallback;
-
-import org.hibernate.intercept.AbstractFieldInterceptor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.intercept.AbstractFieldInterceptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 

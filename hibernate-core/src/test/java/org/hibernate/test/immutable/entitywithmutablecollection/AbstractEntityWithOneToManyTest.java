@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
-
 import java.util.Iterator;
-
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;

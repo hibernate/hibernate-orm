@@ -1,11 +1,8 @@
 // $Id: WithClauseTest.java 10945 2006-12-07 14:50:42Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

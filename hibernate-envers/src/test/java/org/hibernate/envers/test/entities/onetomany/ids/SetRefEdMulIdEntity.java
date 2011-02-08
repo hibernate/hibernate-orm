@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.onetomany.ids;
-
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.OneToMany;
-
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.MulId;
 

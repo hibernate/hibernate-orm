@@ -23,9 +23,6 @@
  *
  */
 package org.hibernate.criterion;
-
-import java.util.Iterator;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.type.Type;

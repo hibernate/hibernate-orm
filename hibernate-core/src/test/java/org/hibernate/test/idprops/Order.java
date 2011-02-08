@@ -1,8 +1,7 @@
 package org.hibernate.test.idprops;
-
 import java.util.Date;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * {@inheritDoc}

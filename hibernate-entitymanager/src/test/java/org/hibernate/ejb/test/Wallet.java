@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test;
-
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Entity;

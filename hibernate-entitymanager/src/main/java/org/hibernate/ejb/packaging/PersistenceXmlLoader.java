@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -40,10 +39,11 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import org.hibernate.Logger;
 import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -61,7 +61,8 @@ import org.xml.sax.SAXParseException;
  */
 public final class PersistenceXmlLoader {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, PersistenceXmlLoader.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           PersistenceXmlLoader.class.getName());
 
 	private PersistenceXmlLoader() {
 	}

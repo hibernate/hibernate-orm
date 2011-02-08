@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Thrown when a resource for a mapping could not be found.
  * 

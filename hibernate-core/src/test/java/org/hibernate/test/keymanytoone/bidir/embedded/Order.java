@@ -1,8 +1,7 @@
 package org.hibernate.test.keymanytoone.bidir.embedded;
-
-import java.util.Set;
-import java.util.HashSet;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * {@inheritDoc}

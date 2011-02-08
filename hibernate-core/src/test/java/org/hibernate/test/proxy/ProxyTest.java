@@ -1,11 +1,8 @@
 //$Id: ProxyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.proxy;
-
 import java.math.BigDecimal;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
@@ -16,9 +13,9 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.impl.SessionImpl;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.util.SerializationHelper;
 
 /**

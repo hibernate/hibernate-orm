@@ -1,7 +1,6 @@
 package org.hibernate.test.any;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * todo: describe Address

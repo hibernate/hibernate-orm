@@ -1,7 +1,6 @@
 package org.hibernate.test.ops;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * VersionedEntity

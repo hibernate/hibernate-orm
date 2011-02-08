@@ -1,10 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +12,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.Cascade;
 
 /**

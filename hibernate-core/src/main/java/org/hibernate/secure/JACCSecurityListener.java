@@ -24,6 +24,7 @@
  */
 package org.hibernate.secure;
 
+
 /**
  * Marker interface for JACC event listeners
  * 

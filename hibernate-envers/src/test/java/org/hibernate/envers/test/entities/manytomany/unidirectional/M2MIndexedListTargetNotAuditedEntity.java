@@ -1,12 +1,14 @@
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
-
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.OrderColumn;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
-
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Vladimir Klyushnikov

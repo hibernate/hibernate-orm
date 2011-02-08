@@ -21,6 +21,7 @@
  */
 package org.hibernate.sql;
 
+
 /**
  * TODO : javadoc
  *

@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.mappedsuperclass.intermediate;
-
-
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.GenerationType;
 
 /**
  * Represents the most base super class in the hierarchy.

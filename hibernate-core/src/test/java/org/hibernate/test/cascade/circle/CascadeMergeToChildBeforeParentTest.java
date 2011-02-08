@@ -25,9 +25,7 @@
  */
 
 package org.hibernate.test.cascade.circle;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

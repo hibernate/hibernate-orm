@@ -1,5 +1,6 @@
 package org.hibernate.test.onetoone.optional;
 
+
 /**
  * @author Gavin King
  */

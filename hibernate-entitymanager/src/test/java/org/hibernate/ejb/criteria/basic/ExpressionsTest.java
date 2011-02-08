@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.basic;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
@@ -31,17 +30,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-
 import org.hibernate.Query;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
-import org.hibernate.ejb.test.mapping.Phone_;
 import org.hibernate.impl.AbstractQueryImpl;
 
 /**

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;

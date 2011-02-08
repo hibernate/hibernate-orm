@@ -22,17 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.events;
-
 import java.util.Set;
-
+import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.Destructible;
 import org.hibernate.event.Initializable;
-import org.hibernate.event.DeleteEvent;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**

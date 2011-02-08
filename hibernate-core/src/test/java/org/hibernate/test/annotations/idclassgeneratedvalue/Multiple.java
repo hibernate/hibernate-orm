@@ -22,16 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.idclassgeneratedvalue;
-
 import java.io.Serializable;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.SequenceGenerator;
-
 import org.hibernate.annotations.GenericGenerator;
 
 /**

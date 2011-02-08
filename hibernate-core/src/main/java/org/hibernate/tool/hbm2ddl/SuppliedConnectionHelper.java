@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
-import org.hibernate.util.JDBCExceptionReporter;
-
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.hibernate.util.JDBCExceptionReporter;
 
 /**
  * A {@link ConnectionHelper} implementation based on an explicitly supplied

@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.id.insert;
-
-import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.pretty.MessageHelper;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.pretty.MessageHelper;
 
 /**
  * Abstract InsertGeneratedIdentifierDelegate implementation where the

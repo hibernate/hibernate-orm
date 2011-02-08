@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.xml.ejb3;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;

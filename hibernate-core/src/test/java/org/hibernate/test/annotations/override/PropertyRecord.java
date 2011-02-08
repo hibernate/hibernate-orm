@@ -1,16 +1,14 @@
 package org.hibernate.test.annotations.override;
-
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.CollectionTable;
-
 import org.hibernate.annotations.CollectionOfElements;
 
 /**

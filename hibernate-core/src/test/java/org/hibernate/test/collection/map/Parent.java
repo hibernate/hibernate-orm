@@ -1,7 +1,6 @@
 package org.hibernate.test.collection.map;
-
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * todo: describe Parent

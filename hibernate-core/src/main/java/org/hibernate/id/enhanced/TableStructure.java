@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.id.enhanced;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,8 +30,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TransactionHelper;
@@ -41,6 +40,7 @@ import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.SQLStatementLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -49,8 +49,7 @@ import org.hibernate.jdbc.util.SQLStatementLogger;
  */
 public class TableStructure extends TransactionHelper implements DatabaseStructure {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TableStructure.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TableStructure.class.getName());
     private static final SQLStatementLogger SQL_STATEMENT_LOGGER = new SQLStatementLogger(false, false);
 
 	private final String tableName;

@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.engine;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.MappingException;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.QueryJoinFragment;
 import org.hibernate.type.AssociationType;

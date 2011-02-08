@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.expression;
-
 import java.io.Serializable;
-
 import org.hibernate.ejb.criteria.AbstractNode;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.TupleElementImplementor;

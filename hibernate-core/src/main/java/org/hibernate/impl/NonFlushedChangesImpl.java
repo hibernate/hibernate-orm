@@ -22,13 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
-
-/**
- * An implementation of NonFlushedChanges.
- *
- * @author Gail Badner
- */
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -37,16 +30,16 @@ import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.ActionQueue;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.event.EventSource;
+import org.jboss.logging.Logger;
 
 public final class NonFlushedChangesImpl implements NonFlushedChanges {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                NonFlushedChangesImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NonFlushedChangesImpl.class.getName());
 
 	private static class SessionNonFlushedChanges implements Serializable {
 		private transient EntityMode entityMode;

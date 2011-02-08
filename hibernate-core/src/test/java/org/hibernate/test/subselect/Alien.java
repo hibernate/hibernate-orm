@@ -1,6 +1,7 @@
 //$Id: Alien.java 7203 2005-06-19 02:01:05Z oneovthafew $
 package org.hibernate.test.subselect;
 
+
 /**
  * @author Gavin King
  */

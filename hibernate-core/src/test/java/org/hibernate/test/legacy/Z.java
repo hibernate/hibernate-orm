@@ -1,5 +1,6 @@
 package org.hibernate.test.legacy;
 
+
 public class Z {
 
 	private long id;

@@ -1,8 +1,7 @@
 // $Id: User.java 7736 2005-08-03 20:03:34Z steveebersole $
 package org.hibernate.test.version.db;
-
-import java.util.Set;
 import java.sql.Timestamp;
+import java.util.Set;
 
 /**
  * Implementation of User.

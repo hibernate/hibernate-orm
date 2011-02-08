@@ -1,9 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.io.Serializable;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Column;
+import javax.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

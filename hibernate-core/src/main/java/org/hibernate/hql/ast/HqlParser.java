@@ -23,17 +23,17 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
 import org.hibernate.hql.antlr.HqlBaseParser;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;
 import antlr.RecognitionException;
@@ -50,8 +50,7 @@ import antlr.collections.AST;
  */
 public final class HqlParser extends HqlBaseParser {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HqlBaseParser.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HqlParser.class.getName());
 
 	private ParseErrorHandler parseErrorHandler;
 	private ASTPrinter printer = getASTPrinter();
@@ -334,7 +333,7 @@ public final class HqlParser extends HqlBaseParser {
 				// The next token ( LT(2) ) should be 'by'... otherwise, this is just an ident.
 				if ( LA( 2 ) != LITERAL_by ) {
 					LT( 1 ).setType( IDENT );
-                    LOG.debug("weakKeywords() : new LT(1) token - " + LT(1));
+                    LOG.debugf("weakKeywords() : new LT(1) token - %s", LT(1));
 				}
 				break;
 			default:
@@ -343,7 +342,7 @@ public final class HqlParser extends HqlBaseParser {
                     HqlToken hqlToken = (HqlToken)LT(1);
                     if (hqlToken.isPossibleID()) {
                         hqlToken.setType(IDENT);
-                        LOG.debug("weakKeywords() : new LT(1) token - " + LT(1));
+                        LOG.debugf("weakKeywords() : new LT(1) token - %s", LT(1));
                     }
                 }
 				break;
@@ -361,7 +360,7 @@ public final class HqlParser extends HqlBaseParser {
             {
                 // Set it!
                 LT( 2 ).setType( IDENT );
-                LOG.debug("handleDotIdent() : new LT(2) token - " + LT(1));
+                LOG.debugf("handleDotIdent() : new LT(2) token - %s", LT(1));
             }
         }
     }

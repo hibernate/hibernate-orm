@@ -22,21 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.JoinTable;
-
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

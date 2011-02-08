@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.util.Locale;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;

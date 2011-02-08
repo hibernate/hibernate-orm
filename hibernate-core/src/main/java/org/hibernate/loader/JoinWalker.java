@@ -22,23 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.JoinHelper;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;

@@ -20,9 +20,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

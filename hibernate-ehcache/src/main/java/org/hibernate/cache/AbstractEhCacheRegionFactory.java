@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.cache;
-
+import java.util.Properties;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Settings;
-
-import java.util.Properties;
 
 /**
  * Abstract class that will delegate all calls to org.hibernate.cache.RegionFactory to the instance it wraps.

@@ -1,6 +1,7 @@
 //$Id: Transaction.java 6234 2005-03-29 03:07:30Z oneovthafew $
 package org.hibernate.test.cut;
 
+
 /**
  * @author Gavin King
  */

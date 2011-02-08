@@ -22,19 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jta.platform.internal;
-
 import java.util.Map;
 import javax.transaction.Synchronization;
 import javax.transaction.TransactionManager;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
-
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.internal.util.jta.JtaStatusHelper;
+import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.jndi.spi.JndiService;
 
 
 /**

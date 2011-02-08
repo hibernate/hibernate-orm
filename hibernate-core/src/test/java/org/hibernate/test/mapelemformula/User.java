@@ -2,6 +2,7 @@
 package org.hibernate.test.mapelemformula;
 
 
+
 /**
  * @author Gavin King
  */

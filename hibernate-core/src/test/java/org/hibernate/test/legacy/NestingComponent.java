@@ -1,5 +1,4 @@
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 
 public class NestingComponent implements Serializable {

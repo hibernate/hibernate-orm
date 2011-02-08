@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.cache;
-
+import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Settings;
-
-import java.util.Properties;
 
 /**
  * Standard Hibernate implementation of the QueryCacheFactory interface.  Returns

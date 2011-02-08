@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.loader;
-
-import java.util.List;
 import java.util.ArrayList;
-
+import java.util.List;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.BagType;
 
 /**

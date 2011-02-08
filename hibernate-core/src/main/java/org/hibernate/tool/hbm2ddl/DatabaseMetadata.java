@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -34,12 +33,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * JDBC database metadata
@@ -47,8 +47,7 @@ import org.hibernate.util.StringHelper;
  */
 public class DatabaseMetadata {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DatabaseMetaData.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DatabaseMetaData.class.getName());
 
 	private final Map tables = new HashMap();
 	private final Set sequences = new HashSet();

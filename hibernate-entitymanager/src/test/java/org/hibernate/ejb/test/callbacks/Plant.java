@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
-import javax.persistence.Id;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.PrePersist;
 
 /**

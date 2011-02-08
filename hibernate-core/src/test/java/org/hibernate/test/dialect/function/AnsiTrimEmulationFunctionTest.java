@@ -22,12 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.dialect.function;
-
 import java.util.Arrays;
 import java.util.List;
-
 import junit.framework.TestCase;
-
 import org.hibernate.dialect.function.AnsiTrimEmulationFunction;
 
 /**

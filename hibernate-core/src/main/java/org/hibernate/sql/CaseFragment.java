@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.sql;
-
-import java.util.Map;
 import java.util.LinkedHashMap;
-
+import java.util.Map;
 import org.hibernate.util.StringHelper;
 
 /**

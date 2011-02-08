@@ -20,11 +20,9 @@
  * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection.association.bidirectional.onetomany;
-
 import junit.framework.Test;
-
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.event.collection.ParentWithCollection;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  *

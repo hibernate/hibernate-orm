@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.inheritance.union;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;

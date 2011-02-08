@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.query;
-
 import javax.persistence.Entity;
 import javax.persistence.EntityResult;
 import javax.persistence.FetchType;

@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Type of available polymorphism for a particular entity
  *

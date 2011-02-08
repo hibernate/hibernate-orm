@@ -1,7 +1,6 @@
 package org.hibernate.test.collection.set;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * todo: describe Parent

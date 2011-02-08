@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.exception;
-
-import org.hibernate.HibernateException;
-
 import java.util.Properties;
+import org.hibernate.HibernateException;
 
 /**
  * The Configurable interface defines the contract for SQLExceptionConverter impls that

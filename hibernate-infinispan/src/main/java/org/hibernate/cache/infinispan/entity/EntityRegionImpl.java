@@ -1,7 +1,5 @@
 package org.hibernate.cache.infinispan.entity;
-
 import javax.transaction.TransactionManager;
-
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.EntityRegion;

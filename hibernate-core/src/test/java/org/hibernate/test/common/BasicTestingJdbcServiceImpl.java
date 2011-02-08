@@ -22,17 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.common;
-
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.jdbc.TypeInfo;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;

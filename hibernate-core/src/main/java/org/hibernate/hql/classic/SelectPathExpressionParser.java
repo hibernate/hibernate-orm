@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.classic;
-
 import org.hibernate.QueryException;
 
 public class SelectPathExpressionParser extends PathExpressionParser {

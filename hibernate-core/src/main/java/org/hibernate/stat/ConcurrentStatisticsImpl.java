@@ -22,14 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.stat;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of {@link Statistics}, as well as {@link StatisticsImplementor}, based on the
@@ -40,8 +40,8 @@ import org.hibernate.util.ArrayHelper;
 @SuppressWarnings({ "unchecked" })
 public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplementor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ConcurrentStatisticsImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       ConcurrentStatisticsImpl.class.getName());
 
 	private SessionFactoryImplementor sessionFactory;
 

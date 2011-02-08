@@ -1,5 +1,6 @@
 package org.hibernate.test.hql;
 
+
 /**
  * @author Rob.Hasselbaum
  */

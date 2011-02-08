@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 
+
 /**
  * @author max
  *

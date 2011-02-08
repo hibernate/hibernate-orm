@@ -1,9 +1,7 @@
 package org.hibernate.envers.test;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -12,8 +10,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.test.common.ServiceRegistryHolder;
-
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Optional;
+import org.testng.annotations.Parameters;
 
 /**
  * Base class for testing envers with Session.

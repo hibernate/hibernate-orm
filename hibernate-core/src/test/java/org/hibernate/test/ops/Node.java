@@ -1,6 +1,5 @@
 //$Id: Node.java 10759 2006-11-08 00:00:53Z steve.ebersole@jboss.com $
 package org.hibernate.test.ops;
-
 import java.sql.Date;
 import java.util.HashSet;
 import java.util.Set;

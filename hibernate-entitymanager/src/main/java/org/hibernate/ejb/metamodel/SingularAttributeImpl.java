@@ -20,9 +20,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
-import java.lang.reflect.Member;
 import java.io.Serializable;
+import java.lang.reflect.Member;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 

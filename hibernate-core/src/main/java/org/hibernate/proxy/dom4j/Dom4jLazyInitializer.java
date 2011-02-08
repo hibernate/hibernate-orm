@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.proxy.dom4j;
-
+import java.io.Serializable;
+import org.dom4j.Element;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.AbstractLazyInitializer;
-import org.dom4j.Element;
-
-import java.io.Serializable;
 
 /**
  * Lazy initializer for "dom4j" entity representations.

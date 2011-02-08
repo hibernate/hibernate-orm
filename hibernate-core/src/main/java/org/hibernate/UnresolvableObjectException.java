@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate;
-
 import java.io.Serializable;
-
 import org.hibernate.pretty.MessageHelper;
 
 /**

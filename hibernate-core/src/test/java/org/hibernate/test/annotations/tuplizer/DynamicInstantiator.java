@@ -1,13 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
-
 import java.io.Serializable;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
-
+import java.lang.reflect.Proxy;
+import org.hibernate.HibernateException;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.HibernateException;
 
 /**
  * @author Emmanuel Bernard

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.loader.entity;
-
 import org.hibernate.MappingException;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -53,7 +52,7 @@ public class CascadeEntityLoader extends AbstractEntityLoader {
 
 		postInstantiate();
 
-        LOG.debug("Static select for action " + action + " on entity " + entityName + ": " + getSQLString());
+        LOG.debugf("Static select for action %s on entity %s: %s", action, entityName, getSQLString());
 	}
 
 }

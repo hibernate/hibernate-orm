@@ -4,6 +4,7 @@
  */
 package org.hibernate.test.readonly;
 
+
 /**
  * @author max
  *

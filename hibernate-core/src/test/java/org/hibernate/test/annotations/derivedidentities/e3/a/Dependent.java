@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.derivedidentities.e3.a;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;

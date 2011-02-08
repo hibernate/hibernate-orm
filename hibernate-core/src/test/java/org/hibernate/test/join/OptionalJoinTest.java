@@ -1,17 +1,11 @@
 //$Id: $
 package org.hibernate.test.join;
-
-/**
- * @author Chris Jones and Gail Badner
- */
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import java.util.List;
+import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
-import junit.framework.Test;
-
-import java.util.List;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 public class OptionalJoinTest extends FunctionalTestCase {
 

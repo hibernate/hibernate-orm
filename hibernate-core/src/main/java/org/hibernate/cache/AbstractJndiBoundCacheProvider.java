@@ -23,15 +23,15 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Support for CacheProvider implementations which are backed by caches bound
@@ -41,7 +41,8 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class AbstractJndiBoundCacheProvider implements CacheProvider {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractJndiBoundCacheProvider.class.getName());
 
 	private Object cache;
 

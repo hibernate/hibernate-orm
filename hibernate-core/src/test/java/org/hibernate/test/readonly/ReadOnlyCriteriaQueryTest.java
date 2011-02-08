@@ -1,10 +1,7 @@
 //$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.readonly;
-
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -17,9 +14,9 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.util.SerializationHelper;
 
 /**

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.engine.query.sql;
-
 import java.util.Map;
-
 import org.hibernate.LockMode;
 
 /**

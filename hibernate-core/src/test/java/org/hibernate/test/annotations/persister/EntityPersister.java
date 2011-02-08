@@ -1,7 +1,5 @@
 package org.hibernate.test.annotations.persister;
-
 import org.hibernate.HibernateException;
-import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;

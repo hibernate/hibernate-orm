@@ -1,15 +1,12 @@
 //$Id$
 package org.hibernate.test.annotations.array;
-
-
 import javax.persistence.CascadeType;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.ElementCollection;
 import javax.persistence.OrderColumn;
-
 import org.hibernate.annotations.IndexColumn;
 
 /**

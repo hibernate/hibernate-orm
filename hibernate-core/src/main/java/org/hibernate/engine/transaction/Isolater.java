@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.transaction;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.transaction.NotSupportedException;
@@ -31,9 +30,10 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Class which provides the isolation semantics required by
@@ -48,7 +48,7 @@ import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
  */
 public class Isolater {
 
-    static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Isolater.class.getPackage().getName());
+    static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Isolater.class.getName());
 
 	/**
 	 * Ensures that all processing actually performed by the given work will
@@ -112,7 +112,7 @@ public class Isolater {
 			try {
 				// First we suspend any current JTA transaction
 				Transaction surroundingTransaction = transactionManager.suspend();
-                LOG.debug("Surrounding JTA transaction suspended [" + surroundingTransaction + "]");
+                LOG.debugf("Surrounding JTA transaction suspended [%s]", surroundingTransaction);
 
 				boolean hadProblems = false;
 				try {
@@ -131,7 +131,7 @@ public class Isolater {
 				finally {
 					try {
 						transactionManager.resume( surroundingTransaction );
-                        LOG.debug("Surrounding JTA transaction resumed [" + surroundingTransaction + "]");
+                        LOG.debugf("Surrounding JTA transaction resumed [%s]", surroundingTransaction);
 					}
 					catch( Throwable t ) {
 						// if the actually work had an error use that, otherwise error based on t
@@ -273,7 +273,7 @@ public class Isolater {
 							connection.setAutoCommit( true );
 						}
 						catch( Exception ignore ) {
-                            LOG.unableToResetConnectionToAutoCommit();
+                            LOG.trace("Unable to reset connection back to auto-commit");
 						}
 					}
 					try {

@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
@@ -35,6 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Wrap collections in a Hibernate collection
@@ -43,8 +43,7 @@ import org.hibernate.type.Type;
  */
 public class WrapVisitor extends ProxyVisitor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                WrapVisitor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, WrapVisitor.class.getName());
 
 	boolean substitute = false;
 

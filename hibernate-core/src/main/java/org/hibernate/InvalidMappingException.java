@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Thrown when a mapping is found to be invalid.
  * Similar to MappingException, but this contains more info about the path and type of mapping (e.g. file, resource or url)

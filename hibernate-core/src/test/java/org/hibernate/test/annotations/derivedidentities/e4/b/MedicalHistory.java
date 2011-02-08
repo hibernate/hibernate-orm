@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.derivedidentities.e4.b;
-
 import java.util.Date;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;

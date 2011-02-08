@@ -23,16 +23,16 @@
  *
  */
 package org.hibernate.transaction;
-
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Implements a basic transaction strategy for CMT transactions. All work is
@@ -46,8 +46,7 @@ import org.hibernate.util.JTAHelper;
  */
 public class CMTTransaction implements Transaction {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CMTTransaction.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CMTTransaction.class.getName());
 
 	protected final JDBCContext jdbcContext;
 	protected final TransactionFactory.Context transactionContext;
@@ -67,7 +66,7 @@ public class CMTTransaction implements Transaction {
 			return;
 		}
 
-        LOG.debug("Begin");
+        LOG.debugf("Begin");
 
 		boolean synchronization = jdbcContext.registerSynchronizationIfPossible();
 
@@ -88,7 +87,7 @@ public class CMTTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.debug("Commit");
+        LOG.debugf("Commit");
 
 		boolean flush = !transactionContext.isFlushModeNever() &&
 		        !transactionContext.isFlushBeforeCompletionEnabled();
@@ -109,7 +108,7 @@ public class CMTTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.debug("Rollback");
+        LOG.debugf("Rollback");
 
 		try {
 			getTransaction().setRollbackOnly();

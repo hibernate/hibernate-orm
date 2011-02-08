@@ -1,19 +1,16 @@
 //$Id: RowIdTest.java 11353 2007-03-28 16:03:40Z steve.ebersole@jboss.com $
 package org.hibernate.test.rowid;
-
 import java.math.BigDecimal;
-import java.sql.Statement;
 import java.sql.SQLException;
-
+import java.sql.Statement;
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King

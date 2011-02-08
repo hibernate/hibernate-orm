@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CacheEntry;
 import org.hibernate.event.PostLoadEvent;
@@ -42,6 +41,7 @@ import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Functionality relating to Hibernate's two-phase loading process,
@@ -52,8 +52,7 @@ import org.hibernate.type.TypeHelper;
  */
 public final class TwoPhaseLoad {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TwoPhaseLoad.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TwoPhaseLoad.class.getName());
 
 	private TwoPhaseLoad() {}
 
@@ -125,8 +124,8 @@ public final class TwoPhaseLoad {
 		Serializable id = entityEntry.getId();
 		Object[] hydratedState = entityEntry.getLoadedState();
 
-        if (LOG.isDebugEnabled()) LOG.debug("Resolving associations for "
-                                            + MessageHelper.infoString(persister, id, session.getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Resolving associations for %s",
+                                             MessageHelper.infoString(persister, id, session.getFactory()));
 
 		Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
@@ -150,8 +149,8 @@ public final class TwoPhaseLoad {
 		final SessionFactoryImplementor factory = session.getFactory();
 		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debug("Adding entity to second-level cache: "
-                                                + MessageHelper.infoString(persister, id, session.getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Adding entity to second-level cache: %s",
+                                                 MessageHelper.infoString(persister, id, session.getFactory()));
 
 			Object version = Versioning.getVersion(hydratedState, persister);
 			CacheEntry entry = new CacheEntry(
@@ -244,8 +243,8 @@ public final class TwoPhaseLoad {
 			}
 		}
 
-        if (LOG.isDebugEnabled()) LOG.debug("Done materializing entity "
-                                            + MessageHelper.infoString(persister, id, session.getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Done materializing entity %s",
+                                             MessageHelper.infoString(persister, id, session.getFactory()));
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().loadEntity( persister.getEntityName() );

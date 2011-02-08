@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
 import java.util.List;
-
-import org.hibernate.type.Type;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.Type;
 
 /**
  * Analogous to {@link org.hibernate.dialect.function.StandardSQLFunction}

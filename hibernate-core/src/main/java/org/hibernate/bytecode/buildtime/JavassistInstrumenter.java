@@ -23,18 +23,16 @@
  */
 package org.hibernate.bytecode.buildtime;
 
-import java.util.Set;
-import java.io.IOException;
-import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
-
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.util.Set;
 import javassist.bytecode.ClassFile;
-
-import org.hibernate.bytecode.util.ClassDescriptor;
-import org.hibernate.bytecode.util.BasicClassFilter;
 import org.hibernate.bytecode.ClassTransformer;
 import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
 import org.hibernate.bytecode.javassist.FieldHandled;
+import org.hibernate.bytecode.util.BasicClassFilter;
+import org.hibernate.bytecode.util.ClassDescriptor;
 
 /**
  * Strategy for performing build-time instrumentation of persistent classes in order to enable
@@ -53,11 +51,13 @@ public class JavassistInstrumenter extends AbstractInstrumenter {
 		super( logger, options );
 	}
 
-	protected ClassDescriptor getClassDescriptor(byte[] bytecode) throws IOException {
+	@Override
+    protected ClassDescriptor getClassDescriptor(byte[] bytecode) throws IOException {
 		return new CustomClassDescriptor( bytecode );
 	}
 
-	protected ClassTransformer getClassTransformer(ClassDescriptor descriptor, Set classNames) {
+	@Override
+    protected ClassTransformer getClassTransformer(ClassDescriptor descriptor, Set classNames) {
 		if ( descriptor.isInstrumented() ) {
 			logger.debug( "class [" + descriptor.getName() + "] already instrumented" );
 			return null;

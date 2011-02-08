@@ -20,10 +20,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
 import java.util.ArrayList;
 import java.util.Iterator;
-
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

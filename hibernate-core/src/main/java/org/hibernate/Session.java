@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate;
-
 import java.io.Serializable;
 import java.sql.Connection;
-
 import org.hibernate.jdbc.Work;
 import org.hibernate.stat.SessionStatistics;
 

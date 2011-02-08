@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.idmanytoone.alphabetical;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 import javax.persistence.Entity;

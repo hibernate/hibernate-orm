@@ -23,19 +23,16 @@
  *
  */
 package org.hibernate.impl;
-
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.hql.HolderInstantiator;
-import org.hibernate.type.Type;
-import org.hibernate.loader.Loader;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.QueryParameters;
-
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.hql.HolderInstantiator;
+import org.hibernate.loader.Loader;
+import org.hibernate.type.Type;
 
 /**
  * Implementation of ScrollableResults which can handle collection fetches.

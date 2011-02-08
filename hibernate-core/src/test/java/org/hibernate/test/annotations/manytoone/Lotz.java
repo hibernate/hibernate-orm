@@ -1,14 +1,13 @@
 //$Id$
 package org.hibernate.test.annotations.manytoone;
-
-import java.util.List;
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.EmbeddedId;
+import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
-import javax.persistence.CascadeType;
 
 /**
  * @author Emmanuel Bernard

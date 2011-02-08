@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.pack.explodedpar;
 
+
 /**
  * @author Emmanuel Bernard
  */

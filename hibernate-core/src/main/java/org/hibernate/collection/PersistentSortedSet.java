@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.collection;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeMap;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;

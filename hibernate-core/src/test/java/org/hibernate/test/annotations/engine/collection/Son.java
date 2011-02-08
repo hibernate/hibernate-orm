@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.engine.collection;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

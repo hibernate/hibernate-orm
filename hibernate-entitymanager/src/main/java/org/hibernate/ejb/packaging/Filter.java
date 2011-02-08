@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.packaging;
 
+
 /**
  * Filter used when searching elements in a JAR
  *

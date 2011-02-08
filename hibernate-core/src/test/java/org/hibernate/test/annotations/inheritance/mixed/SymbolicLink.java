@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.inheritance.mixed;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;

@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import antlr.collections.AST;
-
-import org.hibernate.type.Type;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.hibernate.HibernateException;
+import antlr.collections.AST;
 
 /**
  * Base class for nodes dealing 'is null' and 'is not null' operators.

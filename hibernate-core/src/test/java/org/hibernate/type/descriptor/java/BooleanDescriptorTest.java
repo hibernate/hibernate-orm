@@ -23,6 +23,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+
 /**
  * TODO : javadoc
  *

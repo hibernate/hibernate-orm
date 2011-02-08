@@ -1,5 +1,4 @@
 package org.hibernate.test.insertordering;
-
 import java.util.Date;
 
 /**

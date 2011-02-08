@@ -24,6 +24,7 @@
  */
 package org.hibernate.transform;
 
+
 /**
  * A ResultTransformer that operates on "well-defined" and consistent
  * subset of a tuple's elements.

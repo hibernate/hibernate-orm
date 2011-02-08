@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-
-import java.sql.Clob;
 import java.io.Reader;
 import java.lang.reflect.Proxy;
+import java.sql.Clob;
 import java.sql.NClob;
 
 /**

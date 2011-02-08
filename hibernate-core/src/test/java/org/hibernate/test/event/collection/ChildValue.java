@@ -21,6 +21,7 @@
  */
 package org.hibernate.test.event.collection;
 
+
 /**
  *
  * @author Gail Badner

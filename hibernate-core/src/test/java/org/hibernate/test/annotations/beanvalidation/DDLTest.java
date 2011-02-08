@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;

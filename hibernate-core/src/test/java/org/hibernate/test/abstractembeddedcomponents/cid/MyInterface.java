@@ -1,5 +1,4 @@
 package org.hibernate.test.abstractembeddedcomponents.cid;
-
 import java.io.Serializable;
 
 /**

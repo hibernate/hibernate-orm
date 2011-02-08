@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.StringTokenizer;
-
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;

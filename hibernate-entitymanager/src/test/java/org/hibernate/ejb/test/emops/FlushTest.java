@@ -1,15 +1,12 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
-
-import java.util.Collection;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.Collection;
 import java.util.HashSet;
-
-import javax.persistence.Query;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.EntityManager;
-
+import javax.persistence.Query;
 import org.hibernate.ejb.test.TestCase;
 
 /**

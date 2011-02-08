@@ -2,6 +2,7 @@
 package org.hibernate.test.unidir;
 
 
+
 /**
  * @author Gavin King
  */

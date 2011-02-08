@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+
 /**
  * An interface for initializeable AST nodes.
  */

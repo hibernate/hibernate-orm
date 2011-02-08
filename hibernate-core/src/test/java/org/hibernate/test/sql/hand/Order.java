@@ -1,5 +1,4 @@
 package org.hibernate.test.sql.hand;
-
 import java.io.Serializable;
 
 public class Order {

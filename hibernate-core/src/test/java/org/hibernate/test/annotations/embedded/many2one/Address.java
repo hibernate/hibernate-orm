@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.embedded.many2one;
-
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
-
 import org.hibernate.annotations.AccessType;
 
 /**

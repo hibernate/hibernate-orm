@@ -1,12 +1,9 @@
 // $Id: Dom4jTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.entitymode.dom4j.basic;
-
 import java.util.Map;
-
 import junit.framework.Test;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

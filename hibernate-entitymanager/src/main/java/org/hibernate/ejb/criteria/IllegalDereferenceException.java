@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+
 /**
  * Represents an illegal attempt to dereference from a {@link #getPathSource() path source} which
  * cannot be dereferenced.

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.loader.entity;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -120,7 +119,7 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 
-        LOG.debug("Static select for entity " + entityName + " [" + lockMode + "]: " + getSQLString());
+        LOG.debugf("Static select for entity %s [%s]: %s", entityName, lockMode, getSQLString());
 	}
 
 	public EntityLoader(
@@ -147,9 +146,11 @@ public class EntityLoader extends AbstractEntityLoader {
 
 		batchLoader = batchSize > 1;
 
-        LOG.debug("Static select for entity " + entityName + " [" + lockOptions.getLockMode() + ":" + lockOptions.getTimeOut()
-                  + "]: " + getSQLString());
-
+        LOG.debugf("Static select for entity %s [%s:%s]: %s",
+                   entityName,
+                   lockOptions.getLockMode(),
+                   lockOptions.getTimeOut(),
+                   getSQLString());
 	}
 
 	public Object loadByUniqueKey(SessionImplementor session,Object key) {

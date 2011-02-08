@@ -22,14 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+import org.jboss.logging.Logger;
 
 /**
  * A registry of {@link BasicType} instances
@@ -38,8 +38,7 @@ import org.hibernate.usertype.UserType;
  */
 public class BasicTypeRegistry implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BasicTypeRegistry.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicTypeRegistry.class.getName());
 
 	// TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
 	private Map<String,BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
@@ -136,7 +135,7 @@ public class BasicTypeRegistry implements Serializable {
 		for ( String key : type.getRegistrationKeys() ) {
 			// be safe...
             if (key == null) continue;
-            LOG.debug("Adding type registration " + key + " -> " + type);
+            LOG.debugf("Adding type registration %s -> %s", key, type);
 			final Type old = registry.put( key, type );
             if (old != null && old != type) LOG.typeRegistrationOverridesPrevious(key, old);
 		}

@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-
+import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -40,9 +38,9 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;

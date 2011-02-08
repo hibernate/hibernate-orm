@@ -23,14 +23,13 @@
  *
  */
 package org.hibernate.hql.ast;
-
-import antlr.ASTFactory;
-import antlr.Token;
-import antlr.collections.AST;
+import java.lang.reflect.Constructor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.tree.AggregateNode;
+import org.hibernate.hql.ast.tree.BetweenOperatorNode;
 import org.hibernate.hql.ast.tree.BinaryArithmeticOperatorNode;
 import org.hibernate.hql.ast.tree.BinaryLogicOperatorNode;
+import org.hibernate.hql.ast.tree.BooleanLiteralNode;
 import org.hibernate.hql.ast.tree.Case2Node;
 import org.hibernate.hql.ast.tree.CaseNode;
 import org.hibernate.hql.ast.tree.CollectionFunction;
@@ -42,11 +41,18 @@ import org.hibernate.hql.ast.tree.FromClause;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.IdentNode;
 import org.hibernate.hql.ast.tree.ImpliedFromElement;
+import org.hibernate.hql.ast.tree.InLogicOperatorNode;
 import org.hibernate.hql.ast.tree.IndexNode;
 import org.hibernate.hql.ast.tree.InitializeableNode;
 import org.hibernate.hql.ast.tree.InsertStatement;
 import org.hibernate.hql.ast.tree.IntoClause;
+import org.hibernate.hql.ast.tree.IsNotNullLogicOperatorNode;
+import org.hibernate.hql.ast.tree.IsNullLogicOperatorNode;
+import org.hibernate.hql.ast.tree.JavaConstantNode;
 import org.hibernate.hql.ast.tree.LiteralNode;
+import org.hibernate.hql.ast.tree.MapEntryNode;
+import org.hibernate.hql.ast.tree.MapKeyNode;
+import org.hibernate.hql.ast.tree.MapValueNode;
 import org.hibernate.hql.ast.tree.MethodNode;
 import org.hibernate.hql.ast.tree.OrderByClause;
 import org.hibernate.hql.ast.tree.ParameterNode;
@@ -54,23 +60,15 @@ import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.ResultVariableRefNode;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.tree.SelectExpressionImpl;
+import org.hibernate.hql.ast.tree.SessionFactoryAwareNode;
 import org.hibernate.hql.ast.tree.SqlFragment;
 import org.hibernate.hql.ast.tree.SqlNode;
 import org.hibernate.hql.ast.tree.UnaryArithmeticNode;
-import org.hibernate.hql.ast.tree.UpdateStatement;
-import org.hibernate.hql.ast.tree.BetweenOperatorNode;
 import org.hibernate.hql.ast.tree.UnaryLogicOperatorNode;
-import org.hibernate.hql.ast.tree.InLogicOperatorNode;
-import org.hibernate.hql.ast.tree.JavaConstantNode;
-import org.hibernate.hql.ast.tree.SessionFactoryAwareNode;
-import org.hibernate.hql.ast.tree.BooleanLiteralNode;
-import org.hibernate.hql.ast.tree.IsNullLogicOperatorNode;
-import org.hibernate.hql.ast.tree.IsNotNullLogicOperatorNode;
-import org.hibernate.hql.ast.tree.MapKeyNode;
-import org.hibernate.hql.ast.tree.MapValueNode;
-import org.hibernate.hql.ast.tree.MapEntryNode;
-
-import java.lang.reflect.Constructor;
+import org.hibernate.hql.ast.tree.UpdateStatement;
+import antlr.ASTFactory;
+import antlr.Token;
+import antlr.collections.AST;
 
 /**
  * Custom AST factory the intermediate tree that causes ANTLR to create specialized

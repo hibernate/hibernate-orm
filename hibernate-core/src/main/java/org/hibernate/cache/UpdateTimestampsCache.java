@@ -23,14 +23,14 @@
  *
  */
 package org.hibernate.cache;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Settings;
+import org.jboss.logging.Logger;
 
 /**
  * Tracks the timestamps of the most recent updates to particular tables. It is
@@ -43,9 +43,10 @@ import org.hibernate.cfg.Settings;
  * @author Mikheil Kapanadze
  */
 public class UpdateTimestampsCache {
+
 	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                UpdateTimestampsCache.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                                UpdateTimestampsCache.class.getName());
 
 	private final TimestampsRegion region;
 
@@ -60,7 +61,7 @@ public class UpdateTimestampsCache {
 		//TODO: to handle concurrent writes correctly, this should return a Lock to the client
 		Long ts = new Long( region.nextTimestamp() + region.getTimeout() );
 		for ( int i=0; i<spaces.length; i++ ) {
-            LOG.debug("Pre-invalidating space [" + spaces[i] + "]");
+            LOG.debugf("Pre-invalidating space [%s]", spaces[i]);
 			//put() has nowait semantics, is this really appropriate?
 			//note that it needs to be async replication, never local or sync
 			region.put( spaces[i], ts );
@@ -73,7 +74,7 @@ public class UpdateTimestampsCache {
 		Long ts = new Long( region.nextTimestamp() );
 		//TODO: if lock.getTimestamp().equals(ts)
 		for ( int i=0; i<spaces.length; i++ ) {
-            LOG.debug("Invalidating space [" + spaces[i] + "], timestamp: " + ts);
+            LOG.debugf("Invalidating space [%s], timestamp: %s", spaces[i], ts);
 			//put() has nowait semantics, is this really appropriate?
 			//note that it needs to be async replication, never local or sync
 			region.put( spaces[i], ts );
@@ -92,7 +93,7 @@ public class UpdateTimestampsCache {
 				//result = false; // safer
 			}
 			else {
-                LOG.debug("[" + space + "] last update timestamp: " + lastUpdate + ", result set timestamp: " + timestamp);
+                LOG.debugf("[%s] last update timestamp: %s", space, lastUpdate + ", result set timestamp: " + timestamp);
 				if ( lastUpdate.longValue() >= timestamp.longValue() ) {
 					return false;
 				}

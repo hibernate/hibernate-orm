@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.inheritance.single.childrelation;
-
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-
 import org.hibernate.envers.Audited;
 
 /**

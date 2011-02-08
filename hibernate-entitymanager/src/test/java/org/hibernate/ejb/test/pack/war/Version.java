@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.pack.war;
-
 import javax.persistence.Embeddable;
 
 /**

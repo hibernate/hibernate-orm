@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.math.BigDecimal;
 import java.sql.Types;
-
 import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
 import org.hibernate.type.descriptor.sql.NumericTypeDescriptor;
 

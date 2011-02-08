@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.id.entities;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Entity;

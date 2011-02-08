@@ -1,5 +1,4 @@
 package org.hibernate.envers.configuration.metadata.reader;
-
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.envers.Audited;

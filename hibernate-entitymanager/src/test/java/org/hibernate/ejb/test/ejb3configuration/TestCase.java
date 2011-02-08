@@ -23,14 +23,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.ejb3configuration;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import javax.persistence.Persistence;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;

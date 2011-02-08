@@ -1,5 +1,4 @@
 package org.hibernate.test.namingstrategy;
-
 import org.hibernate.cfg.DefaultNamingStrategy;
 
 /**

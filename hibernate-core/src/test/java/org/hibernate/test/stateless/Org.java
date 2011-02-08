@@ -1,5 +1,6 @@
 package org.hibernate.test.stateless;
 
+
 public class Org {
 	private Integer id;
 	private Country country;

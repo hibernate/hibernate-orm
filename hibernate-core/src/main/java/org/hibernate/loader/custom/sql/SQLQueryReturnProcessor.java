@@ -23,14 +23,13 @@
  *
  */
 package org.hibernate.loader.custom.sql;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
@@ -59,6 +58,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Responsible for processing the series of {@link org.hibernate.engine.query.sql.NativeSQLQueryReturn returns}
@@ -72,8 +72,8 @@ import org.hibernate.type.Type;
  */
 public class SQLQueryReturnProcessor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SQLQueryReturnProcessor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       SQLQueryReturnProcessor.class.getName());
 
 	private NativeSQLQueryReturn[] queryReturns;
 

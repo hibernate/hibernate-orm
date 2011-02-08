@@ -6,6 +6,7 @@ package org.hibernate.test.idclass;
 
 
 
+
 public class Customer {
 
 

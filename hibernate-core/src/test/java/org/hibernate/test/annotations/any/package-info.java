@@ -10,7 +10,7 @@
 )
 
 package org.hibernate.test.annotations.any;
-
-import org.hibernate.annotations.AnyMetaDefs;
 import org.hibernate.annotations.AnyMetaDef;
+import org.hibernate.annotations.AnyMetaDefs;
 import org.hibernate.annotations.MetaValue;
+

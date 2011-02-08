@@ -22,24 +22,26 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jdbc;
-
-import java.sql.*;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
-
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.SQLException;
 import junit.framework.TestCase;
-
+import org.hibernate.engine.jdbc.BlobImplementer;
+import org.hibernate.engine.jdbc.ClobImplementer;
+import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.ContextualLobCreator;
-import org.hibernate.engine.jdbc.BlobImplementer;
-import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.WrappedClob;

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,11 +30,12 @@ import java.io.Serializable;
 import java.util.Collection;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * We need an entry to tell us all about the current state
@@ -45,8 +45,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public final class CollectionEntry implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CollectionEntry.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionEntry.class.getName());
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -195,9 +194,9 @@ public final class CollectionEntry implements Serializable {
 
 		dirty(collection);
 
-        if (LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null) LOG.debug("Collection dirty: "
-                                                                                                    + MessageHelper.collectionInfoString(getLoadedPersister().getRole(),
-                                                                                                                                         getLoadedKey()));
+        if (LOG.isDebugEnabled() && collection.isDirty() && getLoadedPersister() != null) LOG.debugf("Collection dirty: %s",
+                                                                                                     MessageHelper.collectionInfoString(getLoadedPersister().getRole(),
+                                                                                                                                        getLoadedKey()));
 
 		setDoupdate(false);
 		setDoremove(false);

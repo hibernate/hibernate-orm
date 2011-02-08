@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.Serializable;
 import java.util.Map;
-
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.property.BackrefPropertyAccessor;

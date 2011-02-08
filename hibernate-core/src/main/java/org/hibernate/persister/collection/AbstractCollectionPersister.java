@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.persister.collection;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,7 +33,7 @@ import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.TransientObjectException;
@@ -84,6 +83,7 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -96,8 +96,8 @@ import org.hibernate.util.StringHelper;
 public abstract class AbstractCollectionPersister
 		implements CollectionMetadata, SQLLoadableCollection {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractCollectionPersister.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractCollectionPersister.class.getName());
 
     // TODO: encapsulate the protected instance variables!
 
@@ -606,11 +606,11 @@ public abstract class AbstractCollectionPersister
 
 	protected void logStaticSQL() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Static SQL for collection: " + getRole());
-            if (getSQLInsertRowString() != null) LOG.debug(" Row insert: " + getSQLInsertRowString());
-            if (getSQLUpdateRowString() != null) LOG.debug(" Row update: " + getSQLUpdateRowString());
-            if (getSQLDeleteRowString() != null) LOG.debug(" Row delete: " + getSQLDeleteRowString());
-            if (getSQLDeleteString() != null) LOG.debug(" One-shot delete: " + getSQLDeleteString());
+            LOG.debugf("Static SQL for collection: %s", getRole());
+            if (getSQLInsertRowString() != null) LOG.debugf(" Row insert: %s", getSQLInsertRowString());
+            if (getSQLUpdateRowString() != null) LOG.debugf(" Row update: %s", getSQLUpdateRowString());
+            if (getSQLDeleteRowString() != null) LOG.debugf(" Row delete: %s", getSQLDeleteRowString());
+            if (getSQLDeleteString() != null) LOG.debugf(" One-shot delete: %s", getSQLDeleteString());
 		}
 	}
 
@@ -1057,8 +1057,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debug("Deleting collection: "
-                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Deleting collection: %s",
+                                                 MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			// Remove all the old entries
 
@@ -1100,7 +1100,7 @@ public abstract class AbstractCollectionPersister
 					}
 				}
 
-                LOG.debug("Done deleting collection");
+                LOG.debugf("Done deleting collection");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1120,8 +1120,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debug("Inserting collection: "
-                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Inserting collection: %s",
+                                                 MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			try {
 				//create all the new entries
@@ -1190,9 +1190,9 @@ public abstract class AbstractCollectionPersister
 						i++;
 					}
 
-                    LOG.debug("Done inserting collection: " + count + " rows inserted");
+                    LOG.debugf("Done inserting collection: %s rows inserted", count);
 
-                } else LOG.debug("Collection was empty");
+                } else LOG.debugf("Collection was empty");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1214,8 +1214,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debug("Deleting rows of collection: "
-                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Deleting rows of collection: %s",
+                                                 MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
 
@@ -1279,9 +1279,9 @@ public abstract class AbstractCollectionPersister
 							}
 						}
 
-                        LOG.debug("Done deleting collection rows: " + count + " deleted");
+                        LOG.debugf("Done deleting collection rows: %s deleted", count);
 					}
-                } else LOG.debug("No rows to delete");
+                } else LOG.debugf("No rows to delete");
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1303,8 +1303,8 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debug("Inserting rows of collection: "
-                                                + MessageHelper.collectionInfoString(this, id, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Inserting rows of collection: %s",
+                                                 MessageHelper.collectionInfoString(this, id, getFactory()));
 
 			try {
 				//insert all the new entries
@@ -1368,7 +1368,7 @@ public abstract class AbstractCollectionPersister
 					}
 					i++;
 				}
-                LOG.debug("Done inserting rows: " + count + " inserted");
+                LOG.debugf("Done inserting rows: %s inserted", count);
 			}
 			catch ( SQLException sqle ) {
 				throw sqlExceptionHelper.convert(
@@ -1496,12 +1496,12 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && collection.isRowUpdatePossible() ) {
 
-            LOG.debug("Updating rows of collection: " + role + "#" + id);
+            LOG.debugf("Updating rows of collection: %s#%s", role, id);
 
 			//update all the modified entries
 			int count = doUpdateRows( id, collection, session );
 
-            LOG.debug("Done updating rows: " + count + " updated");
+            LOG.debugf("Done updating rows: %s updated", count);
 		}
 	}
 

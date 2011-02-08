@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;

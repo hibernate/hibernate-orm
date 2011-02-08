@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 
+
 /**
  * Are the columns forced to null, not null or not forced
  *

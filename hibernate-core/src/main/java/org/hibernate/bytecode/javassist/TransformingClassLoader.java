@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
-import javassist.ClassPool;
-import javassist.NotFoundException;
-import javassist.CtClass;
-import javassist.CannotCompileException;
-import org.hibernate.HibernateException;
-
 import java.io.IOException;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.NotFoundException;
+import org.hibernate.HibernateException;
 
 /**
  * @author Steve Ebersole

@@ -1,8 +1,7 @@
 package org.hibernate.test.proxy;
-
-import java.util.Set;
-import java.util.HashSet;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole

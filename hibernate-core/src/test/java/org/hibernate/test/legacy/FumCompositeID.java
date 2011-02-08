@@ -1,6 +1,7 @@
 //$Id: FumCompositeID.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.test.legacy;
 
+
 public class FumCompositeID implements java.io.Serializable {
 	String string_;
 	java.util.Date date_;

@@ -2,6 +2,7 @@
 package org.hibernate.test.extendshbm;
 
 
+
 /**
  * @author Gavin King
  */

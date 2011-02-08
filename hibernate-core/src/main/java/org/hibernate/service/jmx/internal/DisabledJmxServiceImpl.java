@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jmx.internal;
-
 import javax.management.ObjectName;
-
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Manageable;
 

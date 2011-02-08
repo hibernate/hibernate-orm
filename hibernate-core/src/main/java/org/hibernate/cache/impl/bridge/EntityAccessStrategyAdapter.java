@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-
 import org.hibernate.cache.CacheConcurrencyStrategy;
-import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cfg.Settings;

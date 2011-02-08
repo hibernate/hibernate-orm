@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.synchronization.work;
 
+
 /**
  * Visitor pattern visitor. All methods should be invoked on the first work unit.
  * @author Adam Warski (adam at warski dot org)

@@ -3,7 +3,6 @@
  *
  */
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 
 /**

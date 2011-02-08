@@ -1,6 +1,5 @@
 //$Id: Child.java 6095 2005-03-17 05:57:29Z oneovthafew $
 package org.hibernate.test.subselectfetch;
-
 import java.util.List;
 
 /**

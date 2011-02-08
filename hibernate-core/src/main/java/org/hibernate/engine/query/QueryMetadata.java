@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.engine.query;
-
-import org.hibernate.type.Type;
-
 import java.io.Serializable;
 import java.util.Set;
+import org.hibernate.type.Type;
 
 /**
  * Defines metadata regarding a translated HQL or native-SQL query.

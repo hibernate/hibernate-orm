@@ -24,14 +24,12 @@
  *
  */
 package org.hibernate.event.def;
-
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
-import java.util.Collection;
-
-import org.hibernate.util.IdentityMap;
 import org.hibernate.AssertionFailure;
+import org.hibernate.util.IdentityMap;
 
 /**
  * EventCache is a Map implementation that can be used by an event

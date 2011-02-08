@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.MapKey;

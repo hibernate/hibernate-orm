@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-
 import java.sql.Types;
-
 import org.hibernate.testing.junit.UnitTestCase;
 
 /**

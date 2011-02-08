@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.pack.defaultpar_1_0;
-
 import javax.persistence.Embeddable;
 
 /**

@@ -2,6 +2,7 @@
 package org.hibernate.test.onetoone.joined;
 
 
+
 /**
  * @author Gavin King
  */

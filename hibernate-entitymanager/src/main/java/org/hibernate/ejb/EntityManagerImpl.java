@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
 import java.util.Map;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
@@ -28,11 +27,11 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.Logger;
 import org.hibernate.Session;
 import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.
@@ -41,8 +40,8 @@ import org.hibernate.engine.SessionImplementor;
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl {
 
-    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                               EntityManagerImpl.class.getPackage().getName());
+    public static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                          EntityManagerImpl.class.getName());
 
 	protected Session session;
 	protected boolean open;
@@ -131,7 +130,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 
 				public void afterCompletion( int i ) {
                     if (session != null) if (session.isOpen()) {
-                        LOG.debug("Closing entity manager after transaction completion");
+                        LOG.debugf("Closing entity manager after transaction completion");
                         session.close();
                     } else LOG.entityManagerClosedBySomeoneElse(Environment.AUTO_CLOSE_SESSION);
                     // TODO session == null should not happen

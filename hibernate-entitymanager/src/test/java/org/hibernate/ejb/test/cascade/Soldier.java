@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
-
 import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;

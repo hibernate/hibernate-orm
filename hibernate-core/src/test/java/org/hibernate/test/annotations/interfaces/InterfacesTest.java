@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.interfaces;
-
 import org.hibernate.test.annotations.TestCase;
 
 /**

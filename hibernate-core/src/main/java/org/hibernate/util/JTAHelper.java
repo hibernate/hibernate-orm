@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.util;
-
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.TransactionException;
 import org.hibernate.engine.SessionFactoryImplementor;
 

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -38,9 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
 import javax.transaction.TransactionManager;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.cache.RegionFactory;
@@ -48,9 +45,9 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.stat.SecondLevelCacheStatistics;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeConnectionProviderImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTransactionManagerLookup;
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.infinispan.util.logging.Log;

@@ -1,9 +1,7 @@
 package org.hibernate.envers.test;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

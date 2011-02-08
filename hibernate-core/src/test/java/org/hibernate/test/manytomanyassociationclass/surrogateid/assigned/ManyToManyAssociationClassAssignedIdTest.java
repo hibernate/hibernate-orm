@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.manytomanyassociationclass.surrogateid.assigned;
-
 import junit.framework.Test;
-
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

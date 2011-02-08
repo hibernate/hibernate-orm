@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.classic;
-
 import org.hibernate.QueryException;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.type.Type;

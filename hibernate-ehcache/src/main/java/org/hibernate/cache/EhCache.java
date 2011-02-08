@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import org.jboss.logging.Logger;
 
 /**
  * EHCache plugin for Hibernate
@@ -43,8 +43,7 @@ import net.sf.ehcache.Element;
  */
 public class EhCache implements Cache {
 
-    private static final EhCacheLogger LOG = org.jboss.logging.Logger.getMessageLogger(EhCacheLogger.class,
-                                                                                     EhCacheLogger.class.getPackage().getName());
+    private static final EhCacheLogger LOG = Logger.getMessageLogger(EhCacheLogger.class, EhCache.class.getName());
 
 	private static final int SIXTY_THOUSAND_MS = 60000;
 
@@ -69,11 +68,11 @@ public class EhCache implements Cache {
 	 */
 	public Object get(Object key) throws CacheException {
 		try {
-            LOG.debug("Key: " + key);
+            LOG.debugf("Key: %s", key);
             if (key == null) return null;
             Element element = cache.get(key);
             if (element == null) {
-                LOG.debug("Element for " + key + " is null");
+                LOG.debugf("Element for %s is null", key);
 				return null;
 			}
             return element.getObjectValue();

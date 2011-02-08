@@ -23,13 +23,10 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
-
 import javax.naming.NamingException;
-import javax.transaction.TransactionManager;
 import javax.transaction.Transaction;
-
+import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.jndi.JndiHelper;
 

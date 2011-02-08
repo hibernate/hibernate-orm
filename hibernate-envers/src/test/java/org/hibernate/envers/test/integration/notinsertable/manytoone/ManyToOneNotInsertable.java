@@ -1,10 +1,8 @@
 package org.hibernate.envers.test.integration.notinsertable.manytoone;
-
 import java.util.Arrays;
 import javax.persistence.EntityManager;
-
-import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.AbstractEntityTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

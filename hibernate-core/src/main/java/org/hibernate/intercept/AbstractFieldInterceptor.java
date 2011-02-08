@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.intercept;
-
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.LazyInitializationException;
-
-import java.util.Set;
 import java.io.Serializable;
+import java.util.Set;
+import org.hibernate.LazyInitializationException;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * @author Steve Ebersole

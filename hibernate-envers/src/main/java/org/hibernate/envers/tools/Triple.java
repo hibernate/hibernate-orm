@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.tools;
 
+
 /**
  * A triple of objects.
  * @param <T1>

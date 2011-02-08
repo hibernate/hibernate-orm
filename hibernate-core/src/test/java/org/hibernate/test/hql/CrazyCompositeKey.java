@@ -1,6 +1,5 @@
 // $Id: CrazyCompositeKey.java 6970 2005-05-31 20:24:41Z oneovthafew $
 package org.hibernate.test.hql;
-
 import java.io.Serializable;
 
 /**

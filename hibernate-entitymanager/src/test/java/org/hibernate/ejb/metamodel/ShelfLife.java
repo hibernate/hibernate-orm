@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
 import java.sql.Date;
 import javax.persistence.Basic;
 import javax.persistence.Embeddable;

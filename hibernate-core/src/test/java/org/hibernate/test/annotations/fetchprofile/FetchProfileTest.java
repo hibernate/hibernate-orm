@@ -24,7 +24,6 @@
  *
  */
 package org.hibernate.test.annotations.fetchprofile;
-
 import static org.hibernate.TestLogger.LOG;
 import java.io.InputStream;
 import junit.framework.TestCase;

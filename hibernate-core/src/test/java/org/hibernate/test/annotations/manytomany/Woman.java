@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.io.Serializable;
 import java.util.Set;
 import javax.persistence.CascadeType;
@@ -9,7 +8,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-
 import org.hibernate.annotations.ForeignKey;
 
 /**

@@ -22,16 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.proxy.pojo;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
-
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 import org.hibernate.util.MarkerObject;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.proxy.AbstractLazyInitializer;
 
 /**
  * Lazy initializer for POJOs

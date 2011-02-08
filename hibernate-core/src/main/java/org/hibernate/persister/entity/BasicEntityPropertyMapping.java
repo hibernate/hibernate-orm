@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import org.hibernate.QueryException;
 import org.hibernate.type.Type;
 

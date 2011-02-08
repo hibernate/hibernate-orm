@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 
+
 /**
  * Allow annotation related mappings
  * <p/>

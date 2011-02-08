@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.jdbc.proxies;
-
 import static org.hibernate.TestLogger.LOG;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

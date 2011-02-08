@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
-
 import java.util.List;
 
 public class Entity2 {

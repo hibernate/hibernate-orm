@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Actoin to use when an element is not found in DB while beeing expected
  *

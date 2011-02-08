@@ -22,19 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
-
 import java.beans.Introspector;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Accesses property values via a get/set pair, which may be nonpublic.
@@ -44,8 +44,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class BasicPropertyAccessor implements PropertyAccessor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BasicPropertyAccessor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicPropertyAccessor.class.getName());
 
 	public static final class BasicSetter implements Setter {
 		private Class clazz;

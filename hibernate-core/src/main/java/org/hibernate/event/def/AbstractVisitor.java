@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import org.hibernate.HibernateException;
 import org.hibernate.event.EventSource;
 import org.hibernate.intercept.LazyPropertyInitializer;

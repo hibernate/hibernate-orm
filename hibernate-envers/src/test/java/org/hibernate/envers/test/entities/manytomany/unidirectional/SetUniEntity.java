@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
-
 import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
 

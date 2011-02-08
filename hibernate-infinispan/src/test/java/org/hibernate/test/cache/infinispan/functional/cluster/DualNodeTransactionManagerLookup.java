@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
-
 import java.util.Properties;
-import javax.transaction.TransactionManager;
 import javax.transaction.Transaction;
-
-import org.hibernate.transaction.TransactionManagerLookup;
+import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
+import org.hibernate.transaction.TransactionManagerLookup;
 
 /**
  * SimpleJtaTransactionManagerLookupImpl subclass that finds a different DualNodeTransactionManager

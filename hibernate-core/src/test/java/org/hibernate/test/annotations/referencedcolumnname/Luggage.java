@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.referencedcolumnname;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;

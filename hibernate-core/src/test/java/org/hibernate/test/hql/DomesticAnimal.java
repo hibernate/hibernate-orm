@@ -1,6 +1,7 @@
 //$Id: DomesticAnimal.java 4899 2004-12-06 14:17:24Z pgmjsd $
 package org.hibernate.test.hql;
 
+
 /**
  * @author Gavin King
  */

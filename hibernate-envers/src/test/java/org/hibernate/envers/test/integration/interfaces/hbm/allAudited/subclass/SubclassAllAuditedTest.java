@@ -1,9 +1,7 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited.subclass;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.integration.interfaces.hbm.allAudited.AbstractAllAuditedTest;
 import org.testng.annotations.Test;

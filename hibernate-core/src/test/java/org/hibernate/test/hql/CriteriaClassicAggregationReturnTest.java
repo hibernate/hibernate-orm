@@ -1,18 +1,15 @@
 package org.hibernate.test.hql;
-
 import java.util.Collections;
-
 import junit.framework.Test;
-
+import org.hibernate.Hibernate;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.function.ClassicCountFunction;
 import org.hibernate.dialect.function.ClassicAvgFunction;
+import org.hibernate.dialect.function.ClassicCountFunction;
 import org.hibernate.dialect.function.ClassicSumFunction;
-import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
+import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
-import org.hibernate.Hibernate;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**

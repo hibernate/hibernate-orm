@@ -24,9 +24,7 @@
  *
  */
 package org.hibernate.test.lob;
-
 import junit.framework.Test;
-
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**

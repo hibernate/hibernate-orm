@@ -1,9 +1,8 @@
 //$Id$
 package org.hibernate.ejb.test.xml;
-
 import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.PreRemove;
+import javax.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

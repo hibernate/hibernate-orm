@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Column;

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
-
 import org.hibernate.cache.access.AccessType;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 

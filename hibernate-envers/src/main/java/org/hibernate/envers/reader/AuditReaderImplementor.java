@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.reader;
-
-import org.hibernate.envers.AuditReader;
-
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.envers.AuditReader;
 
 /**
  * An interface exposed by a VersionsReader to library-facing classes.

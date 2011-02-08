@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
+
 /**
  * An observer contract for batch events.
  *

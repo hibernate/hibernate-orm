@@ -22,15 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.performance;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import javax.persistence.EntityManager;
-
-import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)

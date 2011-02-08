@@ -22,16 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.pagination;
-
 import java.math.BigDecimal;
 import java.util.List;
-
 import junit.framework.Test;
-
-import org.hibernate.Session;
-import org.hibernate.SQLQuery;
-import org.hibernate.Query;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

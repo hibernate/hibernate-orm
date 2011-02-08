@@ -1,6 +1,5 @@
 //$Id: Organization.java 11486 2007-05-08 21:57:24Z steve.ebersole@jboss.com $
 package org.hibernate.test.sql.hand;
-
 import java.util.Collection;
 import java.util.HashSet;
 

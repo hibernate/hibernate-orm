@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;

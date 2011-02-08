@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util.xml;
-
 import java.io.Serializable;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
@@ -36,8 +36,7 @@ import org.xml.sax.SAXParseException;
  */
 public class ErrorLogger implements ErrorHandler, Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ErrorLogger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ErrorLogger.class.getName());
 
 	private SAXParseException error; // capture the initial error
 

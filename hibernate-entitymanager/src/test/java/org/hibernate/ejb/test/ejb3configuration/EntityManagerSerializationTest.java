@@ -1,16 +1,13 @@
 //$Id$
 package org.hibernate.ejb.test.ejb3configuration;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Date;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Distributor;

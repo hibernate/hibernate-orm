@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.stateless.fetching;
-
 import static org.hibernate.TestLogger.LOG;
 import java.util.Date;
 import junit.framework.Test;

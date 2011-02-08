@@ -24,6 +24,7 @@
  */
 package org.hibernate.transaction;
 
+
 /**
  * {@link TransactionManagerLookup} for the OC4J (Oracle) AS.
  * 

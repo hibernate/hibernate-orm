@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.util.Collections;
 import java.util.Map;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Type;

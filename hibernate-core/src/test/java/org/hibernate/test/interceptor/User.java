@@ -1,6 +1,5 @@
 //$Id: User.java 7700 2005-07-30 05:02:47Z oneovthafew $
 package org.hibernate.test.interceptor;
-
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;

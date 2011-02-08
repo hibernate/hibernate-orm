@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
 import java.util.Iterator;
-
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.intercept.LazyPropertyInitializer;

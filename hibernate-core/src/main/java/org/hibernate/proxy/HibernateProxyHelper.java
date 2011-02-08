@@ -25,6 +25,7 @@
 package org.hibernate.proxy;
 
 
+
 /**
  * Utility methods for working with proxies. (this class is being phased out)
  * @author Gavin King

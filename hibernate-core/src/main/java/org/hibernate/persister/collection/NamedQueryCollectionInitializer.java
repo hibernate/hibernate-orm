@@ -23,14 +23,14 @@
  *
  */
 package org.hibernate.persister.collection;
-
 import java.io.Serializable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.collection.CollectionInitializer;
+import org.jboss.logging.Logger;
 
 /**
  * A wrapper around a named query.
@@ -38,8 +38,8 @@ import org.hibernate.loader.collection.CollectionInitializer;
  */
 public final class NamedQueryCollectionInitializer implements CollectionInitializer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                NamedQueryCollectionInitializer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       NamedQueryCollectionInitializer.class.getName());
 
     private final String queryName;
 	private final CollectionPersister persister;
@@ -53,7 +53,7 @@ public final class NamedQueryCollectionInitializer implements CollectionInitiali
 	public void initialize(Serializable key, SessionImplementor session)
 	throws HibernateException {
 
-        LOG.debug("Initializing collection: " + persister.getRole() + " using named query: " + queryName);
+        LOG.debugf("Initializing collection: %s using named query: %s", persister.getRole(), queryName);
 
 		//TODO: is there a more elegant way than downcasting?
 		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedSQLQuery(queryName);

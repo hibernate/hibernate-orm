@@ -22,15 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.proxy.pojo.cglib;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Set;
-
 import org.hibernate.HibernateException;
-import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.type.CompositeType;
 
 /**

@@ -23,19 +23,17 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
-import org.hibernate.bytecode.ProxyFactoryFactory;
-import org.hibernate.bytecode.BasicProxyFactory;
-import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import javassist.util.proxy.MethodFilter;
-import javassist.util.proxy.ProxyObject;
-import javassist.util.proxy.MethodHandler;
-
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import javassist.util.proxy.MethodFilter;
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.ProxyObject;
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.bytecode.BasicProxyFactory;
+import org.hibernate.bytecode.ProxyFactoryFactory;
+import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
 
 /**
  * A factory for Javassist-based {@link ProxyFactory} instances.

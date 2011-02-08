@@ -1,5 +1,6 @@
 package org.hibernate.test.legacy;
 
+
 public class Sortable implements Comparable {
 	
 	private int id;

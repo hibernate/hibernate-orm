@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.test.filter.hql;
-
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * Tests for application of filters 

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cid;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;

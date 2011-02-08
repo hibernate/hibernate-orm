@@ -23,18 +23,16 @@
  *
  */
 package org.hibernate.action;
-
 import java.io.Serializable;
-
-import org.hibernate.HibernateException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
 import org.hibernate.event.PostInsertEvent;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PreInsertEvent;
 import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 
 public final class EntityIdentityInsertAction extends EntityAction  {

@@ -20,12 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.tm;
-
 import java.util.Properties;
-
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.HibernateException;
 import org.hibernate.transaction.TransactionManagerLookup;
 

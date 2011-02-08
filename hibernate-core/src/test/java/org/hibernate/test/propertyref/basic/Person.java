@@ -1,10 +1,9 @@
 //$Id: Person.java 10396 2006-09-01 08:48:02 -0500 (Fri, 01 Sep 2006) steve.ebersole@jboss.com $
 package org.hibernate.test.propertyref.basic;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author gavin

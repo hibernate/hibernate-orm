@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
 

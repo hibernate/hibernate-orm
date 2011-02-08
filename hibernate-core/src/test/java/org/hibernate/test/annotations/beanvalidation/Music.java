@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

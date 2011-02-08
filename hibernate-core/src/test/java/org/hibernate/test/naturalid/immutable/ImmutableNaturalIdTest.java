@@ -14,12 +14,10 @@
  * Red Hat Author(s): Steve Ebersole
  */
 package org.hibernate.test.naturalid.immutable;
-
 import junit.framework.Test;
-
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;

@@ -1,13 +1,11 @@
 package org.hibernate.envers.test.integration.jta;
-
+import java.util.Arrays;
+import javax.persistence.EntityManager;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 import org.testng.annotations.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.

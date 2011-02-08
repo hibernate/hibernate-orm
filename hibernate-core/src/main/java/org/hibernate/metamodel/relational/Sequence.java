@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models a database {@code SEQUENCE}.
  *

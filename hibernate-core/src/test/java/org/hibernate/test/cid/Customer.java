@@ -1,10 +1,9 @@
 //$Id: Customer.java 4806 2004-11-25 14:37:00Z steveebersole $
 package org.hibernate.test.cid;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.GregorianCalendar;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 /**
  * @author Gavin King

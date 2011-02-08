@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.optlock;
-
 import junit.framework.Test;
-
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;

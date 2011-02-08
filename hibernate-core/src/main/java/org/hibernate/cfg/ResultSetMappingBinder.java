@@ -22,30 +22,27 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Map;
-
+import java.util.Set;
 import org.dom4j.Element;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Value;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;

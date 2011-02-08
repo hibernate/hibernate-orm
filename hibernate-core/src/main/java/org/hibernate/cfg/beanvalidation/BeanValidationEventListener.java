@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
-
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -34,7 +33,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import org.hibernate.EntityMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.Initializable;
@@ -45,6 +44,7 @@ import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.jboss.logging.Logger;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -56,8 +56,8 @@ import org.hibernate.persister.entity.EntityPersister;
 public class BeanValidationEventListener implements
 		PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, Initializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BeanValidationEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       BeanValidationEventListener.class.getName());
 
 	private ValidatorFactory factory;
 	private ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister =

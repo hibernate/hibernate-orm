@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.cache.impl;
-
 import java.util.Comparator;
-
 import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.VersionType;
 
 /**

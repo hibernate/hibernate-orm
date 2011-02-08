@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.persister.entity;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,9 +38,9 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
@@ -108,6 +107,7 @@ import org.hibernate.type.VersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -119,8 +119,8 @@ public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
 		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractEntityPersister.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractEntityPersister.class.getName());
 
 	public static final String ENTITY_CLASS = "class";
 
@@ -2863,22 +2863,23 @@ public abstract class AbstractEntityPersister
 
 	protected void logStaticSQL() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Static SQL for entity: " + getEntityName());
-            if (sqlLazySelectString != null) LOG.debug(" Lazy select: " + sqlLazySelectString);
-            if (sqlVersionSelectString != null) LOG.debug(" Version select: " + sqlVersionSelectString);
-            if (sqlSnapshotSelectString != null) LOG.debug(" Snapshot select: " + sqlSnapshotSelectString);
+            LOG.debugf("Static SQL for entity: %s", getEntityName());
+            if (sqlLazySelectString != null) LOG.debugf(" Lazy select: %s", sqlLazySelectString);
+            if (sqlVersionSelectString != null) LOG.debugf(" Version select: %s", sqlVersionSelectString);
+            if (sqlSnapshotSelectString != null) LOG.debugf(" Snapshot select: %s", sqlSnapshotSelectString);
 			for ( int j = 0; j < getTableSpan(); j++ ) {
-                LOG.debug(" Insert " + j + ": " + getSQLInsertStrings()[j]);
-                LOG.debug(" Update " + j + ": " + getSQLUpdateStrings()[j]);
-                LOG.debug(" Delete " + j + ": " + getSQLDeleteStrings()[j]);
+                LOG.debugf(" Insert %s: %s", j, getSQLInsertStrings()[j]);
+                LOG.debugf(" Update %s: %s", j, getSQLUpdateStrings()[j]);
+                LOG.debugf(" Delete %s: %s", j, getSQLDeleteStrings()[j]);
 			}
-            if (sqlIdentityInsertString != null) LOG.debug(" Identity insert: " + sqlIdentityInsertString);
-            if (sqlUpdateByRowIdString != null) LOG.debug(" Update by row id (all fields): " + sqlUpdateByRowIdString);
-            if (sqlLazyUpdateByRowIdString != null) LOG.debug(" Update by row id (non-lazy fields): " + sqlLazyUpdateByRowIdString);
-            if (sqlInsertGeneratedValuesSelectString != null) LOG.debug("Insert-generated property select: "
-                                                                        + sqlInsertGeneratedValuesSelectString);
-            if (sqlUpdateGeneratedValuesSelectString != null) LOG.debug("Update-generated property select: "
-                                                                        + sqlUpdateGeneratedValuesSelectString);
+            if (sqlIdentityInsertString != null) LOG.debugf(" Identity insert: %s", sqlIdentityInsertString);
+            if (sqlUpdateByRowIdString != null) LOG.debugf(" Update by row id (all fields): %s", sqlUpdateByRowIdString);
+            if (sqlLazyUpdateByRowIdString != null) LOG.debugf(" Update by row id (non-lazy fields): %s",
+                                                               sqlLazyUpdateByRowIdString);
+            if (sqlInsertGeneratedValuesSelectString != null) LOG.debugf("Insert-generated property select: %s",
+                                                                         sqlInsertGeneratedValuesSelectString);
+            if (sqlUpdateGeneratedValuesSelectString != null) LOG.debugf("Update-generated property select: %s",
+                                                                         sqlUpdateGeneratedValuesSelectString);
 		}
 	}
 

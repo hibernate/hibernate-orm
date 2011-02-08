@@ -1,9 +1,6 @@
 package org.hibernate.test.collection.idbag;
-
 import java.util.ArrayList;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentIdentifierBag;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

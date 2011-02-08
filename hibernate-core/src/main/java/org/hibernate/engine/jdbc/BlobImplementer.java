@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc;
 
+
 /**
  * Marker interface for non-contextually created {@link java.sql.Blob} instances..
  *

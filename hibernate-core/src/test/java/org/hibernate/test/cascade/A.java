@@ -25,9 +25,8 @@
  */
 
 package org.hibernate.test.cascade;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:ovidiu@feodorov.com">Ovidiu Feodorov</a>

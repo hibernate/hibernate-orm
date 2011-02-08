@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.dataTypes;
 
+
 /**
  * TODO : javadoc
  *

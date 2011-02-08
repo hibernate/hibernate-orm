@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.hql.classic;
-
+import java.util.StringTokenizer;
 import org.hibernate.QueryException;
 import org.hibernate.util.StringHelper;
-
-import java.util.StringTokenizer;
 
 public final class ParserHelper {
 

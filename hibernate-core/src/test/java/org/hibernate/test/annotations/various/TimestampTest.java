@@ -24,7 +24,6 @@
 
 //$Id$
 package org.hibernate.test.annotations.various;
-
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metadata.ClassMetadata;

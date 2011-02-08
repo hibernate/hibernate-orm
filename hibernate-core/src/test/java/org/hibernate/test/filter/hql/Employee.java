@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.test.filter.hql;
-
 import java.util.Date;
 
 /**

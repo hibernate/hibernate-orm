@@ -24,6 +24,7 @@
  */
 package org.hibernate.transform;
 
+
 /**
  * An implementation of TupleSubsetResultTransformer that ignores a
  * tuple element if its corresponding alias is null.

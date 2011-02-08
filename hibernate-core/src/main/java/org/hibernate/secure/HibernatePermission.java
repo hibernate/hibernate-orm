@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.secure;
-
 import java.security.Permission;
 
 /**

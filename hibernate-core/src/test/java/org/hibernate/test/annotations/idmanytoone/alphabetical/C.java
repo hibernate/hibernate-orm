@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.idmanytoone.alphabetical;
-
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;

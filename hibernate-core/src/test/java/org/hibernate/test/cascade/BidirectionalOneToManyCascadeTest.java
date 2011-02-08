@@ -1,11 +1,8 @@
 //$Id: $
 
 package org.hibernate.test.cascade;
-
 import java.util.Collections;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

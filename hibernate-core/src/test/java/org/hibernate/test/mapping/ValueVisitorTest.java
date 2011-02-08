@@ -3,10 +3,8 @@
  *
  */
 package org.hibernate.test.mapping;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Any;

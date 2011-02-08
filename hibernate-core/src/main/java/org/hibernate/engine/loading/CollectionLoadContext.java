@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.loading;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CollectionCacheEntry;
 import org.hibernate.collection.PersistentCollection;
@@ -44,6 +43,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Represents state associated with the processing of a given {@link ResultSet}
@@ -57,8 +57,7 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class CollectionLoadContext {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CollectionLoadContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionLoadContext.class.getName());
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;
@@ -213,19 +212,19 @@ public class CollectionLoadContext {
 
 	private void endLoadingCollections(CollectionPersister persister, List matchedCollectionEntries) {
 		if ( matchedCollectionEntries == null ) {
-            LOG.debug("No collections were found in result set for role: " + persister.getRole());
+            LOG.debugf("No collections were found in result set for role: %s", persister.getRole());
 			return;
 		}
 
 		final int count = matchedCollectionEntries.size();
-        LOG.debug(count + " collections were found in result set for role: " + persister.getRole());
+        LOG.debugf("%s collections were found in result set for role: %s", count, persister.getRole());
 
 		for ( int i = 0; i < count; i++ ) {
 			LoadingCollectionEntry lce = ( LoadingCollectionEntry ) matchedCollectionEntries.get( i );
 			endLoadingCollection( lce, persister );
 		}
 
-        LOG.debug(count + " collections initialized for role: " + persister.getRole());
+        LOG.debugf("%s collections initialized for role: %s", count, persister.getRole());
 	}
 
 	private void endLoadingCollection(LoadingCollectionEntry lce, CollectionPersister persister) {
@@ -253,8 +252,8 @@ public class CollectionLoadContext {
 				!ce.isDoremove();                   // and this is not a forced initialization during flush
         if (addToCache) addCollectionToCache(lce, persister);
 
-        if (LOG.isDebugEnabled()) LOG.debug("Collection fully initialized: "
-                                            + MessageHelper.collectionInfoString(persister, lce.getKey(), session.getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Collection fully initialized: %s",
+                                             MessageHelper.collectionInfoString(persister, lce.getKey(), session.getFactory()));
         if (session.getFactory().getStatistics().isStatisticsEnabled()) session.getFactory().getStatisticsImplementor().loadCollection(persister.getRole());
 	}
 
@@ -268,12 +267,12 @@ public class CollectionLoadContext {
 		final SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 
-        if (LOG.isDebugEnabled()) LOG.debug("Caching collection: "
-                                            + MessageHelper.collectionInfoString(persister, lce.getKey(), factory));
+        if (LOG.isDebugEnabled()) LOG.debugf("Caching collection: %s",
+                                             MessageHelper.collectionInfoString(persister, lce.getKey(), factory));
 
 		if ( !session.getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-            LOG.debug("Refusing to add to cache due to enabled filters");
+            LOG.debugf("Refusing to add to cache due to enabled filters");
 			// todo : add the notion of enabled filters to the CacheKey to differentiate filtered collections from non-filtered;
 			//      but CacheKey is currently used for both collections and entities; would ideally need to define two seperate ones;
 			//      currently this works in conjuction with the check on

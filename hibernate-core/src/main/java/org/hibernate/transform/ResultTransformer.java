@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.transform;
-
 import java.io.Serializable;
 import java.util.List;
 

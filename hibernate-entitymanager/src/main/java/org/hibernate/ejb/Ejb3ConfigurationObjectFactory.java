@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.util.Hashtable;

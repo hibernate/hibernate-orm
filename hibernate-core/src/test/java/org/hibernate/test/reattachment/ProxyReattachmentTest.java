@@ -1,14 +1,11 @@
 package org.hibernate.test.reattachment;
-
-import java.util.Set;
-import java.util.Iterator;
 import java.util.HashSet;
-
+import java.util.Iterator;
+import java.util.Set;
 import junit.framework.Test;
-
+import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.Session;
 
 /**
  * Test of proxy reattachment semantics

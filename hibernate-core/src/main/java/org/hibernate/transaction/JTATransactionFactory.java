@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -31,13 +30,14 @@ import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Factory for {@link JTATransaction} instances.
@@ -72,8 +72,7 @@ import org.hibernate.util.JTAHelper;
 public class JTATransactionFactory implements TransactionFactory {
 	public static final String DEFAULT_USER_TRANSACTION_NAME = "java:comp/UserTransaction";
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JTATransactionFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JTATransactionFactory.class.getName());
 
 	protected InitialContext initialContext;
 	protected String userTransactionName;

@@ -22,16 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers;
-
+import static org.hibernate.envers.tools.ArraysTools.arrayIncludesInstanceOf;
 import javax.persistence.EntityManager;
-
+import org.hibernate.Session;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.event.AuditEventListener;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImpl;
-import static org.hibernate.envers.tools.ArraysTools.arrayIncludesInstanceOf;
-
-import org.hibernate.Session;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostInsertEventListener;
 

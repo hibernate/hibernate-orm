@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.stat;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.Region;
 

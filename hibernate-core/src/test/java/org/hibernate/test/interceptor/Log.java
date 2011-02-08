@@ -1,6 +1,5 @@
 //$Id: Log.java 7700 2005-07-30 05:02:47Z oneovthafew $
 package org.hibernate.test.interceptor;
-
 import java.util.Calendar;
 
 public class Log {

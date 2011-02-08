@@ -23,15 +23,12 @@
  *
  */
 package org.hibernate.classic;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
-import org.hibernate.SQLQuery;
 import org.hibernate.type.Type;
 
 /**

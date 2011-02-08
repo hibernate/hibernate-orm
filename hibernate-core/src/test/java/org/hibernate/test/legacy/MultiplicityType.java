@@ -1,11 +1,9 @@
 //$Id: MultiplicityType.java 6592 2005-04-28 15:44:16Z oneovthafew $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.ForeignKeys;

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.query;
-
 import java.io.Serializable;
 import javax.persistence.ColumnResult;
 import javax.persistence.Entity;

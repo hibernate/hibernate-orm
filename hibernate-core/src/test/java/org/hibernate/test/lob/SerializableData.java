@@ -1,6 +1,5 @@
 // $Id: SerializableData.java 4704 2004-11-04 21:59:22Z steveebersole $
 package org.hibernate.test.lob;
-
 import java.io.Serializable;
 
 /**

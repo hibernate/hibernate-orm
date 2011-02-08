@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
-
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.JDBCException;
-
 import java.io.Serializable;
+import org.hibernate.JDBCException;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * A strategy abstraction for how locks are obtained in the underlying database.

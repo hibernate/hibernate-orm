@@ -24,9 +24,7 @@
  *
  */
 package org.hibernate.test.readonly;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 

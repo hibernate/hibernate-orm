@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.engine.query;
-
-import org.hibernate.type.Type;
-
 import java.io.Serializable;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole

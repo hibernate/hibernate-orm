@@ -1,6 +1,5 @@
 // $Id: Group.java 4746 2004-11-11 20:57:28Z steveebersole $
 package org.hibernate.test.exception;
-
 import java.util.Set;
 
 /**

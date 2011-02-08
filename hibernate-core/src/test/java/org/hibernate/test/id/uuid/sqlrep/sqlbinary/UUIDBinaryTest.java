@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.id.uuid.sqlrep.sqlbinary;
-
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.test.id.uuid.sqlrep.Node;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * TODO : javadoc

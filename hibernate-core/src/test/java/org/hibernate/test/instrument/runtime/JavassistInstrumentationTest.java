@@ -1,9 +1,7 @@
 //$Id: $
 package org.hibernate.test.instrument.runtime;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
 

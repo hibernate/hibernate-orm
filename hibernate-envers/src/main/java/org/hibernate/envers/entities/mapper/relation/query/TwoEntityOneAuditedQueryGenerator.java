@@ -22,13 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.query;
-
 import java.util.Collections;
-
+import org.hibernate.Query;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.entities.mapper.id.QueryParameterData;
 import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
@@ -36,8 +33,6 @@ import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.tools.query.Parameters;
 import org.hibernate.envers.tools.query.QueryBuilder;
-
-import org.hibernate.Query;
 
 /**
  * Selects data from a relation middle-table and a related non-audited entity.

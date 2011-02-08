@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.event.def;
-
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
@@ -35,6 +34,7 @@ import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners that respond to requests to perform a
@@ -44,8 +44,8 @@ import org.hibernate.pretty.MessageHelper;
  */
 public class AbstractLockUpgradeEventListener extends AbstractReassociateEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractLockUpgradeEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractLockUpgradeEventListener.class.getName());
 
 	/**
 	 * Performs a pessimistic lock upgrade on a given entity, if needed.

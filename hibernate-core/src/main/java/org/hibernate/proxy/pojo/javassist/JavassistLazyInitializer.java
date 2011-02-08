@@ -22,24 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.proxy.pojo.javassist;
-
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
-
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A Javassist-based lazy initializer proxy.
@@ -47,6 +44,9 @@ import org.hibernate.util.ReflectHelper;
  * @author Muga Nishizawa
  */
 public class JavassistLazyInitializer extends BasicLazyInitializer implements MethodHandler {
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       JavassistLazyInitializer.class.getName());
 
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
@@ -103,13 +103,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			return proxy;
 		}
 		catch ( Throwable t ) {
-			LoggerFactory.getLogger( BasicLazyInitializer.class ).error(
-					"Javassist Enhancement failed: " + entityName, t
-			);
-			throw new HibernateException(
-					"Javassist Enhancement failed: "
-					+ entityName, t
-			);
+            LOG.error(LOG.javassistEnhancementFailed(entityName), t);
+            throw new HibernateException(LOG.javassistEnhancementFailed(entityName), t);
 		}
 	}
 
@@ -162,14 +157,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			return factory.createClass();
 		}
 		catch ( Throwable t ) {
-			LoggerFactory.getLogger( BasicLazyInitializer.class ).error(
-					"Javassist Enhancement failed: "
-					+ persistentClass.getName(), t
-			);
-			throw new HibernateException(
-					"Javassist Enhancement failed: "
-					+ persistentClass.getName(), t
-			);
+            LOG.error(LOG.javassistEnhancementFailed(persistentClass.getName()), t);
+            throw new HibernateException(LOG.javassistEnhancementFailed(persistentClass.getName()), t);
 		}
 	}
 
@@ -223,7 +212,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		}
 	}
 
-	protected Object serializableProxy() {
+	@Override
+    protected Object serializableProxy() {
 		return new SerializableProxy(
 				getEntityName(),
 		        persistentClass,

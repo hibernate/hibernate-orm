@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;

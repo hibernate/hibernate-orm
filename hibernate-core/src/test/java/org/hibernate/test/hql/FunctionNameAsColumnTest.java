@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.test.hql;
-
 import java.util.List;
 import junit.framework.Test;
 import org.hibernate.FetchMode;

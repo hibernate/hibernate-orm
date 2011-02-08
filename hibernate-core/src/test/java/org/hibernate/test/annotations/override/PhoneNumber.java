@@ -1,12 +1,9 @@
 package org.hibernate.test.annotations.override;
-
-import org.hibernate.test.annotations.override.Employee;
-
+import java.util.Collection;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import java.util.Collection;
 
 @Entity
 public class PhoneNumber {

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Embeddable;

@@ -9,3 +9,4 @@
 )
 package org.hibernate.test.annotations.id;
 
+

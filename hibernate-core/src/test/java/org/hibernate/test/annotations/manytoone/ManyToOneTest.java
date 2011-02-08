@@ -1,10 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.manytoone;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;

@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.envers.query.property;
-
 import org.hibernate.envers.configuration.AuditConfiguration;
 
 /**

@@ -1,6 +1,5 @@
 //$Id: Employer.java 8670 2005-11-25 17:36:29Z epbernard $
 package org.hibernate.test.nonflushedchanges;
-
 import java.io.Serializable;
 import java.util.Collection;
 

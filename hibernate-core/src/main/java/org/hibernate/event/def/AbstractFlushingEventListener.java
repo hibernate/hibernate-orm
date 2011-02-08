@@ -23,13 +23,12 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.action.CollectionRecreateAction;
 import org.hibernate.action.CollectionRemoveAction;
 import org.hibernate.action.CollectionUpdateAction;
@@ -52,6 +51,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.Printer;
 import org.hibernate.util.IdentityMap;
 import org.hibernate.util.LazyIterator;
+import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners whose functionality results in flushing.
@@ -60,8 +60,8 @@ import org.hibernate.util.LazyIterator;
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractFlushingEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractFlushingEventListener.class.getName());
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -104,13 +104,16 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		//some statistics
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Flushed: " + session.getActionQueue().numberOfInsertions() + " insertions, "
-                      + session.getActionQueue().numberOfUpdates() + " updates, " + session.getActionQueue().numberOfDeletions()
-                      + " deletions to " + persistenceContext.getEntityEntries().size() + " objects");
-            LOG.debug("Flushed: " + session.getActionQueue().numberOfCollectionCreations() + " (re)creations, "
-                      + session.getActionQueue().numberOfCollectionUpdates() + " updates, "
-                      + session.getActionQueue().numberOfCollectionRemovals() + " removals to "
-                      + persistenceContext.getCollectionEntries().size() + " collections");
+            LOG.debugf("Flushed: %s insertions, %s updates, %s deletions to %s objects",
+                       session.getActionQueue().numberOfInsertions(),
+                       session.getActionQueue().numberOfUpdates(),
+                       session.getActionQueue().numberOfDeletions(),
+                       persistenceContext.getEntityEntries().size());
+            LOG.debugf("Flushed: %s (re)creations, %s updates, %s removals to %s collections",
+                       session.getActionQueue().numberOfCollectionCreations(),
+                       session.getActionQueue().numberOfCollectionUpdates(),
+                       session.getActionQueue().numberOfCollectionRemovals(),
+                       persistenceContext.getCollectionEntries().size());
 			new Printer( session.getFactory() ).toString(
 					persistenceContext.getEntitiesByKey().values().iterator(),
 					session.getEntityMode()
@@ -125,7 +128,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void prepareEntityFlushes(EventSource session) throws HibernateException {
 
-        LOG.debug("Processing flush-time cascades");
+        LOG.debugf("Processing flush-time cascades");
 
 		final Map.Entry[] list = IdentityMap.concurrentEntries( session.getPersistenceContext().getEntityEntries() );
 		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
@@ -168,7 +171,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 
-        LOG.debug("Dirty checking collections");
+        LOG.debugf("Dirty checking collections");
 
 		final List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		final int size = list.size();

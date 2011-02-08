@@ -22,18 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.components.collections;
-
 import java.util.Arrays;
 import java.util.Set;
 import javax.persistence.EntityManager;
-
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.ComponentSetTestEntity;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
 
 /**
  * TODO: enable and implement

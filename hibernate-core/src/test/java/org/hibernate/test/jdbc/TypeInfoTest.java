@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.jdbc;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
-
 import org.hibernate.internal.util.jdbc.TypeInfo;
 import org.hibernate.internal.util.jdbc.TypeInfoExtracter;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;

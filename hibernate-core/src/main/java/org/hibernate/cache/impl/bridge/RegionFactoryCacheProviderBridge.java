@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.impl.bridge;
-
 import java.util.Properties;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CacheProvider;
@@ -39,6 +38,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Acts as a bridge between the {@link RegionFactory} contract and the older
@@ -49,8 +49,8 @@ import org.hibernate.util.ReflectHelper;
 public class RegionFactoryCacheProviderBridge implements RegionFactory {
 	public static final String DEF_PROVIDER = NoCacheProvider.class.getName();
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                RegionFactoryCacheProviderBridge.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       RegionFactoryCacheProviderBridge.class.getName());
 
 	private CacheProvider cacheProvider;
 	private Settings settings;

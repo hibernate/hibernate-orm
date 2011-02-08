@@ -1,6 +1,5 @@
 //$Id: Search.java 7772 2005-08-05 23:03:46Z oneovthafew $
 package org.hibernate.test.sorted;
-
 import java.util.SortedSet;
 import java.util.TreeSet;
 

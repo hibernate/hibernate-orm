@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.query;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.Environment;
@@ -42,6 +41,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.SimpleMRUCache;
 import org.hibernate.util.SoftLimitMRUCache;
+import org.jboss.logging.Logger;
 
 /**
  * Acts as a cache for compiled query plans, as well as query-parameter metadata.
@@ -53,8 +53,7 @@ import org.hibernate.util.SoftLimitMRUCache;
  */
 public class QueryPlanCache implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QueryPlanCache.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryPlanCache.class.getName());
 
 	private SessionFactoryImplementor factory;
 

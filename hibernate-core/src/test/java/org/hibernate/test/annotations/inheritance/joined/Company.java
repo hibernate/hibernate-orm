@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.inheritance.joined;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.SecondaryTable;

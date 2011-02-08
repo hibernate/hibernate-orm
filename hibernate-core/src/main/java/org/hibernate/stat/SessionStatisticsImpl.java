@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.stat;
-
 import java.util.Collections;
 import java.util.Set;
-
 import org.hibernate.engine.SessionImplementor;
 
 /**

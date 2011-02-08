@@ -20,18 +20,16 @@
  * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.collection.PersistentSet;
 import org.hibernate.event.AbstractCollectionEvent;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  *

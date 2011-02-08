@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.xml.ejb3;
-
 import java.util.Date;
 
 /**

@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
-
 import java.util.Set;
-import java.io.Serializable;
 
 /**
  * @author Adam Warski (adam at warski dot org)

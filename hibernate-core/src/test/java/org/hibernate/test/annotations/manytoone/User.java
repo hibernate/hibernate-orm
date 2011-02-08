@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.manytoone;
-
 import java.util.Date;
 import java.util.Set;
 import javax.persistence.CascadeType;

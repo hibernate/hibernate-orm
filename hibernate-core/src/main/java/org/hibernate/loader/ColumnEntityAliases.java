@@ -22,10 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
-
 import java.util.Map;
-
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Loadable;
 
 /**

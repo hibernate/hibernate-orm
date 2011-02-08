@@ -1,21 +1,17 @@
 // $Id: HqlParserTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
-
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
-import antlr.collections.AST;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.hibernate.hql.ast.HqlParser;
 import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTPrinter;
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
 
 /**
  * Tests the HQL parser on various inputs, just makes sure that the first phase of the parser

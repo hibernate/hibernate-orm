@@ -22,20 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
+import org.jboss.logging.Logger;
 
 /**
  * A locking strategy where the locks are obtained through update statements.
@@ -48,8 +48,7 @@ import org.hibernate.sql.Update;
  */
 public class UpdateLockingStrategy implements LockingStrategy {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                UpdateLockingStrategy.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, UpdateLockingStrategy.class.getName());
 
 	private final Lockable lockable;
 	private final LockMode lockMode;

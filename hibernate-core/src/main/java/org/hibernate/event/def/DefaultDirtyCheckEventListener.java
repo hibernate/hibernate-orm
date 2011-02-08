@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.event.def;
-
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.event.DirtyCheckEvent;
 import org.hibernate.event.DirtyCheckEventListener;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default dirty-check event listener used by hibernate for
@@ -38,8 +38,8 @@ import org.hibernate.event.DirtyCheckEventListener;
  */
 public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListener implements DirtyCheckEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultDirtyCheckEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultDirtyCheckEventListener.class.getName());
 
     /** Handle the given dirty-check event.
      *
@@ -53,8 +53,8 @@ public class DefaultDirtyCheckEventListener extends AbstractFlushingEventListene
 		try {
 			flushEverythingToExecutions(event);
 			boolean wasNeeded = event.getSession().getActionQueue().hasAnyQueuedActions();
-            if (wasNeeded) LOG.debug("Session dirty");
-            else LOG.debug("Session not dirty");
+            if (wasNeeded) LOG.debugf("Session dirty");
+            else LOG.debugf("Session not dirty");
 			event.setDirty( wasNeeded );
 		}
 		finally {

@@ -22,14 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
-
 import java.util.Map;
-
-import org.hibernate.MappingException;
 import org.hibernate.EntityMode;
-import org.hibernate.type.Type;
+import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 

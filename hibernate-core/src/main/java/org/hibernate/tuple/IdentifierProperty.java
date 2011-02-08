@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tuple;
-
 import org.hibernate.engine.IdentifierValue;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;

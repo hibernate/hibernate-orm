@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.entity;
-
 import javax.persistence.Entity;
-
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeDef;
 

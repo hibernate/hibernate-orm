@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
-
+import static org.hibernate.TestLogger.LOG;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import junit.extensions.TestSetup;
@@ -41,7 +41,6 @@ import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
-import org.hibernate.test.cache.infinispan.TestInfinispanLogger;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.util.ComparableComparator;
@@ -54,8 +53,6 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
  * @since 3.5
  */
 public abstract class AbstractEntityRegionAccessStrategyTestCase extends AbstractNonFunctionalTestCase {
-
-    private static final TestInfinispanLogger LOG = TestInfinispanLogger.LOG;
 
     public static final String REGION_NAME = "test/com.foo.test";
     public static final String KEY_BASE = "KEY";

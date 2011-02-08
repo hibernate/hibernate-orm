@@ -26,6 +26,7 @@
 
 package org.hibernate.cfg.annotations;
 
+
 /**
  * @author Emmanuel Bernard
  * @deprecated Use {@link org.hibernate.Version} instead

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
-
 import java.io.Serializable;
 
 public class Info implements Serializable {

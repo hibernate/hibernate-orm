@@ -22,16 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A help for dealing with BLOB and CLOB data
@@ -40,8 +40,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class DataHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DataHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DataHelper.class.getName());
 
 	private static Class nClobClass;
 	static {
@@ -86,7 +85,7 @@ public class DataHelper {
 				reader.close();
 			}
 			catch (IOException e) {
-                LOG.warn(LOG.unableToCloseStream(), e);
+                LOG.unableToCloseStream(e);
 			}
 		}
 		return stringBuilder.toString();
@@ -177,13 +176,13 @@ public class DataHelper {
 				inputStream.close();
 			}
 			catch ( IOException e ) {
-                LOG.warn(LOG.unableToCloseInputStream(), e);
+                LOG.unableToCloseInputStream(e);
 			}
 			try {
 				outputStream.close();
 			}
 			catch ( IOException e ) {
-                LOG.warn(LOG.unableToCloseOutputStream(), e);
+                LOG.unableToCloseOutputStream(e);
 			}
 		}
 		return outputStream.toByteArray();

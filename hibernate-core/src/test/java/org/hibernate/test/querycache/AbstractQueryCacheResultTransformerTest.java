@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.test.querycache;
-
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -44,8 +42,8 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;

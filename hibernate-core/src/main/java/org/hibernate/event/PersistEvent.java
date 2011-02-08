@@ -24,6 +24,7 @@
  */
 package org.hibernate.event;
 
+
 /** 
  * An event class for persist()
  *

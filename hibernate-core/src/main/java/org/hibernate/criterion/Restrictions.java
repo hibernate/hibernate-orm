@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.criterion;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.id.enhanced;
-
 import java.io.Serializable;
-
 import org.hibernate.id.IntegralDataTypeHolder;
 
 /**

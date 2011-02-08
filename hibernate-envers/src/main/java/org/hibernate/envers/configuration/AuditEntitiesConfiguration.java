@@ -22,13 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
-
 import static org.hibernate.envers.tools.Tools.getProperty;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
 
 /**

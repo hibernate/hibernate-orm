@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.onetomany;
-
 import java.util.HashSet;
 import java.util.Set;
 

@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.envers.query.criteria;
-
 import org.hibernate.envers.query.property.PropertyNameGetter;
 
 /**

@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.entitynonentity;
-
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Column;
+import javax.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

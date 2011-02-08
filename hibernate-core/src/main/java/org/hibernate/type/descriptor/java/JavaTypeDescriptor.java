@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
-
 import java.io.Serializable;
 import java.util.Comparator;
-
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**

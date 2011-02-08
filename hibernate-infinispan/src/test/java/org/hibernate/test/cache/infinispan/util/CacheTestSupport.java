@@ -22,8 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.util;
-
-import static org.hibernate.test.cache.infinispan.TestInfinispanLogger.LOG;
+import static org.hibernate.TestLogger.LOG;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;

@@ -24,7 +24,6 @@
 
 //$Id$
 package org.hibernate.test.annotations.various;
-
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 

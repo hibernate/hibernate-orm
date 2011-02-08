@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 
+
 /**
  * An SQL dialect for Firebird.
  *

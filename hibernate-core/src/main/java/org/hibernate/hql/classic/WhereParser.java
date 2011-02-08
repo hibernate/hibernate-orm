@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.hql.classic;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
@@ -41,7 +39,6 @@ import org.hibernate.sql.InFragment;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 

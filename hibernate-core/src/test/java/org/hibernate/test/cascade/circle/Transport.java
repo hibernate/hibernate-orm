@@ -27,6 +27,7 @@
 package org.hibernate.test.cascade.circle;
 
 
+
 public class Transport {
 	
 //	@Id

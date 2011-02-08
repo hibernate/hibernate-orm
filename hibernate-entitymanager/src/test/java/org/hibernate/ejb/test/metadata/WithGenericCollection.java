@@ -22,11 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-
-import java.util.Collection;
-import java.util.List;
 import java.util.ArrayList;
-import javax.persistence.*;
+import java.util.List;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
 * This class has a List of mapped entity objects that are themselves parameterized.

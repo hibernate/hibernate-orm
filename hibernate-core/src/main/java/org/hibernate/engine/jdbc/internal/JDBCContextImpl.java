@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.jdbc.internal;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -32,8 +31,8 @@ import java.sql.SQLException;
 import javax.transaction.TransactionManager;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
-import org.hibernate.Logger;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
@@ -43,6 +42,7 @@ import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.synchronization.CallbackCoordinator;
 import org.hibernate.transaction.synchronization.HibernateSynchronizationImpl;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Acts as the intermediary between "entity-mode related" sessions in terms of their interaction with the JDBC data store.
@@ -59,8 +59,7 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
 	// ConnectionManager is a "JDBCContext"?  A "SessionContext" should
 	// live in the impl package...
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JDBCContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JDBCContextImpl.class.getName());
 
 	private Context owner;
 	private ConnectionManagerImpl connectionManager;
@@ -186,7 +185,7 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
             javax.transaction.Transaction tx = tm.getTransaction();
             if (JTAHelper.isMarkedForRollback(tx)) {
                 // transactions marked for rollback-only cause some TM impls to throw exceptions
-                LOG.debug("Transaction is marked for rollback; skipping Synchronization registration");
+                LOG.debugf("Transaction is marked for rollback; skipping Synchronization registration");
                 return false;
             }
             if (hibernateTransaction == null) hibernateTransaction = owner.getFactory().getSettings().getTransactionFactory().createTransaction(this,
@@ -194,7 +193,7 @@ public class JDBCContextImpl implements ConnectionManagerImpl.Callback, JDBCCont
             tx.registerSynchronization(new HibernateSynchronizationImpl(getJtaSynchronizationCallbackCoordinator(tx)));
 //						tx.registerSynchronization( new CacheSynchronization(owner, this, tx, hibernateTransaction) );
             isTransactionCallbackRegistered = true;
-            LOG.debug("Successfully registered Synchronization");
+            LOG.debugf("Successfully registered Synchronization");
             return true;
         } catch (HibernateException e) {
             throw e;

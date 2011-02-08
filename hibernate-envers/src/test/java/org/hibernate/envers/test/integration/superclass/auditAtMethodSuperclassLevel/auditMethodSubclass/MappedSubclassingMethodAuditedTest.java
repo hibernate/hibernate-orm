@@ -22,11 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel.auditMethodSubclass;
-
 import java.util.Arrays;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;

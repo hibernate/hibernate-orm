@@ -1,10 +1,8 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
-
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

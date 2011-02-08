@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.FromElement;
@@ -38,6 +37,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.collections.AST;
 
 /**
@@ -47,8 +47,7 @@ import antlr.collections.AST;
  */
 public class SyntheticAndFactory implements HqlSqlTokenTypes {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SyntheticAndFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SyntheticAndFactory.class.getName());
 
 	private HqlSqlWalker hqlSqlWalker;
 	private AST thetaJoins;
@@ -87,7 +86,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 			whereFragment = whereFragment.substring( 4 );
 		}
 
-        LOG.debug("Using unprocessed WHERE-fragment [" + whereFragment + "]");
+        LOG.debugf("Using unprocessed WHERE-fragment [%s]", whereFragment);
 
 		SqlFragment fragment = ( SqlFragment ) create( SQL_TOKEN, whereFragment );
 		fragment.setJoinFragment( joinFragment );
@@ -118,7 +117,7 @@ public class SyntheticAndFactory implements HqlSqlTokenTypes {
 				hqlSqlWalker
 		);
 
-        LOG.debug("Using processed WHERE-fragment [" + fragment.getText() + "]");
+        LOG.debugf("Using processed WHERE-fragment [%s]", fragment.getText());
 
 		// Filter conditions need to be inserted before the HQL where condition and the
 		// theta join node.  This is because org.hibernate.loader.Loader binds the filter parameters first,

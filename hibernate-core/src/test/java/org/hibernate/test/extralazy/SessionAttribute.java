@@ -1,6 +1,5 @@
 //$Id: SessionAttribute.java 7628 2005-07-24 06:55:01Z oneovthafew $
 package org.hibernate.test.extralazy;
-
 import java.io.Serializable;
 
 /**

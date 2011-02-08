@@ -25,7 +25,6 @@
 // $Id$
 
 package org.hibernate.testing.junit.functional.annotations;
-
 import static org.hibernate.TestLogger.LOG;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;

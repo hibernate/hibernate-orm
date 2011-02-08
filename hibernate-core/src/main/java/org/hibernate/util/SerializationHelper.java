@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.util;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,8 +33,9 @@ import java.io.ObjectStreamClass;
 import java.io.OutputStream;
 import java.io.Serializable;
 import org.hibernate.Hibernate;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.type.SerializationException;
+import org.jboss.logging.Logger;
 
 /**
  * <p>Assists with the serialization process and performs additional functionality based
@@ -61,8 +61,7 @@ import org.hibernate.type.SerializationException;
  */
 public final class SerializationHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SerializationHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SerializationHelper.class.getName());
 
 	private SerializationHelper() {
 	}

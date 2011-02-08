@@ -23,6 +23,7 @@
  */
 package org.hibernate.util;
 
+
 public final class BytesHelper {
 
 	private BytesHelper() {

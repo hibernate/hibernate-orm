@@ -23,11 +23,10 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import antlr.collections.AST;
-import antlr.Token;
-import org.hibernate.util.StringHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.util.StringHelper;
+import antlr.Token;
+import antlr.collections.AST;
 
 /**
  * Base node class for use by Hibernate within its AST trees.

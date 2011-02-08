@@ -1,9 +1,7 @@
 package org.hibernate.test.cache.infinispan;
-
+import java.util.Properties;
 import junit.framework.TestCase;
 import org.hibernate.cfg.SettingsFactory;
-
-import java.util.Properties;
 
 /**
  * // TODO: Document this

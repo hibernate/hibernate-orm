@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
-
 import java.util.List;
 import javax.persistence.Embeddable;
 import javax.persistence.OneToMany;

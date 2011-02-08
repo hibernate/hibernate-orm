@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.hibernate.EntityMode;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;

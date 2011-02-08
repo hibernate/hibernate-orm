@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.Set;
-
 import org.hibernate.util.xml.XmlDocument;
 
 /**

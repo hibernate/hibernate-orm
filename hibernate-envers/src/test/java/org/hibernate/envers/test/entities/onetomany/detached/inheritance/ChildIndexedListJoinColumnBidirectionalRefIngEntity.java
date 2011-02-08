@@ -1,8 +1,6 @@
 package org.hibernate.envers.test.entities.onetomany.detached.inheritance;
-
-import org.hibernate.envers.Audited;
-
 import javax.persistence.Entity;
+import org.hibernate.envers.Audited;
 
 /**
  * Entity for {@link org.hibernate.envers.test.integration.onetomany.detached.InheritanceIndexedJoinColumnBidirectionalList} test.

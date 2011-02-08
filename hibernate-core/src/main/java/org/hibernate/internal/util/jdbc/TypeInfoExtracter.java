@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal.util.jdbc;
-
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Helper to extract type innformation from {@link DatabaseMetaData JDBC metadata}
@@ -37,8 +37,7 @@ import org.hibernate.util.ArrayHelper;
  */
 public class TypeInfoExtracter {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TypeInfoExtracter.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeInfoExtracter.class.getName());
 
 	private TypeInfoExtracter() {
 	}

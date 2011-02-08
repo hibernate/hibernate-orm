@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.exception;
-
 import java.sql.SQLException;
 
 /**

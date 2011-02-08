@@ -1,15 +1,13 @@
 //$Id$
 package org.hibernate.test.annotations.override;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * @author Emmanuel Bernard

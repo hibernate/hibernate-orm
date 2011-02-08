@@ -22,14 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.sql;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.jboss.logging.Logger;
 
 /**
  * Convenience base implementation of {@link ValueBinder}
@@ -38,11 +38,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class BasicBinder<J> implements ValueBinder<J> {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BasicBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicBinder.class.getName());
 
-	private static final String BIND_MSG_TEMPLATE = "binding parameter [%d] as [%s] - %s";
-	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%d] as [%s] - <null>";
+    private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - %s";
+    private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - <null>";
 
 	private final JavaTypeDescriptor<J> javaDescriptor;
 	private final SqlTypeDescriptor sqlDescriptor;

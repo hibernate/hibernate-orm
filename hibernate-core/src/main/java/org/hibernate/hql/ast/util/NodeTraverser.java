@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
-import antlr.collections.AST;
 import java.util.Stack;
+import antlr.collections.AST;
 
 /**
  * A visitor for traversing an AST tree.

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.sql;
-
 import org.hibernate.util.ArrayHelper;
 
 /**

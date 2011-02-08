@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.bytecode.util;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * BasicClassFilter provides class filtering based on a series of packages to

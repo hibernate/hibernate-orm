@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-
 import java.util.Iterator;
-
 import org.dom4j.Element;
 import org.dom4j.tree.DefaultElement;
+import org.hibernate.MappingException;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
@@ -37,8 +36,6 @@ import org.hibernate.envers.entities.mapper.id.EmbeddedIdMapper;
 import org.hibernate.envers.entities.mapper.id.MultipleIdMapper;
 import org.hibernate.envers.entities.mapper.id.SimpleIdMapperBuilder;
 import org.hibernate.envers.entities.mapper.id.SingleIdMapper;
-
-import org.hibernate.MappingException;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;

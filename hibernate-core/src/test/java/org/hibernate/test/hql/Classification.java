@@ -1,5 +1,4 @@
 package org.hibernate.test.hql;
-
 import java.io.Serializable;
 import java.util.HashMap;
 

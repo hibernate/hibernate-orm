@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.criterion;
-
 import java.util.Collection;
 
 /**

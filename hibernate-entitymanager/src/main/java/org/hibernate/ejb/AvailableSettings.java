@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb;
 
+
 /**
  * Defines the available HEM settings, both JPA-defined as well as Hibernate-specific
  * <p/>

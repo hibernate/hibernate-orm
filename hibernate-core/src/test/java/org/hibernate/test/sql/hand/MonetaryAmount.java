@@ -1,8 +1,7 @@
 package org.hibernate.test.sql.hand;
-
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Currency;
-import java.io.Serializable;
 
 /**
  * Represents a monetary amount as value and currency.

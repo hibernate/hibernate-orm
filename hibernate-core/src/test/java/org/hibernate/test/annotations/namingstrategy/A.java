@@ -1,17 +1,10 @@
 package org.hibernate.test.annotations.namingstrategy;
-
-
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Id;
 import javax.persistence.ElementCollection;
-import javax.persistence.Column;
-import javax.persistence.JoinColumn;
-import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "AEC")

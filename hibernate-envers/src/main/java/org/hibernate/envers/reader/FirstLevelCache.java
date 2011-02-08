@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.reader;
-
 import static org.hibernate.envers.tools.Tools.newHashMap;
 import static org.hibernate.envers.tools.Triple.make;
 import java.util.Map;
 import org.hibernate.envers.EnversLogger;
 import org.hibernate.envers.tools.Triple;
+import org.jboss.logging.Logger;
 
 /**
  * First level cache for versioned entities, versions reader-scoped. Each entity is uniquely identified by a
@@ -37,8 +37,7 @@ import org.hibernate.envers.tools.Triple;
  */
 public class FirstLevelCache {
 
-    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
-                                                                                     FirstLevelCache.class.getPackage().getName());
+    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, FirstLevelCache.class.getName());
 
     /**
      * cache for resolve an object for a given id, revision and entityName.
@@ -56,14 +55,12 @@ public class FirstLevelCache {
     }
 
     public Object get(String entityName, Number revision, Object id) {
-        LOG.debug("Resolving object from First Level Cache: " + "EntityName:" + entityName + " - primaryKey:" + id + " - revision:"
-                  + revision);
+        LOG.debugf("Resolving object from First Level Cache: EntityName:%s - primaryKey:%s - revision:%s", entityName, id, revision);
         return cache.get(make(entityName, revision, id));
     }
 
     public void put(String entityName, Number revision, Object id, Object entity) {
-        LOG.debug("Caching entity on First Level Cache: " + " - primaryKey:" + id + " - revision:" + revision + " - entityName:"
-                  + entityName);
+        LOG.debugf("Caching entity on First Level Cache:  - primaryKey:%s - revision:%s - entityName:%s", id, revision, entityName);
         cache.put(make(entityName, revision, id), entity);
     }
 
@@ -79,8 +76,11 @@ public class FirstLevelCache {
      * @param entity, object retrieved by envers
      */
     public void putOnEntityNameCache(Object id, Number revision, Object entity, String entityName) {
-        LOG.debug("Caching entityName on First Level Cache: " + " - primaryKey:" + id + " - revision:" + revision + " - entity:"
-                  + entity.getClass().getName() + " -> entityName:" + entityName);
+        LOG.debugf("Caching entityName on First Level Cache:  - primaryKey:%s - revision:%s - entity:%s -> entityName:%s",
+                   id,
+                   revision,
+                   entity.getClass().getName(),
+                   entityName);
     	entityNameCache.put(make(id, revision, entity), entityName);
     }
 
@@ -92,8 +92,10 @@ public class FirstLevelCache {
      * @param entity, object retrieved by envers
      */
     public String getFromEntityNameCache(Object id, Number revision, Object entity) {
-        LOG.debug("Trying to resolve entityName from First Level Cache:" + " - primaryKey:" + id + " - revision:" + revision
-                  + " - entity:" + entity);
+        LOG.debugf("Trying to resolve entityName from First Level Cache: - primaryKey:%s - revision:%s - entity:%s",
+                   id,
+                   revision,
+                   entity);
     	return entityNameCache.get(make(id, revision, entity));
     }
 

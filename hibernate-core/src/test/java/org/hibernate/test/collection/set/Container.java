@@ -14,7 +14,6 @@
  * Red Hat Author(s): Steve Ebersole
  */
 package org.hibernate.test.collection.set;
-
 import java.util.HashSet;
 import java.util.Set;
 

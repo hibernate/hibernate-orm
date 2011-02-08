@@ -1,13 +1,12 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
-import java.util.Map;
 import java.util.HashMap;
-import javax.persistence.OneToMany;
-import javax.persistence.Id;
+import java.util.Map;
 import javax.persistence.Entity;
-import javax.persistence.MapKey;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.MapKey;
+import javax.persistence.OneToMany;
 
 /**
  * @author Emmanuel Bernard

@@ -23,18 +23,17 @@
  *
  */
 package org.hibernate.test.dynamicentity.tuplizer2;
-
-import org.hibernate.tuple.entity.PojoEntityTuplizer;
-import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.Instantiator;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
-import org.hibernate.test.dynamicentity.tuplizer.MyEntityInstantiator;
+import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.EntityNameResolver;
+import org.hibernate.test.dynamicentity.tuplizer.MyEntityInstantiator;
+import org.hibernate.tuple.Instantiator;
+import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.tuple.entity.PojoEntityTuplizer;
 
 /**
  * @author Steve Ebersole

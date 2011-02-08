@@ -1,14 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.test.common.ServiceRegistryHolder;
 

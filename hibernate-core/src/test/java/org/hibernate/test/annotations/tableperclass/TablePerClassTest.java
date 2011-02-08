@@ -1,13 +1,10 @@
 //$Id$
 package org.hibernate.test.annotations.tableperclass;
-
 import java.util.List;
-import java.sql.SQLException;
-
+import org.hibernate.JDBCException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.JDBCException;
 import org.hibernate.test.annotations.TestCase;
 
 /**

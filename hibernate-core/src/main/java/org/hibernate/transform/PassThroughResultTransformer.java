@@ -23,11 +23,8 @@
  *
  */
 package org.hibernate.transform;
-
 import java.util.Arrays;
 import java.util.List;
-
-import org.hibernate.util.ArrayHelper;
 
 /**
  * ???

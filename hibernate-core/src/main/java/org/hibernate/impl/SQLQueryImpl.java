@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,28 +30,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.io.Serializable;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.MappingException;
-import org.hibernate.LockOptions;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
-import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.ParameterMetadata;
 import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
-import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 

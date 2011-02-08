@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.bytecode.cglib;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,10 +36,11 @@ import net.sf.cglib.transform.impl.InterceptFieldEnabled;
 import net.sf.cglib.transform.impl.InterceptFieldFilter;
 import net.sf.cglib.transform.impl.InterceptFieldTransformer;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
+import org.jboss.logging.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
@@ -56,7 +56,7 @@ import org.objectweb.asm.Type;
 @Deprecated
 public class CglibClassTransformer extends AbstractClassTransformerImpl {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CglibClassTransformer.class.getName());
 
 	public CglibClassTransformer(ClassFilter classFilter, FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );
@@ -82,7 +82,7 @@ public class CglibClassTransformer extends AbstractClassTransformerImpl {
 		ClassWriter w = new DebuggingClassWriter( ClassWriter.COMPUTE_MAXS  );
 		ClassTransformer t = getClassTransformer( names );
 		if ( t != null ) {
-            LOG.debug("Enhancing " + className);
+            LOG.debugf("Enhancing %s", className);
 			ByteArrayOutputStream out;
 			byte[] result;
 			try {

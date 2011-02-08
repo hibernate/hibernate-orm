@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.type.LiteralType;
-import org.hibernate.type.Type;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.LiteralType;
+import org.hibernate.type.Type;
 
 /**
  * Represents a boolean literal within a query.

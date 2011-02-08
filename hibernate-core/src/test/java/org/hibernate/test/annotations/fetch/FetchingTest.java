@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.fetch;
-
 import java.util.Date;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

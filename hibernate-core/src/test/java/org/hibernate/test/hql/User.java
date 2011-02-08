@@ -1,6 +1,5 @@
 //$Id: User.java 5891 2005-02-24 01:18:15Z oneovthafew $
 package org.hibernate.test.hql;
-
 import java.util.List;
 
 /**

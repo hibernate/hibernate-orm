@@ -25,6 +25,7 @@
 package org.hibernate.stat;
 
 
+
 /**
  * Statistics for a particular <tt>SessionFactory</tt>.
  * Beware of milliseconds metrics, they are depdendent of the JVM precision:

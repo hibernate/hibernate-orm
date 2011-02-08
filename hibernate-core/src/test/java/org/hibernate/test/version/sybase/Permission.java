@@ -1,6 +1,5 @@
 // $Id: Permission.java 7805 2005-08-10 16:25:11Z steveebersole $
 package org.hibernate.test.version.sybase;
-
 import java.util.Date;
 
 /**

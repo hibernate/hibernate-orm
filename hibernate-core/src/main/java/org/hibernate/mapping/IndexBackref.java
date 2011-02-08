@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import org.hibernate.property.IndexPropertyAccessor;
 import org.hibernate.property.PropertyAccessor;
 

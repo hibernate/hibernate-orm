@@ -1,11 +1,10 @@
 package org.hibernate.ejb.test.util;
-
-import java.util.Date;
 import java.io.Serializable;
+import java.util.Date;
 import javax.persistence.Entity;
-import javax.persistence.Temporal;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.Temporal;
 
 /**
  * @author Emmanuel Bernard

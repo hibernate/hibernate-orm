@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.action.EntityIncrementVersionProcess;

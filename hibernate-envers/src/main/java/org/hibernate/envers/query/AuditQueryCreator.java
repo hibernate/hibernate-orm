@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query;
-
+import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.impl.EntitiesAtRevisionQuery;
 import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
-import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
 
 /**
  * @author Adam Warski (adam at warski dot org)

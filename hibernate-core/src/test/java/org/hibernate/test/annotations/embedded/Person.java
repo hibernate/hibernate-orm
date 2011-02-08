@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.embedded;
-
 import java.io.Serializable;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;

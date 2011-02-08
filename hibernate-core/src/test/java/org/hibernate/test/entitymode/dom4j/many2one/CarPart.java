@@ -1,5 +1,6 @@
 package org.hibernate.test.entitymode.dom4j.many2one;
 
+
 /**
  * @author Paco Hern�ndez
  */

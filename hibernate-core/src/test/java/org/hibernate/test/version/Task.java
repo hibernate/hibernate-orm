@@ -1,6 +1,7 @@
 //$Id: Task.java 7676 2005-07-29 06:27:10Z oneovthafew $
 package org.hibernate.test.version;
 
+
 public class Task {
 	private String description;
 	private Person person;

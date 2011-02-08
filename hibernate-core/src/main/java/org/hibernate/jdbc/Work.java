@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.jdbc;
-
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 
 /**

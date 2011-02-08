@@ -23,7 +23,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.packaging;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -32,7 +31,6 @@ import java.util.Set;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-
 import org.hibernate.ejb.packaging.ClassFilter;
 import org.hibernate.ejb.packaging.Entry;
 import org.hibernate.ejb.packaging.ExplodedJarVisitor;

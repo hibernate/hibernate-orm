@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Collections;
 import java.util.Hashtable;
-
 import java.util.Map;
 
 /**

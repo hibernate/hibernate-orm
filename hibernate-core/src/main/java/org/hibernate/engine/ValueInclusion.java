@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.engine;
-
-import java.io.Serializable;
 import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.io.StreamCorruptedException;
 
 /**

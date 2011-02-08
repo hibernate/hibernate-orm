@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.orphan.one2one.fk.composite;
-
 import java.io.Serializable;
 
 /**

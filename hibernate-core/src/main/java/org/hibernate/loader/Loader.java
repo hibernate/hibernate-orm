@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
-
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -38,9 +37,9 @@ import java.util.Map;
 import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -81,6 +80,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Abstract superclass of object loading (and querying) strategies. This class implements
@@ -98,7 +98,7 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class Loader {
 
-    protected static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Loader.class.getPackage().getName());
+    protected static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Loader.class.getName());
 
 	private final SessionFactoryImplementor factory;
 	private ColumnNameCache columnNameCache;
@@ -860,7 +860,7 @@ public abstract class Loader {
 			int count;
 			for ( count = 0; count < maxRows && rs.next(); count++ ) {
 
-                LOG.debug("Result set row: " + count);
+                LOG.debugf("Result set row: %s", count);
 
 				Object result = getRowFromResultSet(
 						rs,
@@ -1180,8 +1180,8 @@ public abstract class Loader {
 		if ( collectionRowKey != null ) {
 			// we found a collection element in the result set
 
-            if (LOG.isDebugEnabled()) LOG.debug("Found row of collection: "
-                                                + MessageHelper.collectionInfoString(persister, collectionRowKey, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Found row of collection: %s",
+                                                 MessageHelper.collectionInfoString(persister, collectionRowKey, getFactory()));
 
 			Object owner = optionalOwner;
 			if ( owner == null ) {
@@ -1209,8 +1209,8 @@ public abstract class Loader {
 			// ensure that a collection is created with the owner's identifier,
 			// since what we have is an empty collection
 
-            if (LOG.isDebugEnabled()) LOG.debug("Result set contains (possibly empty) collection: "
-                                                + MessageHelper.collectionInfoString(persister, optionalKey, getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf("Result set contains (possibly empty) collection: %s",
+                                                 MessageHelper.collectionInfoString(persister, optionalKey, getFactory()));
 
 			persistenceContext.getLoadContexts()
 					.getCollectionLoadContext( rs )
@@ -1242,10 +1242,10 @@ public abstract class Loader {
 				for ( int i = 0; i < keys.length; i++ ) {
 					//handle empty collections
 
-                    if (LOG.isDebugEnabled()) LOG.debug("Result set contains (possibly empty) collection: "
-                                                        + MessageHelper.collectionInfoString(collectionPersisters[j],
-                                                                                             keys[i],
-                                                                                             getFactory()));
+                    if (LOG.isDebugEnabled()) LOG.debugf("Result set contains (possibly empty) collection: %s",
+                                                         MessageHelper.collectionInfoString(collectionPersisters[j],
+                                                                                            keys[i],
+                                                                                            getFactory()));
 
 					session.getPersistenceContext()
 							.getLoadContexts()
@@ -1359,7 +1359,7 @@ public abstract class Loader {
 		final int cols = persisters.length;
 		final EntityAliases[] descriptors = getEntityAliases();
 
-        if (LOG.isDebugEnabled()) LOG.debug("Result row: " + StringHelper.toString(keys));
+        if (LOG.isDebugEnabled()) LOG.debugf("Result row: %s", StringHelper.toString(keys));
 
 		final Object[] rowResults = new Object[cols];
 
@@ -1765,9 +1765,8 @@ public abstract class Loader {
 			LockOptions lockOptions = queryParameters.getLockOptions();
 			if ( lockOptions != null ) {
 				if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
-                    if (!dialect.supportsLockTimeouts()) LOG.debug("Lock timeout ["
-                                                                   + lockOptions.getTimeOut()
-                                                                   + "] requested but dialect reported to not support lock timeouts");
+                    if (!dialect.supportsLockTimeouts()) LOG.debugf("Lock timeout [%s] requested but dialect reported to not support lock timeouts",
+                                                                    lockOptions.getTimeOut());
                     else if (dialect.isLockTimeoutParameterized()) st.setInt(col++, lockOptions.getTimeOut());
 				}
 			}
@@ -1933,7 +1932,7 @@ public abstract class Loader {
 				TypedValue typedval = ( TypedValue ) e.getValue();
 				int[] locs = getNamedParameterLocs( name );
 				for ( int i = 0; i < locs.length; i++ ) {
-                    LOG.debug("bindNamedParameters() " + typedval.getValue() + " -> " + name + " [" + (locs[i] + startIndex) + "]");
+                    LOG.debugf("bindNamedParameters() %s -> %s [%s]", typedval.getValue(), name, locs[i] + startIndex);
 					typedval.getType().nullSafeSet( statement, typedval.getValue(), locs[i] + startIndex, session );
 				}
 				result += locs.length;
@@ -1992,13 +1991,13 @@ public abstract class Loader {
 		// potential deadlock issues due to nature of code.
 		if ( session.getFactory().getSettings().isWrapResultSetsEnabled() ) {
 			try {
-                LOG.debug("Wrapping result set [" + rs + "]");
+                LOG.debugf("Wrapping result set [%s]", rs);
 				return session.getFactory()
 						.getSettings()
 						.getJdbcSupport().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
 			}
 			catch(SQLException e) {
-                LOG.info(LOG.unableToWrapResultSet(), e);
+                LOG.unableToWrapResultSet(e);
 				return rs;
 			}
 		}
@@ -2031,8 +2030,8 @@ public abstract class Loader {
 			final EntityPersister persister,
 			LockOptions lockOptions) throws HibernateException {
 
-        if (LOG.isDebugEnabled()) LOG.debug("Loading entity: "
-                                            + MessageHelper.infoString(persister, id, identifierType, getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Loading entity: %s",
+                                             MessageHelper.infoString(persister, id, identifierType, getFactory()));
 
 		List result;
 		try {
@@ -2055,7 +2054,7 @@ public abstract class Loader {
 				);
 		}
 
-        LOG.debug("Done entity load");
+        LOG.debugf("Done entity load");
 
 		return result;
 
@@ -2073,7 +2072,7 @@ public abstract class Loader {
 	        final Type indexType,
 	        final EntityPersister persister) throws HibernateException {
 
-        LOG.debug("Loading collection element by index");
+        LOG.debugf("Loading collection element by index");
 
 		List result;
 		try {
@@ -2094,7 +2093,7 @@ public abstract class Loader {
 				);
 		}
 
-        LOG.debug("Done entity load");
+        LOG.debugf("Done entity load");
 
 		return result;
 
@@ -2115,7 +2114,7 @@ public abstract class Loader {
 			final EntityPersister persister,
 			LockOptions lockOptions) throws HibernateException {
 
-        if (LOG.isDebugEnabled()) LOG.debug("Batch loading entity: " + MessageHelper.infoString(persister, ids, getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Batch loading entity: %s", MessageHelper.infoString(persister, ids, getFactory()));
 
 		Type[] types = new Type[ids.length];
 		Arrays.fill( types, idType );
@@ -2139,7 +2138,7 @@ public abstract class Loader {
 				);
 		}
 
-        LOG.debug("Done entity batch load");
+        LOG.debugf("Done entity batch load");
 
 		return result;
 
@@ -2153,8 +2152,8 @@ public abstract class Loader {
 	        final Serializable id,
 	        final Type type) throws HibernateException {
 
-        if (LOG.isDebugEnabled()) LOG.debug("Loading collection: "
-                                            + MessageHelper.collectionInfoString(getCollectionPersisters()[0], id, getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Loading collection: %s",
+                                             MessageHelper.collectionInfoString(getCollectionPersisters()[0], id, getFactory()));
 
 		Serializable[] ids = new Serializable[]{id};
 		try {
@@ -2173,7 +2172,7 @@ public abstract class Loader {
 				);
 		}
 
-        LOG.debug("Done loading collection");
+        LOG.debugf("Done loading collection");
 
 	}
 
@@ -2185,8 +2184,8 @@ public abstract class Loader {
 	        final Serializable[] ids,
 	        final Type type) throws HibernateException {
 
-        if (LOG.isDebugEnabled()) LOG.debug("Batch loading collection: "
-                                            + MessageHelper.collectionInfoString(getCollectionPersisters()[0], ids, getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Batch loading collection: %s",
+                                             MessageHelper.collectionInfoString(getCollectionPersisters()[0], ids, getFactory()));
 
 		Type[] idTypes = new Type[ids.length];
 		Arrays.fill( idTypes, type );
@@ -2206,7 +2205,7 @@ public abstract class Loader {
 				);
 		}
 
-        LOG.debug("Done batch load");
+        LOG.debugf("Done batch load");
 
 	}
 

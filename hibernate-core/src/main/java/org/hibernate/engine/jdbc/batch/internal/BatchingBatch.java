@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.batch.internal;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,10 +30,11 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.jdbc.Expectation;
+import org.jboss.logging.Logger;
 
 /**
  * A {@link org.hibernate.engine.jdbc.batch.spi.Batch} implementation which does
@@ -45,8 +45,7 @@ import org.hibernate.jdbc.Expectation;
  */
 public class BatchingBatch extends AbstractBatchImpl {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BatchingBatch.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BatchingBatch.class.getName());
 
 	private final int batchSize;
 
@@ -107,9 +106,9 @@ public class BatchingBatch extends AbstractBatchImpl {
 	 */
 	@Override
     protected void doExecuteBatch() {
-        if (maxBatchPosition == 0) LOG.debug("No batched statements to execute");
+        if (maxBatchPosition == 0) LOG.debugf("No batched statements to execute");
 		else {
-            LOG.debug("Executing " + getStatements().size() + " statements with maximum batch size " + maxBatchPosition);
+            LOG.debugf("Executing %s statements with maximum batch size %s", getStatements().size(), maxBatchPosition);
 
 			try {
 				executeStatements();
@@ -141,10 +140,10 @@ public class BatchingBatch extends AbstractBatchImpl {
 				);
 			}
 			if ( expectations.size() > 0 ) {
-                LOG.debug("Executing with batch of size " + expectations.size() + ": " + sql);
+                LOG.debugf("Executing with batch of size %s: %s", expectations.size(), sql);
 				executeStatement( sql, statement, expectations );
 				expectations.clear();
-            } else LOG.debug("Skipped executing because batch size is 0: " + sql);
+            } else LOG.debugf("Skipped executing because batch size is 0: %s", sql);
 		}
 	}
 

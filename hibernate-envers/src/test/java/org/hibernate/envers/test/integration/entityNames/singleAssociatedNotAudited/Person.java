@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited;
 
+
 /**
  * @author Hern&aacute;n Chanfreau
  * 

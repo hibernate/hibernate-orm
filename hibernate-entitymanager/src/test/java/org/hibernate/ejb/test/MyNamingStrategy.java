@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test;
-
 import org.hibernate.cfg.EJB3NamingStrategy;
 
 /**

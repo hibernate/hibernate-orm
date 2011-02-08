@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.propertyref.component.partial;
 
+
 public class Identity {
 	private String name;
 	private String ssn;

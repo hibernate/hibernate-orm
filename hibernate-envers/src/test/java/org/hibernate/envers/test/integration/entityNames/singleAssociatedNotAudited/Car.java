@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedNotAudited;
-
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 

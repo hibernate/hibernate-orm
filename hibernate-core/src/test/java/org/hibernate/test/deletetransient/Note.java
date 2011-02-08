@@ -1,5 +1,6 @@
 package org.hibernate.test.deletetransient;
 
+
 /**
  *
  * @author Gail Badner

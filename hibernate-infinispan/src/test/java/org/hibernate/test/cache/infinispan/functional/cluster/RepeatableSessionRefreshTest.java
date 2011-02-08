@@ -21,6 +21,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+
 /**
  * RepeatableSessionRefreshTest.
  * 

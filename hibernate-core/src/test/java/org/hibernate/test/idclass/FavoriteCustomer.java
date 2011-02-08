@@ -1,6 +1,7 @@
 //$Id: FavoriteCustomer.java 7858 2005-08-11 21:46:58Z epbernard $
 package org.hibernate.test.idclass;
 
+
 /**
  * @author Emmanuel Bernard
  */

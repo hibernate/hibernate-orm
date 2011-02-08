@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import org.hibernate.FetchMode;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.type.EntityType;

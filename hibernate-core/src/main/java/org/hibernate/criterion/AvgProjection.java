@@ -23,6 +23,7 @@
  */
 package org.hibernate.criterion;
 
+
 /**
  * An avg() projection
  *

@@ -1,5 +1,6 @@
 package org.hibernate.test.jpa.cascade;
 
+
 /**
  * Parent, but with an assigned identifier.
  *

@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.loader.collection;
-
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.util.StringHelper;
 

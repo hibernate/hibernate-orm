@@ -26,7 +26,6 @@
   */
 
 package org.hibernate.test.annotations.backquotes;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;

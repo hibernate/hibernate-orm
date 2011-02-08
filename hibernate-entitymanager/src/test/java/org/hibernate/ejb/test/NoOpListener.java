@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test;
-
-import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreInsertEvent;
+import org.hibernate.event.PreInsertEventListener;
 
 /**
  * @author Emmanuel Bernard

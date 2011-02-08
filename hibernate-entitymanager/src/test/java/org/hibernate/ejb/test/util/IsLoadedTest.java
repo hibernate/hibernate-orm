@@ -1,7 +1,5 @@
 package org.hibernate.ejb.test.util;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

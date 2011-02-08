@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.type.Type;
 

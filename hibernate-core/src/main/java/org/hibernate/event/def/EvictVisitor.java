@@ -23,15 +23,15 @@
  *
  */
 package org.hibernate.event.def;
-
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionEntry;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.event.EventSource;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
+import org.jboss.logging.Logger;
 
 /**
  * Evict any collections referenced by the object from the session cache.
@@ -42,8 +42,7 @@ import org.hibernate.type.CollectionType;
  */
 public class EvictVisitor extends AbstractVisitor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                EvictVisitor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EvictVisitor.class.getName());
 
 	EvictVisitor(EventSource session) {
 		super(session);
@@ -76,10 +75,10 @@ public class EvictVisitor extends AbstractVisitor {
 
 	private void evictCollection(PersistentCollection collection) {
 		CollectionEntry ce = (CollectionEntry) getSession().getPersistenceContext().getCollectionEntries().remove(collection);
-        if (LOG.isDebugEnabled()) LOG.debug("Evicting collection: "
-                                            + MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                 ce.getLoadedKey(),
-                                                                                 getSession().getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Evicting collection: %s",
+                                             MessageHelper.collectionInfoString(ce.getLoadedPersister(),
+                                                                                ce.getLoadedKey(),
+                                                                                getSession().getFactory()));
 		if ( ce.getLoadedPersister() != null && ce.getLoadedKey() != null ) {
 			//TODO: is this 100% correct?
 			getSession().getPersistenceContext().getCollectionsByKey().remove(

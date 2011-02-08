@@ -1,6 +1,5 @@
 //$Id: Baz.java 4688 2004-10-26 09:10:50Z oneovthafew $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;

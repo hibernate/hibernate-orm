@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.classic.Validatable;
@@ -37,6 +36,7 @@ import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
@@ -51,8 +51,7 @@ import org.hibernate.util.ReflectHelper;
 @SuppressWarnings({ "unchecked" })
 public final class TypeFactory implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TypeFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeFactory.class.getName());
 
 	private final TypeScopeImpl typeScope = new TypeScopeImpl();
 

@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.ejb.criteria.components;
-
 import java.io.Serializable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;

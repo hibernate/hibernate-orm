@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.notinsertable.manytoone;
-
+import javax.persistence.Basic;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import org.hibernate.envers.Audited;
-
-import javax.persistence.*;
 
 @Entity
 @Audited

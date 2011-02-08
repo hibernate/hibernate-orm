@@ -1,6 +1,5 @@
 //$Id: Employee.java 5011 2004-12-19 22:01:25Z maxcsaucdk $
 package org.hibernate.test.extendshbm;
-
 import java.math.BigDecimal;
 
 /**

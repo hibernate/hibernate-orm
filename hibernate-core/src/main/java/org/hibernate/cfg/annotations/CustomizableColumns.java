@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.lang.annotation.Annotation;
 import javax.persistence.Column;
-
 import org.hibernate.annotations.Columns;
 
 /**

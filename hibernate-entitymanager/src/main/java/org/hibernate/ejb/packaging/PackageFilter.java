@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.packaging;
 
+
 /**
  * Filter on pachage element
  *

@@ -1,6 +1,6 @@
 package org.hibernate.envers.strategy;
-
 import org.hibernate.envers.EnversLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Deprecated Audit strategy class.
@@ -13,8 +13,7 @@ import org.hibernate.envers.EnversLogger;
 @Deprecated
 public class ValidTimeAuditStrategy extends ValidityAuditStrategy {
 
-    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
-                                                                                     ValidTimeAuditStrategy.class.getPackage().getName());
+    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, ValidTimeAuditStrategy.class.getName());
 
 	/**
 	 * Default constructor. Log a warn message that this class is deprecated.

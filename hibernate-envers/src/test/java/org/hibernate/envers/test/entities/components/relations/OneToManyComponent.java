@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components.relations;
-
-import org.hibernate.envers.test.entities.StrTestEntity;
-
-import javax.persistence.OneToMany;
-import javax.persistence.Embeddable;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.Embeddable;
+import javax.persistence.OneToMany;
+import org.hibernate.envers.test.entities.StrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)

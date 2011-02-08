@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+
 /**
  * Centralizes access to the standard set of basic {@link Type types}.
  * <p/>

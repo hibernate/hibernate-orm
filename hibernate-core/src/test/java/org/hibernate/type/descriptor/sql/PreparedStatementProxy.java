@@ -22,14 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.sql;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
 import junit.framework.Assert;
 
 /**

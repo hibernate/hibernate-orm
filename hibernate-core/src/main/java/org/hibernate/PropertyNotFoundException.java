@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Indicates that an expected getter or setter method could not be
  * found on a class.

@@ -1,11 +1,5 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
-
-/**
- * @author Hern�n Chanfreau
- *
- */
 import java.util.List;
-
 import org.hibernate.envers.Audited;
 
 @Audited

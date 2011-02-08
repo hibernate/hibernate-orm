@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import org.hibernate.hql.NameGenerator;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.tree.HqlSqlWalkerNode;
-
 import antlr.ASTFactory;
 import antlr.collections.AST;
 

@@ -1,7 +1,5 @@
 package org.hibernate.test.generatedkeys.seqidentity;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;

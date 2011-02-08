@@ -22,6 +22,7 @@
  */
 package org.hibernate.cache.infinispan.util;
 
+
 /**
  * AddressAdapter.
  * 

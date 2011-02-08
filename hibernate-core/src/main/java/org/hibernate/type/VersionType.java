@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.util.Comparator;
-
 import org.hibernate.engine.SessionImplementor;
 
 /**

@@ -1,16 +1,13 @@
 //$Id: CreateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.ops;
-
 import java.util.ArrayList;
 import java.util.Collection;
-
 import junit.framework.Test;
-
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King

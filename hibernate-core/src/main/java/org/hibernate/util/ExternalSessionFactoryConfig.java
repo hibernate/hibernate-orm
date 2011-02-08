@@ -23,19 +23,15 @@
  *
  */
 package org.hibernate.util;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-
-import java.util.Properties;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * Defines support for various externally configurable SessionFactory(s), for

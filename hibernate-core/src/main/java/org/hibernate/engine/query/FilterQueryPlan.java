@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.engine.query;
-
-import org.hibernate.engine.SessionFactoryImplementor;
-
 import java.io.Serializable;
 import java.util.Map;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Extends an HQLQueryPlan to maintain a reference to the collection-role name

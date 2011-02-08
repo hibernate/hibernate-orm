@@ -1,12 +1,9 @@
 //$
 package org.hibernate.test.annotations.manytoone.referencedcolumnname;
-
 import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.persistence.JoinColumn;
 
 @Entity
 public class ZItemCost extends GenericObject {

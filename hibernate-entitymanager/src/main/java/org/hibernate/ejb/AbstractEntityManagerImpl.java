@@ -23,7 +23,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -68,7 +67,6 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.ObjectNotFoundException;
@@ -104,6 +102,7 @@ import org.hibernate.transaction.synchronization.ExceptionMapper;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.util.JTAHelper;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
@@ -114,8 +113,8 @@ import org.hibernate.util.ReflectHelper;
 @SuppressWarnings("unchecked")
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractEntityManagerImpl.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           AbstractEntityManagerImpl.class.getName());
 
 	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();
 
@@ -775,7 +774,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( entityManagerSpecificProperties.contains( s ) ) {
 			properties.put( s, o );
 			applyProperties();
-        } else LOG.debug("Trying to set a property which is not supported on entity manager level");
+        } else LOG.debugf("Trying to set a property which is not supported on entity manager level");
 	}
 
 	public Map<String, Object> getProperties() {
@@ -940,7 +939,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	protected void markAsRollback() {
-        LOG.debug("Mark transaction for rollback");
+        LOG.debugf("Mark transaction for rollback");
 		if ( tx.isActive() ) {
 			tx.setRollbackOnly();
 		}
@@ -986,7 +985,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		getSession().isOpen(); //for sync
 		if ( transactionType == PersistenceUnitTransactionType.JTA ) {
 			try {
-                LOG.debug("Looking for a JTA transaction to join");
+                LOG.debugf("Looking for a JTA transaction to join");
 				final Session session = getSession();
 				final Transaction transaction = session.getTransaction();
 				if ( transaction != null && transaction instanceof JoinableCMTTransaction ) {
@@ -994,21 +993,17 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					final JoinableCMTTransaction joinableCMTTransaction = ( JoinableCMTTransaction ) transaction;
 
 					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.JOINED ) {
-                        LOG.debug("Transaction already joined");
+                        LOG.debugf("Transaction already joined");
 						return; //no-op
 					}
 					joinableCMTTransaction.markForJoined();
 					session.isOpen(); //register to the Tx
 					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.NOT_JOINED ) {
 						if ( ignoreNotJoining ) {
-                            LOG.debug("No JTA transaction found");
+                            LOG.debugf("No JTA transaction found");
 							return;
 						}
-						else {
-							throw new TransactionRequiredException(
-									"No active JTA transaction on joinTransaction call"
-							);
-						}
+                        throw new TransactionRequiredException("No active JTA transaction on joinTransaction call");
 					}
 					else if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.MARKED_FOR_JOINED ) {
 						throw new AssertionFailure( "Transaction MARKED_FOR_JOINED after isOpen() call" );

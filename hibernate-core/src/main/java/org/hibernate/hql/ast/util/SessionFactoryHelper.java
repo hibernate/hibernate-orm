@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
@@ -46,7 +44,6 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
 

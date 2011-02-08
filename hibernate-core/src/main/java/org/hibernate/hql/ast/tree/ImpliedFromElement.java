@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+
 /**
  * Represents a FROM element implied by a path expression or a collection reference.
  *

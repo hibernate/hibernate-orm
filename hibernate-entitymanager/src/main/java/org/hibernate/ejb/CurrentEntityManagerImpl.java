@@ -20,12 +20,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
 import java.util.Map;
 import javax.persistence.PersistenceContextType;
-import javax.persistence.TypedQuery;
 import javax.persistence.spi.PersistenceUnitTransactionType;
-
 import org.hibernate.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;

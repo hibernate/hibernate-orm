@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.test.stateless;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.transform;
-
 import org.hibernate.util.ArrayHelper;
 
 /**

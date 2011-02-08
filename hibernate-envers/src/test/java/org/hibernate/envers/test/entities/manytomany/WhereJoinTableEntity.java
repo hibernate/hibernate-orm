@@ -1,11 +1,14 @@
 package org.hibernate.envers.test.entities.manytomany;
-
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import org.hibernate.annotations.WhereJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntNoAutoIdTestEntity;
-import org.hibernate.annotations.WhereJoinTable;
-
-import javax.persistence.*;
-import java.util.List;
 
 /**
  * @author Adam Warski (adam at warski dot org)

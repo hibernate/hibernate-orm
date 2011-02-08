@@ -22,19 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util;
-
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 public final class JDBCExceptionReporter {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JDBCExceptionReporter.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JDBCExceptionReporter.class.getName());
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";
 
@@ -66,14 +65,14 @@ public final class JDBCExceptionReporter {
 		}
 		catch ( SQLException sqle ) {
 			//workaround for WebLogic
-            LOG.debug(LOG.unableToLogWarnings(), sqle);
+            LOG.debug("Could not log warnings", sqle);
 		}
 		try {
 			//Sybase fail if we don't do that, sigh...
 			connection.clearWarnings();
 		}
 		catch ( SQLException sqle ) {
-            LOG.debug(LOG.unableToClearWarnings(), sqle);
+            LOG.debug("Could not clear warnings", sqle);
 		}
 	}
 
@@ -92,14 +91,14 @@ public final class JDBCExceptionReporter {
 		}
 		catch ( SQLException sqle ) {
 			//workaround for WebLogic
-            LOG.debug(LOG.unableToLogWarnings(), sqle);
+            LOG.debug("Could not log warnings", sqle);
 		}
 		try {
 			//Sybase fail if we don't do that, sigh...
 			statement.clearWarnings();
 		}
 		catch ( SQLException sqle ) {
-            LOG.debug(LOG.unableToClearWarnings(), sqle);
+            LOG.debug("Could not clear warnings", sqle);
 		}
 	}
 
@@ -227,7 +226,7 @@ public final class JDBCExceptionReporter {
                 LOG.debug(message, ex);
 			}
 			while (ex != null) {
-                LOG.sqlError(ex.getErrorCode(), ex.getSQLState());
+                LOG.sqlWarning(ex.getErrorCode(), ex.getSQLState());
                 LOG.error(ex.getMessage());
 				ex = ex.getNextException();
 			}

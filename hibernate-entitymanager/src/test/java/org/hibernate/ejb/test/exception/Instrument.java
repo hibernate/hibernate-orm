@@ -16,7 +16,6 @@
 * limitations under the License.
 */
 package org.hibernate.ejb.test.exception;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
-
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Factory for {@link Optimizer} instances.
@@ -37,8 +37,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class OptimizerFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                OptimizerFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, OptimizerFactory.class.getName());
 
 	public static final String NONE = "none";
 	public static final String HILO = "hilo";

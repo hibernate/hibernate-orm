@@ -1,7 +1,6 @@
 package org.hibernate.test.bytecode;
-
-import java.util.Date;
 import java.text.ParseException;
+import java.util.Date;
 
 /**
  * @author Steve Ebersole

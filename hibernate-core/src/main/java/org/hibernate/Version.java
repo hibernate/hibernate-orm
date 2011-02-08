@@ -23,6 +23,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Information about the Hibernate version.
  *

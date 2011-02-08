@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan;
-
+import static org.hibernate.TestLogger.LOG;
 import java.util.Set;
 import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
@@ -194,7 +194,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
         try {
             BatchModeTransactionManager.getInstance().rollback();
         } catch (Exception e) {
-            TestInfinispanLogger.LOG.error(e.getMessage(), e);
+            LOG.error(e.getMessage(), e);
         }
     }
 }

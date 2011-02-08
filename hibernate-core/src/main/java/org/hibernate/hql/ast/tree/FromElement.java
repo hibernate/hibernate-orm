@@ -23,11 +23,10 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -45,6 +44,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Represents a single mapped class mentioned in an HQL FROM clause.  Each
@@ -60,8 +60,7 @@ import org.hibernate.util.StringHelper;
  */
 public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, ParameterContainer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                FromElement.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromElement.class.getName());
 
 	private String className;
 	private String classAlias;
@@ -152,7 +151,7 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.elementType = new FromElementType( this, persister, type );
 		// Register the FromElement with the FROM clause, now that we have the names and aliases.
 		fromClause.registerFromElement( this );
-        LOG.debug(fromClause + " :  " + className + " (" + (classAlias == null ? "<no alias>" : classAlias) + ") -> " + tableAlias);
+        LOG.debugf("%s : %s (%s) -> %s", fromClause, className, classAlias == null ? "<no alias>" : classAlias, tableAlias);
 	}
 
 	public EntityPersister getEntityPersister() {

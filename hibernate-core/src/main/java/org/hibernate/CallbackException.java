@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Should be thrown by persistent objects from <tt>Lifecycle</tt>
  * or <tt>Interceptor</tt> callbacks.

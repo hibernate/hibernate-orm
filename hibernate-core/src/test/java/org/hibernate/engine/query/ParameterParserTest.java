@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.query;
-
 import junit.framework.TestCase;
 
 /**

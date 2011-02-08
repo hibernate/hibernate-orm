@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Thrown when the user passes a persistent instance to a <tt>Session</tt>
  * method that expects a transient instance.

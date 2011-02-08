@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.test.naturalid.immutable;
-
 import java.util.ArrayList;
 import java.util.List;
 

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -44,7 +43,7 @@ import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PreDeleteEventListener;
@@ -57,6 +56,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
@@ -64,8 +64,7 @@ import org.hibernate.util.StringHelper;
  */
 class TypeSafeActivator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TypeSafeActivator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TypeSafeActivator.class.getName());
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
@@ -126,7 +125,7 @@ class TypeSafeActivator {
 				applyDDL( "", persistentClass, clazz, factory, groups, true );
 			}
 			catch (Exception e) {
-                LOG.warn(LOG.unableToApplyConstraints(className), e);
+                LOG.unableToApplyConstraints(className, e);
 			}
 		}
 	}

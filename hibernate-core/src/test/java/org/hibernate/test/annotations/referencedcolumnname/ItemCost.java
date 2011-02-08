@@ -1,10 +1,9 @@
 //$Id$
 package org.hibernate.test.annotations.referencedcolumnname;
-
-import java.math.BigDecimal;
 import java.io.Serializable;
-import javax.persistence.Id;
+import java.math.BigDecimal;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 /**

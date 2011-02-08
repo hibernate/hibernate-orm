@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.idmanytoone.alphabetical;
-
 import org.hibernate.test.annotations.TestCase;
 
 /**

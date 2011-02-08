@@ -23,15 +23,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.access.xml;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.persistence.AccessType;
-
 import junit.framework.TestCase;
-
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;

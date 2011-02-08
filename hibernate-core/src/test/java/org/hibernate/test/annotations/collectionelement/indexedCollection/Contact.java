@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.collectionelement.indexedCollection;
-
 import javax.persistence.Embeddable;
 
 /**

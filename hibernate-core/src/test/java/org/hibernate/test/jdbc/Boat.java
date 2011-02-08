@@ -15,6 +15,7 @@
  */
 package org.hibernate.test.jdbc;
 
+
 /**
  * Boat implementation
  *

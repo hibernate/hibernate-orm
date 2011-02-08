@@ -1,19 +1,16 @@
 package org.hibernate.test.jpa.lock;
-
 import java.math.BigDecimal;
-
 import junit.framework.Test;
-
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.Part;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Test that the Hibernate Session complies with REPEATABLE_READ isolation

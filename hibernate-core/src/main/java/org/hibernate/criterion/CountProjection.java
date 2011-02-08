@@ -22,14 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.criterion;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-
 import org.hibernate.Criteria;
-import org.hibernate.QueryException;
 
 /**
  * A count

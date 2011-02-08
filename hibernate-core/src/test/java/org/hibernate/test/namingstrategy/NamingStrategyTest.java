@@ -1,9 +1,8 @@
 package org.hibernate.test.namingstrategy;
-
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard

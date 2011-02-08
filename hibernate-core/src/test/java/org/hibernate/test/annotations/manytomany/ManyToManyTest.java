@@ -1,8 +1,6 @@
 //$Id$
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -10,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import org.hibernate.Hibernate;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;

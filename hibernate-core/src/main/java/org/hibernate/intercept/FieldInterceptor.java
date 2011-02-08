@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.intercept;
-
 import org.hibernate.engine.SessionImplementor;
 
 /**

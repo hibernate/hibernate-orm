@@ -24,7 +24,6 @@
  *
  */
 package org.hibernate.test.lob;
-
 import junit.framework.AssertionFailedError;
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;

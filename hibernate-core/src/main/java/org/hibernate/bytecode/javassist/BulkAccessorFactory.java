@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.ProtectionDomain;
-
 import javassist.CannotCompileException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Bytecode;

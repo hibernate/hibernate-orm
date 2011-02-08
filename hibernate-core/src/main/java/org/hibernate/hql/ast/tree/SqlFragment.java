@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import java.util.List;
 import java.util.ArrayList;
-
-import org.hibernate.sql.JoinFragment;
+import java.util.List;
 import org.hibernate.param.ParameterSpecification;
+import org.hibernate.sql.JoinFragment;
 
 /**
  * Represents an SQL fragment in the AST.

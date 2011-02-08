@@ -21,6 +21,7 @@
  */
 package org.hibernate.test.stateless.fetching;
 
+
 /**
  * TODO : javadoc
  *

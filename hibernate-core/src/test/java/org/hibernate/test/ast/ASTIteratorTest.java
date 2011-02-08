@@ -1,13 +1,8 @@
 // $Id: ASTIteratorTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.ast;
-
 import java.io.PrintWriter;
-
-import antlr.ASTFactory;
-import antlr.collections.AST;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.HqlParser;
 import org.hibernate.hql.ast.util.ASTIterator;
@@ -15,6 +10,8 @@ import org.hibernate.hql.ast.util.ASTParentsFirstIterator;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.testing.junit.UnitTestCase;
+import antlr.ASTFactory;
+import antlr.collections.AST;
 
 /**
  * Test ASTIterator.

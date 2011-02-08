@@ -1,12 +1,9 @@
 package org.hibernate.envers.test.integration.onetomany.inverseToSuperclass;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.testng.annotations.BeforeClass;

@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;

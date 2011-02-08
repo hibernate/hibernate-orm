@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,8 +33,8 @@ import javax.persistence.ColumnResult;
 import javax.persistence.EntityResult;
 import javax.persistence.FieldResult;
 import javax.persistence.SqlResultSetMapping;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.BinderHelper;
 import org.hibernate.cfg.Mappings;
@@ -49,13 +48,14 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ResultsetMappingSecondPass implements QuerySecondPass {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ResultsetMappingSecondPass.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       ResultsetMappingSecondPass.class.getName());
 
 	private SqlResultSetMapping ann;
 	private Mappings mappings;

@@ -23,8 +23,6 @@
  *
  */
 package org.hibernate.tuple;
-
-import org.hibernate.HibernateException;
 import org.hibernate.property.Getter;
 
 /**

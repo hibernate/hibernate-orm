@@ -23,12 +23,9 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.ArrayList;
-
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
-
 import antlr.collections.AST;
 
 /**

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
-
 import org.hibernate.EmptyInterceptor;
 
 /**

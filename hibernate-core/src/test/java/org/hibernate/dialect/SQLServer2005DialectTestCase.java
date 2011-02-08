@@ -1,5 +1,4 @@
 package org.hibernate.dialect;
-
 import junit.framework.TestCase;
 
 /**

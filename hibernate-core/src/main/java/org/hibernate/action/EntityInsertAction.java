@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.action;
-
 import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheKey;
@@ -34,11 +32,11 @@ import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Versioning;
+import org.hibernate.event.EventSource;
 import org.hibernate.event.PostInsertEvent;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PreInsertEvent;
 import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 
 public final class EntityInsertAction extends EntityAction {

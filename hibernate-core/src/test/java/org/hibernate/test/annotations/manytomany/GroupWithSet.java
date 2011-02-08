@@ -1,19 +1,16 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.util.Set;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterJoinTable;
+import org.hibernate.annotations.Where;
 import org.hibernate.annotations.WhereJoinTable;
 
 /**

@@ -1,6 +1,5 @@
 //$Id: Location.java 4357 2004-08-17 09:20:17Z oneovthafew $
 package org.hibernate.test.unionsubclass;
-
 import java.util.ArrayList;
 import java.util.Collection;
 

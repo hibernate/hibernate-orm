@@ -1,6 +1,5 @@
 //$Id: Group.java 7589 2005-07-21 01:56:42Z oneovthafew $
 package org.hibernate.test.propertyref.basic;
-
 import java.util.HashSet;
 import java.util.Set;
 

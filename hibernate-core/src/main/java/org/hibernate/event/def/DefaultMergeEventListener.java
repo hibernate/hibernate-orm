@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.StaleObjectStateException;
@@ -54,6 +53,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default copy event listener used by hibernate for copying entities
@@ -64,8 +64,8 @@ import org.hibernate.type.TypeHelper;
 public class DefaultMergeEventListener extends AbstractSaveEventListener
 	implements MergeEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultMergeEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultMergeEventListener.class.getName());
 
 	@Override
     protected Map getMergeMap(Object anything) {

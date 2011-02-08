@@ -23,31 +23,25 @@
  *
  */
 package org.hibernate.cache;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 import junit.framework.TestCase;
-
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.AliasToBeanResultTransformer;
+import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
 import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.transform.DistinctResultTransformer;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.PassThroughResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.RootEntityResultTransformer;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.AliasToEntityMapResultTransformer;
-import org.hibernate.transform.PassThroughResultTransformer;
 import org.hibernate.transform.ToListResultTransformer;
 import org.hibernate.transform.TupleSubsetResultTransformer;
-import org.hibernate.type.SerializationException;
-import org.hibernate.util.SerializationHelper;
 import org.hibernate.util.ArrayHelper;
+import org.hibernate.util.SerializationHelper;
 
 /**
  * Tests relating to {@link QueryKey} instances.
@@ -82,6 +76,7 @@ public class QueryKeyTest extends TestCase {
 		// settings are lazily initialized when calling transformTuple(),
 		// so they have not been initialized for the following test
 		// (it *should* be initialized before creating a QueryKey)
+        System.out.println("jboss.i18n.generate-proxies=" + System.getProperty("jboss.i18n.generate-proxies"));
 		doResultTransformerTest( new AliasToBeanResultTransformer( AClass.class ), false );
 
 		// initialize settings for the next test
@@ -124,7 +119,7 @@ public class QueryKeyTest extends TestCase {
 		old = transformerMap.put( transformer2, "new value" );
 		assert old != null && transformerMap.size() == 1 : "deserialization did not set hashCode or equals properly";
 		if ( isSingleton ) {
-			assert transformer == transformer2: "deserialization issue for singleton transformer";			
+			assert transformer == transformer2: "deserialization issue for singleton transformer";
 		}
 		else {
 			assert transformer != transformer2: "deserialization issue for non-singleton transformer";
@@ -169,7 +164,7 @@ public class QueryKeyTest extends TestCase {
 				CacheableResultTransformer.create(
 						transformer,
 						new String[] { aliases[ 0 ], aliases[ 1 ] },
-						new boolean[] { true, true, false } ) 
+						new boolean[] { true, true, false } )
 		) );
 		doTest( buildBasicKey(
 				CacheableResultTransformer.create(

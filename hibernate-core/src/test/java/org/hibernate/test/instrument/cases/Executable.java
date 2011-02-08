@@ -1,5 +1,6 @@
 package org.hibernate.test.instrument.cases;
 
+
 /**
  * @author Steve Ebersole
  */

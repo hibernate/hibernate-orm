@@ -20,9 +20,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.sql.hand;
-
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO : javadoc

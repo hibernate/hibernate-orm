@@ -1,15 +1,12 @@
 package org.hibernate.test.bytecode.cglib;
-
-import org.hibernate.test.bytecode.Bean;
-import org.hibernate.Session;
+import java.text.ParseException;
+import junit.framework.TestSuite;
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.cfg.Environment;
+import org.hibernate.test.bytecode.Bean;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.cfg.Environment;
-
-import junit.framework.TestSuite;
-
-import java.text.ParseException;
 
 /**
  * Test that the Javassist-based lazy initializer properly handles

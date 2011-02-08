@@ -1,12 +1,9 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.TestCase;

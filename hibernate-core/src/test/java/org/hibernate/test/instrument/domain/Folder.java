@@ -1,6 +1,5 @@
 //$Id: Folder.java 9538 2006-03-04 00:17:57Z steve.ebersole@jboss.com $
 package org.hibernate.test.instrument.domain;
-
 import java.util.ArrayList;
 import java.util.Collection;
 

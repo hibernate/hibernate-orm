@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan;
-
+import static org.hibernate.TestLogger.LOG;
 import java.util.Set;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
@@ -86,7 +86,7 @@ public abstract class AbstractNonFunctionalTestCase extends UnitTestCase {
             Thread.sleep(ms);
         }
         catch (InterruptedException e) {
-            TestInfinispanLogger.LOG.warn("Interrupted during sleep", e);
+            LOG.warn("Interrupted during sleep", e);
         }
     }
 

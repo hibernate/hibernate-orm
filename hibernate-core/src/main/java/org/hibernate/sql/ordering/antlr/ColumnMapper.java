@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
-
 import org.hibernate.HibernateException;
 
 /**

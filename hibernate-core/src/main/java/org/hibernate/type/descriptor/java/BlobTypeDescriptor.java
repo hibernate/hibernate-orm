@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
-
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Comparator;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;

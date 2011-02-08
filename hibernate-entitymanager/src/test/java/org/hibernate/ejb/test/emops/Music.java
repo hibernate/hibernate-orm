@@ -1,10 +1,9 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
-
-import javax.persistence.Version;
-import javax.persistence.Id;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Version;
 
 /**
  * @author Emmanuel Bernard

@@ -24,6 +24,7 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
+
 /**
  * Models a collation specification (<tt>COLLATE</tt> using a specific character-set) within a
  * {@link SortSpecification}.

@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util;
-
-import java.io.Serializable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 

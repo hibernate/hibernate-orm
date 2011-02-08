@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Calendar;
@@ -37,7 +36,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -57,13 +56,13 @@ import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class SimpleValueBinder {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SimpleValueBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SimpleValueBinder.class.getName());
 
 	private String propertyName;
 	private String returnedClassName;
@@ -299,7 +298,7 @@ public class SimpleValueBinder {
 	public SimpleValue make() {
 
 		validate();
-        LOG.debug("building SimpleValue for " + propertyName);
+        LOG.debugf("building SimpleValue for %s", propertyName);
 		if ( table == null ) {
 			table = columns[0].getTable();
 		}
@@ -337,7 +336,7 @@ public class SimpleValueBinder {
 
 	public void fillSimpleValue() {
 
-        LOG.debug("Setting SimpleValue typeName for " + propertyName);
+        LOG.debugf("Setting SimpleValue typeName for %s", propertyName);
 
 		String type = BinderHelper.isEmptyAnnotationValue( explicitType ) ? returnedClassName : explicitType;
 		org.hibernate.mapping.TypeDef typeDef = mappings.getTypeDef( type );

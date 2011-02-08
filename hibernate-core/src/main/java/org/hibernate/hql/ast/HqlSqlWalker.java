@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.ParameterBinder;
@@ -98,6 +97,7 @@ import org.hibernate.type.VersionType;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.ASTFactory;
 import antlr.RecognitionException;
 import antlr.SemanticException;
@@ -116,8 +116,7 @@ import antlr.collections.AST;
  */
 public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, ParameterBinder.NamedParameterSource {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HqlSqlWalker.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HqlSqlWalker.class.getName());
 
 	private final QueryTranslatorImpl queryTranslatorImpl;
 	private final HqlParser hqlParser;
@@ -249,7 +248,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 				ASTUtil.createSibling( inputAstFactory, HqlTokenTypes.ALIAS, "this", fromElement );
 				fromClauseInput.addChild( fromElement );
 				// Show the modified AST.
-                LOG.debug("prepareFromClauseInputTree() : Filter - Added 'this' as a from element...");
+                LOG.debugf("prepareFromClauseInputTree() : Filter - Added 'this' as a from element...");
 				queryTranslatorImpl.showHqlAst( hqlParser.getAST() );
 
 				// Create a parameter specification for the collection filter...
@@ -346,7 +345,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		join.addCondition( fkTableAlias, keyColumnNames, " = ?" );
 		fromElement.setJoinSequence( join );
 		fromElement.setFilter( true );
-        LOG.debug("createFromFilterElement() : processed filter FROM element.");
+        LOG.debugf("createFromFilterElement() : processed filter FROM element.");
 		return fromElement;
 	}
 
@@ -398,16 +397,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 		}
 
-        if (LOG.isDebugEnabled()) LOG.debug("createFromJoinElement() : "
-                                            + getASTPrinter().showAsString(fromElement, "-- join tree --"));
+        if (LOG.isDebugEnabled()) LOG.debugf("createFromJoinElement() : %s",
+                                             getASTPrinter().showAsString(fromElement, "-- join tree --"));
 	}
 
 	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException {
 		try {
 			withClause( hqlWithNode );
 			AST hqlSqlWithNode = returnAST;
-            if (LOG.isDebugEnabled()) LOG.debug("handleWithFragment() : "
-                                                + getASTPrinter().showAsString(hqlSqlWithNode, "-- with clause --"));
+            if (LOG.isDebugEnabled()) LOG.debugf("handleWithFragment() : %s",
+                                                 getASTPrinter().showAsString(hqlSqlWithNode, "-- with clause --"));
 			WithClauseVisitor visitor = new WithClauseVisitor( fromElement );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
@@ -558,8 +557,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		switch ( rhs.getType() ) {
 			case SqlTokenTypes.ELEMENTS:
 			case SqlTokenTypes.INDICES:
-                if (LOG.isDebugEnabled()) LOG.debug("lookupProperty() " + dotNode.getPath() + " => " + rhs.getText() + "("
-                                                    + lhs.getPath() + ")");
+                if (LOG.isDebugEnabled()) LOG.debugf("lookupProperty() %s => %s(%s)",
+                                                     dotNode.getPath(),
+                                                     rhs.getText(),
+                                                     lhs.getPath());
 				CollectionFunction f = ( CollectionFunction ) rhs;
 				// Re-arrange the tree so that the collection function is the root and the lhs is the path.
 				f.setFirstChild( lhs );
@@ -621,7 +622,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	@Override
     protected void processQuery(AST select, AST query) throws SemanticException {
-        LOG.debug("processQuery() : " + query.toStringTree());
+        LOG.debugf("processQuery() : %s", query.toStringTree());
 
 		try {
 			QueryNode qn = ( QueryNode ) query;
@@ -865,7 +866,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		select.setNextSibling( sibling );
 		selectClause = ( SelectClause ) select;
 		selectClause.initializeDerivedSelectClause( currentFromClause );
-        LOG.debug("Derived SELECT clause created.");
+        LOG.debugf("Derived SELECT clause created.");
 	}
 
 	@Override

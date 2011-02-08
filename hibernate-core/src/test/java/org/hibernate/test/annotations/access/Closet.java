@@ -16,7 +16,6 @@
 * limitations under the License.
 */
 package org.hibernate.test.annotations.access;
-
 import javax.persistence.Embeddable;
 
 /**

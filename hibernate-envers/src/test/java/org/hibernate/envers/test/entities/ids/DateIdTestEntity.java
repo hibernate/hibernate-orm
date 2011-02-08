@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.ids;
-
-import org.hibernate.envers.Audited;
-
+import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.util.Date;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

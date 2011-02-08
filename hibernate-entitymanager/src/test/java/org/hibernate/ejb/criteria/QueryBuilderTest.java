@@ -22,30 +22,24 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.PluralAttribute;
-
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.metamodel.Address;
 import org.hibernate.ejb.metamodel.Alias;
 import org.hibernate.ejb.metamodel.Country;
 import org.hibernate.ejb.metamodel.CreditCard;
 import org.hibernate.ejb.metamodel.Customer;
-import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Info;
 import org.hibernate.ejb.metamodel.LineItem;
-import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
+import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.ShelfLife;

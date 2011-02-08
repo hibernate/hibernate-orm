@@ -1,5 +1,6 @@
 package org.hibernate.test.interceptor;
 
+
 public class Image {
 
 	private Long id;

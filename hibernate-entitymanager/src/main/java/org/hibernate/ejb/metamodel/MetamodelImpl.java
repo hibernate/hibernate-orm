@@ -20,20 +20,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
-import java.util.Set;
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashSet;
-import java.io.Serializable;
-import javax.persistence.metamodel.Metamodel;
+import java.util.Set;
+import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.EmbeddableType;
-
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.MappedSuperclass;
+import javax.persistence.metamodel.Metamodel;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * Hibernate implementation of the JPA {@link Metamodel} contract.

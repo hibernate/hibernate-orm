@@ -1,7 +1,5 @@
 package org.hibernate.test.connections;
-
 import junit.framework.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;

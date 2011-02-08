@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Comparator;
 
 /**

@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.annotations.target;
 
-import java.util.Map;
+
 
 /**
  * @author Emmanuel Bernard

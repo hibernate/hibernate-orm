@@ -22,6 +22,7 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+
 /**
  * @author Steve Ebersole
  */

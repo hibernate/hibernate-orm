@@ -1,5 +1,4 @@
 package org.hibernate.cache.infinispan.entity;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.SoftLock;
 import org.infinispan.util.logging.Log;

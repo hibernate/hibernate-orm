@@ -23,17 +23,15 @@
  *
  */
 package org.hibernate.tuple.entity;
-
 import java.io.Serializable;
 import java.util.Map;
-
-import org.hibernate.HibernateException;
-import org.hibernate.EntityNameResolver;
 import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
+import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.property.Getter;
 import org.hibernate.tuple.Tuplizer;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Defines further responsibilities reagarding tuplization based on

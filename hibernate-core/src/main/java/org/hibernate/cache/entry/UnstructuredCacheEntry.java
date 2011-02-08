@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.cache.entry;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 
 

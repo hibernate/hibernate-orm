@@ -3,9 +3,6 @@ header
 //   $Id: sql-gen.g 10001 2006-06-08 21:08:04Z steve.ebersole@jboss.com $
 package org.hibernate.hql.antlr;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 }
 /**
  * SQL Generator Tree Parser, providing SQL rendering of SQL ASTs produced by the previous phase, HqlSqlWalker.  All
@@ -28,7 +25,6 @@ options {
 }
 
 {
-	private static Logger log = LoggerFactory.getLogger(SqlGeneratorBase.class);
 
    /** the buffer resulting SQL statement is written to */
 	private StringBuffer buf = new StringBuffer();

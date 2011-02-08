@@ -1,13 +1,12 @@
 //$Id$
 package org.hibernate.test.annotations.inheritance.joined;
-
-import javax.persistence.Entity;
-import javax.persistence.SecondaryTable;
 import javax.persistence.Column;
-import javax.persistence.Id;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.SecondaryTable;
 
 /**
  * @author Emmanuel Bernard

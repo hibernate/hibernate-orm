@@ -24,6 +24,7 @@
  */
 package org.hibernate.cache;
 
+
 /**
  * Defines contract for regions which hold transactionally-managed data.
  * <p/>

@@ -1,10 +1,5 @@
 //$
 package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
-
-/**
- * @author Emmanuel Bernard
- */
-
 import java.util.List;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;

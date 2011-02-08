@@ -1,7 +1,5 @@
 package org.hibernate.ejb.test.metadata;
-
 import javax.persistence.EntityManagerFactory;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

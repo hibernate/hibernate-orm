@@ -1,13 +1,10 @@
 //$Id: EJBQLTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
-
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
@@ -17,7 +14,6 @@ import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.collections.AST;

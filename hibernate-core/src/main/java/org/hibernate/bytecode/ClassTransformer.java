@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.bytecode;
-
 import java.security.ProtectionDomain;
 
 /**

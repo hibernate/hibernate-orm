@@ -1,11 +1,10 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import javax.persistence.EntityListeners;
 import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.PreUpdate;
 import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

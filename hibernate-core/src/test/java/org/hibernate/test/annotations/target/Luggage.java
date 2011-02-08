@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.target;
 
+
 /**
  * @author Emmanuel Bernard
  */

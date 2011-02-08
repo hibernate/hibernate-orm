@@ -22,17 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal.proxy;
-
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Invocation handler for {@link java.sql.CallableStatement} proxies
@@ -40,8 +34,6 @@ import org.slf4j.LoggerFactory;
  * @author Gail Badner
  */
 public class CallableStatementProxyHandler extends PreparedStatementProxyHandler {
-
-	private static final Logger log = LoggerFactory.getLogger( CallableStatementProxyHandler.class );
 
 	protected CallableStatementProxyHandler(
 			String sql,
@@ -51,7 +43,8 @@ public class CallableStatementProxyHandler extends PreparedStatementProxyHandler
 		super( sql, statement, connectionProxyHandler, connectionProxy );
 	}
 
-	protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
+	@Override
+    protected Object continueInvocation(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( ! "executeQuery".equals( method.getName() ) ) {
 			return super.continueInvocation( proxy, method, args ); // EARLY RETURN!
 		}

@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.test.fetchprofiles.join;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * TODO : javadoc

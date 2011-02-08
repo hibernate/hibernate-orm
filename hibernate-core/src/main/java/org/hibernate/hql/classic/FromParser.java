@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.hql.classic;
-
+import java.util.HashMap;
+import java.util.Map;
 import org.hibernate.QueryException;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Parses the from clause of a hibernate query, looking for tables and

@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
-import org.hibernate.bytecode.ReflectionOptimizer;
-import org.hibernate.InstantiationException;
-
 import java.io.Serializable;
+import org.hibernate.InstantiationException;
+import org.hibernate.bytecode.ReflectionOptimizer;
 
 /**
  * The {@link ReflectionOptimizer.InstantiationOptimizer} implementation for Javassist

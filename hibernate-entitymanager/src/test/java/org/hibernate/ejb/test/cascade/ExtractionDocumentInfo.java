@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;

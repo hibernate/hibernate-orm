@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.engine;
-
-import org.hibernate.JDBCException;
-
 import java.util.Iterator;
+import org.hibernate.JDBCException;
 
 /**
  * An iterator that may be "closed"

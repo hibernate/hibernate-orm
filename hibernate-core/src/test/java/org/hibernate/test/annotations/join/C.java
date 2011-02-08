@@ -1,9 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.join;
-
 import javax.persistence.Column;
-import javax.persistence.Entity;
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
 import javax.persistence.SecondaryTable;
 
 /**

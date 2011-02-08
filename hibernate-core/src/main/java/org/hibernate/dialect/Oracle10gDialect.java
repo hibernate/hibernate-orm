@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
-import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.ANSIJoinFragment;
+import org.hibernate.sql.JoinFragment;
 
 
 /**

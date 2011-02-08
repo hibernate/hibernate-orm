@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.internal;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
 import org.hibernate.service.internal.ServicesRegistryImpl;

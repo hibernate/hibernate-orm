@@ -26,13 +26,12 @@
   */
 
 package org.hibernate.test.annotations.inheritance.joined;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.SecondaryTable;
 import javax.persistence.Table;
-import javax.persistence.InheritanceType;
 
 /**
  * @author Sharath Reddy

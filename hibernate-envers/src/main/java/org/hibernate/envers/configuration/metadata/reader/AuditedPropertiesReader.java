@@ -1,26 +1,28 @@
 package org.hibernate.envers.configuration.metadata.reader;
-
 import static org.hibernate.envers.tools.Tools.newHashSet;
-
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
 import javax.persistence.Version;
-
+import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.envers.*;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditMappedBy;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.NotAudited;
 import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-import org.hibernate.MappingException;
 
 /**
  * Reads persistent properties form a

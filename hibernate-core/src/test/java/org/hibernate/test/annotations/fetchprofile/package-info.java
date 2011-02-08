@@ -32,7 +32,6 @@
 		})
 })
 package org.hibernate.test.annotations.fetchprofile;
-
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;

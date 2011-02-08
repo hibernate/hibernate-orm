@@ -1,18 +1,17 @@
 //$
 package org.hibernate.test.annotations.idmanytoone;
-
 import java.io.Serializable;
-import javax.persistence.IdClass;
-import javax.persistence.Id;
-import javax.persistence.Column;
-import javax.persistence.CascadeType;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.Table;
-import javax.persistence.ManyToOne;
 import javax.persistence.Basic;
-import javax.persistence.JoinColumns;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name="BasketItems")

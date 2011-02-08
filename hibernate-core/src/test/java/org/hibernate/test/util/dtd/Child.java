@@ -1,5 +1,6 @@
 package org.hibernate.test.util.dtd;
 
+
 /**
  * The Child class.
  *

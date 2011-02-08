@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.hql;
-
+import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-
-import java.util.Map;
 
 
 /**

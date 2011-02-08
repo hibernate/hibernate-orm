@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.onetomany;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -9,12 +8,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
@@ -24,6 +21,7 @@ import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.Ticket;
 import org.hibernate.test.annotations.TicketComparator;
+import org.hibernate.testing.junit.FailureExpected;
 
 /**
  * Test various case of a one to many relationship.

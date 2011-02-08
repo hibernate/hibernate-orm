@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.intercept;
-
+import java.util.Set;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.intercept.cglib.CGLIBHelper;
 import org.hibernate.intercept.javassist.JavassistHelper;
-
-import java.util.Set;
 
 /**
  * Helper class for dealing with enhanced entity classes.

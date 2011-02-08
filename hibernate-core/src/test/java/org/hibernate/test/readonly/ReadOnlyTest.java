@@ -24,12 +24,9 @@
  *
  */
 package org.hibernate.test.readonly;
-
 import java.math.BigDecimal;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;

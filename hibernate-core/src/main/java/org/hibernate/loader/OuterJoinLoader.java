@@ -23,14 +23,11 @@
  *
  */
 package org.hibernate.loader;
-
-import java.util.Map;
-
-import org.hibernate.LockOptions;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.EntityType;

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;

@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 
+
 /**
  * Enumeration of the known places from which a piece of metadata may come.
  *

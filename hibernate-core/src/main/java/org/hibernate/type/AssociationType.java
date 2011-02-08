@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
+import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Joinable;
-
-import java.util.Map;
 
 /**
  * A type that represents some kind of association between entities.

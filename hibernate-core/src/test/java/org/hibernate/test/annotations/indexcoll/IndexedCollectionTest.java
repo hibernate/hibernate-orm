@@ -1,21 +1,19 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.RequiresDialect;
 
 /**
  * Test index collections

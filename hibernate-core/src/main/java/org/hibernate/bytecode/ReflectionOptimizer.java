@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode;
 
+
 /**
  * Represents reflection optimization for a particular class.
  *

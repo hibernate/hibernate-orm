@@ -1,11 +1,10 @@
 //$Id: BreakDance.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
 package org.hibernate.test.annotations.id.sequences.entities;
-
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
-import javax.persistence.TableGenerator;
 import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.TableGenerator;
 
 /**
  * @author Emmanuel Bernard

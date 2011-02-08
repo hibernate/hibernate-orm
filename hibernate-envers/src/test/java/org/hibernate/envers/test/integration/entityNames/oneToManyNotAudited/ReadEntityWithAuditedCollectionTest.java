@@ -1,11 +1,9 @@
 package org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.hibernate.MappingException;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 import org.testng.annotations.BeforeClass;

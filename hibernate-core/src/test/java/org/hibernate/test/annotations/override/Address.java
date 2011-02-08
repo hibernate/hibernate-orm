@@ -1,6 +1,4 @@
 package org.hibernate.test.annotations.override;
-
-import javax.persistence.Embedded;
 import javax.persistence.Embeddable;
 
 /**

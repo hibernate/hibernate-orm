@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.cache.access;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CollectionRegion;
 

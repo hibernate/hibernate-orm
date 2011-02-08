@@ -22,23 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.testing.junit.functional;
-
-import java.util.HashMap;
-import java.util.Iterator;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-
-import org.hibernate.dialect.Dialect;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
-import org.hibernate.SessionFactory;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Collection;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.test.common.ServiceRegistryHolder;

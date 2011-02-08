@@ -24,6 +24,7 @@
  */
 package org.hibernate.stat;
 
+
 /**
  * Collection related statistics
  *

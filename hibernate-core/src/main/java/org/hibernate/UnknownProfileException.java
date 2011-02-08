@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Used to indicate a request against an unknown profile name.
  *

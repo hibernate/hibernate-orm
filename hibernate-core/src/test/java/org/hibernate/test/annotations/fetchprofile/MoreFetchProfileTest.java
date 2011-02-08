@@ -24,9 +24,7 @@
  *
  */
 package org.hibernate.test.annotations.fetchprofile;
-
 import java.util.Date;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

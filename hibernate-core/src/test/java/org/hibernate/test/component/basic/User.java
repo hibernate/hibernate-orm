@@ -1,6 +1,5 @@
 //$Id: User.java 11345 2007-03-26 17:24:20Z steve.ebersole@jboss.com $
 package org.hibernate.test.component.basic;
-
 import java.util.Date;
 
 /**

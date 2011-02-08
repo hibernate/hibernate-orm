@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode.javassist;
 
+
 /**
  * An exception thrown while generating a bulk accessor.
  * 

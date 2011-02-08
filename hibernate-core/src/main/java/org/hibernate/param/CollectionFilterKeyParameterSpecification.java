@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.param;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;

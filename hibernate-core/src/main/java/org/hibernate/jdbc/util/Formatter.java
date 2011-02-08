@@ -24,6 +24,7 @@
  */
 package org.hibernate.jdbc.util;
 
+
 /**
  * Formatter contract
  *

@@ -1,14 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.backquotes;
-
 import java.util.List;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-
 import org.hibernate.annotations.Index;
 
 @Entity

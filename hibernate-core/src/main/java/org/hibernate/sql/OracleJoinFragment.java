@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.sql;
-
 import java.util.HashSet;
 import java.util.Set;
 

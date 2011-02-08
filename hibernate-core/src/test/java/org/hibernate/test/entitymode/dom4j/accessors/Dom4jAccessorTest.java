@@ -1,13 +1,11 @@
 // $Id: Dom4jAccessorTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.entitymode.dom4j.accessors;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.util.NodeComparator;
-
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Mappings;

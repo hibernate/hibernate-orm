@@ -23,7 +23,6 @@
 		}
 )
 package org.hibernate.test.annotations.lob;
-
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 

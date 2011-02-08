@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal.proxy;
-
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
-
 import org.hibernate.HibernateException;
 
 /**

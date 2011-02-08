@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.jdbc.util;
-
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import org.hibernate.util.StringHelper;
 
 /**

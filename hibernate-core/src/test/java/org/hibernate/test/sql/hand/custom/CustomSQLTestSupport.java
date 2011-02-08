@@ -1,19 +1,17 @@
 package org.hibernate.test.sql.hand.custom;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
-
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.util.ArrayHelper;
 import org.hibernate.test.sql.hand.Employment;
+import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.TextHolder;
-import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * Abstract test case defining tests for the support for user-supplied (aka

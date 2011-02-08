@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+
 /**
  * An AST node with a path property.  This path property will be the fully qualified name.
  *

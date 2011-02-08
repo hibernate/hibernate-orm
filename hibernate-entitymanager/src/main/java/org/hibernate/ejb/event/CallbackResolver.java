@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
@@ -33,17 +32,19 @@ import javax.persistence.ExcludeDefaultListeners;
 import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
-import org.hibernate.Logger;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
+import org.hibernate.ejb.EntityManagerLogger;
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  */
 public final class CallbackResolver {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, CallbackResolver.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           CallbackResolver.class.getName());
 
 	private static boolean useAnnotationAnnotatedByListener;
 
@@ -90,8 +91,10 @@ public final class CallbackResolver {
 								);
 							}
                             if (!method.isAccessible()) method.setAccessible(true);
-                            LOG.debug("Adding " + methodName + " as " + annotation.getSimpleName() + " callback for entity "
-                                      + beanClass.getName() + ".");
+                            LOG.debugf("Adding %s as %s callback for entity %s",
+                                       methodName,
+                                       annotation.getSimpleName(),
+                                       beanClass.getName());
 							callbacks.add( 0, callback ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
@@ -172,8 +175,10 @@ public final class CallbackResolver {
 										);
 									}
                                     if (!method.isAccessible()) method.setAccessible(true);
-                                    LOG.debug("Adding " + methodName + " as " + annotation.getSimpleName()
-                                              + " callback for entity " + beanClass.getName() + ".");
+                                    LOG.debugf("Adding %s as %s callback for entity %s",
+                                               methodName,
+                                               annotation.getSimpleName(),
+                                               beanClass.getName());
 									callbacks.add( 0, callback ); // listeners first
 								}
 								else {

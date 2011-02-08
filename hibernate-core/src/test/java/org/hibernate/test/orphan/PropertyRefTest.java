@@ -1,8 +1,6 @@
 // $Id: PropertyRefTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.orphan;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

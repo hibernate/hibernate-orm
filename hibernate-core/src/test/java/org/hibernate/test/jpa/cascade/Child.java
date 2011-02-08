@@ -1,5 +1,6 @@
 package org.hibernate.test.jpa.cascade;
 
+
 /**
  * todo: describe Child
  *

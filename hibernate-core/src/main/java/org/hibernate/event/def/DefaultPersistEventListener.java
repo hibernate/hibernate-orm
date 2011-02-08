@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.engine.CascadingAction;
@@ -39,6 +38,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.util.IdentityMap;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default create event listener used by hibernate for creating
@@ -48,8 +48,8 @@ import org.hibernate.util.IdentityMap;
  */
 public class DefaultPersistEventListener extends AbstractSaveEventListener implements PersistEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultPersistEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultPersistEventListener.class.getName());
 
 	/**
 	 * Handle the given create event.
@@ -112,7 +112,7 @@ public class DefaultPersistEventListener extends AbstractSaveEventListener imple
 			// NOTE: entityEntry must be null to get here, so we cannot use any of its values
 			EntityPersister persister = source.getFactory().getEntityPersister( entityName );
 			if ( ForeignGenerator.class.isInstance( persister.getIdentifierGenerator() ) ) {
-                if (LOG.isDebugEnabled() && persister.getIdentifier(entity, source) != null) LOG.debug("Resetting entity id attribute to null for foreign generator");
+                if (LOG.isDebugEnabled() && persister.getIdentifier(entity, source) != null) LOG.debugf("Resetting entity id attribute to null for foreign generator");
 				persister.setIdentifier( entity, null, source );
 				entityState = getEntityState( entity, entityName, entityEntry, source );
 			}

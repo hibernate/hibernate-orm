@@ -1,14 +1,11 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
-
+import java.util.Arrays;
 import javax.persistence.EntityManager;
-
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.testng.Assert;
-
-import java.util.Arrays;
 
 /**
  * @author Hern�n Chanfreau

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.event.def;
-
 import org.hibernate.event.PreLoadEvent;
 import org.hibernate.event.PreLoadEventListener;
 import org.hibernate.persister.entity.EntityPersister;

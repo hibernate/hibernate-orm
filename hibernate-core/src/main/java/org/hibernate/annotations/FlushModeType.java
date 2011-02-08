@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Enumeration extending javax.persistence flush modes.
  *

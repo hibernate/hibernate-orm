@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Entity;
@@ -30,7 +29,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
-
 import org.hibernate.envers.Audited;
 
 /**

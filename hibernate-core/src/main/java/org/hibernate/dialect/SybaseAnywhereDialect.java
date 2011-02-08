@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 
+
 /**
  * SQL Dialect for Sybase Anywhere
  * extending Sybase (Enterprise) Dialect

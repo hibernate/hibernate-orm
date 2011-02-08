@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.impl;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -52,11 +51,11 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
 import org.hibernate.LobHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.Query;
@@ -138,6 +137,7 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -155,8 +155,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	// a seperate classs responsible for generating/dispatching events just duplicates most of the Session methods...
 	// passing around seperate reto interceptor, factory, actionQueue, and persistentContext is not manageable...
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SessionImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SessionImpl.class.getName());
 
 	private transient EntityMode entityMode = EntityMode.POJO;
 	private transient boolean autoClear; //for EJB3
@@ -209,7 +208,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
         if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-        LOG.debug("Opened session [" + entityMode + "]");
+        LOG.debugf("Opened session [%s]", entityMode);
 	}
 
 	/**
@@ -253,7 +252,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
         if (factory.getStatistics().isStatisticsEnabled()) factory.getStatisticsImplementor().openSession();
 
-        LOG.debug("Opened session at timestamp: " + timestamp);
+        LOG.debugf("Opened session at timestamp: %s", timestamp);
 	}
 
 	public Session getSession(EntityMode entityMode) {
@@ -530,20 +529,20 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
-        LOG.debug("Disconnecting session");
+        LOG.debugf("Disconnecting session");
 		return jdbcContext.getConnectionManager().manualDisconnect();
 	}
 
 	public void reconnect() throws HibernateException {
 		errorIfClosed();
-        LOG.debug("Reconnecting session");
+        LOG.debugf("Reconnecting session");
 		checkTransactionSynchStatus();
 		jdbcContext.getConnectionManager().manualReconnect();
 	}
 
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
-        LOG.debug("Reconnecting session");
+        LOG.debugf("Reconnecting session");
 		checkTransactionSynchStatus();
 		jdbcContext.getConnectionManager().manualReconnect( conn );
 	}
@@ -1001,7 +1000,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
         if (LOG.isDebugEnabled()) {
 			EntityPersister persister = getFactory().getEntityPersister(entityName);
-            LOG.debug("Initializing proxy: " + MessageHelper.infoString(persister, id, getFactory()));
+            LOG.debugf("Initializing proxy: %s", MessageHelper.infoString(persister, id, getFactory()));
 		}
 
 		LoadEvent event = new LoadEvent(id, entityName, true, this);
@@ -1172,9 +1171,9 @@ public final class SessionImpl extends AbstractSessionImpl
 	public boolean isDirty() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-        LOG.debug("Checking session dirtiness");
+        LOG.debugf("Checking session dirtiness");
 		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
-            LOG.debug("Session dirty (scheduled updates and insertions)");
+            LOG.debugf("Session dirty (scheduled updates and insertions)");
 			return true;
 		}
         DirtyCheckEvent event = new DirtyCheckEvent(this);
@@ -1199,10 +1198,8 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
 		errorIfClosed();
-        if (LOG.isDebugEnabled()) LOG.debug("Flushing to force deletion of re-saved object: "
-                                            + MessageHelper.infoString(entityEntry.getPersister(),
-                                                                       entityEntry.getId(),
-                                                                       getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf("Flushing to force deletion of re-saved object: %s",
+                                             MessageHelper.infoString(entityEntry.getPersister(), entityEntry.getId(), getFactory()));
 
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new ObjectDeletedException(

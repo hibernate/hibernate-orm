@@ -1,9 +1,8 @@
 // $Id: Order.java 4222 2004-08-10 05:19:46Z steveebersole $
 package org.hibernate.test.filter;
-
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * @author Steve Ebersole

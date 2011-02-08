@@ -20,9 +20,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.type.Type;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.type.Type;
 
 /**
  * TODO : javadoc

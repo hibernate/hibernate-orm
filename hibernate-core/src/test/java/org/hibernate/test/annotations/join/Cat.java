@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.join;
-
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -9,13 +8,12 @@ import javax.persistence.Id;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
 import javax.persistence.UniqueConstraint;
-
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.Table;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Tables;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Index;
 import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.Table;
+import org.hibernate.annotations.Tables;
 
 /**
  * @author Emmanuel Bernard

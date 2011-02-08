@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -34,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 

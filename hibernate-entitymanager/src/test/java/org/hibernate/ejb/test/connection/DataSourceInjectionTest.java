@@ -21,10 +21,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.connection;
-
 import java.io.File;
-import javax.persistence.EntityManagerFactory;
-
 import junit.framework.TestCase;
 import org.hibernate.ejb.HibernatePersistence;
 

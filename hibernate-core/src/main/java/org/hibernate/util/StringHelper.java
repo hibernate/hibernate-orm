@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.util;
-
-import java.util.Iterator;
-import java.util.StringTokenizer;
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.Iterator;
+import java.util.StringTokenizer;
 import org.hibernate.dialect.Dialect;
 
 public final class StringHelper {

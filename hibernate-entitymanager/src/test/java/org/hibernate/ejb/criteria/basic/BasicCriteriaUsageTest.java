@@ -20,14 +20,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.basic;
-
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Predicate;
-
+import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.SingularAttribute;
 import org.hibernate.ejb.test.TestCase;
 
 /**

@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.derivedidentities.e1.b;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;

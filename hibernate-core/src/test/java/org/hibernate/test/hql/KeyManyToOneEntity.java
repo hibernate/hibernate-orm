@@ -1,6 +1,5 @@
 // $Id: KeyManyToOneEntity.java 7091 2005-06-08 19:31:26Z steveebersole $
 package org.hibernate.test.hql;
-
 import java.io.Serializable;
 
 /**

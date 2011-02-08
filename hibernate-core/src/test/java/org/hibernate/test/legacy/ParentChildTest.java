@@ -1,6 +1,5 @@
 //$Id: ParentChildTest.java 11089 2007-01-24 14:34:22Z max.andersen@jboss.com $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,9 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -30,8 +27,8 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.impl.SessionImpl;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 
 public class ParentChildTest extends LegacyTestCase {

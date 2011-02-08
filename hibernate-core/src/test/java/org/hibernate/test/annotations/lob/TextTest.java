@@ -24,16 +24,14 @@
  *
  */
 package org.hibernate.test.annotations.lob;
-
 import junit.framework.AssertionFailedError;
-
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.util.ArrayHelper;
 
 /**

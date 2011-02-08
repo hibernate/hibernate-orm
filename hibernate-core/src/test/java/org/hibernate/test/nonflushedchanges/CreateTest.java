@@ -1,11 +1,8 @@
 //$Id: CreateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.nonflushedchanges;
-
 import java.util.ArrayList;
 import java.util.Collection;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;

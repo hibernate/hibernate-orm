@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.onetoone.hhh4851;
-
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;

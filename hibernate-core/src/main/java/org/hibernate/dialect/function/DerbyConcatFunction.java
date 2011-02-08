@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
-import java.util.List;
 import java.util.Iterator;
-
+import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;

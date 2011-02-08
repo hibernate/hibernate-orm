@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * The base {@link Throwable} type for Hibernate.
  * <p/>

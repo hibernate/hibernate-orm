@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.classic;
-
 import org.hibernate.HibernateException;
 
 /**

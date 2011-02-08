@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.embedded;
-
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;

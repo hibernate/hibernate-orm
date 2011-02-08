@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.cid;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

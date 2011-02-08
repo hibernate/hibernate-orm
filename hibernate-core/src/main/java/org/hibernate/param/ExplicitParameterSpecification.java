@@ -24,6 +24,7 @@
  */
 package org.hibernate.param;
 
+
 /**
  * An additional contract for parameters which originate from parameters explicitly encountered in the source statement
  * (HQL or native-SQL).

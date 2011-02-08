@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;

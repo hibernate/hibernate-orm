@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;

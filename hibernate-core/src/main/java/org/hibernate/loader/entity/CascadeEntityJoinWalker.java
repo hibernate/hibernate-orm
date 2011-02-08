@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.loader.entity;
-
 import org.hibernate.FetchMode;
-import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;

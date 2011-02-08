@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.xml.hbm;
-
 import javax.persistence.Entity;
 import javax.persistence.Table;
 

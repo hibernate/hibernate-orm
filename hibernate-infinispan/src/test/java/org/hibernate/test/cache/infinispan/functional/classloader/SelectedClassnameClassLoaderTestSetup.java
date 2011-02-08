@@ -15,7 +15,6 @@
  */
 
 package org.hibernate.test.cache.infinispan.functional.classloader;
-
 import junit.extensions.TestSetup;
 import junit.framework.Test;
 

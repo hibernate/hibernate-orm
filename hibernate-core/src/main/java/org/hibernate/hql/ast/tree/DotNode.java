@@ -23,8 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.CollectionProperties;
@@ -38,6 +37,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -68,7 +68,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	public static IllegalCollectionDereferenceExceptionBuilder ILLEGAL_COLL_DEREF_EXCP_BUILDER = DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER;
 	///////////////////////////////////////////////////////////////////////////
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, DotNode.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DotNode.class.getName());
 
 	private static final int DEREF_UNKNOWN = 0;
 	private static final int DEREF_ENTITY = 1;
@@ -302,7 +302,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		);
 		FromElement elem = factory.createCollection( queryableCollection, role, joinType, fetch, indexed );
 
-        LOG.debug("dereferenceCollection() : Created new FROM element for " + propName + " : " + elem);
+        LOG.debugf("dereferenceCollection() : Created new FROM element for %s : %s", propName, elem);
 
 		setImpliedJoin( elem );
 		setFromElement( elem );	// This 'dot' expression now refers to the resulting from element.
@@ -383,10 +383,11 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean impliedJoin, AST parent)
 	throws SemanticException {
 		dereferenceType = DEREF_ENTITY;
-        if (LOG.isDebugEnabled()) LOG.debug("dereferenceEntityJoin() : generating join for " + propertyName + " in "
-                                            + getFromElement().getClassName() + " ("
-                                            + (classAlias == null ? "<no alias>" : classAlias) + ") parent = "
-                                            + ASTUtil.getDebugString(parent));
+        if (LOG.isDebugEnabled()) LOG.debugf("dereferenceEntityJoin() : generating join for %s in %s (%s) parent = %s",
+                                             propertyName,
+                                             getFromElement().getClassName(),
+                                             classAlias == null ? "<no alias>" : classAlias,
+                                             ASTUtil.getDebugString(parent));
 		// Create a new FROM node for the referenced class.
 		String associatedEntityName = propertyType.getAssociatedEntityName();
 		String tableAlias = getAliasGenerator().createName( associatedEntityName );
@@ -521,23 +522,17 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			// only the identifier property field name can be a reference to the associated entity's PK...
 			return propertyName.equals( persister.getIdentifierPropertyName() ) && owningType.isReferenceToPrimaryKey();
 		}
-		else {
-			// here, we have two possibilities:
-			// 		1) the property-name matches the explicitly identifier property name
-			//		2) the property-name matches the implicit 'id' property name
-			if ( EntityPersister.ENTITY_ID.equals( propertyName ) ) {
-				// the referenced node text is the special 'id'
-				return owningType.isReferenceToPrimaryKey();
-			}
-			else {
-				String keyPropertyName = getSessionFactoryHelper().getIdentifierOrUniqueKeyPropertyName( owningType );
-				return keyPropertyName != null && keyPropertyName.equals( propertyName ) && owningType.isReferenceToPrimaryKey();
-			}
-		}
+        // here, we have two possibilities:
+        // 1) the property-name matches the explicitly identifier property name
+        // 2) the property-name matches the implicit 'id' property name
+        // the referenced node text is the special 'id'
+        if (EntityPersister.ENTITY_ID.equals(propertyName)) return owningType.isReferenceToPrimaryKey();
+        String keyPropertyName = getSessionFactoryHelper().getIdentifierOrUniqueKeyPropertyName(owningType);
+        return keyPropertyName != null && keyPropertyName.equals(propertyName) && owningType.isReferenceToPrimaryKey();
 	}
 
 	private void checkForCorrelatedSubquery(String methodName) {
-        if (isCorrelatedSubselect()) LOG.debug(methodName + "() : correlated subquery");
+        if (isCorrelatedSubselect()) LOG.debugf("%s() : correlated subquery", methodName);
 	}
 
 	private boolean isCorrelatedSubselect() {
@@ -558,8 +553,9 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private void dereferenceEntityIdentifier(String propertyName, DotNode dotParent) {
 		// special shortcut for id properties, skip the join!
 		// this must only occur at the _end_ of a path expression
-        LOG.debug("dereferenceShortcut() : property " + propertyName + " in " + getFromElement().getClassName()
-                  + " does not require a join.");
+        LOG.debugf("dereferenceShortcut() : property %s in %s does not require a join.",
+                   propertyName,
+                   getFromElement().getClassName());
 
 		initText();
 		setPropertyNameAndPath( dotParent ); // Set the unresolved path in this node and the parent.
@@ -579,8 +575,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			propertyName = rhs.getText();
 			propertyPath = propertyPath + "." + propertyName; // Append the new property name onto the unresolved path.
 			dotNode.propertyPath = propertyPath;
-            LOG.debug("Unresolved property path is now '" + dotNode.propertyPath + "'");
-        } else LOG.debug("Terminal propertyPath = [" + propertyPath + "]");
+            LOG.debugf("Unresolved property path is now '%s'", dotNode.propertyPath);
+        } else LOG.debugf("Terminal propertyPath = [%s]", propertyPath);
 	}
 
 	@Override
@@ -590,7 +586,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
             if (fromElement == null) return null;
 			// If the lhs is a collection, use CollectionPropertyMapping
 			Type propertyType = fromElement.getPropertyType( propertyName, propertyPath );
-            LOG.debug("getDataType() : " + propertyPath + " -> " + propertyType);
+            LOG.debugf("getDataType() : %s -> %s", propertyPath, propertyType);
 			super.setDataType( propertyType );
 		}
 		return super.getDataType();

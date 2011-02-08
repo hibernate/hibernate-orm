@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.generics;
-
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

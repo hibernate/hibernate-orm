@@ -22,20 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.internal;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
+import org.jboss.logging.Logger;
 
 /**
  * Basic Hibernate implementation of the service registry.
@@ -44,8 +44,7 @@ import org.hibernate.service.spi.UnknownServiceException;
  */
 public class ServicesRegistryImpl implements ServicesRegistry {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ServicesRegistryImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServicesRegistryImpl.class.getName());
 
 	private final List<ServiceInitiator> serviceInitiators;
 	private ServicesInitializer initializer;

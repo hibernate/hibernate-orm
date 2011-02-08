@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.immutable;
-
 import static org.hibernate.TestLogger.LOG;
 import java.util.ArrayList;
 import java.util.List;

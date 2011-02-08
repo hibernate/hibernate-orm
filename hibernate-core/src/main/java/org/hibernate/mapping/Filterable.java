@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 
+
 /**
  * Defines mapping elements to which filters may be applied.
  *

@@ -23,21 +23,19 @@
  */
 package org.hibernate.tool.instrument;
 
-import org.apache.tools.ant.Task;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
-
 import org.hibernate.bytecode.buildtime.Instrumenter;
 import org.hibernate.bytecode.buildtime.Logger;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.io.File;
 
 /**
  * Super class for all Hibernate instrumentation tasks.  Provides the basic templating of how instrumentation
@@ -85,7 +83,8 @@ public abstract class BasicInstrumentationTask extends Task implements Instrumen
 
 	protected abstract Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options);
 
-	public void execute() throws BuildException {
+	@Override
+    public void execute() throws BuildException {
 		try {
 			buildInstrumenter( logger, this )
 					.execute( collectSpecifiedFiles() );

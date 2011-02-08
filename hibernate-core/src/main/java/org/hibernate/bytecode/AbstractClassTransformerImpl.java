@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.bytecode;
-
+import java.security.ProtectionDomain;
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
-
-import java.security.ProtectionDomain;
 
 /**
  * Basic implementation of the {@link ClassTransformer} contract.

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.event;
-
 import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 
 /**

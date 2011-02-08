@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetoone.bidirectional.ids;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.OneToOne;
-
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.ids.EmbId;
 

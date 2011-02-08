@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.hql;
 
+
 /**
  *
  * @author Gail Badner

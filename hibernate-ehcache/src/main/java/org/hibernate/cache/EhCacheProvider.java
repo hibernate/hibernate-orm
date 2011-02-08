@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
-
 import java.net.URL;
 import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Cache Provider plugin for Hibernate
@@ -66,8 +66,7 @@ import org.hibernate.util.StringHelper;
  */
 public class EhCacheProvider implements CacheProvider {
 
-    private static final EhCacheLogger LOG = org.jboss.logging.Logger.getMessageLogger(EhCacheLogger.class,
-                                                                                       EhCacheLogger.class.getPackage().getName());
+    private static final EhCacheLogger LOG = Logger.getMessageLogger(EhCacheLogger.class, EhCacheProvider.class.getName());
 
 	private CacheManager manager;
 
@@ -91,7 +90,7 @@ public class EhCacheProvider implements CacheProvider {
                 LOG.unableToFindConfiguration(name);
                 manager.addCache(name);
                 cache = manager.getCache(name);
-                LOG.debug("Started EHCache region: " + name);
+                LOG.debugf("Started EHCache region: %s", name);
             }
             return new EhCache(cache);
 	    }
@@ -144,7 +143,7 @@ public class EhCacheProvider implements CacheProvider {
 
 	private URL loadResource(String configurationResourceName) {
 		URL url = ConfigHelper.locateConfig( configurationResourceName );
-        LOG.debug("Creating EhCacheProvider from a specified resource: " + configurationResourceName + " Resolved to URL: " + url);
+        LOG.debugf("Creating EhCacheProvider from a specified resource: %s Resolved to URL: %s", configurationResourceName, url);
         return url;
     }
 

@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.collectionelement.deepcollectionelements;
-
 import org.hibernate.test.annotations.TestCase;
 
 /**

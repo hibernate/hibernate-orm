@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers;
 
+
 /**
  * An implementation of this class, having a no-arg constructor, should be passed as an argument to the
  * {@link RevisionEntity} annotation.

@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.intercept.LazyPropertyInitializer;

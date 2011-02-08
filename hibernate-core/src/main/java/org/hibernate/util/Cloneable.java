@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.util;
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-
 import org.hibernate.HibernateException;
 
 /**

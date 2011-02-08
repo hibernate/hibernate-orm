@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.engine;
-
-import java.io.Serializable;
-import java.io.ObjectStreamException;
 import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of determining

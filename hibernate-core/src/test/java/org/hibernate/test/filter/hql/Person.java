@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.filter.hql;
 
+
 /**
  * Base of inheritence hierarchy
  *

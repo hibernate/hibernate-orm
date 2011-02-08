@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.queryplan;
-
 import java.util.Collections;
 import java.util.HashMap;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.query.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;

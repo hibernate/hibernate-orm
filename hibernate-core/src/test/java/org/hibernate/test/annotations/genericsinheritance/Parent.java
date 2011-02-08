@@ -1,8 +1,6 @@
 package org.hibernate.test.annotations.genericsinheritance;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKey;

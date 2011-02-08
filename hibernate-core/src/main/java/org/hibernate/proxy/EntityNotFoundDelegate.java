@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.proxy;
-
 import java.io.Serializable;
 
 /**

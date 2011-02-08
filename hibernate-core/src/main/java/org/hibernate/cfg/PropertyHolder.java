@@ -22,18 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-
+import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.annotations.common.reflection.XClass;
 
 /**
  * Property holder abstract property containers from their direct implementation

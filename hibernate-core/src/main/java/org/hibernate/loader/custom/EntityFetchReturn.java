@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.loader.custom;
-
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.LockMode;
+import org.hibernate.loader.EntityAliases;
 
 /**
  * Spefically a fetch return that refers to an entity association.

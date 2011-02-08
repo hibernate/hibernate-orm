@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.orphan.one2one.fk.reversed.unidirectional;
-
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 

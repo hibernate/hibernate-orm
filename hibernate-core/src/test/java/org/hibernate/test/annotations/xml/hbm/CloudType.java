@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.xml.hbm;
 
+
 /**
  * @author Emmanuel Bernard
  */

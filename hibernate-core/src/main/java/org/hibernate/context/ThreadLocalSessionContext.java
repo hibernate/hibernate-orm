@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.context;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -37,10 +36,11 @@ import java.util.Map;
 import javax.transaction.Synchronization;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * A {@link CurrentSessionContext} impl which scopes the notion of current
@@ -70,8 +70,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
  */
 public class ThreadLocalSessionContext implements CurrentSessionContext {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ThreadLocalSessionContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       ThreadLocalSessionContext.class.getName());
 	private static final Class[] SESS_PROXY_INTERFACES = new Class[] {
 			org.hibernate.classic.Session.class,
 	        org.hibernate.engine.SessionImplementor.class,

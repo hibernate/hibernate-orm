@@ -1,9 +1,7 @@
 package org.hibernate.test.annotations.cid;
-
-
-import javax.persistence.ManyToOne;
-import javax.persistence.JoinColumn;
 import java.io.Serializable;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 /**
  * @author Emmanuel Bernard

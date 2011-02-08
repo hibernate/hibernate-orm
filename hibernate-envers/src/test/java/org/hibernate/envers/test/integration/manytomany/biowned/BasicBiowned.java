@@ -22,18 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.manytomany.biowned;
-
+import static org.testng.Assert.assertEquals;
+import java.util.Arrays;
+import javax.persistence.EntityManager;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning1Entity;
 import org.hibernate.envers.test.entities.manytomany.biowned.ListBiowning2Entity;
 import org.hibernate.envers.test.tools.TestTools;
-import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
-import static org.testng.Assert.assertEquals;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
+import org.testng.annotations.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)

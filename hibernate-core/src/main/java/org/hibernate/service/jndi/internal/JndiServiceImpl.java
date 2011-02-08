@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jndi.internal;
-
 import java.util.Hashtable;
 import java.util.Map;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.internal.util.jndi.JndiException;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.jndi.spi.JndiService;
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of JNDI services.
@@ -39,8 +39,7 @@ import org.hibernate.service.jndi.spi.JndiService;
  */
 public class JndiServiceImpl implements JndiService {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JndiServiceImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JndiServiceImpl.class.getName());
 
 	private final Hashtable initialContextSettings;
 

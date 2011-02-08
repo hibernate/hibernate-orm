@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.hql.classic;
-
 import java.util.LinkedList;
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
@@ -41,7 +39,6 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 
 /**
  * Parses an expression of the form foo.bar.baz and builds up an expression

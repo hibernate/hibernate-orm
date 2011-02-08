@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal.util.config;
-
 import org.hibernate.HibernateException;
 
 /**

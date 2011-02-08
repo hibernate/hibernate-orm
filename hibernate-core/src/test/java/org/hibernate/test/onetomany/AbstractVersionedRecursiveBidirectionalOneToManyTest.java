@@ -23,12 +23,8 @@
  *
  */
 package org.hibernate.test.onetomany;
-
-import org.hibernate.CacheMode;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * @author Burkhard Graves, Gail Badner

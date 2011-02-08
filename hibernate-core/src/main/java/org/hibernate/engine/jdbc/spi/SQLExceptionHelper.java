@@ -22,18 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
-
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.WARN;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
-import org.hibernate.Logger;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Helper for handling SQLExceptions in various manners.
@@ -42,8 +42,7 @@ import org.hibernate.util.StringHelper;
  */
 public class SQLExceptionHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SQLExceptionHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SQLExceptionHelper.class.getName());
 
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";
@@ -130,7 +129,7 @@ public class SQLExceptionHelper {
 			}
 			catch ( SQLException sqle ) {
 				//workaround for WebLogic
-                LOG.warn(LOG.unableToLogWarnings(), sqle);
+                LOG.unableToLogWarnings(sqle);
 			}
 		}
 		try {
@@ -138,7 +137,7 @@ public class SQLExceptionHelper {
 			connection.clearWarnings();
 		}
 		catch ( SQLException sqle ) {
-            LOG.debug("Could not clear warnings : " + sqle);
+            LOG.debugf("Could not clear warnings : %s", sqle);
 		}
 
 	}
@@ -160,14 +159,9 @@ public class SQLExceptionHelper {
 	 */
 	public void logWarnings(SQLWarning warning, String message) {
         if (LOG.isEnabled(WARN)) {
-            if (warning != null) LOG.debug((StringHelper.isNotEmpty(message) ? message : DEFAULT_WARNING_MSG) + " : " + warning);
+            if (warning != null) LOG.debugf("%s : %s", (StringHelper.isNotEmpty(message) ? message : DEFAULT_WARNING_MSG), warning);
 			while ( warning != null ) {
-				StringBuffer buf = new StringBuffer( 30 )
-						.append( "SQL Warning: " )
-						.append( warning.getErrorCode() )
-						.append( ", SQLState: " )
-						.append( warning.getSQLState() );
-                LOG.warn(buf.toString());
+                LOG.sqlWarning(warning.getErrorCode(), warning.getSQLState());
                 LOG.warn(warning.getMessage());
 				warning = warning.getNextWarning();
 			}
@@ -191,9 +185,9 @@ public class SQLExceptionHelper {
 	 */
 	public void logExceptions(SQLException sqlException, String message) {
         if (LOG.isEnabled(ERROR)) {
-            LOG.debug((StringHelper.isNotEmpty(message) ? message : DEFAULT_EXCEPTION_MSG) + " : " + sqlException);
+            LOG.debugf("%s : %s", (StringHelper.isNotEmpty(message) ? message : DEFAULT_EXCEPTION_MSG), sqlException);
 			while ( sqlException != null ) {
-                LOG.sqlException(sqlException.getErrorCode(), sqlException.getSQLState());
+                LOG.sqlWarning(sqlException.getErrorCode(), sqlException.getSQLState());
                 LOG.error(sqlException.getMessage());
 				sqlException = sqlException.getNextException();
 			}

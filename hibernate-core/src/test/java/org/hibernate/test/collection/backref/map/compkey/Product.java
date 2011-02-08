@@ -14,7 +14,6 @@
  * Red Hat Author(s): Steve Ebersole
  */
 package org.hibernate.test.collection.backref.map.compkey;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;

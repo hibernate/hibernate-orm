@@ -27,6 +27,7 @@
 
 package org.hibernate.test.resulttransformer;
 
+
 /**
  * @author Sharath Reddy
  *

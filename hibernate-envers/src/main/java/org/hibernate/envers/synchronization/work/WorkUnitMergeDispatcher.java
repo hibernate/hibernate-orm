@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.synchronization.work;
 
+
 /**
  * Visitor patter dispatcher.
  * @author Adam Warski (adam at warski dot org)

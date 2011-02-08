@@ -4,7 +4,8 @@ apply plugin: 'antlr'
 // todo : we need to jar up hibernate-testing.jar from here
 
 dependencies {
-    compile( libraries.commons_collections )
+	compile fileTree(dir: 'lib', includes: ['*.jar'])
+	compile( libraries.commons_collections )
     compile( libraries.jta )
     compile( libraries.dom4j ) {
         transitive = false

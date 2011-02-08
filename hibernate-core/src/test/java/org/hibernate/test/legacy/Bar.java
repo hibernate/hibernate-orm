@@ -1,6 +1,7 @@
 //$Id: Bar.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.test.legacy;
 
+
 public class Bar extends Abstract implements BarProxy, Named {
 	private String barString;
 	private FooComponent barComponent = new FooComponent("bar", 69, null, null);

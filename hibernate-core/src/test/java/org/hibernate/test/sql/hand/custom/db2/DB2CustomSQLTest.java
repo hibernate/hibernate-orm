@@ -1,12 +1,10 @@
 //$Id$
 package org.hibernate.test.sql.hand.custom.db2;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Custom SQL tests for DB2

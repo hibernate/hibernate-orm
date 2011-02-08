@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
@@ -35,9 +34,9 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -70,6 +69,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -77,8 +77,7 @@ import org.hibernate.util.CollectionHelper;
 public class StatelessSessionImpl extends AbstractSessionImpl
 		implements JDBCContext.Context, StatelessSession {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                StatelessSessionImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StatelessSessionImpl.class.getName());
 
 	private JDBCContextImpl jdbcContext;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );

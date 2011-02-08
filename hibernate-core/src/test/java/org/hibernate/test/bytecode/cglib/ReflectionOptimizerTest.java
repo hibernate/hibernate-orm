@@ -1,12 +1,10 @@
 package org.hibernate.test.bytecode.cglib;
-
 import junit.framework.TestSuite;
-
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
-import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.test.bytecode.Bean;
 import org.hibernate.test.bytecode.BeanReflectionHelper;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * @author Steve Ebersole

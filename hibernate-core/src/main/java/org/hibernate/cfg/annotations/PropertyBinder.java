@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.util.Map;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import org.hibernate.AnnotationException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Immutable;
@@ -52,13 +51,13 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class PropertyBinder {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                PropertyBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PropertyBinder.class.getName());
 
 	private String name;
 	private String returnedClassName;
@@ -171,7 +170,7 @@ public class PropertyBinder {
 
 	private Property makePropertyAndValue() {
 		validateBind();
-        LOG.debug("Binder property " + name + " with lazy=" + lazy);
+        LOG.debugf("Binder property %s with lazy=%s", name, lazy);
 		String containerClassName = holder == null ?
 				null :
 				holder.getClassName();
@@ -251,7 +250,7 @@ public class PropertyBinder {
 	//used when the value is provided and the binding is done elsewhere
 	public Property makeProperty() {
 		validateMake();
-        LOG.debug("Building property " + name);
+        LOG.debugf("Building property %s", name);
 		Property prop = new Property();
 		prop.setName( name );
 		prop.setNodeName( name );

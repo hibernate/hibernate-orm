@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Properties;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.util.JDBCExceptionReporter;
-
-import java.util.Properties;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 /**
  * A {@link ConnectionHelper} implementation based on an internally

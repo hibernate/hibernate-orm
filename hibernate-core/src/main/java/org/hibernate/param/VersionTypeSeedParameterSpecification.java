@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.param;
-
-import org.hibernate.engine.QueryParameters;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.VersionType;
-import org.hibernate.type.Type;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.Type;
+import org.hibernate.type.VersionType;
 
 /**
  * Parameter bind specification used for optimisitc lock version seeding (from insert statements).

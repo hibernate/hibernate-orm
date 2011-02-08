@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
-
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Properties;
@@ -38,9 +37,10 @@ import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
 import javax.naming.spi.ObjectFactory;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.jndi.JndiHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Resolves {@link SessionFactory} instances during <tt>JNDI<tt> look-ups as well as during deserialization
@@ -50,12 +50,12 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 	@SuppressWarnings({ "UnusedDeclaration" })
 	private static final SessionFactoryObjectFactory INSTANCE; //to stop the class from being unloaded
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SessionFactoryObjectFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       SessionFactoryObjectFactory.class.getName());
 
 	static {
 		INSTANCE = new SessionFactoryObjectFactory();
-        LOG.debug("Initializing class SessionFactoryObjectFactory");
+        LOG.debugf("Initializing class SessionFactoryObjectFactory");
 	}
 
 	private static final ConcurrentHashMap<String, SessionFactory> INSTANCES = new ConcurrentHashMap<String, SessionFactory>();
@@ -63,7 +63,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 
 	private static final NamingListener LISTENER = new NamespaceChangeListener() {
 		public void objectAdded(NamingEvent evt) {
-            LOG.debug("A factory was successfully bound to name: " + evt.getNewBinding().getName());
+            LOG.debugf("A factory was successfully bound to name: %s", evt.getNewBinding().getName());
 		}
 		public void objectRemoved(NamingEvent evt) {
 			String name = evt.getOldBinding().getName();
@@ -86,13 +86,13 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 	};
 
 	public Object getObjectInstance(Object reference, Name name, Context ctx, Hashtable env) throws Exception {
-        LOG.debug("JNDI lookup: " + name);
+        LOG.debugf("JNDI lookup: %s", name);
 		String uid = (String) ( (Reference) reference ).get(0).getContent();
 		return getInstance(uid);
 	}
 
 	public static void addInstance(String uid, String name, SessionFactory instance, Properties properties) {
-        LOG.debug("Registered: " + uid + " (" + (name == null ? "<unnamed>" : name) + ")");
+        LOG.debugf("Registered: %s (%s)", uid, name == null ? "<unnamed>" : name);
 		INSTANCES.put(uid, instance);
 		if (name!=null) NAMED_INSTANCES.put(name, instance);
 
@@ -111,7 +111,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
                 LOG.invalidJndiName(name, ine);
 			}
 			catch (NamingException ne) {
-                LOG.warn(LOG.unableToBindFactoryToJndi(), ne);
+                LOG.unableToBindFactoryToJndi(ne);
 			}
 			catch(ClassCastException cce) {
                 LOG.initialContextDidNotImplementEventContext();
@@ -134,7 +134,7 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
                 LOG.invalidJndiName(name, ine);
 			}
 			catch (NamingException ne) {
-                LOG.warn(LOG.unableToUnbindFactoryFromJndi(), ne);
+                LOG.unableToUnbindFactoryFromJndi(ne);
 			}
 
 			NAMED_INSTANCES.remove(name);
@@ -146,21 +146,21 @@ public class SessionFactoryObjectFactory implements ObjectFactory {
 	}
 
 	public static Object getNamedInstance(String name) {
-        LOG.debug("Lookup: name=" + name);
+        LOG.debugf("Lookup: name=%s", name);
 		Object result = NAMED_INSTANCES.get(name);
 		if (result==null) {
-            LOG.debug("Not found: " + name);
-            LOG.debug(NAMED_INSTANCES.toString());
+            LOG.debugf("Not found: %s", name);
+            LOG.debugf(NAMED_INSTANCES.toString());
 		}
 		return result;
 	}
 
 	public static Object getInstance(String uid) {
-        LOG.debug("Lookup: uid=" + uid);
+        LOG.debugf("Lookup: uid=%s", uid);
 		Object result = INSTANCES.get(uid);
 		if (result==null) {
-            LOG.debug("Not found: " + uid);
-            LOG.debug(INSTANCES.toString());
+            LOG.debugf("Not found: %s", uid);
+            LOG.debugf(INSTANCES.toString());
 		}
 		return result;
 	}

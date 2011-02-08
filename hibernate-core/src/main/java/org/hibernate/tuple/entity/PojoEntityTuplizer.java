@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tuple.entity;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
@@ -32,7 +31,7 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
@@ -53,6 +52,7 @@ import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
@@ -62,8 +62,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                PojoEntityTuplizer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PojoEntityTuplizer.class.getName());
 
 	private final Class mappedClass;
 	private final Class proxyInterface;
@@ -188,7 +187,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			);
 		}
 		catch ( HibernateException he ) {
-            LOG.warn(LOG.unableToCreateProxyFactory(getEntityName()), he);
+            LOG.unableToCreateProxyFactory(getEntityName(), he);
 			pf = null;
 		}
 		return pf;

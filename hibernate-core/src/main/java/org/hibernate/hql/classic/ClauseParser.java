@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.hql.classic;
-
-import org.hibernate.QueryException;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.hibernate.QueryException;
 
 /**
  * Parses the Hibernate query into its constituent clauses.

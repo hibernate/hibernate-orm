@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.revisioninfo;
-
 import java.util.Date;
 import java.util.Set;
-
 import org.hibernate.Query;
 import org.hibernate.Session;
 

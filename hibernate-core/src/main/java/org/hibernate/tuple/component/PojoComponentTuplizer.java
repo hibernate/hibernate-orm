@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.tuple.component;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.BasicProxyFactory;

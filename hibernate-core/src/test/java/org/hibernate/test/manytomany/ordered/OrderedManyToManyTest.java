@@ -1,9 +1,6 @@
 package org.hibernate.test.manytomany.ordered;
-
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;

@@ -22,11 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.common;
-
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
@@ -34,7 +31,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.internal.ServicesRegistryImpl;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.spi.ServicesRegistry;
 
 /**

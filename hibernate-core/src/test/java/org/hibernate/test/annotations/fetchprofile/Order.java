@@ -24,7 +24,6 @@
  *
  */
 package org.hibernate.test.annotations.fetchprofile;
-
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

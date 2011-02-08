@@ -24,6 +24,7 @@
  */
 package org.hibernate.criterion;
 
+
 /**
  * @author Gavin King
  */

@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.component;
-
 import java.util.Map;
-
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.tools.query.Parameters;
 

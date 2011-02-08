@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
@@ -37,6 +36,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Basic implementation of the {@link PropertyMapping} contract.
@@ -45,8 +45,8 @@ import org.hibernate.util.StringHelper;
  */
 public abstract class AbstractPropertyMapping implements PropertyMapping {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractPropertyMapping.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractPropertyMapping.class.getName());
 
 	private final Map typesByPropertyPath = new HashMap();
 	private final Map columnsByPropertyPath = new HashMap();

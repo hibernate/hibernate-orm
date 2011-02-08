@@ -1,8 +1,7 @@
 package org.hibernate.test.annotations.genericsinheritance;
-
-import javax.persistence.MappedSuperclass;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public abstract class Child<P extends Parent> {

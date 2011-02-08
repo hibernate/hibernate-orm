@@ -1,5 +1,4 @@
 package org.hibernate.ejb.test.packaging;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

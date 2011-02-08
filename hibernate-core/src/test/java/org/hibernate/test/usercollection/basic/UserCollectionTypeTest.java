@@ -1,8 +1,6 @@
 //$Id $
 package org.hibernate.test.usercollection.basic;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.entitymode.map.subclass;
-
 import java.util.HashMap;
-
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.Session;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * TODO : javadoc

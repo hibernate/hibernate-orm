@@ -23,40 +23,36 @@
  *
  */
 package org.hibernate.loader.criteria;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.LinkedHashMap;
-
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.LockOptions;
-import org.hibernate.criterion.EnhancedProjection;
-import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.EnhancedProjection;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.hql.ast.util.SessionFactoryHelper;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.transform.CacheableResultTransformer;
-import org.hibernate.transform.TupleSubsetResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;

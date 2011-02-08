@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.sql;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.HibernateException;
-
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
 
 /**
  * Implementation of InsertSelect.

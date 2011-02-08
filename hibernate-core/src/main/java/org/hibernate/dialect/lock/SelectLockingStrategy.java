@@ -22,21 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
-
-import org.hibernate.LockOptions;
-import org.hibernate.persister.entity.Lockable;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.JDBCException;
-import org.hibernate.LockMode;
-import org.hibernate.sql.SimpleSelect;
-import org.hibernate.pretty.MessageHelper;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import org.hibernate.JDBCException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.persister.entity.Lockable;
+import org.hibernate.pretty.MessageHelper;
+import org.hibernate.sql.SimpleSelect;
 
 /**
  * A locking strategy where the locks are obtained through select statements.

@@ -1,15 +1,13 @@
 package org.hibernate.test.hql;
-
-import org.hibernate.type.IntegerType;
-import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.HibernateException;
-import org.hibernate.Hibernate;
-
+import java.io.Serializable;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.sql.Types;
-import java.io.Serializable;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.type.IntegerType;
+import org.hibernate.usertype.EnhancedUserType;
 
 /**
  * A custom type for mapping {@link org.hibernate.test.hql.Classification} instances

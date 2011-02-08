@@ -23,17 +23,17 @@
  *
  */
 package org.hibernate.jdbc;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.util.JDBCExceptionReporter;
+import org.jboss.logging.Logger;
 
 /**
  * Holds various often used {@link Expectation} definitions.
@@ -42,8 +42,7 @@ import org.hibernate.util.JDBCExceptionReporter;
  */
 public class Expectations {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                Expectations.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Expectations.class.getName());
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;
@@ -72,7 +71,7 @@ public class Expectations {
 		}
 
 		private void checkBatched(int rowCount, int batchPosition) {
-            if (rowCount == -2) LOG.debug("Success of batch update unknown: " + batchPosition);
+            if (rowCount == -2) LOG.debugf("Success of batch update unknown: %s", batchPosition);
             else if (rowCount == -3) throw new BatchFailedException("Batch update failed: " + batchPosition);
 			else {
                 if (expectedRowCount > rowCount) throw new StaleStateException(

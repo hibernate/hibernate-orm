@@ -22,15 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.persister.entity;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
-
 import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;

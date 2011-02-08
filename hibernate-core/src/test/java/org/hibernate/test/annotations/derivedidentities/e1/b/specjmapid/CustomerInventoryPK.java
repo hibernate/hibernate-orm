@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid;
-
 import java.io.Serializable;
 
 

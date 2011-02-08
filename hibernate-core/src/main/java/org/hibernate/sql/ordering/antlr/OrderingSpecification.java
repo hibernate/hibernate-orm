@@ -24,6 +24,7 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
+
 /**
  * Models an ordering specification (<tt>ASCENDING</tt> or <tt>DESCENDING</tt>) within a {@link SortSpecification}.
  *

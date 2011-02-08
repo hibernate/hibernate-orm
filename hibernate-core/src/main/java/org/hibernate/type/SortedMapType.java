@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.TreeMap;
-
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
 import org.hibernate.collection.PersistentCollection;

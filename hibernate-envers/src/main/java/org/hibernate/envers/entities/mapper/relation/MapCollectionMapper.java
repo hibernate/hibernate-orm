@@ -22,18 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
-
+import org.hibernate.collection.PersistentCollection;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.MapCollectionInitializor;
 import org.hibernate.envers.reader.AuditReaderImplementor;
-
-import org.hibernate.collection.PersistentCollection;
 
 /**
  * @author Adam Warski (adam at warski dot org)

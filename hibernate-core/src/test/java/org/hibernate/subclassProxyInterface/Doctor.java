@@ -23,6 +23,7 @@
  */
 package org.hibernate.subclassProxyInterface;
 
+
 /**
  * @author Steve Ebersole
  */

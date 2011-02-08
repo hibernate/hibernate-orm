@@ -1,12 +1,10 @@
 //$Id: Glarch.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.hibernate.CallbackException;
 import org.hibernate.Session;
 import org.hibernate.classic.Lifecycle;

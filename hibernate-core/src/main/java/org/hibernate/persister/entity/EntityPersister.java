@@ -23,16 +23,13 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import java.io.Serializable;
 import java.util.Map;
-
+import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
-import org.hibernate.EntityMode;
 import org.hibernate.LockOptions;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.MappingException;
 import org.hibernate.cache.OptimisticCacheSource;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
@@ -42,6 +39,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 

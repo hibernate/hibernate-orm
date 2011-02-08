@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.transaction;
-
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
@@ -8,7 +7,6 @@ import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TransactionRequiredException;
-
 import org.hibernate.Session;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.test.TestCase;

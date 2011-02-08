@@ -23,35 +23,32 @@
  *
  */
 package org.hibernate.engine;
-
+import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.sql.Connection;
-
 import javax.transaction.TransactionManager;
-
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.engine.query.QueryPlanCache;
-import org.hibernate.engine.profile.FetchProfile;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.cache.QueryCache;
-import org.hibernate.cache.UpdateTimestampsCache;
 import org.hibernate.cache.Region;
+import org.hibernate.cache.UpdateTimestampsCache;
 import org.hibernate.cfg.Settings;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;

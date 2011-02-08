@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.jboss.logging.Logger;
 import antlr.collections.AST;
 
 /**
@@ -37,8 +37,7 @@ import antlr.collections.AST;
  */
 public class UpdateStatement extends AbstractRestrictableStatement {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                UpdateStatement.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, UpdateStatement.class.getName());
 
 	/**
 	 * @see org.hibernate.hql.ast.tree.Statement#getStatementType()
@@ -60,7 +59,7 @@ public class UpdateStatement extends AbstractRestrictableStatement {
 	}
 
 	@Override
-    protected Logger getLog() {
+    protected HibernateLogger getLog() {
         return LOG;
 	}
 

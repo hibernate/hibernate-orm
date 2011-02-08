@@ -22,14 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.interfaces.components;
-
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import org.hibernate.envers.Audited;
 import org.hibernate.annotations.Target;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

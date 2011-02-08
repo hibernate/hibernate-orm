@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.entities.components;
 
+
 /**
  * 
  * @author Erik-Berndt Scheper

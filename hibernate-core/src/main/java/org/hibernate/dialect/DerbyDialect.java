@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.lang.reflect.Method;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
@@ -42,8 +42,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class DerbyDialect extends DB2Dialect {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DerbyDialect.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, DerbyDialect.class.getName());
 
 	private int driverVersionMajor;
 	private int driverVersionMinor;

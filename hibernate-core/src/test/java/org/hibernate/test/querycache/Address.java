@@ -1,6 +1,7 @@
 // $Id: Address.java 7996 2005-08-22 14:49:57Z steveebersole $
 package org.hibernate.test.querycache;
 
+
 /**
  * Implementation of Address.
  *

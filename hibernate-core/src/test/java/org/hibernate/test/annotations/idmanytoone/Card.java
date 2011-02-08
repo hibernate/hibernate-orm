@@ -1,14 +1,13 @@
 //$Id$
 package org.hibernate.test.annotations.idmanytoone;
-
 import java.io.Serializable;
 import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-import javax.persistence.CascadeType;
-import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 
 /**

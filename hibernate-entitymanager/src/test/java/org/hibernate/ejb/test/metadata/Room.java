@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-
 import java.math.BigDecimal;
 import javax.persistence.Embeddable;
 

@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
-import org.hibernate.bytecode.ReflectionOptimizer;
-import org.hibernate.PropertyAccessException;
-
 import java.io.Serializable;
+import org.hibernate.PropertyAccessException;
+import org.hibernate.bytecode.ReflectionOptimizer;
 
 /**
  * The {@link ReflectionOptimizer.AccessOptimizer} implementation for Javassist

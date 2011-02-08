@@ -1,10 +1,7 @@
 //$Id: CollectionTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.collection.original;
-
 import java.sql.SQLException;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;

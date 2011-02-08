@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.classic.Lifecycle;
@@ -39,13 +38,13 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
-import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.event.SaveOrUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default listener used by Hibernate for handling save-update
@@ -56,8 +55,8 @@ import org.hibernate.proxy.HibernateProxy;
  */
 public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener implements SaveOrUpdateEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractBatchImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultSaveOrUpdateEventListener.class.getName());
 
 	/**
 	 * Handle the given update event.
@@ -329,9 +328,9 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 
 	protected boolean invokeUpdateLifecycle(Object entity, EntityPersister persister, EventSource source) {
 		if ( persister.implementsLifecycle( source.getEntityMode() ) ) {
-            LOG.debug("Calling onUpdate()");
+            LOG.debugf("Calling onUpdate()");
             if (((Lifecycle)entity).onUpdate(source)) {
-                LOG.debug("Update vetoed by onUpdate()");
+                LOG.debugf("Update vetoed by onUpdate()");
 				return true;
 			}
 		}

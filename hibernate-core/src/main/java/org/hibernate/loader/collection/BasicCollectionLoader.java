@@ -23,13 +23,13 @@
  *
  */
 package org.hibernate.loader.collection;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.jboss.logging.Logger;
 
 /**
  * Loads a collection of values or a many-to-many association.
@@ -42,8 +42,7 @@ import org.hibernate.persister.collection.QueryableCollection;
  */
 public class BasicCollectionLoader extends CollectionLoader {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BasicCollectionLoader.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicCollectionLoader.class.getName());
 
 	public BasicCollectionLoader(
 			QueryableCollection collectionPersister,
@@ -79,6 +78,6 @@ public class BasicCollectionLoader extends CollectionLoader {
 
 		postInstantiate();
 
-        LOG.debug("Static select for collection " + collectionPersister.getRole() + ": " + getSQLString());
+        LOG.debugf("Static select for collection %s: %s", collectionPersister.getRole(), getSQLString());
 	}
 }

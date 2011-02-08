@@ -1,10 +1,8 @@
 package org.hibernate.test.annotations.naturalid;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-
 import org.hibernate.annotations.NaturalId;
 
 @Entity

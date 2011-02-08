@@ -22,23 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
-
-import java.io.Serializable;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
-
 import org.hibernate.EntityMode;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.transform.CacheableResultTransformer;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.util.EqualsHelper;
 import org.hibernate.util.CollectionHelper;
+import org.hibernate.util.EqualsHelper;
 
 /**
  * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses

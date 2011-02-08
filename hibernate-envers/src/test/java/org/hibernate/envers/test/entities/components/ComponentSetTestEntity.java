@@ -22,16 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components;
-
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
 import org.hibernate.envers.Audited;
-
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * @author Adam Warski (adam at warski dot org)

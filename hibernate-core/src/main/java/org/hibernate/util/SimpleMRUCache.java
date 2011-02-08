@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.util;
-
-import org.apache.commons.collections.map.LRUMap;
-
-import java.io.Serializable;
 import java.io.IOException;
+import java.io.Serializable;
+import org.apache.commons.collections.map.LRUMap;
 
 /**
  * Cache following a "Most Recently Used" (MRU) algorithm for maintaining a

@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.unionsubclass.alias;
 
+
 /**
  * 
  * @author Strong Liu <stliu@redhat.com>

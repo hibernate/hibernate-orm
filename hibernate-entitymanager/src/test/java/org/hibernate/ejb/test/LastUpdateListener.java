@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test;
-
 import java.util.Date;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;

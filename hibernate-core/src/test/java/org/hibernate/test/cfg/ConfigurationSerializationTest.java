@@ -20,18 +20,15 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.test.cfg;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.util.SerializationHelper;
-import org.hibernate.SessionFactory;
 
 /**
  * Copied over mostly from ConfigurationPerformanceTest

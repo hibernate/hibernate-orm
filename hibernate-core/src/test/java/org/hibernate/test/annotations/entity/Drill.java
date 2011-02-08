@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.entity;
-
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;

@@ -23,18 +23,15 @@
  */
 
 package org.hibernate.envers.test.integration.inheritance.joined.primarykeyjoin;
-
 import java.util.Arrays;
 import javax.persistence.EntityManager;
-
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
+import org.hibernate.mapping.Column;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.testng.Assert;
-
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.mapping.Column;
 
 /**
  * @author Adam Warski (adam at warski dot org)

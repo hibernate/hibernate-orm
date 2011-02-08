@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.loader.hql;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,32 +31,30 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
-import org.hibernate.hql.ast.tree.FromElement;
-import org.hibernate.hql.ast.tree.SelectClause;
-import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.AggregatedSelectExpression;
+import org.hibernate.hql.ast.tree.FromElement;
+import org.hibernate.hql.ast.tree.QueryNode;
+import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.impl.IteratorImpl;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;

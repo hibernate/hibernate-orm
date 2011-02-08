@@ -23,19 +23,17 @@
  *
  */
 package org.hibernate.loader.collection;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
 

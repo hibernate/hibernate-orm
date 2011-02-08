@@ -22,19 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany.detached;
-
+import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import java.util.Arrays;
+import javax.persistence.EntityManager;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity1;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefEdEntity2;
 import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColumnBidirectionalRefIngEntity;
-import static org.hibernate.envers.test.tools.TestTools.checkList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 import org.testng.annotations.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
 
 /**
  * Test for a double "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn

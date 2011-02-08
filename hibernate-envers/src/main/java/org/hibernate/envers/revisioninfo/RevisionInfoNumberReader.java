@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.revisioninfo;
-
-import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.envers.entities.PropertyData;
-
+import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.property.Getter;
 
 /**

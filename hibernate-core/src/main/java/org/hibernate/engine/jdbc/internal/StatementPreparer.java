@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,13 +29,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.ScrollMode;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Prepares statements.
@@ -45,7 +45,7 @@ import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
  */
 public class StatementPreparer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StatementPreparer.class.getName());
 
 	// TODO: Move JDBC settings into a different object...
 	private final Settings settings;

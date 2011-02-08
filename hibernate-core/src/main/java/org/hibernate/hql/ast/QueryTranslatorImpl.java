@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -63,6 +62,7 @@ import org.hibernate.type.Type;
 import org.hibernate.util.IdentitySet;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.ANTLRException;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
@@ -75,8 +75,7 @@ import antlr.collections.AST;
  */
 public class QueryTranslatorImpl implements FilterTranslator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QueryTranslatorImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryTranslatorImpl.class.getName());
 
 	private SessionFactoryImplementor factory;
 
@@ -162,7 +161,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private synchronized void doCompile(Map replacements, boolean shallow, String collectionRole) {
 		// If the query is already compiled, skip the compilation.
 		if ( compiled ) {
-            LOG.debug("compile() : The query is already compiled, skipping...");
+            LOG.debugf("compile() : The query is already compiled, skipping...");
 			return;
 		}
 
@@ -230,8 +229,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			gen.statement( sqlAst );
 			sql = gen.getSQL();
             if (LOG.isDebugEnabled()) {
-                LOG.debug("HQL: " + hql);
-                LOG.debug("SQL: " + sql);
+                LOG.debugf("HQL: %s", hql);
+                LOG.debugf("SQL: %s", sql);
 			}
 			gen.getParseErrorHandler().throwQueryException();
 			collectedParameterSpecifications = gen.getCollectedParameters();
@@ -247,7 +246,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
         if (LOG.isDebugEnabled()) {
 			ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
-            LOG.debug(printer.showAsString(w.getAST(), "--- SQL AST ---"));
+            LOG.debugf(printer.showAsString(w.getAST(), "--- SQL AST ---"));
 		}
 
 		w.getParseErrorHandler().throwQueryException();
@@ -260,7 +259,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		HqlParser parser = HqlParser.getInstance( hql );
 		parser.setFilter( filter );
 
-        LOG.debug("parse() - HQL: " + hql);
+        LOG.debugf("parse() - HQL: %s", hql);
 		parser.statement();
 
 		AST hqlAst = parser.getAST();
@@ -278,7 +277,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	void showHqlAst(AST hqlAst) {
         if (LOG.isDebugEnabled()) {
 			ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class );
-            LOG.debug(printer.showAsString(hqlAst, "--- HQL AST ---"));
+            LOG.debugf(printer.showAsString(hqlAst, "--- HQL AST ---"));
 		}
 	}
 

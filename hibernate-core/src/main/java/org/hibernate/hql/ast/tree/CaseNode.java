@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
-
 import antlr.SemanticException;
 
 /**

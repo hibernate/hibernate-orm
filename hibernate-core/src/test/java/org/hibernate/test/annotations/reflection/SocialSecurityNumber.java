@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
-
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 

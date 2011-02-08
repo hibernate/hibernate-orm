@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
@@ -33,10 +31,10 @@ import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.ForeignKeys;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.LockEvent;
 import org.hibernate.event.LockEventListener;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

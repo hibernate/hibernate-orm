@@ -23,12 +23,12 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
-
 import java.util.ArrayList;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.sql.Template;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.CommonAST;
 import antlr.TokenStream;
 import antlr.collections.AST;
@@ -40,8 +40,7 @@ import antlr.collections.AST;
  */
 public class OrderByFragmentParser extends GeneratedOrderByFragmentParser {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                OrderByFragmentParser.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, OrderByFragmentParser.class.getName());
 
 	private final TranslationContext context;
 

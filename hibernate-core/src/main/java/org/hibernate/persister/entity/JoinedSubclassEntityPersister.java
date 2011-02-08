@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -50,7 +48,6 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.type.AbstractType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 

@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
-
 import org.hibernate.envers.Audited;
 
 /**

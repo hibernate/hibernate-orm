@@ -1,6 +1,5 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
-
 import static org.hibernate.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;

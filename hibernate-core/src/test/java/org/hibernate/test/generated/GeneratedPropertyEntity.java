@@ -1,6 +1,7 @@
 // $Id: GeneratedPropertyEntity.java 7800 2005-08-10 12:13:00Z steveebersole $
 package org.hibernate.test.generated;
 
+
 /**
  * Implementation of GeneratedPropertyEntity.
  *

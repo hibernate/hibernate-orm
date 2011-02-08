@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-
 import java.sql.Blob;
 import java.sql.Clob;
 

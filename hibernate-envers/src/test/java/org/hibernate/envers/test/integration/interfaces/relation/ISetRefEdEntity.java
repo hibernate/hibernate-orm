@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.interfaces.relation;
 
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */

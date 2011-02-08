@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
@@ -43,14 +42,14 @@ import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
  */
 public final class QueryParameters {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QueryParameters.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryParameters.class.getName());
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;

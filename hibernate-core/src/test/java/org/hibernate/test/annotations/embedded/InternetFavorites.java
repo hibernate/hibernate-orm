@@ -1,8 +1,7 @@
 package org.hibernate.test.annotations.embedded;
-
+import java.util.Collection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
-import java.util.Collection;
 
 @Embeddable
 public class InternetFavorites {

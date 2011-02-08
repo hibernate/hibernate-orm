@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.naturalid;
-
 import java.util.List;
-
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

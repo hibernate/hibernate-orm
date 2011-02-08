@@ -1,9 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.join;
-
 import java.util.ArrayList;
 import java.util.Date;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;

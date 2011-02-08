@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.util;
-
 import java.util.Iterator;
 
 /**

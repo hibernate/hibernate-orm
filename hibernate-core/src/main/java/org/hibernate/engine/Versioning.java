@@ -23,10 +23,10 @@
  *
  */
 package org.hibernate.engine;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
+import org.jboss.logging.Logger;
 
 /**
  * Utilities for dealing with optimisitic locking values.
@@ -57,8 +57,7 @@ public final class Versioning {
 	 */
 	public static final int OPTIMISTIC_LOCK_DIRTY = 1;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                Versioning.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Versioning.class.getName());
 
 	/**
 	 * Private constructor disallowing instantiation.

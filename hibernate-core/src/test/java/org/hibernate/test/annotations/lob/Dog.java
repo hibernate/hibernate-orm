@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.lob;
-
 import java.io.Serializable;
 
 public class Dog implements Serializable {

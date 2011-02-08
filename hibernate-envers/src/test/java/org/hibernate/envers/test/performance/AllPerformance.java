@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.performance;
-
 import java.io.IOException;
 
 public class AllPerformance {

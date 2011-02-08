@@ -1,5 +1,4 @@
 package org.hibernate.test.hql;
-
 import java.util.HashSet;
 import java.util.Set;
 

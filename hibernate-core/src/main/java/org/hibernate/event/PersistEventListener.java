@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.event;
-
 import java.io.Serializable;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 
 /**

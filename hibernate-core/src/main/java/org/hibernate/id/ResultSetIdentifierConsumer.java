@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-
-import java.sql.ResultSet;
 import java.io.Serializable;
+import java.sql.ResultSet;
 
 /**
  * An optional contract for {@link org.hibernate.type.Type} or

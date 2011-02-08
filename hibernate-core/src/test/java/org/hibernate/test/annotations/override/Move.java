@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.override;
-
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;

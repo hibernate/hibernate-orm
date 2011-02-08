@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.bytecode;
-
-import org.hibernate.bytecode.util.ByteCodeHelper;
-
 import java.io.InputStream;
+import org.hibernate.bytecode.util.ByteCodeHelper;
 
 /**
  * A specialized classloader which performs bytecode enhancement on class

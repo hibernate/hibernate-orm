@@ -23,17 +23,15 @@
  *
  */
 package org.hibernate.loader.custom.sql;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.hibernate.QueryException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.ParameterParser;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.SQLLoadable;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Gavin King

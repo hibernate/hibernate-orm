@@ -1,6 +1,7 @@
 //$Id: $
 package org.hibernate.test.id;
 
+
 /**
  * @author Emmanuel Bernard
  */

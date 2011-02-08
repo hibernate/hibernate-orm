@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tuple.entity;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +31,7 @@ import org.dom4j.Element;
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -47,6 +46,7 @@ import org.hibernate.proxy.dom4j.Dom4jProxyFactory;
 import org.hibernate.tuple.Dom4jInstantiator;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.CompositeType;
+import org.jboss.logging.Logger;
 
 /**
  * An {@link EntityTuplizer} specific to the dom4j entity mode.
@@ -56,8 +56,7 @@ import org.hibernate.type.CompositeType;
  */
 public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                Dom4jEntityTuplizer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Dom4jEntityTuplizer.class.getName());
 
 	private Map inheritenceNodeNameMap = new HashMap();
 
@@ -160,7 +159,7 @@ public class Dom4jEntityTuplizer extends AbstractEntityTuplizer {
 			);
 		}
 		catch ( HibernateException he ) {
-            LOG.warn(LOG.unableToCreateProxyFactory(getEntityName()), he);
+            LOG.unableToCreateProxyFactory(getEntityName(), he);
 			pf = null;
 		}
 		return pf;

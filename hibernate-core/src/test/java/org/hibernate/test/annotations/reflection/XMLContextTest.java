@@ -1,12 +1,10 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import junit.framework.TestCase;
 import org.dom4j.io.SAXReader;
 import org.hibernate.cfg.EJB3DTDEntityResolver;

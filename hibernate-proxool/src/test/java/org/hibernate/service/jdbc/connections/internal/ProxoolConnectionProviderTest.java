@@ -22,15 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-
+import junit.framework.TestCase;
 import org.hibernate.cfg.Environment;
 import org.logicalcobwebs.proxool.ProxoolFacade;
-
-import junit.framework.TestCase;
 
 /**
  * Test to verify connection pools are closed, and that only the managed one is closed.

@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.hql;
-
-import org.hibernate.type.Type;
 import java.util.Set;
+import org.hibernate.type.Type;
 
 /**
  * Defines available information about the parameters encountered during

@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.impl;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.SessionImplementor;

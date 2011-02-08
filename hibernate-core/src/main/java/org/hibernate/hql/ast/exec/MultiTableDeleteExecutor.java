@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.hql.ast.exec;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.HqlSqlWalker;
@@ -38,6 +37,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of MultiTableDeleteExecutor.
@@ -46,8 +46,8 @@ import org.hibernate.util.StringHelper;
  */
 public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                MultiTableDeleteExecutor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       MultiTableDeleteExecutor.class.getName());
 
 	private final Queryable persister;
 	private final String idInsertSelect;

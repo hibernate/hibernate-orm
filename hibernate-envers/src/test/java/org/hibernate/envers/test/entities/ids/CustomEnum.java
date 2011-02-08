@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.test.entities.ids;
 
+
 /**
  * @author Slawek Garwol (slawekgarwol at gmail dot com)
  */

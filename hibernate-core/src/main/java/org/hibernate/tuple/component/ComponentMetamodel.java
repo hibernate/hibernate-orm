@@ -23,17 +23,15 @@
  *
  */
 package org.hibernate.tuple.component;
-
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
-import org.hibernate.HibernateException;
-import org.hibernate.tuple.StandardProperty;
-import org.hibernate.tuple.PropertyFactory;
-
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
+import org.hibernate.HibernateException;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Property;
+import org.hibernate.tuple.PropertyFactory;
+import org.hibernate.tuple.StandardProperty;
 
 /**
  * Centralizes metamodel information about a component.

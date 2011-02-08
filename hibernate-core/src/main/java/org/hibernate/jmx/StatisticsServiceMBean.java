@@ -1,6 +1,5 @@
 //$Id: StatisticsServiceMBean.java 4332 2004-08-15 12:55:28Z oneovthafew $
 package org.hibernate.jmx;
-
 import org.hibernate.stat.Statistics;
 
 /**

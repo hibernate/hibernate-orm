@@ -1,14 +1,13 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
-import javax.persistence.PreUpdate;
 import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

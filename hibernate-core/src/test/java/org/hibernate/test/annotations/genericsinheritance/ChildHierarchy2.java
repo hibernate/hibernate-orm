@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.genericsinheritance;
-
 import javax.persistence.MappedSuperclass;
 
 @MappedSuperclass

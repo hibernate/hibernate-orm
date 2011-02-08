@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode.javassist;
 
+
 /**
  * The interface defining how interception of a field should be handled.
  *

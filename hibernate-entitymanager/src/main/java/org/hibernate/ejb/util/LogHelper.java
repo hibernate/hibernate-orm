@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.util;
-
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.List;

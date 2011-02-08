@@ -22,15 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * A {@link org.hibernate.dialect.function.SQLFunction} providing support for implementing TRIM functionality

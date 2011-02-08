@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.transaction.synchronization;
-
 import javax.transaction.Synchronization;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * The {@link Synchronization} implementation Hibernate registers with the JTA {@link javax.transaction.Transaction}
@@ -34,8 +34,8 @@ import org.hibernate.Logger;
  */
 public class HibernateSynchronizationImpl implements Synchronization {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HibernateSynchronizationImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       HibernateSynchronizationImpl.class.getName());
 
 	private final CallbackCoordinator coordinator;
 

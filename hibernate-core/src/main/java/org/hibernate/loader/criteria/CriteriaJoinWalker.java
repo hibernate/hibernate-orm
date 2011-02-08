@@ -23,19 +23,17 @@
  *
  */
 package org.hibernate.loader.criteria;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
 import org.hibernate.engine.CascadeStyle;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.loader.PropertyPath;

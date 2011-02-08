@@ -21,7 +21,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -60,7 +59,6 @@ import javax.sql.DataSource;
 import org.dom4j.Element;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
@@ -96,6 +94,7 @@ import org.hibernate.util.StringHelper;
 import org.hibernate.util.xml.MappingReader;
 import org.hibernate.util.xml.OriginImpl;
 import org.hibernate.util.xml.XmlDocument;
+import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
@@ -118,7 +117,8 @@ import org.xml.sax.InputSource;
  */
 public class Ejb3Configuration implements Serializable, Referenceable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Ejb3Configuration.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           Ejb3Configuration.class.getName());
 	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();
 	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
 	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";
@@ -185,7 +185,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(PersistenceMetadata metadata, Map overridesIn) {
-        LOG.debug("Creating Factory: " + metadata.getName());
+        LOG.debugf("Creating Factory: %s", metadata.getName());
 
 		Map overrides = new HashMap();
 		if ( overridesIn != null ) {
@@ -295,7 +295,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(String persistenceUnitName, Map integration) {
 		try {
-            LOG.debug("Look up for persistence unit: " + persistenceUnitName);
+            LOG.debugf("Look up for persistence unit: %s", persistenceUnitName);
 			integration = integration == null ?
 					CollectionHelper.EMPTY_MAP :
 					Collections.unmodifiableMap( integration );
@@ -508,7 +508,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public Ejb3Configuration configure(PersistenceUnitInfo info, Map integration) {
-        if (LOG.isDebugEnabled()) LOG.debug("Processing " + LogHelper.logPersistenceUnitInfo(info));
+        if (LOG.isDebugEnabled()) LOG.debugf("Processing %s", LogHelper.logPersistenceUnitInfo(info));
         else LOG.processingPersistenceUnitInfoName(info.getPersistenceUnitName());
 
 		// Spec says the passed map may be null, so handle that to make further processing easier...
@@ -758,7 +758,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					fileInputStream.close();
 				}
 				catch (IOException ioe) {
-                    LOG.warn(LOG.unableToCloseInputStream(), ioe);
+                    LOG.unableToCloseInputStream(ioe);
 				}
 			}
 		}
@@ -823,7 +823,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			if ( "class".equalsIgnoreCase( element ) ) detectClasses = true;
 			if ( "hbm".equalsIgnoreCase( element ) ) detectHbm = true;
 		}
-        LOG.debug("Detect class: " + detectClasses + "; detect hbm: " + detectHbm);
+        LOG.debugf("Detect class: %s; detect hbm: %s", detectClasses, detectHbm);
 		context.detectClasses( detectClasses ).detectHbmFiles( detectHbm );
 	}
 
@@ -933,7 +933,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	public Reference getReference() throws NamingException {
-        LOG.debug("Returning a Reference to the Ejb3Configuration");
+        LOG.debugf("Returning a Reference to the Ejb3Configuration");
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ObjectOutput out = null;
 		byte[] serialized;
@@ -1266,7 +1266,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	private void addSecurity(List<String> keys, Map properties, Map workingVars) {
-        LOG.debug("Adding security");
+        LOG.debugf("Adding security");
 		if ( !properties.containsKey( AvailableSettings.JACC_CONTEXT_ID ) ) {
 			throw new PersistenceException( getExceptionHeader() +
 					"Entities have been configured for JACC, but "
@@ -1311,12 +1311,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				catch (ClassNotFoundException e) {
 					pkg = null;
 				}
-				if ( pkg == null ) {
-					throw new PersistenceException( getExceptionHeader() +  "class or package not found", cnfe );
-				}
-				else {
-					cfg.addPackage( name );
-				}
+                if (pkg == null) throw new PersistenceException(getExceptionHeader() + "class or package not found", cnfe);
+                else cfg.addPackage(name);
 			}
 		}
 	}

@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -37,6 +36,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * <b>sequence</b><br>
@@ -52,8 +52,7 @@ import org.hibernate.type.Type;
  */
 public class SequenceGenerator implements PersistentIdentifierGenerator, Configurable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SequenceGenerator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SequenceGenerator.class.getName());
 
 	/**
 	 * The sequence parameter
@@ -113,7 +112,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 					rs.next();
 					IntegralDataTypeHolder result = buildHolder();
 					result.initialize( rs, 1 );
-                    LOG.debug("Sequence identifier generated: " + result);
+                    LOG.debugf("Sequence identifier generated: %s", result);
 					return result;
 				}
 				finally {

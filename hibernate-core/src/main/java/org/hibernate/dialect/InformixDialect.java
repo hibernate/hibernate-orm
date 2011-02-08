@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.sql.SQLException;
 import java.sql.Types;
-
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.exception.JDBCExceptionHelper;

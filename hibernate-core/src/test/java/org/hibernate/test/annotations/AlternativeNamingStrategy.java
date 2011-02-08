@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.util.StringHelper;

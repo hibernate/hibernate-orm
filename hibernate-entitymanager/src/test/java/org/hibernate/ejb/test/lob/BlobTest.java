@@ -1,15 +1,11 @@
 //$Id$
 package org.hibernate.ejb.test.lob;
-
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.sql.Blob;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
-
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.test.TestCase;

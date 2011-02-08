@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.logical;
 
+
 /**
  * Models the notion of a component (what JPA calls an Embeddable).
  * <p/>

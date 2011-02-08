@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;

@@ -23,12 +23,12 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
+import org.jboss.logging.Logger;
 import antlr.RecognitionException;
 
 /**
@@ -36,8 +36,7 @@ import antlr.RecognitionException;
  */
 public class ErrorCounter implements ParseErrorHandler {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ErrorCounter.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ErrorCounter.class.getName());
 
 	private List errorList = new ArrayList();
 	private List warningList = new ArrayList();
@@ -59,7 +58,7 @@ public class ErrorCounter implements ParseErrorHandler {
 	}
 
 	public void reportWarning(String message) {
-        LOG.debug(message);
+        LOG.debugf(message);
 		warningList.add( message );
 	}
 
@@ -78,6 +77,6 @@ public class ErrorCounter implements ParseErrorHandler {
             if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert((RecognitionException)recognitionExceptions.get(0));
             throw new QueryException(getErrorString());
         }
-        LOG.debug("throwQueryException() : no errors");
+        LOG.debugf("throwQueryException() : no errors");
 	}
 }

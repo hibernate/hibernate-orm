@@ -1,13 +1,11 @@
 // $Id: ASTUtilTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.ast;
-
-import antlr.ASTFactory;
-import antlr.collections.AST;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.testing.junit.UnitTestCase;
+import antlr.ASTFactory;
+import antlr.collections.AST;
 
 /**
  * Unit test for ASTUtil.

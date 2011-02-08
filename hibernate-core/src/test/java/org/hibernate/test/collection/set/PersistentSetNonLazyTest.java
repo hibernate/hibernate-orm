@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.collection.set;
-
 import junit.framework.Test;
-
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**

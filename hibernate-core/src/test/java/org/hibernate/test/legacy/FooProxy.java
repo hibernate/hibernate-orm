@@ -1,5 +1,6 @@
 package org.hibernate.test.legacy;
 
+
 public interface FooProxy {
 	public void setNullComponent(FooComponent arg0) throws Exception;
 	public FooComponent getNullComponent();

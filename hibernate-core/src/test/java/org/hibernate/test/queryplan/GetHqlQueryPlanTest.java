@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.test.queryplan;
-
 import java.util.Map;
-
+import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.Session;
 
 /**
  * Tests for HQL query plans

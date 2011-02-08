@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.ejb.test.query;
-
 import javax.persistence.EntityManager;
-
-import org.hibernate.ejb.test.TestCase;
 import org.hibernate.ejb.criteria.components.Client;
+import org.hibernate.ejb.test.TestCase;
 
 /**
  * Tests related to specifying joins on components (embedded values).

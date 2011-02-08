@@ -22,19 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.manytomany.ternary;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-
+import org.hibernate.annotations.MapKeyManyToMany;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.envers.test.entities.StrTestEntity;
-
-import org.hibernate.annotations.MapKeyManyToMany;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -1,17 +1,17 @@
 //$Id: HibernateService.java 6100 2005-03-17 10:48:03Z turin42 $
 package org.hibernate.jmx;
-
 import java.util.Map;
 import java.util.Properties;
 import javax.naming.InitialContext;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.ExternalSessionFactoryConfig;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -25,8 +25,7 @@ import org.hibernate.util.ExternalSessionFactoryConfig;
  */
 public class HibernateService extends ExternalSessionFactoryConfig implements HibernateServiceMBean {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HibernateService.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HibernateService.class.getName());
 
 	private String boundName;
 	private Properties properties = new Properties();
@@ -51,7 +50,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 			//context.unbind(boundName);
 		}
 		catch (Exception e) {
-            LOG.warn(LOG.unableToStopHibernateService(), e);
+            LOG.unableToStopHibernateService(e);
 		}
 	}
 

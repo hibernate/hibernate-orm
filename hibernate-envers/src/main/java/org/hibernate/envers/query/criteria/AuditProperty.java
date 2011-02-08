@@ -23,17 +23,15 @@
  */
 
 package org.hibernate.envers.query.criteria;
-
-import org.hibernate.envers.query.property.PropertyNameGetter;
+import java.util.Collection;
+import org.hibernate.criterion.MatchMode;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.order.PropertyAuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.PropertyAuditProjection;
+import org.hibernate.envers.query.property.PropertyNameGetter;
 import org.hibernate.envers.tools.Triple;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.criterion.MatchMode;
-
-import java.util.Collection;
 
 /**
  * Create restrictions, projections and specify order for a property of an audited entity.

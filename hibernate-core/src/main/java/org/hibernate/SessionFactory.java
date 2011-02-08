@@ -23,18 +23,15 @@
  *
  */
 package org.hibernate;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
-
 import javax.naming.Referenceable;
-
+import org.hibernate.engine.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
-import org.hibernate.engine.FilterDefinition;
 
 /**
  * The main contract here is the creation of {@link Session} instances.  Usually

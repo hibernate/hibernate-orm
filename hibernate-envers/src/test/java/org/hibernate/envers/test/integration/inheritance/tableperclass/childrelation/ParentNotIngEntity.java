@@ -23,13 +23,11 @@
  */
 
 package org.hibernate.envers.test.integration.inheritance.tableperclass.childrelation;
-
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-
 import org.hibernate.envers.Audited;
 
 /**

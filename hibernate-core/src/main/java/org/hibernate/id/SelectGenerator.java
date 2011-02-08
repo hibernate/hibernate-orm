@@ -23,21 +23,19 @@
  *
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
-
-import org.hibernate.MappingException;
 import org.hibernate.HibernateException;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.id.insert.IdentifierGeneratingInsert;
-import org.hibernate.id.insert.AbstractSelectingDelegate;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.ValueInclusion;
+import org.hibernate.id.insert.AbstractSelectingDelegate;
+import org.hibernate.id.insert.IdentifierGeneratingInsert;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.type.Type;
 
 /**

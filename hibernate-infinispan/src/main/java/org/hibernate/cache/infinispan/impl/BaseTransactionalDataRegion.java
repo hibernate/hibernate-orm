@@ -1,7 +1,5 @@
 package org.hibernate.cache.infinispan.impl;
-
 import javax.transaction.TransactionManager;
-
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TransactionalDataRegion;

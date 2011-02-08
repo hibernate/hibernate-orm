@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -57,6 +56,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -67,8 +67,7 @@ import org.hibernate.type.Type;
  */
 public final class AuditMetadataGenerator {
 
-    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
-                                                                                     AuditMetadataGenerator.class.getPackage().getName());
+    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, AuditMetadataGenerator.class.getName());
 
     private final Configuration cfg;
     private final GlobalConfiguration globalCfg;
@@ -382,8 +381,8 @@ public final class AuditMetadataGenerator {
             if (idMapper == null) {
                 // Unsupported id mapping, e.g. key-many-to-one. If the entity is used in auditing, an exception
                 // will be thrown later on.
-                LOG.debug("Unable to create auditing id mapping for entity " + entityName
-                          + ", because of an unsupported Hibernate id mapping (e.g. key-many-to-one).");
+                LOG.debugf("Unable to create auditing id mapping for entity %s, because of an unsupported Hibernate id mapping (e.g. key-many-to-one)",
+                           entityName);
                 return;
             }
 
@@ -396,7 +395,7 @@ public final class AuditMetadataGenerator {
 		}
 
         String entityName = pc.getEntityName();
-        LOG.debug("Generating first-pass auditing mapping for entity " + entityName + ".");
+        LOG.debugf("Generating first-pass auditing mapping for entity %s", entityName);
 
         String auditEntityName = verEntCfg.getAuditEntityName(entityName);
         String auditTableName = verEntCfg.getAuditTableName(entityName, pc.getTable().getName());
@@ -472,7 +471,7 @@ public final class AuditMetadataGenerator {
     public void generateSecondPass(PersistentClass pc, ClassAuditingData auditingData,
                                    EntityXmlMappingData xmlMappingData) {
         String entityName = pc.getEntityName();
-        LOG.debug("Generating second-pass auditing mapping for entity " + entityName + ".");
+        LOG.debugf("Generating second-pass auditing mapping for entity %s", entityName);
 
         CompositeMapperBuilder propertyMapper = entitiesConfigurations.get(entityName).getPropertyMapper();
 

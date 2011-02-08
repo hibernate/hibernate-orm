@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate;
+import org.jboss.logging.Logger;
 
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.
@@ -33,7 +34,7 @@ public class AssertionFailure extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, AssertionFailure.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AssertionFailure.class.getName());
 
     public AssertionFailure( String s ) {
         super(s);

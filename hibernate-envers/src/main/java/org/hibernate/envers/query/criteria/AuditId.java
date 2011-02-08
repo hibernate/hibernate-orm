@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.envers.query.criteria;
-
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.query.projection.PropertyAuditProjection;
 import org.hibernate.envers.query.property.OriginalIdPropertyName;

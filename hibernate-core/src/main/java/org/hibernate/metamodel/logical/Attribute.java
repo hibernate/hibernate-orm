@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.logical;
+import javax.persistence.metamodel.PluralAttribute;
 
 /**
  * Desribes an attribute.

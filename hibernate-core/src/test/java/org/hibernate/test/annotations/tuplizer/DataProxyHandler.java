@@ -1,10 +1,9 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
-
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.io.Serializable;
 
 /**
  * A simple {@link java.lang.reflect.InvocationHandler} to act as the handler for our generated

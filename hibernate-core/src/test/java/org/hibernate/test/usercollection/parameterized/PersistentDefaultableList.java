@@ -1,7 +1,5 @@
 package org.hibernate.test.usercollection.parameterized;
-
 import java.util.List;
-
 import org.hibernate.collection.PersistentList;
 import org.hibernate.engine.SessionImplementor;
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models a SQL <tt>INDEX</tt> defined as UNIQUE
  *

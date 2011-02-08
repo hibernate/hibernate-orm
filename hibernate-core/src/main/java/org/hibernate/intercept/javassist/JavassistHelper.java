@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.intercept.javassist;
-
-import org.hibernate.intercept.FieldInterceptor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.bytecode.javassist.FieldHandled;
-
 import java.util.Set;
+import org.hibernate.bytecode.javassist.FieldHandled;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.intercept.FieldInterceptor;
 
 /**
  * @author Steve Ebersole

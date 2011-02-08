@@ -1,5 +1,6 @@
 package org.hibernate.test.cascade;
 
+
 /**
  * Created by IntelliJ IDEA.
  * User: Gail

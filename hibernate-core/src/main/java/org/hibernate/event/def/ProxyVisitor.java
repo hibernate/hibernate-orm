@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;

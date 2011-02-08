@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.id;
-
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.jdbc.util.SQLStatementLogger;

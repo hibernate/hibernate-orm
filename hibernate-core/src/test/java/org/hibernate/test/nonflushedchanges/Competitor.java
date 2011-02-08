@@ -1,6 +1,5 @@
 //$Id: $
 package org.hibernate.test.nonflushedchanges;
-
 import java.io.Serializable;
 
 /**

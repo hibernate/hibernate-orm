@@ -1,11 +1,8 @@
 // $Id: SuppliedConnectionTest.java 11332 2007-03-22 17:34:55Z steve.ebersole@jboss.com $
 package org.hibernate.test.connections;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
-
 import junit.framework.Test;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;

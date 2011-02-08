@@ -1,5 +1,4 @@
 package org.hibernate.test.pagination;
-
 import java.util.HashSet;
 import java.util.Set;
 

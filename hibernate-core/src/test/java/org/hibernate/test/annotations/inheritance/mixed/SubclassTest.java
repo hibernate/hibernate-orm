@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.inheritance.mixed;
-
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.SQLGrammarException;

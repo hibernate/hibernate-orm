@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.exception;
-
-import org.hibernate.JDBCException;
-
 import java.sql.SQLException;
+import org.hibernate.JDBCException;
 
 /**
  * Generic, non-specific JDBCException.

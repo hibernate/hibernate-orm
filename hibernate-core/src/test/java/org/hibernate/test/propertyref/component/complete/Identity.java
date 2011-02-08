@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.propertyref.component.complete;
-
 import java.io.Serializable;
 
 public class Identity implements Serializable {

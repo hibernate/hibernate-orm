@@ -22,25 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.NoResultException;
-
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.entities.EntityConfiguration;
 import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.entities.mapper.PropertyMapper;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.collection.PersistentCollection;
 import org.hibernate.property.Setter;
 
 /**

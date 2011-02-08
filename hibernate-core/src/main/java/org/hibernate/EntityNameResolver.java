@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Contract for resolving an entity-name from a given entity instance.
  *

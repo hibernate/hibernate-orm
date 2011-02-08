@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.integration.naming;
-
 import javax.persistence.AssociationOverride;
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
@@ -10,10 +9,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
-
-import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.test.entities.components.Component1;
 
 /**
  * Test entity, containing two embedded components, which each contain a list of

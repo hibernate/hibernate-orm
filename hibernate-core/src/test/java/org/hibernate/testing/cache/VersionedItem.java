@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.cache;
 
+
 /**
  * @author Steve Ebersole
  */

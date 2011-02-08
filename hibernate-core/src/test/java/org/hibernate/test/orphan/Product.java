@@ -1,6 +1,5 @@
 //$Id: Product.java 5725 2005-02-14 12:10:15Z oneovthafew $
 package org.hibernate.test.orphan;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;

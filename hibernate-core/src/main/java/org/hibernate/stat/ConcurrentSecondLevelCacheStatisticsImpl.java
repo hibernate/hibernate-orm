@@ -1,10 +1,8 @@
 package org.hibernate.stat;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.Region;
 

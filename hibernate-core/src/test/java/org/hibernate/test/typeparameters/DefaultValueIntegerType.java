@@ -1,13 +1,11 @@
 package org.hibernate.test.typeparameters;
-
+import static org.hibernate.TestLogger.LOG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -41,10 +39,10 @@ public class DefaultValueIntegerType implements UserType, ParameterizedType, Ser
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
 		if (value == null || defaultValue.equals(value) ) {
-			LoggerFactory.getLogger( getClass() ).trace("binding null to parameter: " + index);
+            LOG.trace("binding null to parameter: " + index);
 			st.setNull(index, Types.INTEGER);
 		} else {
-			LoggerFactory.getLogger( getClass() ).trace("binding " + value + " to parameter: " + index);
+            LOG.trace("binding " + value + " to parameter: " + index);
 			st.setInt(index, ((Integer)value).intValue());
 		}
 	}

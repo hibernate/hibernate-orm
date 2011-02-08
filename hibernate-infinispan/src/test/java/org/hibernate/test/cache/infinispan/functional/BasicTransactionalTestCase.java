@@ -1,8 +1,6 @@
 package org.hibernate.test.cache.infinispan.functional;
-
 import java.io.Serializable;
 import java.util.Map;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cache.entry.CacheEntry;

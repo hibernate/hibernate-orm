@@ -22,15 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.Type;
+import org.hibernate.QueryException;
+import org.hibernate.hql.NameGenerator;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.QueryException;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-import org.hibernate.hql.NameGenerator;
 
 /**
  * Models an explicit join terminating at a component value (e.g. <tt>... from Person p join p.name as n ...</tt>)

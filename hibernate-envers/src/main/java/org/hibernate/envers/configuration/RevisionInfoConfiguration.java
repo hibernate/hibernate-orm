@@ -22,33 +22,34 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
-
 import java.util.Date;
 import java.util.Iterator;
-
+import javax.persistence.Column;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.hibernate.envers.*;
-import org.hibernate.envers.entities.PropertyData;
-import org.hibernate.envers.configuration.metadata.MetadataTools;
+import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.RevisionEntity;
+import org.hibernate.envers.RevisionListener;
+import org.hibernate.envers.RevisionNumber;
+import org.hibernate.envers.RevisionTimestamp;
 import org.hibernate.envers.configuration.metadata.AuditTableData;
+import org.hibernate.envers.configuration.metadata.MetadataTools;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.revisioninfo.DefaultRevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.tools.MutableBoolean;
-
-import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
-
-import javax.persistence.Column;
 
 /**
  * @author Adam Warski (adam at warski dot org)

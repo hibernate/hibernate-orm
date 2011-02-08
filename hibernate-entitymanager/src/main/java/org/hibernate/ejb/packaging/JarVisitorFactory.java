@@ -20,22 +20,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import org.hibernate.Logger;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class JarVisitorFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, JarVisitorFactory.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           JarVisitorFactory.class.getName());
 
 	/**
 	 * Get the JAR URL of the JAR containing the given entry

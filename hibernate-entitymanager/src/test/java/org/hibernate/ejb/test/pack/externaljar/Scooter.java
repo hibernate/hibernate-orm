@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.pack.externaljar;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

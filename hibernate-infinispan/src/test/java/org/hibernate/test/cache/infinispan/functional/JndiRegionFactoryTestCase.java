@@ -1,5 +1,11 @@
 package org.hibernate.test.cache.infinispan.functional;
-
+import java.util.Properties;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.Name;
+import javax.naming.NameNotFoundException;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import org.hibernate.Session;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
@@ -9,8 +15,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.testing.junit.functional.ExecutionEnvironment;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.junit.functional.ExecutionEnvironment;
 import org.infinispan.Cache;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
@@ -20,14 +26,6 @@ import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.naming.NonSerializableFactory;
 import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.Name;
-import javax.naming.NameNotFoundException;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
-import java.util.Properties;
 
 /**
  * // TODO: Document this

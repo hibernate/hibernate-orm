@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.util;
-
-import org.hibernate.sql.Template;
-import org.hibernate.impl.FilterImpl;
+import java.util.Iterator;
+import java.util.Map;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-
-import java.util.Map;
-import java.util.Iterator;
+import org.hibernate.impl.FilterImpl;
+import org.hibernate.sql.Template;
 
 /**
  * Implementation of FilterHelper.

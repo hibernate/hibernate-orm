@@ -23,22 +23,19 @@
  *
  */
 package org.hibernate.test.dynamicentity.tuplizer2;
-
-import org.hibernate.test.dynamicentity.Company;
-import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.test.dynamicentity.Customer;
-import org.hibernate.test.dynamicentity.Address;
-import org.hibernate.test.dynamicentity.Person;
-import org.hibernate.Session;
-import org.hibernate.Hibernate;
+import java.util.HashSet;
+import junit.framework.TestSuite;
 import org.hibernate.EntityMode;
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.test.dynamicentity.Address;
+import org.hibernate.test.dynamicentity.Company;
+import org.hibernate.test.dynamicentity.Customer;
+import org.hibernate.test.dynamicentity.Person;
+import org.hibernate.test.dynamicentity.ProxyHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-
-import junit.framework.TestSuite;
-
-import java.util.HashSet;
 
 /**
  * Demonstrates use of Tuplizers to allow the use of JDK

@@ -1,5 +1,6 @@
 package org.hibernate.test.generatedkeys.identity;
 
+
 /**
  * @author Steve Ebersole
  */

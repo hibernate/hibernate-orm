@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.cid;
-
 import java.util.Date;
-
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.Column;

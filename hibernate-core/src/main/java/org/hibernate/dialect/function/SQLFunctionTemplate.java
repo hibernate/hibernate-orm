@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
+import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
-
-import java.util.List;
 
 /**
  * Represents HQL functions that can have different representations in different SQL dialects.

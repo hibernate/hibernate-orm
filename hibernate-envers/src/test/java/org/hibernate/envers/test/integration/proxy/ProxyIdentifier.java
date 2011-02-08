@@ -22,20 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.proxy;
-
+import javax.persistence.EntityManager;
 import org.hibernate.ejb.Ejb3Configuration;
-
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAuditedEntity;
-
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import javax.persistence.EntityManager;
 
 
 /**

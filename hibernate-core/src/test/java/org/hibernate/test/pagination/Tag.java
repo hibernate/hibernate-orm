@@ -1,5 +1,6 @@
 package org.hibernate.test.pagination;
 
+
 public class Tag {
 	private int id;
 	private String surrogate;

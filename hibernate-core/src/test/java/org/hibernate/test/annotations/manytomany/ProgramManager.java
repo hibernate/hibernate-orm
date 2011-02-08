@@ -1,10 +1,9 @@
 package org.hibernate.test.annotations.manytomany;
-
+import java.util.Collection;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.Collection;
 
 @Entity
 public class ProgramManager {

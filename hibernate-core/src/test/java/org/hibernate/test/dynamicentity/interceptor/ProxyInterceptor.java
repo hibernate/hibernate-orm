@@ -1,15 +1,11 @@
 package org.hibernate.test.dynamicentity.interceptor;
-
+import java.io.Serializable;
+import java.lang.reflect.Proxy;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.EntityMode;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.test.dynamicentity.DataProxyHandler;
-
-import java.io.Serializable;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
 
 /**
  * Our custom {@link org.hibernate.Interceptor} impl which performs the

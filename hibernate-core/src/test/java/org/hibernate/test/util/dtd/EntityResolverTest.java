@@ -1,8 +1,6 @@
 package org.hibernate.test.util.dtd;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit.UnitTestCase;
 

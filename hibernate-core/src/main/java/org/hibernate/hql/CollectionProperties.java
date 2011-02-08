@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.hql;
-
-import org.hibernate.persister.collection.CollectionPropertyNames;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.hibernate.persister.collection.CollectionPropertyNames;
 
 /**
  * Provides a map of collection function names to the corresponding property names.

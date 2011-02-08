@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.cache;
-
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.AccessType;
+import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 
 /**
  * Defines the contract for a cache region which will specifically be used to

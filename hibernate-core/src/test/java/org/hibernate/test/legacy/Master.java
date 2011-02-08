@@ -1,6 +1,5 @@
 //$Id: Master.java 4599 2004-09-26 05:18:27Z oneovthafew $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Collection;

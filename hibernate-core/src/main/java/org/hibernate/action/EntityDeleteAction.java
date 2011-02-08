@@ -23,22 +23,19 @@
  *
  */
 package org.hibernate.action;
-
 import java.io.Serializable;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.engine.EntityEntry;
-import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
 import org.hibernate.event.PostDeleteEvent;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PreDeleteEvent;
 import org.hibernate.event.PreDeleteEventListener;
-import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 
 public final class EntityDeleteAction extends EntityAction {

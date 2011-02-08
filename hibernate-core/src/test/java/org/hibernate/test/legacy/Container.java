@@ -1,6 +1,5 @@
 //$Id: Container.java 6844 2005-05-21 14:22:16Z oneovthafew $
 package org.hibernate.test.legacy;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

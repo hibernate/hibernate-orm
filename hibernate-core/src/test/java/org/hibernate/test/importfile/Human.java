@@ -1,5 +1,6 @@
 package org.hibernate.test.importfile;
 
+
 /**
  * @author Emmanuel Bernard
  */

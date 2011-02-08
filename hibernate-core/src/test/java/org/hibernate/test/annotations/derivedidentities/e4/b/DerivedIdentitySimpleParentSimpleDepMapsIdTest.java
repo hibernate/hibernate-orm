@@ -1,7 +1,5 @@
 package org.hibernate.test.annotations.derivedidentities.e4.b;
-
 import java.util.Date;
-
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;

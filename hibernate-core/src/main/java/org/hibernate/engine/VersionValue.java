@@ -23,10 +23,10 @@
  *
  */
 package org.hibernate.engine;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A strategy for determining if a version value is an version of
@@ -38,8 +38,7 @@ import org.hibernate.id.IdentifierGeneratorHelper;
  */
 public class VersionValue {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                VersionValue.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, VersionValue.class.getName());
 
 	private final Object value;
 	/**

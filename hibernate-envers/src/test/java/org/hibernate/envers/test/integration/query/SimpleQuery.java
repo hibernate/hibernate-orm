@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.query;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import javax.persistence.EntityManager;
-
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
@@ -36,8 +35,6 @@ import org.hibernate.envers.test.entities.StrIntTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
 
 /**
  * @author Adam Warski (adam at warski dot org)

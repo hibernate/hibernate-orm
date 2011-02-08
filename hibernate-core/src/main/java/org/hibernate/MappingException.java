@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * An exception that usually occurs at configuration time, rather
  * than runtime, as a result of something screwy in the O-R mappings.

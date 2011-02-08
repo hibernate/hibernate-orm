@@ -2,6 +2,7 @@
 package org.hibernate.test.join;
 
 
+
 /**
  * @author Gavin King
  */

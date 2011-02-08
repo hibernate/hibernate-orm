@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.uuid;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import org.hibernate.util.BytesHelper;
 
 /**

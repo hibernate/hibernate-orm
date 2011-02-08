@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.integration.naming;
-
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;

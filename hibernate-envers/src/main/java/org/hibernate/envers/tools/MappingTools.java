@@ -1,5 +1,4 @@
 package org.hibernate.envers.tools;
-
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.ToOne;

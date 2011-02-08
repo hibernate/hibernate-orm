@@ -1,12 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.entity;
-
+import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
-
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -19,8 +18,6 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
-
-import java.util.Set;
 
 /**
  * Use hibernate specific annotations

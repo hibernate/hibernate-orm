@@ -23,10 +23,10 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Comparator;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.access.SoftLock;
+import org.jboss.logging.Logger;
 
 /**
  * Caches data that is sometimes updated without ever locking the cache.
@@ -40,7 +40,8 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       NonstrictReadWriteCache.class.getName());
 
 	private Cache cache;
 
@@ -59,11 +60,11 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Get the most recent version, if available.
 	 */
 	public Object get(Object key, long txTimestamp) throws CacheException {
-        LOG.debug("Cache lookup: " + key);
+        LOG.debugf("Cache lookup: %s", key);
 
 		Object result = cache.get( key );
-        if (result != null) LOG.debug("Cache hit: " + key);
-        else LOG.debug("Cache miss: " + key);
+        if (result != null) LOG.debugf("Cache hit: %s", key);
+        else LOG.debugf("Cache miss: %s", key);
 		return result;
 	}
 
@@ -78,10 +79,10 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	        Comparator versionComparator,
 	        boolean minimalPut) throws CacheException {
 		if ( minimalPut && cache.get( key ) != null ) {
-            LOG.debug("Item already cached: " + key);
+            LOG.debugf("Item already cached: %s", key);
 			return false;
 		}
-        LOG.debug("Caching: " + key);
+        LOG.debugf("Caching: %s", key);
 
 		cache.put( key, value );
 		return true;
@@ -98,12 +99,12 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	}
 
 	public void remove(Object key) throws CacheException {
-        LOG.debug("Removing: " + key);
+        LOG.debugf("Removing: %s", key);
 		cache.remove( key );
 	}
 
 	public void clear() throws CacheException {
-        LOG.debug("Clearing");
+        LOG.debugf("Clearing");
 		cache.clear();
 	}
 
@@ -120,7 +121,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Invalidate the item
 	 */
 	public void evict(Object key) throws CacheException {
-        LOG.debug("Invalidating: " + key);
+        LOG.debugf("Invalidating: %s", key);
 		cache.remove( key );
 	}
 
@@ -143,7 +144,7 @@ public class NonstrictReadWriteCache implements CacheConcurrencyStrategy {
 	 * Invalidate the item (again, for safety).
 	 */
 	public void release(Object key, SoftLock lock) throws CacheException {
-        LOG.debug("Invalidating: " + key);
+        LOG.debugf("Invalidating: %s", key);
 		cache.remove( key );
 	}
 

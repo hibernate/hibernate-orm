@@ -1,5 +1,4 @@
 package org.hibernate.test.criteria;
-
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.LikeExpression;
 

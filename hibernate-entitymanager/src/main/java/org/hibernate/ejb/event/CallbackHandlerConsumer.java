@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.event;
 
+
 /**
  * @author Emmanuel Bernard
  */

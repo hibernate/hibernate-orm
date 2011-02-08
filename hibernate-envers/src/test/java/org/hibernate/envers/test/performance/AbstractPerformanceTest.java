@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.performance;
-
-import org.hibernate.envers.test.AbstractEntityTest;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import org.hibernate.envers.test.AbstractEntityTest;
 
 /**
  * @author Adam Warski (adam at warski dot org)

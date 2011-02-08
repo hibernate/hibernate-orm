@@ -22,16 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.io.ObjectInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
-
 import org.hibernate.util.ReflectHelper;
 
 /**

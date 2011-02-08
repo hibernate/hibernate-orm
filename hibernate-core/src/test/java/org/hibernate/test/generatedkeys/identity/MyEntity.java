@@ -1,7 +1,6 @@
 package org.hibernate.test.generatedkeys.identity;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole

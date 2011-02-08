@@ -24,6 +24,7 @@
 package org.hibernate.test.cid;
 
 
+
 /**
  * @author Jacob Robertson
  */

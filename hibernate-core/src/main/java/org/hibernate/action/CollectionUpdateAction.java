@@ -23,21 +23,19 @@
  *
  */
 package org.hibernate.action;
-
+import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.event.PostCollectionUpdateEvent;
-import org.hibernate.event.PreCollectionUpdateEvent;
-import org.hibernate.event.PreCollectionUpdateEventListener;
-import org.hibernate.event.EventSource;
-import org.hibernate.event.PostCollectionUpdateEventListener;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.PostCollectionUpdateEvent;
+import org.hibernate.event.PostCollectionUpdateEventListener;
+import org.hibernate.event.PreCollectionUpdateEvent;
+import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-
-import java.io.Serializable;
 
 public final class CollectionUpdateAction extends CollectionAction {
 

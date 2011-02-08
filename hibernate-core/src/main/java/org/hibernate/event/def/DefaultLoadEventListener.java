@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TypeMismatchException;
@@ -55,6 +54,7 @@ import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -68,8 +68,8 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 	public static final Object INCONSISTENT_RTN_CLASS_MARKER = new Object();
 	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultLoadEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultLoadEventListener.class.getName());
 
 
 	/**
@@ -419,11 +419,11 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		Object entity = loadFromSessionCache( event, keyToLoad, options );
 		if ( entity == REMOVED_ENTITY_MARKER ) {
-            LOG.debug("Load request found matching entity in context, but it is scheduled for removal; returning null");
+            LOG.debugf("Load request found matching entity in context, but it is scheduled for removal; returning null");
 			return null;
 		}
 		if ( entity == INCONSISTENT_RTN_CLASS_MARKER ) {
-            LOG.debug("Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null");
+            LOG.debugf("Load request found matching entity in context, but the matched entity was of an inconsistent return type; returning null");
 			return null;
 		}
 		if ( entity != null ) {

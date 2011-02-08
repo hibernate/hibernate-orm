@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.inheritance.union;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;

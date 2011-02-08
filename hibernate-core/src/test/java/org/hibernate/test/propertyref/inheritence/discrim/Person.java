@@ -2,6 +2,7 @@
 package org.hibernate.test.propertyref.inheritence.discrim;
 
 
+
 /**
  * @author gavin
  */

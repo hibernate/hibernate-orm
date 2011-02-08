@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.jdbc.internal;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -34,8 +33,8 @@ import java.sql.SQLException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
-import org.hibernate.Logger;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
@@ -43,6 +42,7 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.ConnectionManager;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.jdbc.Expectation;
+import org.jboss.logging.Logger;
 
 /**
  * Encapsulates JDBC Connection management logic needed by Hibernate.
@@ -54,7 +54,7 @@ import org.hibernate.jdbc.Expectation;
  */
 public class ConnectionManagerImpl implements ConnectionManager {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ConnectionManagerImpl.class.getName());
 
 	public static interface Callback extends ConnectionObserver {
 		public boolean isTransactionInProgress();
@@ -253,7 +253,7 @@ public class ConnectionManagerImpl implements ConnectionManager {
 		if ( logicalConnection != null ) {
             if (isAfterTransactionRelease() || isAggressiveReleaseNoTransactionCheck()) logicalConnection.afterTransaction();
             // log a message about potential connection leaks
-            else if (isOnCloseRelease()) LOG.debug("Transaction completed on session with on_close connection release mode; be sure to close the session to release JDBC resources!");
+            else if (isOnCloseRelease()) LOG.debugf("Transaction completed on session with on_close connection release mode; be sure to close the session to release JDBC resources!");
 		}
         if (statementPreparer != null) statementPreparer.unsetTransactionTimeout();
 	}

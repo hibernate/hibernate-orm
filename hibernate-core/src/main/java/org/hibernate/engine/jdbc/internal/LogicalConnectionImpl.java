@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -32,14 +31,15 @@ import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
-import org.hibernate.Logger;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.jdbc.BorrowedConnectionProxy;
 import org.hibernate.stat.StatisticsImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * LogicalConnectionImpl implementation
@@ -48,8 +48,7 @@ import org.hibernate.stat.StatisticsImplementor;
  */
 public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                LogicalConnectionImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LogicalConnectionImpl.class.getName());
 
 	private Connection physicalConnection;
 	private Connection borrowedConnection;
@@ -105,7 +104,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 		else if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT &&
 				! jdbcServices.getConnectionProvider().supportsAggressiveRelease() ) {
-            LOG.debug("Connection provider reports to not support aggressive release; overriding");
+            LOG.debugf("Connection provider reports to not support aggressive release; overriding");
 			return ConnectionReleaseMode.AFTER_TRANSACTION;
 		}
 		else {
@@ -247,13 +246,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
         LOG.trace("Starting after statement execution processing [" + connectionReleaseMode + "]");
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-                LOG.debug("Skipping aggressive release due to manual disabling");
+                LOG.debugf("Skipping aggressive release due to manual disabling");
 				return;
 			}
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
-                LOG.debug("Skipping aggressive release due to registered resources");
+                LOG.debugf("Skipping aggressive release due to registered resources");
 				return;
-            } else if (borrowedConnection != null) LOG.debug("Skipping aggressive release due to borrowed connection");
+            } else if (borrowedConnection != null) LOG.debugf("Skipping aggressive release due to borrowed connection");
 			releaseConnection();
 		}
 	}
@@ -285,9 +284,9 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * Force aggresive release of the underlying connection.
 	 */
 	public void aggressiveRelease() {
-        if (isUserSuppliedConnection) LOG.debug("Cannot aggressively release user-supplied connection; skipping");
+        if (isUserSuppliedConnection) LOG.debugf("Cannot aggressively release user-supplied connection; skipping");
 		else {
-            LOG.debug("Aggressively releasing JDBC connection");
+            LOG.debugf("Aggressively releasing JDBC connection");
 			if ( physicalConnection != null ) {
 				releaseConnection();
 			}
@@ -301,13 +300,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws org.hibernate.JDBCException Indicates problem opening a connection
 	 */
 	private void obtainConnection() throws JDBCException {
-        LOG.debug("Obtaining JDBC connection");
+        LOG.debugf("Obtaining JDBC connection");
 		try {
 			physicalConnection = getJdbcServices().getConnectionProvider().getConnection();
 			for ( ConnectionObserver observer : observers ) {
 				observer.physicalConnectionObtained( physicalConnection );
 			}
-            LOG.debug("Obtained JDBC connection");
+            LOG.debugf("Obtained JDBC connection");
 		}
 		catch ( SQLException sqle) {
 			throw getJdbcServices().getSqlExceptionHelper().convert( sqle, "Could not open connection" );
@@ -320,7 +319,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 * @throws JDBCException Indicates problem closing a connection
 	 */
 	private void releaseConnection() throws JDBCException {
-        LOG.debug("Releasing JDBC connection");
+        LOG.debugf("Releasing JDBC connection");
 		if ( physicalConnection == null ) return;
 		try {
             if (!physicalConnection.isClosed()) getJdbcServices().getSqlExceptionHelper().logAndClearWarnings(physicalConnection);
@@ -332,7 +331,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		finally {
 			physicalConnection = null;
 		}
-        LOG.debug("Released JDBC connection");
+        LOG.debugf("Released JDBC connection");
 		for ( ConnectionObserver observer : observers ) {
 			observer.physicalConnectionReleased();
 		}
@@ -369,11 +368,11 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
             else if (physicalConnection != null) throw new IllegalArgumentException(
                                                                                     "cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting.");
 			physicalConnection = suppliedConnection;
-            LOG.debug("Reconnected JDBC connection");
+            LOG.debugf("Reconnected JDBC connection");
 		}
 		else {
             if (suppliedConnection != null) throw new IllegalStateException("unexpected user-supplied connection");
-            LOG.debug("Called reconnect() with null connection (not user-supplied)");
+            LOG.debugf("Called reconnect() with null connection (not user-supplied)");
 		}
 	}
 

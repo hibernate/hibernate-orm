@@ -1,5 +1,4 @@
 package org.hibernate.test.legacy;
-
 import java.sql.Blob;
 import java.sql.Clob;
 

@@ -23,13 +23,13 @@
  *
  */
 package org.hibernate.stat;
-
 import java.util.HashMap;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @see org.hibernate.stat.Statistics
@@ -43,8 +43,7 @@ public class StatisticsImpl implements Statistics, StatisticsImplementor {
 
 	//TODO: we should provide some way to get keys of collection of statistics to make it easier to retrieve from a GUI perspective
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                StatisticsImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StatisticsImpl.class.getName());
 
 	private SessionFactoryImplementor sessionFactory;
 

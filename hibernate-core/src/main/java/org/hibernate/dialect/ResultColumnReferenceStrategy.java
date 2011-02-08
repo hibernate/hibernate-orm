@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
-import java.io.Serializable;
 import java.io.ObjectStreamException;
-import java.util.Map;
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Defines how we need to reference columns in the group-by, having, and order-by

@@ -22,12 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util;
-
 import java.io.InputStream;
 import java.io.Serializable;
-
 import junit.framework.TestCase;
-
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.util.ByteCodeHelper;
 

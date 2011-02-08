@@ -1,8 +1,7 @@
 //$Id: Animal.java 7445 2005-07-10 16:51:17Z oneovthafew $
 package org.hibernate.test.hql;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author Gavin King

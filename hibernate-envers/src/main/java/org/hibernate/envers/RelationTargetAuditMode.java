@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers;
 
+
 /**
  * @author Tomasz Bech
  */

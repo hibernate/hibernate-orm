@@ -1,5 +1,4 @@
 package org.hibernate.test.legacy;
-
 import java.util.Set;
 
 public class W {

@@ -1,5 +1,4 @@
 package org.hibernate.ejb.test.metadata;
-
 import java.util.Set;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
@@ -9,7 +8,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 
 /**

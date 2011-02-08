@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +35,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.FilterDefinition;
@@ -97,6 +96,7 @@ import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 import org.hibernate.util.xml.XmlDocument;
+import org.jboss.logging.Logger;
 
 /**
  * Walks an XML mapping document and produces the Hibernate configuration-time metamodel (the
@@ -106,8 +106,7 @@ import org.hibernate.util.xml.XmlDocument;
  */
 public final class HbmBinder {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HbmBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HbmBinder.class.getName());
 
 	/**
 	 * Private constructor to disallow instantiation.
@@ -228,7 +227,7 @@ public final class HbmBinder {
 		String rename = ( renameNode == null ) ?
 						StringHelper.unqualify( className ) :
 						renameNode.getValue();
-        LOG.debug("Import: " + rename + " -> " + className);
+        LOG.debugf("Import: %s -> %s", rename, className);
 		mappings.addImport( className, rename );
 	}
 
@@ -1318,7 +1317,7 @@ public final class HbmBinder {
 			if ( columns.length() > 0 ) msg += " -> " + columns;
 			// TODO: this fails if we run with debug on!
 			// if ( model.getType()!=null ) msg += ", type: " + model.getType().getName();
-            LOG.debug(msg);
+            LOG.debugf(msg);
 		}
 
 		property.setMetaAttributes( getMetas( node, inheritedMetas ) );
@@ -2600,7 +2599,7 @@ public final class HbmBinder {
 			if ( condition==null) {
 				throw new MappingException("no filter condition found for filter: " + name);
 			}
-            LOG.debug("Applying many-to-many filter [" + name + "] as [" + condition + "] to role [" + collection.getRole() + "]");
+            LOG.debugf("Applying many-to-many filter [%s] as [%s] to role [%s]", name, condition, collection.getRole());
 			collection.addManyToManyFilter( name, condition );
 		}
 	}
@@ -2633,7 +2632,7 @@ public final class HbmBinder {
 		String queryName = queryElem.attributeValue( "name" );
 		if (path!=null) queryName = path + '.' + queryName;
 		String query = queryElem.getText();
-        LOG.debug("Named query: " + queryName + " -> " + query);
+        LOG.debugf("Named query: %s -> %s", queryName, query);
 
 		boolean cacheable = "true".equals( queryElem.attributeValue( "cacheable" ) );
 		String region = queryElem.attributeValue( "cache-region" );
@@ -2966,7 +2965,7 @@ public final class HbmBinder {
 
 	private static void parseFilterDef(Element element, Mappings mappings) {
 		String name = element.attributeValue( "name" );
-        LOG.debug("Parsing filter-def [" + name + "]");
+        LOG.debugf("Parsing filter-def [%s]", name);
 		String defaultCondition = element.getTextTrim();
 		if ( StringHelper.isEmpty( defaultCondition ) ) {
 			defaultCondition = element.attributeValue( "condition" );
@@ -2977,12 +2976,12 @@ public final class HbmBinder {
 			final Element param = (Element) params.next();
 			final String paramName = param.attributeValue( "name" );
 			final String paramType = param.attributeValue( "type" );
-            LOG.debug("Adding filter parameter : " + paramName + " -> " + paramType);
+            LOG.debugf("Adding filter parameter : %s -> %s", paramName, paramType);
 			final Type heuristicType = mappings.getTypeResolver().heuristicType( paramType );
-            LOG.debug("Parameter heuristic type : " + heuristicType);
+            LOG.debugf("Parameter heuristic type : %s", heuristicType);
 			paramMappings.put( paramName, heuristicType );
 		}
-        LOG.debug("Parsed filter-def [" + name + "]");
+        LOG.debugf("Parsed filter-def [%s]", name);
 		FilterDefinition def = new FilterDefinition( name, defaultCondition, paramMappings );
 		mappings.addFilterDefinition( def );
 	}
@@ -3005,7 +3004,7 @@ public final class HbmBinder {
 		if ( condition==null) {
 			throw new MappingException("no filter condition found for filter: " + name);
 		}
-        LOG.debug("Applying filter [" + name + "] as [" + condition + "]");
+        LOG.debugf("Applying filter [%s] as [%s]", name, condition);
 		filterable.addFilter( name, condition );
 	}
 

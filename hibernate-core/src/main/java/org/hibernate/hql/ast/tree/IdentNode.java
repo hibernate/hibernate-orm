@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import antlr.SemanticException;
-import antlr.collections.AST;
+import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.antlr.SqlTokenTypes;
@@ -36,8 +34,8 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
-
-import java.util.List;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents an identifier all by itself, which may be a function name,

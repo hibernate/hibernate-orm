@@ -1,6 +1,7 @@
 //$Id: Child.java 6978 2005-06-01 03:29:27Z oneovthafew $
 package org.hibernate.test.compositeelement;
 
+
 /**
  * @author gavin
  */

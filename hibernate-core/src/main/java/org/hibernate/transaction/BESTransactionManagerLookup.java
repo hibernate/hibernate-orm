@@ -24,6 +24,7 @@
  */
 package org.hibernate.transaction;
 
+
 /**
  * A <tt>TransactionManager</tt> lookup strategy for Borland ES.
  *

@@ -1,5 +1,6 @@
 package org.hibernate.test.bytecode;
 
+
 /**
  * Created by IntelliJ IDEA.
  * User: Paul

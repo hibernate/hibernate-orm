@@ -1,9 +1,7 @@
 package org.hibernate.test.instrument.cases;
-
-import org.hibernate.test.instrument.domain.Document;
-import org.hibernate.intercept.FieldInterceptionHelper;
-
 import java.util.HashSet;
+import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.test.instrument.domain.Document;
 
 /**
  * @author Steve Ebersole

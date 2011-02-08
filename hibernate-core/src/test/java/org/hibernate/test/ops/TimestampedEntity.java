@@ -1,5 +1,4 @@
 package org.hibernate.test.ops;
-
 import java.util.Date;
 
 /**

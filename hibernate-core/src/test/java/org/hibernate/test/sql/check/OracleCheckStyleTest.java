@@ -1,7 +1,5 @@
 package org.hibernate.test.sql.check;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

@@ -1,6 +1,5 @@
 //$Id: Human.java 9873 2006-05-04 13:42:48Z max.andersen@jboss.com $
 package org.hibernate.test.hql;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;

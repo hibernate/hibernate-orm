@@ -1,9 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.referencedcolumnname;
-
-import java.util.Iterator;
 import java.math.BigDecimal;
-
+import java.util.Iterator;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;

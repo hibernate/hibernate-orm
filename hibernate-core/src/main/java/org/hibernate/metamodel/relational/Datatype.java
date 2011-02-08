@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models a JDBC {@link java.sql.Types DATATYPE}
  *

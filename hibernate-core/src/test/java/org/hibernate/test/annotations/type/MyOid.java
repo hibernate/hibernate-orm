@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.type;
-
 import java.io.Serializable;
 
 /**

@@ -23,14 +23,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.ops;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.TestCase;

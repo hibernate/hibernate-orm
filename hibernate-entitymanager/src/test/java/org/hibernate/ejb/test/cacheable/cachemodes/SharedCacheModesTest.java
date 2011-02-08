@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.cacheable.cachemodes;
-
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.AvailableSettings;

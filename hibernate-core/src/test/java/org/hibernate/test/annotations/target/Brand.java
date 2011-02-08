@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.target;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.ElementCollection;
@@ -31,7 +30,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyClass;
-
 import org.hibernate.annotations.MapKeyManyToMany;
 
 /**

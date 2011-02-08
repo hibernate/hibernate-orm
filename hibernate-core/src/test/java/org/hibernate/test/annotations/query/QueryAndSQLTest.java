@@ -23,12 +23,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.query;
-
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-
 import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;

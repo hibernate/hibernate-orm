@@ -1,5 +1,4 @@
 package org.hibernate.cache.infinispan.entity;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;

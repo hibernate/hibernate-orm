@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;

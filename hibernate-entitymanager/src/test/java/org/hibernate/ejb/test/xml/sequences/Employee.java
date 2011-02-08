@@ -1,6 +1,5 @@
 //$Id: $
 package org.hibernate.ejb.test.xml.sequences;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

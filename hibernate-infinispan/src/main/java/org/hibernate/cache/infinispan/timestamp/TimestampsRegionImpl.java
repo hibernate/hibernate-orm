@@ -1,12 +1,9 @@
 package org.hibernate.cache.infinispan.timestamp;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TimestampsRegion;

@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.engine.collection;
-
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Entity;
@@ -9,7 +8,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 

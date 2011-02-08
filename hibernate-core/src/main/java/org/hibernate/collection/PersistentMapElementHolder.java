@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.collection;
-
 import java.io.Serializable;
 import java.util.List;
-
 import org.dom4j.Element;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;

@@ -22,18 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata.reader;
-
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
-
-import org.hibernate.envers.SecondaryAuditTable;
-import org.hibernate.envers.*;
-import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.configuration.GlobalConfiguration;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.envers.AuditTable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.SecondaryAuditTable;
+import org.hibernate.envers.SecondaryAuditTables;
+import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 

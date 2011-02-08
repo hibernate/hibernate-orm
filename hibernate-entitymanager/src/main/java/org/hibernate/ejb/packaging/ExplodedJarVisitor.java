@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,7 +29,8 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import org.hibernate.Logger;
+import org.hibernate.ejb.EntityManagerLogger;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -38,7 +38,8 @@ import org.hibernate.Logger;
  */
 public class ExplodedJarVisitor extends AbstractJarVisitor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, ExplodedJarVisitor.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           ExplodedJarVisitor.class.getName());
 
     private String entry;
 

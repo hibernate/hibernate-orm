@@ -1,5 +1,6 @@
 package org.hibernate.test.generatedkeys.select;
 
+
 /**
  * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
  */

@@ -1,6 +1,5 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 

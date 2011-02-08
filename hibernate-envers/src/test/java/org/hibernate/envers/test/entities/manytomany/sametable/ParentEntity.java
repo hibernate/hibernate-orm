@@ -1,11 +1,15 @@
 package org.hibernate.envers.test.entities.manytomany.sametable;
-
-import org.hibernate.envers.Audited;
-import org.hibernate.annotations.WhereJoinTable;
-
-import javax.persistence.*;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import org.hibernate.annotations.WhereJoinTable;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

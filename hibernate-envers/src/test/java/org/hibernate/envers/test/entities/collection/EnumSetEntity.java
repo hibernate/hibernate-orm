@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.collection;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
@@ -30,10 +29,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import org.hibernate.envers.Audited;
-
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -1,6 +1,5 @@
 //$Id: Customer.java 6979 2005-06-01 03:51:32Z oneovthafew $
 package org.hibernate.test.typedmanytoone;
-
 import java.io.Serializable;
 
 /**

@@ -1,11 +1,10 @@
 //$Id$
 package org.hibernate.test.annotations.bytecode;
-
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Hibernate;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Emmanuel Bernard

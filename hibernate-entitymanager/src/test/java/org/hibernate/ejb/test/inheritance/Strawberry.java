@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.inheritance;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 

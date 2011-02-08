@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.propertyref.component.partial;
 
+
 public class Person {
 	private Long id;
 	private Identity identity;

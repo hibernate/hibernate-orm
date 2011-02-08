@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.query;
-
-import org.hibernate.envers.reader.AuditReaderImplementor;
-
 import org.hibernate.Query;
+import org.hibernate.envers.reader.AuditReaderImplementor;
 
 /**
  * TODO: cleanup implementations and extract common code

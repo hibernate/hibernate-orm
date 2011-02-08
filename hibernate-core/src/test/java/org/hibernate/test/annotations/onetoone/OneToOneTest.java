@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
-
 import java.util.Iterator;
-
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;

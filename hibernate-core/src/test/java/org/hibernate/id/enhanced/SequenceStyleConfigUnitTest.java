@@ -22,20 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
-
 import java.util.Properties;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
-import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.id.PersistentIdentifierGenerator;
 
 /**
  * Tests that SequenceStyleGenerator configures itself as expected

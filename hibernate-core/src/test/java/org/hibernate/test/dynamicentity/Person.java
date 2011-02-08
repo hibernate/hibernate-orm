@@ -1,5 +1,4 @@
 package org.hibernate.test.dynamicentity;
-
 import java.util.Set;
 
 /**

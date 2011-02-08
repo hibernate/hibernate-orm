@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.persister.collection;
-
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.persister.entity.AbstractPropertyMapping;

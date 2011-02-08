@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
-
 import java.util.Map;
-
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServicesRegistry;
 
 /**
  * Standard initiator for the standard {@link DialectResolver} service

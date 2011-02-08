@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast;
 
+
 /**
  * A custom token class for the HQL grammar.
  * <p><i>NOTE:<i> This class must be public becuase it is instantiated by the ANTLR library.  Ignore any suggestions

@@ -1,8 +1,7 @@
 // $Id: Department.java 4448 2004-08-28 02:29:05Z steveebersole $
 package org.hibernate.test.filter;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Implementation of Department.

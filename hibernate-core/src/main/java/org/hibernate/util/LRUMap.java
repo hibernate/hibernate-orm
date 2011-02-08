@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util;
-
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;

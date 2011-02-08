@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.engine.collection;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
@@ -7,7 +6,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 

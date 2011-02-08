@@ -1,9 +1,6 @@
 package org.hibernate.test.collection.map;
-
 import java.util.HashMap;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentMap;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

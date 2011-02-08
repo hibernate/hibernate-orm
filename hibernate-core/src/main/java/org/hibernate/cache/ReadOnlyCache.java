@@ -23,10 +23,10 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Comparator;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.access.SoftLock;
+import org.jboss.logging.Logger;
 
 /**
  * Caches data that is never updated.
@@ -34,7 +34,7 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class ReadOnlyCache implements CacheConcurrencyStrategy {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ReadOnlyCache.class.getName());
 
 	private Cache cache;
 
@@ -54,7 +54,7 @@ public class ReadOnlyCache implements CacheConcurrencyStrategy {
 
 	public synchronized Object get(Object key, long timestamp) throws CacheException {
 		Object result = cache.get(key);
-        if (result != null) LOG.debug("Cache hit: " + key);
+        if (result != null) LOG.debugf("Cache hit: %s", key);
 		return result;
 	}
 
@@ -75,10 +75,10 @@ public class ReadOnlyCache implements CacheConcurrencyStrategy {
 			boolean minimalPut)
 	throws CacheException {
 		if ( minimalPut && cache.get(key)!=null ) {
-            LOG.debug("Item already cached: " + key);
+            LOG.debugf("Item already cached: %s", key);
 			return false;
 		}
-        LOG.debug("Caching: " + key);
+        LOG.debugf("Caching: %s", key);
 		cache.put(key, value);
 		return true;
 	}
@@ -120,7 +120,7 @@ public class ReadOnlyCache implements CacheConcurrencyStrategy {
 	 * Do nothing.
 	 */
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-        LOG.debug("Caching after insert: " + key);
+        LOG.debugf("Caching after insert: %s", key);
 		cache.update(key, value);
 		return true;
 	}

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.testing.junit;
-
 import static org.hibernate.TestLogger.LOG;
 import java.util.Enumeration;
 import java.util.HashSet;

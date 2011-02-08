@@ -1,6 +1,5 @@
 //$Id: Being.java 6007 2005-03-04 12:01:43Z oneovthafew $
 package org.hibernate.test.unionsubclass;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

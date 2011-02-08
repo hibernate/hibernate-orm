@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.id;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;

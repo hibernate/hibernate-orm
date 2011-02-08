@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.cascade;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

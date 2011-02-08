@@ -1,5 +1,4 @@
 package org.hibernate.envers.configuration;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -10,6 +9,7 @@ import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.tools.MappingTools;
 import org.hibernate.mapping.PersistentClass;
+import org.jboss.logging.Logger;
 
 /**
  * A helper class holding auditing meta-data for all persistent classes.
@@ -17,8 +17,7 @@ import org.hibernate.mapping.PersistentClass;
  */
 public class ClassesAuditingData {
 
-    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
-                                                                                     ClassesAuditingData.class.getPackage().getName());
+    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, ClassesAuditingData.class.getName());
 
     private final Map<String, ClassAuditingData> entityNameToAuditingData = new HashMap<String, ClassAuditingData>();
     private final Map<PersistentClass, ClassAuditingData> persistentClassToAuditingData = new LinkedHashMap<PersistentClass, ClassAuditingData>();
@@ -84,8 +83,10 @@ public class ClassesAuditingData {
                     referencedEntityName + "." + propertyName);
             }
 
-            LOG.debug("Non-insertable property " + referencedEntityName + "." + propertyName
-                      + " will be made insertable because a matching @AuditMappedBy was found in the " + entityName + " entity.");
+            LOG.debugf("Non-insertable property %s.%s will be made insertable because a matching @AuditMappedBy was found in the %s entity",
+                       referencedEntityName,
+                       propertyName,
+                       entityName);
 
             classAuditingData
                     .getPropertyAuditingData(propertyName)

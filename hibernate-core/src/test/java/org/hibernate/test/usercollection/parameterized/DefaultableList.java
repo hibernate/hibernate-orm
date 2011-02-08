@@ -1,5 +1,4 @@
 package org.hibernate.test.usercollection.parameterized;
-
 import java.util.List;
 
 /**

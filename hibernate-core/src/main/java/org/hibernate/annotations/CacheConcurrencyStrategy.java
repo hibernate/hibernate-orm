@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
-
 import org.hibernate.cache.access.AccessType;
 
 /**

@@ -1,7 +1,5 @@
 package org.hibernate.test.dialect.unit.lockhint;
-
 import junit.framework.TestSuite;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 

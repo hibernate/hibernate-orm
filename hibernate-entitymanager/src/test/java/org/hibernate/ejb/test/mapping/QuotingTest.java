@@ -1,5 +1,4 @@
 package org.hibernate.ejb.test.mapping;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

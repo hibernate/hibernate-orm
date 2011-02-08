@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.bytecode.util;
-
-import java.io.InputStream;
-import java.io.IOException;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 
 /**

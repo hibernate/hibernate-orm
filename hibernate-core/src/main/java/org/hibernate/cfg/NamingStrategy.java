@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 
+
 /**
  * A set of rules for determining the physical column
  * and table names given the information in the mapping

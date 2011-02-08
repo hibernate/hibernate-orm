@@ -1,7 +1,5 @@
 package org.hibernate.test.generatedkeys.identity;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

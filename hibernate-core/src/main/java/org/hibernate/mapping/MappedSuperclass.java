@@ -22,8 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**

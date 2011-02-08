@@ -1,23 +1,20 @@
 package org.hibernate.test.insertordering;
-
-import java.util.List;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.sql.PreparedStatement;
-
+import java.util.List;
 import junit.framework.Test;
-
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.Session;
-import org.hibernate.jdbc.Expectation;
 
 /**
  * {@inheritDoc}

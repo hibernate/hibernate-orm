@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.id.enhanced;
-
 import org.hibernate.id.IntegralDataTypeHolder;
 
 /**

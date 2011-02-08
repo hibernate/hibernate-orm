@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal.proxy;
-
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Arrays;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Invocation handler for {@link java.sql.PreparedStatement} proxies
@@ -36,8 +36,8 @@ import org.hibernate.Logger;
  */
 public class PreparedStatementProxyHandler extends AbstractStatementProxyHandler {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                PreparedStatementProxyHandler.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       PreparedStatementProxyHandler.class.getName());
 
 	private final String sql;
 

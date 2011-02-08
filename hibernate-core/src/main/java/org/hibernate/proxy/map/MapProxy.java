@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.proxy.map;
-
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.proxy.LazyInitializer;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Proxy for "dynamic-map" entity representations.

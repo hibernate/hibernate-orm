@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import java.util.Map;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.EntityIdentityInsertAction;
 import org.hibernate.action.EntityInsertAction;
@@ -50,6 +49,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A convenience bas class for listeners responding to save events.
@@ -63,8 +63,8 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 	protected static final int DETACHED = 2;
 	protected static final int DELETED = 3;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractSaveEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractSaveEventListener.class.getName());
 
 	/**
 	 * Prepares the save call using the given requested id.
@@ -128,9 +128,9 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		}
 		else {
             // TODO: define toString()s for generators
-            if (LOG.isDebugEnabled()) LOG.debug("Generated identifier: "
-                                                + persister.getIdentifierType().toLoggableString(generatedId, source.getFactory())
-                                                + ", using strategy: " + persister.getIdentifierGenerator().getClass().getName());
+            if (LOG.isDebugEnabled()) LOG.debugf("Generated identifier: %s, using strategy: %s",
+                                                 persister.getIdentifierType().toLoggableString(generatedId, source.getFactory()),
+                                                 persister.getIdentifierGenerator().getClass().getName());
 
 			return performSave( entity, generatedId, persister, false, anything, source, true );
 		}
@@ -202,9 +202,9 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// Sub-insertions should occur before containing insertion so
 		// Try to do the callback now
 		if ( persister.implementsLifecycle( source.getEntityMode() ) ) {
-            LOG.debug("Calling onSave()");
+            LOG.debugf("Calling onSave()");
 			if ( ( ( Lifecycle ) entity ).onSave( source ) ) {
-                LOG.debug("Insertion vetoed by onSave()");
+                LOG.debugf("Insertion vetoed by onSave()");
 				return true;
 			}
 		}
@@ -303,14 +303,14 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 					values, entity, persister, source, shouldDelayIdentityInserts
 			);
 			if ( !shouldDelayIdentityInserts ) {
-                LOG.debug("Executing identity-insert immediately");
+                LOG.debugf("Executing identity-insert immediately");
 				source.getActionQueue().execute( insert );
 				id = insert.getGeneratedId();
 				key = new EntityKey( id, persister, source.getEntityMode() );
 				source.getPersistenceContext().checkUniqueness( key, entity );
 			}
 			else {
-                LOG.debug("Delaying identity-insert due to no transaction in progress");
+                LOG.debugf("Delaying identity-insert due to no transaction in progress");
 				source.getActionQueue().addAction( insert );
 				key = insert.getDelayedEntityKey();
 			}

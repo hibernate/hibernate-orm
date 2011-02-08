@@ -1,7 +1,5 @@
 package org.hibernate.test.propertyref.inheritence.union;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

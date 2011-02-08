@@ -1,10 +1,9 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.util.Date;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.test.entitymode.dom4j.component;
-
 import junit.framework.Test;
-
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.Session;
 import org.hibernate.EntityMode;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * TODO : javadoc

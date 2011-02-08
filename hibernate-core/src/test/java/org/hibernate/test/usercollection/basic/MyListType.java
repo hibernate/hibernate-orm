@@ -1,8 +1,6 @@
 package org.hibernate.test.usercollection.basic;
-
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;

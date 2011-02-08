@@ -23,6 +23,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Annotation related exception.
  * The EJB3 EG will probably set a generic exception.

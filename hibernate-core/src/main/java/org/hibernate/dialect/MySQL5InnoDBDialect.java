@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 
+
 /**
  * @author Gavin King, Scott Marlow
  */

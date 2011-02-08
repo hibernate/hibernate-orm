@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
 
 
+
 /**
  * @author Hern�n Chanfreau
  *

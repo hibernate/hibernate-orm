@@ -22,17 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany.detached;
-
-import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.envers.test.AbstractEntityTest;
-import org.hibernate.envers.test.entities.onetomany.detached.IndexedListJoinColumnBidirectionalRefIngEntity;
-import org.hibernate.envers.test.entities.onetomany.detached.IndexedListJoinColumnBidirectionalRefEdEntity;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import org.testng.annotations.Test;
-
-import javax.persistence.EntityManager;
 import java.util.Arrays;
+import javax.persistence.EntityManager;
+import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.envers.test.AbstractEntityTest;
+import org.hibernate.envers.test.entities.onetomany.detached.IndexedListJoinColumnBidirectionalRefEdEntity;
+import org.hibernate.envers.test.entities.onetomany.detached.IndexedListJoinColumnBidirectionalRefIngEntity;
+import org.testng.annotations.Test;
 
 /**
  * Test for a "fake" bidirectional mapping where one side uses @OneToMany+@JoinColumn (and thus owns the relatin),

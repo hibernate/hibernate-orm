@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Thrown if Hibernate can't instantiate an entity or component
  * class at runtime.

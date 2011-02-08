@@ -22,14 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query;
-
+import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.query.criteria.AuditConjunction;
 import org.hibernate.envers.query.criteria.AuditCriterion;
-import org.hibernate.envers.query.criteria.*;
+import org.hibernate.envers.query.criteria.AuditDisjunction;
+import org.hibernate.envers.query.criteria.AuditId;
+import org.hibernate.envers.query.criteria.AuditProperty;
+import org.hibernate.envers.query.criteria.AuditRelatedId;
+import org.hibernate.envers.query.criteria.LogicalAuditExpression;
+import org.hibernate.envers.query.criteria.NotAuditExpression;
 import org.hibernate.envers.query.property.EntityPropertyName;
 import org.hibernate.envers.query.property.RevisionNumberPropertyName;
 import org.hibernate.envers.query.property.RevisionPropertyPropertyName;
 import org.hibernate.envers.query.property.RevisionTypePropertyName;
-import org.hibernate.envers.RevisionType;
 
 /**
  * TODO: ilike

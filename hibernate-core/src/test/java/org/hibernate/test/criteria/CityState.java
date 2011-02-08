@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.criteria;
 
+
 /**
  * @author Gail Badner
  */

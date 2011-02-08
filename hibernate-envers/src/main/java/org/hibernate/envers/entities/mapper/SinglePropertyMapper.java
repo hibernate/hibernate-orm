@@ -22,23 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.HibernateException;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.reader.AuditReaderImplementor;
 import org.hibernate.envers.tools.Tools;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-
-import org.hibernate.collection.PersistentCollection;
-import org.hibernate.property.Setter;
 import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.HibernateException;
+import org.hibernate.property.Setter;
 
 /**
  * TODO: diff

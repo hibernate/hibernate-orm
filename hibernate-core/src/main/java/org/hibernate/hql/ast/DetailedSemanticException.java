@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.hql.ast;
-
-import antlr.SemanticException;
-
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import antlr.SemanticException;
 
 /**
  * Thrown when a call to the underlying Hibernate engine fails, indicating

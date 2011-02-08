@@ -1,9 +1,7 @@
 //$Id: PointyTooth.java 14761 2008-06-11 13:51:06Z hardy.ferentschik $
 package org.hibernate.test.annotations.id.sequences.entities;
-
 import java.io.Serializable;
 import java.math.BigInteger;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -11,7 +9,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-
 import org.hibernate.annotations.GenericGenerator;
 
 /**

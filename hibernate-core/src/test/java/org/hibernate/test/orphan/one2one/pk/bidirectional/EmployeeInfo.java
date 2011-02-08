@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.orphan.one2one.pk.bidirectional;
 
+
 /**
  * TODO : javadoc
  *

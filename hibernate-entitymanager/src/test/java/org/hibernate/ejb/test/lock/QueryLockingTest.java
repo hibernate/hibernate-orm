@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.lock;
-
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
-
 import org.hibernate.LockMode;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.ejb.AvailableSettings;

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine;
-
 import static org.jboss.logging.Logger.Level.WARN;
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -41,8 +40,8 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
@@ -57,6 +56,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
 import org.hibernate.util.IdentityMap;
 import org.hibernate.util.MarkerObject;
+import org.jboss.logging.Logger;
 
 /**
  * A <tt>PersistenceContext</tt> represents the state of persistent "stuff" which
@@ -74,8 +74,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                StatefulPersistenceContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       StatefulPersistenceContext.class.getName());
 	private static final int INIT_COLL_SIZE = 8;
 
 	private SessionImplementor session;
@@ -548,7 +548,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		if ( value instanceof HibernateProxy ) {
-            LOG.debug("setting proxy identifier: " + id);
+            LOG.debugf("Setting proxy identifier: %s", id);
 			HibernateProxy proxy = (HibernateProxy) value;
 			LazyInitializer li = proxy.getHibernateLazyInitializer();
 			li.setIdentifier(id);
@@ -884,7 +884,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	public void initializeNonLazyCollections() throws HibernateException {
 		if ( loadCounter == 0 ) {
-            LOG.debug("Initializing non-lazy collections");
+            LOG.debugf("Initializing non-lazy collections");
 			//do this work only at the very highest level of the load
 			loadCounter++; //don't let this method be called recursively
 			try {

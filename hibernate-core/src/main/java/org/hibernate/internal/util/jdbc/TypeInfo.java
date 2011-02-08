@@ -23,6 +23,7 @@
  */
 package org.hibernate.internal.util.jdbc;
 
+
 /**
  * Models type info extracted from {@link java.sql.DatabaseMetaData#getTypeInfo()}
  *

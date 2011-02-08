@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;

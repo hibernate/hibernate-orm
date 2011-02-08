@@ -1,5 +1,6 @@
 package org.hibernate.test.collection.original;
 
+
 public class Animal {
     long id;
     String name;

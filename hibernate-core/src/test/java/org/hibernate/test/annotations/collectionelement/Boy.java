@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,7 +19,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.CollectionOfElements;
 
 /**

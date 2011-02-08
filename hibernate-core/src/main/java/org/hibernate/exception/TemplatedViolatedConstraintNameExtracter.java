@@ -24,6 +24,7 @@
  */
 package org.hibernate.exception;
 
+
 /**
  * Knows how to extract a violated constraint name from an error message based on the
  * fact that the constraint name is templated within the message.

@@ -1,8 +1,7 @@
 //$Id: DataPoint.java 7231 2005-06-19 22:04:00Z oneovthafew $
 package org.hibernate.test.readonly;
-
-import java.math.BigDecimal;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * @author Gavin King

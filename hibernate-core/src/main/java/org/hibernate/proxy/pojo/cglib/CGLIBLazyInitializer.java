@@ -22,26 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.proxy.pojo.cglib;
-
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
 import net.sf.cglib.proxy.Callback;
 import net.sf.cglib.proxy.CallbackFilter;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.InvocationHandler;
 import net.sf.cglib.proxy.NoOp;
-
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.proxy.pojo.BasicLazyInitializer;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.type.CompositeType;
 import org.hibernate.util.ReflectHelper;
-
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * A <tt>LazyInitializer</tt> implemented using the CGLIB bytecode generation library
@@ -50,6 +47,8 @@ import org.slf4j.LoggerFactory;
  */
 @Deprecated
 public final class CGLIBLazyInitializer extends BasicLazyInitializer implements InvocationHandler {
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CGLIBLazyInitializer.class.getName());
 
 	private static final CallbackFilter FINALIZE_FILTER = new CallbackFilter() {
 		public int accept(Method method) {
@@ -95,9 +94,8 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 			return proxy;
 		}
 		catch (Throwable t) {
-			LoggerFactory.getLogger( BasicLazyInitializer.class )
-				.error( "CGLIB Enhancement failed: " + entityName, t );
-			throw new HibernateException( "CGLIB Enhancement failed: " + entityName, t );
+            LOG.error(LOG.cglibEnhancementFailed(entityName), t);
+            throw new HibernateException(LOG.cglibEnhancementFailed(entityName), t);
 		}
 	}
 
@@ -222,7 +220,8 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 		}
 	}
 
-	protected Object serializableProxy() {
+	@Override
+    protected Object serializableProxy() {
 		return new SerializableProxy(
 				getEntityName(),
 				persistentClass,
@@ -231,7 +230,7 @@ public final class CGLIBLazyInitializer extends BasicLazyInitializer implements 
 				( isReadOnlySettingAvailable() ? Boolean.valueOf( isReadOnly() ) : isReadOnlyBeforeAttachedToSession() ),
 				getIdentifierMethod,
 				setIdentifierMethod,
-				componentIdType 
+				componentIdType
 			);
 	}
 }

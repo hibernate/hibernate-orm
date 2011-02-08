@@ -24,6 +24,7 @@
  */
 package org.hibernate.loader;
 
+
 /**
  * Type definition of CollectionAliases.
  *

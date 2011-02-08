@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 
+
 /**
  * An SQL dialect for DB2/390. This class provides support for
  * DB2 Universal Database for OS/390, also known as DB2/390.

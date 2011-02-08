@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.query;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.QueryParameters;
@@ -50,6 +49,7 @@ import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.EmptyIterator;
 import org.hibernate.util.IdentitySet;
 import org.hibernate.util.JoinedIterator;
+import org.jboss.logging.Logger;
 
 /**
  * Defines a query execution plan for an HQL query (or filter).
@@ -60,8 +60,7 @@ public class HQLQueryPlan implements Serializable {
 
     // TODO : keep separate notions of QT[] here for shallow/non-shallow queries...
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HQLQueryPlan.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HQLQueryPlan.class.getName());
 
 	private final String sourceQuery;
 	private final QueryTranslator[] translators;

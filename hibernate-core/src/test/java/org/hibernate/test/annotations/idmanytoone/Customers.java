@@ -1,11 +1,10 @@
 //$
 package org.hibernate.test.annotations.idmanytoone;
-
 import java.io.Serializable;
-import javax.persistence.Id;
-import javax.persistence.Column;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 

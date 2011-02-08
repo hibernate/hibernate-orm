@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jmx.internal;
-
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Map;
@@ -31,13 +30,14 @@ import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.Stoppable;
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of JMX services
@@ -46,8 +46,7 @@ import org.hibernate.service.spi.Stoppable;
  */
 public class JmxServiceImpl implements JmxService, Stoppable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JmxServiceImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JmxServiceImpl.class.getName());
 
 	public static final String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
 	public static final String JMX_AGENT_ID = "hibernate.jmx.agentId";
@@ -93,7 +92,7 @@ public class JmxServiceImpl implements JmxService, Stoppable {
 							mBeanServer.unregisterMBean( objectName );
 						}
 						catch ( Exception e ) {
-                            LOG.debug("Unable to unregsiter registered MBean [ON=" + objectName + "] : " + e.toString());
+                            LOG.debugf("Unable to unregsiter registered MBean [ON=%s] : %s", objectName, e.toString());
 						}
 					}
 				}

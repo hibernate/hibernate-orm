@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.criterion;
-
 import java.io.Serializable;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;

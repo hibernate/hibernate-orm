@@ -26,7 +26,6 @@
   */
 
 package org.hibernate.test.annotations.inheritance.joined;
-
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

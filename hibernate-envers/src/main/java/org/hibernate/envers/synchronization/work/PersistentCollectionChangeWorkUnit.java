@@ -22,22 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
-
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-
+import org.hibernate.Session;
+import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.CollectionEntry;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
 import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-
-import org.hibernate.Session;
-import org.hibernate.engine.CollectionEntry;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.collection.PersistentCollection;
 
 /**
  * @author Adam Warski (adam at warski dot org)

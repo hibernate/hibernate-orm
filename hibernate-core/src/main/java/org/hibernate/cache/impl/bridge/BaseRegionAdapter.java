@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-
 import java.util.Map;
-
-import org.hibernate.cache.Region;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.Region;
 import org.hibernate.cfg.Settings;
 
 /**

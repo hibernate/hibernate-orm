@@ -1,8 +1,6 @@
 //$Id: InterfaceProxyTest.java 15736 2008-12-27 00:49:42Z gbadner $
 package org.hibernate.test.interfaceproxy;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

@@ -1,5 +1,4 @@
 package org.hibernate.test.criteria;
-
 import java.io.Serializable;
 
 /**

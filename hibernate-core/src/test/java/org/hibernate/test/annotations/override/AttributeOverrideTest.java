@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.override;
-
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
 

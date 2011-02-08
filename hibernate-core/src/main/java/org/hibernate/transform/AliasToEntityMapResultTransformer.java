@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.transform;
-
 import java.util.HashMap;
 import java.util.Map;
 

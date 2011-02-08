@@ -1,13 +1,11 @@
 package org.hibernate.test.sql.hand.identity;
-
 import junit.framework.Test;
-
+import org.hibernate.JDBCException;
+import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.Session;
-import org.hibernate.JDBCException;
-import org.hibernate.test.sql.hand.Organization;
 
 /**
  * Custom SQL tests for combined usage of custom insert SQL and identity columns

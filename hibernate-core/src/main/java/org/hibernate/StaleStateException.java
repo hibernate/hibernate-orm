@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Thrown when a version number or timestamp check failed, indicating that the
  * <tt>Session</tt> contained stale data (when using long transactions

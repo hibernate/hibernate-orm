@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import javax.persistence.AttributeOverride;

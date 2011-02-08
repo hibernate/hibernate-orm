@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.packaging;
 
+
 /**
  * Filter a Java element (class or package per fully qualified name and annotation existence)
  * At least 1 annotation has to annotate the element and the accept method must match

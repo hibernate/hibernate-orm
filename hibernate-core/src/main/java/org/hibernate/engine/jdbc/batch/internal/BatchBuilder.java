@@ -22,11 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.batch.internal;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.jboss.logging.Logger;
 
 /**
  * A builder for {@link Batch} instances.
@@ -35,8 +35,7 @@ import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
  */
 public class BatchBuilder {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                BatchBuilder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BatchBuilder.class.getName());
 
 	private int size;
 

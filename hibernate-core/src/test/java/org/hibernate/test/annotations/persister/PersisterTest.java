@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.persister;
-
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.SingleTableEntityPersister;

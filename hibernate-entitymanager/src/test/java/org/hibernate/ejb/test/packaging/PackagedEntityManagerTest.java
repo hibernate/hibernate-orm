@@ -23,7 +23,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.packaging;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,7 +31,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
-
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.test.Distributor;

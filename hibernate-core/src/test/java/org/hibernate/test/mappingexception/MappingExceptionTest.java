@@ -1,6 +1,5 @@
 // $Id: SQLExceptionConversionTest.java 6847 2005-05-21 15:46:41Z oneovthafew $
 package org.hibernate.test.mappingexception;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,10 +8,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
 import org.hibernate.InvalidMappingException;

@@ -23,14 +23,11 @@
  *
  */
 package org.hibernate.proxy;
-
 import java.io.Serializable;
-
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.TransientObjectException;
 import org.hibernate.SessionException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;

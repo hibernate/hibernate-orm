@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.tuple;
-
+import org.hibernate.FetchMode;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.type.Type;
-import org.hibernate.FetchMode;
 
 /**
  * Represents a basic property within the Hibernate runtime-metamodel.

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;

@@ -23,11 +23,10 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.Cascade;
@@ -41,6 +40,7 @@ import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default replicate event listener used by Hibernate to replicate
@@ -50,8 +50,8 @@ import org.hibernate.type.Type;
  */
 public class DefaultReplicateEventListener extends AbstractSaveEventListener implements ReplicateEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultReplicateEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultReplicateEventListener.class.getName());
 
 	/**
 	 * Handle the given replicate event.

@@ -24,7 +24,6 @@
  *
  */
 package org.hibernate.test.annotations.lob;
-
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.sql.LongVarcharTypeDescriptor;

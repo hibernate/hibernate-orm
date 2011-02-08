@@ -22,20 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
-
+import org.hibernate.FlushMode;
+import org.hibernate.Session;
 import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.tools.Pair;
-
-import org.hibernate.FlushMode;
-import org.hibernate.Session;
 
 /**
  * @author Adam Warski (adam at warski dot org)

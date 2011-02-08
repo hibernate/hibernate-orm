@@ -1,5 +1,4 @@
 package org.hibernate.stat;
-
 import java.util.concurrent.atomic.AtomicLong;
 
 /**

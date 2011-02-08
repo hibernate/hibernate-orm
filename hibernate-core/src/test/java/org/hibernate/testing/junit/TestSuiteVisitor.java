@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.testing.junit;
-
 import java.util.Enumeration;
-
-import junit.framework.TestSuite;
 import junit.framework.Test;
+import junit.framework.TestSuite;
 
 /**
  * Handles walking a TestSuite hierarchy for recognition of individual tests.

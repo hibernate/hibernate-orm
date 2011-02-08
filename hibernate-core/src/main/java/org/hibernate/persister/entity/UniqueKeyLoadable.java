@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 

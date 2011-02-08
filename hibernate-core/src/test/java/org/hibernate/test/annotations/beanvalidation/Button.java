@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import javax.persistence.Embeddable;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotNull;

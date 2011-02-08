@@ -1,8 +1,7 @@
 package org.hibernate.test.any;
-
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * todo: describe ${NAME}

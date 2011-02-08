@@ -2,6 +2,7 @@
 
 package org.hibernate.test.legacy;
 
+
 public class S {
 	private String address;
 	private int count;

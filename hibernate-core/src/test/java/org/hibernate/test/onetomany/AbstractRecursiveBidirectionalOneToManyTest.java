@@ -23,11 +23,8 @@
  *
  */
 package org.hibernate.test.onetomany;
-
 import java.util.ArrayList;
-
 import org.hibernate.CacheMode;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

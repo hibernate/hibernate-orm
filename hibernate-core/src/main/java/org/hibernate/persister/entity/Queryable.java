@@ -23,8 +23,6 @@
  *
  */
 package org.hibernate.persister.entity;
-
-import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.sql.SelectFragment;
 
 /**

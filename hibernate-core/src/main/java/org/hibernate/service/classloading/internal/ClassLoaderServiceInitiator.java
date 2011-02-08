@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.classloading.internal;
-
 import java.util.Map;
-
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistry;

@@ -24,7 +24,6 @@
 
 //$Id$
 package org.hibernate.test.annotations.inheritance.discriminatoroptions;
-
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.test.annotations.TestCase;

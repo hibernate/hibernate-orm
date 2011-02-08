@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.loader.custom;
-
-import org.hibernate.LockMode;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 
 /**
  * Represents some non-scalar (entity/collection) return within the query result.

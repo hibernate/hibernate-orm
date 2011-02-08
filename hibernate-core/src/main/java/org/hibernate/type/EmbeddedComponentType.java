@@ -22,14 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.lang.reflect.Method;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.component.ComponentMetamodel;
+import org.hibernate.tuple.component.ComponentTuplizer;
 
 /**
  * @author Gavin King

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jmx;
-
 import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -35,8 +34,8 @@ import javax.naming.StringRefAddr;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
-import org.hibernate.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.TypeHelper;
@@ -47,6 +46,7 @@ import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.stat.Statistics;
+import org.jboss.logging.Logger;
 
 /**
  * A flyweight for <tt>SessionFactory</tt>. If the MBean itself does not
@@ -58,8 +58,7 @@ import org.hibernate.stat.Statistics;
 public class SessionFactoryStub implements SessionFactory {
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SessionFactoryStub.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SessionFactoryStub.class.getName());
 
 	private transient SessionFactory impl;
 	private transient HibernateService service;
@@ -113,8 +112,8 @@ public class SessionFactoryStub implements SessionFactory {
 			// (alternatively we could do an actual JNDI lookup here....)
 			result = SessionFactoryObjectFactory.getNamedInstance(name);
             if (result == null) throw new InvalidObjectException("Could not find a stub SessionFactory named: " + name);
-            LOG.debug("Resolved stub SessionFactory by name");
-        } else LOG.debug("Resolved stub SessionFactory by uid");
+            LOG.debugf("Resolved stub SessionFactory by name");
+        } else LOG.debugf("Resolved stub SessionFactory by uid");
 		return result;
 	}
 

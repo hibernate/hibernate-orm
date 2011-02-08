@@ -23,14 +23,13 @@
  *
  */
 package org.hibernate.hql.ast.exec;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.HqlSqlWalker;
@@ -41,6 +40,7 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Update;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of MultiTableUpdateExecutor.
@@ -49,8 +49,8 @@ import org.hibernate.util.StringHelper;
  */
 public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                MultiTableUpdateExecutor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       MultiTableUpdateExecutor.class.getName());
 
 	private final Queryable persister;
 	private final String idInsertSelect;

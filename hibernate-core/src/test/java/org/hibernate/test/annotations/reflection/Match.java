@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.reflection;
-
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;

@@ -1,6 +1,7 @@
 //$Id: Group.java 6058 2005-03-11 17:05:19Z oneovthafew $
 package org.hibernate.test.idbag;
 
+
 /**
  * @author Gavin King
  */

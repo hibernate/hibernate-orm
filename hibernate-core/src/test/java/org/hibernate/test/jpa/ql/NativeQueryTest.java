@@ -1,10 +1,8 @@
 package org.hibernate.test.jpa.ql;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.jpa.AbstractJPATest;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * todo: describe NativeQueryTest

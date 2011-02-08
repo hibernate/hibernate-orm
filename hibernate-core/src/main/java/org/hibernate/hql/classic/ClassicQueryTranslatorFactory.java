@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.hql.classic;
-
+import java.util.Map;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
-
-import java.util.Map;
 
 /**
  * Generates translators which uses the older hand-written parser to perform

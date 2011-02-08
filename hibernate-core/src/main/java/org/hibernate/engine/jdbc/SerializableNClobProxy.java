@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-
-import java.sql.Clob;
 import java.lang.reflect.Proxy;
+import java.sql.Clob;
 
 /**
  * Manages aspects of proxying java.sql.NClobs to add serializability.

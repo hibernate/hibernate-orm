@@ -22,28 +22,26 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
-import java.sql.Types;
-import java.sql.SQLException;
-import java.sql.ResultSet;
 import java.sql.CallableStatement;
-
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import org.hibernate.HibernateException;
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.function.NoArgSQLFunction;
+import org.hibernate.dialect.function.NvlFunction;
+import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.JDBCExceptionHelper;
+import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
+import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.dialect.function.NoArgSQLFunction;
-import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.dialect.function.NvlFunction;
-import org.hibernate.HibernateException;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.exception.ViolatedConstraintNameExtracter;
-import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.JDBCExceptionHelper;
 
 /**
  * A dialect for Oracle 8i.

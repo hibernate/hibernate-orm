@@ -25,14 +25,12 @@
  */
 
 package org.hibernate.test.cascade;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author <a href="mailto:ovidiu@feodorov.com">Ovidiu Feodorov</a>

@@ -23,16 +23,14 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.loading.LoadContexts;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.loading.LoadContexts;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.transform;
-
 import java.util.Arrays;
-
 import org.hibernate.HibernateException;
 import org.hibernate.property.ChainedPropertyAccessor;
 import org.hibernate.property.PropertyAccessor;

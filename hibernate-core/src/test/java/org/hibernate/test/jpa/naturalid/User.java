@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.jpa.naturalid;
 
+
 /**
  * {@inheritDoc}
  *

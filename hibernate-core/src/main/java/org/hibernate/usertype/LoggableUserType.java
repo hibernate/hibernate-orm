@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.usertype;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**

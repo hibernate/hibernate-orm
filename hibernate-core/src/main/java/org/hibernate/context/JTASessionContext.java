@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.context;
-
 import java.util.Hashtable;
 import java.util.Map;
 import javax.transaction.Synchronization;
@@ -31,10 +30,11 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link CurrentSessionContext} which scopes the notion
@@ -61,8 +61,7 @@ import org.hibernate.util.JTAHelper;
  */
 public class JTASessionContext implements CurrentSessionContext {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JTASessionContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JTASessionContext.class.getName());
 
 	protected final SessionFactoryImplementor factory;
 	private transient Map currentSessionMap = new Hashtable();

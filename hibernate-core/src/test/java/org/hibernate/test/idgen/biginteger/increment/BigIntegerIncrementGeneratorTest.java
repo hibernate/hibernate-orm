@@ -22,11 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.idgen.biginteger.increment;
-
 import java.math.BigInteger;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

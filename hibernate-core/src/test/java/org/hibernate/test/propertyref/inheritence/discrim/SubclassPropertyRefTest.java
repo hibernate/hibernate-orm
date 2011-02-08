@@ -1,8 +1,6 @@
 //$Id: SubclassPropertyRefTest.java 6029 2005-03-06 16:34:16Z oneovthafew $
 package org.hibernate.test.propertyref.inheritence.discrim;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

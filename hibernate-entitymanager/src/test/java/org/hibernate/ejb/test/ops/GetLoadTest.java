@@ -24,10 +24,8 @@
 
 //$Id$
 package org.hibernate.ejb.test.ops;
-
 import java.util.Map;
 import javax.persistence.EntityManager;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;

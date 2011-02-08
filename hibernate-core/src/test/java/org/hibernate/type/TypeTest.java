@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -37,9 +36,7 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
-
 import junit.framework.TestCase;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;

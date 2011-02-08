@@ -1,6 +1,7 @@
 //$Id: PublicationDate.java 7556 2005-07-19 23:22:27Z oneovthafew $
 package org.hibernate.test.optlock;
 
+
 public class PublicationDate {
 	private int year;
 	private Integer month;

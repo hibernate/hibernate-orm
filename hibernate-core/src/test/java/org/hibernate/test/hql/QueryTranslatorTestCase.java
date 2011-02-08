@@ -1,6 +1,5 @@
 // $Id: QueryTranslatorTestCase.java 11361 2007-03-29 12:48:35Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
-
 import java.sql.Connection;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
@@ -14,13 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-
 import junit.framework.ComparisonFailure;
-
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
@@ -31,6 +27,7 @@ import org.hibernate.hql.ast.HqlToken;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
 

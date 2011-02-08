@@ -24,6 +24,7 @@
 
 package org.hibernate.test.annotations.xml.ejb3;
 
+
 public class Entity1 {
 	Entity2 field1;
 

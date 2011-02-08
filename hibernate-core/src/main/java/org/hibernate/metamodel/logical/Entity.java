@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.logical;
 
+
 /**
  * Models the notion of an entity
  *

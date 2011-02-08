@@ -1,6 +1,5 @@
 //$Id: Auction.java 5733 2005-02-14 15:56:06Z oneovthafew $
 package org.hibernate.test.bidi;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

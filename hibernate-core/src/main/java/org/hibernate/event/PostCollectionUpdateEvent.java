@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.event;
-
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 

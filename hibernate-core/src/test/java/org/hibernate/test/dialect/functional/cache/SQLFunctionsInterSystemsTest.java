@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.dialect.functional.cache;
-
 import static org.hibernate.TestLogger.LOG;
 import java.sql.Statement;
 import java.util.ArrayList;

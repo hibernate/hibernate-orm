@@ -23,22 +23,19 @@
  *
  */
 package org.hibernate.loader.collection;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.OuterJoinableAssociation;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
-import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.StringHelper;
 
 /**

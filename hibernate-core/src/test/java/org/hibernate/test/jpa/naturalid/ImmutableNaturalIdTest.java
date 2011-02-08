@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.jpa.naturalid;
-
 import junit.framework.Test;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -1,6 +1,7 @@
 //$Id: $
 package org.hibernate.test.sql.hand;
 
+
 /**
  * @author Emmanuel Bernard
  */

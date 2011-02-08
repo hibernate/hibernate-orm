@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -36,8 +35,8 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 import org.hibernate.EntityMode;
-import org.hibernate.Logger;
 import org.hibernate.annotations.common.AssertionFailure;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;
@@ -49,6 +48,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
+import org.jboss.logging.Logger;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
@@ -62,7 +62,8 @@ import org.hibernate.type.EntityType;
  */
 public class AttributeFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, AttributeFactory.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           AttributeFactory.class.getName());
 
 	private final MetadataContext context;
 

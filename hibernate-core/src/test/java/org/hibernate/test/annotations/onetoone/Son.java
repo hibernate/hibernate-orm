@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
+
 /**
  * @author Hardy Ferentschik
  */

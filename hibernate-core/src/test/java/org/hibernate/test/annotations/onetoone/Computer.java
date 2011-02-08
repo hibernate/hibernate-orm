@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;

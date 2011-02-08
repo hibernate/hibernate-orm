@@ -20,10 +20,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
-import java.util.Set;
-import java.net.URL;
 import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.util.Set;
 
 /**
  * @author Emmanuel Bernard

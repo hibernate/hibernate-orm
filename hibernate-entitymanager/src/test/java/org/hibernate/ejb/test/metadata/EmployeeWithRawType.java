@@ -1,5 +1,4 @@
 package org.hibernate.ejb.test.metadata;
-
 import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;

@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.synchronization.work;
-
-import org.hibernate.Session;
-
 import java.util.Map;
+import org.hibernate.Session;
 
 /**
  * TODO: refactor constructors into factory methods

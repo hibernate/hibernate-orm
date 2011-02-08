@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * A problem occurred translating a Hibernate query to SQL
  * due to invalid query syntax, etc.

@@ -1,15 +1,13 @@
 //$Id$
 package org.hibernate.test.sql.hand.custom.sybase;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Custom SQL tests for Sybase dialects

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.event.def;
-
 import org.hibernate.engine.CascadingAction;
 
 public class DefaultSaveOrUpdateCopyEventListener extends DefaultMergeEventListener {

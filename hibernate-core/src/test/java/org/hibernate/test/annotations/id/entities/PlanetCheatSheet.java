@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.id.entities;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;

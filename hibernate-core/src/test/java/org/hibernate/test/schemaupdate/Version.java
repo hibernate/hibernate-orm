@@ -1,5 +1,6 @@
 package org.hibernate.test.schemaupdate;
 
+
 public class Version {
 
 	long id;

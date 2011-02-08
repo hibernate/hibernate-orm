@@ -1,10 +1,8 @@
 package org.hibernate.test.any;
-
-import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-
 import junit.framework.Test;
+import org.hibernate.Session;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * todo: describe AnyTypeTest

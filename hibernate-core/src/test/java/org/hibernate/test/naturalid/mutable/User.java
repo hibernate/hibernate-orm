@@ -1,6 +1,7 @@
 //$Id: User.java 6900 2005-05-25 01:24:22Z oneovthafew $
 package org.hibernate.test.naturalid.mutable;
 
+
 /**
  * @author Gavin King
  */

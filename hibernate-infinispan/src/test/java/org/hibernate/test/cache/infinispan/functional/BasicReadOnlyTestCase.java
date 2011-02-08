@@ -1,9 +1,7 @@
 package org.hibernate.test.cache.infinispan.functional;
-
+import java.util.Map;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-
-import java.util.Map;
 
 /**
  * @author Galder Zamarreño

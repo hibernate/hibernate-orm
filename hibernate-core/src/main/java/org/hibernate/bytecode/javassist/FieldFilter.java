@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode.javassist;
 
+
 /**
  * Contract for deciding whether fields should be read and/or write intercepted.
  *

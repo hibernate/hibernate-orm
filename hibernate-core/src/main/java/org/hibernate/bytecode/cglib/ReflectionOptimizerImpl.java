@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.bytecode.cglib;
-
-import org.hibernate.bytecode.ReflectionOptimizer;
-
 import java.io.Serializable;
+import org.hibernate.bytecode.ReflectionOptimizer;
 
 /**
  * ReflectionOptimizer implementation for CGLIB.

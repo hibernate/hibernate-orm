@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.inheritance.singletable;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 

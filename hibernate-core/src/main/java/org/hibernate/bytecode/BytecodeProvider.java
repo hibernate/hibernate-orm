@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.bytecode;
-
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
 

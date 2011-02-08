@@ -23,20 +23,18 @@
  *
  */
 package org.hibernate.action;
-
-import org.hibernate.HibernateException;
+import java.io.Serializable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.event.PostCollectionRemoveEvent;
-import org.hibernate.event.PreCollectionRemoveEvent;
-import org.hibernate.event.PreCollectionRemoveEventListener;
-import org.hibernate.event.EventSource;
-import org.hibernate.event.PostCollectionRemoveEventListener;
+import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.PostCollectionRemoveEvent;
+import org.hibernate.event.PostCollectionRemoveEventListener;
+import org.hibernate.event.PreCollectionRemoveEvent;
+import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-
-import java.io.Serializable;
 
 public final class CollectionRemoveAction extends CollectionAction {
 

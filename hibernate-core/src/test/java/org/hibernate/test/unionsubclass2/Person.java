@@ -2,6 +2,7 @@
 package org.hibernate.test.unionsubclass2;
 
 
+
 /**
  * @author Gavin King
  */

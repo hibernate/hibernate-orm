@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.junit;
 
+
 /**
  * A specialized TestCase for running tests in an isolated class-loader
  *

@@ -1,6 +1,7 @@
 //$Id: $
 package org.hibernate.test.component.basic;
 
+
 /**
  * @author Gail Badner
  */

@@ -1,5 +1,6 @@
 package org.hibernate.test.sql.check;
 
+
 /**
  * An entity which is expected to be mapped to each database using stored
  * procedures which return "affected row counts"; in other words, using

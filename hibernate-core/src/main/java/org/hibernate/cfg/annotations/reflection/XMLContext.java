@@ -25,7 +25,6 @@
 // $Id$
 
 package org.hibernate.cfg.annotations.reflection;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,15 +34,15 @@ import javax.persistence.AccessType;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class XMLContext implements Serializable {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                XMLContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, XMLContext.class.getName());
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<String, Element>();
 	private Map<String, Default> defaultsOverriding = new HashMap<String, Default>();
@@ -153,7 +152,7 @@ public class XMLContext implements Serializable {
 			setAccess( access, localDefault );
 			defaultsOverriding.put( className, localDefault );
 
-            LOG.debug("Adding XML overriding information for " + className);
+            LOG.debugf("Adding XML overriding information for %s", className);
 			addEntityListenerClasses( element, packageName, addedClasses );
 		}
 	}
@@ -172,15 +171,13 @@ public class XMLContext implements Serializable {
                         LOG.duplicateListener(listenerClassName);
 						continue;
 					}
-					else {
-						throw new IllegalStateException( "Duplicate XML entry for " + listenerClassName );
-					}
+                    throw new IllegalStateException("Duplicate XML entry for " + listenerClassName);
 				}
 				localAddedClasses.add( listenerClassName );
 				classOverriding.put( listenerClassName, listener );
 			}
 		}
-        LOG.debug("Adding XML overriding information for listeners: " + localAddedClasses);
+        LOG.debugf("Adding XML overriding information for listeners: %s", localAddedClasses);
 		addedClasses.addAll( localAddedClasses );
 		return localAddedClasses;
 	}

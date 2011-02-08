@@ -1,6 +1,7 @@
 //$Id: Item.java 6593 2005-04-28 15:52:26Z oneovthafew $
 package org.hibernate.test.iterate;
 
+
 /**
  * @author Gavin King
  */

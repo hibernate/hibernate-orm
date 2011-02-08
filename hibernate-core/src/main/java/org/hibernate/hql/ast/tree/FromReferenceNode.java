@@ -23,8 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -36,8 +36,7 @@ import antlr.collections.AST;
 public abstract class FromReferenceNode extends AbstractSelectExpression
         implements ResolvableNode, DisplayableNode, InitializeableNode, PathNode {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                FromReferenceNode.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromReferenceNode.class.getName());
 
 	private FromElement fromElement;
 	private boolean resolved = false;
@@ -70,7 +69,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 
 	public void setResolved() {
 		this.resolved = true;
-        LOG.debug("Resolved :  " + this.getPath() + " -> " + this.getText());
+        LOG.debugf("Resolved : %s -> %s", this.getPath(), this.getText());
 	}
 
 	public String getDisplayText() {

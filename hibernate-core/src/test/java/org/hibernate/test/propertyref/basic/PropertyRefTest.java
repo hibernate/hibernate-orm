@@ -1,22 +1,19 @@
 //$Id: PropertyRefTest.java 10396 2006-09-01 08:48:02 -0500 (Fri, 01 Sep 2006) steve.ebersole@jboss.com $
 package org.hibernate.test.propertyref.basic;
-
 import java.util.Iterator;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * @author Gavin King

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
-
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;

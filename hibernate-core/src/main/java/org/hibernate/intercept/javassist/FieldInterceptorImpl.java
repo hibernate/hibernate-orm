@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.intercept.javassist;
-
 import java.io.Serializable;
 import java.util.Set;
-
 import org.hibernate.bytecode.javassist.FieldHandler;
-import org.hibernate.intercept.AbstractFieldInterceptor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.intercept.AbstractFieldInterceptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 

@@ -1,6 +1,5 @@
 //$Id: Person.java 4592 2004-09-26 00:39:43Z oneovthafew $
 package org.hibernate.test.cuk;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;

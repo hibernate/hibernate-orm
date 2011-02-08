@@ -24,17 +24,14 @@
  *
  */
 package org.hibernate.test.readonly;
-
 import java.math.BigDecimal;
-
 import junit.framework.Test;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
-import org.hibernate.SessionException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;

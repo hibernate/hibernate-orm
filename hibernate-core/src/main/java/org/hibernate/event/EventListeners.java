@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.event;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.hibernate.MappingException;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.event.def.DefaultAutoFlushEventListener;
 import org.hibernate.event.def.DefaultDeleteEventListener;
@@ -44,6 +42,7 @@ import org.hibernate.event.def.DefaultLoadEventListener;
 import org.hibernate.event.def.DefaultLockEventListener;
 import org.hibernate.event.def.DefaultMergeEventListener;
 import org.hibernate.event.def.DefaultPersistEventListener;
+import org.hibernate.event.def.DefaultPersistOnFlushEventListener;
 import org.hibernate.event.def.DefaultPostLoadEventListener;
 import org.hibernate.event.def.DefaultPreLoadEventListener;
 import org.hibernate.event.def.DefaultRefreshEventListener;
@@ -52,7 +51,6 @@ import org.hibernate.event.def.DefaultSaveEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateCopyEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.def.DefaultUpdateEventListener;
-import org.hibernate.event.def.DefaultPersistOnFlushEventListener;
 import org.hibernate.util.Cloneable;
 
 /**

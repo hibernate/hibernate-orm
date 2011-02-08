@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.embedded.many2one;
-
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 

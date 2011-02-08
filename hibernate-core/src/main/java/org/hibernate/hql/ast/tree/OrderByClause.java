@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
-
 import antlr.collections.AST;
 
 /**

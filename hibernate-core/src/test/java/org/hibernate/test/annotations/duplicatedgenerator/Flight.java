@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.duplicatedgenerator;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;

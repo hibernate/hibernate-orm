@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.collection;
-
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
@@ -33,11 +32,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * A persistent wrapper for an array. Lazy initialization
@@ -49,8 +49,7 @@ import org.hibernate.type.Type;
 public class PersistentArrayHolder extends AbstractPersistentCollection {
 	protected Object array;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                PersistentArrayHolder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PersistentArrayHolder.class.getName());
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;

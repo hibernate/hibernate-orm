@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.logical;
 
+
 /**
  * Describes the type of a type :/
  *

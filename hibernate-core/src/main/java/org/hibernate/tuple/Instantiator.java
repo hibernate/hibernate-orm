@@ -23,8 +23,6 @@
  *
  */
 package org.hibernate.tuple;
-
-
 import java.io.Serializable;
 
 /**

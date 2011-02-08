@@ -22,19 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.collection;
-
 import java.util.Arrays;
 import javax.persistence.EntityManager;
-
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity;
-import static org.hibernate.envers.test.entities.collection.EnumSetEntity.E1;
-import static org.hibernate.envers.test.entities.collection.EnumSetEntity.E2;
+import org.hibernate.envers.test.entities.collection.EnumSetEntity.E1;
+import org.hibernate.envers.test.entities.collection.EnumSetEntity.E2;
 import org.hibernate.envers.test.tools.TestTools;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import org.hibernate.ejb.Ejb3Configuration;
 
 /**
  * @author Adam Warski (adam at warski dot org)

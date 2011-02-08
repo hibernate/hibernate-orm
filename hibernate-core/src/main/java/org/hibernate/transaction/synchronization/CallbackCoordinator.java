@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.transaction.synchronization;
-
 import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
@@ -39,8 +39,7 @@ import org.hibernate.util.JTAHelper;
  */
 public class CallbackCoordinator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CallbackCoordinator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CallbackCoordinator.class.getName());
 
 	private final TransactionFactory.Context ctx;
 	private JDBCContext jdbcContext;

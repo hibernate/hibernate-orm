@@ -23,14 +23,14 @@
  *
  */
 package org.hibernate.secure;
-
 import java.util.StringTokenizer;
 import javax.security.jacc.EJBMethodPermission;
 import javax.security.jacc.PolicyConfiguration;
 import javax.security.jacc.PolicyConfigurationFactory;
 import javax.security.jacc.PolicyContextException;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Adds Hibernate permissions to roles via JACC
@@ -39,8 +39,7 @@ import org.hibernate.Logger;
  */
 public class JACCConfiguration {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JACCConfiguration.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JACCConfiguration.class.getName());
 
 	private final PolicyConfiguration policyConfiguration;
 
@@ -75,7 +74,7 @@ public class JACCConfiguration {
 					null // arguments
 				);
 
-            LOG.debug("Adding permission to role " + role + ": " + permission);
+            LOG.debugf("Adding permission to role %s: %s", role, permission);
 			try {
 				policyConfiguration.addToRole( role, permission );
 			}

@@ -62,7 +62,7 @@ libraries = [
 
         // logging
         logging:        'org.jboss.logging:jboss-logging:3.0.0.Beta4',
-        // logging_tools:  'org.jboss.logging:jboss-logging-tools:1.0.0.Beta2',
+        logging_tools:  'org.jboss.logging:jboss-logging-tools:1.0.0.Beta3',
         slf4j_api:      'org.slf4j:slf4j-api:' + slf4jVersion,
         slf4j_simple:   'org.slf4j:slf4j-simple:' + slf4jVersion,
         jcl_slf4j:      'org.slf4j:jcl-over-slf4j:' + slf4jVersion,
@@ -107,7 +107,7 @@ subprojects { subProject ->
 
         // appropriately inject the common dependencies into each sub-project
         dependencies {
-            compile(libraries.logging)
+            // compile(libraries.logging)
             // compile(libraries.logging_tools)
             compile( libraries.slf4j_api )
             testCompile( libraries.junit )

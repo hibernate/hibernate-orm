@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Thrown when the user calls a method of a {@link Session} that is in an
  * inappropropriate state for the given call (for example, the the session

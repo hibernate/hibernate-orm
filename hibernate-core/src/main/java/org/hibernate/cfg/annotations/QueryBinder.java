@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.util.HashMap;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
@@ -35,8 +34,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.cfg.BinderHelper;
@@ -46,6 +45,7 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
+import org.jboss.logging.Logger;
 
 /**
  * Query binder
@@ -53,14 +53,12 @@ import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
  * @author Emmanuel Bernard
  */
 public abstract class QueryBinder {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QueryBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryBinder.class.getName());
 
 	public static void bindQuery(NamedQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
-		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
-		}
+        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
+                                                                                                "A named query must have a name when used in class or package level");
 		//EJBQL Query
 		QueryHint[] hints = queryAnn.hints();
 		String queryName = queryAnn.query();
@@ -89,9 +87,8 @@ public abstract class QueryBinder {
 	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
-		}
+        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
+                                                                                                "A named query must have a name when used in class or package level");
 		NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		QueryHint[] hints = queryAnn.hints();
@@ -150,10 +147,9 @@ public abstract class QueryBinder {
 	public static void bindNativeQuery(org.hibernate.annotations.NamedNativeQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
 		//ResultSetMappingDefinition mappingDefinition = mappings.getResultSetMapping( queryAnn.resultSetMapping() );
-		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
-		}
-		NamedSQLQueryDefinition query;
+        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
+                                                                                                "A named query must have a name when used in class or package level");
+        NamedSQLQueryDefinition query;
 		String resultSetMapping = queryAnn.resultSetMapping();
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
@@ -226,10 +222,8 @@ public abstract class QueryBinder {
 
 	public static void bindQuery(org.hibernate.annotations.NamedQuery queryAnn, Mappings mappings) {
 		if ( queryAnn == null ) return;
-		if ( BinderHelper.isEmptyAnnotationValue( queryAnn.name() ) ) {
-			throw new AnnotationException( "A named query must have a name when used in class or package level" );
-		}
-
+        if (BinderHelper.isEmptyAnnotationValue(queryAnn.name())) throw new AnnotationException(
+                                                                                                "A named query must have a name when used in class or package level");
 		FlushMode flushMode;
 		flushMode = getFlushMode( queryAnn.flushMode() );
 

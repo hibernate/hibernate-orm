@@ -1,5 +1,6 @@
 package org.hibernate.test.propertyref.inheritence.union;
 
+
 /**
  * @author gavin
  */

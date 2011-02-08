@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.naming.ids;
-
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;

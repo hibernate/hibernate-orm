@@ -1,10 +1,7 @@
 //$Id: OrderByTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.ordered;
-
 import java.util.Iterator;
-
 import junit.framework.Test;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

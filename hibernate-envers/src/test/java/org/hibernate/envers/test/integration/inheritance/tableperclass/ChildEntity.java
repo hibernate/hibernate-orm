@@ -23,10 +23,8 @@
  */
 
 package org.hibernate.envers.test.integration.inheritance.tableperclass;
-
 import javax.persistence.Basic;
 import javax.persistence.Entity;
-
 import org.hibernate.envers.Audited;
 
 /**

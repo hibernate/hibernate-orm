@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.cfg.annotations.reflection;
-
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -118,7 +117,7 @@ import javax.persistence.Version;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.Columns;
@@ -129,6 +128,7 @@ import org.hibernate.annotations.common.reflection.Filter;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor.
@@ -140,8 +140,8 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings("unchecked")
 public class JPAOverridenAnnotationReader implements AnnotationReader {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JPAOverridenAnnotationReader.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       JPAOverridenAnnotationReader.class.getName());
 	private static final Map<Class, String> annotationToXml;
 	private static final String SCHEMA_VALIDATION = "Activate schema validation for more information";
 	private static final Filter FILTER = new Filter() {

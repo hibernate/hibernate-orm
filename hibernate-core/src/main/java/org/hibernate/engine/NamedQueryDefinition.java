@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.util.Map;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 

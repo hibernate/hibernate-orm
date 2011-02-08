@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.param;
-
 import org.hibernate.type.Type;
 
 /**

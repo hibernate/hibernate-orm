@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
-
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
-import org.hibernate.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.jboss.logging.Logger;
 
 /**
  * A templated resolver impl which delegates to the {@link #resolveDialectInternal} method
@@ -40,8 +40,8 @@ import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
  */
 public abstract class AbstractDialectResolver implements DialectResolver {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractDialectResolver.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractDialectResolver.class.getName());
 
 	/**
 	 * {@inheritDoc}
@@ -56,7 +56,7 @@ public abstract class AbstractDialectResolver implements DialectResolver {
 		catch ( SQLException sqlException ) {
 			JDBCException jdbcException = BasicSQLExceptionConverter.INSTANCE.convert( sqlException );
             if (jdbcException instanceof JDBCConnectionException) throw jdbcException;
-            LOG.warn(BasicSQLExceptionConverter.MSG + " : " + sqlException.getMessage());
+            LOG.warnf("%s : %s", BasicSQLExceptionConverter.MSG, sqlException.getMessage());
             return null;
 		}
 		catch ( Throwable t ) {

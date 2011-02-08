@@ -26,7 +26,6 @@
   */
 
 package org.hibernate.test.annotations.manytoonewithformula;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;

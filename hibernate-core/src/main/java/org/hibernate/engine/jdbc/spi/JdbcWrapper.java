@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+
 /**
  * Generic contract for wrapped JDBC objects.
  *

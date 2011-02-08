@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test;
-
 import java.io.IOException;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.event.AuditEventListener;
@@ -40,9 +39,11 @@ import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.testing.tm.ConnectionProviderImpl;
 import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.testng.annotations.*;
-
-import org.hibernate.ejb.Ejb3Configuration;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Optional;
+import org.testng.annotations.Parameters;
 
 /**
  * @author Adam Warski (adam at warski dot org)

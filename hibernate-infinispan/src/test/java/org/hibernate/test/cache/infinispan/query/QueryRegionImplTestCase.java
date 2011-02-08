@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.query;
-
+import static org.hibernate.TestLogger.LOG;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +36,6 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
-import org.hibernate.test.cache.infinispan.TestInfinispanLogger;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
@@ -51,8 +50,6 @@ import org.infinispan.util.concurrent.IsolationLevel;
  * @since 3.5
  */
 public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
-
-    private static final TestInfinispanLogger LOG = TestInfinispanLogger.LOG;
 
     // protected static final String REGION_NAME = "test/" + StandardQueryCache.class.getName();
 

@@ -22,17 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.strategy;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-
 import org.hibernate.Session;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;

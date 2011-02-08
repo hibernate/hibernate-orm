@@ -1,5 +1,6 @@
 package org.hibernate.test.idgen.enhanced.table;
 
+
 /**
  * {@inheritDoc}
  *

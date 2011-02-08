@@ -1,11 +1,9 @@
 package org.hibernate.test.abstractembeddedcomponents.cid;
-
+import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-
-import junit.framework.Test;
 
 /**
  * @author Steve Ebersole

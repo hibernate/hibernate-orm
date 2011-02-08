@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
 import java.io.Serializable;
 
 

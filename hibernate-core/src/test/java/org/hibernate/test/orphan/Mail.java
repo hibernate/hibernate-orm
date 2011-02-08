@@ -1,5 +1,6 @@
 package org.hibernate.test.orphan;
 
+
 public class Mail {
 
 	private Integer id;

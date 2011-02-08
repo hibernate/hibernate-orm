@@ -1,6 +1,7 @@
 //$Id: Item.java 6236 2005-03-29 03:20:23Z oneovthafew $
 package org.hibernate.test.mapcompelem;
 
+
 /**
  * @author Gavin King
  */

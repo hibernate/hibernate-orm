@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Locale;
@@ -8,7 +7,6 @@ import java.util.Map;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.MapKeyColumn;
-
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;

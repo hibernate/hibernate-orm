@@ -25,7 +25,6 @@
 // $Id$
 
 package org.hibernate.cfg;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -38,7 +37,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import org.hibernate.AnnotationException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
@@ -46,6 +45,7 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A helper class to keep the {@code XProperty}s of a class ordered by access type.
@@ -58,8 +58,7 @@ class PropertyContainer {
         System.setProperty("jboss.i18n.generate-proxies", "true");
     }
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                PropertyContainer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, PropertyContainer.class.getName());
 
 	private final AccessType explicitClassDefinedAccessType;
 

@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode.util;
 
+
 /**
  * Contract describing the information Hibernate needs in terms of instrumenting
  * a class, either via ant task or dynamic classloader.

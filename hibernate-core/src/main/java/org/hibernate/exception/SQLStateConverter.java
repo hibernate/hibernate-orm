@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.exception;
-
-import org.hibernate.JDBCException;
-import org.hibernate.PessimisticLockException;
-import org.hibernate.QueryTimeoutException;
-
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.JDBCException;
+import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 
 /**
  * A SQLExceptionConverter implementation which performs converion based on

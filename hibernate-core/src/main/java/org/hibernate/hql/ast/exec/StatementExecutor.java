@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.exec;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;

@@ -1,27 +1,25 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.Column;
-import javax.persistence.JoinTable;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.TemporalType;
-
-import org.hibernate.annotations.MapKey;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.MapKey;
 
 /**
  * @author Emmanuel Bernard

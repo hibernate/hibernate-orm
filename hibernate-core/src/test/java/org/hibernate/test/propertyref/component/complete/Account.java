@@ -24,6 +24,7 @@
 package org.hibernate.test.propertyref.component.complete;
 
 
+
 public class Account {
 	private String number;
 	private Person owner;

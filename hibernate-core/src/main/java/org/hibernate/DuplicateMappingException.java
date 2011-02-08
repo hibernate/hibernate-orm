@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Raised whenever a duplicate for a certain type occurs.
  * Duplicate class, table, property name etc.

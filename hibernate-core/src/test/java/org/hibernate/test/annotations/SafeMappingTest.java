@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;

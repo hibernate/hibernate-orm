@@ -1,13 +1,12 @@
 //$Id$
 package org.hibernate.test.annotations.idmanytoone;
-
 import java.io.Serializable;
 import java.util.Set;
-import javax.persistence.Table;
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * @author Emmanuel Bernard

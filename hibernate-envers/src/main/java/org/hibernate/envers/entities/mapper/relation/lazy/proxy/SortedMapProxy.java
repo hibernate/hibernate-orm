@@ -22,14 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
-
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.io.Serializable;
-
 import org.hibernate.envers.entities.mapper.relation.lazy.initializor.Initializor;
 
 /**

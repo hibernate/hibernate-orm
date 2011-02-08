@@ -1,6 +1,5 @@
 //$Id: HQLTest.java 11374 2007-03-29 19:09:18Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -8,9 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DB2Dialect;
@@ -45,7 +42,6 @@ import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-
 import antlr.RecognitionException;
 import antlr.collections.AST;
 

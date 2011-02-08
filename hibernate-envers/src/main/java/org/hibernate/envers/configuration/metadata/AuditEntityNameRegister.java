@@ -1,9 +1,7 @@
 package org.hibernate.envers.configuration.metadata;
-
-import org.hibernate.MappingException;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
+import org.hibernate.MappingException;
 
 /**
  * A register of all audit entity names used so far.

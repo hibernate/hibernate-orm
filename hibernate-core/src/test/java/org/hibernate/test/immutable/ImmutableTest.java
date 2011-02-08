@@ -24,11 +24,8 @@
  *
  */
 package org.hibernate.test.immutable;
-
 import java.util.Iterator;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -36,9 +33,9 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.proxy.HibernateProxy;
 
 /**
  * @author Gavin King

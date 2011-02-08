@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Indicates that a transaction could not be begun, committed
  * or rolled back.

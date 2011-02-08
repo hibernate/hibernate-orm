@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.cfg.annotations.EntityBinder;

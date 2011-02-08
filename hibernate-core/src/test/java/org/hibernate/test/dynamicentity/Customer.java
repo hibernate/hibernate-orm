@@ -1,5 +1,6 @@
 package org.hibernate.test.dynamicentity;
 
+
 /**
  * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>
  */

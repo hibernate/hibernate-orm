@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.manytomanyassociationclass.compositeid;
-
 import java.io.Serializable;
-
 import org.hibernate.test.manytomanyassociationclass.Group;
 import org.hibernate.test.manytomanyassociationclass.Membership;
 import org.hibernate.test.manytomanyassociationclass.User;

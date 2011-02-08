@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;

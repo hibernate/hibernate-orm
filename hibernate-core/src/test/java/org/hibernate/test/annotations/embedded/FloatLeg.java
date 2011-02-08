@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.embedded;
-
 import java.text.NumberFormat;
 import javax.persistence.Embeddable;
 

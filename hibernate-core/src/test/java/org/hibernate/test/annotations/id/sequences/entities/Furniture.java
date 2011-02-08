@@ -1,10 +1,8 @@
 //$Id: Furniture.java 14760 2008-06-11 07:33:15Z hardy.ferentschik $
 package org.hibernate.test.annotations.id.sequences.entities;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 

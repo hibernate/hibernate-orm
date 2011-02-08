@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.io.Serializable;
 import java.util.Set;
 import javax.persistence.CascadeType;

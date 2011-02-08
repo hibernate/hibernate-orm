@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -31,11 +30,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
 /**
@@ -45,8 +45,8 @@ import org.jboss.logging.Logger.Level;
  */
 public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JdbcResourceRegistryImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       JdbcResourceRegistryImpl.class.getName());
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
@@ -265,7 +265,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			}
 			catch( SQLException sqle ) {
 				// there was a problem "cleaning" the prepared statement
-                LOG.debug("Exception clearing maxRows/queryTimeout [" + sqle.getMessage() + "]");
+                LOG.debugf("Exception clearing maxRows/queryTimeout [%s]", sqle.getMessage());
 				return; // EARLY EXIT!!!
 			}
 			statement.close();
@@ -274,7 +274,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			}
 		}
 		catch( SQLException sqle ) {
-            LOG.debug("Unable to release statement [" + sqle.getMessage() + "]");
+            LOG.debugf("Unable to release statement [%s]", sqle.getMessage());
 		}
 	}
 
@@ -292,7 +292,7 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 			resultSet.close();
 		}
 		catch( SQLException e ) {
-            LOG.debug("Unable to release result set [" + e.getMessage() + "]");
+            LOG.debugf("Unable to release result set [%s]", e.getMessage());
 		}
 	}
 }

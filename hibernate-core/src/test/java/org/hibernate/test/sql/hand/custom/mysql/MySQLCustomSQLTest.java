@@ -1,12 +1,10 @@
 //$Id: MySQLCustomSQLTest.java 11486 2007-05-08 21:57:24Z steve.ebersole@jboss.com $
 package org.hibernate.test.sql.hand.custom.mysql;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Custom SQL tests for MySQL

@@ -23,13 +23,13 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Helper for generating {@link TransactionManagerLookup} instances.
@@ -38,8 +38,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public final class TransactionManagerLookupFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TransactionManagerLookupFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       TransactionManagerLookupFactory.class.getName());
 
 	/**
 	 * Disallow instantiation

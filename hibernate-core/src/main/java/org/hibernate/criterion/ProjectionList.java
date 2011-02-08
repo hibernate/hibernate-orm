@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.criterion;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.type.Type;

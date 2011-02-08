@@ -23,19 +23,17 @@
  *
  */
 package org.hibernate.action;
-
+import java.io.Serializable;
 import org.hibernate.HibernateException;
-import org.hibernate.event.PostCollectionRecreateEventListener;
-import org.hibernate.event.PostCollectionRecreateEvent;
-import org.hibernate.event.EventSource;
-import org.hibernate.event.PreCollectionRecreateEvent;
-import org.hibernate.event.PreCollectionRecreateEventListener;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.PostCollectionRecreateEvent;
+import org.hibernate.event.PostCollectionRecreateEventListener;
+import org.hibernate.event.PreCollectionRecreateEvent;
+import org.hibernate.event.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
-
-import java.io.Serializable;
 
 public final class CollectionRecreateAction extends CollectionAction {
 

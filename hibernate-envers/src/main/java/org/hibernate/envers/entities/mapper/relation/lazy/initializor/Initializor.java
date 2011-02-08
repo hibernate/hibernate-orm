@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.initializor;
 
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */

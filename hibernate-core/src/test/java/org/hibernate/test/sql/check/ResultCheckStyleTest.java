@@ -1,5 +1,4 @@
 package org.hibernate.test.sql.check;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;

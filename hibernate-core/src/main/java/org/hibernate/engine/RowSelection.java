@@ -24,6 +24,7 @@
  */
 package org.hibernate.engine;
 
+
 /**
  * Represents a selection of rows in a JDBC <tt>ResultSet</tt>
  * @author Gavin King

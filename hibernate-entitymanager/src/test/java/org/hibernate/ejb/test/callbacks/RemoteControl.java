@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Entity;

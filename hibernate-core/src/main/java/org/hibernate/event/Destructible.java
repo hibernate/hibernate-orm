@@ -24,6 +24,7 @@
  */
 package org.hibernate.event;
 
+
 /**
  * Contract for listeners which require notification of SessionFactory closing,
  * presumably to destroy internal state.

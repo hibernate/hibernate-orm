@@ -1,7 +1,5 @@
 package org.hibernate.test.ops;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 

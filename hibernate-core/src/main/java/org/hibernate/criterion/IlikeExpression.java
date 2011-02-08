@@ -23,8 +23,6 @@
  *
  */
 package org.hibernate.criterion;
-
-
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;

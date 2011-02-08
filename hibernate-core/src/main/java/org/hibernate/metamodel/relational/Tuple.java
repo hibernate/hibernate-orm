@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models a compound value (a tuple or row-value-constructor is SQL terms).  It is both a {@link Value} and
  * a {@link ValueContainer} simultaneously.

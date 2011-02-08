@@ -1,11 +1,8 @@
 package org.hibernate.ejb.test.beanvalidation;
-
 import java.math.BigDecimal;
-
 import javax.persistence.EntityManager;
 import javax.persistence.RollbackException;
 import javax.validation.ConstraintViolationException;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

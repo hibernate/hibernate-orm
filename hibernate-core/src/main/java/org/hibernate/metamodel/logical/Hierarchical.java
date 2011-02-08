@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.logical;
 
+
 /**
  * Additional contract for things that can occur in an inheritance hierarchy (specifically ones we would
  * need to traverse).

@@ -23,10 +23,10 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.collections.AST;
 
 /**
@@ -36,8 +36,8 @@ import antlr.collections.AST;
  */
 public class OrderByFragmentRenderer extends GeneratedOrderByFragmentRenderer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                OrderByFragmentRenderer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       OrderByFragmentRenderer.class.getName());
 	private static final ASTPrinter printer = new ASTPrinter( GeneratedOrderByFragmentRendererTokenTypes.class );
 
 	@Override

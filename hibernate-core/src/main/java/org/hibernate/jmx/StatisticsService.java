@@ -1,11 +1,10 @@
 //$Id: StatisticsService.java 8262 2005-09-30 07:48:53Z oneovthafew $
 package org.hibernate.jmx;
-
 import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.impl.SessionFactoryObjectFactory;
 import org.hibernate.stat.CollectionStatistics;
@@ -14,6 +13,7 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.StatisticsImpl;
+import org.jboss.logging.Logger;
 
 /**
  * JMX service for Hibernate statistics<br>
@@ -49,8 +49,7 @@ import org.hibernate.stat.StatisticsImpl;
  */
 public class StatisticsService implements StatisticsServiceMBean {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                StatisticsService.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StatisticsService.class.getName());
 	//TODO: We probably should have a StatisticsNotPublishedException, to make it clean
 
 	SessionFactory sf;

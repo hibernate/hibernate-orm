@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.cascade;
-
 import java.util.ArrayList;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;

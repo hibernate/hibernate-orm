@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tool.hbm2ddl;
-
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.mapping.ForeignKey;
+import org.jboss.logging.Logger;
 
 /**
  * JDBC table metadata
@@ -40,8 +40,7 @@ import org.hibernate.mapping.ForeignKey;
  */
 public class TableMetadata {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TableMetadata.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TableMetadata.class.getName());
 
 	private final String catalog;
 	private final String schema;

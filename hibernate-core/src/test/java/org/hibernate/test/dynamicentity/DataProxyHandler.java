@@ -1,9 +1,8 @@
 package org.hibernate.test.dynamicentity;
-
+import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.io.Serializable;
 
 /**
  * A simple {@link InvocationHandler} to act as the handler for our generated

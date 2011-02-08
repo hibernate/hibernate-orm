@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.logical;
 
+
 /**
  * Models a basic type, a simple value.
  *

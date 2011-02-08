@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.persister;
-
 import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;

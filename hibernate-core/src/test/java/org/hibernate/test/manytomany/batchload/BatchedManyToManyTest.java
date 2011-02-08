@@ -20,28 +20,25 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.manytomany.batchload;
-
 import java.util.List;
-
-import junit.framework.Test;
 import junit.framework.Assert;
-
+import junit.framework.Test;
+import org.hibernate.EmptyInterceptor;
+import org.hibernate.Hibernate;
+import org.hibernate.Interceptor;
+import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.Session;
-import org.hibernate.Hibernate;
-import org.hibernate.Interceptor;
-import org.hibernate.EmptyInterceptor;
-import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
+import org.hibernate.stat.CollectionStatistics;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Tests loading of many-to-many collection which should trigger

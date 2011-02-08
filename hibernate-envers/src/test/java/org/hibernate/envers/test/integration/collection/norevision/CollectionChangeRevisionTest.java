@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.integration.collection.norevision;
-
 import java.util.Arrays;
 import java.util.List;
 

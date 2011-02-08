@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.component;
-
+import java.util.Map;
 import org.hibernate.envers.entities.EntityInstantiator;
 import org.hibernate.envers.tools.query.Parameters;
-
-import java.util.Map;
 
 /**
  * A mapper for reading and writing a property straight to/from maps. This mapper cannot be used with middle tables,

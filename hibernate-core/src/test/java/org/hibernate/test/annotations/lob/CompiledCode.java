@@ -1,10 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.lob;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 
 /**
  * Compiled code representation

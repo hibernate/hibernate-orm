@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.sql;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;

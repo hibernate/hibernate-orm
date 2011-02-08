@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.classic;
-
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
@@ -39,9 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
@@ -71,6 +70,7 @@ import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * An instance of <tt>QueryTranslator</tt> translates a Hibernate
@@ -78,8 +78,7 @@ import org.hibernate.util.StringHelper;
  */
 public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QueryTranslatorImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryTranslatorImpl.class.getName());
 
 	private static final String[] NO_RETURN_ALIASES = new String[] {};
 
@@ -304,8 +303,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	private static void logQuery(String hql, String sql) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("HQL: " + hql);
-            LOG.debug("SQL: " + sql);
+            LOG.debugf("HQL: %s", hql);
+            LOG.debugf("SQL: %s", sql);
 		}
 	}
 
@@ -329,12 +328,8 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	String unalias(String path) {
 		String alias = StringHelper.root( path );
 		String name = getAliasName( alias );
-		if ( name != null ) {
-			return name + path.substring( alias.length() );
-		}
-		else {
-			return path;
-		}
+        if (name != null) return name + path.substring(alias.length());
+        return path;
 	}
 
 	void addEntityToFetch(String name, String oneToOneOwnerName, AssociationType ownerAssociationType) {

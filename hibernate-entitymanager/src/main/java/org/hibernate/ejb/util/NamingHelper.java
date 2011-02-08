@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.util;
-
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingException;
@@ -31,10 +30,11 @@ import javax.naming.event.NamespaceChangeListener;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.NamingListener;
-import org.hibernate.Logger;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.internal.util.jndi.JndiHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
@@ -42,12 +42,12 @@ import org.hibernate.internal.util.jndi.JndiHelper;
 public class NamingHelper {
 	private NamingHelper() {}
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, NamingHelper.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class, NamingHelper.class.getName());
 
 	/** bind the configuration to the JNDI */
 	public static void bind(Ejb3Configuration cfg) {
 		String name = cfg.getHibernateConfiguration().getProperty( AvailableSettings.CONFIGURATION_JNDI_NAME );
-        if (name == null) LOG.debug("No JNDI name configured for binding Ejb3Configuration");
+        if (name == null) LOG.debugf("No JNDI name configured for binding Ejb3Configuration");
 		else {
             LOG.ejb3ConfigurationName(name);
 
@@ -61,7 +61,7 @@ public class NamingHelper {
                 LOG.invalidJndiName(name, ine);
 			}
 			catch (NamingException ne) {
-                LOG.warn(LOG.unableToBindEjb3ConfigurationToJndi(), ne);
+                LOG.unableToBindEjb3ConfigurationToJndi(ne);
 			}
 			catch (ClassCastException cce) {
                 LOG.initialContextDoesNotImplementEventContext();
@@ -71,7 +71,7 @@ public class NamingHelper {
 
 	private static final NamingListener LISTENER = new NamespaceChangeListener() {
 		public void objectAdded(NamingEvent evt) {
-            LOG.debug("An Ejb3Configuration was successfully bound to name: " + evt.getNewBinding().getName());
+            LOG.debugf("An Ejb3Configuration was successfully bound to name: %s", evt.getNewBinding().getName());
 		}
 
 		public void objectRemoved(NamingEvent evt) {
@@ -85,7 +85,7 @@ public class NamingHelper {
 		}
 
 		public void namingExceptionThrown(NamingExceptionEvent evt) {
-            LOG.warn(LOG.unableToAccessEjb3Configuration(), evt.getException());
+            LOG.unableToAccessEjb3Configuration(evt.getException());
 		}
 	};
 

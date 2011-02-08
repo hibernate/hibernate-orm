@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.cache;
-
 import java.io.Serializable;
 import java.util.Comparator;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cache.access.SoftLock;
+import org.jboss.logging.Logger;
 
 /**
  * Caches data that is sometimes updated while maintaining the semantics of
@@ -47,7 +47,7 @@ import org.hibernate.cache.access.SoftLock;
  */
 public class ReadWriteCache implements CacheConcurrencyStrategy {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ReadWriteCache.class.getName());
 
 	private Cache cache;
 	private int nextLockId;
@@ -93,15 +93,15 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * the data is versioned or timestamped.
 	 */
 	public synchronized Object get(Object key, long txTimestamp) throws CacheException {
-        LOG.debug("Cache lookup: " + key);
+        LOG.debugf("Cache lookup: %s", key);
 		Lockable lockable = (Lockable)cache.get(key);
 		boolean gettable = lockable != null && lockable.isGettable(txTimestamp);
 		if (gettable) {
-            LOG.debug("Cache hit: " + key);
+            LOG.debugf("Cache hit: %s", key);
             return ((Item)lockable).getValue();
         }
-        if (lockable == null) LOG.debug("Cache miss: " + key);
-        else LOG.debug("Cached item was locked: " + key);
+        if (lockable == null) LOG.debugf("Cache miss: %s", key);
+        else LOG.debugf("Cached item was locked: %s", key);
         return null;
 	}
 
@@ -113,7 +113,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * item.
 	 */
 	public synchronized SoftLock lock(Object key, Object version) throws CacheException {
-        LOG.debug("Invalidating: " + key);
+        LOG.debugf("Invalidating: %s", key);
 		try {
 			cache.lock(key);
 
@@ -147,7 +147,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 			Comparator versionComparator,
 			boolean minimalPut)
 	throws CacheException {
-        LOG.debug("Caching: " + key);
+        LOG.debugf("Caching: %s", key);
 
 		try {
 			cache.lock(key);
@@ -159,11 +159,11 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 
 			if (puttable) {
 				cache.put( key, new Item( value, version, cache.nextTimestamp() ) );
-                LOG.debug("Cached: " + key);
+                LOG.debugf("Cached: %s", key);
 				return true;
 			}
-            if (lockable.isLock()) LOG.debug("Cached item was locked: " + key);
-            else LOG.debug("Item already cached: " + key);
+            if (lockable.isLock()) LOG.debugf("Cached item was locked: %s", key);
+            else LOG.debugf("Item already cached: %s", key);
             return false;
 		}
 		finally {
@@ -186,7 +186,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	 * simultaneous lock).
 	 */
 	public synchronized void release(Object key, SoftLock clientLock) throws CacheException {
-        LOG.debug("Releasing: " + key);
+        LOG.debugf("Releasing: %s", key);
 
 		try {
 			cache.lock(key);
@@ -237,7 +237,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	public synchronized boolean afterUpdate(Object key, Object value, Object version, SoftLock clientLock)
 	throws CacheException {
 
-        LOG.debug("Updating: " + key);
+        LOG.debugf("Updating: %s", key);
 
 		try {
 			cache.lock(key);
@@ -253,7 +253,7 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 				}
                 // recache the updated state
                 cache.update(key, new Item(value, version, cache.nextTimestamp()));
-                LOG.debug("Updated: " + key);
+                LOG.debugf("Updated: %s", key);
                 return true;
 			}
             handleLockExpiry(key);
@@ -271,14 +271,14 @@ public class ReadWriteCache implements CacheConcurrencyStrategy {
 	public synchronized boolean afterInsert(Object key, Object value, Object version)
 	throws CacheException {
 
-        LOG.debug("Inserting: " + key);
+        LOG.debugf("Inserting: %s", key);
 		try {
 			cache.lock(key);
 
 			Lockable lockable = (Lockable) cache.get(key);
 			if (lockable==null) {
 				cache.update( key, new Item( value, version, cache.nextTimestamp() ) );
-                LOG.debug("Inserted: " + key);
+                LOG.debugf("Inserted: %s", key);
 				return true;
 			}
             return false;

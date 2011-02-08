@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.cache;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import org.hibernate.EntityMode;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.impl.FilterImpl;

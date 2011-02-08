@@ -23,11 +23,8 @@
  *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class Party implements Serializable {

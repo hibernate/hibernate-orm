@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.loader.custom;
-
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.List;
 
 /**
  * Extension point allowing any SQL query with named and positional parameters

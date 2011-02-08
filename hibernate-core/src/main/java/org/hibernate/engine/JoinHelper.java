@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine;
-
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.PropertyMapping;

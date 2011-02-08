@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.ops;
-
 import java.util.HashSet;
 import java.util.Set;
 

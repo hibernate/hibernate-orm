@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.cache;
-
+import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Settings;
-
-import java.util.Properties;
 
 /**
  * Defines a factory for query cache instances.  These factories are responsible for

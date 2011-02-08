@@ -1,6 +1,5 @@
 //$Id: Person.java 8054 2005-08-31 20:12:24Z oneovthafew $
 package org.hibernate.test.timestamp;
-
 import java.util.Date;
 
 /**

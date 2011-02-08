@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.cache.entry;
-
 import java.io.Serializable;
-
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.util.ArrayHelper;

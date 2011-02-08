@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -43,6 +42,7 @@ import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 
@@ -55,8 +55,7 @@ import antlr.collections.AST;
  */
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SqlGenerator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SqlGenerator.class.getName());
 
 	public static boolean REGRESSION_STYLE_CROSS_JOINS = false;
 

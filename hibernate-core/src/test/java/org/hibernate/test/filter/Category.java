@@ -1,6 +1,5 @@
 // $Id: Category.java 6507 2005-04-25 16:57:32Z steveebersole $
 package org.hibernate.test.filter;
-
 import java.util.Date;
 import java.util.Set;
 

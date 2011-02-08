@@ -1,12 +1,10 @@
 package org.hibernate.test.generated;
-
 import junit.framework.Test;
-
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.Session;
+import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * {@inheritDoc}

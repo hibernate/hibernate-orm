@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.loader.entity;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;

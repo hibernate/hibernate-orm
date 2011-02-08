@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.util.Properties;
-
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;

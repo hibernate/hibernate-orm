@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.dataTypes;
-
 import java.util.Date;
 import javax.persistence.Access;
 import javax.persistence.AccessType;

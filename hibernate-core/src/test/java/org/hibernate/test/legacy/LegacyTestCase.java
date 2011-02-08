@@ -1,17 +1,15 @@
 package org.hibernate.test.legacy;
-
 import java.util.Iterator;
-
+import org.hibernate.Query;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.DefaultNamingStrategy;
 import org.hibernate.cfg.Environment;
+import org.hibernate.classic.Session;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.util.StringHelper;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.classic.Session;
 import org.hibernate.type.Type;
-import org.hibernate.Query;
+import org.hibernate.util.StringHelper;
 
 /**
  * @author Steve Ebersole

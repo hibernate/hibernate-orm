@@ -22,11 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.Map;
-
 import javax.persistence.OrderColumn;
-
 import org.hibernate.mapping.Join;
 
 /**

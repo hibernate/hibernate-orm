@@ -24,6 +24,7 @@
  */
 package org.hibernate.util;
 
+
 /**
  * @author Gavin King
  */

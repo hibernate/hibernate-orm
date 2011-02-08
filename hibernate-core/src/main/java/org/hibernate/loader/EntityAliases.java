@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.loader;
-
 import org.hibernate.persister.entity.Loadable;
 
 /**

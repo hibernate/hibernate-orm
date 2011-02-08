@@ -1,14 +1,12 @@
 //$Id$
 package org.hibernate.test.annotations.generics;
-
 import java.io.Serializable;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
 import java.sql.Types;
-
-import org.hibernate.usertype.UserType;
 import org.hibernate.HibernateException;
+import org.hibernate.usertype.UserType;
 
 /**
  * @author Emmanuel Bernard

@@ -22,12 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.ejb3configuration;
-
 import java.util.Collections;
-import java.util.Map;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
-
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;

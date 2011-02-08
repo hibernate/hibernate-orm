@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.manytoone;
-
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.Date;

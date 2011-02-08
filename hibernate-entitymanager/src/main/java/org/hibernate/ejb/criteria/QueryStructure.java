@@ -22,28 +22,26 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
-
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import javax.persistence.criteria.AbstractQuery;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.metamodel.EntityType;
-
 import org.hibernate.ejb.criteria.path.RootImpl;
 
 /**

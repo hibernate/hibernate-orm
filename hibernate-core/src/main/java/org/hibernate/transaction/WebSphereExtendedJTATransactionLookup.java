@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
-
 import javax.naming.NamingException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.RollbackException;
@@ -38,7 +36,6 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
-
 import org.hibernate.HibernateException;
 import org.hibernate.internal.util.jndi.JndiHelper;
 

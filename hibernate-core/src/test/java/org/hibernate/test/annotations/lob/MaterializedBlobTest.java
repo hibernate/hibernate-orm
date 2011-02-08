@@ -22,13 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
-
 import java.util.Arrays;
-
 import org.hibernate.Session;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.testing.junit.DialectChecks;
 import org.hibernate.testing.junit.RequiresDialectFeature;

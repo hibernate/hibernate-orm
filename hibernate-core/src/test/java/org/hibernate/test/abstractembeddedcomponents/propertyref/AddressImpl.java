@@ -1,6 +1,6 @@
 package org.hibernate.test.abstractembeddedcomponents.propertyref;
 
-import org.hibernate.test.abstractembeddedcomponents.propertyref.Address;
+
 
 /**
  * @author Steve Ebersole

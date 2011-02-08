@@ -1,12 +1,4 @@
 package org.hibernate.test.annotations.generics;
-
-/**
- * A test case for ANN-494.
- *
- * @author Edward Costello
- * @author Paolo Perrotta
- */
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.ElementCollection;

@@ -23,18 +23,15 @@
  *
  */
 package org.hibernate.loader.entity;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
-
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;

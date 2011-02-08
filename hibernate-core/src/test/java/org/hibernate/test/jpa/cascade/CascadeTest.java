@@ -1,5 +1,4 @@
 package org.hibernate.test.jpa.cascade;
-
 import static org.hibernate.TestLogger.LOG;
 import junit.framework.Test;
 import org.hibernate.Session;

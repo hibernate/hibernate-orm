@@ -1,12 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.manytomany;
-
 import java.util.Set;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
-import javax.persistence.JoinTable;
 
 /**
  * @author Emmanuel Bernard

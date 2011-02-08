@@ -23,11 +23,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.emops;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

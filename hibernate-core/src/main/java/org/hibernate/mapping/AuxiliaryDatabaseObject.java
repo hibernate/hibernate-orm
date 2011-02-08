@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import java.io.Serializable;
-
 import org.hibernate.dialect.Dialect;
 
 /**

@@ -1,14 +1,11 @@
 package org.hibernate.envers.test.integration.accesstype;
-
+import static org.testng.Assert.assertEquals;
 import java.util.Arrays;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import static org.testng.Assert.assertEquals;
 
 public class ImmutableClassAccessType extends AbstractEntityTest {
 	private Country country;

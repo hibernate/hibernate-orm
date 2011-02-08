@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Transaction;

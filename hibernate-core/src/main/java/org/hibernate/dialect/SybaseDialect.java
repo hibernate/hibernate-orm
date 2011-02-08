@@ -23,6 +23,7 @@
  */
 package org.hibernate.dialect;
 
+
 /**
  * This dialect is being deprecated; it had been used both as the base class
  * for TransactSQL-based dialects as well as the physical dialect for handling

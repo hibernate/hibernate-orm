@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate;
-
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;

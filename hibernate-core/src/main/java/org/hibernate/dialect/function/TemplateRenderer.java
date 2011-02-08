@@ -22,11 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Delegate for handling function "templates".
@@ -35,8 +35,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
  */
 public class TemplateRenderer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TemplateRenderer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TemplateRenderer.class.getName());
 
 	private final String template;
 	private final String[] chunks;

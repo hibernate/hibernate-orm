@@ -23,9 +23,9 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -37,8 +37,7 @@ import org.hibernate.Logger;
  */
 public class IdentifierValue {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                IdentifierValue.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, IdentifierValue.class.getName());
 
 	private final Serializable value;
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+
 /**
  * Enables other Component-like types to hold collections and have cascades, etc.
  *

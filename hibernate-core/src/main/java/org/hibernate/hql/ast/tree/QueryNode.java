@@ -23,13 +23,13 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -40,8 +40,7 @@ import antlr.collections.AST;
  */
 public class QueryNode extends AbstractRestrictableStatement implements SelectExpression {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QueryNode.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QueryNode.class.getName());
 
 	private OrderByClause orderByClause;
 	private int scalarColumnIndex = -1;
@@ -66,7 +65,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 	}
 
 	@Override
-    protected Logger getLog() {
+    protected HibernateLogger getLog() {
         return LOG;
 	}
 
@@ -98,7 +97,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 
 			// if there is no order by, make one
 			if ( orderByClause == null ) {
-                LOG.debug("getOrderByClause() : Creating a new ORDER BY clause");
+                LOG.debugf("getOrderByClause() : Creating a new ORDER BY clause");
 				orderByClause = ( OrderByClause ) ASTUtil.create( getWalker().getASTFactory(), SqlTokenTypes.ORDER, "ORDER" );
 
 				// Find the WHERE; if there is no WHERE, find the FROM...

@@ -1,6 +1,5 @@
 //$Id: Parent.java 4478 2004-09-02 02:30:28Z oneovthafew $
 package org.hibernate.test.compositeelement;
-
 import java.util.Collection;
 import java.util.HashSet;
 

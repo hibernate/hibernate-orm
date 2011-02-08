@@ -20,14 +20,11 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.functional.bulk;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.FlushMode;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
@@ -35,10 +32,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.transaction.CMTTransactionFactory;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;

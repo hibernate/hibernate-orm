@@ -3,10 +3,8 @@
 *
 */
 package org.hibernate.test.mapping;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClassVisitor;
 import org.hibernate.mapping.RootClass;

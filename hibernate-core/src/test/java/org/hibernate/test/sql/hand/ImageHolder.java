@@ -21,6 +21,7 @@
  */
 package org.hibernate.test.sql.hand;
 
+
 /**
  * @author Gail Badner
  */

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 

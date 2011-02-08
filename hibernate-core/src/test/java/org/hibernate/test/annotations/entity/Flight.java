@@ -1,13 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.entity;
-
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
-
 import org.hibernate.annotations.Formula;
 
 /**

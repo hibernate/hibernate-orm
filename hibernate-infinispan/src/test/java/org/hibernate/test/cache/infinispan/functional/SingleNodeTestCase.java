@@ -1,16 +1,12 @@
 package org.hibernate.test.cache.infinispan.functional;
-
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.stat.SecondLevelCacheStatistics;
-import org.hibernate.stat.Statistics;
 import org.hibernate.transaction.CMTTransactionFactory;
 import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;

@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.factory;
-
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.Assigned;
@@ -47,6 +46,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Basic <tt>templated</tt> support for {@link IdentifierGeneratorFactory} implementations.
@@ -55,8 +55,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFactory, Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultIdentifierGeneratorFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultIdentifierGeneratorFactory.class.getName());
 
 	private transient Dialect dialect;
 	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
@@ -86,7 +86,7 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 	 * {@inheritDoc}
 	 */
 	public void setDialect(Dialect dialect) {
-        LOG.debug("Setting dialect [" + dialect + "]");
+        LOG.debugf("Setting dialect [%s]", dialect);
 		this.dialect = dialect;
 	}
 
@@ -94,7 +94,7 @@ public class DefaultIdentifierGeneratorFactory implements IdentifierGeneratorFac
 		Object old = generatorStrategyToClassNameMap.put( strategy, generatorClass );
         String msg = "Registering IdentifierGenerator strategy [" + strategy + "] -> [" + generatorClass + "]";
         if (old != null) msg += ", overriding [" + old + "]";
-        LOG.debug(msg);
+        LOG.debugf(msg);
 	}
 
 	/**

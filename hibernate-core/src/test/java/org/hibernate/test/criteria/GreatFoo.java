@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.criteria;
 
+
 public class GreatFoo extends AbstractFoo {
 
 }

@@ -22,17 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
+import org.jboss.logging.Logger;
 
 /**
  * Collection second pass
@@ -41,8 +41,7 @@ import org.hibernate.mapping.Value;
  */
 public abstract class CollectionSecondPass implements SecondPass {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CollectionSecondPass.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionSecondPass.class.getName());
 
 	Mappings mappings;
 	Collection collection;
@@ -60,7 +59,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 
 	public void doSecondPass(java.util.Map persistentClasses)
 			throws MappingException {
-        LOG.debug("Second pass for collection: " + collection.getRole());
+        LOG.debugf("Second pass for collection: %s", collection.getRole());
 
 		secondPass( persistentClasses, localInheritedMetas ); // using local since the inheritedMetas at this point is not the correct map since it is always the empty map
 		collection.createAllKeys();
@@ -76,7 +75,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-            LOG.debug(msg);
+            LOG.debugf(msg);
 		}
 	}
 

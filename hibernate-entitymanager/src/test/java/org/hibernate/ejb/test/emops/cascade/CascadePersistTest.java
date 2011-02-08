@@ -1,10 +1,8 @@
 //$Id$
 package org.hibernate.ejb.test.emops.cascade;
-
 import javax.persistence.EntityManager;
-
-import org.hibernate.ejb.test.TestCase;
 import org.hibernate.Session;
+import org.hibernate.ejb.test.TestCase;
 import org.hibernate.stat.Statistics;
 
 /**

@@ -21,11 +21,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.cache.infinispan.util;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.hibernate.cache.CacheException;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;

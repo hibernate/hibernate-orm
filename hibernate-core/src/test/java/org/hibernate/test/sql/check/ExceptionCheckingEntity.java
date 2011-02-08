@@ -1,5 +1,6 @@
 package org.hibernate.test.sql.check;
 
+
 /**
  * An entity which is expected to be mapped to each database using stored
  * procedures which throw exceptions on their own; in other words, using

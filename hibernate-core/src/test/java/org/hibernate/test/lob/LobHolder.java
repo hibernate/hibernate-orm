@@ -1,8 +1,6 @@
 package org.hibernate.test.lob;
-
-import java.io.Serializable;
-import java.sql.Clob;
 import java.sql.Blob;
+import java.sql.Clob;
 
 /**
  * An entity containing all kinds of good LOB-type data...

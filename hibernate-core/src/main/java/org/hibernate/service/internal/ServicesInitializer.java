@@ -22,12 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.internal;
-
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
@@ -38,6 +37,7 @@ import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServicesRegistryAwareService;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.UnknownServiceException;
+import org.jboss.logging.Logger;
 
 /**
  * Delegate responsible for initializing services
@@ -46,8 +46,7 @@ import org.hibernate.service.spi.UnknownServiceException;
  */
 public class ServicesInitializer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ServicesInitializer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServicesInitializer.class.getName());
 
 	private final ServicesRegistryImpl servicesRegistry;
 	private final Map<Class,ServiceInitiator> serviceInitiatorMap;

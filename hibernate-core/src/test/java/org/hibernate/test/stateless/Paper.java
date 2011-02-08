@@ -1,6 +1,7 @@
 //$Id: Paper.java 8048 2005-08-30 21:27:17Z epbernard $
 package org.hibernate.test.stateless;
 
+
 /**
  * @author Emmanuel Bernard
  */

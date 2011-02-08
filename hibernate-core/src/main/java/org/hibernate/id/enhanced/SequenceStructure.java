@@ -23,16 +23,16 @@
  *
  */
 package org.hibernate.id.enhanced;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.jboss.logging.Logger;
 
 /**
  * Describes a sequence.
@@ -41,8 +41,7 @@ import org.hibernate.id.IntegralDataTypeHolder;
  */
 public class SequenceStructure implements DatabaseStructure {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SequenceStructure.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SequenceStructure.class.getName());
 
 	private final String sequenceName;
 	private final int initialValue;
@@ -108,7 +107,7 @@ public class SequenceStructure implements DatabaseStructure {
 							rs.next();
 							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
-                            LOG.debug("Sequence value obtained: " + value.makeValue());
+                            LOG.debugf("Sequence value obtained: %s", value.makeValue());
 							return value;
 						}
 						finally {

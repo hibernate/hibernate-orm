@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.transaction;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;

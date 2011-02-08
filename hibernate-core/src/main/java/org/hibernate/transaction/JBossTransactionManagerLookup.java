@@ -24,6 +24,7 @@
  */
 package org.hibernate.transaction;
 
+
 /**
  * A {@link TransactionManagerLookup} lookup strategy for JBoss AS.
  *

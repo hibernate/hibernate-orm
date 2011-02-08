@@ -23,12 +23,9 @@
  *
  */
 package org.hibernate.test.naturalid.immutable;
-
 import java.lang.reflect.Field;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;

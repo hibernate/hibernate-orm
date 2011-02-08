@@ -20,9 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.List;
-
 import org.hibernate.transform.ResultTransformer;
 
 /**

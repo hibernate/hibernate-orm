@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.fetchprofiles.join;
 
+
 /**
  * TODO : javadoc
  *

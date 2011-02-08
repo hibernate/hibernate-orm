@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +29,13 @@ import java.util.Properties;
 import java.util.Set;
 import javax.persistence.EntityNotFoundException;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * The standard implementation of the Hibernate QueryCache interface.  This
@@ -48,7 +48,7 @@ import org.hibernate.type.TypeHelper;
  */
 public class StandardQueryCache implements QueryCache {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StandardQueryCache.class.getName());
 
 	private QueryResultsRegion cacheRegion;
 	private UpdateTimestampsCache updateTimestampsCache;
@@ -85,7 +85,7 @@ public class StandardQueryCache implements QueryCache {
         if (isNaturalKeyLookup && result.size() == 0) return false;
         Long ts = new Long(session.getFactory().getSettings().getRegionFactory().nextTimestamp());
 
-        LOG.debug("Caching query results in region: " + cacheRegion.getName() + "; timestamp=" + ts);
+        LOG.debugf("Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts);
 
 		List cacheable = new ArrayList(result.size() + 1);
         logCachedResultDetails(key, null, returnTypes, cacheable);
@@ -107,23 +107,23 @@ public class StandardQueryCache implements QueryCache {
 			boolean isNaturalKeyLookup,
 			Set spaces,
 			SessionImplementor session) throws HibernateException {
-        LOG.debug("Checking cached query results in region: " + cacheRegion.getName());
+        LOG.debugf("Checking cached query results in region: %s", cacheRegion.getName());
 
 		List cacheable = ( List ) cacheRegion.get( key );
         logCachedResultDetails(key, spaces, returnTypes, cacheable);
 
 		if ( cacheable == null ) {
-            LOG.debug("Query results were not found in cache");
+            LOG.debugf("Query results were not found in cache");
 			return null;
 		}
 
 		Long timestamp = ( Long ) cacheable.get( 0 );
 		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp ) ) {
-            LOG.debug("Cached query results were not up-to-date");
+            LOG.debugf("Cached query results were not up-to-date");
 			return null;
 		}
 
-        LOG.debug("Returning cached query results");
+        LOG.debugf("Returning cached query results");
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			if ( returnTypes.length == 1 ) {
 				returnTypes[0].beforeAssemble( ( Serializable ) cacheable.get( i ), session );
@@ -153,7 +153,7 @@ public class StandardQueryCache implements QueryCache {
 					//      the uoe could occur while resolving
 					//      associations, leaving the PC in an
 					//      inconsistent state
-                    LOG.debug("Unable to reassemble cached result set");
+                    LOG.debugf("Unable to reassemble cached result set");
 					cacheRegion.evict( key );
 					return null;
 				}
@@ -164,7 +164,7 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	protected boolean isUpToDate(Set spaces, Long timestamp) {
-        LOG.debug("Checking query spaces are up-to-date: " + spaces);
+        LOG.debugf("Checking query spaces are up-to-date: %s", spaces);
 		return updateTimestampsCache.isUpToDate( spaces, timestamp );
 	}
 

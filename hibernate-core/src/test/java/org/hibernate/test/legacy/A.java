@@ -1,6 +1,7 @@
 package org.hibernate.test.legacy;
 
 
+
 public class A {
 	private Long id;
 	private String name;

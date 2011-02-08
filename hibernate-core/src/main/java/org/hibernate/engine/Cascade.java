@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
@@ -30,7 +29,7 @@ import java.util.Iterator;
 import java.util.Stack;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -42,6 +41,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.CollectionHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -95,7 +95,7 @@ public final class Cascade {
 	 */
 	public static final int BEFORE_MERGE = 0;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Cascade.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Cascade.class.getName());
 
 
 	private int cascadeTo;

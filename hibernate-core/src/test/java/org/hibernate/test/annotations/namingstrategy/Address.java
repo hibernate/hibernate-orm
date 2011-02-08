@@ -1,6 +1,5 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinTable;

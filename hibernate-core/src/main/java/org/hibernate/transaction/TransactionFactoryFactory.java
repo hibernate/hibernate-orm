@@ -23,12 +23,12 @@
  *
  */
 package org.hibernate.transaction;
-
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Helper for creating {@link TransactionFactory} instances.
@@ -37,8 +37,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public final class TransactionFactoryFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TransactionFactoryFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       TransactionFactoryFactory.class.getName());
 
 	/**
 	 * Create an appropriate transaction factory based on the given configuration

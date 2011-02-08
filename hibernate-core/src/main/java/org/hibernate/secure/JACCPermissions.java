@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.secure;
-
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.AccessController;
 import java.security.CodeSource;

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.intercept;
-
 import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 

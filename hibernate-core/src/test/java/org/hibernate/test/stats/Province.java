@@ -1,5 +1,6 @@
 package org.hibernate.test.stats;
 
+
 /**
  * @author Steve Ebersole
  */

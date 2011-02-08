@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
-
+import static org.hibernate.TestLogger.LOG;
 import javax.transaction.TransactionManager;
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -28,7 +28,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.test.cache.infinispan.TestInfinispanLogger;
 import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
@@ -48,8 +47,6 @@ import org.infinispan.manager.EmbeddedCacheManager;
  * @since 3.5
  */
 public class IsolatedClassLoaderTest extends DualNodeTestCase {
-
-    private static final TestInfinispanLogger LOG = TestInfinispanLogger.LOG;
 
     public static final String OUR_PACKAGE = IsolatedClassLoaderTest.class.getPackage().getName();
 

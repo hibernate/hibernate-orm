@@ -2,6 +2,7 @@
 package org.hibernate.test.legacy;
 
 
+
 public class Custom implements Cloneable {
 	String id;
 	private String name;

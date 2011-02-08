@@ -23,16 +23,14 @@
  *
  */
 package org.hibernate.bytecode.cglib;
-
-import org.hibernate.bytecode.ReflectionOptimizer;
-import org.hibernate.PropertyAccessException;
-import net.sf.cglib.beans.BulkBean;
-import net.sf.cglib.beans.BulkBeanException;
-
-import java.io.Serializable;
-import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import net.sf.cglib.beans.BulkBean;
+import net.sf.cglib.beans.BulkBeanException;
+import org.hibernate.PropertyAccessException;
+import org.hibernate.bytecode.ReflectionOptimizer;
 
 /**
  * The {@link ReflectionOptimizer.AccessOptimizer} implementation for CGLIB

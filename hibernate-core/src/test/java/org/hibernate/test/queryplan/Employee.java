@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.test.queryplan;
-
 import java.util.Date;
 
 /**

@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-
-import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cfg.Settings;
 
 /**

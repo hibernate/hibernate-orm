@@ -1,10 +1,9 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
-
+import org.hibernate.AnnotationException;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.SessionFactory;
-import org.hibernate.AnnotationException;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**

@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Status;
@@ -35,6 +34,7 @@ import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners that respond to requests to reassociate an entity
@@ -44,8 +44,8 @@ import org.hibernate.type.TypeHelper;
  */
 public class AbstractReassociateEventListener implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractReassociateEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractReassociateEventListener.class.getName());
 
 	/**
 	 * Associates a given entity (either transient or associated with another session) to

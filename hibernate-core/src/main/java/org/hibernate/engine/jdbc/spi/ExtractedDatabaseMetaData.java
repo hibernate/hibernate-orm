@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
-
 import java.util.LinkedHashSet;
 import java.util.Set;
-
 import org.hibernate.internal.util.jdbc.TypeInfo;
 
 /**

@@ -1,10 +1,8 @@
 package org.hibernate.envers.test.entities.ids;
-
-import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
-
+import java.io.Serializable;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
-import java.io.Serializable;
+import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -1,6 +1,5 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import org.hibernate.QueryException;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 

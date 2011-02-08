@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tuple.component;
-
 import org.dom4j.Element;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -31,8 +30,8 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
-import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.Dom4jInstantiator;
+import org.hibernate.tuple.Instantiator;
 
 /**
  * A {@link ComponentTuplizer} specific to the dom4j entity mode.

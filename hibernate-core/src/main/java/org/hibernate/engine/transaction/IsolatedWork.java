@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.engine.transaction;
-
-import org.hibernate.HibernateException;
-
 import java.sql.Connection;
+import org.hibernate.HibernateException;
 
 /**
  * Represents work that needs to be performed in a manner

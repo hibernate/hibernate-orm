@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 

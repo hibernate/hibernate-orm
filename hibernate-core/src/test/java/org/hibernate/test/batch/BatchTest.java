@@ -1,20 +1,17 @@
 //$Id: BatchTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.batch;
-
 import java.math.BigDecimal;
-
 import junit.framework.Test;
-
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 
 /**
  * This is how to do batch processing in Hibernate.

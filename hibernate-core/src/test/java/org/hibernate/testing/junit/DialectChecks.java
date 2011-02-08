@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.testing.junit;
-
 import org.hibernate.dialect.Dialect;
 
 /**

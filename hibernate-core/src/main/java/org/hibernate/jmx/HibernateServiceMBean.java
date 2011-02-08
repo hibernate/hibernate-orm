@@ -1,6 +1,5 @@
 //$Id: HibernateServiceMBean.java 10860 2006-11-22 00:02:55Z steve.ebersole@jboss.com $
 package org.hibernate.jmx;
-
 import org.hibernate.HibernateException;
 
 /**

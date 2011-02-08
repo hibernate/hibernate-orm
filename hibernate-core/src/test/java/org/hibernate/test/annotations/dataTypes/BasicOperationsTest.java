@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.dataTypes;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
-
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 import org.hibernate.test.annotations.TestCase;

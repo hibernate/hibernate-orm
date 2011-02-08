@@ -23,8 +23,6 @@
  *
  */
 package org.hibernate.test.annotations.manytomany;
-
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 

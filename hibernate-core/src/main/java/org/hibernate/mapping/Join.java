@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import org.hibernate.sql.Alias;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.sql.Alias;
 
 /**
  * @author Gavin King

@@ -1,9 +1,6 @@
 package org.hibernate.test.collection.bag;
-
 import java.util.ArrayList;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentBag;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
 import java.io.Serializable;
 import javax.persistence.metamodel.BasicType;
 

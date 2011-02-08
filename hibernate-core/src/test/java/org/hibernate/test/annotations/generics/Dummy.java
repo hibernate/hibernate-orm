@@ -1,9 +1,8 @@
 //$
 package org.hibernate.test.annotations.generics;
-
-import javax.persistence.Transient;
-import javax.persistence.Id;
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Transient;
 
 /**
  * @author Emmanuel Bernard

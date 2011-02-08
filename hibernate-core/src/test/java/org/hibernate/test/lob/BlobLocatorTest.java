@@ -24,12 +24,9 @@
  *
  */
 package org.hibernate.test.lob;
-
 import java.sql.Blob;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;

@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.util;
-
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.type.Type;

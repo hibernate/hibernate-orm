@@ -1,6 +1,5 @@
 //$Id: DataPoint.java 4343 2004-08-16 11:46:19Z oneovthafew $
 package org.hibernate.test.batch;
-
 import java.math.BigDecimal;
 
 /**

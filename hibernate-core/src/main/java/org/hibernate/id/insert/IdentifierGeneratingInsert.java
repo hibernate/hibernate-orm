@@ -23,9 +23,8 @@
  *
  */
 package org.hibernate.id.insert;
-
-import org.hibernate.sql.Insert;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.Insert;
 
 /**
  * Nothing more than a distinguishing subclass of Insert used to indicate

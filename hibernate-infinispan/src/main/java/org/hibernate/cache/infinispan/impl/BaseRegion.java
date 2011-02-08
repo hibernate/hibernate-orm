@@ -1,5 +1,4 @@
 package org.hibernate.cache.infinispan.impl;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7,11 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.RegionFactory;

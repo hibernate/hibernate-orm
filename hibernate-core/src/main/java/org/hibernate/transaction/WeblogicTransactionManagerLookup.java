@@ -24,6 +24,7 @@
  */
 package org.hibernate.transaction;
 
+
 /**
  * TransactionManager lookup strategy for WebLogic
  * @author Gavin King

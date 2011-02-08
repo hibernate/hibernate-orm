@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.namingstrategy;
-
 import javax.persistence.Embeddable;
 
 @Embeddable

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy.proxy;
-
 import java.util.Comparator;
 import java.util.SortedSet;
 

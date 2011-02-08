@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.id;
-
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.envers.tools.query.Parameters;
 
 /**

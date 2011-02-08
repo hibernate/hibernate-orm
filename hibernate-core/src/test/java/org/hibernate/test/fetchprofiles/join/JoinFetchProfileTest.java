@@ -23,16 +23,14 @@
  *
  */
 package org.hibernate.test.fetchprofiles.join;
-
 import java.util.List;
-
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.Session;
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * Various tests related to join-style fetch profiles.

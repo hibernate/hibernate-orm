@@ -22,16 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
-
-import org.hibernate.MappingException;
+import java.util.StringTokenizer;
 import org.hibernate.EntityMode;
+import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.Mapping;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.engine.Mapping;
 import org.hibernate.sql.Alias;
 import org.hibernate.util.EmptyIterator;
 import org.hibernate.util.JoinedIterator;

@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.sql;
-
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.LiteralType;
 

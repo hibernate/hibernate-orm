@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import java.util.Map;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.CacheKey;
@@ -44,6 +43,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.util.IdentityMap;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities
@@ -53,8 +53,8 @@ import org.hibernate.util.IdentityMap;
  */
 public class DefaultRefreshEventListener implements RefreshEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultRefreshEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultRefreshEventListener.class.getName());
 
 	public void onRefresh(RefreshEvent event) throws HibernateException {
 		onRefresh( event, IdentityMap.instantiate(10) );

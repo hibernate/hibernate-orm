@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
-import antlr.SemanticException;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.util.StringHelper;
+import antlr.SemanticException;
 
 /**
  * Represents a reference to a result_variable as defined in the JPA 2 spec.

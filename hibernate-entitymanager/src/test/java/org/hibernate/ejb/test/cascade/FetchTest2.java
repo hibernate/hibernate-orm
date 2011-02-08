@@ -1,7 +1,5 @@
 package org.hibernate.ejb.test.cascade;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.test.TestCase;
 
 public class FetchTest2 extends TestCase {

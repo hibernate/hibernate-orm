@@ -22,16 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.transaction;
-
 import java.sql.SQLException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.transaction.SynchronizationRegistry;
+import org.jboss.logging.Logger;
 
 /**
  * {@link Transaction} implementation based on transaction management through a JDBC {@link java.sql.Connection}.
@@ -43,8 +43,7 @@ import org.hibernate.engine.transaction.SynchronizationRegistry;
  */
 public class JDBCTransaction implements Transaction {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JDBCTransaction.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JDBCTransaction.class.getName());
 
 	private final SynchronizationRegistry synchronizationRegistry = new SynchronizationRegistry();
 	private final JDBCContext jdbcContext;
@@ -74,13 +73,13 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("cannot re-start transaction after failed commit");
 		}
 
-        LOG.debug("Begin");
+        LOG.debugf("Begin");
 
 		try {
 			toggleAutoCommit = jdbcContext.connection().getAutoCommit();
-            LOG.debug("current autocommit status: " + toggleAutoCommit);
+            LOG.debugf("current autocommit status: %s", toggleAutoCommit);
 			if (toggleAutoCommit) {
-                LOG.debug("Disabling autocommit");
+                LOG.debugf("Disabling autocommit");
 				jdbcContext.connection().setAutoCommit(false);
 			}
 		}
@@ -123,7 +122,7 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.debug("Commit");
+        LOG.debugf("Commit");
 
 		if ( !transactionContext.isFlushModeNever() && callback ) {
 			transactionContext.managedFlush(); //if an exception occurs during flush, user must call rollback()
@@ -136,7 +135,7 @@ public class JDBCTransaction implements Transaction {
 
 		try {
 			commitAndResetAutoCommit();
-            LOG.debug("Committed JDBC Connection");
+            LOG.debugf("Committed JDBC Connection");
 			committed = true;
 			if ( callback ) {
 				jdbcContext.afterTransactionCompletion( true, this );
@@ -175,7 +174,7 @@ public class JDBCTransaction implements Transaction {
 			throw new TransactionException("Transaction not successfully started");
 		}
 
-        LOG.debug("Rollback");
+        LOG.debugf("Rollback");
 
 		if (!commitFailed) {
 
@@ -186,7 +185,7 @@ public class JDBCTransaction implements Transaction {
 
 			try {
 				rollbackAndResetAutoCommit();
-                LOG.debug("Rolled back JDBC Connection");
+                LOG.debugf("Rolled back JDBC Connection");
 				rolledBack = true;
 				notifySynchronizationsAfterTransactionCompletion(Status.STATUS_ROLLEDBACK);
 			}
@@ -216,7 +215,7 @@ public class JDBCTransaction implements Transaction {
 	private void toggleAutoCommit() {
 		try {
 			if (toggleAutoCommit) {
-                LOG.debug("Re-enabling autocommit");
+                LOG.debugf("Re-enabling autocommit");
 				jdbcContext.connection().setAutoCommit( true );
 			}
 		}

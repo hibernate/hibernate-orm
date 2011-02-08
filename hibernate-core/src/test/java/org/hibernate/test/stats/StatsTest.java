@@ -1,11 +1,8 @@
 //$Id: StatsTest.java 15731 2008-12-26 23:42:56Z gbadner $
 package org.hibernate.test.stats;
-
 import java.util.HashSet;
 import java.util.Iterator;
-
 import junit.framework.Test;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -14,11 +11,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.mapping.Collection;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Show the difference between fetch and load

@@ -1,5 +1,6 @@
 package org.hibernate.test.sql.hand;
 
+
 /**
  * Used to mimic some tests from the JPA testsuite...
  *

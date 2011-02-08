@@ -1,5 +1,6 @@
 package org.hibernate.test.any;
 
+
 /**
  * todo: describe IntegerPropertyValue
  *

@@ -1,16 +1,14 @@
 package org.hibernate.test.usercollection.parameterized;
-
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.List;
-
-import org.hibernate.usertype.UserCollectionType;
-import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.EntityMode;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.EntityMode;
+import org.hibernate.usertype.ParameterizedType;
+import org.hibernate.usertype.UserCollectionType;
 
 /**
  * Our Hibernate type-system extension for defining our specialized collection

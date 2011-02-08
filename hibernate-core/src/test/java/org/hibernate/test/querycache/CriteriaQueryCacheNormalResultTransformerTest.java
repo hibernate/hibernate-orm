@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.querycache;
-
 import junit.framework.Test;
-
 import org.hibernate.CacheMode;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 

@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.query;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 

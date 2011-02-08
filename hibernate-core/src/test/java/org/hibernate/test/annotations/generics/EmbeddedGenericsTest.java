@@ -1,11 +1,4 @@
 package org.hibernate.test.annotations.generics;
-
-/**
- * A test case for ANN-494.
- *
- * @author Edward Costello
- * @author Paolo Perrotta
- */
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;

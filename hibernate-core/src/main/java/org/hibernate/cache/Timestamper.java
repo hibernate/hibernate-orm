@@ -24,6 +24,7 @@
  */
 package org.hibernate.cache;
 
+
 /**
  * Generates increasing identifiers (in a single VM only).
  * Not valid across multiple VMs. Identifiers are not necessarily

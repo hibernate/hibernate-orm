@@ -23,17 +23,15 @@
  *
  */
 package org.hibernate.tuple.component;
-
-import org.hibernate.tuple.EntityModeToTuplizerMapping;
-import org.hibernate.tuple.Tuplizer;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.EntityMode;
-
-import java.util.Map;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.io.Serializable;
+import java.util.Map;
+import org.hibernate.EntityMode;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.tuple.EntityModeToTuplizerMapping;
+import org.hibernate.tuple.Tuplizer;
 
 /**
  * Handles mapping {@link EntityMode}s to {@link ComponentTuplizer}s.

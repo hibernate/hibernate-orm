@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
-
-import net.sf.swarmcache.ObjectCache;
-
 import java.io.Serializable;
 import java.util.Map;
+import net.sf.swarmcache.ObjectCache;
 
 /**
  * @author Jason Carreira, Gavin King

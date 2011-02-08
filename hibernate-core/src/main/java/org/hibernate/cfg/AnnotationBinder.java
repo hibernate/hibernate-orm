@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +82,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -170,6 +169,7 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.jboss.logging.Logger;
 
 /**
  * JSR 175 annotation binder which reads the annotations from classes, applies the
@@ -182,8 +182,7 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 @SuppressWarnings("unchecked")
 public final class AnnotationBinder {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AnnotationBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AnnotationBinder.class.getName());
 
     /*
      * Some design description
@@ -989,7 +988,7 @@ public final class AnnotationBinder {
 		SharedCacheMode mode;
 		final Object value = mappings.getConfigurationProperties().get( "javax.persistence.sharedCache.mode" );
 		if ( value == null ) {
-            LOG.debug("No value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED");
+            LOG.debugf("No value specified for 'javax.persistence.sharedCache.mode'; using UNSPECIFIED");
 			mode = SharedCacheMode.UNSPECIFIED;
 		}
 		else {
@@ -1001,7 +1000,7 @@ public final class AnnotationBinder {
 					mode = SharedCacheMode.valueOf( value.toString() );
 				}
 				catch ( Exception e ) {
-                    LOG.debug("Unable to resolve given mode name [" + value + "]; using UNSPECIFIED : " + e);
+                    LOG.debugf("Unable to resolve given mode name [%s]; using UNSPECIFIED : %s", value, e);
 					mode = SharedCacheMode.UNSPECIFIED;
 				}
 			}
@@ -1034,7 +1033,7 @@ public final class AnnotationBinder {
 			return;
 		}
 
-        LOG.debug("Setting default cache concurrency strategy via config [" + strategy.name() + "]");
+        LOG.debugf("Setting default cache concurrency strategy via config [%s]", strategy.name());
 		DEFAULT_CACHE_CONCURRENCY_STRATEGY = strategy;
 	}
 

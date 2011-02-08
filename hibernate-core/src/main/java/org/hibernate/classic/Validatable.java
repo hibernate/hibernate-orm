@@ -24,6 +24,7 @@
  */
 package org.hibernate.classic;
 
+
 /**
  * Implemented by persistent classes with invariants that must
  * be checked before inserting into or updating the database.

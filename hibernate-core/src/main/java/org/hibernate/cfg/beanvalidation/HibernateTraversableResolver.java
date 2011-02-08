@@ -22,21 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
-
 import java.lang.annotation.ElementType;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.validation.TraversableResolver;
 import javax.validation.Path;
-
-import org.hibernate.persister.entity.EntityPersister;
+import javax.validation.TraversableResolver;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.CollectionType;
 
 /**
  * Use Hibernate metadata to ignore cascade on entities.

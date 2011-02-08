@@ -24,6 +24,7 @@
  */
 package org.hibernate.cache;
 
+
 /**
  * Contract for general-purpose cache regions.
  *

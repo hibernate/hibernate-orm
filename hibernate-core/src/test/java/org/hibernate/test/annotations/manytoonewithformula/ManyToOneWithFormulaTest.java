@@ -25,12 +25,11 @@
   * Boston, MA  02110-1301  USA
   */
 package org.hibernate.test.annotations.manytoonewithformula;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.testing.junit.SkipForDialect;
 import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit.SkipForDialect;
 
 /**
  * @author Sharath Reddy

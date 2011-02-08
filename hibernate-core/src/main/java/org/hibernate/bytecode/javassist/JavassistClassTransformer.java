@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.bytecode.javassist;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -32,9 +31,10 @@ import java.io.IOException;
 import java.security.ProtectionDomain;
 import javassist.bytecode.ClassFile;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.bytecode.AbstractClassTransformerImpl;
 import org.hibernate.bytecode.util.ClassFilter;
+import org.jboss.logging.Logger;
 
 /**
  * Enhance the classes allowing them to implements InterceptFieldEnabled
@@ -45,7 +45,8 @@ import org.hibernate.bytecode.util.ClassFilter;
  */
 public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       JavassistClassTransformer.class.getName());
 
 	public JavassistClassTransformer(ClassFilter classFilter, org.hibernate.bytecode.util.FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );
@@ -69,7 +70,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 		}
 		FieldTransformer transformer = getFieldTransformer( classfile );
 		if ( transformer != null ) {
-            LOG.debug("Enhancing " + className);
+            LOG.debugf("Enhancing %s", className);
 			DataOutputStream out = null;
 			try {
 				transformer.transform( classfile );

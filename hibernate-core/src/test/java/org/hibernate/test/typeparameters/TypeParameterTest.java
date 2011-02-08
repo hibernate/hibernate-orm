@@ -1,12 +1,9 @@
 //$Id: TypeParameterTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.typeparameters;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-
 import junit.framework.Test;
-
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

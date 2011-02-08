@@ -5,7 +5,6 @@
  */
 
 package org.hibernate.test.orphan;
-
 import java.util.HashSet;
 import java.util.Set;
 

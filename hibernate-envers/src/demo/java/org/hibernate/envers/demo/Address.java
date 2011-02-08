@@ -20,6 +20,8 @@
  * Red Hat Author(s): Adam Warski
  */
 package org.hibernate.envers.demo;
+import org.jboss.logging.Logger;
+
 
 import org.hibernate.envers.Audited;
 

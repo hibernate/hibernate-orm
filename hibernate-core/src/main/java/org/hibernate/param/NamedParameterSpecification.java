@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.param;
-
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
-
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 /**
  * Parameter bind specification for an explicit named parameter.

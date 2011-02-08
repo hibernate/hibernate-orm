@@ -1,5 +1,4 @@
 package org.hibernate.test.entityname;
-
 import org.hibernate.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 

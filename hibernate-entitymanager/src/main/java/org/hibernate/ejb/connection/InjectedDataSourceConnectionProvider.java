@@ -20,15 +20,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.connection;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
+import org.jboss.logging.Logger;
 
 /**
  * A specialization of {@link DatasourceConnectionProviderImpl} which uses the {@link DataSource} specified vi
@@ -42,8 +42,8 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  */
 public class InjectedDataSourceConnectionProvider extends DatasourceConnectionProviderImpl {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                InjectedDataSourceConnectionProvider.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           InjectedDataSourceConnectionProvider.class.getName());
 
 	private String user;
 	private String pass;

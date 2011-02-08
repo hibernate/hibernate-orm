@@ -20,18 +20,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.Map;
-
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ColumnHelper;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.util.StringHelper;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * TODO : javadoc

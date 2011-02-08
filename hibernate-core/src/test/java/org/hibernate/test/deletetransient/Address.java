@@ -1,7 +1,6 @@
 package org.hibernate.test.deletetransient;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * todo: describe Address

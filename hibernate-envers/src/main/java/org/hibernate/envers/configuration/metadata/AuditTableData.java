@@ -24,6 +24,7 @@
 
 package org.hibernate.envers.configuration.metadata;
 
+
 /**
  * Holds information necessary to create an audit table: its name, schema and catalog, as well as the audit
  * entity name.

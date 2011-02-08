@@ -21,6 +21,7 @@
  */
 package org.hibernate.ejb.packaging;
 
+
 /**
  * Filter use to match a file by its name
  *

@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.persister.entity;
-
-import org.hibernate.MappingException;
-
 import java.util.Map;
+import org.hibernate.MappingException;
 
 /**
  * Anything that can be loaded by outer join - namely

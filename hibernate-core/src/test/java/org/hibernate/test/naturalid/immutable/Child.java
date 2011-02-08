@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.naturalid.immutable;
 
+
 /**
  * @author Alex Burgel
  */

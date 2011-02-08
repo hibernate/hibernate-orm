@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.exec;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
@@ -30,7 +29,7 @@ import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
@@ -45,6 +44,7 @@ import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import antlr.RecognitionException;
 import antlr.collections.AST;
 
@@ -55,14 +55,14 @@ import antlr.collections.AST;
  */
 public abstract class AbstractStatementExecutor implements StatementExecutor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractStatementExecutor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractStatementExecutor.class.getName());
 
 	private final HqlSqlWalker walker;
 	private List idSelectParameterSpecifications = Collections.EMPTY_LIST;
 
     public AbstractStatementExecutor( HqlSqlWalker walker,
-                                      Logger log ) {
+                                      HibernateLogger log ) {
 		this.walker = walker;
 	}
 
@@ -157,7 +157,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 					}
 				}
 				catch( Exception e ) {
-                    LOG.debug("Unable to create temporary id table [" + e.getMessage() + "]");
+                    LOG.debugf("Unable to create temporary id table [%s]", e.getMessage());
 				}
 			}
 		};
@@ -186,8 +186,8 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 
 		@Override
 		protected void logWarning(String description, String message) {
-			LOG.debug( description );
-			LOG.debug( message );
+            LOG.debugf(description);
+            LOG.debugf(message);
 		}
 	};
 

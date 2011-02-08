@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.entityNames.oneToManyNotAudited;
 
+
 /**
  * @author Hern&aacute;n Chanfreau
  * 

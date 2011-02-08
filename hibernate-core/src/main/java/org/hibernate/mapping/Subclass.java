@@ -22,10 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.util.JoinedIterator;

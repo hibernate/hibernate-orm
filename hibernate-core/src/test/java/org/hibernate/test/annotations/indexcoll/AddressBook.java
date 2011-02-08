@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.CascadeType;
@@ -9,7 +8,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
-import javax.persistence.JoinTable;
 
 /**
  * @author Emmanuel Bernard

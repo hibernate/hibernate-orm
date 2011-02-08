@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
@@ -40,8 +38,6 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
 import org.hibernate.util.JoinedIterator;
 import org.hibernate.util.ReflectHelper;

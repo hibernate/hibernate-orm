@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.onetoone.hhh4851;
-
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.exception;
-
-import org.hibernate.JDBCException;
-
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.JDBCException;
 
 /**
  * A SQLExceptionConverter implementation specific to Cach&eacute; SQL,

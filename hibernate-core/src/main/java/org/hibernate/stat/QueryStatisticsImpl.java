@@ -24,6 +24,7 @@
  */
 package org.hibernate.stat;
 
+
 /**
  * Query statistics (HQL and SQL)
  * <p/>

@@ -1,9 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
-
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-
 import org.hibernate.ejb.test.TestCase;
 
 

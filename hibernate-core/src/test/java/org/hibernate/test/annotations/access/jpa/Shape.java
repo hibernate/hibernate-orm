@@ -23,9 +23,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.access.jpa;
-
-import javax.persistence.Access;
-import javax.persistence.AccessType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

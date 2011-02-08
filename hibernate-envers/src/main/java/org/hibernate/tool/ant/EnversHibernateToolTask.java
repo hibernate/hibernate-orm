@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tool.ant;
-
 import org.apache.tools.ant.BuildException;
 import org.hibernate.envers.ant.AnnotationConfigurationTaskWithEnvers;
 import org.hibernate.envers.ant.ConfigurationTaskWithEnvers;

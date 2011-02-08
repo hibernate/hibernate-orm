@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+
 /**
  * An abstract type for mapping long binary SQL types to Java byte[].
  *

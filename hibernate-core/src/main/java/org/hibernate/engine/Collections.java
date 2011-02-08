@@ -23,16 +23,16 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
+import org.jboss.logging.Logger;
 
 /**
  * Implements book-keeping for the collection persistence by reachability algorithm
@@ -40,8 +40,7 @@ import org.hibernate.type.CollectionType;
  */
 public final class Collections {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                Collections.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Collections.class.getName());
 
 	private Collections() {}
 
@@ -70,10 +69,10 @@ public final class Collections {
 		CollectionEntry entry = persistenceContext.getCollectionEntry(coll);
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
-        if (LOG.isDebugEnabled() && loadedPersister != null) LOG.debug("Collection dereferenced: "
-                                                                       + MessageHelper.collectionInfoString(loadedPersister,
-                                                                                                            entry.getLoadedKey(),
-                                                                                                            session.getFactory()));
+        if (LOG.isDebugEnabled() && loadedPersister != null) LOG.debugf("Collection dereferenced: %s",
+                                                                        MessageHelper.collectionInfoString(loadedPersister,
+                                                                                                           entry.getLoadedKey(),
+                                                                                                           session.getFactory()));
 
 		// do a check
 		boolean hasOrphanDelete = loadedPersister != null &&
@@ -129,8 +128,8 @@ public final class Collections {
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		CollectionEntry entry = persistenceContext.getCollectionEntry(coll);
 
-        LOG.debug("Found collection with unloaded owner: "
-                  + MessageHelper.collectionInfoString(entry.getLoadedPersister(), entry.getLoadedKey(), session.getFactory()));
+        LOG.debugf("Found collection with unloaded owner: %s",
+                   MessageHelper.collectionInfoString(entry.getLoadedPersister(), entry.getLoadedKey(), session.getFactory()));
 
 		entry.setCurrentPersister( entry.getLoadedPersister() );
 		entry.setCurrentKey( entry.getLoadedKey() );
@@ -183,15 +182,14 @@ public final class Collections {
 		ce.setCurrentKey( type.getKeyOfOwner(entity, session) ); //TODO: better to pass the id in as an argument?
 
         if (LOG.isDebugEnabled()) {
-            if (collection.wasInitialized()) LOG.debug("Collection found: "
-                                                       + MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory)
-                                                       + ", was: "
-                                                       + MessageHelper.collectionInfoString(ce.getLoadedPersister(),
-                                                                                            ce.getLoadedKey(),
-                                                                                            factory) + " (initialized)");
-            else LOG.debug("Collection found: " + MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory)
-                           + ", was: " + MessageHelper.collectionInfoString(ce.getLoadedPersister(), ce.getLoadedKey(), factory)
-                           + " (uninitialized)");
+            if (collection.wasInitialized()) LOG.debugf("Collection found: %s, was: %s (initialized)",
+                                                        MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory),
+                                                        MessageHelper.collectionInfoString(ce.getLoadedPersister(),
+                                                                                           ce.getLoadedKey(),
+                                                                                           factory));
+            else LOG.debugf("Collection found: %s, was: %s (uninitialized)",
+                            MessageHelper.collectionInfoString(persister, ce.getCurrentKey(), factory),
+                            MessageHelper.collectionInfoString(ce.getLoadedPersister(), ce.getLoadedKey(), factory));
         }
 
 		prepareCollectionForUpdate( collection, ce, session.getEntityMode(), factory );

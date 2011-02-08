@@ -1,5 +1,6 @@
 package org.hibernate.test.criteria;
 
+
 public class TestObject {
     private Integer id;
     private String text;

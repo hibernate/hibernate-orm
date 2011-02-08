@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.sql.Types;
-
 import org.hibernate.LockOptions;
-import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ANSICaseFragment;
+import org.hibernate.sql.CaseFragment;
 
 /**
  * A dialect for Oracle 9i databases.

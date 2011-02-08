@@ -23,13 +23,13 @@
  *
  */
 package org.hibernate.event.def;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.event.AutoFlushEvent;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.EventSource;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default flush event listeners used by hibernate for
@@ -39,8 +39,8 @@ import org.hibernate.event.EventSource;
  */
 public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener implements AutoFlushEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultAutoFlushEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultAutoFlushEventListener.class.getName());
 
     /** Handle the given auto-flush event.
      *

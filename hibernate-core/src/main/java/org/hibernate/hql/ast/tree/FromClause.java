@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,10 +30,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -45,8 +45,7 @@ import antlr.collections.AST;
  */
 public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, DisplayableNode {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                FromClause.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromClause.class.getName());
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;
@@ -277,7 +276,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addJoinByPathMap(String path, FromElement destination) {
-        LOG.debug("addJoinByPathMap() : " + path + " -> " + destination.getDisplayText());
+        LOG.debugf("addJoinByPathMap() : %s -> %s", path, destination.getDisplayText());
 		fromElementsByPath.put( path, destination );
 	}
 
@@ -347,7 +346,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	public void promoteJoin(FromElement elem) {
-        LOG.debug("Promoting [" + elem + "] to [" + this + "]");
+        LOG.debugf("Promoting [%s] to [%s]", elem, this);
 		//TODO: implement functionality
 		//  this might be painful to do here, as the "join post processing" for
 		//  the subquery has already been performed (meaning that for
@@ -363,7 +362,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	}
 
 	void addCollectionJoinFromElementByPath(String path, FromElement destination) {
-        LOG.debug("addCollectionJoinFromElementByPath() : " + path + " -> " + destination);
+        LOG.debugf("addCollectionJoinFromElementByPath() : %s -> %s", path, destination);
 		collectionJoinFromElementsByPath.put( path, destination );	// Add the new node to the map so that we don't create it twice.
 	}
 

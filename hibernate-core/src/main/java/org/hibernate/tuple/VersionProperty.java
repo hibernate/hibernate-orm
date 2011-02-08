@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tuple;
-
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.VersionValue;
 import org.hibernate.type.Type;

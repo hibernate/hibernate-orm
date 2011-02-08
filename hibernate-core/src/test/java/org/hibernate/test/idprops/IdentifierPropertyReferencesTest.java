@@ -1,7 +1,5 @@
 package org.hibernate.test.idprops;
-
 import junit.framework.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;

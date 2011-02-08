@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.SingularAttribute;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

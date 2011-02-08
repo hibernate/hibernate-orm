@@ -23,10 +23,9 @@
  */
 
 package org.hibernate.envers.query.order;
-
 import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.tools.Pair;
 import org.hibernate.envers.query.property.PropertyNameGetter;
+import org.hibernate.envers.tools.Pair;
 
 /**
  * @author Adam Warski (adam at warski dot org)

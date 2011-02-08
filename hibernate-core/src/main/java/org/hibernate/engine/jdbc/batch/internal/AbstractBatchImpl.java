@@ -22,16 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.batch.internal;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Convenience base class for implementors of the Batch interface.
@@ -40,8 +40,7 @@ import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
  */
 public abstract class AbstractBatchImpl implements Batch {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractBatchImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AbstractBatchImpl.class.getName());
 
 	private final SQLStatementLogger statementLogger;
 	private final SQLExceptionHelper exceptionHelper;
@@ -119,7 +118,7 @@ public abstract class AbstractBatchImpl implements Batch {
 		}
 		PreparedStatement statement = statements.get( sql );
 		if ( statement != null ) {
-            LOG.debug("Reusing prepared statement");
+            LOG.debugf("Reusing prepared statement");
 			statementLogger.logStatement( sql );
 		}
 		return statement;

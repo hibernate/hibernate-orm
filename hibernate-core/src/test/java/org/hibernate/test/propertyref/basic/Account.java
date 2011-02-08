@@ -1,6 +1,7 @@
 //$Id: Account.java 4399 2004-08-21 08:43:20Z oneovthafew $
 package org.hibernate.test.propertyref.basic;
 
+
 /**
  * @author Gavin King
  */

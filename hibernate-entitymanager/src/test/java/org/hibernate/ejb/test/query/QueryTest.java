@@ -1,18 +1,16 @@
 //$Id$
 package org.hibernate.ejb.test.query;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-
 import org.hibernate.Hibernate;
-import org.hibernate.ejb.test.TestCase;
-import org.hibernate.ejb.test.Item;
-import org.hibernate.ejb.test.Wallet;
 import org.hibernate.ejb.test.Distributor;
+import org.hibernate.ejb.test.Item;
+import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.Wallet;
 
 
 /**

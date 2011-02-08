@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.logical;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

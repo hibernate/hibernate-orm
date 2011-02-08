@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.ant;
-
-import org.hibernate.envers.configuration.AuditConfiguration;
-
 import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.tool.ant.ConfigurationTask;
 
 /**

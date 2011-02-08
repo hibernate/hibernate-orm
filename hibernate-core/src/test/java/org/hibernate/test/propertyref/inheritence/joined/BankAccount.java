@@ -1,6 +1,7 @@
 //$Id: BankAccount.java 7274 2005-06-22 17:07:29Z oneovthafew $
 package org.hibernate.test.propertyref.inheritence.joined;
 
+
 public class BankAccount extends Account {
 	private String accountNumber;
 	private String bsb;

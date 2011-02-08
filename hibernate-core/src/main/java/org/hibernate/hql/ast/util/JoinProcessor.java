@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -31,7 +30,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
 import org.hibernate.AssertionFailure;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -49,6 +48,7 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.
@@ -59,8 +59,7 @@ import org.hibernate.util.StringHelper;
  */
 public class JoinProcessor implements SqlTokenTypes {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JoinProcessor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JoinProcessor.class.getName());
 
 	private final HqlSqlWalker walker;
 	private final SyntheticAndFactory syntheticAndFactory;
@@ -170,7 +169,7 @@ public class JoinProcessor implements SqlTokenTypes {
 		// If there is a FROM fragment and the FROM element is an explicit, then add the from part.
 		if ( fromElement.useFromFragment() /*&& StringHelper.isNotEmpty( frag )*/ ) {
 			String fromFragment = processFromFragment( frag, join ).trim();
-            LOG.debug("Using FROM fragment [" + fromFragment + "]");
+            LOG.debugf("Using FROM fragment [%s]", fromFragment);
 			processDynamicFilterParameters(
 					fromFragment,
 					fromElement,

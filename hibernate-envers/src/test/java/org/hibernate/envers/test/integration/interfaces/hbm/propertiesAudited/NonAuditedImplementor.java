@@ -1,5 +1,6 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited;
 
+
 /**
  * @author Hern�n Chanfreau
  */

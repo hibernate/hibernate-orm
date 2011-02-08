@@ -24,7 +24,6 @@
  *
  */
 package org.hibernate.test.lob;
-
 import java.io.Serializable;
 
 /**

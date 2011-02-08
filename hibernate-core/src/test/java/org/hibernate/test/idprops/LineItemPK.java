@@ -1,5 +1,4 @@
 package org.hibernate.test.idprops;
-
 import java.io.Serializable;
 
 /**

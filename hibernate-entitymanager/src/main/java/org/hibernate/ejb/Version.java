@@ -23,8 +23,7 @@
 
 //$Id$
 package org.hibernate.ejb;
-
-import org.hibernate.Logger;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -32,7 +31,7 @@ import org.hibernate.Logger;
  */
 public class Version {
 
-    public static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Version.class.getPackage().getName());
+    public static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class, Version.class.getName());
 
 	public static String getVersionString() {
 		return "[WORKING]";

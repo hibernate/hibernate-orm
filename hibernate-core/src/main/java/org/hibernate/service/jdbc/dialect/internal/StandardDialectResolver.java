@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
-
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -45,6 +44,7 @@ import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.jboss.logging.Logger;
 
 /**
  * The standard Hibernate Dialect resolver.
@@ -53,8 +53,8 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
  */
 public class StandardDialectResolver extends AbstractDialectResolver {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                StandardDialectResolver.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       StandardDialectResolver.class.getName());
 
 	@Override
     protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {

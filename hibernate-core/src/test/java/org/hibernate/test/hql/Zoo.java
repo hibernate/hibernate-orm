@@ -1,6 +1,5 @@
 //$Id: Zoo.java 10653 2006-10-26 13:38:50Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
-
 import java.util.HashMap;
 import java.util.Map;
 

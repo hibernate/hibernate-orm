@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.action;
-
 import java.io.Serializable;
 
 /**

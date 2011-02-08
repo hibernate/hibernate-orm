@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -30,13 +29,14 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -49,8 +49,8 @@ import org.hibernate.util.ReflectHelper;
  */
 public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DriverManagerConnectionProviderImpl.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DriverManagerConnectionProviderImpl.class.getName());
 
 	private String url;
 	private Properties connectionProps;
@@ -113,7 +113,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 				connection.close();
 			}
 			catch (SQLException sqle) {
-                LOG.warn(LOG.unableToClosePooledConnection(), sqle);
+                LOG.unableToClosePooledConnection(sqle);
 			}
 		}
 		pool.clear();
@@ -143,7 +143,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 		// otherwise we open a new connection...
 
-        LOG.debug("Opening new JDBC connection");
+        LOG.debugf("Opening new JDBC connection");
 		Connection conn = DriverManager.getConnection( url, connectionProps );
 		if ( isolation != null ) {
 			conn.setTransactionIsolation( isolation.intValue() );
@@ -152,7 +152,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			conn.setAutoCommit(autocommit);
 		}
 
-        LOG.debug("Created connection to: " + url + ", Isolation Level: " + conn.getTransactionIsolation());
+        LOG.debugf("Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation());
 
 		checkedOut++;
 
@@ -172,7 +172,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			}
 		}
 
-        LOG.debug("Closing JDBC connection");
+        LOG.debugf("Closing JDBC connection");
 		conn.close();
 	}
 

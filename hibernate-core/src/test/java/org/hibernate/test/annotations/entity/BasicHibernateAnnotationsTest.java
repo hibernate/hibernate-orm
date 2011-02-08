@@ -23,14 +23,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.entity;
-
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;

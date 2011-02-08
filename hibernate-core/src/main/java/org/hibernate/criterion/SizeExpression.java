@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.criterion;
-
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;

@@ -1,6 +1,5 @@
 //$Id: Point.java 6477 2005-04-21 07:39:21Z oneovthafew $
 package org.hibernate.test.rowid;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 

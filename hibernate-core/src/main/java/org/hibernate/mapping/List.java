@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.TypeFactory;
 
 /**
  * A list mapping has a primary key consisting of the key columns + index column.

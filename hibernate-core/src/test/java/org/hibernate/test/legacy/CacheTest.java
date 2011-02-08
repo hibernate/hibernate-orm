@@ -1,14 +1,12 @@
 //$Id: CacheTest.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheConcurrencyStrategy;
 import org.hibernate.cache.CacheProvider;
-import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cache.HashtableCacheProvider;
+import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.testing.junit.UnitTestCase;
 

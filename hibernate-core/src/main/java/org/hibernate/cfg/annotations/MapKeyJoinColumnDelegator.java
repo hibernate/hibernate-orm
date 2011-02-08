@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.lang.annotation.Annotation;
 import javax.persistence.Column;
-import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.JoinColumn;
+import javax.persistence.MapKeyJoinColumn;
 
 /**
  * @author Emmanuel Bernard

@@ -1,11 +1,8 @@
 package org.hibernate.test.annotations.override;
-
-import org.hibernate.test.annotations.override.SocialSite;
-
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToMany;
-import java.util.List;
 
 @Embeddable
 public class SocialTouchPoints {

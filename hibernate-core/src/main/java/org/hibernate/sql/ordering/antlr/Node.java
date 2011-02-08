@@ -24,6 +24,7 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
+
 /**
  * General contract for AST nodes.
  *

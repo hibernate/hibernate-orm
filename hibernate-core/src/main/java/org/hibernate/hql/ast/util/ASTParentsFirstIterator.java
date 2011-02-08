@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import java.util.Iterator;
 import java.util.LinkedList;
-
 import antlr.collections.AST;
 
 /**

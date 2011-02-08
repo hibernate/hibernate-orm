@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.jdbc;
-
 import org.hibernate.HibernateException;
 
 /**

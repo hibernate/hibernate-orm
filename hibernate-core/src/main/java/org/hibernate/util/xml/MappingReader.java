@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util.xml;
-
 import java.io.StringReader;
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
+import org.hibernate.HibernateLogger;
 import org.hibernate.InvalidMappingException;
-import org.hibernate.Logger;
+import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -39,8 +39,7 @@ import org.xml.sax.SAXException;
  */
 public class MappingReader {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                MappingReader.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, MappingReader.class.getName());
 
 	public static final String ASSUMED_ORM_XSD_VERSION = "2.0";
 	public static final MappingReader INSTANCE = new MappingReader();
@@ -78,7 +77,7 @@ public class MappingReader {
 			return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 		}
 		catch ( Exception orm2Problem ) {
-            LOG.debug("Problem parsing XML using orm 2 xsd : " + orm2Problem.getMessage());
+            LOG.debugf("Problem parsing XML using orm 2 xsd : %s", orm2Problem.getMessage());
 			failure = orm2Problem;
 			errorHandler.reset();
 
@@ -93,7 +92,7 @@ public class MappingReader {
 					return new XmlDocumentImpl( document, origin.getType(), origin.getName() );
 				}
 				catch ( Exception orm1Problem ) {
-                    LOG.debug("Problem parsing XML using orm 1 xsd : " + orm1Problem.getMessage());
+                    LOG.debugf("Problem parsing XML using orm 1 xsd : %s", orm1Problem.getMessage());
 				}
 			}
 		}

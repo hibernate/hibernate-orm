@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.criteria;
 
+
 /**
  * TODO : javadoc
  *

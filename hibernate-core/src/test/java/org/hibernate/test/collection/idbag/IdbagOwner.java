@@ -1,7 +1,6 @@
 package org.hibernate.test.collection.idbag;
-
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * {@inheritDoc}

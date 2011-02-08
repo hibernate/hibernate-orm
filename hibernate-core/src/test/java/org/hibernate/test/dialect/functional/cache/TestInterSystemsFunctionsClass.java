@@ -1,5 +1,4 @@
 package org.hibernate.test.dialect.functional.cache;
-
 import java.util.Date;
 
 /**

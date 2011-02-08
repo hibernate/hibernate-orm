@@ -23,12 +23,12 @@
  *
  */
 package org.hibernate.transform;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Distinctions the result tuples in the final result based on the defined
@@ -43,8 +43,8 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 
 	public static final DistinctResultTransformer INSTANCE = new DistinctResultTransformer();
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DistinctResultTransformer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DistinctResultTransformer.class.getName());
 
 	/**
 	 * Helper class to handle distincting
@@ -93,7 +93,7 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 				result.add( entity );
 			}
 		}
-        LOG.debug("Transformed: " + list.size() + " rows to: " + result.size() + " distinct results");
+        LOG.debugf("Transformed: %s rows to: %s distinct results", list.size(), result.size());
 		return result;
 	}
 

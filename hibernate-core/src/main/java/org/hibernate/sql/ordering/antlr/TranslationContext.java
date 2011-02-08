@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
-
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Contract for contextual information required to perform translation.

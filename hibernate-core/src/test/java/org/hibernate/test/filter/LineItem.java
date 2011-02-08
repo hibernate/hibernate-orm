@@ -1,6 +1,7 @@
 // $Id: LineItem.java 4046 2004-07-20 04:07:40Z steveebersole $
 package org.hibernate.test.filter;
 
+
 /**
  * Implementation of LineItem.
  * 

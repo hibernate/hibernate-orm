@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,6 +83,7 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Generates metadata for a collection-valued property.
@@ -92,8 +92,7 @@ import org.hibernate.type.Type;
  */
 public final class CollectionMetadataGenerator {
 
-    public static final EnversLogger LOG = org.jboss.logging.Logger.getMessageLogger(EnversLogger.class,
-                                                                                     CollectionMetadataGenerator.class.getPackage().getName());
+    public static final EnversLogger LOG = Logger.getMessageLogger(EnversLogger.class, CollectionMetadataGenerator.class.getName());
 
     private final AuditMetadataGenerator mainGenerator;
     private final String propertyName;
@@ -165,7 +164,9 @@ public final class CollectionMetadataGenerator {
 
     @SuppressWarnings({"unchecked"})
     private void addOneToManyAttached(boolean fakeOneToManyBidirectional) {
-        LOG.debug("Adding audit mapping for property " + referencingEntityName+ "." + propertyName+ ": one-to-many collection, using a join column on the referenced entity.");
+        LOG.debugf("Adding audit mapping for property %s.%s: one-to-many collection, using a join column on the referenced entity",
+                   referencingEntityName,
+                   propertyName);
 
         String mappedBy = getMappedBy(propertyValue);
 
@@ -276,8 +277,7 @@ public final class CollectionMetadataGenerator {
     @SuppressWarnings({"unchecked"})
     private void addWithMiddleTable() {
 
-        LOG.debug("Adding audit mapping for property " + referencingEntityName + "." + propertyName
-                  + ": collection with a join table.");
+        LOG.debugf("Adding audit mapping for property %s.%s: collection with a join table", referencingEntityName, propertyName);
 
         // Generating the name of the middle table
         String auditMiddleTableName;
@@ -291,7 +291,7 @@ public final class CollectionMetadataGenerator {
             auditMiddleEntityName = mainGenerator.getVerEntCfg().getAuditEntityName(middleTableName);
         }
 
-        LOG.debug("Using join table name: " + auditMiddleTableName);
+        LOG.debugf("Using join table name: %s", auditMiddleTableName);
 
         // Generating the XML mapping for the middle entity, only if the relation isn't inverse.
         // If the relation is inverse, will be later checked by comparing middleEntityXml with null.
@@ -557,11 +557,13 @@ public final class CollectionMetadataGenerator {
         String mappedBy = this.searchMappedBy(referencedClass, collectionValue);
 
         if(mappedBy == null) {
-            LOG.debug("Going to search the mapped by attribute for " + propertyName + " in superclasses of entity: " + referencedClass.getClassName());
+            LOG.debugf("Going to search the mapped by attribute for %s in superclasses of entity: %s",
+                       propertyName,
+                       referencedClass.getClassName());
 
             PersistentClass tempClass = referencedClass;
 			while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
-                LOG.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
+                LOG.debugf("Searching in superclass: %s", tempClass.getSuperclass().getClassName());
 				mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionValue);
 				tempClass = tempClass.getSuperclass();
 			}
@@ -601,14 +603,15 @@ public final class CollectionMetadataGenerator {
 
         // not found on referenced class, searching on superclasses
         if(mappedBy == null) {
-            LOG.debug("Going to search the mapped by attribute for " + propertyName + " in superclasses of entity: "
-                      + referencedClass.getClassName());
+            LOG.debugf("Going to search the mapped by attribute for %s in superclasses of entity: %s",
+                       propertyName,
+                       referencedClass.getClassName());
 
             PersistentClass tempClass = referencedClass;
-			while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
-                LOG.debug("Searching in superclass: " + tempClass.getSuperclass().getClassName());
-				mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionTable);
-				tempClass = tempClass.getSuperclass();
+            while ((mappedBy == null) && (tempClass.getSuperclass() != null)) {
+                LOG.debugf("Searching in superclass: %s", tempClass.getSuperclass().getClassName());
+                mappedBy = this.searchMappedBy(tempClass.getSuperclass(), collectionTable);
+                tempClass = tempClass.getSuperclass();
 			}
         }
 

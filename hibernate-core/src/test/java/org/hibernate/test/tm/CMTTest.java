@@ -1,14 +1,11 @@
 //$Id: CMTTest.java 11303 2007-03-19 22:06:14Z steve.ebersole@jboss.com $
 package org.hibernate.test.tm;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.transaction.Transaction;
-
 import junit.framework.Test;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.ScrollableResults;

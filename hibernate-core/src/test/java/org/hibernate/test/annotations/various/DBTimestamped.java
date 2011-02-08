@@ -24,13 +24,11 @@
 
 // $Id$
 package org.hibernate.test.annotations.various;
-
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Version;
-
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
 

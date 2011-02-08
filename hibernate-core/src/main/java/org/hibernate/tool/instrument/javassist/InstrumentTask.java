@@ -64,7 +64,8 @@ import org.hibernate.tool.instrument.BasicInstrumentationTask;
  * @author Steve Ebersole
  */
 public class InstrumentTask extends BasicInstrumentationTask {
-	protected Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options) {
+	@Override
+    protected Instrumenter buildInstrumenter(Logger logger, Instrumenter.Options options) {
 		return new JavassistInstrumenter( logger, options );
 	}
 }

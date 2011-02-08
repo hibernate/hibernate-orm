@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.persister.collection;
-
 import org.hibernate.FetchMode;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;

@@ -24,6 +24,7 @@
  */
 package org.hibernate.persister.collection;
 
+
 /**
  * The names of all the collection properties.
  *

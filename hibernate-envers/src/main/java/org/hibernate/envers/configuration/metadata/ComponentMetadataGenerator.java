@@ -1,14 +1,12 @@
 package org.hibernate.envers.configuration.metadata;
-
+import java.util.Iterator;
 import org.dom4j.Element;
-import org.hibernate.mapping.Value;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Property;
-import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
 import org.hibernate.envers.configuration.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
-
-import java.util.Iterator;
+import org.hibernate.envers.entities.mapper.CompositeMapperBuilder;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
 
 /**
  * Generates metadata for components.

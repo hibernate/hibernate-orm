@@ -23,15 +23,15 @@
  *
  */
 package org.hibernate.transaction;
-
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A JTA transaction synch used to allow the {@link org.hibernate.Session} to know about transaction
@@ -41,8 +41,7 @@ import org.hibernate.util.JTAHelper;
  */
 public final class CacheSynchronization implements Synchronization {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CacheSynchronization.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CacheSynchronization.class.getName());
 
 	private final TransactionFactory.Context ctx;
 	private JDBCContext jdbcContext;

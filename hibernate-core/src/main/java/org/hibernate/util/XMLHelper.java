@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.util;
-
 import java.util.List;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
@@ -30,7 +29,8 @@ import org.dom4j.io.DOMReader;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
@@ -41,8 +41,7 @@ import org.xml.sax.SAXParseException;
  */
 public final class XMLHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                XMLHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, XMLHelper.class.getName());
 
 	public static final EntityResolver DEFAULT_DTD_RESOLVER = new DTDEntityResolver();
 

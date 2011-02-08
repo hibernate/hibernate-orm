@@ -1,5 +1,4 @@
 package org.hibernate.test.dynamicentity.tuplizer;
-
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.test.dynamicentity.ProxyHelper;
 

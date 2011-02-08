@@ -1,6 +1,5 @@
 //$
 package org.hibernate.test.annotations.collectionelement;
-
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -9,7 +8,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
-
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;

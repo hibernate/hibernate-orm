@@ -1,8 +1,6 @@
 //$Id: $
 package org.hibernate.test.id;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;

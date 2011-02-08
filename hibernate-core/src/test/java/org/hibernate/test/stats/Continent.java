@@ -1,6 +1,5 @@
 //$Id: Continent.java 6736 2005-05-09 16:09:38Z epbernard $
 package org.hibernate.test.stats;
-
 import java.util.Set;
 
 /**

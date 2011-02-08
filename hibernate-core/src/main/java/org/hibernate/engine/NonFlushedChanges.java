@@ -22,14 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
-/**
- * This interface defines the public API for changes to an EventSource that have not
- * been flushed to the database.
- *
- * @author Gail Badner
- */
-
 import java.io.Serializable;
 import org.hibernate.event.EventSource;
 

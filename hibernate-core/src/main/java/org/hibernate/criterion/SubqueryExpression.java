@@ -23,14 +23,13 @@
  *
  */
 package org.hibernate.criterion;
-
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.TypedValue;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.TypedValue;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaJoinWalker;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;

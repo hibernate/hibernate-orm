@@ -24,6 +24,7 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
+
 /**
  * Represents a parsed <tt>order-by</tt> mapping fragment.  This holds the tree of all {@link SortSpecification}s.
  *

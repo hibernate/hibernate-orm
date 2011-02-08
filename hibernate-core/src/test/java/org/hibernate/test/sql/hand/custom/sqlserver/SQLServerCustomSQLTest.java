@@ -20,13 +20,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.sql.hand.custom.sqlserver;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Custom SQL tests for SQLServer

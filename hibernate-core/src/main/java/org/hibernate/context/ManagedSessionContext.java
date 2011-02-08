@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.context;
-
-import org.hibernate.classic.Session;
+import java.util.HashMap;
+import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
+import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
-
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Represents a {@link CurrentSessionContext} the notion of a contextual session

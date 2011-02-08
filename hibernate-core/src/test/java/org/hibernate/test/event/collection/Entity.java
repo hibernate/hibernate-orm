@@ -1,5 +1,6 @@
 package org.hibernate.test.event.collection;
 
+
 /**
  * Created by IntelliJ IDEA.
  * User: gbadner

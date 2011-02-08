@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.entity;
 
+
 public class PhoneNumber {
 	
 	private String number;

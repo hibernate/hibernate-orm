@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.logical;
 
+
 /**
  * Basic information about a Java type, in regards to its role in particular set of mappings.
  *

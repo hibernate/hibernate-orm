@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
-
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
 /**
  * Tests READ_ONLY access when pessimistic locking and invalidation are used.

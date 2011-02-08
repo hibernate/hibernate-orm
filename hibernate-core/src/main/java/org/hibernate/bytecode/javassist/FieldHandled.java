@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode.javassist;
 
+
 /**
  * Interface introduced to the enhanced class in order to be able to
  * inject a {@link FieldHandler} to define the interception behavior.

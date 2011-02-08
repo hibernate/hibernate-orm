@@ -1,6 +1,7 @@
 package org.hibernate.test.legacy;
 
 
+
 public class Result {
 	private String name;
 	private long amount;

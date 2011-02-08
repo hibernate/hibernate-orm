@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.referencedcolumnname;
-
-import javax.persistence.Id;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

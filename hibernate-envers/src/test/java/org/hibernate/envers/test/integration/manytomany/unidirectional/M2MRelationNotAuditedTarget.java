@@ -22,22 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.manytomany.unidirectional;
-
+import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.testng.Assert.assertTrue;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
-import static org.hibernate.envers.test.tools.TestTools.*;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MTargetNotAuditedEntity;
-
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import static org.testng.Assert.*;
 
 /**
  * A test for auditing a many-to-many relation where the target entity is not audited.

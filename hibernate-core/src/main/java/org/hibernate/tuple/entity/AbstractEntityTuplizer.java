@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tuple.entity;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
@@ -53,6 +52,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -63,8 +63,8 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractEntityTuplizer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractEntityTuplizer.class.getName());
 
 	//TODO: currently keeps Getters and Setters (instead of PropertyAccessors) because of the way getGetter() and getSetter() are implemented currently; yuck!
 
@@ -367,7 +367,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							subId = pcEntry.getId();
 						}
 						else {
-                            LOG.debug("Performing implicit derived identity cascade");
+                            LOG.debugf("Performing implicit derived identity cascade");
 							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
 							for ( int x = 0; x < session.getListeners().getPersistEventListeners().length; x++ ) {
 								session.getListeners().getPersistEventListeners()[x].onPersist( event );

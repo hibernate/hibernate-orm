@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.pretty;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,12 +30,13 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Renders entities to a nicely readable string.
@@ -44,7 +44,7 @@ import org.hibernate.type.Type;
  */
 public final class Printer {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Printer.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Printer.class.getName());
 
     private SessionFactoryImplementor factory;
 
@@ -102,14 +102,14 @@ public final class Printer {
 
 	public void toString(Iterator iter, EntityMode entityMode) throws HibernateException {
         if (!LOG.isDebugEnabled() || !iter.hasNext()) return;
-        LOG.debug("Listing entities:");
+        LOG.debugf("Listing entities:");
 		int i=0;
 		while ( iter.hasNext() ) {
 			if (i++>20) {
-                LOG.debug("More......");
+                LOG.debugf("More......");
 				break;
 			}
-            LOG.debug(toString(iter.next(), entityMode));
+            LOG.debugf(toString(iter.next(), entityMode));
 		}
 	}
 

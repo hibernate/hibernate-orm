@@ -1,8 +1,6 @@
 //$Id: PropertyRefTest.java 7275 2005-06-22 18:58:16Z oneovthafew $
 package org.hibernate.test.propertyref.inheritence.joined;
-
 import junit.framework.Test;
-
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

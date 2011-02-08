@@ -1,12 +1,9 @@
 package org.hibernate.test.entitymode.dom4j.many2one;
-
 import java.util.List;
-
 import junit.framework.Test;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.engine;
-
-import org.hibernate.type.Type;
-
 import java.io.Serializable;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import org.hibernate.type.Type;
 
 /**
  * A FilterDefinition defines the global attributes of a dynamic filter.  This

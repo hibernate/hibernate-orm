@@ -20,12 +20,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.instrument;
-
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.cfg.Environment;

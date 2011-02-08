@@ -23,25 +23,24 @@
  */
 package org.hibernate.bytecode.buildtime;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.HashSet;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import java.util.zip.CRC32;
-import java.io.File;
-import java.io.DataInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
-
+import org.hibernate.bytecode.ClassTransformer;
 import org.hibernate.bytecode.util.ByteCodeHelper;
 import org.hibernate.bytecode.util.ClassDescriptor;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.bytecode.ClassTransformer;
 
 /**
  * Provides the basic templating of how instrumentation should occur.

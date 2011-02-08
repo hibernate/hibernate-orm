@@ -24,6 +24,7 @@
 
 package org.hibernate.annotations;
 
+
 /**
  * Where should Hibernate retrieve the value from? From the database, or from the current JVM?
  *

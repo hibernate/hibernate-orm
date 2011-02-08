@@ -23,19 +23,15 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
+import org.hibernate.QueryException;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTAppender;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.type.Type;
-import org.hibernate.QueryException;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
 

@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.tuplizer;
-
-import javax.persistence.Embeddable;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

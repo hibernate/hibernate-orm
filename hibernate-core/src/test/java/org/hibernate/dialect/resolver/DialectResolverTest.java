@@ -23,16 +23,13 @@
  *
  */
 package org.hibernate.dialect.resolver;
-
 import java.sql.SQLException;
-
-import junit.framework.TestSuite;
 import junit.framework.Test;
 import junit.framework.TestCase;
-
+import junit.framework.TestSuite;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.TestingDialects;
 import org.hibernate.dialect.Mocks;
+import org.hibernate.dialect.TestingDialects;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;

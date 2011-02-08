@@ -25,6 +25,7 @@
 package org.hibernate.stat;
 
 
+
 /**
  * Entity related statistics
  *

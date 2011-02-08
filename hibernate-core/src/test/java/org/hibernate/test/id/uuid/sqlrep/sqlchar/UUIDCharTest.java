@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.id.uuid.sqlrep.sqlchar;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.id.uuid.sqlrep.sqlbinary.UUIDBinaryTest;
 import org.hibernate.type.UUIDCharType;

@@ -1,7 +1,6 @@
 package org.hibernate.test.keymanytoone.bidir.embedded;
-
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * {@inheritDoc}

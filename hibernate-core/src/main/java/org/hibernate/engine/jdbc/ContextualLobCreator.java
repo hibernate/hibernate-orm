@@ -22,18 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-
-import java.sql.Blob;
-import java.sql.NClob;
-import java.sql.SQLException;
-import java.sql.Clob;
-import java.sql.Connection;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.NClob;
+import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 

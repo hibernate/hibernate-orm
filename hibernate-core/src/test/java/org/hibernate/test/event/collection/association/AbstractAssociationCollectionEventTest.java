@@ -20,7 +20,6 @@
  * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection.association;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.event.collection.AbstractCollectionEventTest;

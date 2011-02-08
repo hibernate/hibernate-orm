@@ -24,6 +24,7 @@
 package org.hibernate.test.propertyref.component.complete;
 
 
+
 public class Person {
 	private Long id;
 	private Identity identity;

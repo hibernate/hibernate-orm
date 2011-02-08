@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,7 +30,8 @@ import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-import org.hibernate.Logger;
+import org.hibernate.ejb.EntityManagerLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Work on a JAR that can be accessed through a File
@@ -40,7 +40,8 @@ import org.hibernate.Logger;
  */
 public class FileZippedJarVisitor extends AbstractJarVisitor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, FileZippedJarVisitor.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           FileZippedJarVisitor.class.getName());
 
     private String entry;
 
@@ -67,7 +68,7 @@ public class FileZippedJarVisitor extends AbstractJarVisitor {
 			}
 		}
 		catch (IOException ze) {
-            LOG.warn(LOG.unableToFindFile(jarUrl), ze);
+            LOG.unableToFindFile(jarUrl, ze);
 			return;
 		}
 		catch (URISyntaxException e) {

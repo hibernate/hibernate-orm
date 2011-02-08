@@ -20,9 +20,8 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan;
-
 import java.util.Properties;
-
+import junit.framework.TestCase;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
@@ -34,8 +33,6 @@ import org.infinispan.config.Configuration;
 import org.infinispan.config.Configuration.CacheMode;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.manager.DefaultCacheManager;
-
-import junit.framework.TestCase;
 import org.infinispan.manager.EmbeddedCacheManager;
 
 /**

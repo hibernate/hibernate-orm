@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.entities.components;
-
 import javax.persistence.Embedded;
 
 /**

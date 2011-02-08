@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
-
 import java.util.Map;
-
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServicesRegistry;
 
 /**
  * Standard initiator for the standard {@link JdbcServices} service

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cfg.internal;
-
 import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.internal.ServicesRegistryImpl;

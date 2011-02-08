@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-
-import javax.persistence.Embeddable;
 import javax.persistence.Basic;
+import javax.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

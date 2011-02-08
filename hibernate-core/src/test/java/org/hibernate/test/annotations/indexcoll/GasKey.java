@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

@@ -22,16 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
-import java.sql.Types;
-import java.io.Reader;
+import java.io.CharArrayReader;
 import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.io.CharArrayReader;
-
+import java.io.Reader;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 

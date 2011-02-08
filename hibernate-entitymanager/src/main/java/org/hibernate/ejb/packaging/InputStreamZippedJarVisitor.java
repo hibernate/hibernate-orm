@@ -20,14 +20,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-import org.hibernate.Logger;
+import org.hibernate.ejb.EntityManagerLogger;
+import org.jboss.logging.Logger;
 
 
 /**
@@ -38,8 +38,8 @@ import org.hibernate.Logger;
  */
 public class InputStreamZippedJarVisitor extends AbstractJarVisitor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                InputStreamZippedJarVisitor.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           InputStreamZippedJarVisitor.class.getName());
 
     private String entry;
 
@@ -60,7 +60,7 @@ public class InputStreamZippedJarVisitor extends AbstractJarVisitor {
 		}
 		catch (Exception ze) {
 			//really should catch IOException but Eclipse is buggy and raise NPE...
-            LOG.warn(LOG.unableToFindFile(jarUrl), ze);
+            LOG.unableToFindFile(jarUrl, ze);
 			return;
 		}
 		if ( entry != null && entry.length() == 1 ) entry = null; //no entry

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;

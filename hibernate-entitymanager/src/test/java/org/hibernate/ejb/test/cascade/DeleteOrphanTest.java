@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,7 +8,6 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.test.TestCase;
 

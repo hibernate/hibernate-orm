@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.envers.configuration.metadata.reader;
-
-import java.util.List;
 import java.util.ArrayList;
-
+import java.util.List;
+import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;
 import org.hibernate.envers.ModificationStore;
-import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.entities.PropertyData;
 

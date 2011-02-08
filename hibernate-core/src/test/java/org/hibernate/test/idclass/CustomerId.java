@@ -1,6 +1,5 @@
 //$Id: CustomerId.java 7239 2005-06-20 09:44:54Z oneovthafew $
 package org.hibernate.test.idclass;
-
 import java.io.Serializable;
 
 public class CustomerId implements Serializable {

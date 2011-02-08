@@ -22,22 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-
 import java.util.Set;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.MappedSuperclassType;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.SetAttribute;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.ListAttribute;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.IdentifiableType;
-
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.test.TestCase;

@@ -22,19 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.dom4j.Node;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.EqualsHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Superclass of single-column nullable types.
@@ -47,8 +47,7 @@ import org.hibernate.util.EqualsHelper;
 public abstract class NullableType extends AbstractType implements StringRepresentableType, XmlRepresentableType {
 
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                NullableType.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NullableType.class.getName());
 
 	/**
 	 * Get a column value from a result set, without worrying about the

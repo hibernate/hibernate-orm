@@ -1,6 +1,5 @@
 //$Id: Detail.java 4602 2004-09-26 11:42:47Z oneovthafew $
 package org.hibernate.test.formulajoin;
-
 import java.io.Serializable;
 
 /**

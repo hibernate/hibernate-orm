@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.exec;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;

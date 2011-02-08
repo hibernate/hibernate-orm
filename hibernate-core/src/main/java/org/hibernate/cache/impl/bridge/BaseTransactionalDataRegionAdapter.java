@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-
-import org.hibernate.cache.TransactionalDataRegion;
 import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.TransactionalDataRegion;
 import org.hibernate.cfg.Settings;
 
 /**

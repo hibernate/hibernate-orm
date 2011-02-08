@@ -23,14 +23,11 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
-
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;

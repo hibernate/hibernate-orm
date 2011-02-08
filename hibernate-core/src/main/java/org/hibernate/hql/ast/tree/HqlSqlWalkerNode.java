@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.util.AliasGenerator;
 import org.hibernate.hql.ast.util.SessionFactoryHelper;
-
 import antlr.ASTFactory;
 
 /**

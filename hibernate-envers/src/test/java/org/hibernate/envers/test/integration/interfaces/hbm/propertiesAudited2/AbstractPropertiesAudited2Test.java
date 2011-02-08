@@ -1,7 +1,5 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.testng.annotations.BeforeClass;

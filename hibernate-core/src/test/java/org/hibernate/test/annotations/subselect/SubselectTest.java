@@ -26,7 +26,6 @@
   */
 
 package org.hibernate.test.annotations.subselect;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;

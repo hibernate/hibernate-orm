@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -34,8 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
-import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -46,6 +45,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -55,8 +55,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class SchemaUpdate {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SchemaUpdate.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaUpdate.class.getName());
 	private ConnectionHelper connectionHelper;
 	private Configuration configuration;
 	private Dialect dialect;
@@ -199,7 +198,7 @@ public class SchemaUpdate {
 						outputFileWriter.write( formatted + "\n" );
 					}
 					if ( doUpdate ) {
-                        LOG.debug(sql);
+                        LOG.debugf(sql);
 						stmt.executeUpdate( formatted );
 					}
 				}

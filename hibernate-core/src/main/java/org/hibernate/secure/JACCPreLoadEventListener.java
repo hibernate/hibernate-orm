@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.secure;
-
 import javax.security.jacc.EJBMethodPermission;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.event.Initializable;

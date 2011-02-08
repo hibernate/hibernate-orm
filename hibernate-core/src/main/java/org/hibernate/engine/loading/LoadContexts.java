@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.loading;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -31,7 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.EntityMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.PersistenceContext;
@@ -39,6 +38,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.util.IdentityMap;
+import org.jboss.logging.Logger;
 
 /**
  * Maps {@link ResultSet result-sets} to specific contextual data
@@ -58,8 +58,7 @@ import org.hibernate.util.IdentityMap;
  */
 public class LoadContexts {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                LoadContexts.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LoadContexts.class.getName());
 
 	private final PersistenceContext persistenceContext;
 	private Map collectionLoadContexts;

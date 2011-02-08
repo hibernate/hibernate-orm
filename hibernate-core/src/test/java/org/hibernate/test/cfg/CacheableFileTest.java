@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cfg;
-
 import java.io.File;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.util.SerializationHelper;

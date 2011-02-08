@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+
 /**
  * Additional contract for a {@link Type} may be used for a discriminator.  THis contract is used to process
  * the string representation as presented in metadata, especially in <tt>XML</tt> files.

@@ -20,17 +20,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.util;
-
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import javax.persistence.FlushModeType;
 import javax.persistence.PersistenceException;
-
-import org.hibernate.FlushMode;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 
 /**
  * @author Emmanuel Bernard

@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper;
-
-import org.hibernate.envers.tools.Pair;
-
 import java.util.Map;
+import org.hibernate.envers.tools.Pair;
 
 /**
  * Data describing the change of a single object in a persistent collection (when the object was added, removed or

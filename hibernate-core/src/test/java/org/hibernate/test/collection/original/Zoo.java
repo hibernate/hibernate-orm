@@ -1,5 +1,4 @@
 package org.hibernate.test.collection.original;
-
 import java.util.ArrayList;
 import java.util.List;
 

@@ -23,22 +23,20 @@
  *
  */
 package org.hibernate.sql;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
-import org.hibernate.util.StringHelper;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
-import org.hibernate.sql.ordering.antlr.TranslationContext;
-import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.sql.ordering.antlr.ColumnMapper;
+import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
+import org.hibernate.sql.ordering.antlr.TranslationContext;
+import org.hibernate.util.StringHelper;
 
 /**
  * Parses SQL fragments specified in mapping documents

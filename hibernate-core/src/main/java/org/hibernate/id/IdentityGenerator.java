@@ -23,21 +23,19 @@
  *
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.PreparedStatement;
-
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
-import org.hibernate.id.insert.IdentifierGeneratingInsert;
-import org.hibernate.id.insert.AbstractSelectingDelegate;
-import org.hibernate.id.insert.AbstractReturningDelegate;
-import org.hibernate.id.insert.InsertSelectIdentityInsert;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.HibernateException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.id.insert.AbstractReturningDelegate;
+import org.hibernate.id.insert.AbstractSelectingDelegate;
+import org.hibernate.id.insert.IdentifierGeneratingInsert;
+import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.id.insert.InsertSelectIdentityInsert;
 
 /**
  * A generator for use with ANSI-SQL IDENTITY columns used as the primary key.

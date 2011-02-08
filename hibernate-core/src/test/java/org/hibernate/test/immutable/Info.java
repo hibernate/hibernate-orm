@@ -1,6 +1,5 @@
 //$Id: Contract.java 7222 2005-06-19 17:22:01Z oneovthafew $
 package org.hibernate.test.immutable;
-
 import java.io.Serializable;
 
 public class Info implements Serializable {

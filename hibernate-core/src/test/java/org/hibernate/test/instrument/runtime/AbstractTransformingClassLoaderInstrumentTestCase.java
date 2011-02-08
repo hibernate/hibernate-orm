@@ -1,7 +1,5 @@
 package org.hibernate.test.instrument.runtime;
-
 import java.lang.reflect.InvocationTargetException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.InstrumentedClassLoader;

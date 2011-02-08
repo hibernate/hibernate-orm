@@ -1,18 +1,15 @@
 //$Id: CustomPersister.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Comparator;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
-import org.hibernate.tuple.entity.EntityMetamodel;
+import org.hibernate.MappingException;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
 import org.hibernate.cache.entry.UnstructuredCacheEntry;
@@ -33,6 +30,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.QuerySelect;
 import org.hibernate.sql.Select;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.util.EqualsHelper;

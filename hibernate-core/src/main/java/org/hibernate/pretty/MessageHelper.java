@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.pretty;
-
 import java.io.Serializable;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;

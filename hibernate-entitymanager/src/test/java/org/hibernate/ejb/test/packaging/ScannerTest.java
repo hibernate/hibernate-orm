@@ -23,7 +23,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.packaging;
-
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -34,7 +33,6 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Persistence;
-
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;

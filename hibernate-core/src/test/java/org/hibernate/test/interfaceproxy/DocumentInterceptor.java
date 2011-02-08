@@ -1,14 +1,12 @@
 //$Id: DocumentInterceptor.java 7860 2005-08-11 21:58:23Z oneovthafew $
 package org.hibernate.test.interfaceproxy;
-
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Iterator;
-
 import org.hibernate.CallbackException;
+import org.hibernate.EntityMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Transaction;
-import org.hibernate.EntityMode;
 import org.hibernate.type.Type;
 
 /**

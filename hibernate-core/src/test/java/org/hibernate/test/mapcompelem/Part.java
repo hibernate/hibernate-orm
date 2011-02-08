@@ -2,6 +2,7 @@
 package org.hibernate.test.mapcompelem;
 
 
+
 /**
  * @author Gavin King
  */

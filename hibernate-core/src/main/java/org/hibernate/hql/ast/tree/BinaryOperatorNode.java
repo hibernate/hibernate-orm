@@ -24,6 +24,7 @@
  */
 package org.hibernate.hql.ast.tree;
 
+
 /**
  * Contract for nodes representing binary operators.
  *

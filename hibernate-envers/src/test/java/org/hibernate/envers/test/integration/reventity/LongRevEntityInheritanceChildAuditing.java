@@ -23,16 +23,14 @@
  */
 
 package org.hibernate.envers.test.integration.reventity;
-
+import static org.testng.Assert.assertEquals;
+import java.util.Iterator;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
 import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
 import org.hibernate.mapping.Column;
 import org.testng.annotations.Test;
-import static org.testng.Assert.assertEquals;
-
-import java.util.Iterator;
 
 /**
  * A join-inheritance test using a custom revision entity where the revision number is a long, mapped in the database

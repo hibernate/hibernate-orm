@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.revisioninfo;
-
 import java.util.Date;
-
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.envers.RevisionListener;

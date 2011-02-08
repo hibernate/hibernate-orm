@@ -1,15 +1,13 @@
 package org.hibernate.envers.test.integration.hashcode;
-
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.envers.Audited;
-
+import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import javax.persistence.Basic;
-import java.util.Set;
-import java.util.HashSet;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

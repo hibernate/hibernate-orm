@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.List;
 import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;

@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.cache;
-
 import java.util.Properties;
-
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Settings;
 

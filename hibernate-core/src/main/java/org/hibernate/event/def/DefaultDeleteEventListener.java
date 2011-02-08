@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import java.util.Set;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.EntityDeleteAction;
 import org.hibernate.classic.Lifecycle;
@@ -48,6 +47,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.util.IdentitySet;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -57,8 +57,8 @@ import org.hibernate.util.IdentitySet;
  */
 public class DefaultDeleteEventListener implements DeleteEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultDeleteEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultDeleteEventListener.class.getName());
 
 	/**
 	 * Handle the given delete event.
@@ -296,9 +296,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
 		if ( persister.implementsLifecycle( session.getEntityMode() ) ) {
-            LOG.debug("Calling onDelete()");
+            LOG.debugf("Calling onDelete()");
 			if ( ( ( Lifecycle ) entity ).onDelete( session ) ) {
-                LOG.debug("Deletion vetoed by onDelete()");
+                LOG.debugf("Deletion vetoed by onDelete()");
 				return true;
 			}
 		}

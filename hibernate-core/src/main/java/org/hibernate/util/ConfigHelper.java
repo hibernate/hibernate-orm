@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.util;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,8 +31,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
+import org.jboss.logging.Logger;
 
 /**
  * A simple class to centralize logic needed to locate config files on the system.
@@ -42,8 +42,7 @@ import org.hibernate.cfg.Environment;
  */
 public final class ConfigHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ConfigHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ConfigHelper.class.getName());
 
 	/** Try to locate a local URL representing the incoming path.  The first attempt
 	 * assumes that the incoming path is an actual URL string (file://, etc).  If this

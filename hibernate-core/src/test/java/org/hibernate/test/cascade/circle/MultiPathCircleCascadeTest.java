@@ -25,11 +25,8 @@
  */
 
 package org.hibernate.test.cascade.circle;
-
 import java.util.Iterator;
-
 import junit.framework.Test;
-
 import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;

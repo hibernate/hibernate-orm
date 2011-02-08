@@ -1,5 +1,6 @@
 package org.hibernate.test.legacy;
 
+
 public class Super {
 
 	protected String name;

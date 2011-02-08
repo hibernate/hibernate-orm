@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.exception;
-
+import java.sql.SQLException;
 import org.hibernate.JDBCException;
 import org.hibernate.util.JDBCExceptionReporter;
-
-import java.sql.SQLException;
 
 /**
  * Implementation of JDBCExceptionHelper.

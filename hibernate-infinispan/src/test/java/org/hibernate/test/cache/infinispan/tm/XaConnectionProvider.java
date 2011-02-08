@@ -20,11 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.tm;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
-
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;

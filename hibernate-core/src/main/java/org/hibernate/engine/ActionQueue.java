@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,7 +34,7 @@ import java.util.List;
 import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.action.AfterTransactionCompletionProcess;
 import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.action.BulkOperationCleanupAction;
@@ -49,6 +48,7 @@ import org.hibernate.action.EntityUpdateAction;
 import org.hibernate.action.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
@@ -61,8 +61,7 @@ import org.hibernate.type.Type;
  */
 public class ActionQueue {
 
-    static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ActionQueue.class.getPackage().getName());
+    static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ActionQueue.class.getName());
 	private static final int INIT_QUEUE_LIST_SIZE = 5;
 
 	private SessionImplementor session;
@@ -247,7 +246,7 @@ public class ActionQueue {
 			final Serializable[] spaces = action.getPropertySpaces();
 			for ( Serializable space : spaces ) {
 				if ( tableSpaces.contains( space ) ) {
-                    LOG.debug("Changes must be flushed to space: " + space);
+                    LOG.debugf("Changes must be flushed to space: %s", space);
 					return true;
 				}
 			}

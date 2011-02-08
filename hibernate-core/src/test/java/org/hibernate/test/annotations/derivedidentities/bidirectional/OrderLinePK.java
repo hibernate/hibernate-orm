@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
 
+
 public class OrderLinePK
 {
 	public Order order;

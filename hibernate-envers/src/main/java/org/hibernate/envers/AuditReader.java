@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.hibernate.HibernateException;
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.envers.exception.RevisionDoesNotExistException;

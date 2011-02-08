@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -30,26 +29,24 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.DOMWriter;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-import org.hibernate.envers.configuration.metadata.reader.AnnotationsMetadataReader;
-import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
-import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
-import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
+import org.hibernate.MappingException;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.configuration.metadata.AuditEntityNameRegister;
+import org.hibernate.envers.configuration.metadata.AuditMetadataGenerator;
+import org.hibernate.envers.configuration.metadata.EntityXmlMappingData;
+import org.hibernate.envers.configuration.metadata.reader.AnnotationsMetadataReader;
+import org.hibernate.envers.configuration.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.entities.EntitiesConfigurations;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.envers.tools.graph.GraphTopologicalSort;
-
-import org.hibernate.MappingException;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 
 /**

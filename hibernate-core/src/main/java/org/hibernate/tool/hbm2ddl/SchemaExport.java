@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,8 +40,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
-import org.hibernate.Logger;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -55,6 +54,7 @@ import org.hibernate.jdbc.util.Formatter;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -64,8 +64,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class SchemaExport {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SchemaExport.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SchemaExport.class.getName());
 
 	private ConnectionHelper connectionHelper;
 	private String[] dropSQL;
@@ -252,7 +251,7 @@ public class SchemaExport {
 					importFileReaders.add( new NamedReader( resourceName, stream ) );
 				}
 				catch ( HibernateException e ) {
-                    LOG.debug("Import file not found: " + currentFile);
+                    LOG.debugf("Import file not found: %s", currentFile);
 				}
 			}
 
@@ -359,7 +358,7 @@ public class SchemaExport {
 					continue;
 				}
                 if (trimmedSql.endsWith(";")) trimmedSql = trimmedSql.substring(0, trimmedSql.length() - 1);
-                LOG.debug(trimmedSql);
+                LOG.debugf(trimmedSql);
                 statement.execute(trimmedSql);
 			}
 			catch ( SQLException e ) {
@@ -393,8 +392,8 @@ public class SchemaExport {
 			}
 			catch ( SQLException e ) {
 				exceptions.add( e );
-                LOG.debug("Unsuccessful: " + dropSQL[i]);
-                LOG.debug(e.getMessage());
+                LOG.debugf("Unsuccessful: %s", dropSQL[i]);
+                LOG.debugf(e.getMessage());
 			}
 		}
 	}
@@ -402,13 +401,9 @@ public class SchemaExport {
 	private void execute(boolean script, boolean export, Writer fileOutput, Statement statement, final String sql)
 			throws IOException, SQLException {
 		String formatted = formatter.format( sql );
-		if ( delimiter != null ) {
-			formatted += delimiter;
-		}
-		if ( script ) {
-			System.out.println( formatted );
-		}
-        LOG.debug(formatted);
+        if (delimiter != null) formatted += delimiter;
+        if (script) System.out.println(formatted);
+        LOG.debugf(formatted);
 		if ( outputFile != null ) {
 			fileOutput.write( formatted + "\n" );
 		}

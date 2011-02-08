@@ -23,10 +23,8 @@
  */
 //$Id$
 package org.hibernate.ejb.test.ops;
-
 import java.util.Map;
 import javax.persistence.EntityManager;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.TestCase;

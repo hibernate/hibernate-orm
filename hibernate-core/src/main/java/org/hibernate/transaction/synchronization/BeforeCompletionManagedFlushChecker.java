@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.transaction.synchronization;
-
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
-
 import org.hibernate.transaction.TransactionFactory;
 
 /**

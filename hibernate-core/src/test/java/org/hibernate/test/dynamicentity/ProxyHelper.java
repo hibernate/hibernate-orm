@@ -1,8 +1,7 @@
 package org.hibernate.test.dynamicentity;
-
 import java.io.Serializable;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 
 /**
  * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>

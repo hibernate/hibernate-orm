@@ -1,5 +1,6 @@
 package org.hibernate.test.annotations.collectionelement;
 
+
 /**
  * @author Emmanuel Bernard
  */

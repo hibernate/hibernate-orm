@@ -1,8 +1,6 @@
 package org.hibernate.test.annotations.override;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 
 @Entity
 public class Addr {

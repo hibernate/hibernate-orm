@@ -23,15 +23,13 @@
  *
  */
 package org.hibernate.bytecode.cglib;
-
-import org.hibernate.bytecode.ReflectionOptimizer;
-import net.sf.cglib.reflect.FastClass;
-import org.hibernate.InstantiationException;
-
-import java.io.Serializable;
-import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import net.sf.cglib.reflect.FastClass;
+import org.hibernate.InstantiationException;
+import org.hibernate.bytecode.ReflectionOptimizer;
 
 /**
  * The {@link ReflectionOptimizer.InstantiationOptimizer} implementation for CGLIB

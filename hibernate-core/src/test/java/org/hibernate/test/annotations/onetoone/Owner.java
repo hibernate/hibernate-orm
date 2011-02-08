@@ -1,12 +1,11 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
-
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.CascadeType;
 
 /**
  * @author Emmanuel Bernard

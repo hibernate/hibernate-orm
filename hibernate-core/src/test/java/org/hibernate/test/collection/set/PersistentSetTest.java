@@ -1,18 +1,15 @@
 package org.hibernate.test.collection.set;
-
 import java.util.HashSet;
-
 import junit.framework.Test;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.collection.PersistentSet;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.stat.CollectionStatistics;
 
 /**
  * todo: describe PersistentSetTest

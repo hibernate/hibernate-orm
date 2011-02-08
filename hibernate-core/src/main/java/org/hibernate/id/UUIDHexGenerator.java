@@ -22,14 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.util.Properties;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * <b>uuid</b><br>
@@ -45,8 +45,7 @@ import org.hibernate.type.Type;
  */
 public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configurable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                UUIDHexGenerator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, UUIDHexGenerator.class.getName());
 
 	private static boolean warned = false;
 

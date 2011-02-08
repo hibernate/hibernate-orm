@@ -22,11 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.transaction;
-
 import java.util.LinkedHashSet;
 import javax.transaction.Synchronization;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * Manages a registry of {@link Synchronization Synchronizations}.
@@ -35,8 +35,8 @@ import org.hibernate.Logger;
  */
 public class SynchronizationRegistry {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SynchronizationRegistry.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       SynchronizationRegistry.class.getName());
 
 	private LinkedHashSet<Synchronization> synchronizations;
 

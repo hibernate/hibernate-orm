@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.sql.Types;
 import java.util.Properties;
-
 import org.hibernate.cfg.Environment;
 
 /**

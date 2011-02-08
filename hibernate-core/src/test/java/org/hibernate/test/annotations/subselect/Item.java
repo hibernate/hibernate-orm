@@ -26,8 +26,6 @@
   */
 
 package org.hibernate.test.annotations.subselect;
-
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 

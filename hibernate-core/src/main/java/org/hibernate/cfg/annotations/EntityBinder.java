@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -37,7 +36,7 @@ import javax.persistence.SecondaryTables;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -85,6 +84,7 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Stateful holder and processor for binding Entity information
@@ -92,8 +92,7 @@ import org.hibernate.util.StringHelper;
  * @author Emmanuel Bernard
  */
 public class EntityBinder {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                EntityBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EntityBinder.class.getName());
 
 	private String name;
 	private XClass annotatedClass;
@@ -339,7 +338,7 @@ public class EntityBinder {
 				persistentClass.addFilter( filterName, cond );
 			}
         } else if (filters.size() > 0) LOG.filterAnnotationOnSubclass(persistentClass.getEntityName());
-        LOG.debug("Import with entity name " + name);
+        LOG.debugf("Import with entity name %s", name);
 		try {
 			mappings.addImport( persistentClass.getEntityName(), name );
 			String entityName = persistentClass.getEntityName();

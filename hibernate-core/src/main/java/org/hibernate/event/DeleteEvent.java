@@ -25,6 +25,7 @@
 package org.hibernate.event;
 
 
+
 /** Defines an event class for the deletion of an entity.
  *
  * @author Steve Ebersole

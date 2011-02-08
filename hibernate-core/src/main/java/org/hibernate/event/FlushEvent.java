@@ -25,6 +25,7 @@
 package org.hibernate.event;
 
 
+
 /** 
  * Defines an event class for the flushing of a session.
  *

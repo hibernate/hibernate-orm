@@ -29,7 +29,6 @@
  */
 
 package org.hibernate.envers.tools;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.Reference;

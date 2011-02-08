@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
-
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
@@ -30,11 +29,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
-
 import org.dom4j.Node;
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
 import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;

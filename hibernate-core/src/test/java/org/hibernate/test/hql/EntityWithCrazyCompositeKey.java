@@ -1,6 +1,7 @@
 // $Id: EntityWithCrazyCompositeKey.java 6567 2005-04-27 17:41:57Z steveebersole $
 package org.hibernate.test.hql;
 
+
 /**
  * Implementation of EntityWithCrazyCompositeKey.
  *

@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.onetoone.hhh4851;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;

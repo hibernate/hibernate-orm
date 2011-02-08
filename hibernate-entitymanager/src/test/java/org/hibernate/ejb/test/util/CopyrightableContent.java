@@ -1,6 +1,4 @@
 package org.hibernate.ejb.test.util;
-
-import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;

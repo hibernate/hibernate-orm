@@ -1,5 +1,4 @@
 package org.hibernate.test.usercollection.basic;
-
 import java.util.ArrayList;
 
 /**

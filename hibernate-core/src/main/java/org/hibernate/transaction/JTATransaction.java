@@ -23,18 +23,18 @@
  *
  */
 package org.hibernate.transaction;
-
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.util.JTAHelper;
+import org.jboss.logging.Logger;
 
 /**
  * {@link Transaction} implementation based on transaction management through
@@ -48,8 +48,7 @@ import org.hibernate.util.JTAHelper;
  */
 public class JTATransaction implements Transaction {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JTATransaction.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JTATransaction.class.getName());
 
 	private final JDBCContext jdbcContext;
 	private final TransactionFactory.Context transactionContext;
@@ -81,13 +80,13 @@ public class JTATransaction implements Transaction {
 			throw new TransactionException( "cannot re-start transaction after failed commit" );
 		}
 
-        LOG.debug("Begin");
+        LOG.debugf("Begin");
 
 		try {
 			newTransaction = userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION;
 			if ( newTransaction ) {
 				userTransaction.begin();
-                LOG.debug("Began a new JTA transaction");
+                LOG.debugf("Began a new JTA transaction");
 			}
 		}
 		catch ( Exception e ) {
@@ -130,7 +129,7 @@ public class JTATransaction implements Transaction {
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-        LOG.debug("Commit");
+        LOG.debugf("Commit");
 
 		boolean flush = !transactionContext.isFlushModeNever()
 				&& ( callback || !transactionContext.isFlushBeforeCompletionEnabled() );
@@ -149,7 +148,7 @@ public class JTATransaction implements Transaction {
 			try {
 				userTransaction.commit();
 				commitSucceeded = true;
-                LOG.debug("Committed JTA UserTransaction");
+                LOG.debugf("Committed JTA UserTransaction");
 			}
 			catch ( Exception e ) {
 				commitFailed = true; // so the transaction is already rolled back, by JTA spec
@@ -178,7 +177,7 @@ public class JTATransaction implements Transaction {
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-        LOG.debug("Rollback");
+        LOG.debugf("Rollback");
 
 		try {
 			closeIfRequired();
@@ -192,12 +191,12 @@ public class JTATransaction implements Transaction {
 			if ( newTransaction ) {
 				if ( !commitFailed ) {
 					userTransaction.rollback();
-                    LOG.debug("Rolled back JTA UserTransaction");
+                    LOG.debugf("Rolled back JTA UserTransaction");
 				}
 			}
 			else {
 				userTransaction.setRollbackOnly();
-                LOG.debug("Set JTA UserTransaction to rollback only");
+                LOG.debugf("Set JTA UserTransaction to rollback only");
 			}
 		}
 		catch ( Exception e ) {

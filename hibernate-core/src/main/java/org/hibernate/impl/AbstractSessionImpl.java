@@ -23,23 +23,21 @@
  *
  */
 package org.hibernate.impl;
-
+import java.util.List;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
-import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
-import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
-import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
-
-import java.util.List;
+import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 
 /**
  * Functionality common to stateless and stateful sessions

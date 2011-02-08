@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.def.DefaultAutoFlushEventListener;

@@ -1,10 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.collectionelement;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-
 import org.hibernate.annotations.Parent;
 
 /**

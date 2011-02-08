@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,11 +37,12 @@ import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
-import org.hibernate.Logger;
+import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Compiles a JPA criteria query into an executable {@link TypedQuery}.  Its single contract is the {@link #compile}
@@ -55,7 +55,8 @@ import org.hibernate.util.StringHelper;
  */
 public class CriteriaQueryCompiler implements Serializable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, CriteriaQueryCompiler.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           CriteriaQueryCompiler.class.getName());
 
 	/**
 	 * Used to describe implicit (not defined in criteria query) parameters.
@@ -219,7 +220,7 @@ public class CriteriaQueryCompiler implements Serializable {
 
 		final RenderedCriteriaQuery renderedCriteriaQuery = criteriaQueryImpl.render( renderingContext );
 
-        LOG.debug("Rendered criteria query -> " + renderedCriteriaQuery.getQueryString());
+        LOG.debugf("Rendered criteria query -> %s", renderedCriteriaQuery.getQueryString());
 
 		TypedQuery<T> jpaqlQuery = entityManager.createQuery(
 				renderedCriteriaQuery.getQueryString(),

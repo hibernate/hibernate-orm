@@ -1,6 +1,5 @@
 //$Id: User.java 6058 2005-03-11 17:05:19Z oneovthafew $
 package org.hibernate.test.idbag;
-
 import java.util.ArrayList;
 import java.util.List;
 

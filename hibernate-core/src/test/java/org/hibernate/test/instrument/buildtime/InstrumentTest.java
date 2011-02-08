@@ -1,11 +1,8 @@
 //$Id: InstrumentTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.instrument.buildtime;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
 import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.test.instrument.cases.Executable;
 import org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite;
 import org.hibernate.test.instrument.cases.TestDirtyCheckExecutable;
@@ -18,6 +15,7 @@ import org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable;
 import org.hibernate.test.instrument.cases.TestManyToOneProxyExecutable;
 import org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable;
 import org.hibernate.test.instrument.domain.Document;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * @author Gavin King

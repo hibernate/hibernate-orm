@@ -1,6 +1,5 @@
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
-
 import static org.hibernate.TestLogger.LOG;
 import junit.framework.TestCase;
 import org.hibernate.cfg.AnnotationConfiguration;

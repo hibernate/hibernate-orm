@@ -1,5 +1,6 @@
 package org.hibernate.test.collection.original;
 
+
 public class Mammal extends Animal {
     private String mammalName;
     private String mammalName2;

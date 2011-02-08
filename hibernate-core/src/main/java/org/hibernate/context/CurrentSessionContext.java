@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.context;
-
-import org.hibernate.HibernateException;
-
 import java.io.Serializable;
+import org.hibernate.HibernateException;
 
 /**
  * Defines the contract for implementations which know how to scope the notion

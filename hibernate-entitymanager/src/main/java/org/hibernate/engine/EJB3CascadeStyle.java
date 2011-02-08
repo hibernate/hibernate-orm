@@ -21,6 +21,7 @@
  */
 package org.hibernate.engine;
 
+
 /**
  * Becasue CascadeStyle is not opened and package protected,
  * I need to subclass and override the persist alias

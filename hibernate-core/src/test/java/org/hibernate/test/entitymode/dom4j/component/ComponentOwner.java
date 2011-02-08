@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.entitymode.dom4j.component;
 
+
 /**
  * TODO : javadoc
  *

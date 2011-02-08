@@ -1,6 +1,5 @@
 //$Id: DocumentImpl.java 4407 2004-08-22 01:20:08Z oneovthafew $
 package org.hibernate.test.interfaceproxy;
-
 import java.sql.Blob;
 import java.util.Calendar;
 

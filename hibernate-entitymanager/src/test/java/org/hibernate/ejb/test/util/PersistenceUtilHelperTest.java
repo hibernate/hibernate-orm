@@ -22,9 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.util;
-
 import javax.persistence.spi.LoadState;
-
 import org.hibernate.ejb.util.PersistenceUtilHelper;
 
 /**

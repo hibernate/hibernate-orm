@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
-
 import org.hibernate.engine.SessionImplementor;
 
 /**

@@ -14,9 +14,7 @@
  * Red Hat Author(s): Steve Ebersole
  */
 package org.hibernate.jdbc.util;
-
 import java.util.StringTokenizer;
-
 import junit.framework.TestCase;
 
 /**

@@ -1,12 +1,10 @@
 //$Id$
 package org.hibernate.test.sql.hand.custom.datadirect.oracle;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.DataDirectOracle9Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Custom SQL tests for Oracle via the DataDirect drivers.

@@ -1,8 +1,7 @@
 package org.hibernate.ejb.test.util;
-
 import java.io.Serializable;
-import javax.persistence.Entity;
 import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

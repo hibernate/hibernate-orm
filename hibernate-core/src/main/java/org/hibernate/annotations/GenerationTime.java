@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * When should the generation occurs
  *

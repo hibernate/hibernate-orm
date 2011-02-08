@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.Type;

@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Contract for data containers (what the ANSI SQL spec calls "table specifications") to which we can map
  * entity state.  The two flavors here are {@link Table physical table} and {@link InLineView inline view}, but a

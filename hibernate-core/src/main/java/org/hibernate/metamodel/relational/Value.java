@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models a value within a {@link ValueContainer}.  This will generally be either a {@link Column column} or a
  * {@link DerivedValue derived value}, but we also allow the notion of {@link Tuple} at this level

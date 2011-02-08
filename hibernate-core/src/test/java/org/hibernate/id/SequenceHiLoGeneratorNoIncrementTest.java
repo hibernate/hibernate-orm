@@ -22,17 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
-
 import junit.framework.TestCase;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.TestingDatabaseInfo;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -43,7 +41,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.TestingDatabaseInfo;
 import org.hibernate.test.common.ServiceRegistryHolder;
 
 /**

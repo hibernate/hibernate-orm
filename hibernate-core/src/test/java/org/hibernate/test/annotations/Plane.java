@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;

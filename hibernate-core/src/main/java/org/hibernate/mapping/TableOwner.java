@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 
+
 /**
  * Interface allowing to differenciate SubClasses
  * from Classes, JoinedSubClasses and UnionSubClasses

@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation;
-
 import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
-import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 import org.hibernate.envers.entities.PropertyData;
+import org.hibernate.envers.entities.mapper.relation.query.RelationQueryGenerator;
 
 /**
  * Data that is used by all collection mappers, regardless of the type.  

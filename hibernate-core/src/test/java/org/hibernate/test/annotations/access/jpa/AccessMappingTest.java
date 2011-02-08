@@ -23,9 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.access.jpa;
-
 import junit.framework.TestCase;
-
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;

@@ -24,6 +24,7 @@
  */
 package org.hibernate.sql;
 
+
 /**
  * A disjunctive string of conditions
  * @author Gavin King

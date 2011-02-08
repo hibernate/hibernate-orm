@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -50,6 +49,7 @@ import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -65,8 +65,7 @@ import org.hibernate.util.ReflectHelper;
  */
 public class HSQLDialect extends Dialect {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HSQLDialect.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HSQLDialect.class.getName());
 
 	/**
 	 * version is 18 for 1.8 or 20 for 2.0

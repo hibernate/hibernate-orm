@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,7 +10,6 @@ import javax.persistence.FieldResult;
 import javax.persistence.Id;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.SqlResultSetMapping;
 

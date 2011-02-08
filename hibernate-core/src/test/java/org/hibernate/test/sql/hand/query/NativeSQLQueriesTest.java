@@ -1,45 +1,42 @@
 package org.hibernate.test.sql.hand.query;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.test.sql.hand.Dimension;
+import org.hibernate.test.sql.hand.Employment;
+import org.hibernate.test.sql.hand.Group;
+import org.hibernate.test.sql.hand.ImageHolder;
+import org.hibernate.test.sql.hand.Order;
+import org.hibernate.test.sql.hand.Organization;
+import org.hibernate.test.sql.hand.Person;
+import org.hibernate.test.sql.hand.Product;
+import org.hibernate.test.sql.hand.SpaceShip;
+import org.hibernate.test.sql.hand.Speech;
+import org.hibernate.test.sql.hand.TextHolder;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
 import org.hibernate.type.FloatType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.util.ArrayHelper;
-import org.hibernate.test.sql.hand.Organization;
-import org.hibernate.test.sql.hand.Person;
-import org.hibernate.test.sql.hand.Employment;
-import org.hibernate.test.sql.hand.Product;
-import org.hibernate.test.sql.hand.Order;
-import org.hibernate.test.sql.hand.Dimension;
-import org.hibernate.test.sql.hand.SpaceShip;
-import org.hibernate.test.sql.hand.Speech;
-import org.hibernate.test.sql.hand.Group;
-import org.hibernate.test.sql.hand.TextHolder;
-import org.hibernate.test.sql.hand.ImageHolder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.transform.BasicTransformerAdapter;
 
 /**
  * Tests of various features of native SQL queries.

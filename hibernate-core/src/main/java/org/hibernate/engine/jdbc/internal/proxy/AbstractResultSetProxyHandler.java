@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal.proxy;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.jboss.logging.Logger;
 
 /**
  * Basic support for building {@link ResultSet}-based proxy handlers
@@ -39,8 +39,8 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
  */
 public abstract class AbstractResultSetProxyHandler extends AbstractProxyHandler {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AbstractResultSetProxyHandler.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractResultSetProxyHandler.class.getName());
 
 	private ResultSet resultSet;
 

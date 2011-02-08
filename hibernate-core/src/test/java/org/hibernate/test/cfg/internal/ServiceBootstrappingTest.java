@@ -22,28 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cfg.internal;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
-import org.hibernate.testing.junit.UnitTestCase;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
+import org.hibernate.service.internal.ServicesRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator;
-import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.internal.ServicesRegistryImpl;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.test.common.ConnectionProviderBuilder;
+import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * TODO : javadoc

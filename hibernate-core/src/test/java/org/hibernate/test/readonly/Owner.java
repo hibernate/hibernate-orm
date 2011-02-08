@@ -1,5 +1,4 @@
 package org.hibernate.test.readonly;
-
 import java.io.Serializable;
 
 /**

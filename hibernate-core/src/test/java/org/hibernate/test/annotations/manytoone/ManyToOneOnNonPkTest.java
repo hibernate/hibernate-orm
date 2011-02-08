@@ -1,10 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.manytoone;
-
-import java.util.Date;
-
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.Session;
 
 
 /**

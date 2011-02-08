@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.callbacks;
-
 import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;

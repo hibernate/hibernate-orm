@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Cascade types (can override default EJB3 cascades
  */

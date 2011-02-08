@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.derivedidentities.e1.a;
-
 import java.io.Serializable;
 
 /**

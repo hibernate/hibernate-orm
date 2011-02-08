@@ -23,21 +23,19 @@
  *
  */
 package org.hibernate.hql.ast;
-
-import org.hibernate.hql.ParameterTranslations;
-import org.hibernate.type.Type;
-import org.hibernate.param.ParameterSpecification;
-import org.hibernate.param.PositionalParameterSpecification;
-import org.hibernate.param.NamedParameterSpecification;
-import org.hibernate.util.ArrayHelper;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.List;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.hibernate.hql.ParameterTranslations;
+import org.hibernate.param.NamedParameterSpecification;
+import org.hibernate.param.ParameterSpecification;
+import org.hibernate.param.PositionalParameterSpecification;
+import org.hibernate.type.Type;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * Defines the information available for parameters encountered during

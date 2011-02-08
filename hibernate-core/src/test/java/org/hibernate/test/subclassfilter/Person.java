@@ -1,6 +1,7 @@
 // $Id: Person.java 5899 2005-02-24 20:08:04Z steveebersole $
 package org.hibernate.test.subclassfilter;
 
+
 /**
  * Implementation of Person.
  *

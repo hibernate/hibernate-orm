@@ -22,25 +22,25 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
  */
 public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements QuerySecondPass {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                NamedSQLQuerySecondPass.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       NamedSQLQuerySecondPass.class.getName());
 
 	private Element queryElem;
 	private String path;
@@ -116,7 +116,7 @@ public class NamedSQLQuerySecondPass extends ResultSetMappingBinder implements Q
 			);
 		}
 
-        LOG.debug("Named SQL query: " + queryName + " -> " + namedQuery.getQueryString());
+        LOG.debugf("Named SQL query: %s -> %s", queryName, namedQuery.getQueryString());
 		mappings.addSQLQuery( queryName, namedQuery );
 	}
 }

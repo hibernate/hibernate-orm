@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.exception;
 
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */

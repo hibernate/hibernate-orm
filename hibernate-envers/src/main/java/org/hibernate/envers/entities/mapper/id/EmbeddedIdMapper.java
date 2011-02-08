@@ -22,16 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.id;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
-import org.hibernate.envers.entities.PropertyData;
-
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.util.ReflectHelper;

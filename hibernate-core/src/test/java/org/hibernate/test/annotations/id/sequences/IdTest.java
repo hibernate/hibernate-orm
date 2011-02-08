@@ -23,13 +23,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.id.sequences;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
 import org.hibernate.mapping.Column;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
@@ -49,6 +46,8 @@ import org.hibernate.test.annotations.id.sequences.entities.Shoe;
 import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
+import org.hibernate.testing.junit.DialectChecks;
+import org.hibernate.testing.junit.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard

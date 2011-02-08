@@ -3,8 +3,8 @@ header
 // $Id: hql-sql.g 10001 2006-06-08 21:08:04Z steve.ebersole@jboss.com $
 package org.hibernate.hql.antlr;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 }
 
 /**
@@ -56,7 +56,7 @@ tokens
 
 // -- Declarations --
 {
-	private static Logger log = LoggerFactory.getLogger( HqlSqlBaseWalker.class );
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, HqlSqlBaseWalker.class.getName());
 
 	private int level = 0;
 	private boolean inSelect = false;
@@ -129,21 +129,15 @@ tokens
 			this.statementType = statementType;
 		}
 		currentStatementType = statementType;
-		if ( log.isDebugEnabled() ) {
-			log.debug( statementName + " << begin [level=" + level + ", statement=" + this.statementTypeName + "]" );
-		}
+		LOG.debugf("%s << begin [level=%s, statement=%s]", statementName, level, this.statementTypeName);
 	}
 
 	private void beforeStatementCompletion(String statementName) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( statementName + " : finishing up [level=" + level + ", statement=" + statementTypeName + "]" );
-		}
+        LOG.debugf("%s : finishing up [level=%s, statement=%s]", statementName, level, this.statementTypeName);
 	}
 
 	private void afterStatementCompletion(String statementName) {
-		if ( log.isDebugEnabled() ) {
-			log.debug( statementName + " >> end [level=" + level + ", statement=" + statementTypeName + "]" );
-		}
+        LOG.debugf("%s >> end [level=%s, statement=%s]", statementName, level, this.statementTypeName);
 		level--;
 	}
 

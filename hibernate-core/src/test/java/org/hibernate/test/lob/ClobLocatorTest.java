@@ -22,11 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.lob;
-
 import java.sql.Clob;
-
 import junit.framework.Test;
-
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;

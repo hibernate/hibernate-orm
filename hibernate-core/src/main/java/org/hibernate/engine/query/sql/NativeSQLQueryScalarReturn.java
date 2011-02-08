@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.query.sql;
-
 import org.hibernate.type.Type;
 
 /**

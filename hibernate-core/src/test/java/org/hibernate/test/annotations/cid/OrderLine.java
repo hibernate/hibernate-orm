@@ -1,8 +1,7 @@
 package org.hibernate.test.annotations.cid;
-
 import javax.persistence.Entity;
-import javax.persistence.IdClass;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 
 /**
  * @author Emmanuel Bernard

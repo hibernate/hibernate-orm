@@ -22,16 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.action.CollectionRemoveAction;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -40,8 +40,7 @@ import org.hibernate.type.Type;
  */
 public abstract class ReattachVisitor extends ProxyVisitor {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ReattachVisitor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ReattachVisitor.class.getName());
 
 	private final Serializable ownerIdentifier;
 	private final Object owner;

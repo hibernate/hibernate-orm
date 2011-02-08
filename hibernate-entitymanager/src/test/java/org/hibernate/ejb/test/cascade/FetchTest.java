@@ -1,12 +1,10 @@
 //$Id$
 package org.hibernate.ejb.test.cascade;
-
 import java.util.ArrayList;
 import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
-
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.TestCase;

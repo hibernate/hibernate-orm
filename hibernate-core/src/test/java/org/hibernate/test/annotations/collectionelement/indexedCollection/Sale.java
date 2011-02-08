@@ -1,19 +1,17 @@
 //$
 package org.hibernate.test.annotations.collectionelement.indexedCollection;
-
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.Column;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 /**
  * @author Emmanuel Bernard

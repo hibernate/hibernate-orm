@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.persister.collection;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.persister.entity.PropertyMapping;

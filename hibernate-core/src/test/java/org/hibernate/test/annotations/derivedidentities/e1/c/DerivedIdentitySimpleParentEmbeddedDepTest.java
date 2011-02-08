@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.derivedidentities.e1.c;
-
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;

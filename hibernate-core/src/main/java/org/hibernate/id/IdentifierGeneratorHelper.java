@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -31,9 +30,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -43,8 +43,8 @@ import org.hibernate.type.Type;
  */
 public final class IdentifierGeneratorHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                IdentifierGeneratorHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       IdentifierGeneratorHelper.class.getName());
 
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
@@ -85,7 +85,7 @@ public final class IdentifierGeneratorHelper {
 			throw new HibernateException( "The database returned no natively generated identity value" );
 		}
 		final Serializable id = IdentifierGeneratorHelper.get( rs, type );
-        LOG.debug("Natively generated identity: " + id);
+        LOG.debugf("Natively generated identity: %s", id);
 		return id;
 	}
 

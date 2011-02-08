@@ -23,21 +23,18 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
-
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
-import org.hibernate.transform.ResultTransformer;
-import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
-import org.hibernate.transform.Transformers;
 import org.hibernate.hql.ast.DetailedSemanticException;
+import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
+import org.hibernate.transform.ResultTransformer;
+import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
 

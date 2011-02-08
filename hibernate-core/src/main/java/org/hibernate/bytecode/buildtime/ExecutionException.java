@@ -23,6 +23,7 @@
  */
 package org.hibernate.bytecode.buildtime;
 
+
 /**
  * Indicates problem performing the instrumentation execution.
  *

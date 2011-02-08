@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.filter.hql;
 
+
 /**
  * Non-leaf subclass
  *

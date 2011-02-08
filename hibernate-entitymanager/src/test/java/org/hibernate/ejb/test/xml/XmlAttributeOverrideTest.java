@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.ejb.test.xml;
-
 import javax.persistence.EntityManager;
-
 import org.hibernate.ejb.test.TestCase;
 
 /**

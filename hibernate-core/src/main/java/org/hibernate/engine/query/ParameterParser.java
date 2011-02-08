@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.engine.query;
-
 import org.hibernate.QueryException;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.util.StringHelper;

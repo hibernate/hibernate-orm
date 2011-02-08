@@ -20,9 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-
 import java.io.Serializable;
-
 import org.hibernate.event.EventSource;
 import org.hibernate.event.def.DefaultMergeEventListener;
 

@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Optimistic locking strategy
  * VERSION is the default and recommanded one

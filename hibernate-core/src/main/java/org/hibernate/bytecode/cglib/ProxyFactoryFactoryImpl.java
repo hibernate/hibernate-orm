@@ -23,23 +23,21 @@
  *
  */
 package org.hibernate.bytecode.cglib;
-
-import org.hibernate.bytecode.ProxyFactoryFactory;
-import org.hibernate.bytecode.BasicProxyFactory;
-import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.pojo.cglib.CGLIBProxyFactory;
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import net.sf.cglib.proxy.Enhancer;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import net.sf.cglib.proxy.Callback;
 import net.sf.cglib.proxy.CallbackFilter;
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.Factory;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import net.sf.cglib.proxy.NoOp;
-import net.sf.cglib.proxy.Callback;
-import net.sf.cglib.proxy.Factory;
-
-import java.lang.reflect.Method;
-import java.util.HashMap;
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.bytecode.BasicProxyFactory;
+import org.hibernate.bytecode.ProxyFactoryFactory;
+import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.proxy.pojo.cglib.CGLIBProxyFactory;
 
 /**
  * A factory for CGLIB-based {@link ProxyFactory} instances.

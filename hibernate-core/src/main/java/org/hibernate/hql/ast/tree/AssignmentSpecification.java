@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.Collections;
-
 import org.hibernate.QueryException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
@@ -38,7 +36,6 @@ import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-
 import antlr.collections.AST;
 
 /**

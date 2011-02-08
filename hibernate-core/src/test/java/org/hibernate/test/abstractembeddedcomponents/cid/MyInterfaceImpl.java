@@ -1,6 +1,6 @@
 package org.hibernate.test.abstractembeddedcomponents.cid;
 
-import org.hibernate.test.abstractembeddedcomponents.cid.MyInterface;
+
 
 /**
  * @author Steve Ebersole

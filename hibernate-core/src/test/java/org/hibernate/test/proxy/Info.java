@@ -1,5 +1,6 @@
 package org.hibernate.test.proxy;
 
+
 /**
  * todo: describe Info
  *

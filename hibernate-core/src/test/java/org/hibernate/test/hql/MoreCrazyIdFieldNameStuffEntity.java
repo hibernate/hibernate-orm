@@ -1,6 +1,7 @@
 // $Id: MoreCrazyIdFieldNameStuffEntity.java 7471 2005-07-14 14:58:28Z steveebersole $
 package org.hibernate.test.hql;
 
+
 /**
  * Implementation of MoreCrazyIdFieldNameStuffEntity.
  *

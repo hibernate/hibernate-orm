@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.expression;
-
 import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 

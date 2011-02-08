@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.interfaces;
-
 import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

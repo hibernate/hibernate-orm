@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.fetch;
-
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.CascadeType;
@@ -11,11 +10,10 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 /**
  * @author Emmanuel Bernard

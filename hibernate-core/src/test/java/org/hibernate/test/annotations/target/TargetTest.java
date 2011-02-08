@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.target;
-
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.Session;
+import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Emmanuel Bernard

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -44,7 +43,7 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
@@ -109,6 +108,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Base class for binding different types of collections to Hibernate configuration objects.
@@ -118,8 +118,7 @@ import org.hibernate.util.StringHelper;
  */
 @SuppressWarnings({"unchecked", "serial"})
 public abstract class CollectionBinder {
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CollectionBinder.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CollectionBinder.class.getName());
 
 	protected Collection collection;
 	protected String propertyName;
@@ -371,7 +370,7 @@ public abstract class CollectionBinder {
 	public void bind() {
 		this.collection = createCollection( propertyHolder.getPersistentClass() );
         String role = StringHelper.qualify(propertyHolder.getPath(), propertyName);
-        LOG.debug("Collection role: " + role);
+        LOG.debugf("Collection role: %s", role);
         collection.setRole(role);
 		collection.setNodeName( propertyName );
 
@@ -715,7 +714,7 @@ public abstract class CollectionBinder {
 			String hqlOrderBy,
 			Mappings mappings,
 			Map<XClass, InheritanceState> inheritanceStatePerClass) {
-        LOG.debug("Binding a OneToMany: " + propertyHolder.getEntityName() + "." + propertyName + " through a foreign key");
+        LOG.debugf("Binding a OneToMany: %s.%s through a foreign key", propertyHolder.getEntityName(), propertyName);
 		org.hibernate.mapping.OneToMany oneToMany = new org.hibernate.mapping.OneToMany( mappings, collection.getOwner() );
 		collection.setElement( oneToMany );
 		oneToMany.setReferencedEntityName( collectionType.getName() );
@@ -1146,10 +1145,10 @@ public abstract class CollectionBinder {
 		ManyToAny anyAnn = property.getAnnotation( ManyToAny.class );
         if (LOG.isDebugEnabled()) {
 			String path = collValue.getOwnerEntityName() + "." + joinColumns[0].getPropertyName();
-            if (isCollectionOfEntities && unique) LOG.debug("Binding a OneToMany: " + path + " through an association table");
-            else if (isCollectionOfEntities) LOG.debug("Binding as ManyToMany: " + path);
-            else if (anyAnn != null) LOG.debug("Binding a ManyToAny: " + path);
-            else LOG.debug("Binding a collection of element: " + path);
+            if (isCollectionOfEntities && unique) LOG.debugf("Binding a OneToMany: %s through an association table", path);
+            else if (isCollectionOfEntities) LOG.debugf("Binding as ManyToMany: %s", path);
+            else if (anyAnn != null) LOG.debugf("Binding a ManyToAny: %s", path);
+            else LOG.debugf("Binding a collection of element: %s", path);
 		}
 		//check for user error
 		if ( !isCollectionOfEntities ) {

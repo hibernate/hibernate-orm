@@ -1,5 +1,4 @@
 package org.hibernate.test.entitymode.dom4j.many2one;
-
 import java.util.HashSet;
 import java.util.Set;
 

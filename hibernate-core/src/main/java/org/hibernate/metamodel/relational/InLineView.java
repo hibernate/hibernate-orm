@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A <tt>data container</tt> defined by a <tt>SELECT</tt> statement.  This translates into an inline view in the

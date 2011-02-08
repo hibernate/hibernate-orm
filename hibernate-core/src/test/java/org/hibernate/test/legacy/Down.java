@@ -2,6 +2,7 @@
 package org.hibernate.test.legacy;
 
 
+
 /**
  * @author Gavin King
  */

@@ -1,5 +1,6 @@
 package org.hibernate.test.abstractembeddedcomponents.propertyref;
 
+
 /**
  * @author Steve Ebersole
  */

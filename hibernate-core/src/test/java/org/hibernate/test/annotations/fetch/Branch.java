@@ -1,13 +1,12 @@
 //$Id$
 package org.hibernate.test.annotations.fetch;
-
-import java.util.Set;
 import java.util.HashSet;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
-import javax.persistence.OneToMany;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 /**
  * @author Emmanuel Bernard

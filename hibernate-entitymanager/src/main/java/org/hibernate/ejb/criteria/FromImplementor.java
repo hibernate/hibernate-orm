@@ -22,11 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
-
-import java.io.Serializable;
-import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.From;
-import javax.persistence.criteria.Join;
 
 /**
  * Implementation contract for the JPA {@link From} interface.

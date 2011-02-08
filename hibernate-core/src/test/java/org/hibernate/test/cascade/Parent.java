@@ -1,5 +1,4 @@
 package org.hibernate.test.cascade;
-
 import java.util.Set;
 
 /**

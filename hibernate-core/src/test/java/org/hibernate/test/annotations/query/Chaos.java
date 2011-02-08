@@ -1,21 +1,19 @@
 //$Id$
 package org.hibernate.test.annotations.query;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.JoinColumn;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.JoinColumn;
-import javax.persistence.Column;
-
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLUpdate;
+import javax.persistence.Table;
+import org.hibernate.annotations.Loader;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.Loader;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLUpdate;
 
 /**
  * @author Emmanuel Bernard

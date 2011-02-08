@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import antlr.ASTFactory;
 import antlr.collections.AST;
 

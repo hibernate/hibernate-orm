@@ -1,12 +1,10 @@
 package org.hibernate.test.annotations.collectionelement;
-
+import java.util.HashSet;
+import java.util.Iterator;
 import junit.framework.Assert;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;
-
-import java.util.HashSet;
-import java.util.Iterator;
 
 public class OrderByTest extends TestCase {
 

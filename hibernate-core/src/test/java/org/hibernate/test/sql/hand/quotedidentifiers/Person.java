@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.sql.hand.quotedidentifiers;
 
+
 /**
  * TODO : javadoc
  *

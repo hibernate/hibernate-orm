@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.identifiercollection;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.persistence.CascadeType;
@@ -11,7 +10,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.TableGenerator;
-
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Type;
 

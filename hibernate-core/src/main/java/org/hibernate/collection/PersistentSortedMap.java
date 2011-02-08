@@ -23,8 +23,6 @@
  *
  */
 package org.hibernate.collection;
-
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
@@ -33,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;

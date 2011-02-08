@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import javax.persistence.PostLoad;
@@ -30,9 +29,8 @@ import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
-
-import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XClass;
 
 /**
  * Keep track of all lifecycle callbacks and listeners for a given persistence unit

@@ -1,6 +1,5 @@
 //$Id: MultiTableTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,9 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import junit.framework.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;

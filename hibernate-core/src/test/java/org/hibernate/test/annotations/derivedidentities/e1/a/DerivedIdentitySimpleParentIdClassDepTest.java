@@ -1,11 +1,9 @@
 package org.hibernate.test.annotations.derivedidentities.e1.a;
-
+import java.util.List;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.util.SchemaUtil;
-
-import java.util.List;
 
 /**
  * @author Emmanuel Bernard

@@ -23,18 +23,15 @@
  *
  */
 package org.hibernate.sql;
-
 import java.util.Collections;
-
 import junit.framework.TestCase;
-
-import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.type.Type;
 import org.hibernate.QueryException;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.sql.ordering.antlr.ColumnMapper;
+import org.hibernate.type.Type;
 
 /**
  * TODO : javadoc

@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
@@ -37,6 +36,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * <b>increment</b><br>
@@ -53,8 +53,7 @@ import org.hibernate.util.StringHelper;
  */
 public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                IncrementGenerator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, IncrementGenerator.class.getName());
 
 	private Class returnClass;
 	private String sql;
@@ -119,7 +118,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private void initializePreviousValueHolder(SessionImplementor session) {
 		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 
-        LOG.debug("Fetching initial value: " + sql);
+        LOG.debugf("Fetching initial value: %s", sql);
 		try {
 			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
 			try {
@@ -128,7 +127,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
                     if (rs.next()) previousValueHolder.initialize(rs, 0L).increment();
                     else previousValueHolder.initialize(1L);
 					sql = null;
-                    LOG.debug("First free id: " + previousValueHolder.makeValue());
+                    LOG.debugf("First free id: %s", previousValueHolder.makeValue());
 				}
 				finally {
 					rs.close();

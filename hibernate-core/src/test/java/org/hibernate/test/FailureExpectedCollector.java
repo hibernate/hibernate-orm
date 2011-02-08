@@ -1,13 +1,10 @@
 package org.hibernate.test;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.hibernate.testing.junit.TestSuiteVisitor;
 
 /**

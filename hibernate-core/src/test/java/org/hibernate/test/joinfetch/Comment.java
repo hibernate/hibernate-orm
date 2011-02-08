@@ -1,6 +1,5 @@
 //$Id: Comment.java 6797 2005-05-16 12:08:03Z oneovthafew $
 package org.hibernate.test.joinfetch;
-
 import java.util.Calendar;
 
 /**

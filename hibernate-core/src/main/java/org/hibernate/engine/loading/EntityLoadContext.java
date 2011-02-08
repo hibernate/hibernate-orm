@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.engine.loading;
-
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * {@inheritDoc}
@@ -36,8 +36,7 @@ import org.hibernate.Logger;
  */
 public class EntityLoadContext {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                EntityLoadContext.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EntityLoadContext.class.getName());
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;

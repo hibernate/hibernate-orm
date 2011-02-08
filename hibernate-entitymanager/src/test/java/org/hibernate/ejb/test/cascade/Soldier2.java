@@ -1,5 +1,4 @@
 package org.hibernate.ejb.test.cascade;
-
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

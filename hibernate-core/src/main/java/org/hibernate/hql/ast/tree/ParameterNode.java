@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
-import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Implementation of ParameterNode.

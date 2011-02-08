@@ -1,13 +1,10 @@
 //$Id: MergeTest.java 11037 2007-01-09 16:04:16Z steve.ebersole@jboss.com $
 package org.hibernate.test.ops;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
 import junit.framework.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;

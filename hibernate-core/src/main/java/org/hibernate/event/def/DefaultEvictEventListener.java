@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
@@ -39,6 +38,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default evict event listener used by hibernate for evicting entities
@@ -50,8 +50,8 @@ import org.hibernate.proxy.LazyInitializer;
  */
 public class DefaultEvictEventListener implements EvictEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultEvictEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultEvictEventListener.class.getName());
 
 	/**
 	 * Handle the given evict event.

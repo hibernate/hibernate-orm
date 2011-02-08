@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
-
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.FlushMode;
 import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 
 /**

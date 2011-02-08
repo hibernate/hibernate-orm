@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities;
-
 import org.dom4j.Element;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
 

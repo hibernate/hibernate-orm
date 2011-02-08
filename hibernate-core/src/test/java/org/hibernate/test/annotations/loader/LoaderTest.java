@@ -1,9 +1,7 @@
 //$Id$
 package org.hibernate.test.annotations.loader;
-
-import java.util.Set;
 import java.util.Iterator;
-
+import java.util.Set;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.TestCase;

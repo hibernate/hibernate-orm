@@ -1,9 +1,8 @@
 //$Id$
 package org.hibernate.test.annotations.polymorphism;
-
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.test.annotations.TestCase;
 
 /**
  * @author Emmanuel Bernard

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,6 +32,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;
 import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
@@ -45,8 +45,7 @@ import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
  */
 public class ProxoolConnectionProvider implements ConnectionProvider {
 
-    public static final ProxoolLogger LOG = org.jboss.logging.Logger.getMessageLogger(ProxoolLogger.class,
-                                                                                      ProxoolConnectionProvider.class.getPackage().getName());
+    public static final ProxoolLogger LOG = Logger.getMessageLogger(ProxoolLogger.class, ProxoolConnectionProvider.class.getName());
 
 	private static final String PROXOOL_JDBC_STEM = "proxool.";
 

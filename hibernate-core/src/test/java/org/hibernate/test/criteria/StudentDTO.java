@@ -4,6 +4,7 @@
  */
 package org.hibernate.test.criteria;
 
+
 /**
  * @author max
  *

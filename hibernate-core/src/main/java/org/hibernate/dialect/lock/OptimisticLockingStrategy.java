@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
-
 import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;

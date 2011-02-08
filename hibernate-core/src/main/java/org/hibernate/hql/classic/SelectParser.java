@@ -23,18 +23,16 @@
  *
  */
 package org.hibernate.hql.classic;
-
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.QuerySplitter;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
-
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Parsers the select clause of a Hibernate query.

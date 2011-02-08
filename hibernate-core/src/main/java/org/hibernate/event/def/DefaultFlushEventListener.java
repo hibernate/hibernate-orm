@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.event.def;
-
 import org.hibernate.HibernateException;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.FlushEvent;

@@ -22,35 +22,33 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
-import java.util.Map;
 import java.util.ListIterator;
-
+import java.util.Map;
+import java.util.Properties;
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
+import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.FetchProfile;
 import org.hibernate.type.TypeResolver;
 
 /**

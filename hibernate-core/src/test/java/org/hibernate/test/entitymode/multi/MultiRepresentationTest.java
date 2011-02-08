@@ -1,16 +1,13 @@
 // $Id: MultiRepresentationTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.entitymode.multi;
-
 import java.sql.Date;
 import java.util.Iterator;
 import java.util.List;
-
 import junit.framework.Test;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-
 import org.hibernate.EntityMode;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;

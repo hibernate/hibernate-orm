@@ -23,13 +23,11 @@
  */
 
 package org.hibernate.envers.test.performance.complex;
-
-import org.hibernate.envers.Audited;
-import org.hibernate.annotations.CollectionOfElements;
-
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.util.Set;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)

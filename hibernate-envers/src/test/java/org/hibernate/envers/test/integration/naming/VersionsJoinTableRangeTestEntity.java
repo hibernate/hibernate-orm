@@ -1,5 +1,4 @@
 package org.hibernate.envers.test.integration.naming;
-
 import javax.persistence.Entity;
 import javax.persistence.Table;
 

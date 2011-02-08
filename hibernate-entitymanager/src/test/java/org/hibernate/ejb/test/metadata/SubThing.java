@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.test.metadata;
 
+
 /**
  * @author Emmanuel Bernard
  */

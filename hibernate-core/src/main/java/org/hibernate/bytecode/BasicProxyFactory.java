@@ -24,6 +24,7 @@
  */
 package org.hibernate.bytecode;
 
+
 /**
  * A proxy factory for "basic proxy" generation
  *

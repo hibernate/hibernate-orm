@@ -1,13 +1,10 @@
 // $Id: JoinedSubclassFilterTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.subclassfilter;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
 import junit.framework.Test;
-
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;

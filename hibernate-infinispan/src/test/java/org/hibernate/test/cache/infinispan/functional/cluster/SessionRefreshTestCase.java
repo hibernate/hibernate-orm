@@ -20,13 +20,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
-
+import static org.hibernate.TestLogger.LOG;
 import javax.transaction.TransactionManager;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.cache.infinispan.TestInfinispanLogger;
 import org.hibernate.test.cache.infinispan.functional.classloader.Account;
 import org.hibernate.test.cache.infinispan.functional.classloader.ClassLoaderTestDAO;
 import org.infinispan.Cache;
@@ -40,8 +39,6 @@ import org.infinispan.test.TestingUtil;
  * @since 3.5
  */
 public class SessionRefreshTestCase extends DualNodeTestCase {
-
-    private static final TestInfinispanLogger LOG = TestInfinispanLogger.LOG;
 
     public static final String OUR_PACKAGE = SessionRefreshTestCase.class.getPackage().getName();
 

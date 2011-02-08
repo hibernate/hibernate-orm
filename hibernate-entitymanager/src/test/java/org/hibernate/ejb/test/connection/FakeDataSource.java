@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.connection;
-
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;

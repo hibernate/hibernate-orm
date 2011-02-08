@@ -24,6 +24,7 @@
  */
 package org.hibernate.cache;
 
+
 /**
  * A contract for transactional cache implementations which support
  * optimistic locking of items within the cache.

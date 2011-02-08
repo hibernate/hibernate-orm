@@ -20,13 +20,10 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import javax.transaction.TransactionManager;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.CacheKey;
@@ -38,9 +35,9 @@ import org.infinispan.manager.CacheContainer;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
-import org.jboss.util.collection.ConcurrentSet;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
+import org.jboss.util.collection.ConcurrentSet;
 
 /**
  * EntityCollectionInvalidationTestCase.

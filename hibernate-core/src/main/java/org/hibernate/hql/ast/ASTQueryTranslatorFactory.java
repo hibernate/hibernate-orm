@@ -23,13 +23,13 @@
  *
  */
 package org.hibernate.hql.ast;
-
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
+import org.jboss.logging.Logger;
 
 /**
  * Generates translators which uses the Antlr-based parser to perform
@@ -39,8 +39,8 @@ import org.hibernate.hql.QueryTranslatorFactory;
  */
 public class ASTQueryTranslatorFactory implements QueryTranslatorFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ASTQueryTranslatorFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       ASTQueryTranslatorFactory.class.getName());
 
 	public ASTQueryTranslatorFactory() {
         LOG.usingAstQueryTranslatorFactory();

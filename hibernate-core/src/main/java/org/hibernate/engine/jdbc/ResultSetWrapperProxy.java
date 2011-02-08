@@ -22,16 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-
-import static org.jboss.logging.Logger.Level.WARN;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.util.JDBCExceptionReporter;
+import org.jboss.logging.Logger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -42,8 +41,7 @@ import org.hibernate.util.JDBCExceptionReporter;
  */
 public class ResultSetWrapperProxy implements InvocationHandler {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                ResultSetWrapperProxy.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ResultSetWrapperProxy.class.getName());
 	private static final Class[] PROXY_INTERFACES = new Class[] { ResultSet.class };
 
 	private final ResultSet rs;
@@ -110,10 +108,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 				JDBCExceptionReporter.logExceptions( ex, buf.toString() );
 			}
 			catch ( NoSuchMethodException ex ) {
-                if (LOG.isEnabled(WARN)) {
-                    StringBuffer buf = new StringBuffer().append("Exception switching from method: [").append(method).append("] to a method using the column index. Reverting to using: [").append(method).append("]");
-                    LOG.warn(buf.toString());
-				}
+                LOG.unableToSwitchToMethodUsingColumnIndex(method);
 			}
 		}
 		return invokeMethod( method, args );

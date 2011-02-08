@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
-
 import org.hibernate.InstantiationException;
 import org.hibernate.MappingException;
 import org.hibernate.property.Getter;

@@ -20,7 +20,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;

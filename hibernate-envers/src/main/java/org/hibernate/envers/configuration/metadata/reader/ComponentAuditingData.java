@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.envers.configuration.metadata.reader;
-
-import static org.hibernate.envers.tools.Tools.*;
-
+import static org.hibernate.envers.tools.Tools.newHashMap;
 import java.util.Map;
 
 /**

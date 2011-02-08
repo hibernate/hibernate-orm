@@ -23,6 +23,7 @@
  */
 package org.hibernate.annotations;
 
+
 /**
  * Possible checks on Sql Insert, Delete, Update
  *

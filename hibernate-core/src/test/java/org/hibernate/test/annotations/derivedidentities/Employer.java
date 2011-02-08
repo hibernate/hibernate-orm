@@ -16,7 +16,6 @@
 * limitations under the License.
 */
 package org.hibernate.test.annotations.derivedidentities;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;

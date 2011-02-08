@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jmx.internal;
-
 import java.util.Map;
-
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jmx.spi.JmxService;
-import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServicesRegistry;
 
 /**
  * Standard initiator for the standard {@link JmxService} service

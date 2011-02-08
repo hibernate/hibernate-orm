@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+
 /**
  * Specific adaptation of the "any" type to the old deprecated "object" type
  *

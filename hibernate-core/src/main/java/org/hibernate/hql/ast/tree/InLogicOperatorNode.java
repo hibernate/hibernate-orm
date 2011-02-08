@@ -23,18 +23,15 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * @author Steve Ebersole

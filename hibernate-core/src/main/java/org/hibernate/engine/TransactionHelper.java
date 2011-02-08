@@ -23,15 +23,12 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.transaction.IsolatedWork;
 import org.hibernate.engine.transaction.Isolater;
-import org.hibernate.exception.JDBCExceptionHelper;
 
 /**
  * Allows work to be done outside the current transaction, by suspending it,

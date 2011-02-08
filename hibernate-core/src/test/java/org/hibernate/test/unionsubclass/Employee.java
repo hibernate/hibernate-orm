@@ -1,6 +1,7 @@
 //$Id: Employee.java 6673 2005-05-03 22:59:24Z epbernard $
 package org.hibernate.test.unionsubclass;
 
+
 /**
  * @author Emmanuel Bernard
  */

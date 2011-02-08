@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
@@ -38,6 +37,7 @@ import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Wrap state of an EJB3 @Column annotation
@@ -47,8 +47,7 @@ import org.hibernate.util.StringHelper;
  */
 public class Ejb3Column {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                Ejb3Column.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Ejb3Column.class.getName());
 
 	private Column mappingColumn;
 	private boolean insertable = true;
@@ -182,7 +181,7 @@ public class Ejb3Column {
 
 	public void bind() {
 		if ( StringHelper.isNotEmpty( formulaString ) ) {
-            LOG.debug("Binding formula " + formulaString);
+            LOG.debugf("Binding formula %s", formulaString);
 			formula = new Formula();
 			formula.setFormula( formulaString );
 		}
@@ -190,7 +189,7 @@ public class Ejb3Column {
 			initMappingColumn(
 					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
 			);
-            LOG.debug("Binding column: " + toString());
+            LOG.debugf("Binding column: %s", toString());
 		}
 	}
 
@@ -421,7 +420,7 @@ public class Ejb3Column {
 					throw new AnnotationException( "AttributeOverride.column() should override all columns for now" );
 				}
 				actualCols = overriddenCols.length == 0 ? null : overriddenCols;
-                LOG.debug("Column(s) overridden for property " + inferredData.getPropertyName());
+                LOG.debugf("Column(s) overridden for property %s", inferredData.getPropertyName());
 			}
 			if ( actualCols == null ) {
 				columns = buildImplicitColumn(

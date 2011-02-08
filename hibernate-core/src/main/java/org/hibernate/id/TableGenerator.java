@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.id;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,8 +31,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
@@ -42,6 +41,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * An <tt>IdentifierGenerator</tt> that uses a database
@@ -83,8 +83,7 @@ public class TableGenerator extends TransactionHelper
 	/** Default table name */
 	public static final String DEFAULT_TABLE_NAME = "hibernate_unique_key";
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                TableGenerator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TableGenerator.class.getName());
 
 	private Type identifierType;
 	private String tableName;

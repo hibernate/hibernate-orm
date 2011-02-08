@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.derivedidentities.e3.b;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 

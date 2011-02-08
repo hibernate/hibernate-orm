@@ -23,16 +23,15 @@
  */
 package org.hibernate.bytecode.buildtime;
 
-import java.util.Set;
 import java.io.ByteArrayInputStream;
-
-import org.hibernate.bytecode.util.ClassDescriptor;
-import org.hibernate.bytecode.util.BasicClassFilter;
-import org.hibernate.bytecode.ClassTransformer;
-import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
-import org.objectweb.asm.ClassReader;
+import java.util.Set;
 import net.sf.cglib.core.ClassNameReader;
 import net.sf.cglib.transform.impl.InterceptFieldEnabled;
+import org.hibernate.bytecode.ClassTransformer;
+import org.hibernate.bytecode.cglib.BytecodeProviderImpl;
+import org.hibernate.bytecode.util.BasicClassFilter;
+import org.hibernate.bytecode.util.ClassDescriptor;
+import org.objectweb.asm.ClassReader;
 
 /**
  * Strategy for performing build-time instrumentation of persistent classes in order to enable
@@ -50,11 +49,13 @@ public class CGLIBInstrumenter extends AbstractInstrumenter {
 		super( logger, options );
 	}
 
-	protected ClassDescriptor getClassDescriptor(byte[] byecode) throws Exception {
+	@Override
+    protected ClassDescriptor getClassDescriptor(byte[] byecode) throws Exception {
 		return new CustomClassDescriptor( byecode );
 	}
 
-	protected ClassTransformer getClassTransformer(ClassDescriptor descriptor, Set classNames) {
+	@Override
+    protected ClassTransformer getClassTransformer(ClassDescriptor descriptor, Set classNames) {
 		if ( descriptor.isInstrumented() ) {
 			logger.debug( "class [" + descriptor.getName() + "] already instrumented" );
 			return null;

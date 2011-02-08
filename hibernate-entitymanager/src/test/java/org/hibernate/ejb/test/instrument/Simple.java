@@ -1,6 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.instrument;
 
+
 /**
  * @author Emmanuel Bernard
  */

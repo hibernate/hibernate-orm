@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.jdbc.util.FormatStyle;
+import org.jboss.logging.Logger;
 
 /**
  * Centralize logging for SQL statements.
@@ -33,8 +33,7 @@ import org.hibernate.jdbc.util.FormatStyle;
  */
 public class SQLStatementLogger {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SQLStatementLogger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SQLStatementLogger.class.getName());
 
 	private boolean logToStdout;
 	private boolean format;
@@ -91,7 +90,7 @@ public class SQLStatementLogger {
 	public void logStatement(String statement) {
 		// for now just assume a DML log for formatting
         if (format && (logToStdout || LOG.isDebugEnabled())) statement = FormatStyle.BASIC.getFormatter().format(statement);
-        LOG.debug(statement);
+        LOG.debugf(statement);
         if (logToStdout) System.out.println("Hibernate: " + statement);
 	}
 }

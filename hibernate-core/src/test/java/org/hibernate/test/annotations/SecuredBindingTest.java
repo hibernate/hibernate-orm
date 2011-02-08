@@ -1,8 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations;
-
 import java.util.Properties;
-
 import junit.framework.TestCase;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;

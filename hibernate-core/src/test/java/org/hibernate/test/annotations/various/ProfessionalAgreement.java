@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.various;
-
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

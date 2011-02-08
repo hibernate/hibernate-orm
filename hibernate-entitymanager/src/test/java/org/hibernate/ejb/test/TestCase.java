@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test;
-
+import static org.hibernate.TestLogger.LOG;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -40,7 +40,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.hibernate.ejb.TestEntityManagerLogger;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
 
 /**
@@ -50,8 +49,6 @@ import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
  * @author Hardy Ferentschik
  */
 public abstract class TestCase extends HibernateTestCase {
-
-    public static final TestEntityManagerLogger LOG = TestEntityManagerLogger.LOG;
 
 	protected static EntityManagerFactory factory;
 	private EntityManager em;

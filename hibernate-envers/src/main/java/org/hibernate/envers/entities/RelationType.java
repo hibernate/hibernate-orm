@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.entities;
 
+
 /**
  * Type of a relation between two entities.
  * @author Adam Warski (adam at warski dot org)

@@ -23,10 +23,8 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
-
 import java.util.Date;
 import java.util.List;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;

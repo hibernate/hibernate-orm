@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.hql.ast.util;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
@@ -45,6 +44,7 @@ import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -72,8 +72,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	 */
 	public static int DECIMAL_LITERAL_FORMAT = EXACT;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                LiteralProcessor.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LiteralProcessor.class.getName());
 
 	private HqlSqlWalker walker;
 
@@ -132,7 +131,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setSQLValue(DotNode node, String text, String value) {
-        LOG.debug("setSQLValue() " + text + " -> " + value);
+        LOG.debugf("setSQLValue() %s -> %s", text, value);
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		node.setType( SqlTokenTypes.SQL_TOKEN );
 		node.setText(value);
@@ -140,7 +139,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	}
 
 	private void setConstantValue(DotNode node, String text, Object value) {
-        LOG.debug("setConstantValue() " + text + " -> " + value + " " + value.getClass().getName());
+        LOG.debugf("setConstantValue() %s -> %s %s", text, value, value.getClass().getName());
 		node.setFirstChild( null );	// Chop off the rest of the tree.
 		if ( value instanceof String ) {
 			node.setType( SqlTokenTypes.QUOTED_STRING );
@@ -208,7 +207,7 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
 	private void processLiteral(AST constant) {
 		String replacement = ( String ) walker.getTokenReplacements().get( constant.getText() );
 		if ( replacement != null ) {
-            LOG.debug("processConstant() : Replacing '" + constant.getText() + "' with '" + replacement + "'");
+            LOG.debugf("processConstant() : Replacing '%s' with '%s'", constant.getText(), replacement);
 			constant.setText( replacement );
 		}
 	}

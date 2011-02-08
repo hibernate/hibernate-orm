@@ -23,13 +23,11 @@
  *
  */
 package org.hibernate.internal.util.config;
-
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Iterator;
-
 import org.hibernate.util.ArrayHelper;
 import org.hibernate.util.StringHelper;
 

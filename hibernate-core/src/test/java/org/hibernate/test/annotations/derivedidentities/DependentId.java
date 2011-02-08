@@ -16,7 +16,6 @@
 * limitations under the License.
 */
 package org.hibernate.test.annotations.derivedidentities;
-
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 

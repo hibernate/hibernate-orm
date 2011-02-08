@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.criterion;
-
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.PassThroughResultTransformer;

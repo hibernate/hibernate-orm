@@ -1,11 +1,10 @@
 //$Id$
 package org.hibernate.ejb.test.inheritance;
-
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
 
 /**
  * @author Emmanuel Bernard

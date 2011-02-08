@@ -23,10 +23,9 @@
  *
  */
 package org.hibernate.hql.ast.tree;
-
 import java.util.List;
 import java.util.Map;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
@@ -45,6 +44,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Delegate that handles the type and join sequence information for a FromElement.
@@ -53,8 +53,7 @@ import org.hibernate.util.ArrayHelper;
  */
 class FromElementType {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                FromElementType.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, FromElementType.class.getName());
 
 	private FromElement fromElement;
 	private EntityType entityType;
@@ -340,7 +339,7 @@ class FromElementType {
 			        enabledFilters,
 					propertyMapping.toColumns( tableAlias, path )
 			);
-            LOG.debug("toColumns(" + tableAlias + "," + path + ") : subquery = " + subquery);
+            LOG.debugf("toColumns(%s,%s) : subquery = %s", tableAlias, path, subquery);
 			return new String[]{"(" + subquery + ")"};
 		}
         if (forceAlias) {

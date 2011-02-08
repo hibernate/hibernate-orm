@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers;
 
+
 /**
  * Type of the revision.
  * @author Adam Warski (adam at warski dot org)

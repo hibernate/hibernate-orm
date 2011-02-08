@@ -21,11 +21,7 @@
  */
 package org.hibernate.test.event.collection.association.bidirectional.onetomany;
 
-import java.util.Collection;
-import java.util.Iterator;
 
-import org.hibernate.test.event.collection.Child;
-import org.hibernate.test.event.collection.AbstractParentWithCollection;
 
 /**
  *

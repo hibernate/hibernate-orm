@@ -23,14 +23,13 @@
  *
  */
 package org.hibernate.engine;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.collection.PersistentCollection;
@@ -40,6 +39,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * A session action that may be cascaded from parent entity to its children
@@ -48,8 +48,7 @@ import org.hibernate.type.Type;
  */
 public abstract class CascadingAction {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CascadingAction.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, CascadingAction.class.getName());
 
 
 	// the CascadingAction contract ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

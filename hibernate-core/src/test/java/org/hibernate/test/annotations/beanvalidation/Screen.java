@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;

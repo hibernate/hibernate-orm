@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.search;
-
 import java.util.Properties;
 import org.hibernate.AnnotationException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.event.EventListeners;
 import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.event.PostCollectionRemoveEventListener;
@@ -34,6 +33,7 @@ import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Helper methods initializing Hibernate Search event listeners.
@@ -45,8 +45,8 @@ import org.hibernate.util.ReflectHelper;
 @Deprecated
 public class HibernateSearchEventListenerRegister {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                HibernateSearchEventListenerRegister.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       HibernateSearchEventListenerRegister.class.getName());
 
 	/**
 	 * Class name of the class needed to enable Search.
@@ -226,7 +226,7 @@ public class HibernateSearchEventListenerRegister {
 					FULL_TEXT_INDEX_EVENT_LISTENER_CLASS,
 					HibernateSearchEventListenerRegister.class);
 		} catch (ClassNotFoundException e) {
-            LOG.debug("Search not present in classpath, ignoring event listener registration.");
+            LOG.debugf("Search not present in classpath, ignoring event listener registration.");
 		}
 		return searchEventListenerClass;
 	}

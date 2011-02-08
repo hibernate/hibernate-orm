@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.pack.cfgxmlpar;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;

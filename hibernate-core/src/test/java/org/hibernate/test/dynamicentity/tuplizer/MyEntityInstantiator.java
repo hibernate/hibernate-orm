@@ -1,18 +1,16 @@
 package org.hibernate.test.dynamicentity.tuplizer;
-
-import org.hibernate.tuple.Instantiator;
-import org.hibernate.test.dynamicentity.Customer;
-import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.test.dynamicentity.Company;
-import org.hibernate.test.dynamicentity.DataProxyHandler;
-import org.hibernate.test.dynamicentity.Address;
-import org.hibernate.test.dynamicentity.Person;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.HibernateException;
-
 import java.io.Serializable;
-import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+import org.hibernate.HibernateException;
+import org.hibernate.test.dynamicentity.Address;
+import org.hibernate.test.dynamicentity.Company;
+import org.hibernate.test.dynamicentity.Customer;
+import org.hibernate.test.dynamicentity.DataProxyHandler;
+import org.hibernate.test.dynamicentity.Person;
+import org.hibernate.test.dynamicentity.ProxyHelper;
+import org.hibernate.tuple.Instantiator;
+import org.hibernate.util.ReflectHelper;
 
 /**
  * @author <a href="mailto:steve@hibernate.org">Steve Ebersole </a>

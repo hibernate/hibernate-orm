@@ -22,20 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-
 import java.util.Iterator;
 import java.util.Properties;
-
 import org.dom4j.Element;
-import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;
-
+import org.hibernate.envers.entities.mapper.SimpleMapperBuilder;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.CompositeCustomType;
-import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 
 /**

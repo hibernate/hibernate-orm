@@ -23,12 +23,10 @@
  *
  */
 package org.hibernate.engine.query.sql;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 

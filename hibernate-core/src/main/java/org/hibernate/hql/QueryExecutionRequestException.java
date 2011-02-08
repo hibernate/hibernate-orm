@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.hql;
-
 import org.hibernate.QueryException;
 
 /**

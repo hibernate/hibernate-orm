@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-
 import java.io.Serializable;
 import java.util.Set;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
-import javax.persistence.metamodel.Attribute;
 
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal.util.jndi;
-
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
@@ -32,13 +31,13 @@ import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
+import org.jboss.logging.Logger;
 
 public final class JndiHelper {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                JndiHelper.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JndiHelper.class.getName());
 
 	private JndiHelper() {
 	}
@@ -156,7 +155,7 @@ public final class JndiHelper {
 				throw new JndiException( "Error performing intermediate bind [" + n + "]", e );
 			}
 		}
-        LOG.debug("Bound name: " + jndiName);
+        LOG.debugf("Bound name: %s", jndiName);
 	}
 
 	private static Name tokenizeName(String jndiName, Context context) {
@@ -220,7 +219,7 @@ public final class JndiHelper {
 				catch (NameNotFoundException nfe) {}
 
 				if (subctx!=null) {
-                    LOG.debug("Found subcontext: " + ctxName);
+                    LOG.debugf("Found subcontext: %s", ctxName);
 					ctx = subctx;
 				}
 				else {
@@ -232,7 +231,7 @@ public final class JndiHelper {
             LOG.trace("Binding : " + n);
 			ctx.rebind(n, val);
 		}
-        LOG.debug("Bound name: " + name);
+        LOG.debugf("Bound name: %s", name);
 	}
 }
 

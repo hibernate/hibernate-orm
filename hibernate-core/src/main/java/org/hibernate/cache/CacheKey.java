@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.cache;
-
 import java.io.Serializable;
-
 import org.hibernate.EntityMode;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.type.Type;

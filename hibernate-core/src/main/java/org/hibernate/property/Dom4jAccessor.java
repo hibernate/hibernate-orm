@@ -22,11 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
-
-import java.lang.reflect.Method;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.Map;
-
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.Node;

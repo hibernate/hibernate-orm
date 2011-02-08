@@ -22,15 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-
 import java.io.Serializable;
-import java.util.Set;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.persistence.ElementCollection;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.ElementCollection;
-import javax.persistence.CollectionTable;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OrderColumn;
 

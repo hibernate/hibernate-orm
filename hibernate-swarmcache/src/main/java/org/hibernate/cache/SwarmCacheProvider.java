@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
-
+import java.util.Properties;
 import net.sf.swarmcache.CacheConfiguration;
 import net.sf.swarmcache.CacheConfigurationManager;
 import net.sf.swarmcache.CacheFactory;
 import net.sf.swarmcache.ObjectCache;
-
-import java.util.Properties;
 
 /**
  * Support for SwarmCache replicated cache. SwarmCache does not support

@@ -14,14 +14,11 @@
  * Red Hat Author(s): Steve Ebersole
  */
 package org.hibernate.test.jdbc;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
 import junit.framework.Test;
-
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;

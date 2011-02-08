@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.engine.query.sql;
-
-import org.hibernate.util.ArrayHelper;
-
-import java.util.Set;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import org.hibernate.util.ArrayHelper;
 
 /**
  * Defines the specification or blue-print for a native-sql query.

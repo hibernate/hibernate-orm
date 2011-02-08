@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.action;
-
-import org.hibernate.HibernateException;
-
 import java.io.Serializable;
+import org.hibernate.HibernateException;
 
 /**
  * An operation which may be scheduled for later execution.

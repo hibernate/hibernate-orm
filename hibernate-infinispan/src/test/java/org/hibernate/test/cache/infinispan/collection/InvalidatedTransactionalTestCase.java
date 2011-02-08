@@ -20,11 +20,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.collection;
-
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
 /**
  * InvalidatedTransactionalTestCase.

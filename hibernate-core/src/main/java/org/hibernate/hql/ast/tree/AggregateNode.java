@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
-
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.hql.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -38,8 +38,7 @@ import antlr.collections.AST;
  */
 public class AggregateNode extends AbstractSelectExpression implements SelectExpression, FunctionNode {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                AggregateNode.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AggregateNode.class.getName());
 
 	private SQLFunction sqlFunction;
 

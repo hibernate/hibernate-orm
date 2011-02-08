@@ -22,13 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
-
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
 import org.hibernate.jdbc.Expectation;

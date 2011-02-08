@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.event.def;
-
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.DelayedPostInsertIdentifier;
 import org.hibernate.action.EntityUpdateAction;
@@ -47,6 +46,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  * An event that occurs for each entity instance at flush time
@@ -55,8 +55,8 @@ import org.hibernate.util.ArrayHelper;
  */
 public class DefaultFlushEntityEventListener implements FlushEntityEventListener {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                DefaultFlushEntityEventListener.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       DefaultFlushEntityEventListener.class.getName());
 
 	/**
 	 * make sure user didn't mangle the id

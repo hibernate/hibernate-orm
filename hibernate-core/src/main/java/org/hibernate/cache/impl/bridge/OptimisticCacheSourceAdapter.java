@@ -23,11 +23,9 @@
  *
  */
 package org.hibernate.cache.impl.bridge;
-
 import java.util.Comparator;
-
-import org.hibernate.cache.OptimisticCacheSource;
 import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.OptimisticCacheSource;
 
 /**
  * {@inheritDoc}

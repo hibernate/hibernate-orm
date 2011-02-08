@@ -25,7 +25,6 @@
 // $Id$
 
 package org.hibernate.testing.junit;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

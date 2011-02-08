@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
 
+
 /**
  * @author Hardy Ferentschik
  */

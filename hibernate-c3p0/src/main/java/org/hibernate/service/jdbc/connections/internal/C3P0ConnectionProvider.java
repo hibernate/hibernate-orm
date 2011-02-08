@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -33,6 +32,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.util.ReflectHelper;
+import org.jboss.logging.Logger;
 import com.mchange.v2.c3p0.DataSources;
 
 /**
@@ -44,7 +44,7 @@ import com.mchange.v2.c3p0.DataSources;
  */
 public class C3P0ConnectionProvider implements ConnectionProvider {
 
-    private static final C3P0Logger LOG = org.jboss.logging.Logger.getMessageLogger(C3P0Logger.class, C3P0Logger.class.getPackage().getName());
+    private static final C3P0Logger LOG = Logger.getMessageLogger(C3P0Logger.class, C3P0ConnectionProvider.class.getName());
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
@@ -196,7 +196,7 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 			DataSources.destroy( ds );
 		}
 		catch ( SQLException sqle ) {
-            LOG.warn(LOG.unableToDestroyC3p0ConnectionPool(), sqle);
+            LOG.unableToDestroyC3p0ConnectionPool(sqle);
 		}
 	}
 

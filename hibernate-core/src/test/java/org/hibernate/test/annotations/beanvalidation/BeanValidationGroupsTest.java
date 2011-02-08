@@ -23,13 +23,11 @@
  */
 
 package org.hibernate.test.annotations.beanvalidation;
-
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import javax.validation.ConstraintViolationException;
 import javax.validation.constraints.NotNull;
 import javax.validation.groups.Default;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.tools.graph;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

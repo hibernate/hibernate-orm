@@ -25,6 +25,7 @@
 package org.hibernate.test.criteria;
 
 
+
 public abstract class AbstractFoo {
  
     private Integer id;

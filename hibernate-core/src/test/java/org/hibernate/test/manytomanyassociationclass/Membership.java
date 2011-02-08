@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.test.manytomanyassociationclass;
-
 import java.io.Serializable;
 
 /**

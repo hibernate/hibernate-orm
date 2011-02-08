@@ -1,7 +1,5 @@
 package org.hibernate.test.generatedkeys.select;
-
 import junit.framework.Test;
-
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;

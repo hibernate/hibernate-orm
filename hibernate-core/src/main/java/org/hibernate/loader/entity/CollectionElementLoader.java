@@ -23,13 +23,12 @@
  *
  */
 package org.hibernate.loader.entity;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -41,6 +40,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
+import org.jboss.logging.Logger;
 
 /**
  *
@@ -49,8 +49,8 @@ import org.hibernate.util.ArrayHelper;
  */
 public class CollectionElementLoader extends OuterJoinLoader {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                CollectionElementLoader.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       CollectionElementLoader.class.getName());
 
 	private final OuterJoinLoadable persister;
 	private final Type keyType;
@@ -83,7 +83,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 
 		postInstantiate();
 
-        LOG.debug("Static select for entity " + entityName + ": " + getSQLString());
+        LOG.debugf("Static select for entity %s: %s", entityName, getSQLString());
 
 	}
 

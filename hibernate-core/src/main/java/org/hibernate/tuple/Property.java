@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.tuple;
-
-import org.hibernate.type.Type;
-
 import java.io.Serializable;
+import org.hibernate.type.Type;
 
 /**
  * Defines the basic contract of a Property within the runtime metamodel.

@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.cache.access;
-
 import java.io.Serializable;
 
 /**

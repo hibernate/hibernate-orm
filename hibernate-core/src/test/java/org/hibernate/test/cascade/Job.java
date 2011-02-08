@@ -1,6 +1,7 @@
 // $Id: Job.java 6663 2005-05-03 20:55:31Z steveebersole $
 package org.hibernate.test.cascade;
 
+
 /**
  * Implementation of Job.
  *

@@ -23,15 +23,15 @@
  *
  */
 package org.hibernate.persister.entity;
-
 import java.io.Serializable;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateLogger;
 import org.hibernate.LockOptions;
-import org.hibernate.Logger;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.impl.AbstractQueryImpl;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.jboss.logging.Logger;
 
 /**
  * Not really a <tt>Loader</tt>, just a wrapper around a
@@ -44,8 +44,7 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	private final String queryName;
 	private final EntityPersister persister;
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                NamedQueryLoader.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NamedQueryLoader.class.getName());
 
 	public NamedQueryLoader(String queryName, EntityPersister persister) {
 		super();
@@ -54,12 +53,12 @@ public final class NamedQueryLoader implements UniqueEntityLoader {
 	}
 
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
-        if (lockOptions != null) LOG.debug("Ignoring lock-options passed to named query loader");
+        if (lockOptions != null) LOG.debugf("Ignoring lock-options passed to named query loader");
 		return load( id, optionalObject, session );
 	}
 
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
-        LOG.debug("Loading entity: " + persister.getEntityName() + " using named query: " + queryName);
+        LOG.debugf("Loading entity: %s using named query: %s", persister.getEntityName(), queryName);
 
 		AbstractQueryImpl query = (AbstractQueryImpl) session.getNamedQuery(queryName);
 		if ( query.hasNamedParameters() ) {

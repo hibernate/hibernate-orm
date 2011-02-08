@@ -23,7 +23,6 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
-
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.AssociationOverride;

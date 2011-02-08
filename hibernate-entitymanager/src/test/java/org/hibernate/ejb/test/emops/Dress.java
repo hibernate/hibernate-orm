@@ -1,8 +1,7 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
-
-import javax.persistence.Id;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * @author Emmanuel Bernard

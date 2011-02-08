@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.batch.internal;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 import org.hibernate.jdbc.Expectation;
+import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link org.hibernate.engine.jdbc.batch.spi.Batch} which does not perform batching.  It simply executes each statement as it is
@@ -38,8 +38,7 @@ import org.hibernate.jdbc.Expectation;
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                NonBatchingBatch.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NonBatchingBatch.class.getName());
 
 	protected NonBatchingBatch(Object key,
 							SQLStatementLogger statementLogger,

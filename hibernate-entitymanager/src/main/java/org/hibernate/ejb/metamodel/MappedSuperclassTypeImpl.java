@@ -1,7 +1,5 @@
 package org.hibernate.ejb.metamodel;
-
 import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.Type;
 
 /**
  * @author Emmanuel Bernard

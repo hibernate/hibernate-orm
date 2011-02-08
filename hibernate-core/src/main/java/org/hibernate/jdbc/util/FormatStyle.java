@@ -24,6 +24,7 @@
  */
 package org.hibernate.jdbc.util;
 
+
 /**
  * Represents the the understood types or styles of formatting. 
  *

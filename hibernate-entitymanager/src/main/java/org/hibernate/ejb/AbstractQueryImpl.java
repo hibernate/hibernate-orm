@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
-
 import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
 import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
@@ -46,12 +45,12 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.Logger;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.hql.QueryExecutionRequestException;
+import org.jboss.logging.Logger;
 
 /**
  * Intended as a base class providing convenience in implementing both {@link javax.persistence.Query} and
@@ -64,7 +63,8 @@ import org.hibernate.hql.QueryExecutionRequestException;
  */
 public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, AbstractQueryImpl.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
+                                                                           AbstractQueryImpl.class.getName());
 
 	private final HibernateEntityManagerImplementor entityManager;
 

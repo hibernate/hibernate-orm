@@ -21,7 +21,6 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.annotations.idclass.xml;
-
 import java.io.Serializable;
 
 /**

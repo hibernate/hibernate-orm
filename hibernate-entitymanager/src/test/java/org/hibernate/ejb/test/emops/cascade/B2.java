@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.emops.cascade;
-
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;

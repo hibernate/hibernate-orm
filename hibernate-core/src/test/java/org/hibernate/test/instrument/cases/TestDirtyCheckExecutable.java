@@ -1,13 +1,10 @@
 package org.hibernate.test.instrument.cases;
-
+import java.util.Iterator;
+import java.util.List;
+import junit.framework.Assert;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.instrument.domain.Folder;
-
-import java.util.List;
-import java.util.Iterator;
-
-import junit.framework.Assert;
 
 /**
  * @author Steve Ebersole

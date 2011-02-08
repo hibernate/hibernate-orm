@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.profile;
 
+
 /**
  * Models an individual fetch within a profile.
  *

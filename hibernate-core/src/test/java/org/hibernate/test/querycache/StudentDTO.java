@@ -4,6 +4,7 @@
  */
 package org.hibernate.test.querycache;
 
+
 /**
  * @author max
  *

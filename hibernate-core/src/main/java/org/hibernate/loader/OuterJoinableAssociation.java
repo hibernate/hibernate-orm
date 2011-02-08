@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
-
 import java.util.List;
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.engine.JoinHelper;
 import org.hibernate.engine.SessionFactoryImplementor;

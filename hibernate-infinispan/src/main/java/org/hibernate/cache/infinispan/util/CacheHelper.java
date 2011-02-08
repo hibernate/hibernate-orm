@@ -22,13 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.infinispan.util;
-
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Set;
-
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 

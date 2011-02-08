@@ -23,17 +23,17 @@
  *
  */
 package org.hibernate.bytecode.cglib;
-
 import java.lang.reflect.Modifier;
 import net.sf.cglib.beans.BulkBean;
 import net.sf.cglib.beans.BulkBeanException;
 import net.sf.cglib.reflect.FastClass;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Bytecode provider implementation for CGLIB.
@@ -45,7 +45,7 @@ import org.hibernate.util.StringHelper;
 @Deprecated
 public class BytecodeProviderImpl implements BytecodeProvider {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class, Logger.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BytecodeProviderImpl.class.getName());
 
     public BytecodeProviderImpl() {
         LOG.deprecated();
@@ -82,11 +82,15 @@ public class BytecodeProviderImpl implements BytecodeProvider {
             if (LOG.isDebugEnabled()) {
                 int index = 0;
                 if (t instanceof BulkBeanException) index = ((BulkBeanException)t).getIndex();
-                if (index >= 0) LOG.debug("Reflection optimizer disabled for: " + clazz.getName() + " ["
-                                          + StringHelper.unqualify(t.getClass().getName()) + ": " + t.getMessage() + " (property "
-                                          + setterNames[index] + ")");
-                else LOG.debug("Reflection optimizer disabled for: " + clazz.getName() + " ["
-                               + StringHelper.unqualify(t.getClass().getName()) + ": " + t.getMessage());
+                if (index >= 0) LOG.debugf("Reflection optimizer disabled for: %s [%s: %s (property %s)",
+                                           clazz.getName(),
+                                           StringHelper.unqualify(t.getClass().getName()),
+                                           t.getMessage(),
+                                           setterNames[index]);
+                else LOG.debugf("Reflection optimizer disabled for: %s [%s: %s",
+                                clazz.getName(),
+                                StringHelper.unqualify(t.getClass().getName()),
+                                t.getMessage());
             }
         }
 

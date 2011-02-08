@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.indexcoll;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.Column;

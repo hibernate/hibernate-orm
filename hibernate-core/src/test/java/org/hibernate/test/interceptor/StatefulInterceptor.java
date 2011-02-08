@@ -1,11 +1,9 @@
 //$Id: StatefulInterceptor.java 7701 2005-07-30 05:07:01Z oneovthafew $
 package org.hibernate.test.interceptor;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;
 import org.hibernate.type.Type;

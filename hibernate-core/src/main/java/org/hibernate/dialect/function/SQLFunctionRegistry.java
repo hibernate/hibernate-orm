@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
-
 import java.util.HashMap;
 import java.util.Map;
-
 import org.hibernate.dialect.Dialect;
 
 public class SQLFunctionRegistry {

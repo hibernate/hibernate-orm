@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.hql;
-
-import org.hibernate.engine.SessionFactoryImplementor;
-
 import java.util.Map;
+import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * Facade for generation of {@link QueryTranslator} and {@link FilterTranslator} instances.

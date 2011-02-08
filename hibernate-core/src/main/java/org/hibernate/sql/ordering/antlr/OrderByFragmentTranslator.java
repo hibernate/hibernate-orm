@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
-
 import java.io.StringReader;
 import org.hibernate.HibernateException;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.hql.ast.util.ASTPrinter;
+import org.jboss.logging.Logger;
 
 /**
  * A translator which coordinates translation of an <tt>order-by</tt> mapping.
@@ -36,8 +36,8 @@ import org.hibernate.hql.ast.util.ASTPrinter;
  */
 public class OrderByFragmentTranslator {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                OrderByFragmentTranslator.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       OrderByFragmentTranslator.class.getName());
 
 	public final TranslationContext context;
 

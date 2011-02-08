@@ -23,10 +23,8 @@
  *
  */
 package org.hibernate.event;
-
-import org.hibernate.HibernateException;
-
 import java.io.Serializable;
+import org.hibernate.HibernateException;
 
 /**
  * Defines the contract for handling of load events generated from a session.

@@ -1,10 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations;
-
-/**
- * @author Emmanuel Bernard
- */
-
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

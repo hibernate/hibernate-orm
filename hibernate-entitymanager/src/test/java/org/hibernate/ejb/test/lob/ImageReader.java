@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.ejb.test.lob;
-
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;

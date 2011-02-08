@@ -1,6 +1,5 @@
 //$Id$
 package org.hibernate.test.annotations.onetoone;
-
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 

@@ -23,17 +23,17 @@
  *
  */
 package org.hibernate.exception;
-
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
-import org.hibernate.Logger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A factory for building SQLExceptionConverter instances.
@@ -42,8 +42,8 @@ import org.hibernate.util.StringHelper;
  */
 public class SQLExceptionConverterFactory {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                SQLExceptionConverterFactory.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       SQLExceptionConverterFactory.class.getName());
 
 	private SQLExceptionConverterFactory() {
 		// Private constructor - stops checkstyle from complaining.

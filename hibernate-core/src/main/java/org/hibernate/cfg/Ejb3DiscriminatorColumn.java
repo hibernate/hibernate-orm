@@ -22,10 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
 

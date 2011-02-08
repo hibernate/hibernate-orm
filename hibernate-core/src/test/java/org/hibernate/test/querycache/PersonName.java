@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.querycache;
 
+
 /**
  * @author Gail Badner
  */

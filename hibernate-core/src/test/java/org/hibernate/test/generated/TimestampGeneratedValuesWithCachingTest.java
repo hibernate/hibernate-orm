@@ -1,14 +1,12 @@
 // $Id: TimestampGeneratedValuesWithCachingTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.generated;
-
 import junit.framework.Test;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.Sybase11Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseAnywhereDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**

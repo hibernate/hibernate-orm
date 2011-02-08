@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.queryplan;
 
+
 /**
  * Non-leaf subclass
  *

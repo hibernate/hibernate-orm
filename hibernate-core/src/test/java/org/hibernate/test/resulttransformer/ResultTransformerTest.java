@@ -26,9 +26,7 @@
  */
 
 package org.hibernate.test.resulttransformer;
-
 import java.util.List;
-
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;

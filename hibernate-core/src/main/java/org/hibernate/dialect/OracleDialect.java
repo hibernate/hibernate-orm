@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-
 import java.sql.Types;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.OracleJoinFragment;
+import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect for Oracle, compatible with Oracle 8.
@@ -39,8 +39,7 @@ import org.hibernate.sql.OracleJoinFragment;
 @Deprecated
 public class OracleDialect extends Oracle9Dialect {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                OracleDialect.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, OracleDialect.class.getName());
 
 	public OracleDialect() {
 		super();

@@ -1,9 +1,8 @@
 // $Id: AbstractGeneratedPropertyTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.generated;
-
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.Hibernate;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 
 /**

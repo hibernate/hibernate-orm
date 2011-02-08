@@ -1,6 +1,7 @@
 //$Id: Person.java 6298 2005-04-03 03:56:22Z oneovthafew $
 package org.hibernate.test.unconstrained;
 
+
 /**
  * @author Gavin King
  */

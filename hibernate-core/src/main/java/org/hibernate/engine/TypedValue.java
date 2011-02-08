@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.engine;
-
 import java.io.Serializable;
-
 import org.hibernate.EntityMode;
 import org.hibernate.type.Type;
 

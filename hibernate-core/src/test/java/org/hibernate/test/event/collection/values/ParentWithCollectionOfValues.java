@@ -20,12 +20,9 @@
  * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection.values;
-
-import java.util.Collection;
-
+import org.hibernate.test.event.collection.AbstractParentWithCollection;
 import org.hibernate.test.event.collection.Child;
 import org.hibernate.test.event.collection.ChildValue;
-import org.hibernate.test.event.collection.AbstractParentWithCollection;
 
 /**
  *

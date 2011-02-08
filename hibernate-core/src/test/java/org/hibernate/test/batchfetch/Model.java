@@ -1,6 +1,7 @@
 //$Id: Model.java 4460 2004-08-29 12:04:14Z oneovthafew $
 package org.hibernate.test.batchfetch;
 
+
 /**
  * @author Gavin King
  */

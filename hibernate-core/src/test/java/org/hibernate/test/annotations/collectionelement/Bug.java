@@ -1,5 +1,4 @@
 package org.hibernate.test.annotations.collectionelement;
-
 import javax.persistence.Embeddable;
 
 @Embeddable

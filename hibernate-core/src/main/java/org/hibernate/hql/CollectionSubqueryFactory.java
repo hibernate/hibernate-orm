@@ -23,14 +23,12 @@
  *
  */
 package org.hibernate.hql;
-
-import org.hibernate.engine.JoinSequence;
-import org.hibernate.sql.JoinFragment;
+import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.engine.JoinSequence;
+import org.hibernate.sql.JoinFragment;
 import org.hibernate.util.StringHelper;
-
-import java.util.Map;
 
 /**
  * Provides the SQL for collection subqueries.

@@ -1,5 +1,6 @@
 package org.hibernate.test.legacy;
 
+
 /**
  * @author hbm2java
  */

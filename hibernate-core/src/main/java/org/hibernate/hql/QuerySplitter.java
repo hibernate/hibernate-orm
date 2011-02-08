@@ -23,15 +23,15 @@
  *
  */
 package org.hibernate.hql;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import org.hibernate.Logger;
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.util.StringHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Provides query splitting methods, which were originally in QueryTranslator.
@@ -42,8 +42,7 @@ import org.hibernate.util.StringHelper;
  */
 public final class QuerySplitter {
 
-    private static final Logger LOG = org.jboss.logging.Logger.getMessageLogger(Logger.class,
-                                                                                QuerySplitter.class.getPackage().getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, QuerySplitter.class.getName());
 
 	private static final Set BEFORE_CLASS_TOKENS = new HashSet();
 	private static final Set NOT_AFTER_CLASS_TOKENS = new HashSet();

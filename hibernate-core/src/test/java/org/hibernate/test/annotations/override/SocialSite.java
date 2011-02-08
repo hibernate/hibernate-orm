@@ -1,9 +1,8 @@
 package org.hibernate.test.annotations.override;
-
+import java.util.Collection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
-import java.util.Collection;
 
 @Entity
 public class SocialSite {

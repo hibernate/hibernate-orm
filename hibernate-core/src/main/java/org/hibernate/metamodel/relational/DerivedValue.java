@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 /**
  * Models a value expression.  It is the result of a <tt>formula</tt> mapping.
  *

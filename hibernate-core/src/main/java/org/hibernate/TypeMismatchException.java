@@ -24,6 +24,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Used when a user provided type does not match the expected one
  *

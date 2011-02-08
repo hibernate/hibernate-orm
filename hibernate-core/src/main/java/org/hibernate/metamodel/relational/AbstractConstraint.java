@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Support for writing {@link Constraint} implementations

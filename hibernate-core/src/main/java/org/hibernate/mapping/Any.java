@@ -22,13 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
-
 import java.util.Map;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.type.MetaType;
-import org.hibernate.type.AnyType;
 import org.hibernate.type.Type;
 
 /**

@@ -24,6 +24,7 @@
  */
 package org.hibernate.criterion;
 
+
 /**
  * Factory class for criterion instances that represent expressions
  * involving subqueries.

@@ -1,6 +1,5 @@
 //$Id: MonetoryAmount.java 6234 2005-03-29 03:07:30Z oneovthafew $
 package org.hibernate.test.cut;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Currency;

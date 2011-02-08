@@ -23,9 +23,7 @@
  *
  */
 package org.hibernate.test.cascade.circle;
-
 import junit.framework.Test;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;

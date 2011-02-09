@@ -108,8 +108,8 @@ subprojects { subProject ->
         // appropriately inject the common dependencies into each sub-project
         dependencies {
 			compile fileTree(dir: 'lib', includes: ['*.jar'])
-		    // compile(libraries.logging)
-		    compile(libraries.logging_tools)
+		    // compile( libraries.logging )
+		    compile( libraries.logging_tools )
             compile( libraries.slf4j_api )
             testCompile( libraries.junit )
             testRuntime( libraries.slf4j_simple )
@@ -121,10 +121,10 @@ subprojects { subProject ->
             deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
         }
 
-		task compileAnnotations(type: Compile) {
-		    classpath = sourceSets.main.compileClasspath
-		    source = sourceSets.main.java.srcDirs
-		    destinationDir = sourceSets.main.classesDir
+		task compileJavaAnnotations(type: Compile) {
+		    classpath = compileJava.classpath
+		    source = compileJava.source
+		    destinationDir = compileJava.destinationDir
 		    options.define(compilerArgs: ['-proc:only'])
 		}
 
@@ -132,7 +132,20 @@ subprojects { subProject ->
     		options.define(compilerArgs: ['-proc:none'])
 		}
 		
-		compileJava.dependsOn compileAnnotations
+		compileJava.dependsOn compileJavaAnnotations
+
+		task compileTestJavaAnnotations(type: Compile) {
+		    classpath = compileTestJava.classpath
+		    source = compileTestJava.source
+		    destinationDir = compileTestJava.destinationDir
+		    options.define(compilerArgs: ['-proc:only'])
+		}
+
+		compileTestJava {
+    		options.define(compilerArgs: ['-proc:none'])
+		}
+		
+		compileTestJava.dependsOn compileTestJavaAnnotations
 
         sourceSets {
             main {

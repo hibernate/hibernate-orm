@@ -233,4 +233,8 @@ public String getForUpdateString() {
     public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
+	
+	public boolean supportsUnboundedLobLocatorMaterialization() {
+		return false;
+	}
 }

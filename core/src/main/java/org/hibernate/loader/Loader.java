@@ -332,7 +332,8 @@ public abstract class Loader {
 				hydratedObjects, 
 				resultSet, 
 				session, 
-				queryParameters.isReadOnly( session )
+				queryParameters.isReadOnly( session ),
+				result
 			);
 		session.getPersistenceContext().initializeNonLazyCollections();
 		return result;
@@ -383,7 +384,8 @@ public abstract class Loader {
 				hydratedObjects, 
 				resultSet, 
 				session, 
-				queryParameters.isReadOnly( session )
+				queryParameters.isReadOnly( session ),
+				result
 			);
 		session.getPersistenceContext().initializeNonLazyCollections();
 		return result;
@@ -939,12 +941,20 @@ public abstract class Loader {
 			return null;
 		}
 	}
-
 	private void initializeEntitiesAndCollections(
 			final List hydratedObjects,
 			final Object resultSetId,
 			final SessionImplementor session,
-			final boolean readOnly) 
+			final boolean readOnly)
+	throws HibernateException {
+		initializeEntitiesAndCollections( hydratedObjects, resultSetId, session, readOnly, null );
+	}
+	private void initializeEntitiesAndCollections(
+			final List hydratedObjects,
+			final Object resultSetId,
+			final SessionImplementor session,
+			final boolean readOnly,
+			final Object loadedEntity)
 	throws HibernateException {
 		
 		final CollectionPersister[] collectionPersisters = getCollectionPersisters();
@@ -956,7 +966,7 @@ public abstract class Loader {
 					//during loading
 					//TODO: or we could do this polymorphically, and have two
 					//      different operations implemented differently for arrays
-					endCollectionLoad( resultSetId, session, collectionPersisters[i] );
+					endCollectionLoad( resultSetId, session, collectionPersisters[i], loadedEntity );
 				}
 			}
 		}
@@ -990,7 +1000,7 @@ public abstract class Loader {
 					//the entities, since we might call hashCode() on the elements
 					//TODO: or we could do this polymorphically, and have two
 					//      different operations implemented differently for arrays
-					endCollectionLoad( resultSetId, session, collectionPersisters[i] );
+					endCollectionLoad( resultSetId, session, collectionPersisters[i], loadedEntity );
 				}
 			}
 		}
@@ -1000,12 +1010,13 @@ public abstract class Loader {
 	private void endCollectionLoad(
 			final Object resultSetId, 
 			final SessionImplementor session, 
-			final CollectionPersister collectionPersister) {
+			final CollectionPersister collectionPersister,
+			final Object loadedEntity) {
 		//this is a query and we are loading multiple instances of the same collection role
 		session.getPersistenceContext()
 				.getLoadContexts()
 				.getCollectionLoadContext( ( ResultSet ) resultSetId )
-				.endLoadingCollections( collectionPersister );
+				.endLoadingCollections( collectionPersister, loadedEntity );
 	}
 
 	/**

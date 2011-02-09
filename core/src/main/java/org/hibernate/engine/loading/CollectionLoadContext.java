@@ -64,7 +64,7 @@ public class CollectionLoadContext {
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;
-	private Set localLoadingCollectionKeys = new HashSet();
+	private Set<CollectionKey> localLoadingCollectionKeys = new HashSet<CollectionKey>();
 
 	/**
 	 * Creates a collection load context for the given result set.
@@ -174,38 +174,40 @@ public class CollectionLoadContext {
 	 *
 	 * @param persister The persister for which to complete loading.
 	 */
-	public void endLoadingCollections(CollectionPersister persister) {
+	public void endLoadingCollections(CollectionPersister persister, Object loadedEntity) {
 		SessionImplementor session = getLoadContext().getPersistenceContext().getSession();
 		if ( !loadContexts.hasLoadingCollectionEntries()
 				&& localLoadingCollectionKeys.isEmpty() ) {
 			return;
 		}
-
 		// in an effort to avoid concurrent-modification-exceptions (from
 		// potential recursive calls back through here as a result of the
 		// eventual call to PersistentCollection#endRead), we scan the
 		// internal loadingCollections map for matches and store those matches
 		// in a temp collection.  the temp collection is then used to "drive"
 		// the #endRead processing.
-		List matches = null;
-		Iterator iter = localLoadingCollectionKeys.iterator();
+		List<LoadingCollectionEntry> matches = null;
+		Iterator<CollectionKey> iter = localLoadingCollectionKeys.iterator();
 		while ( iter.hasNext() ) {
-			final CollectionKey collectionKey = (CollectionKey) iter.next();
+			final CollectionKey collectionKey = iter.next();
 			final LoadingCollectionEntry lce = loadContexts.locateLoadingCollectionEntry( collectionKey );
 			if ( lce == null) {
 				log.warn( "In CollectionLoadContext#endLoadingCollections, localLoadingCollectionKeys contained [" + collectionKey + "], but no LoadingCollectionEntry was found in loadContexts" );
 			}
 			else if ( lce.getResultSet() == resultSet && lce.getPersister() == persister ) {
-				if ( matches == null ) {
-					matches = new ArrayList();
-				}
-				matches.add( lce );
 				if ( lce.getCollection().getOwner() == null ) {
 					session.getPersistenceContext().addUnownedCollection(
 							new CollectionKey( persister, lce.getKey(), session.getEntityMode() ),
 							lce.getCollection()
 					);
 				}
+				else if ( loadedEntity != null && lce.getCollection().getOwner() != loadedEntity ) {
+					continue;
+				}
+				if ( matches == null ) {
+					matches = new ArrayList<LoadingCollectionEntry>();
+				}
+				matches.add( lce );
 				if ( log.isTraceEnabled() ) {
 					log.trace( "removing collection load entry [" + lce + "]" );
 				}
@@ -215,6 +217,7 @@ public class CollectionLoadContext {
 				iter.remove();
 			}
 		}
+
 
 		endLoadingCollections( persister, matches );
 		if ( localLoadingCollectionKeys.isEmpty() ) {
@@ -228,7 +231,7 @@ public class CollectionLoadContext {
 		}
 	}
 
-	private void endLoadingCollections(CollectionPersister persister, List matchedCollectionEntries) {
+	private void endLoadingCollections(CollectionPersister persister, List<LoadingCollectionEntry> matchedCollectionEntries) {
 		if ( matchedCollectionEntries == null ) {
 			if ( log.isDebugEnabled() ) {
 				log.debug( "no collections were found in result set for role: " + persister.getRole() );
@@ -242,7 +245,7 @@ public class CollectionLoadContext {
 		}
 
 		for ( int i = 0; i < count; i++ ) {
-			LoadingCollectionEntry lce = ( LoadingCollectionEntry ) matchedCollectionEntries.get( i );
+			LoadingCollectionEntry lce = matchedCollectionEntries.get( i );
 			endLoadingCollection( lce, persister );
 		}
 
@@ -303,7 +306,7 @@ public class CollectionLoadContext {
 			log.debug( "Caching collection: " + MessageHelper.collectionInfoString( persister, lce.getKey(), factory ) );
 		}
 
-		if ( !session.getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( session ) ) {
+		if ( !session.getLoadQueryInfluencers().getEnabledFilters().isEmpty() && persister.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
 			log.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the CacheKey to differentiate filtered collections from non-filtered;

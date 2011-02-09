@@ -107,8 +107,9 @@ subprojects { subProject ->
 
         // appropriately inject the common dependencies into each sub-project
         dependencies {
-            // compile(libraries.logging)
-            // compile(libraries.logging_tools)
+			compile fileTree(dir: 'lib', includes: ['*.jar'])
+		    // compile(libraries.logging)
+		    compile(libraries.logging_tools)
             compile( libraries.slf4j_api )
             testCompile( libraries.junit )
             testRuntime( libraries.slf4j_simple )
@@ -119,6 +120,19 @@ subprojects { subProject ->
             testRuntime( libraries.h2 )
             deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
         }
+
+		task compileAnnotations(type: Compile) {
+		    classpath = sourceSets.main.compileClasspath
+		    source = sourceSets.main.java.srcDirs
+		    destinationDir = sourceSets.main.classesDir
+		    options.define(compilerArgs: ['-proc:only'])
+		}
+
+		compileJava {
+    		options.define(compilerArgs: ['-proc:none'])
+		}
+		
+		compileJava.dependsOn compileAnnotations
 
         sourceSets {
             main {
@@ -136,7 +150,7 @@ subprojects { subProject ->
 
         test {
             systemProperties['hibernate.test.validatefailureexpected'] = true
-            systemProperties['jboss.i18n.generate-proxies'] = true
+            // systemProperties['jboss.i18n.generate-proxies'] = true
             maxHeapSize = "1024m"
         }
 

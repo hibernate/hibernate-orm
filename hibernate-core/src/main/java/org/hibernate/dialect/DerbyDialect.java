@@ -221,4 +221,8 @@ public class DerbyDialect extends DB2Dialect {
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
+	
+	public boolean supportsUnboundedLobLocatorMaterialization() {
+		return false;
+	}
 }

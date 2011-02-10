@@ -193,6 +193,8 @@ subprojects { subProject ->
             }
         }
 
+        subProject.basePomConfig = pomConfig
+
         configure(install.repositories.mavenInstaller) {
             pom.project pomConfig
         }
@@ -202,8 +204,8 @@ subprojects { subProject ->
                 name = 'jbossDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-                repository(url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
-                snapshotRepository(url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+                repository(id: "jboss-releases-repository", url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
+                snapshotRepository(id: "jboss-snapshots-repository", url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
             }
         }
 

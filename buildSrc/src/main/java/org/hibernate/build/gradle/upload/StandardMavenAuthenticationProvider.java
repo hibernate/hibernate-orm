@@ -29,7 +29,6 @@ import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
-import org.gradle.api.artifacts.maven.MavenDeployer;
 import org.xml.sax.InputSource;
 
 import org.slf4j.Logger;
@@ -56,10 +55,6 @@ public class StandardMavenAuthenticationProvider implements AuthenticationProvid
 
 	@Override
 	public Authentication determineAuthentication(RemoteRepository remoteRepository) {
-		if ( ! MavenDeployer.class.isInstance( remoteRepository  ) ) {
-			return null;
-		}
-
 		if ( repositoryAuthenticationMap == null ) {
 			loadRepositoryAuthenticationMap();
 		}
@@ -117,7 +112,6 @@ public class StandardMavenAuthenticationProvider implements AuthenticationProvid
 	private SAXReader buildSAXReader() {
 		SAXReader saxReader = new SAXReader();
 		saxReader.setMergeAdjacentText( true );
-		saxReader.setValidation( true );
 		return saxReader;
 	}
 

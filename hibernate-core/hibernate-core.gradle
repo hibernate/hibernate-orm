@@ -48,20 +48,54 @@ ideaModule {
     sourceDirs.add( file( '$buildDir/generated-src/antlr/main' ) )
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This entire section below is all about creating, installing and uploading the hibernate-testing artifacts.
+// This is obviously extremely verbose.  Check back once Gradle goes m2 for 1.0 to see about the MavenPublication
+// approach Adam talked about as a means to make this more succinct and natural.
+// todo : check back once Gradle goes m2 for 1.0 to see about the MavenPublication approach
+configurations {
+    testing
+}
+
 task testingJar(type: Jar, dependsOn: compileTestJava) {
     from sourceSets.test.classes
-    includes += "org/hibernate/testing/*"
+    includes += "org/hibernate/testing/**"
     baseName = 'hibernate-testing'
 }
 
 task testingSourcesJar(type: Jar, dependsOn: compileTestJava) {
     from sourceSets.test.allSource
-    includes += "org/hibernate/testing/*"
+    includes += "org/hibernate/testing/**"
     baseName = 'hibernate-testing'
     classifier = 'sources'
 }
 
 artifacts {
-  testing testingJar, testingSourcesJar
+    testing testingJar, testingSourcesJar
 }
 
+// ugh, lots of duplication with uploadArchives
+uploadTesting {
+    repositories.mavenDeployer {
+        name = 'jbossDeployer'
+        configuration = configurations.deployerJars
+        pom.project basePomConfig
+        pom.artifactId = 'hibernate-testing'
+        repository(id: "jboss-releases-repository", url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
+        snapshotRepository(id: "jboss-snapshots-repository", url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+    }
+}
+
+uploadArchives.dependsOn uploadTesting
+
+task installTesting(type:Upload, dependsOn: [testingJar,testingSourcesJar]) {
+    configuration = configurations.testing
+    repositories.mavenInstaller {
+        name = RepositoryHandler.DEFAULT_MAVEN_INSTALLER_NAME
+        pom.project basePomConfig
+        pom.artifactId = 'hibernate-testing'
+    }
+}
+
+install.dependsOn installTesting
+uploadTesting.dependsOn installTesting

@@ -73,7 +73,7 @@ public class TypeNames {
 	 * @return the default type name associated with specified key
 	 */
 	public String get(int typecode) throws MappingException {
-		String result = defaults.get( new Integer(typecode) );
+		String result = defaults.get( typecode );
 		if (result==null) throw new MappingException("No Dialect mapping for JDBC type: " + typecode);
 		return result;
 	}
@@ -88,7 +88,7 @@ public class TypeNames {
 	 * if available and the default type name otherwise
 	 */
 	public String get(int typecode, int size, int precision, int scale) throws MappingException {
-		Map<Integer, String> map = weighted.get( new Integer(typecode) );
+		Map<Integer, String> map = weighted.get( typecode );
 		if ( map!=null && map.size()>0 ) {
 			// iterate entries ordered by capacity to find first fit
 			for (Map.Entry<Integer, String> entry: map.entrySet()) {
@@ -111,10 +111,10 @@ public class TypeNames {
 	 * @param typecode the type key
 	 */
 	public void put(int typecode, int capacity, String value) {
-		Map<Integer, String> map = weighted.get( new Integer(typecode) );
+		Map<Integer, String> map = weighted.get( typecode );
 		if (map == null) {// add new ordered map
 			map = new TreeMap<Integer, String>();
-			weighted.put( new Integer(typecode), map );
+			weighted.put( typecode, map );
 		}
 		map.put(new Integer(capacity), value);
 	}
@@ -124,7 +124,7 @@ public class TypeNames {
 	 * @param typecode the type key
 	 */
 	public void put(int typecode, String value) {
-		defaults.put( new Integer(typecode), value );
+		defaults.put( typecode, value );
 	}
 }
 

@@ -1160,7 +1160,7 @@ public abstract class AbstractEntityPersister
 		return select.addCondition( rootTableKeyColumnNames, "=?" ).toStatementString();
 	}
 
-	protected boolean[] getPropertyUniqueness() {
+	public boolean[] getPropertyUniqueness() {
 		return propertyUniqueness;
 	}
 

@@ -81,11 +81,11 @@ public class RevisionInfoConfiguration {
 
         Element idProperty = MetadataTools.addNativelyGeneratedId(class_mapping, revisionInfoIdData.getName(),
                 revisionPropType);
-        MetadataTools.addColumn(idProperty, "REV", null, 0, 0, null);
+        MetadataTools.addColumn(idProperty, "REV", null, 0, 0, null, null, null);
 
         Element timestampProperty = MetadataTools.addProperty(class_mapping, revisionInfoTimestampData.getName(),
                 revisionInfoTimestampType.getName(), true, false);
-        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null);
+        MetadataTools.addColumn(timestampProperty, "REVTSTMP", null, 0, 0, null, null, null);
 
         return document;
     }
@@ -98,7 +98,7 @@ public class RevisionInfoConfiguration {
 
         if (revisionPropSqlType != null) {
             // Putting a fake name to make Hibernate happy. It will be replaced later anyway.
-            MetadataTools.addColumn(rev_rel_mapping, "*" , null, 0, 0, revisionPropSqlType);
+            MetadataTools.addColumn(rev_rel_mapping, "*" , null, 0, 0, revisionPropSqlType, null, null);
         }
 
         return rev_rel_mapping;

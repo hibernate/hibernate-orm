@@ -221,7 +221,10 @@ public class XmlMetaEntity implements MetaEntity {
         }
         else if (elem.asType() instanceof ExecutableType) {
             ExecutableType executableType = (ExecutableType) elem.asType();
-            type = (DeclaredType) executableType.getReturnType();
+            if (executableType.getReturnType() instanceof DeclaredType) {
+                DeclaredType declaredType = (DeclaredType) executableType.getReturnType();
+                type = declaredType;
+            }
         }
         return type;
     }

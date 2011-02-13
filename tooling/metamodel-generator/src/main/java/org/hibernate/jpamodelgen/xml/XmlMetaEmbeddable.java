@@ -43,7 +43,7 @@ public class XmlMetaEmbeddable extends XmlMetaEntity {
 
 	public List<MetaAttribute> getMembers() {
 		if ( !initialized ) {
-			context.logMessage( Diagnostic.Kind.OTHER, "Entity " + getQualifiedName() + "was lazily initialised." );
+			context.logMessage( Diagnostic.Kind.OTHER, "Entity " + getQualifiedName() + " was lazily initialised." );
 			init();
 			initialized = true;
 		}

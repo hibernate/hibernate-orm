@@ -28,6 +28,7 @@ import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
  * @author Hardy Ferentschik
@@ -37,6 +38,18 @@ public class XmlOnlyTest extends CompilationTest {
 	public void testMetaModelGeneratedForXmlConiguredEntity() {
 		assertMetamodelClassGeneratedFor( XmlOnly.class );
 	}
+
+    @Test
+    public void testMetaModelGeneratedForManyToManyFieldAccessWithoutTargetEntity() {
+        assertPresenceOfFieldInMetamodelFor(Course.class, "qualifiedTeachers", "Type should be inferred from field");
+        assertPresenceOfFieldInMetamodelFor(Teacher.class, "qualifiedFor", "Type should be inferred from field");
+    }
+
+    @Test
+    public void testMetaModelGeneratedForManyToManyPropertyAccessWithoutTargetEntity() {
+        assertPresenceOfFieldInMetamodelFor(Car.class, "tires", "Type should be inferred from field");
+        assertPresenceOfFieldInMetamodelFor(Tire.class, "car", "Type should be inferred from field");
+    }
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {

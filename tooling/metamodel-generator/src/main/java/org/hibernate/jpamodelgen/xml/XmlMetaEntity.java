@@ -27,8 +27,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.*;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.AccessTypeInformation;
@@ -191,29 +190,57 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	private String[] getCollectionTypes(String propertyName, String explicitTargetEntity, String explicitMapKeyClass, ElementKind expectedElementKind) {
-		String types[] = new String[3];
 		for ( Element elem : element.getEnclosedElements() ) {
-			if ( expectedElementKind.equals( elem.getKind() ) ) {
+			if ( !expectedElementKind.equals( elem.getKind() ) ) {
 				continue;
 			}
 
-			if ( !elem.getSimpleName().toString().equals( propertyName ) ) {
-				continue;
-			}
+			if ( ElementKind.METHOD.equals(elem.getKind())) {
+                if (!propertyName.equals(determinePropertyName(elem))) {
+                    continue;
+                }
+            }
+            else if(!elem.getSimpleName().toString().equals( propertyName )) {
+                continue;
+            }
 
-			DeclaredType type = ( ( DeclaredType ) elem.asType() );
-			determineTargetType( type, propertyName, explicitTargetEntity, types );
-			determineCollectionType( type, types );
-			if ( types[1].equals( "javax.persistence.metamodel.MapAttribute" ) ) {
-				determineMapType( type, explicitMapKeyClass, types );
-			}
-			return types;
-
+            DeclaredType type = determineDeclaredType(elem);
+            if (type != null) {
+                String types[] = new String[3];
+                determineTypes(propertyName, explicitTargetEntity, explicitMapKeyClass, type, types);
+                return types;
+            }
 		}
 		return null;
 	}
 
-	private void determineMapType(DeclaredType type, String explicitMapKeyClass, String[] types) {
+    private DeclaredType determineDeclaredType(Element elem) {
+        DeclaredType type = null;
+        if (elem.asType() instanceof DeclaredType) {
+            type = ( ( DeclaredType ) elem.asType() );
+        }
+        else if (elem.asType() instanceof ExecutableType) {
+            ExecutableType executableType = (ExecutableType) elem.asType();
+            type = (DeclaredType) executableType.getReturnType();
+        }
+        return type;
+    }
+
+    /** Convert method name to property name: 'getSomething' to 'something'. */
+    private String determinePropertyName(Element elem) {
+        return elem.getSimpleName().subSequence(3,4).toString().toLowerCase()
+                + elem.getSimpleName().subSequence(4,elem.getSimpleName().length());
+    }
+
+    private void determineTypes(String propertyName, String explicitTargetEntity, String explicitMapKeyClass, DeclaredType type, String types[]) {
+        determineTargetType( type, propertyName, explicitTargetEntity, types );
+        determineCollectionType( type, types );
+        if ( types[1].equals( "javax.persistence.metamodel.MapAttribute" ) ) {
+            determineMapType( type, explicitMapKeyClass, types );
+        }
+    }
+
+    private void determineMapType(DeclaredType type, String explicitMapKeyClass, String[] types) {
 		if ( explicitMapKeyClass != null ) {
 			types[2] = explicitMapKeyClass;
 		}
@@ -539,7 +566,8 @@ public class XmlMetaEntity implements MetaEntity {
 	private ElementKind getElementKind(org.hibernate.jpamodelgen.xml.jaxb.AccessType accessType) {
 		// if no explicit access type was specified in xml we use the entity access type
 		if ( accessType == null ) {
-			return TypeUtils.getElementKindForAccessType( accessTypeInfo.getDefaultAccessType() );
+//            return TypeUtils.getElementKindForAccessType( accessTypeInfo.getDefaultAccessType());
+			return TypeUtils.getElementKindForAccessType( accessTypeInfo.getAccessType() );
 		}
 
 		if ( org.hibernate.jpamodelgen.xml.jaxb.AccessType.FIELD.equals( accessType ) ) {

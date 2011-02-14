@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -30,6 +31,7 @@ import org.dom4j.Document;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.persister.PersisterClassProvider;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate
@@ -233,6 +235,12 @@ public class AnnotationConfiguration extends Configuration {
 	@Override
 	public AnnotationConfiguration setNamingStrategy(NamingStrategy namingStrategy) {
 		super.setNamingStrategy( namingStrategy );
+		return this;
+	}
+
+	@Override
+	public AnnotationConfiguration setPersisterClassProvider(PersisterClassProvider persisterClassProvider) {
+		super.setPersisterClassProvider( persisterClassProvider );
 		return this;
 	}
 

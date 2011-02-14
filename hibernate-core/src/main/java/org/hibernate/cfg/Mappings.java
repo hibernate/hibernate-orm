@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +50,7 @@ import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
+import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -86,6 +88,16 @@ public interface Mappings {
 	 * @param namingStrategy The naming strategy to use.
 	 */
 	public void setNamingStrategy(NamingStrategy namingStrategy);
+
+	/**
+	 * Get the current persister class provider implementation
+	 */
+	public PersisterClassProvider getPersisterClassProvider();
+
+	/**
+	 * Set the current persister class provider implementation
+	 */
+	public void setPersisterClassProvider(PersisterClassProvider persisterClassProvider);
 
 	/**
 	 * Returns the currently bound default schema name.
@@ -686,7 +698,8 @@ public interface Mappings {
 	/**
 	 * @deprecated Use {@link #getUniqueConstraintHoldersByTable} instead
 	 */
-	@SuppressWarnings({ "JavaDoc" })
+	@Deprecated
+    @SuppressWarnings({ "JavaDoc" })
 	public Map<Table, List<String[]>> getTableUniqueConstraints();
 
 	public Map<Table, List<UniqueConstraintHolder>> getUniqueConstraintHoldersByTable();
@@ -694,7 +707,8 @@ public interface Mappings {
 	/**
 	 * @deprecated Use {@link #addUniqueConstraintHolders} instead
 	 */
-	@SuppressWarnings({ "JavaDoc" })
+	@Deprecated
+    @SuppressWarnings({ "JavaDoc" })
 	public void addUniqueConstraints(Table table, List uniqueConstraints);
 
 	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders);

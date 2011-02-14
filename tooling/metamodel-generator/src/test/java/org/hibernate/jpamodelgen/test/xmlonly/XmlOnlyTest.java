@@ -38,24 +38,24 @@ public class XmlOnlyTest extends CompilationTest {
 		assertMetamodelClassGeneratedFor( XmlOnly.class );
 	}
 
-    @Test
-    public void testMetaModelGeneratedForManyToManyFieldAccessWithoutTargetEntity() {
-        assertPresenceOfFieldInMetamodelFor(Course.class, "qualifiedTeachers", "Type should be inferred from field");
-        assertPresenceOfFieldInMetamodelFor(Teacher.class, "qualifiedFor", "Type should be inferred from field");
-    }
+	@Test
+	public void testMetaModelGeneratedForManyToManyFieldAccessWithoutTargetEntity() {
+		assertPresenceOfFieldInMetamodelFor( Course.class, "qualifiedTeachers", "Type should be inferred from field" );
+		assertPresenceOfFieldInMetamodelFor( Teacher.class, "qualifiedFor", "Type should be inferred from field" );
+	}
 
-    @Test
-    public void testMetaModelGeneratedForOneToManyPropertyAccessWithoutTargetEntity() {
-        assertPresenceOfFieldInMetamodelFor(Car.class, "tires", "Type should be inferred from field");
-        assertPresenceOfFieldInMetamodelFor(Tire.class, "car", "Type should be inferred from field");
-    }
+	@Test
+	public void testMetaModelGeneratedForOneToManyPropertyAccessWithoutTargetEntity() {
+		assertPresenceOfFieldInMetamodelFor( Car.class, "tires", "Type should be inferred from field" );
+		assertPresenceOfFieldInMetamodelFor( Tire.class, "car", "Type should be inferred from field" );
+	}
 
-    @Test
-    public void testMetaModelGeneratedForEmbeddable() {
-        assertPresenceOfFieldInMetamodelFor(Option.class, "period", "Embedded expected");
-        assertPresenceOfFieldInMetamodelFor(Period.class, "start", "Embedded expected");
-        assertPresenceOfFieldInMetamodelFor(Period.class, "end", "Embedded expected");
-    }
+	@Test
+	public void testMetaModelGeneratedForEmbeddable() {
+		assertPresenceOfFieldInMetamodelFor( Option.class, "period", "Embedded expected" );
+		assertPresenceOfFieldInMetamodelFor( Period.class, "start", "Embedded expected" );
+		assertPresenceOfFieldInMetamodelFor( Period.class, "end", "Embedded expected" );
+	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {

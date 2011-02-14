@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.transaction;
 
@@ -80,9 +79,10 @@ public class WebSphereExtendedJTATransactionLookup implements TransactionManager
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public Object getTransactionIdentifier(Transaction transaction) {
 		// WebSphere, however, is not a sane JEE/JTA container...
-		return new Integer( transaction.hashCode() );
+		return Integer.valueOf( transaction.hashCode() );
 	}
 
 	public static class TransactionManagerAdapter implements TransactionManager {
@@ -101,8 +101,7 @@ public class WebSphereExtendedJTATransactionLookup implements TransactionManager
 						"registerSynchronizationCallbackForCurrentTran",
 						new Class[] { synchronizationCallbackClass }
 				);
-				getLocalIdMethod = extendedJTATransactionClass.getMethod( "getLocalId", null );
-
+				getLocalIdMethod = extendedJTATransactionClass.getMethod( "getLocalId", (Class[]) null );
 			}
 			catch ( ClassNotFoundException cnfe ) {
 				throw new HibernateException( cnfe );
@@ -223,10 +222,7 @@ public class WebSphereExtendedJTATransactionLookup implements TransactionManager
 					);
 
 				try {
-					registerSynchronizationMethod.invoke(
-							extendedJTATransaction,
-							new Object[] { synchronizationCallback }
-						);
+					registerSynchronizationMethod.invoke( extendedJTATransaction, synchronizationCallback );
 				}
 				catch (Exception e) {
 					throw new HibernateException(e);
@@ -250,14 +246,9 @@ public class WebSphereExtendedJTATransactionLookup implements TransactionManager
 				return getLocalId().equals( that.getLocalId() );
 			}
 
-			/**
-			 * Getter for property 'localId'.
-			 *
-			 * @return Value for property 'localId'.
-			 */
 			private Object getLocalId() throws HibernateException {
 				try {
-					return getLocalIdMethod.invoke( extendedJTATransaction, null );
+					return getLocalIdMethod.invoke( extendedJTATransaction, (Object[]) null );
 				}
 				catch ( Exception e ) {
 					throw new HibernateException( e );

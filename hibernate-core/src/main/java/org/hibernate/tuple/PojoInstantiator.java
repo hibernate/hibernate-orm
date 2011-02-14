@@ -108,7 +108,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 		}
 		else {
 			try {
-				return constructor.newInstance( null );
+				return constructor.newInstance( (Object[]) null );
 			}
 			catch ( Exception e ) {
 				throw new InstantiationException( "Could not instantiate entity: ", mappedClass, e );

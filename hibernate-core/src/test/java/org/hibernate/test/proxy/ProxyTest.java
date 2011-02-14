@@ -62,7 +62,7 @@ public class ProxyTest extends FunctionalTestCase {
 		assertFalse( Hibernate.isInitialized(dp) );
 		
 		try {
-			dp.getClass().getDeclaredMethod("finalize",null);
+			dp.getClass().getDeclaredMethod( "finalize", (Class[]) null );
 			fail();
 			
 		} 

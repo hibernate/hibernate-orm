@@ -1014,67 +1014,29 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				}
 			}
 		}
-		if ( preparedProperties.containsKey( AvailableSettings.INTERCEPTOR )
-				&& ( cfg.getInterceptor() == null
-				|| cfg.getInterceptor().equals( defaultInterceptor ) ) ) {
-			//cfg.setInterceptor has precedence over configuration file
-			String interceptorName = preparedProperties.getProperty( AvailableSettings.INTERCEPTOR );
-			try {
-				Class interceptor = classForName( interceptorName );
-				cfg.setInterceptor( (Interceptor) interceptor.newInstance() );
-			}
-			catch (ClassNotFoundException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Unable to find interceptor class: " + interceptorName, e
-				);
-			}
-			catch (IllegalAccessException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Unable to access interceptor class: " + interceptorName, e
-				);
-			}
-			catch (InstantiationException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Unable to instanciate interceptor class: " + interceptorName, e
-				);
-			}
-			catch (ClassCastException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Interceptor class does not implement Interceptor interface: " + interceptorName, e
-				);
-			}
+		final Interceptor interceptor = instantiateCustomClassFromConfiguration(
+				preparedProperties,
+				defaultInterceptor,
+				cfg.getInterceptor(),
+				AvailableSettings.INTERCEPTOR,
+				"interceptor",
+				Interceptor.class
+		);
+		if ( interceptor != null ) {
+			cfg.setInterceptor( interceptor );
 		}
-		if ( preparedProperties.containsKey( AvailableSettings.NAMING_STRATEGY )
-				&& ( cfg.getNamingStrategy() == null
-				|| cfg.getNamingStrategy().equals( defaultNamingStrategy ) ) ) {
-			//cfg.setNamingStrategy has precedence over configuration file
-			String namingStrategyName = preparedProperties.getProperty( AvailableSettings.NAMING_STRATEGY );
-			try {
-				Class namingStragegy = classForName( namingStrategyName );
-				cfg.setNamingStrategy( (NamingStrategy) namingStragegy.newInstance() );
-			}
-			catch (ClassNotFoundException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Unable to find naming strategy class: " + namingStrategyName, e
-				);
-			}
-			catch (IllegalAccessException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Unable to access naming strategy class: " + namingStrategyName, e
-				);
-			}
-			catch (InstantiationException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Unable to instanciate naming strategy class: " + namingStrategyName, e
-				);
-			}
-			catch (ClassCastException e) {
-				throw new PersistenceException(
-						getExceptionHeader() + "Naming strategyy class does not implement NmaingStrategy interface: " + namingStrategyName,
-						e
-				);
-			}
+		final NamingStrategy namingStrategy = instantiateCustomClassFromConfiguration(
+				preparedProperties,
+				defaultNamingStrategy,
+				cfg.getNamingStrategy(),
+				AvailableSettings.NAMING_STRATEGY,
+				"naming strategy",
+				NamingStrategy.class
+		);
+		if ( namingStrategy != null ) {
+			cfg.setNamingStrategy( namingStrategy );
 		}
+
 
 		if ( jaccKeys.size() > 0 ) {
 			addSecurity( jaccKeys, preparedProperties, workingVars );
@@ -1087,9 +1049,49 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		//some spec compliance checking
 		//TODO centralize that?
         if (!"true".equalsIgnoreCase(cfg.getProperty(Environment.AUTOCOMMIT))) LOG.jdbcAutoCommitFalseBreaksEjb3Spec(Environment.AUTOCOMMIT);
-		discardOnClose = preparedProperties.getProperty( AvailableSettings.DISCARD_PC_ON_CLOSE )
-				.equals( "true" );
+        discardOnClose = preparedProperties.getProperty(AvailableSettings.DISCARD_PC_ON_CLOSE).equals("true");
 		return this;
+	}
+
+	private <T> T instantiateCustomClassFromConfiguration(
+			Properties preparedProperties,
+			T defaultObject,
+			T cfgObject,
+			String propertyName,
+			String classDescription,
+			Class<T> objectClass) {
+		if ( preparedProperties.containsKey( propertyName )
+				&& ( cfgObject == null || cfgObject.equals( defaultObject ) ) ) {
+			//cfg.setXxx has precedence over configuration file
+			String className = preparedProperties.getProperty( propertyName );
+			try {
+				Class<T> clazz = classForName( className );
+				return clazz.newInstance();
+				//cfg.setInterceptor( (Interceptor) instance.newInstance() );
+			}
+			catch (ClassNotFoundException e) {
+				throw new PersistenceException(
+						getExceptionHeader() + "Unable to find " + classDescription + " class: " + className, e
+				);
+			}
+			catch (IllegalAccessException e) {
+				throw new PersistenceException(
+						getExceptionHeader() + "Unable to access " + classDescription + " class: " + className, e
+				);
+			}
+			catch (InstantiationException e) {
+				throw new PersistenceException(
+						getExceptionHeader() + "Unable to instantiate " + classDescription + " class: " + className, e
+				);
+			}
+			catch (ClassCastException e) {
+				throw new PersistenceException(
+						getExceptionHeader() + classDescription + " class does not implement " + objectClass + " interface: "
+								+ className, e
+				);
+			}
+		}
+		return null;
 	}
 
 	@SuppressWarnings({ "unchecked" })

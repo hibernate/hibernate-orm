@@ -650,7 +650,7 @@ public interface HibernateLogger extends BasicLogger {
     void jdbc3GeneratedKeys( String enabledDisabled );
 
     @LogMessage( level = WARN )
-    @Message( value = "%s = false break the EJB3 specification", id = 144 )
+    @Message( value = "%s = false breaks the EJB3 specification", id = 144 )
     void jdbcAutoCommitFalseBreaksEjb3Spec( String autocommit );
 
     @LogMessage( level = INFO )

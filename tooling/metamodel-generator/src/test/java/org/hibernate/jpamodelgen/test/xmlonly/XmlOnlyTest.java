@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 package org.hibernate.jpamodelgen.test.xmlonly;
 
 import java.util.HashMap;
@@ -35,7 +34,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  */
 public class XmlOnlyTest extends CompilationTest {
 	@Test
-	public void testMetaModelGeneratedForXmlConiguredEntity() {
+	public void testMetaModelGeneratedForXmlConfiguredEntity() {
 		assertMetamodelClassGeneratedFor( XmlOnly.class );
 	}
 
@@ -46,7 +45,7 @@ public class XmlOnlyTest extends CompilationTest {
     }
 
     @Test
-    public void testMetaModelGeneratedForManyToManyPropertyAccessWithoutTargetEntity() {
+    public void testMetaModelGeneratedForOneToManyPropertyAccessWithoutTargetEntity() {
         assertPresenceOfFieldInMetamodelFor(Car.class, "tires", "Type should be inferred from field");
         assertPresenceOfFieldInMetamodelFor(Tire.class, "car", "Type should be inferred from field");
     }

@@ -45,6 +45,7 @@ import org.hibernate.jpamodelgen.xml.jaxb.Basic;
 import org.hibernate.jpamodelgen.xml.jaxb.ElementCollection;
 import org.hibernate.jpamodelgen.xml.jaxb.Embeddable;
 import org.hibernate.jpamodelgen.xml.jaxb.EmbeddableAttributes;
+import org.hibernate.jpamodelgen.xml.jaxb.Embedded;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
 import org.hibernate.jpamodelgen.xml.jaxb.Id;
 import org.hibernate.jpamodelgen.xml.jaxb.ManyToMany;
@@ -385,12 +386,12 @@ public class XmlMetaEntity implements MetaEntity {
 			}
 		}
 
-        for (org.hibernate.jpamodelgen.xml.jaxb.Embedded embedded : attributes.getEmbedded()) {
-            parseEmbedded( embedded);
-        }
+		for ( Embedded embedded : attributes.getEmbedded() ) {
+			parseEmbedded( embedded );
+		}
 	}
 
-    private void parseEmbeddableAttributes(EmbeddableAttributes attributes) {
+	private void parseEmbeddableAttributes(EmbeddableAttributes attributes) {
 		if ( attributes == null ) {
 			return;
 		}
@@ -452,17 +453,15 @@ public class XmlMetaEntity implements MetaEntity {
 		return false;
 	}
 
-    private void parseEmbedded(org.hibernate.jpamodelgen.xml.jaxb.Embedded embedded) {
-        XmlMetaSingleAttribute attribute;
-        ElementKind elementKind = getElementKind( embedded.getAccess() );
-        String type = getType( embedded.getName(), null, elementKind );
-        if ( type != null ) {
-            attribute = new XmlMetaSingleAttribute( this, embedded.getName(), type );
-            members.add( attribute );
-        }
-    }
-
-
+	private void parseEmbedded(Embedded embedded) {
+		XmlMetaSingleAttribute attribute;
+		ElementKind elementKind = getElementKind( embedded.getAccess() );
+		String type = getType( embedded.getName(), null, elementKind );
+		if ( type != null ) {
+			attribute = new XmlMetaSingleAttribute( this, embedded.getName(), type );
+			members.add( attribute );
+		}
+	}
 
 	private String determineExplicitTargetEntity(String targetClass) {
 		String explicitTargetClass = targetClass;

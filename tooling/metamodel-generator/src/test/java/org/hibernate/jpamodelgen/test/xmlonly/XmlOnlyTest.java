@@ -50,6 +50,13 @@ public class XmlOnlyTest extends CompilationTest {
         assertPresenceOfFieldInMetamodelFor(Tire.class, "car", "Type should be inferred from field");
     }
 
+    @Test
+    public void testMetaModelGeneratedForEmbeddable() {
+        assertPresenceOfFieldInMetamodelFor(Option.class, "period", "Embedded expected");
+        assertPresenceOfFieldInMetamodelFor(Period.class, "start", "Embedded expected");
+        assertPresenceOfFieldInMetamodelFor(Period.class, "end", "Embedded expected");
+    }
+
 	@Override
 	protected String getPackageNameOfCurrentTest() {
 		return XmlOnlyTest.class.getPackage().getName();

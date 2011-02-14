@@ -63,5 +63,21 @@
         </attributes>
     </entity>
 
+    <entity class="Option" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <embedded name="period" />
+        </attributes>
+    </entity>
 
+    <embeddable class="Period" access="FIELD">
+        <attributes>
+            <basic name="start">
+                <temporal>DATE</temporal>
+            </basic>
+            <basic name="end">
+                <temporal>DATE</temporal>
+            </basic>
+        </attributes>
+    </embeddable>
 </entity-mappings>

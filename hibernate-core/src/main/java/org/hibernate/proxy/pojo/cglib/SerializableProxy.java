@@ -76,18 +76,18 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	private Object readResolve() {
 		try {
 			HibernateProxy proxy = CGLIBLazyInitializer.getProxy(
-				getEntityName(),
-				persistentClass,
-				interfaces,
-				getIdentifierMethodName==null ?
-					null :
-					getIdentifierMethodClass.getDeclaredMethod(getIdentifierMethodName, null),
-				setIdentifierMethodName==null ?
-					null :
-					setIdentifierMethodClass.getDeclaredMethod(setIdentifierMethodName, setIdentifierMethodParams),
+					getEntityName(),
+					persistentClass,
+					interfaces,
+					getIdentifierMethodName==null
+							? null
+							: getIdentifierMethodClass.getDeclaredMethod( getIdentifierMethodName, (Class[]) null ),
+					setIdentifierMethodName==null
+							? null
+							: setIdentifierMethodClass.getDeclaredMethod(setIdentifierMethodName, setIdentifierMethodParams),
 					componentIdType,
-				getId(),
-				null
+					getId(),
+					null
 			);
 
 			setReadOnlyBeforeAttachedToSession( ( CGLIBLazyInitializer ) proxy.getHibernateLazyInitializer() );

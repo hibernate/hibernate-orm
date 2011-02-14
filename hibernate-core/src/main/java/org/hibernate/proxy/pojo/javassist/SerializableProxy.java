@@ -76,13 +76,13 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 				getEntityName(),
 				persistentClass,
 				interfaces,
-				getIdentifierMethodName==null ?
-					null :
-					getIdentifierMethodClass.getDeclaredMethod(getIdentifierMethodName, null),
-				setIdentifierMethodName==null ?
-					null :
-					setIdentifierMethodClass.getDeclaredMethod(setIdentifierMethodName, setIdentifierMethodParams),
-					componentIdType,
+				getIdentifierMethodName==null
+						? null
+						: getIdentifierMethodClass.getDeclaredMethod( getIdentifierMethodName, (Class[]) null ),
+				setIdentifierMethodName==null
+						? null 
+						: setIdentifierMethodClass.getDeclaredMethod(setIdentifierMethodName, setIdentifierMethodParams),
+				componentIdType,
 				getId(),
 				null
 			);

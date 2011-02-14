@@ -23,6 +23,8 @@
  *
  */
 package org.hibernate.transaction;
+
+import java.lang.reflect.Method;
 import java.util.Properties;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -35,6 +37,7 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  */
+@SuppressWarnings( {"UnusedDeclaration"})
 public class WebSphereTransactionManagerLookup implements TransactionManagerLookup {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
@@ -80,7 +83,8 @@ public class WebSphereTransactionManagerLookup implements TransactionManagerLook
 	 */
 	public TransactionManager getTransactionManager(Properties props) throws HibernateException {
 		try {
-			return ( TransactionManager ) tmfClass.getMethod( "getTransactionManager", null ).invoke( null, null );
+			final Method method = tmfClass.getMethod( "getTransactionManager", (Class[]) null );
+			return ( TransactionManager ) method.invoke( null, (Object[]) null );
 		}
 		catch ( Exception e ) {
 			throw new HibernateException( "Could not obtain WebSphere TransactionManager", e );

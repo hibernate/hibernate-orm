@@ -644,7 +644,7 @@ public final class Environment {
 
 		boolean getGeneratedKeysSupport;
 		try {
-			Statement.class.getMethod("getGeneratedKeys", null);
+			Statement.class.getMethod("getGeneratedKeys", (Class[])null);
 			getGeneratedKeysSupport = true;
 		}
 		catch (NoSuchMethodException nsme) {

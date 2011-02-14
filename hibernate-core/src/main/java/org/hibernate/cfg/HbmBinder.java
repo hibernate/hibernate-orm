@@ -87,6 +87,9 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.mapping.FetchProfile;
+import org.hibernate.persister.PersisterClassProvider;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
@@ -687,6 +690,9 @@ public final class HbmBinder {
 		entity.setMetaAttributes( getMetas( node, inheritedMetas ) );
 
 		// PERSISTER
+		//persister node in XML has priority over
+		//persisterClassProvider
+		//if all fail, the default Hibernate persisters kick in
 		Attribute persisterNode = node.attribute( "persister" );
 		if ( persisterNode != null ) {
 			try {
@@ -696,6 +702,17 @@ public final class HbmBinder {
 			catch (ClassNotFoundException cnfe) {
 				throw new MappingException( "Could not find persister class: "
 					+ persisterNode.getValue() );
+			}
+		}
+		else {
+			final PersisterClassProvider persisterClassProvider = mappings.getPersisterClassProvider();
+			if ( persisterClassProvider != null ) {
+				final Class<? extends EntityPersister> persister = persisterClassProvider.getEntityPersisterClass(
+						entity.getEntityName()
+				);
+				if ( persister != null ) {
+					entity.setEntityPersisterClass( persister );
+				}
 			}
 		}
 
@@ -1399,6 +1416,9 @@ public final class HbmBinder {
 
 
 		// PERSISTER
+		//persister node in XML has priority over
+		//persisterClassProvider
+		//if all fail, the default Hibernate persisters kick in
 		Attribute persisterNode = node.attribute( "persister" );
 		if ( persisterNode != null ) {
 			try {
@@ -1408,6 +1428,16 @@ public final class HbmBinder {
 			catch (ClassNotFoundException cnfe) {
 				throw new MappingException( "Could not find collection persister class: "
 					+ persisterNode.getValue() );
+			}
+		}
+		else {
+			final PersisterClassProvider persisterClassProvider = mappings.getPersisterClassProvider();
+			if ( persisterClassProvider != null ) {
+				final Class<? extends CollectionPersister> persister =
+						persisterClassProvider.getCollectionPersisterClass( collection.getRole() );
+				if ( persister != null ) {
+					collection.setCollectionPersisterClass( persister );
+				}
 			}
 		}
 

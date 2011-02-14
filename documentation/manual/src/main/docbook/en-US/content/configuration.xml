@@ -1347,6 +1347,48 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQLDialect</programlisting>
     applications.</para>
   </section>
 
+  <section>
+    <title>Implementing a PersisterClassProvider</title>
+
+    <para>You can configure the persister implementation used to persist your
+    entities and collections:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>by default, Hibernate uses persisters that make sense in a
+        relational model and follow Java Persistence's specification</para>
+      </listitem>
+
+      <listitem>
+        <para>you can define a <classname>PersisterClassProvider</classname>
+        implementation that provides the persister class used of a given
+        entity or collection</para>
+      </listitem>
+
+      <listitem>
+        <para>finally, you can override them on a per entity and collection
+        basis in the mapping using <classname>@Persister</classname> or its
+        XML equivalent</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The latter in the list the higher in priority.</para>
+
+    <para>You can pass the <classname>PersisterClassProvider</classname>
+    instance to the <classname>Configuration</classname> object.</para>
+
+    <programlisting role="JAVA">SessionFactory sf = new Configuration()
+    .setPersisterClassProvider(customPersisterClassProvider)
+    .addAnnotatedClass(Order.class)
+    .buildSessionFactory();</programlisting>
+
+    <para>The persister class provider methods, when returning a non null
+    persister class, override the default Hibernate persisters. The entity
+    name or the collection role are passed to the methods. It is a nice way to
+    centralize the overriding logic of the persisters instead of spreading
+    them on each entity or collection mapping. </para>
+  </section>
+
   <section id="configuration-xmlconfig" revision="2">
     <title>XML configuration file</title>
 

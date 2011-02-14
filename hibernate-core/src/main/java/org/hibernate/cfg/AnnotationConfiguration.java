@@ -55,6 +55,7 @@ import org.hibernate.mapping.IdGenerator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.util.CollectionHelper;
 
 /**
@@ -260,6 +261,12 @@ public class AnnotationConfiguration extends Configuration {
 	@Override
 	public AnnotationConfiguration setNamingStrategy(NamingStrategy namingStrategy) {
 		super.setNamingStrategy( namingStrategy );
+		return this;
+	}
+
+	@Override
+	public AnnotationConfiguration setPersisterClassProvider(PersisterClassProvider persisterClassProvider) {
+		super.setPersisterClassProvider( persisterClassProvider );
 		return this;
 	}
 

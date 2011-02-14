@@ -82,6 +82,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
+import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
@@ -243,6 +244,8 @@ public class EntityBinder {
 
 		//set persister if needed
 		//@Persister has precedence over @Entity.persister
+		//in both fail we look for the PersisterClassProvider
+		//if all fail, the persister is left null and the Hibernate defaults kick in
 		Persister persisterAnn = annotatedClass.getAnnotation( Persister.class );
 		Class persister = null;
 		if ( persisterAnn != null ) {
@@ -258,8 +261,16 @@ public class EntityBinder {
 					throw new AnnotationException( "Could not find persister class: " + persister );
 				}
 			}
+			else {
+				final PersisterClassProvider persisterClassProvider = mappings.getPersisterClassProvider();
+				if ( persisterClassProvider != null ) {
+					persister = persisterClassProvider.getEntityPersisterClass( persistentClass.getEntityName() );
+				}
+			}
 		}
-		if ( persister != null ) persistentClass.setEntityPersisterClass( persister );
+		if ( persister != null ) {
+			persistentClass.setEntityPersisterClass( persister );
+		}
 
 		persistentClass.setBatchSize( batchSize );
 

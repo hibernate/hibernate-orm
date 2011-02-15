@@ -214,7 +214,7 @@ selectExpr
 	| aggregate
 	| c:constant { out(c); }
 	| arithmeticExpr
-	| param:PARAM { out(param); }
+	| parameter
 	| sn:SQL_NODE { out(sn); }
 	| { out("("); } selectStatement { out(")"); }
 	;

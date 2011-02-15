@@ -764,6 +764,19 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 		}
 
+		if ( sessionFactoryHelper.getFactory().getDialect().supportsParametersInInsertSelect() ) {
+			AST child = selectClause.getFirstChild();
+			int i = 0;
+			while(child != null) {
+				if(child instanceof ParameterNode) {
+					// infer the parameter type from the type listed in the INSERT INTO clause
+					((ParameterNode)child).setExpectedType(insertStatement.getIntoClause().getInsertionTypes()[selectClause.getParameterPositions().get(i)]);
+					i++;
+				}
+				child = child.getNextSibling();
+			}
+		}
+
 		final boolean includeVersionProperty = persister.isVersioned() &&
 				!insertStatement.getIntoClause().isExplicitVersionInsertion() &&
 				persister.isVersionPropertyInsertable();

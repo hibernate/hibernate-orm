@@ -1,13 +1,8 @@
 // $Id: BulkManipulationTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
-
 import org.hibernate.QueryException;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
@@ -15,12 +10,15 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.persister.entity.EntityPersister;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -177,6 +175,31 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 		data.cleanup();
 	}
+
+    public void testSimpleInsertWithNamedParam() {
+		TestData data = new TestData();
+		data.prepare();
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+
+		org.hibernate.Query q = s.createQuery( "insert into Pickup (id, owner, vin) select id, :owner, vin from Car" );
+		q.setParameter("owner", "owner");
+
+		q.executeUpdate();
+
+		t.commit();
+		t = s.beginTransaction();
+
+		s.createQuery( "delete Vehicle" ).executeUpdate();
+
+		t.commit();
+		s.close();
+
+		data.cleanup();
+	}
+
+
 
 	public void testSimpleNativeSQLInsert() {
 		TestData data = new TestData();

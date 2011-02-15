@@ -24,16 +24,15 @@
  */
 package org.hibernate.hql.ast.tree;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.sql.Types;
-
+import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
 
-import antlr.collections.AST;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an entity referenced in the INTO clause of an HQL
@@ -111,15 +110,20 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 
 	public void validateTypes(SelectClause selectClause) throws QueryException {
 		Type[] selectTypes = selectClause.getQueryReturnTypes();
-		if ( selectTypes.length != types.length ) {
+		if ( selectTypes.length + selectClause.getTotalParameterCount() != types.length ) {
 			throw new QueryException( "number of select types did not match those for insert" );
 		}
 
+		int parameterCount = 0;
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( !areCompatible( types[i], selectTypes[i] ) ) {
+
+			// account for the parameters that are not part of the select types
+			if( selectClause.getParameterPositions().contains(i) ) {
+				parameterCount++;
+			} else if ( !areCompatible( types[i], selectTypes[i - parameterCount] ) ) {
 				throw new QueryException(
-				        "insertion type [" + types[i] + "] and selection type [" +
-				        selectTypes[i] + "] at position " + i + " are not compatible"
+					"insertion type [" + types[i] + "] and selection type [" +
+					selectTypes[i] + "] at position " + i + " are not compatible"
 				);
 			}
 		}

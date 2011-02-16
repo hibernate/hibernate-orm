@@ -76,7 +76,6 @@ public class QueryKeyTest extends TestCase {
 		// settings are lazily initialized when calling transformTuple(),
 		// so they have not been initialized for the following test
 		// (it *should* be initialized before creating a QueryKey)
-        System.out.println("jboss.i18n.generate-proxies=" + System.getProperty("jboss.i18n.generate-proxies"));
 		doResultTransformerTest( new AliasToBeanResultTransformer( AClass.class ), false );
 
 		// initialize settings for the next test

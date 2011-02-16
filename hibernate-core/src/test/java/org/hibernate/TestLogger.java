@@ -8,10 +8,12 @@
 package org.hibernate;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines internationalized messages for all modules part of hibernate-core.
  */
+@MessageLogger( projectCode = "HHH" )
 public interface TestLogger extends BasicLogger {
 
     public static final TestLogger LOG = Logger.getMessageLogger(TestLogger.class, TestLogger.class.getName());

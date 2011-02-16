@@ -10,11 +10,13 @@ import static org.jboss.logging.Logger.Level.INFO;
 import org.hibernate.HibernateLogger;
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines internationalized messages for this hibernate-proxool, with IDs ranging from 30001 to 35000 inclusively. New messages
  * must be added after the last message defined to ensure message codes are unique.
  */
+@MessageLogger( projectCode = "HHH" )
 public interface ProxoolLogger extends HibernateLogger {
 
     @LogMessage( level = INFO )
@@ -40,22 +42,18 @@ public interface ProxoolLogger extends HibernateLogger {
     @Message( value = "Exception occured when closing the Proxool pool", id = 30006 )
     String exceptionClosingProxoolPool();
 
-    @LogMessage( level = INFO )
-    @Message( value = "JDBC isolation level: %s", id = 30007 )
-    void jdbcIsolationLevel( String isolationLevelToString );
-
-    @Message( value = "Cannot configure Proxool Provider to use an existing in memory pool without the %s property set.", id = 30008 )
+    @Message( value = "Cannot configure Proxool Provider to use an existing in memory pool without the %s property set.", id = 30007 )
     String unableToConfigureProxoolProviderToUseExistingInMemoryPool( String proxoolPoolAlias );
 
-    @Message( value = "Cannot configure Proxool Provider to use JAXP without the %s property set.", id = 30009 )
+    @Message( value = "Cannot configure Proxool Provider to use JAXP without the %s property set.", id = 30008 )
     String unableToConfigureProxoolProviderToUseJaxp( String proxoolPoolAlias );
 
-    @Message( value = "Cannot configure Proxool Provider to use Properties File without the %s property set.", id = 30010 )
+    @Message( value = "Cannot configure Proxool Provider to use Properties File without the %s property set.", id = 30009 )
     String unableToConfigureProxoolProviderToUsePropertiesFile( String proxoolPoolAlias );
 
-    @Message( value = "Proxool Provider unable to load JAXP configurator file: %s", id = 30011 )
+    @Message( value = "Proxool Provider unable to load JAXP configurator file: %s", id = 30010 )
     String unableToLoadJaxpConfiguratorFile( String jaxpFile );
 
-    @Message( value = "Proxool Provider unable to load Property configurator file: %s", id = 30012 )
+    @Message( value = "Proxool Provider unable to load Property configurator file: %s", id = 30011 )
     String unableToLoadPropertyConfiguratorFile( String propFile );
 }

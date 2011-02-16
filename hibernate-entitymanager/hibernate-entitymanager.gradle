@@ -17,18 +17,8 @@ dependencies {
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
-    testCompile( libraries.slf4j_api )
     testRuntime( libraries.validator )
 }
-
-procTargetDirName = buildDirName + "/generated-src/jpamodelgen"
-procTargetDir = dir( procTargetDirName )
-compileTestJava {
-    configure( options ) {
-        compilerArgs = [ "-s", "$procTargetDir.dir.absolutePath" ]
-    }
-}
-compileTestJava.dependsOn procTargetDir
 
 bundlesTargetDirName = "$buildDirName/bundles"
 bundlesTargetDir = dir( bundlesTargetDirName )
@@ -48,10 +38,6 @@ copyBundleResources.dependsOn bundlesTargetDir
 
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
-
-ideaModule {
-    testSourceDirs.add( file( procTargetDirName ) )
-}
 
 
 

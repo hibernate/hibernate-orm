@@ -665,7 +665,7 @@ public interface HibernateLogger extends BasicLogger {
     String jdbcBeginFailed();
 
     @LogMessage( level = WARN )
-    @Message( value = "no JDBC Driver class was specified by property %s", id = 148 )
+    @Message( value = "No JDBC Driver class was specified by property %s", id = 148 )
     void jdbcDriverNotSpecified( String driver );
 
     @LogMessage( level = INFO )

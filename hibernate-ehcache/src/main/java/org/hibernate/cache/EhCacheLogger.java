@@ -10,11 +10,13 @@ import static org.jboss.logging.Logger.Level.WARN;
 import org.hibernate.HibernateLogger;
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;
+import org.jboss.logging.MessageLogger;
 
 /**
  * Defines internationalized messages for this hibernate-ehcache, with IDs ranging from 20001 to 25000 inclusively. New messages
  * must be added after the last message defined to ensure message codes are unique.
  */
+@MessageLogger( projectCode = "HHH" )
 public interface EhCacheLogger extends HibernateLogger {
 
     @LogMessage( level = WARN )

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -31,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 import com.mchange.v2.c3p0.DataSources;
@@ -87,10 +89,23 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 		conn.close();
 	}
 
-    /**
-     * @param props
-     * @throws HibernateException
-     */
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+			return (T) ds;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public void configure(Properties props) throws HibernateException {
 		String jdbcDriverClass = props.getProperty( Environment.DRIVER );
 		String jdbcUrl = props.getProperty( Environment.URL );

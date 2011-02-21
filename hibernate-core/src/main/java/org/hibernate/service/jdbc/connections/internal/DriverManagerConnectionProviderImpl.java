@@ -35,6 +35,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
@@ -60,6 +61,24 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 	private final ArrayList<Connection> pool = new ArrayList<Connection>();
 	private int checkedOut = 0;
+
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType ) ||
+				DriverManagerConnectionProviderImpl.class.isAssignableFrom( unwrapType );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.equals( unwrapType ) ||
+				DriverManagerConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
+	}
 
 	public void configure(Map configurationValues) {
         LOG.usingHibernateBuiltInConnectionPool();

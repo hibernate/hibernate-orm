@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.internal;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -44,15 +45,15 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class ServicesInitializer {
+public class ServiceInitializer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServicesInitializer.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServiceInitializer.class.getName());
 
 	private final ServiceRegistryImpl servicesRegistry;
 	private final Map<Class,ServiceInitiator> serviceInitiatorMap;
 	private final Map configurationValues;
 
-	public ServicesInitializer(
+	public ServiceInitializer(
 			ServiceRegistryImpl servicesRegistry,
 			List<ServiceInitiator> serviceInitiators,
 			Map configurationValues) {
@@ -64,11 +65,12 @@ public class ServicesInitializer {
 	/**
 	 * We convert the incoming list of initiators to a map for 2 reasons:<ul>
 	 * <li>to make it easier to look up the initiator we need for a given service role</li>
-	 * <li>to make sure there is only one initator for a given service role (last wins)</li>
+	 * <li>to make sure there is only one initiator for a given service role (last wins)</li>
 	 * </ul>
 	 *
-	 * @param serviceInitiators
-	 * @return
+	 * @param serviceInitiators The list of individual initiators
+	 *
+	 * @return The map of initiators keyed by the service rle they initiate.
 	 */
 	private static Map<Class, ServiceInitiator> toMap(List<ServiceInitiator> serviceInitiators) {
 		final Map<Class, ServiceInitiator> result = new HashMap<Class, ServiceInitiator>();
@@ -76,6 +78,13 @@ public class ServicesInitializer {
 			result.put( initiator.getServiceInitiated(), initiator );
 		}
 		return result;
+	}
+
+	void registerServiceInitiator(ServiceInitiator serviceInitiator) {
+		final Object previous = serviceInitiatorMap.put( serviceInitiator.getServiceInitiated(), serviceInitiator );
+		final boolean overwritten = previous != null;
+        if (overwritten) LOG.debugf("Over-wrote existing service initiator [role=%s]",
+                                    serviceInitiator.getServiceInitiated().getName());
 	}
 
 	/**
@@ -158,7 +167,9 @@ public class ServicesInitializer {
 			dependentServiceRole = injectionMethod.getParameterTypes()[0];
 		}
 
-		final Service dependantService = servicesRegistry.internalGetService( dependentServiceRole );
+		// todo : because of the use of proxies, this is no longer returning null here...
+
+		final Service dependantService = servicesRegistry.getService( dependentServiceRole );
 		if ( dependantService == null ) {
 			if ( injectService.required() ) {
 				throw new ServiceDependencyException(

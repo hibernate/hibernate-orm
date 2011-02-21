@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
@@ -39,6 +40,26 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider {
    private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
    private String nodeId;
    private boolean isTransactional;
+
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return DualNodeConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ||
+				ConnectionProvider.class.isAssignableFrom( unwrapType );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( DualNodeConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else if ( ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+			return (T) actualConnectionProvider;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
+	}
 
    public static ConnectionProvider getActualConnectionProvider() {
       return actualConnectionProvider;

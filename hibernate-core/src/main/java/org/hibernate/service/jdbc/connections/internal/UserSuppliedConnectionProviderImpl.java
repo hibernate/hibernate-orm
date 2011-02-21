@@ -25,6 +25,7 @@ package org.hibernate.service.jdbc.connections.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 
 /**
  * An implementation of the {@link ConnectionProvider} interface that simply throws an exception when a connection
@@ -35,6 +36,24 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
  * @author Steve Ebersole
  */
 public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType ) ||
+				UserSuppliedConnectionProviderImpl.class.isAssignableFrom( unwrapType );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.equals( unwrapType ) ||
+				UserSuppliedConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */

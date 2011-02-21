@@ -33,6 +33,7 @@ import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
@@ -67,6 +68,28 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@InjectService( required = false )
 	public void setJndiService(JndiService jndiService) {
 		this.jndiService = jndiService;
+	}
+
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType ) ||
+				DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ||
+				DataSource.class.isAssignableFrom( unwrapType );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.equals( unwrapType ) ||
+				DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+			return (T) getDataSource();
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
 	}
 
 	/**

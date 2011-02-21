@@ -30,6 +30,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
@@ -77,6 +78,24 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 
 		// return the connection
 		return c;
+	}
+
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return ConnectionProvider.class.equals( unwrapType ) ||
+				ProxoolConnectionProvider.class.isAssignableFrom( unwrapType );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.equals( unwrapType ) ||
+				ProxoolConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
 	}
 
 	/**

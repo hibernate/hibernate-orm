@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Various help for handling collections.
@@ -91,5 +92,38 @@ public final class CollectionHelper {
 	public static int determineProperSizing(int numberOfElements) {
 		int actual = ( (int) (numberOfElements / LOAD_FACTOR) ) + 1;
 		return Math.max( actual, MINIMUM_INITIAL_CAPACITY );
+	}
+
+	/**
+	 * Create a properly sized {@link ConcurrentHashMap} based on the given expected number of elements.
+	 *
+	 * @param expectedNumberOfElements The expected number of elements for the created map
+	 * @param <K> The map key type
+	 * @param <V> The map value type
+	 *
+	 * @return The created map.
+	 */
+	public static <K,V> ConcurrentHashMap<K,V> concurrentMap(int expectedNumberOfElements) {
+		return concurrentMap( expectedNumberOfElements, LOAD_FACTOR );
+	}
+
+	/**
+	 * Create a properly sized {@link ConcurrentHashMap} based on the given expected number of elements and an
+	 * explicit load factor
+	 *
+	 * @param expectedNumberOfElements The expected number of elements for the created map
+	 * @param loadFactor The collection load factor
+	 * @param <K> The map key type
+	 * @param <V> The map value type
+	 *
+	 * @return The created map.
+	 */
+	public static <K,V> ConcurrentHashMap<K,V> concurrentMap(int expectedNumberOfElements, float loadFactor) {
+		final int size = expectedNumberOfElements + 1 + (int) ( expectedNumberOfElements * loadFactor );
+		return new ConcurrentHashMap<K, V>( size, loadFactor );
+	}
+
+	public static <T> List<T> arrayList(int anticipatedSize) {
+		return new ArrayList<T>( anticipatedSize );
 	}
 }

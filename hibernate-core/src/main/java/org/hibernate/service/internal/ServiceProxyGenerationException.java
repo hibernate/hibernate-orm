@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg.internal;
+package org.hibernate.service.internal;
 
-import java.util.Map;
-import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.spi.StandardServiceInitiators;
+import org.hibernate.HibernateException;
 
 /**
- * The standard bootstrap process for Hibernate services
- *
+ * Indicates a problem generating a service proxy
+ * 
  * @author Steve Ebersole
  */
-public class ServicesRegistryBootstrap {
-	public ServiceRegistryImpl initiateServicesRegistry(Map configurationValues) {
-		return new ServiceRegistryImpl( StandardServiceInitiators.LIST, configurationValues );
+public class ServiceProxyGenerationException extends HibernateException {
+	public ServiceProxyGenerationException(String string, Throwable root) {
+		super( string, root );
+	}
+
+	public ServiceProxyGenerationException(Throwable root) {
+		super( root );
 	}
 }

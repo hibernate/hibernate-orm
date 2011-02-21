@@ -30,6 +30,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
@@ -49,6 +50,28 @@ public class ConnectionProviderImpl implements ConnectionProvider {
 	}
 
 	public void configure(Properties props) throws HibernateException {
+	}
+
+	@Override
+	public boolean isUnwrappableAs(Class unwrapType) {
+		return ConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ||
+				ConnectionProvider.class.isAssignableFrom( unwrapType ) ||
+				getActualConnectionProvider().getClass().isAssignableFrom( unwrapType );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else if ( ConnectionProvider.class.isAssignableFrom( unwrapType ) ||
+				getActualConnectionProvider().getClass().isAssignableFrom( unwrapType ) ) {
+			return (T) getActualConnectionProvider();
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
 	}
 
 	public Connection getConnection() throws SQLException {

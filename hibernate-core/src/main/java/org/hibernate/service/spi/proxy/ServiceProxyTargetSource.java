@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg.internal;
+package org.hibernate.service.spi.proxy;
 
-import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.spi.StandardServiceInitiators;
-
-import java.util.Map;
+import org.hibernate.service.spi.Service;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
- * The standard bootstrap process for Hibernate services
+ * Additional contract for service proxies.  This allows the proxies access to their actual service instances.
  *
  * @author Steve Ebersole
  */
-public class ServicesRegistryBootstrap {
-	public ServiceRegistryImpl initiateServicesRegistry(Map configurationValues) {
-		return new ServiceRegistryImpl( StandardServiceInitiators.LIST, configurationValues );
-	}
+public interface ServiceProxyTargetSource extends ServiceRegistry {
+	/**
+	 * Retrieve a service by role.  Unlike {@link org.hibernate.service.spi.ServiceRegistry#getService}, this version
+	 * will never return a proxy.
+	 *
+	 * @param serviceRole The service role
+	 * @param <T> The type of the service
+	 *
+	 * @return The requested service.
+	 *
+	 * @throws org.hibernate.service.spi.UnknownServiceException Indicates the service was not known.
+	 */
+	public <T extends Service> T getServiceInternal(Class<T> serviceRole);
 }

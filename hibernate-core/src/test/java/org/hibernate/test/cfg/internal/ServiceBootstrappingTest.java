@@ -23,24 +23,15 @@
  */
 package org.hibernate.test.cfg.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.testing.junit.UnitTestCase;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.service.classloading.internal.ClassLoaderServiceInitiator;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.service.jdbc.dialect.internal.DialectFactoryInitiator;
-import org.hibernate.service.jdbc.dialect.internal.DialectResolverInitiator;
-import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.test.common.ConnectionProviderBuilder;
+import org.hibernate.testing.junit.UnitTestCase;
+
+import java.util.Properties;
 
 /**
  * TODO : javadoc
@@ -48,45 +39,32 @@ import org.hibernate.test.common.ConnectionProviderBuilder;
  * @author Steve Ebersole
  */
 public class ServiceBootstrappingTest extends UnitTestCase {
-	private ServiceRegistryImpl servicesRegistry;
-
 	public ServiceBootstrappingTest(String string) {
 		super( string );
 	}
 
-	protected void setUp() {
-		List<ServiceInitiator> serviceInitiators = new ArrayList<ServiceInitiator>();
-		serviceInitiators.add( ClassLoaderServiceInitiator.INSTANCE );
-		serviceInitiators.add( ConnectionProviderInitiator.INSTANCE );
-		serviceInitiators.add( DialectResolverInitiator.INSTANCE );
-		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
-		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );
-
-		servicesRegistry = new ServiceRegistryImpl( serviceInitiators );
-	}
-
-	protected void tearDown() {
-		servicesRegistry.destroy();
-	}
-
 	public void testBasicBuild() {
-		servicesRegistry.initialize( ConnectionProviderBuilder.getConnectionProviderProperties() );
-		JdbcServices jdbcServices = servicesRegistry.getService( JdbcServices.class );
+		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( ConnectionProviderBuilder.getConnectionProviderProperties() );
+		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
-		assertTrue( jdbcServices.getConnectionProvider() instanceof DriverManagerConnectionProviderImpl );
+		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
 		assertFalse( jdbcServices.getSqlStatementLogger().isLogToStdout() );
+
+		serviceRegistry.destroy();
 	}
 
 	public void testBuildWithLogging() {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.put( Environment.SHOW_SQL, "true" );
 
-		servicesRegistry.initialize( props );
-		JdbcServices jdbcServices = servicesRegistry.getService( JdbcServices.class );
+		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( props );
+		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
-		assertTrue( jdbcServices.getConnectionProvider() instanceof DriverManagerConnectionProviderImpl );
+		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
 		assertTrue( jdbcServices.getSqlStatementLogger().isLogToStdout() );
+
+		serviceRegistry.destroy();
 	}
 }

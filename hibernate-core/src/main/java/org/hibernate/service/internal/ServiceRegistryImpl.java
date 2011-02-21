@@ -23,45 +23,53 @@
  */
 package org.hibernate.service.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.HibernateException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.internal.proxy.javassist.ServiceProxyFactoryFactoryImpl;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.StandardServiceInitiators;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
+import org.hibernate.service.spi.proxy.ServiceProxyFactory;
+import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
+import org.hibernate.util.CollectionHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Basic Hibernate implementation of the service registry.
+ * Standard Hibernate implementation of the service registry.
  *
  * @author Steve Ebersole
  */
-public class ServiceRegistryImpl implements ServiceRegistry {
+public class ServiceRegistryImpl implements ServiceRegistry, ServiceProxyTargetSource {
 	private static final Logger log = LoggerFactory.getLogger( ServiceRegistryImpl.class );
 
-	private final List<ServiceInitiator> serviceInitiators;
-	private ServicesInitializer initializer;
+	private final ServiceInitializer initializer;
+	// for now just hardcode the javassist factory
+	private ServiceProxyFactory serviceProxyFactory = new ServiceProxyFactoryFactoryImpl().makeServiceProxyFactory( this );
 
-	private HashMap<Class,Service> serviceMap = new HashMap<Class, Service>();
+	private ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap;
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used ordered map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
 	private List<Service> serviceList = new ArrayList<Service>();
 
-	public ServiceRegistryImpl(List<ServiceInitiator> serviceInitiators) {
-		this.serviceInitiators = Collections.unmodifiableList( serviceInitiators );
+	public ServiceRegistryImpl(Map configurationValues) {
+		this( StandardServiceInitiators.LIST, configurationValues );
 	}
 
-	public void initialize(Map configurationValues) {
-		this.initializer = new ServicesInitializer( this, serviceInitiators, ConfigurationHelper.clone( configurationValues ) );
+	public ServiceRegistryImpl(List<ServiceInitiator> serviceInitiators, Map configurationValues) {
+		this.initializer = new ServiceInitializer( this, serviceInitiators, ConfigurationHelper.clone( configurationValues ) );
+		final int anticipatedSize = serviceInitiators.size() + 5; // allow some growth
+		serviceBindingMap = CollectionHelper.concurrentMap( anticipatedSize );
+		serviceList = CollectionHelper.arrayList( anticipatedSize );
 	}
 
 	public void destroy() {
@@ -79,35 +87,84 @@ public class ServiceRegistryImpl implements ServiceRegistry {
 		}
 		serviceList.clear();
 		serviceList = null;
-		serviceMap.clear();
-		serviceMap = null;
+		serviceBindingMap.clear();
+		serviceBindingMap = null;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T extends Service> T getService(Class<T> serviceRole) {
-		T service = internalGetService( serviceRole );
+		return locateOrCreateServiceBinding( serviceRole ).getProxy();
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private <T extends Service> ServiceBinding<T> locateOrCreateServiceBinding(Class<T> serviceRole) {
+		ServiceBinding<T> serviceBinding = serviceBindingMap.get( serviceRole );
+		if ( serviceBinding == null ) {
+			T proxy = serviceProxyFactory.makeProxy( serviceRole );
+			serviceBinding = new ServiceBinding<T>( proxy );
+			serviceBindingMap.put( serviceRole, serviceBinding );
+		}
+		return serviceBinding;
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T extends Service> T getServiceInternal(Class<T> serviceRole) {
+		ServiceBinding<T> serviceBinding = serviceBindingMap.get( serviceRole );
+		if ( serviceBinding == null ) {
+			throw new HibernateException( "Only proxies should invoke #getServiceInternal" );
+		}
+		T service = serviceBinding.getTarget();
+		if ( service == null ) {
+			service = initializer.initializeService( serviceRole );
+			serviceBinding.setTarget( service );
+		}
 		if ( service == null ) {
 			throw new UnknownServiceException( serviceRole );
 		}
 		return service;
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	private <T extends Service> T locateService(Class<T> serviceRole) {
-		return (T) serviceMap.get( serviceRole );
-	}
-
-	<T extends Service> T internalGetService(Class<T> serviceRole) {
-		T service = locateService( serviceRole );
-		if ( service == null ) {
-			service = initializer.initializeService( serviceRole );
+	@Override
+	public <T extends Service> void registerService(Class<T> serviceRole, T service) {
+		ServiceBinding<T> serviceBinding = locateOrCreateServiceBinding( serviceRole );
+		T priorServiceInstance = serviceBinding.getTarget();
+		serviceBinding.setTarget( service );
+		if ( priorServiceInstance != null ) {
+			serviceList.remove( priorServiceInstance );
 		}
-		return service;
+		serviceList.add( service );
 	}
 
-	<T extends Service> void registerService(Class<T> serviceRole, T service) {
-		serviceList.add( service );
-		serviceMap.put( serviceRole, service );
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public void registerServiceInitiator(ServiceInitiator initiator) {
+		ServiceBinding serviceBinding = serviceBindingMap.get( initiator.getServiceInitiated() );
+		if ( serviceBinding != null ) {
+			serviceBinding.setTarget( null );
+		}
+		initializer.registerServiceInitiator( initiator );
+	}
+
+	private static final class ServiceBinding<T> {
+		private final T proxy;
+		private T target;
+
+		private ServiceBinding(T proxy) {
+			this.proxy = proxy;
+		}
+
+		public T getProxy() {
+			return proxy;
+		}
+
+		public T getTarget() {
+			return target;
+		}
+
+		public void setTarget(T target) {
+			this.target = target;
+		}
 	}
 }

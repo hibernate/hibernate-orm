@@ -39,6 +39,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.UnknownUnwrapTypeException;
 import org.hibernate.util.ReflectHelper;
 
 /**
@@ -91,6 +92,20 @@ public class C3P0ConnectionProvider implements ConnectionProvider {
 	 */
 	public void closeConnection(Connection conn) throws SQLException {
 		conn.close();
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked"})
+	public <T> T unwrap(Class<T> unwrapType) {
+		if ( ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
+			return (T) this;
+		}
+		else if ( DataSource.class.isAssignableFrom( unwrapType ) ) {
+			return (T) ds;
+		}
+		else {
+			throw new UnknownUnwrapTypeException( unwrapType );
+		}
 	}
 
 	/**

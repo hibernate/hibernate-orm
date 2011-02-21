@@ -30,14 +30,30 @@ package org.hibernate.service.spi;
  */
 public interface ServiceRegistry {
 	/**
-	 * Retrieve a service by role.
+	 * Retrieve a service by role.  If service is not found, but a {@link ServiceInitiator} is registered for
+	 * this service role, the service will be initialized and returned.
 	 *
-	 * @param type The service role
+	 * @param serviceRole The service role
 	 * @param <T> The type of the service
 	 *
 	 * @return The requested service.
 	 *
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 */
-	public <T extends Service> T getService(Class<T> type);
+	public <T extends Service> T getService(Class<T> serviceRole);
+
+	/**
+	 * Register a service into the registry.
+	 *
+	 * @param serviceRole The service role.
+	 * @param service The service to register
+	 */
+	public <T extends Service> void registerService(Class<T> serviceRole, T service);
+
+	/**
+	 * Register a service initiator.
+	 *
+	 * @param initiator The initiator of a service
+	 */
+	public void registerServiceInitiator(ServiceInitiator initiator);
 }

@@ -31,11 +31,13 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.hibernate.TestLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServicesRegistry;
 import org.hibernate.test.common.ServiceRegistryHolder;
+import org.jboss.logging.Logger;
 
 /**
  * A basic JUnit {@link junit.framework.TestCase} subclass for
@@ -61,7 +63,7 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
     public void runBare() throws Throwable {
 		final boolean doValidate = getName().endsWith( "FailureExpected" ) && Boolean.getBoolean( "hibernate.test.validatefailureexpected" );
 		try {
-            LOG.info("Starting test [" + fullTestName() + "]");
+            Logger.getMessageLogger(TestLogger.class, TestLogger.class.getName()).info("Starting test [" + fullTestName() + "]");
 			super.runBare();
 			if ( doValidate ) {
 				throw new FailureExpectedTestPassedException();

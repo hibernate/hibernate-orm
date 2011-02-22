@@ -1,5 +1,6 @@
 //$Id: HibernateService.java 6100 2005-03-17 10:48:03Z turin42 $
 package org.hibernate.jmx;
+
 import java.util.Map;
 import java.util.Properties;
 import javax.naming.InitialContext;
@@ -7,8 +8,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.internal.util.jndi.JndiHelper;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.ExternalSessionFactoryConfig;
 import org.jboss.logging.Logger;
@@ -57,9 +58,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	SessionFactory buildSessionFactory() throws HibernateException {
         LOG.startingServiceAtJndiName(boundName);
         LOG.serviceProperties(properties);
-		return buildConfiguration().buildSessionFactory(
-				new ServicesRegistryBootstrap().initiateServicesRegistry( properties )
-		);
+        return buildConfiguration().buildSessionFactory(new ServiceRegistryImpl(properties));
 	}
 
 	@Override

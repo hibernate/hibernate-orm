@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.cfg.internal;
+package org.hibernate.test.service;
 
 import java.util.Properties;
 import org.hibernate.cfg.Environment;
@@ -29,6 +29,8 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.UnitTestCase;
 
@@ -63,6 +65,23 @@ public class ServiceBootstrappingTest extends UnitTestCase {
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
 		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
 		assertTrue( jdbcServices.getSqlStatementLogger().isLogToStdout() );
+
+		serviceRegistry.destroy();
+	}
+
+	public void testBuildWithServiceOverride() {
+		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
+
+		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( props );
+		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+
+		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
+		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( DriverManagerConnectionProviderImpl.class ) );
+
+		serviceRegistry.registerService( ConnectionProvider.class, new UserSuppliedConnectionProviderImpl() );
+
+		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
+		assertTrue( jdbcServices.getConnectionProvider().isUnwrappableAs( UserSuppliedConnectionProviderImpl.class ) );
 
 		serviceRegistry.destroy();
 	}

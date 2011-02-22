@@ -33,8 +33,7 @@ import org.hibernate.service.spi.ServiceRegistry;
  */
 public interface ServiceProxyTargetSource extends ServiceRegistry {
 	/**
-	 * Retrieve a service by role.  Unlike {@link org.hibernate.service.spi.ServiceRegistry#getService}, this version
-	 * will never return a proxy.
+	 * Retrieve a service by role.  Unlike {@link ServiceRegistry#getService}, this version will never return a proxy.
 	 *
 	 * @param serviceRole The service role
 	 * @param <T> The type of the service

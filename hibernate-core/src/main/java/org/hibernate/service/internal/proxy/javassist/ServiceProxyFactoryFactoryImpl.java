@@ -28,6 +28,8 @@ import org.hibernate.service.spi.proxy.ServiceProxyFactoryFactory;
 import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
 
 /**
+ * Javassist-based implementation of a {@link ServiceProxyFactoryFactory}
+ *
  * @author Steve Ebersole
  */
 public class ServiceProxyFactoryFactoryImpl implements ServiceProxyFactoryFactory {

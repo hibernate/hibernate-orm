@@ -24,8 +24,17 @@
 package org.hibernate.service.spi.proxy;
 
 /**
+ * Contract for making a {@link ServiceProxyFactory}.
+ *
  * @author Steve Ebersole
  */
 public interface ServiceProxyFactoryFactory {
+	/**
+	 * Make an instance of the service proxy factory.
+	 *
+	 * @param registry The registry of actual service instances
+	 *
+	 * @return The created service proxy factory
+	 */
 	public ServiceProxyFactory makeServiceProxyFactory(ServiceProxyTargetSource registry);
 }

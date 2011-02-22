@@ -38,7 +38,6 @@ import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.util.PersistenceUtilHelper;
@@ -81,7 +80,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		);
 		serviceRegistryProperties.putAll( cfg.getProperties() );
 		serviceRegistryProperties.putAll( connectionProviderInjectionData );
-		this.serviceRegistry = new ServicesRegistryBootstrap().initiateServicesRegistry( serviceRegistryProperties );
+		this.serviceRegistry = new ServiceRegistryImpl( serviceRegistryProperties );
 		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;

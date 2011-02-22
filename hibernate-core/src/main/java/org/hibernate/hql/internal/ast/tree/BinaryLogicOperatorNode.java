@@ -127,8 +127,18 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 		// mutation depends on the types of nodes involved...
 		int comparisonType = getType();
 		String comparisonText = getText();
-		setType( HqlSqlTokenTypes.AND );
-		setText( "AND" );
+		
+		switch (comparisonType) {
+		case HqlSqlTokenTypes.NE:
+			setType( HqlSqlTokenTypes.OR );
+			setText( "OR" );
+			break;
+		default:
+			setType( HqlSqlTokenTypes.AND );
+			setText( "AND" );
+			break;
+		}
+		
 		String[] lhsElementTexts = extractMutationTexts( getLeftHandOperand(), valueElements );
 		String[] rhsElementTexts = extractMutationTexts( getRightHandOperand(), valueElements );
 

@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.internal.ServicesRegistryBootstrap;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -47,7 +46,7 @@ public class ServiceRegistryHolder {
 		properties.putAll( props );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		serviceRegistry = new ServicesRegistryBootstrap().initiateServicesRegistry( properties );
+		serviceRegistry = new ServiceRegistryImpl( properties );
 		properties.putAll( serviceRegistry.getService( JdbcServices.class ).getDialect().getDefaultProperties() );
 	}
 

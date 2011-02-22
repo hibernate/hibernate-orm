@@ -26,8 +26,18 @@ package org.hibernate.service.spi.proxy;
 import org.hibernate.service.spi.Service;
 
 /**
+ * Contract for creating proxy instances for {@link Service} instances.
+ *
  * @author Steve Ebersole
  */
 public interface ServiceProxyFactory {
+	/**
+	 * Create a proxy for the given service role.
+	 *
+	 * @param serviceRole The service role for which to create a proxy.
+	 * @param <T> The type of the service
+	 *
+	 * @return The service proxy
+	 */
 	public <T extends Service> T makeProxy(Class<T> serviceRole);
 }

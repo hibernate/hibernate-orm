@@ -38,6 +38,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
+ * Javassist-based implementation of a {@link ServiceProxyFactory}
+ *
  * @author Steve Ebersole
  */
 public class ServiceProxyFactoryImpl implements ServiceProxyFactory {

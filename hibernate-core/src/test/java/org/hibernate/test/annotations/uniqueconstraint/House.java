@@ -9,7 +9,7 @@ import javax.persistence.UniqueConstraint;
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room", "cost"} )})
+@Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room_id", "cost"} )})
 public class House extends Building {
 
     public Long id;

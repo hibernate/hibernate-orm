@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
@@ -110,8 +111,22 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 		// mutation depends on the types of nodes involved...
 		int comparisonType = getType();
 		String comparisonText = getText();
-		setType( HqlSqlTokenTypes.AND );
-		setText( "AND" );
+
+		switch ( comparisonType ) {
+			case HqlSqlTokenTypes.EQ:
+				setType( HqlSqlTokenTypes.AND );
+				setText( "AND" );
+				break;
+
+			case HqlSqlTokenTypes.NE:
+				setType( HqlSqlTokenTypes.OR );
+				setText( "OR" );
+				break;
+
+			default:
+				throw new QuerySyntaxException( comparisonText + " operator not supported on composite types." );
+		}
+
 		String[] lhsElementTexts = extractMutationTexts( getLeftHandOperand(), valueElements );
 		String[] rhsElementTexts = extractMutationTexts( getRightHandOperand(), valueElements );
 
@@ -175,7 +190,7 @@ public class BinaryLogicOperatorNode extends AbstractSelectExpression implements
 				AST rhs = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, rhsElementTexts[i] );
 				op.setFirstChild( lhs );
 				lhs.setNextSibling( rhs );
-				AST newContainer = getASTFactory().create( HqlSqlTokenTypes.AND, "AND" );
+				AST newContainer = getASTFactory().create( container.getType(), container.getText() );
 				container.setFirstChild( newContainer );
 				newContainer.setNextSibling( op );
 				container = newContainer;

@@ -69,7 +69,8 @@ public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 			assertEquals( result.size(), 1 );
 			result = s.createQuery("from Transaction where value = (1.5, 'AUD')").list();
 			assertEquals( result.size(), 1 );
-			
+			result = s.createQuery( "from Transaction where value != (1.4, 'AUD')" ).list();
+			assertEquals( result.size(), 1 );
 		}
 		
 		s.delete(tran);

@@ -76,7 +76,8 @@ public class HibernatePersistence extends AvailableSettings implements Persisten
 	 * create a factory from a canonical version
 	 * @deprecated
 	 */
-	public EntityManagerFactory createEntityManagerFactory(Map properties) {
+	@Deprecated
+    public EntityManagerFactory createEntityManagerFactory(Map properties) {
 		// This is used directly by JBoss so don't remove until further notice.  bill@jboss.org
 		Ejb3Configuration cfg = new Ejb3Configuration();
 		return cfg.createEntityManagerFactory( properties );

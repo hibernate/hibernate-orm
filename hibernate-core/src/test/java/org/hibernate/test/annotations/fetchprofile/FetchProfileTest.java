@@ -23,7 +23,9 @@
  * Boston, MA  02110-1301  USA
  *
  */
+
 package org.hibernate.test.annotations.fetchprofile;
+
 import static org.hibernate.TestLogger.LOG;
 import java.io.InputStream;
 import junit.framework.TestCase;
@@ -31,7 +33,8 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * Test case for HHH-4812
@@ -40,18 +43,16 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  */
 public class FetchProfileTest extends TestCase {
 
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	@Override
     protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@Override
     protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
-		}
+        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
 	public void testFetchProfileConfigured() {
@@ -61,7 +62,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( SupportTickets.class );
 		config.addAnnotatedClass( Country.class );
 		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistryHolder.getServiceRegistry()
+				serviceRegistry
 		);
 
 		assertTrue(
@@ -81,7 +82,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -96,7 +97,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -111,7 +112,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -129,7 +130,7 @@ public class FetchProfileTest extends TestCase {
 				.getResourceAsStream( "org/hibernate/test/annotations/fetchprofile/mappings.hbm.xml" );
 		config.addInputStream( is );
 		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistryHolder.getServiceRegistry()
+				serviceRegistry
 		);
 
 		assertTrue(
@@ -143,7 +144,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( Country.class );
 		try {
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -159,7 +160,7 @@ public class FetchProfileTest extends TestCase {
 		config.addAnnotatedClass( Country.class );
 		config.addPackage( Customer.class.getPackage().getName() );
 		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistryHolder.getServiceRegistry()
+				serviceRegistry
 		);
 
 		assertTrue(

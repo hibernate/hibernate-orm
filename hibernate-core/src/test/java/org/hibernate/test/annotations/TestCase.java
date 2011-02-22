@@ -23,12 +23,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations;
+
 import java.io.InputStream;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
@@ -78,7 +80,7 @@ public abstract class TestCase extends HibernateTestCase {
 		return (SessionFactoryImplementor) getSessions();
 	}
 
-	@Override	
+	@Override
 	protected void buildConfiguration() throws Exception {
 		if ( sessions != null ) {
 			sessions.close();
@@ -86,7 +88,7 @@ public abstract class TestCase extends HibernateTestCase {
 		try {
 			setCfg( new AnnotationConfiguration() );
 			// by default use the new id generator scheme...
-			cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+			cfg.setProperty( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 			configure( cfg );
 			if ( recreateSchema() ) {
 				cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );

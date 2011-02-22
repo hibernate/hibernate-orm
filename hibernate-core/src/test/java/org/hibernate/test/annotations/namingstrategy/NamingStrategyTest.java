@@ -1,5 +1,6 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
+
 import static org.hibernate.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -10,7 +11,8 @@ import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.mapping.Table;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * Test harness for ANN-716.
@@ -19,18 +21,16 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  */
 public class NamingStrategyTest extends TestCase {
 
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	@Override
     protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@Override
     protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
-		}
+        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
 	public void testWithCustomNamingStrategy() throws Exception {
@@ -39,7 +39,7 @@ public class NamingStrategyTest extends TestCase {
 			config.setNamingStrategy(new DummyNamingStrategy());
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
@@ -55,7 +55,7 @@ public class NamingStrategyTest extends TestCase {
 			config.setNamingStrategy(EJB3NamingStrategy.INSTANCE);
 			config.addAnnotatedClass(A.class);
 			config.addAnnotatedClass(AddressEntry.class);
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			Mappings mappings = config.createMappings();
 			boolean foundIt = false;
 
@@ -83,7 +83,7 @@ public class NamingStrategyTest extends TestCase {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();

@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.dialect.resolver;
+
 import java.sql.Connection;
 import java.util.Properties;
 import junit.framework.Test;
@@ -46,11 +47,13 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TestingDialects;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * TODO : javadoc
@@ -58,19 +61,21 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  * @author Steve Ebersole
  */
 public class DialectFactoryTest extends TestCase {
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	public DialectFactoryTest(String name) {
 		super( name );
 	}
 
-	protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	@Override
+    protected void setUp() {
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
-	protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+	@Override
+    protected void tearDown() {
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -121,7 +126,7 @@ public class DialectFactoryTest extends TestCase {
 
 	private DialectFactoryImpl getDialectFactoryImpl(DialectResolver dialectResolver) {
 		DialectFactoryImpl dialectFactoryImpl = new DialectFactoryImpl();
-		dialectFactoryImpl.setClassLoaderService( serviceRegistryHolder.getClassLoaderService() );
+		dialectFactoryImpl.setClassLoaderService( serviceRegistry.getService( ClassLoaderService.class ) );
 		dialectFactoryImpl.setDialectResolver( dialectResolver );
 		return dialectFactoryImpl;
 	}

@@ -1,11 +1,13 @@
 //$Id: A320.java 14736 2008-06-04 14:23:42Z hardy.ferentschik $
 package org.hibernate.test.annotations.onetoone.primarykey;
+
 import static org.hibernate.TestLogger.LOG;
 import junit.framework.TestCase;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * Test harness for ANN-742.
@@ -17,13 +19,13 @@ public class NullablePrimaryKeyTest extends TestCase {
 
 	public void testGeneratedSql() {
 
-		ServiceRegistryHolder serviceRegistryHolder = null;
+		ServiceRegistry serviceRegistry = null;
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+			config.buildSessionFactory( serviceRegistry );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
@@ -36,8 +38,8 @@ public class NullablePrimaryKeyTest extends TestCase {
 			fail(e.getMessage());
 		}
 		finally {
-			if ( serviceRegistryHolder != null ) {
-				serviceRegistryHolder.destroy();
+			if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
 	}

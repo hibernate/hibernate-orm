@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.tm;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -43,9 +44,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.stat.Statistics;
 import org.hibernate.test.cache.infinispan.functional.Item;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.infinispan.transaction.lookup.JBossStandaloneJTAManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -69,12 +71,12 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    private static final JBossStandaloneJTAManagerLookup lookup = new JBossStandaloneJTAManagerLookup();
    Context ctx;
    Main jndiServer;
-   private ServiceRegistryHolder serviceRegistryHolder;
+   private ServiceRegistry serviceRegistry;
 
    @Override
    protected void setUp() throws Exception {
       super.setUp();
-	  serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+	  serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
       jndiServer = startJndiServer();
       ctx = createJndiContext();
       bindTransactionManager();
@@ -90,8 +92,8 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
          jndiServer.stop();
 	  }
 	  finally {
-		  if ( serviceRegistryHolder != null ) {
-			  serviceRegistryHolder.destroy();
+		  if ( serviceRegistry != null ) {
+			  ServiceRegistryBuilder.destroy( serviceRegistry );
 		  }
 	  }
    }
@@ -270,7 +272,7 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    }
 
    private SessionFactory buildSessionFactory() {
-      // Extra options located in src/test/resources/hibernate.properties 
+      // Extra options located in src/test/resources/hibernate.properties
       Configuration cfg = new Configuration();
       cfg.setProperty(Environment.DIALECT, "org.hibernate.dialect.HSQLDialect");
       cfg.setProperty(Environment.HBM2DDL_AUTO, "create-drop");
@@ -298,6 +300,6 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
          Collection coll = (Collection) iter.next();
          cfg.setCollectionCacheConcurrencyStrategy(coll.getRole(), "transactional");
       }
-      return cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+      return cfg.buildSessionFactory( serviceRegistry );
    }
 }

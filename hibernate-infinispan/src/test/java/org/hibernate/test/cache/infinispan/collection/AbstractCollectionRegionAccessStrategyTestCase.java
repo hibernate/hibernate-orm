@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.collection;
+
 import static org.hibernate.TestLogger.LOG;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -48,10 +49,12 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.util.ComparableComparator;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
@@ -513,7 +516,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         private final String configResource;
         private final String configName;
         private String preferIPv4Stack;
-        private ServiceRegistryHolder serviceRegistryHolder;
+        private ServiceRegistry serviceRegistry;
 
         public AccessStrategyTestSetup( Test test,
                                         String configName ) {
@@ -536,13 +539,13 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
             System.setProperty(PREFER_IPV4STACK, "true");
 
-            serviceRegistryHolder = new ServiceRegistryHolder(Environment.getProperties());
+            serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(Environment.getProperties());
 
             localCfg = createConfiguration(configName, configResource);
-            localRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistryHolder.getJdbcServicesImpl(), localCfg);
+            localRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistry.getService(JdbcServices.class), localCfg);
 
             remoteCfg = createConfiguration(configName, configResource);
-            remoteRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistryHolder.getJdbcServicesImpl(), remoteCfg);
+            remoteRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistry.getService(JdbcServices.class), remoteCfg);
         }
 
         @Override
@@ -559,8 +562,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
                 if (remoteRegionFactory != null) remoteRegionFactory.stop();
             } finally {
-                if (serviceRegistryHolder != null) {
-                    serviceRegistryHolder.destroy();
+                if (serviceRegistry != null) {
+                    ServiceRegistryBuilder.destroy(serviceRegistry);
                 }
             }
         }

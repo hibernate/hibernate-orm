@@ -1,12 +1,14 @@
 //$Id$
 package org.hibernate.test.annotations;
+
 import java.util.Properties;
 import junit.framework.TestCase;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * @author Emmanuel Bernard
@@ -29,22 +31,25 @@ public class SecuredBindingTest extends TestCase {
 		ac.setProperties( p );
 		ac.addAnnotatedClass( Plane.class );
 		SessionFactory sf;
-		ServiceRegistryHolder serviceRegistryHolder = null;
+		ServiceRegistry serviceRegistry = null;
 		try {
-			serviceRegistryHolder = new ServiceRegistryHolder( p );
-			sf = ac.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( p );
+			sf = ac.buildSessionFactory( serviceRegistry );
+			try {
+				sf.close();
+			}
+			catch (Exception ignore) {
+			}
 			fail( "Driver property overriding should work" );
-			sf.close();
 		}
 		catch (HibernateException he) {
 			//success
 		}
 		finally {
-			if ( serviceRegistryHolder != null ) {
-				serviceRegistryHolder.destroy();
+			if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
-
 	}
 }
 

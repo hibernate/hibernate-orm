@@ -22,10 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.testing.junit;
+
 import static org.hibernate.TestLogger.LOG;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
@@ -36,7 +36,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.jboss.logging.Logger;
 
 /**
@@ -47,7 +47,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class UnitTestCase extends junit.framework.TestCase {
 
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	public UnitTestCase(String string) {
 		super( string );
@@ -87,17 +87,17 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 
 	@Override
 	protected void tearDown() throws Exception {
-		if ( serviceRegistryHolder != null ) {
-				serviceRegistryHolder.destroy();
-				serviceRegistryHolder = null;
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+			serviceRegistry = null;
 		}
 	}
 
 	protected ServiceRegistry getServiceRegistry() {
-		if ( serviceRegistryHolder == null ) {
-			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		if ( serviceRegistry == null ) {
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 		}
-		return serviceRegistryHolder.getServiceRegistry();
+		return serviceRegistry;
  	}
 
 	protected JdbcServices getJdbcServices() {
@@ -121,9 +121,8 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 	// additional assertions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public static void assertElementTypeAssignability(java.util.Collection collection, Class clazz) throws AssertionFailedError {
-		Iterator itr = collection.iterator();
-		while ( itr.hasNext() ) {
-			assertClassAssignability( itr.next().getClass(), clazz );
+		for ( Object aCollection : collection ) {
+			assertClassAssignability( aCollection.getClass(), clazz );
 		}
 	}
 

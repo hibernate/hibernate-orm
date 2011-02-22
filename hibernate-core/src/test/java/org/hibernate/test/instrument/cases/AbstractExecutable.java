@@ -1,25 +1,27 @@
 package org.hibernate.test.instrument.cases;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractExecutable implements Executable {
 
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 	private SessionFactory factory;
 
 	public final void prepare() {
 		Configuration cfg = new Configuration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		String[] resources = getResources();
-		for ( int i = 0; i < resources.length; i++ ) {
-			cfg.addResource( resources[i] );
+		for ( String resource : resources ) {
+			cfg.addResource( resource );
 		}
-		serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
-		factory = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+		factory = cfg.buildSessionFactory( serviceRegistry );
 	}
 
 	public final void complete() {
@@ -28,9 +30,9 @@ public abstract class AbstractExecutable implements Executable {
 		}
 		finally {
 			factory.close();
-			if ( serviceRegistryHolder != null ) {
-				serviceRegistryHolder.destroy();
-			}			
+			if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
+			}
 		}
 	}
 

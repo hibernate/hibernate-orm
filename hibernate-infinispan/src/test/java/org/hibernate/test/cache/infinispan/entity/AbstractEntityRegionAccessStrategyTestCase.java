@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2007, Red Hat, Inc. and/or it's affiliates or third-party contributors as
  * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
+ * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat, Inc. and/or it's affiliates.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
+
 import static org.hibernate.TestLogger.LOG;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -40,9 +41,11 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.util.ComparableComparator;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
@@ -631,7 +634,7 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
         private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
         private final String configName;
         private String preferIPv4Stack;
-        private ServiceRegistryHolder serviceRegistryHolder;
+        private ServiceRegistry serviceRegistry;
 
         public AccessStrategyTestSetup( Test test,
                                         String configName ) {
@@ -652,13 +655,13 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
             preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
             System.setProperty(PREFER_IPV4STACK, "true");
 
-            serviceRegistryHolder = new ServiceRegistryHolder(Environment.getProperties());
+            serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(Environment.getProperties());
 
             localCfg = createConfiguration(configName);
-            localRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistryHolder.getJdbcServicesImpl(), localCfg);
+            localRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistry.getService(JdbcServices.class), localCfg);
 
             remoteCfg = createConfiguration(configName);
-            remoteRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistryHolder.getJdbcServicesImpl(), remoteCfg);
+            remoteRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistry.getService(JdbcServices.class), remoteCfg);
         }
 
         @Override
@@ -670,8 +673,8 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 
                 if (remoteRegionFactory != null) remoteRegionFactory.stop();
             } finally {
-                if (serviceRegistryHolder != null) {
-                    serviceRegistryHolder.destroy();
+                if (serviceRegistry != null) {
+                    ServiceRegistryBuilder.destroy(serviceRegistry);
                 }
             }
         }

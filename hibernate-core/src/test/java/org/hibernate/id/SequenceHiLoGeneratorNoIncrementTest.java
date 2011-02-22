@@ -41,7 +41,8 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -54,7 +55,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private Configuration cfg;
-	ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
 
@@ -94,8 +95,8 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 				)
 		);
 
-		serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
-		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 	}
 
 	@Override
@@ -103,8 +104,8 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 		super.tearDown();
 	}

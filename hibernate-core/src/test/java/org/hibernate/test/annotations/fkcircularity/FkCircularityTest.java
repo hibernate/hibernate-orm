@@ -1,5 +1,6 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
+
 import static org.hibernate.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -8,7 +9,8 @@ import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * Test case for ANN-722 and ANN-730.
@@ -17,18 +19,16 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  */
 public class FkCircularityTest extends TestCase {
 
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	@Override
     protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@Override
     protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
-		}
+        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
 	}
 
 	public void testJoinedSublcassesInPK() {
@@ -38,7 +38,7 @@ public class FkCircularityTest extends TestCase {
 			config.addAnnotatedClass(B.class);
 			config.addAnnotatedClass(C.class);
 			config.addAnnotatedClass(D.class);
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
@@ -60,7 +60,7 @@ public class FkCircularityTest extends TestCase {
 			config.addAnnotatedClass(ClassB.class);
 			config.addAnnotatedClass(ClassC.class);
 			config.addAnnotatedClass(ClassD.class);
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 			String[] schema = config
 					.generateSchemaCreationScript(new HSQLDialect());
 			for (String s : schema) {

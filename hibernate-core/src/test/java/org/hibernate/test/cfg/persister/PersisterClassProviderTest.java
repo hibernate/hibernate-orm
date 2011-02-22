@@ -20,12 +20,11 @@
  */
 package org.hibernate.test.cfg.persister;
 
-import junit.framework.TestCase;
-
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit.UnitTestCase;
 
 /**
@@ -40,9 +39,9 @@ public class PersisterClassProviderTest extends UnitTestCase {
 
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		ServiceRegistryHolder serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 		//no exception as the GoofyPersisterClassProvider is not set
-		SessionFactory sessionFactory = cfg.buildSessionFactory(serviceRegistryHolder.getServiceRegistry());
+		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		sessionFactory.close();
 
 
@@ -50,7 +49,7 @@ public class PersisterClassProviderTest extends UnitTestCase {
 		cfg.addAnnotatedClass( Gate.class );
 		cfg.setPersisterClassProvider( new GoofyPersisterClassProvider() );
 		try {
-			sessionFactory = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
 		}
 		catch ( MappingException e ) {
@@ -66,7 +65,7 @@ public class PersisterClassProviderTest extends UnitTestCase {
 		cfg.addAnnotatedClass( Window.class );
 		cfg.setPersisterClassProvider( new GoofyPersisterClassProvider() );
 		try {
-			sessionFactory = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
 		}
 		catch ( MappingException e ) {
@@ -76,8 +75,8 @@ public class PersisterClassProviderTest extends UnitTestCase {
 					( (GoofyException) e.getCause() ).getValue() );
 		}
 
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 }

@@ -24,36 +24,38 @@
  */
 package org.hibernate.dialect.resolver;
 
-import java.util.Properties;
-import java.sql.Connection;
-
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.InformixDialect;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.InformixDialect;
+import org.hibernate.dialect.IngresDialect;
+import org.hibernate.dialect.Mocks;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.TestingDialects;
-import org.hibernate.dialect.Mocks;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.TestingDialects;
+import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
+
+import java.sql.Connection;
+import java.util.Properties;
 
 /**
  * TODO : javadoc
@@ -61,19 +63,19 @@ import org.hibernate.test.common.ServiceRegistryHolder;
  * @author Steve Ebersole
  */
 public class DialectFactoryTest extends TestCase {
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	public DialectFactoryTest(String name) {
 		super( name );
 	}
 
 	protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -124,7 +126,7 @@ public class DialectFactoryTest extends TestCase {
 
 	private DialectFactoryImpl getDialectFactoryImpl(DialectResolver dialectResolver) {
 		DialectFactoryImpl dialectFactoryImpl = new DialectFactoryImpl();
-		dialectFactoryImpl.setClassLoaderService( serviceRegistryHolder.getClassLoaderService() );
+		dialectFactoryImpl.setClassLoaderService( serviceRegistry.getService( ClassLoaderService.class ) );
 		dialectFactoryImpl.setDialectResolver( dialectResolver );
 		return dialectFactoryImpl;
 	}

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.subclassProxyInterface;
+package org.hibernate.testing;
 
-import junit.framework.TestCase;
-
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.H2Dialect;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
+
+import java.util.Map;
+import java.util.Properties;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class SubclassProxyInterfaceTest extends TestCase {
-	public void testSubclassProxyInterfaces() {
-        final Configuration cfg = new Configuration()
-				.setProperty( Environment.DIALECT, H2Dialect.class.getName() )
-				.addClass( Person.class );
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		cfg.buildSessionFactory( serviceRegistry ).close();
-		ServiceRegistryBuilder.destroy( serviceRegistry );
+public class ServiceRegistryBuilder {
+	public static ServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
+		Properties properties = new Properties();
+		properties.putAll( serviceRegistryConfig );
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+		return new ServiceRegistryImpl( properties );
+	}
+
+	public static void destroy(ServiceRegistry serviceRegistry) {
+		( (ServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

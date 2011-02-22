@@ -24,12 +24,6 @@
  */
 package org.hibernate.test.annotations.access.xml;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import javax.persistence.AccessType;
-
 import junit.framework.TestCase;
 
 import org.hibernate.EntityMode;
@@ -38,9 +32,16 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
+
+import javax.persistence.AccessType;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 /**
@@ -50,15 +51,15 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  */
 public class XmlAccessTest extends TestCase {
 
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -184,7 +185,7 @@ public class XmlAccessTest extends TestCase {
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile );
 			cfg.addInputStream( is );
 		}
-		return ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		return ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
 	}
 
 	// uses the first getter of the tupelizer for the assertions

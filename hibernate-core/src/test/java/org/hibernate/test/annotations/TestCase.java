@@ -24,8 +24,6 @@
  */
 package org.hibernate.test.annotations;
 
-import java.io.InputStream;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -33,8 +31,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.test.common.ServiceRegistryHolder;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
+
+import java.io.InputStream;
 
 /**
  * A base class for all annotation tests.

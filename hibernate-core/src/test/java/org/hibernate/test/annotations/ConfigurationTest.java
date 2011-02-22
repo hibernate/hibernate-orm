@@ -2,29 +2,28 @@
 package org.hibernate.test.annotations;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ConfigurationTest extends junit.framework.TestCase {
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -32,7 +31,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();
@@ -50,7 +49,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AnnotationConfiguration.ARTEFACT_PROCESSING_ORDER, "class" );
-		SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();
@@ -74,7 +73,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAnnotatedClass( Boat.class );
-		SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
 		s.getTransaction().begin();
@@ -100,7 +99,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AnnotationConfiguration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
 		cfg.addAnnotatedClass( Boat.class );
-		SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
 		s.getTransaction().begin();
@@ -124,7 +123,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.addClass( Ferry.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();
@@ -142,7 +141,7 @@ public class ConfigurationTest extends junit.framework.TestCase {
 		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
 		cfg.addAnnotatedClass( Port.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		SessionFactory sf = cfg.buildSessionFactory( serviceRegistry );
 		assertNotNull( sf );
 		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();

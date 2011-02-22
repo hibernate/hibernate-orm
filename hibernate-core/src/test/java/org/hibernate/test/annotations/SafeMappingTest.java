@@ -2,10 +2,10 @@
 package org.hibernate.test.annotations;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**
  * @author Emmanuel Bernard
@@ -15,18 +15,18 @@ public class SafeMappingTest extends junit.framework.TestCase {
 		AnnotationConfiguration cfg = new AnnotationConfiguration();
 		cfg.addAnnotatedClass( IncorrectEntity.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		ServiceRegistryHolder serviceRegistryHolder = null;
+		ServiceRegistry serviceRegistry = null;
 		try {
-			serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
-			SessionFactory sf = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+			cfg.buildSessionFactory( serviceRegistry );
 			fail( "Entity wo id should fail" );
 		}
 		catch (AnnotationException e) {
 			//success
 		}
 		finally {
-			if ( serviceRegistryHolder != null ) {
-				serviceRegistryHolder.destroy();
+			if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
 	}

@@ -23,23 +23,13 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-
 import junit.extensions.TestSetup;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
@@ -50,19 +40,24 @@ import org.hibernate.cache.infinispan.access.TransactionalAccessDelegate;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.util.ComparableComparator;
-import org.infinispan.Cache;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 import javax.transaction.TransactionManager;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Base class for tests of CollectionRegionAccessStrategy impls.
@@ -524,7 +519,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       private final String configResource;
       private final String configName;
       private String preferIPv4Stack;
-      private ServiceRegistryHolder serviceRegistryHolder;
+      private ServiceRegistry serviceRegistry;
 
       public AccessStrategyTestSetup(Test test, String configName) {
          this(test, configName, null);
@@ -544,17 +539,17 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
          preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
          System.setProperty(PREFER_IPV4STACK, "true");
 
-         serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+         serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 
          localCfg = createConfiguration(configName, configResource);
          localRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistryHolder.getJdbcServicesImpl(),
+				 serviceRegistry.getService( JdbcServices.class ),
 				 localCfg
 		 );
 
          remoteCfg = createConfiguration(configName, configResource);
          remoteRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistryHolder.getJdbcServicesImpl(),
+				 serviceRegistry.getService( JdbcServices.class ),
 				 remoteCfg
 		 );
       }
@@ -578,8 +573,8 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                remoteRegionFactory.stop();
 		  }
 		  finally {
-            if ( serviceRegistryHolder != null ) {
-               serviceRegistryHolder.destroy(); 
+            if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
             }
 		  }
       }

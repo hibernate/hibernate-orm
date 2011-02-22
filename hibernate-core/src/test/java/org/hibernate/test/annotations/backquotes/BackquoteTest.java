@@ -1,18 +1,18 @@
 //$Id$
 package org.hibernate.test.annotations.backquotes;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import junit.framework.TestCase;
 
 import org.hibernate.MappingException;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.common.ServiceRegistryHolder;
-
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * Testcase for ANN-718 - @JoinTable / @JoinColumn fail when using backquotes in PK field name.
@@ -24,15 +24,15 @@ public class BackquoteTest extends TestCase {
 		
 	private Logger log = LoggerFactory.getLogger(BackquoteTest.class);	
 	
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	protected void setUp() {
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	protected void tearDown() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -41,7 +41,7 @@ public class BackquoteTest extends TestCase {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Bug.class);
 			config.addAnnotatedClass(Category.class);
-			config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+			config.buildSessionFactory( serviceRegistry );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
@@ -63,7 +63,7 @@ public class BackquoteTest extends TestCase {
     		AnnotationConfiguration config = new AnnotationConfiguration();
     		config.addAnnotatedClass(Printer.class);
     		config.addAnnotatedClass(PrinterCable.class);
-    		config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+    		config.buildSessionFactory( serviceRegistry );
     		fail("expected MappingException to be thrown");
     	}
     	//we WANT MappingException to be thrown

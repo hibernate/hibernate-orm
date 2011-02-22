@@ -1,8 +1,10 @@
 package org.hibernate.envers.test;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Optional;
+import org.testng.annotations.Parameters;
 
 import org.hibernate.MappingException;
 import org.hibernate.Session;
@@ -11,12 +13,12 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.test.common.ServiceRegistryHolder;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Optional;
-import org.testng.annotations.Parameters;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
+
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 /**
  * Base class for testing envers with Session when the same session and
@@ -29,7 +31,7 @@ public abstract class AbstractOneSessionTest  {
 
 	
 	protected Configuration config;
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 	private SessionFactory sessionFactory;
 	private Session session ;
 	private AuditReader auditReader;
@@ -48,8 +50,8 @@ public abstract class AbstractOneSessionTest  {
 
         this.initMappings();
 		
-		serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
-		sessionFactory = config.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+		sessionFactory = config.buildSessionFactory( serviceRegistry );
     }
 	
 	protected abstract void initMappings() throws MappingException, URISyntaxException ;
@@ -69,9 +71,9 @@ public abstract class AbstractOneSessionTest  {
 	   		sessionFactory.close();
 		}
 		finally {
-			if ( serviceRegistryHolder != null ) {
-					serviceRegistryHolder.destroy();
-					serviceRegistryHolder = null;
+			if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
+				serviceRegistry = null;
 			}
 		}
 	}

@@ -21,17 +21,18 @@
  */
 package org.hibernate.test.cfg;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.hibernate.test.common.ServiceRegistryHolder;
-import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.util.SerializationHelper;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit.UnitTestCase;
+import org.hibernate.util.SerializationHelper;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * Copied over mostly from ConfigurationPerformanceTest
@@ -105,18 +106,18 @@ public class ConfigurationSerializationTest extends UnitTestCase {
 		cfg = ( Configuration ) SerializationHelper.deserialize( bytes );
 
 		SessionFactory factory = null;
-		ServiceRegistryHolder serviceRegistryHolder = null;
+		ServiceRegistry serviceRegistry = null;
 		try {
-			serviceRegistryHolder = new ServiceRegistryHolder( cfg.getProperties() );
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 			// try to build SF
-			factory = cfg.buildSessionFactory( serviceRegistryHolder.getServiceRegistry());
+			factory = cfg.buildSessionFactory( serviceRegistry );
 		}
 		finally {
 			if ( factory != null ) {
 				factory.close();
 			}
-			if ( serviceRegistryHolder != null ) {
-				serviceRegistryHolder.destroy();
+			if ( serviceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
 	}

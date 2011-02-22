@@ -26,16 +26,7 @@
 
 package org.hibernate.testing.junit.functional.annotations;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import junit.framework.TestCase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -43,7 +34,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit.DialectChecks;
 import org.hibernate.testing.junit.FailureExpected;
 import org.hibernate.testing.junit.RequiresDialect;
@@ -52,6 +43,15 @@ import org.hibernate.testing.junit.SkipForDialect;
 import org.hibernate.testing.junit.SkipLog;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.util.StringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * A base class for all tests.
@@ -65,7 +65,7 @@ public abstract class HibernateTestCase extends TestCase {
 
 	protected static Configuration cfg;
 	private static Class<?> lastTestClass;
-	private ServiceRegistryHolder serviceRegistryHolder;
+	private ServiceRegistry serviceRegistry;
 
 	public HibernateTestCase() {
 		super();
@@ -153,10 +153,10 @@ public abstract class HibernateTestCase extends TestCase {
 	}
 
 	protected ServiceRegistry getServiceRegistry() {
-		if ( serviceRegistryHolder == null ) {
-			serviceRegistryHolder = new ServiceRegistryHolder( Environment.getProperties() );
+		if ( serviceRegistry == null ) {
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 		}
-		return serviceRegistryHolder.getServiceRegistry();
+		return serviceRegistry;
  	}
 
 	protected JdbcServices getJdbcServices() {
@@ -282,9 +282,9 @@ public abstract class HibernateTestCase extends TestCase {
 	protected abstract void handleUnclosedResources();
 
 	protected void closeResources() {
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
-			serviceRegistryHolder = null;
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+			serviceRegistry = null;
 		}
 	}
 

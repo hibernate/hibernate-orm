@@ -23,25 +23,25 @@
  */
 package org.hibernate.testing.junit.functional;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.Map;
-
-import org.hibernate.dialect.Dialect;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
-import org.hibernate.SessionFactory;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.Collection;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.test.common.ServiceRegistryHolder;
+import org.hibernate.testing.ServiceRegistryBuilder;
+
+import java.sql.Blob;
+import java.sql.Clob;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * {@inheritDoc}
@@ -55,8 +55,8 @@ public class ExecutionEnvironment {
 	private final ExecutionEnvironment.Settings settings;
 
 	private Map conectionProviderInjectionProperties;
-	private ServiceRegistryHolder serviceRegistryHolder;
 	private Configuration configuration;
+	private ServiceRegistry serviceRegistry;
 	private SessionFactory sessionFactory;
 	private boolean allowRebuild;
 
@@ -81,7 +81,7 @@ public class ExecutionEnvironment {
 	}
 
 	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistryHolder.getServiceRegistry();
+		return serviceRegistry;
 	}
 
 	public SessionFactory getSessionFactory() {
@@ -117,8 +117,8 @@ public class ExecutionEnvironment {
 
 		this.configuration = configuration;
 
-		serviceRegistryHolder = new ServiceRegistryHolder( getServiceRegistryProperties() );
-		sessionFactory = configuration.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( getServiceRegistryProperties() );
+		sessionFactory = configuration.buildSessionFactory( serviceRegistry );
 
 		settings.afterSessionFactoryBuilt( ( SessionFactoryImplementor ) sessionFactory );
 	}
@@ -186,12 +186,11 @@ public class ExecutionEnvironment {
 			sessionFactory.close();
 			sessionFactory = null;
 		}
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
-			serviceRegistryHolder = null;
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
-		serviceRegistryHolder = new ServiceRegistryHolder( getServiceRegistryProperties() );
-		sessionFactory = configuration.buildSessionFactory( serviceRegistryHolder.getServiceRegistry() );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( getServiceRegistryProperties() );
+		sessionFactory = configuration.buildSessionFactory( serviceRegistry );
 		settings.afterSessionFactoryBuilt( ( SessionFactoryImplementor ) sessionFactory );
 	}
 
@@ -200,9 +199,9 @@ public class ExecutionEnvironment {
 			sessionFactory.close();
 			sessionFactory = null;
 		}
-		if ( serviceRegistryHolder != null ) {
-			serviceRegistryHolder.destroy();
-			serviceRegistryHolder = null;
+		if ( serviceRegistry != null ) {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+			serviceRegistry = null;
 		}
 		configuration = null;
 	}

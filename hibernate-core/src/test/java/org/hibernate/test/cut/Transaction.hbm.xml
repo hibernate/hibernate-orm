@@ -26,6 +26,14 @@
 			<column name="amount" not-null="true"/>
 			<column name="currency" not-null="true"/>
 		</property>
+		<property name="timestamp" type="userDateTime">
+			<column name="year"/>
+			<column name="month"/>
+			<column name="day"/>
+			<column name="hour"/>
+			<column name="minute"/>
+			<column name="second"/>
+		</property>
 	</class>
 	
     <class name="MutualFund" table="MutualFund">

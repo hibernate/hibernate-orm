@@ -24,15 +24,15 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
 import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
 import org.hibernate.util.ArrayHelper;
-
-import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents an entity referenced in the INTO clause of an HQL
@@ -123,7 +123,7 @@ public class IntoClause extends HqlSqlWalkerNode implements DisplayableNode {
 			} else if ( !areCompatible( types[i], selectTypes[i - parameterCount] ) ) {
 				throw new QueryException(
 					"insertion type [" + types[i] + "] and selection type [" +
-					selectTypes[i] + "] at position " + i + " are not compatible"
+					selectTypes[i - parameterCount] + "] at position " + i + " are not compatible"
 				);
 			}
 		}

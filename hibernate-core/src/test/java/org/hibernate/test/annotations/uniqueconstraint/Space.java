@@ -10,7 +10,7 @@ import javax.persistence.UniqueConstraint;
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
 @MappedSuperclass
-@Table(uniqueConstraints = {@UniqueConstraint(name="inheritedConstraint", columnNames = {"matter", "value"})})
+@Table(uniqueConstraints = {@UniqueConstraint(name="inheritedConstraint", columnNames = {"matter_id", "value"})})
 public class Space {
 
     private Matter matter;

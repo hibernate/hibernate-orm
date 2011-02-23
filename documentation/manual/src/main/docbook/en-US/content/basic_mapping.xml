@@ -261,7 +261,7 @@ public class Flight implements Serializable {
         <para>Be sure to use the database-level column names for the <literal>columnNames</literal>
          property of a <literal>@UniqueConstraint</literal>. For example, whilst for simple types the
          database-level column name may be the same as the entity-level property name, this is often
-         not the case for relational types.
+         not the case for relational properties.
         </para>
       </tip>
 

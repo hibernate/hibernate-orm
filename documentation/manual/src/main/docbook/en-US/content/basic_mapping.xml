@@ -210,7 +210,7 @@ public class Dog { ... }</programlisting>
     affect the database schemas exported by the schema export tool (for
     example, the <literal> not-null</literal> attribute).</para>
 
-    <section id="mapping-declaration-class" revision="3">
+    <section id="mapping-declaration-class" revision="4">
       <title>Entity</title>
 
       <para>An entity is a regular Java object (aka POJO) which will be
@@ -256,6 +256,14 @@ public class Flight implements Serializable {
       column names composing the constraint correspond to the column names as
       defined before the Hibernate <classname>NamingStrategy</classname> is
       applied.</para>
+
+      <tip>
+        <para>Be sure to use the database-level column names for the <literal>columnNames</literal>
+         property of a <literal>@UniqueConstraint</literal>. For example, whilst for simple types the
+         database-level column name may be the same as the entity-level property name, this is often
+         not the case for relational types.
+        </para>
+      </tip>
 
       <para><literal>@Entity.name</literal> lets you define the shortcut name
       of the entity you can used in JP-QL and HQL queries. It defaults to the

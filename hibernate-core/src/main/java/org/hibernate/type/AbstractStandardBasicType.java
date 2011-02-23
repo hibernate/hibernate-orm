@@ -244,13 +244,17 @@ public abstract class AbstractStandardBasicType<T>
 			public LobCreator getLobCreator() {
 				return Hibernate.getLobCreator( session );
 			}
+
+			public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				return session.getFactory().getTypeResolver().resolveSqlTypeDescriptor( sqlTypeDescriptor );
+			}
 		};
 
 		return nullSafeGet( rs, name, options );
 	}
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		return sqlTypeDescriptor.getExtractor( javaTypeDescriptor ).extract( rs, name, options );
+		return resolveSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
 	}
 
 	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException {
@@ -272,6 +276,10 @@ public abstract class AbstractStandardBasicType<T>
 			public LobCreator getLobCreator() {
 				return Hibernate.getLobCreator( session );
 			}
+
+			public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+				return session.getFactory().getTypeResolver().resolveSqlTypeDescriptor( sqlTypeDescriptor );
+			}
 		};
 
 		nullSafeSet( st, value, index, options );
@@ -279,7 +287,11 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	protected final void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		sqlTypeDescriptor.getBinder( javaTypeDescriptor ).bind( st, (T) value, index, options );
+		resolveSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
+	}
+
+	private SqlTypeDescriptor resolveSqlTypeDescriptor(WrapperOptions options) {
+		return options.resolveSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	public void set(PreparedStatement st, T value, int index, SessionImplementor session) throws HibernateException, SQLException {

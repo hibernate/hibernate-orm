@@ -67,6 +67,9 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 
@@ -293,6 +296,67 @@ public abstract class Dialect {
 		typeNames.put( code, name );
 	}
 
+	/**
+	 * Allows the dialect to override a {@link SqlTypeDescriptor}.
+	 * <p/>
+	 * If <code>sqlTypeDescriptor</code> is a "standard basic" SQL type
+	 * descriptor, then this method uses {@link #getSqlTypeDescriptorOverride}
+	 * to get an optional override based on the SQL code returned by
+	 * {@link SqlTypeDescriptor#getSqlType()}.
+	 * <p/>
+	 * If this dialect does not provide an override, then this method
+	 * simply returns <code>sqlTypeDescriptor</code>
+	 *
+	 * @param sqlTypeDescriptor The {@link SqlTypeDescriptor} to override
+	 * @return The {@link SqlTypeDescriptor} that should be used for this dialect;
+	 *         if there is no override, then <code>sqlTypeDescriptor</code> is returned.
+	 * @throws IllegalArgumentException if <code>sqlTypeDescriptor</code> is null.
+	 *
+	 * @see {@link SqlTypeDescriptor}
+	 * @see {@link #getSqlTypeDescriptorOverride}
+	 * @see {@link StandardBasicTypes#isStandardBasicSqlTypeDescriptor(org.hibernate.type.descriptor.sql.SqlTypeDescriptor)}
+	 */
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		if ( sqlTypeDescriptor == null ) {
+			throw new IllegalArgumentException( "sqlTypeDescriptor is null" );
+		}
+		SqlTypeDescriptor overrideBySqlCode = null;
+		if ( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( sqlTypeDescriptor ) ) {
+			overrideBySqlCode = getSqlTypeDescriptorOverride( sqlTypeDescriptor.getSqlType() );
+		}
+		return overrideBySqlCode == null ? sqlTypeDescriptor : overrideBySqlCode;
+	}
+
+	/**
+	 * Returns the {@link SqlTypeDescriptor} that should override the
+	 * "standard basic" SQL type descriptor for values of the specified
+	 * column type, or null, if there is no override.
+	 *
+	 * @param sqlCode A {@link Types} constant indicating the SQL column type
+	 * @return The {@link SqlTypeDescriptor} that should override the
+	 * "standard basic" SQL type descriptor, or null, if there is no override.
+	 *
+	 * @see {@link SqlTypeDescriptor}
+	 * @see {@link StandardBasicTypes#isStandardBasicSqlTypeDescriptor(org.hibernate.type.descriptor.sql.SqlTypeDescriptor)}
+	 */
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		SqlTypeDescriptor descriptor;
+		switch ( sqlCode ) {
+			case Types.BLOB: {
+				descriptor = useInputStreamToInsertBlob() ? BlobTypeDescriptor.STREAM_BINDING : null;
+				break;
+			}
+			case Types.CLOB: {
+				descriptor = useInputStreamToInsertBlob() ? ClobTypeDescriptor.STREAM_BINDING : null;
+				break;
+			}
+			default: {
+				descriptor = null;
+				break;
+			}
+		}
+		return descriptor;
+	}
 
 	// hibernate type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

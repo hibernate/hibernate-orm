@@ -37,7 +37,7 @@ public class MaterializedClobType extends AbstractSingleColumnStandardBasicType<
 	public static final MaterializedClobType INSTANCE = new MaterializedClobType();
 
 	public MaterializedClobType() {
-		super( ClobTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+		super( ClobTypeDescriptor.DEFAULT, StringTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

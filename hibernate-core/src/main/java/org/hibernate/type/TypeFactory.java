@@ -86,6 +86,10 @@ public final class TypeFactory implements Serializable {
 		typeScope.injectSessionFactory( factory );
 	}
 
+	public SessionFactoryImplementor resolveSessionFactory() {
+		return typeScope.resolveFactory();
+	}
+
 	public Type byClass(Class clazz, Properties parameters) {
 		if ( Type.class.isAssignableFrom( clazz ) ) {
 			return type( (Class<Type>) clazz, parameters );

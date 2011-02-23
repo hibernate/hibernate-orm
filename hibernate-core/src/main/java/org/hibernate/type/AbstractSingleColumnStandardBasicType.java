@@ -56,6 +56,10 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}
+
+		public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+			return sqlTypeDescriptor;
+		}
 	};
 
 	public final int sqlType() {

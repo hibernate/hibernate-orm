@@ -36,8 +36,6 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
 /**
  * TODO : javadoc
@@ -48,7 +46,7 @@ public class StringValueMappingTest extends TestCase {
 	private final StringTypeDescriptor stringJavaDescriptor = new StringTypeDescriptor();
 
 	private final VarcharTypeDescriptor varcharSqlDescriptor = new VarcharTypeDescriptor();
-	private final ClobTypeDescriptor clobSqlDescriptor = new ClobTypeDescriptor();
+	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
 		public boolean useStreamForLobBinding() {
@@ -57,6 +55,10 @@ public class StringValueMappingTest extends TestCase {
 
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
+		}
+
+		public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+			return sqlTypeDescriptor;
 		}
 	};
 

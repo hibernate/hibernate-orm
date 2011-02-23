@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,41 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
-
-import java.sql.Blob;
-
-import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
+package org.hibernate.test.typeoverride;
 
 /**
- * A type that maps between {@link java.sql.Types#BLOB BLOB} and {@link Blob}
- *
- * @author Gavin King
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
-	public static final BlobType INSTANCE = new BlobType();
+public class Entity {
+	private long id;
+	private String name;
 
-	public BlobType() {
-		super( org.hibernate.type.descriptor.sql.BlobTypeDescriptor.DEFAULT, BlobTypeDescriptor.INSTANCE );
+	public Entity() {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	public Entity(String name) {
+		this.name = name;
+	}
+
+	public long getId() {
+		return id;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
 	public String getName() {
-		return "blob";
+		return name;
 	}
 
-	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
+	public void setName(String name) {
+		this.name = name;
 	}
-
-	@Override
-	protected Blob getReplacement(Blob original, Blob target) {
-		return target;
-	}
-
 }
-

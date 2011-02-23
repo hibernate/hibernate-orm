@@ -40,6 +40,9 @@ import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * An SQL dialect for Postgres
@@ -144,6 +147,30 @@ public class PostgreSQLDialect extends Dialect {
 		registerFunction( "str", new SQLFunctionTemplate(Hibernate.STRING, "cast(?1 as varchar)") );
 
 		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);
+		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
+		SqlTypeDescriptor descriptor;
+		switch ( sqlCode ) {
+			case Types.BLOB: {
+				descriptor = BlobTypeDescriptor.BLOB_BINDING;
+				break;
+			}
+			case Types.CLOB: {
+				descriptor = ClobTypeDescriptor.CLOB_BINDING;
+				break;
+			}
+			default: {
+				descriptor = super.getSqlTypeDescriptorOverride( sqlCode );
+				break;
+			}
+		}
+		return descriptor;
 	}
 
 	public String getAddColumnString() {
@@ -364,8 +391,18 @@ public class PostgreSQLDialect extends Dialect {
 		return false;
 	}
 
+	@Override
 	public boolean supportsExpectedLobUsagePattern() {
-		// seems to have spotty LOB suppport
+		return true;
+	}
+
+	@Override
+	public boolean supportsLobValueChangePropogation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
 	}
 

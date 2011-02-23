@@ -24,11 +24,17 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.util.ReflectHelper;
@@ -39,21 +45,31 @@ import org.hibernate.util.ReflectHelper;
  * @author Steve Ebersole
  */
 public class TypeResolver implements Serializable {
+	private static final Logger log = LoggerFactory.getLogger( TypeResolver.class );
+
 	private final BasicTypeRegistry basicTypeRegistry;
 	private final TypeFactory typeFactory;
+	private final Map<SqlTypeDescriptor, SqlTypeDescriptor> resolvedSqlTypeDescriptors;
 
 	public TypeResolver() {
-		this(  new BasicTypeRegistry(), new TypeFactory() );
+		this(  new BasicTypeRegistry(), new TypeFactory(), null );
 	}
 
-	public TypeResolver(BasicTypeRegistry basicTypeRegistry, TypeFactory typeFactory) {
+	public TypeResolver(BasicTypeRegistry basicTypeRegistry,
+						TypeFactory typeFactory,
+						Map<SqlTypeDescriptor, SqlTypeDescriptor> resolvedSqlTypeDescriptors) {
 		this.basicTypeRegistry = basicTypeRegistry;
 		this.typeFactory = typeFactory;
+		this.resolvedSqlTypeDescriptors = resolvedSqlTypeDescriptors;
 	}
 
 	public TypeResolver scope(SessionFactoryImplementor factory) {
 		typeFactory.injectSessionFactory( factory );
-		return new TypeResolver( basicTypeRegistry.shallowCopy(), typeFactory );
+		return new TypeResolver(
+				basicTypeRegistry.shallowCopy(),
+				typeFactory,
+				new HashMap<SqlTypeDescriptor, SqlTypeDescriptor>( 25 )
+		);
 	}
 
 	public void registerTypeOverride(BasicType type) {
@@ -134,5 +150,40 @@ public class TypeResolver implements Serializable {
 		}
 
 		return null;
+	}
+
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		if ( resolvedSqlTypeDescriptors == null ) {
+			throw new IllegalStateException( "cannot resolve a SqlTypeDescriptor until the TypeResolver is scoped." );
+		}
+		SqlTypeDescriptor resolvedDescriptor = resolvedSqlTypeDescriptors.get( sqlTypeDescriptor );
+		if ( resolvedDescriptor == null ) {
+			resolvedDescriptor =
+					typeFactory.resolveSessionFactory().getDialect().resolveSqlTypeDescriptor( sqlTypeDescriptor );
+			if ( resolvedDescriptor == null ) {
+				throw new IllegalStateException( "dialect returned a resolved SqlTypeDescriptor that was null." );
+			}
+			if ( sqlTypeDescriptor != resolvedDescriptor ) {
+				log.info(
+						"Adding override for {}: {}",
+						new String[] {
+								sqlTypeDescriptor.getClass().getName(),
+								resolvedDescriptor.getClass().getName(),
+						}
+				);
+				if ( sqlTypeDescriptor.getSqlType() != resolvedDescriptor.getSqlType() ) {
+					log.warn( "Resolved SqlTypeDescriptor is for a different SQL code. {} has sqlCode={}; type override {} has sqlCode={}",
+							new String[] {
+									sqlTypeDescriptor.getClass().getName(),
+									String.valueOf( sqlTypeDescriptor.getSqlType() ),
+									resolvedDescriptor.getClass().getName(),
+									String.valueOf( resolvedDescriptor.getSqlType() ),
+							}
+					);
+				}
+			}
+			resolvedSqlTypeDescriptors.put( sqlTypeDescriptor, resolvedDescriptor );
+		}
+		return resolvedDescriptor;
 	}
 }

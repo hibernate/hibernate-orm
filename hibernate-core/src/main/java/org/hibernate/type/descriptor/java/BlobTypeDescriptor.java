@@ -31,6 +31,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
+import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -107,12 +108,21 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 
 	@SuppressWarnings({ "unchecked" })
 	public <X> X unwrap(Blob value, Class<X> type, WrapperOptions options) {
-		if ( !Blob.class.isAssignableFrom( type ) ) {
+		if ( ! ( Blob.class.isAssignableFrom( type ) || BinaryStream.class.isAssignableFrom( type ) ) ) {
 			throw unknownUnwrap( type );
 		}
 
 		if ( value == null ) {
 			return null;
+		}
+
+		if ( BinaryStream.class.isAssignableFrom( type ) ) {
+			try {
+				return (X) new BinaryStreamImpl( DataHelper.extractBytes( value.getBinaryStream() ) );
+			}
+			catch ( SQLException e ) {
+				throw new HibernateException( "Unable to access blob stream", e );
+			}
 		}
 
 		final Blob blob =  WrappedBlob.class.isInstance( value )

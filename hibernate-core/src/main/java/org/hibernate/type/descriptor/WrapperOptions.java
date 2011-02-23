@@ -23,7 +23,10 @@
  */
 package org.hibernate.type.descriptor;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.type.TypeResolver;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * TODO : javadoc
@@ -33,4 +36,5 @@ import org.hibernate.engine.jdbc.LobCreator;
 public interface WrapperOptions {
 	public boolean useStreamForLobBinding();
 	public LobCreator getLobCreator();
+	public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor);
 }

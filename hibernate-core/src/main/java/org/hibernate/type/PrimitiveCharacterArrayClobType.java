@@ -35,7 +35,7 @@ public class PrimitiveCharacterArrayClobType extends AbstractSingleColumnStandar
 	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
 
 	public PrimitiveCharacterArrayClobType() {
-		super( ClobTypeDescriptor.INSTANCE, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+		super( ClobTypeDescriptor.DEFAULT, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

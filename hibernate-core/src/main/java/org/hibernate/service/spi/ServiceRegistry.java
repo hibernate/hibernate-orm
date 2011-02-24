@@ -23,7 +23,6 @@
  */
 package org.hibernate.service.spi;
 
-
 /**
  * The registry of services used by Hibernate
  *

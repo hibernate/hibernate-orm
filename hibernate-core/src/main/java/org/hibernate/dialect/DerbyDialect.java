@@ -234,7 +234,8 @@ public String getForUpdateString() {
 		return false;
 	}
 	
-	public boolean supportsUnboundedLobLocatorMaterialization() {
+	@Override
+    public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
 	}
 }

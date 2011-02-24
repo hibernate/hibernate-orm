@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

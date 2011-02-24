@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
+
 import java.util.Hashtable;
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;

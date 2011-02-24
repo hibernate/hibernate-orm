@@ -245,6 +245,6 @@ public class AnnotationConfiguration extends Configuration {
 	}
 
 	@Deprecated
-	protected class ExtendedMappingsImpl extends MappingsImpl implements ExtendedMappings {
+    protected class ExtendedMappingsImpl extends MappingsImpl {
 	}
 }

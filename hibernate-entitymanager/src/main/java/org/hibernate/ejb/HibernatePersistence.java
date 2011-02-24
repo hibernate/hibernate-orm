@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.ejb;
+
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.LoadState;

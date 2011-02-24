@@ -48,7 +48,7 @@ public abstract class AbstractOneSessionTest  {
 
         this.initMappings();
 
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+        serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(Environment.getProperties());
 		sessionFactory = config.buildSessionFactory( serviceRegistry );
     }
 

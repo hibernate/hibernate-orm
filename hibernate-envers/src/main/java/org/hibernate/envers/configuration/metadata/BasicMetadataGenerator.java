@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
+
 import java.util.Properties;
 import org.dom4j.Element;
 import org.hibernate.envers.configuration.metadata.reader.PropertyAuditingData;

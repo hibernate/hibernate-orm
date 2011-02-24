@@ -1,11 +1,9 @@
 //$Id$
 package org.hibernate.ejb.test.query;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;

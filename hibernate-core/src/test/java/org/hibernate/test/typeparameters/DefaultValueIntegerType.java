@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -34,12 +35,12 @@ public class DefaultValueIntegerType implements UserType, ParameterizedType, Ser
 		return x.equals(y);
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
 		Number result = (Number) rs.getObject(names[0]);
 		return result==null ? defaultValue : new Integer(result.intValue());
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		if (value == null || defaultValue.equals(value) ) {
 			LoggerFactory.getLogger( getClass() ).trace("binding null to parameter: " + index);
 			st.setNull(index, Types.INTEGER);

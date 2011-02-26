@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Hibernate;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -18,17 +19,17 @@ public class CustomBlobType implements UserType {
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object nullSafeGet(ResultSet rs, String names[], Object owner) throws SQLException {
+	public Object nullSafeGet(ResultSet rs, String names[], SessionImplementor session, Object owner) throws SQLException {
 		// cast just to make sure...
-		return ( byte[] ) Hibernate.BINARY.nullSafeGet( rs, names[0] );
+		return ( byte[] ) Hibernate.BINARY.nullSafeGet( rs, names[0], session );
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public void nullSafeSet(PreparedStatement ps, Object value, int index) throws SQLException, HibernateException {
+	public void nullSafeSet(PreparedStatement ps, Object value, int index, SessionImplementor session) throws SQLException, HibernateException {
 		// cast just to make sure...
-		Hibernate.BINARY.nullSafeSet( ps, ( byte[] ) value, index );
+		Hibernate.BINARY.nullSafeSet( ps, ( byte[] ) value, index, session );
 	}
 
 	/**

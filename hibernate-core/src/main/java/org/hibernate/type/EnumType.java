@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.util.ReflectHelper;
@@ -97,7 +98,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 	}
 
 
-	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
 		Object object = rs.getObject( names[0] );
 		if ( rs.wasNull() ) {
 			if ( IS_VALUE_TRACING_ENABLED ) {
@@ -130,7 +131,7 @@ public class EnumType implements EnhancedUserType, ParameterizedType, Serializab
 		}
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		if ( value == null ) {
 			if ( IS_VALUE_TRACING_ENABLED ) {
 				log().debug( "Binding null to parameter: {}", index );

@@ -24,7 +24,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,7 +34,6 @@ import junit.framework.TestCase;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
@@ -132,11 +130,11 @@ public class BasicTypeRegistryTest extends TestCase {
 			return 0;
 		}
 
-		public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
+		public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
 			return null;
 		}
 
-		public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+		public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		}
 
 		public Object deepCopy(Object value) throws HibernateException {

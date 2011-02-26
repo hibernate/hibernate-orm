@@ -47,12 +47,6 @@ public interface SingleColumnType<T> extends Type {
 	public T fromStringValue(String xml) throws HibernateException;
 
 	/**
-	 * @deprecated Use {@link #nullSafeGet(ResultSet, String, SessionImplementor)} instead
-	 */
-	@SuppressWarnings({ "JavaDoc" })
-	public T nullSafeGet(ResultSet rs, String name) throws HibernateException, SQLException;
-
-	/**
 	 * Get a column value from a result set by name.
 	 *
 	 * @param rs The result set from which to extract the value.
@@ -67,14 +61,6 @@ public interface SingleColumnType<T> extends Type {
 	public T nullSafeGet(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
 
 	/**
-	 * DO NOT USER THIS FORM!
-	 *
-	 * @deprecated Use {@link #get(ResultSet, String, SessionImplementor)} instead.
-	 */
-	@SuppressWarnings({ "JavaDoc" })
-	public Object get(ResultSet rs, String name) throws HibernateException, SQLException;
-
-	/**
 	 * Get a column value from a result set, without worrying about the possibility of null values.
 	 *
 	 * @param rs The result set from which to extract the value.
@@ -87,22 +73,6 @@ public interface SingleColumnType<T> extends Type {
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
 	public Object get(ResultSet rs, String name, SessionImplementor session) throws HibernateException, SQLException;
-
-	/**
-	 * DO NOT USE THIS FORM!
-	 *
-	 * @deprecated Use {@link #nullSafeSet(PreparedStatement, Object, int, SessionImplementor)} instead.
-	 */
-	@SuppressWarnings({ "JavaDoc" })
-	public void nullSafeSet(PreparedStatement st, T value, int index) throws HibernateException, SQLException;
-
-	/**
-	 * DO NOT USE THIS FORM!
-	 *
-	 * @deprecated Use {@link #set(PreparedStatement, Object, int, SessionImplementor)} instead.
-	 */
-	@SuppressWarnings({ "JavaDoc" })
-	public void set(PreparedStatement st, T value, int index) throws HibernateException, SQLException;
 
 	/**
 	 * Set a parameter value without worrying about the possibility of null

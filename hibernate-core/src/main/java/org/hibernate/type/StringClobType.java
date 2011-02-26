@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -59,7 +60,7 @@ public class StringClobType implements UserType, Serializable {
 		return x.hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
 		Reader reader = rs.getCharacterStream( names[0] );
 		if ( reader == null ) return null;
 		StringBuilder result = new StringBuilder( 4096 );
@@ -75,7 +76,7 @@ public class StringClobType implements UserType, Serializable {
 		return result.toString();
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		if ( value != null ) {
 			String string = (String) value;
 			StringReader reader = new StringReader( string );

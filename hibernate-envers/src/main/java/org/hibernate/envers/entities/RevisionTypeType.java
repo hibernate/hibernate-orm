@@ -29,9 +29,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.IntegerType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -49,23 +51,20 @@ public class RevisionTypeType implements UserType {
         return RevisionType.class;
     }
 
-    public RevisionType nullSafeGet(ResultSet resultSet, String[] names, Object owner) throws HibernateException, SQLException {
-        byte representation = (byte) resultSet.getInt(names[0]);
-        RevisionType result = null;
-
-        if (!resultSet.wasNull()) {
-            result = RevisionType.fromRepresentation(representation);
-        }
-
-        return result;
+    public RevisionType nullSafeGet(ResultSet resultSet, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+		Integer representationInt = IntegerType.INSTANCE.nullSafeGet( resultSet, names[0], session );
+		return representationInt == null ?
+				null :
+				RevisionType.fromRepresentation( representationInt.byteValue() );
     }
 
-    public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index) throws HibernateException, SQLException {
-        if (null == value) {
-            preparedStatement.setNull(index, Types.TINYINT);
-        } else {
-            preparedStatement.setInt(index, ((RevisionType) value).getRepresentation());
-        }
+    public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+		IntegerType.INSTANCE.nullSafeSet(
+				preparedStatement,
+				( value == null ? null : ((RevisionType) value).getRepresentation().intValue() ),
+				index,
+				session
+		);
     }
 
     public Object deepCopy(Object value) throws HibernateException{

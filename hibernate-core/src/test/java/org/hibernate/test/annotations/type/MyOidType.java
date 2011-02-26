@@ -93,10 +93,10 @@ public class MyOidType implements CompositeUserType {
 	public Object nullSafeGet(
 			ResultSet aResultSet, String[] names, SessionImplementor aSessionImplementor, Object aObject
 	) throws HibernateException, SQLException {
-		Integer highval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[0] );
-		Integer midval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[1] );
-		Integer lowval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[2] );
-		Integer other = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[3] );
+		Integer highval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[0], aSessionImplementor );
+		Integer midval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[1], aSessionImplementor );
+		Integer lowval = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[2], aSessionImplementor );
+		Integer other = (Integer) Hibernate.INTEGER.nullSafeGet( aResultSet, names[3], aSessionImplementor );
 
 		return new MyOid( highval, midval, lowval, other );
 	}
@@ -113,10 +113,10 @@ public class MyOidType implements CompositeUserType {
 			c = (MyOid) value;
 		}
 
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getHigh(), index );
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getMiddle(), index + 1 );
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getLow(), index + 2 );
-		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3 );
+		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getHigh(), index, aSessionImplementor );
+		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getMiddle(), index + 1, aSessionImplementor );
+		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getLow(), index + 2, aSessionImplementor );
+		Hibernate.INTEGER.nullSafeSet( aPreparedStatement, c.getOther(), index + 3, aSessionImplementor );
 	}
 
 	public Object deepCopy(Object aObject) throws HibernateException {

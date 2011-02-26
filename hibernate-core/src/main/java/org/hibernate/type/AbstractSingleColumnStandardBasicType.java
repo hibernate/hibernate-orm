@@ -48,36 +48,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 		super( sqlTypeDescriptor, javaTypeDescriptor );
 	}
 
-	private static WrapperOptions NO_OPTIONS = new WrapperOptions() {
-		public boolean useStreamForLobBinding() {
-			return false;
-		}
-
-		public LobCreator getLobCreator() {
-			return NonContextualLobCreator.INSTANCE;
-		}
-
-		public SqlTypeDescriptor resolveSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-			return sqlTypeDescriptor;
-		}
-	};
-
 	public final int sqlType() {
 		return getSqlTypeDescriptor().getSqlType();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public T nullSafeGet(ResultSet rs, String name) throws HibernateException, SQLException {
-		return nullSafeGet( rs, name, NO_OPTIONS );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
-		return nullSafeGet( rs, name );
 	}
 
 	/**
@@ -89,19 +61,4 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 			nullSafeSet( st, value, index, session );
 		}
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void nullSafeSet(PreparedStatement st, T value, int index) throws HibernateException, SQLException {
-		nullSafeSet( st, value, index, NO_OPTIONS );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public void set(PreparedStatement st, T value, int index) throws HibernateException, SQLException {
-		nullSafeSet( st, value, index );
-	}
-
 }

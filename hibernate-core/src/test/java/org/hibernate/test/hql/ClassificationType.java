@@ -1,5 +1,6 @@
 package org.hibernate.test.hql;
 
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.IntegerType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.HibernateException;
@@ -46,14 +47,14 @@ public class ClassificationType implements EnhancedUserType {
 		return x.hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
-		Integer ordinal = ( Integer ) IntegerType.INSTANCE.nullSafeGet( rs, names[0] );
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
+		Integer ordinal = ( Integer ) IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
 		return Classification.valueOf( ordinal );
 	}
 
-	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		Integer ordinal = value == null ? null : new Integer( ( ( Classification ) value ).ordinal() );
-		Hibernate.INTEGER.nullSafeSet( st, ordinal, index );
+		Hibernate.INTEGER.nullSafeSet( st, ordinal, index, session );
 	}
 
 	public Object deepCopy(Object value) throws HibernateException {

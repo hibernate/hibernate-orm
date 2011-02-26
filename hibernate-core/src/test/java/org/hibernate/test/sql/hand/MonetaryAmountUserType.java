@@ -9,6 +9,7 @@ import java.sql.Types;
 import java.util.Currency;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -40,7 +41,7 @@ public class MonetaryAmountUserType
 
 	public Object nullSafeGet(ResultSet resultSet,
 							  String[] names,
-							  Object owner)
+							  SessionImplementor session, Object owner)
 			throws HibernateException, SQLException {
 
 		BigDecimal value = resultSet.getBigDecimal(names[0]);
@@ -53,7 +54,7 @@ public class MonetaryAmountUserType
 
 	public void nullSafeSet(PreparedStatement statement,
 							Object value,
-							int index)
+							int index, SessionImplementor session)
 			throws HibernateException, SQLException {
 
 		if (value == null) {

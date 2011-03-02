@@ -23,34 +23,32 @@
  */
 package org.hibernate.hql.ast.exec;
 
-import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.SQLWarning;
-import java.sql.Statement;
-import java.util.List;
-import java.util.Collections;
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.transaction.Isolater;
-import org.hibernate.engine.transaction.IsolatedWork;
 import org.hibernate.event.EventSource;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.SqlGenerator;
+import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.StringHelper;
-
-import antlr.RecognitionException;
-import antlr.collections.AST;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLWarning;
+import java.sql.Statement;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Implementation of AbstractStatementExecutor.
@@ -139,42 +137,55 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 			        " from " + persister.getTemporaryIdTableName();
 	}
 
+	private static class TemporaryTableCreationWork implements Work {
+		private final Queryable persister;
+
+		private TemporaryTableCreationWork(Queryable persister) {
+			this.persister = persister;
+		}
+
+		@Override
+		public void execute(Connection connection) {
+			try {
+				Statement statement = connection.createStatement();
+				try {
+					statement.executeUpdate( persister.getTemporaryIdTableDDL() );
+					JDBCExceptionReporter.handleAndClearWarnings( statement, CREATION_WARNING_HANDLER );
+				}
+				finally {
+					try {
+						statement.close();
+					}
+					catch( Throwable ignore ) {
+						// ignore
+					}
+				}
+			}
+			catch( Exception e ) {
+				LOG.debug( "unable to create temporary id table [" + e.getMessage() + "]" );
+			}
+		}
+	}
 	protected void createTemporaryTableIfNecessary(final Queryable persister, final SessionImplementor session) {
 		// Don't really know all the codes required to adequately decipher returned jdbc exceptions here.
 		// simply allow the failure to be eaten and the subsequent insert-selects/deletes should fail
-		IsolatedWork work = new IsolatedWork() {
-			public void doWork(Connection connection) throws HibernateException {
-				try {
-					Statement statement = connection.createStatement();
-					try {
-						statement.executeUpdate( persister.getTemporaryIdTableDDL() );
-						JDBCExceptionReporter.handleAndClearWarnings( statement, CREATION_WARNING_HANDLER );
-					}
-					finally {
-						try {
-							statement.close();
-						}
-						catch( Throwable ignore ) {
-							// ignore
-						}
-					}
-				}
-				catch( Exception e ) {
-					log.debug( "unable to create temporary id table [" + e.getMessage() + "]" );
-				}
-			}
-		};
+		TemporaryTableCreationWork work = new TemporaryTableCreationWork( persister );
 		if ( shouldIsolateTemporaryTableDDL() ) {
-			if ( getFactory().getSettings().isDataDefinitionInTransactionSupported() ) {
-				Isolater.doIsolatedWork( work, session );
-			}
-			else {
-				Isolater.doNonTransactedWork( work, session );
-			}
+			session.getTransactionCoordinator()
+					.getTransaction()
+					.createIsolationDelegate()
+					.delegateWork( work, getFactory().getSettings().isDataDefinitionInTransactionSupported() );
 		}
 		else {
-			work.doWork( session.getJDBCContext().getConnectionManager().getConnection() );
-			session.getJDBCContext().getConnectionManager().afterStatement();
+			final Connection connection = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getLogicalConnection()
+					.getShareableConnectionProxy();
+			work.execute( connection );
+			session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getLogicalConnection()
+					.afterStatementExecution();
 		}
 	}
 
@@ -194,53 +205,67 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 	};
 
-	protected void dropTemporaryTableIfNecessary(final Queryable persister, final SessionImplementor session) {
-		if ( getFactory().getDialect().dropTemporaryTableAfterUse() ) {
-			IsolatedWork work = new IsolatedWork() {
-				public void doWork(Connection connection) throws HibernateException {
-					final String command = session.getFactory().getDialect().getDropTemporaryTableString()
-							+ ' ' + persister.getTemporaryIdTableName();
-					try {
-						Statement statement = connection.createStatement();
-						try {
-							statement = connection.createStatement();
-							statement.executeUpdate( command );
-						}
-						finally {
-							try {
-								statement.close();
-							}
-							catch( Throwable ignore ) {
-								// ignore
-							}
-						}
-					}
-					catch( Exception e ) {
-						log.warn( "unable to drop temporary id table after use [" + e.getMessage() + "]" );
-					}
-				}
-			};
+	private static class TemporaryTableDropWork implements Work {
+		private final Queryable persister;
+		private final SessionImplementor session;
 
-			if ( shouldIsolateTemporaryTableDDL() ) {
-				if ( getFactory().getSettings().isDataDefinitionInTransactionSupported() ) {
-					Isolater.doIsolatedWork( work, session );
+		private TemporaryTableDropWork(Queryable persister, SessionImplementor session) {
+			this.persister = persister;
+			this.session = session;
+		}
+
+		@Override
+		public void execute(Connection connection) {
+			final String command = session.getFactory().getDialect().getDropTemporaryTableString()
+					+ ' ' + persister.getTemporaryIdTableName();
+			try {
+				Statement statement = connection.createStatement();
+				try {
+					statement = connection.createStatement();
+					statement.executeUpdate( command );
 				}
-				else {
-					Isolater.doNonTransactedWork( work, session );
+				finally {
+					try {
+						statement.close();
+					}
+					catch( Throwable ignore ) {
+						// ignore
+					}
 				}
 			}
+			catch( Exception e ) {
+				LOG.warn( "unable to drop temporary id table after use [" + e.getMessage() + "]" );
+			}
+		}
+	}
+
+	protected void dropTemporaryTableIfNecessary(final Queryable persister, final SessionImplementor session) {
+		if ( getFactory().getDialect().dropTemporaryTableAfterUse() ) {
+			TemporaryTableDropWork work = new TemporaryTableDropWork( persister, session );
+			if ( shouldIsolateTemporaryTableDDL() ) {
+				session.getTransactionCoordinator()
+						.getTransaction()
+						.createIsolationDelegate()
+						.delegateWork( work, getFactory().getSettings().isDataDefinitionInTransactionSupported() );
+			}
 			else {
-				work.doWork( session.getJDBCContext().getConnectionManager().getConnection() );
-				session.getJDBCContext().getConnectionManager().afterStatement();
+				final Connection connection = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getLogicalConnection()
+						.getShareableConnectionProxy();
+				work.execute( connection );
+				session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getLogicalConnection()
+						.afterStatementExecution();
 			}
 		}
 		else {
 			// at the very least cleanup the data :)
 			PreparedStatement ps = null;
 			try {
-				ps = session.getJDBCContext().getConnectionManager().prepareStatement( "delete from " + persister.getTemporaryIdTableName(),
-						false
-				);
+				final String sql = "delete from " + persister.getTemporaryIdTableName();
+				ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				ps.executeUpdate();
 			}
 			catch( Throwable t ) {

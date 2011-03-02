@@ -23,48 +23,52 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
-import org.hibernate.jdbc.Expectation;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Map;
 
 /**
- * An implementation of {@link org.hibernate.engine.jdbc.batch.spi.Batch} which does not perform batching.  It simply executes each statement as it is
- * encountered.
+ * An implementation of {@link org.hibernate.engine.jdbc.batch.spi.Batch} which does not perform batching.  It simply
+ * executes each statement as it is encountered.
  *
  * @author Steve Ebersole
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
 	private static final Logger log = LoggerFactory.getLogger( NonBatchingBatch.class );
 
-	protected NonBatchingBatch(Object key,
-							SQLStatementLogger statementLogger,
-							SQLExceptionHelper exceptionHelper) {
-		super( key, statementLogger, exceptionHelper );
+	protected NonBatchingBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
+		super( key, jdbcCoordinator );
 	}
 
-	public void addToBatch(Object key, String sql, Expectation expectation) {
-		checkConsistentBatchKey( key );
-		if ( sql == null ) {
-			throw new IllegalArgumentException( "sql must be non-null." );
-		}
+	@Override
+	public void addToBatch() {
 		notifyObserversImplicitExecution();
-		try {
-			final PreparedStatement statement = getStatements().get( sql );
-			final int rowCount = statement.executeUpdate();
-			expectation.verifyOutcome( rowCount, statement, 0 );
+		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
+			try {
+				final PreparedStatement statement = entry.getValue();
+				final int rowCount = statement.executeUpdate();
+				getKey().getExpectation().verifyOutcome( rowCount, statement, 0 );
+				try {
+					statement.close();
+				}
+				catch (SQLException e) {
+					log.debug( "Unable to close non-batched batch statement", e );
+				}
+			}
+			catch ( SQLException e ) {
+				log.debug( "sqlexception escaped proxy", e );
+				throw sqlExceptionHelper().convert( e, "could not execute batch statement", entry.getKey() );
+			}
 		}
-		catch ( SQLException e ) {
-			log.error( "sqlexception escaped proxy", e );
-			throw getSqlExceptionHelper().convert( e, "could not execute batch statement", sql );
-		}
+		getStatements().clear();
 	}
 
+	@Override
 	protected void doExecuteBatch() {
 		// nothing to do
 	}

@@ -38,6 +38,8 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
+import org.hibernate.engine.transaction.spi.TransactionContext;
+import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 
 import java.util.List;
 
@@ -46,7 +48,7 @@ import java.util.List;
  * 
  * @author Gavin King
  */
-public abstract class AbstractSessionImpl implements SessionImplementor {
+public abstract class AbstractSessionImpl implements SessionImplementor, TransactionContext {
 
 	protected transient SessionFactoryImpl factory;
 	private boolean closed = false;
@@ -57,6 +59,11 @@ public abstract class AbstractSessionImpl implements SessionImplementor {
 
 	public SessionFactoryImplementor getFactory() {
 		return factory;
+	}
+
+	@Override
+	public TransactionEnvironment getTransactionEnvironment() {
+		return factory.getTransactionEnvironment();
 	}
 
 	public boolean isClosed() {

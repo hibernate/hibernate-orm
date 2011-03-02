@@ -28,4 +28,9 @@ public class CurrentSessionConnectionTest extends AggressiveReleaseTest {
 	protected void release(Session session) {
 		// do nothing, txn synch should release session as part of current-session definition
 	}
+
+	@Override
+	public void testSerializationOnAfterStatementAggressiveRelease() throws Throwable {
+		super.testSerializationOnAfterStatementAggressiveRelease();
+	}
 }

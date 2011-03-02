@@ -67,6 +67,7 @@ libraries = [
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
         // testing
+        atomikos:       'com.atomikos:transactions-jdbc:3.6.4',
         junit:          'junit:junit:3.8.2',
         testng:         'org.testng:testng:5.8:jdk15',
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.0.Final',
@@ -106,6 +107,7 @@ subprojects { subProject ->
         dependencies {
             compile( libraries.slf4j_api )
             testCompile( libraries.junit )
+            testCompile( libraries.atomikos )
             testRuntime( libraries.slf4j_simple )
             testRuntime( libraries.jcl_slf4j )
             testRuntime( libraries.jcl_api )
@@ -151,12 +153,8 @@ subprojects { subProject ->
         sourceCompatibility = "1.6"
 
         ideaModule {
-            // treat our "provided" configuration dependencies as "Compile" scope dependencies in IntelliJ
+            // treat our "provided" configuration dependencies as "compile" scope dependencies in IntelliJ
             scopes.COMPILE.plus.add( configurations.provided )
-            // Use explicitly separate compilation output directories for Gradle and IntelliJ
-            File baseDirectory = new File( subProject.buildDir, "idea/classes" )
-            outputDir = new File( baseDirectory, "main" )
-            testOutputDir = new File( baseDirectory, "test" )
             whenConfigured { module ->
                 module.dependencies*.exported = true
             }

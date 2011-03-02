@@ -198,7 +198,7 @@ public class NativeSQLQueryPlan implements Serializable {
 					session );
 			String sql = queryParameters.getFilteredSQL();
 
-			ps = session.getJDBCContext().getConnectionManager().prepareStatement( sql, false );
+			ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 
 			try {
 				int col = 1;

@@ -39,9 +39,9 @@ import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
@@ -156,20 +156,6 @@ public interface SessionImplementor extends Serializable {
 	 * calling the Interceptor if necessary
 	 */
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
-
-	/**
-	 * Notify the session that the transaction completed, so we no longer
-	 * own the old locks. (Also we should release cache softlocks.) May
-	 * be called multiple times during the transaction completion process.
-	 * Also called after an autocommit, in which case the second argument
-	 * is null.
-	 */
-	public void afterTransactionCompletion(boolean successful, Transaction tx);
-	
-	/**
-	 * Notify the session that the transaction is about to complete
-	 */
-	public void beforeTransactionCompletion(Transaction tx);
 
 	/**
 	 * Return the identifier of the persistent object, or null if 
@@ -340,11 +326,16 @@ public interface SessionImplementor extends Serializable {
 	 */
 	public void setFetchProfile(String name);
 
-	public JDBCContext getJDBCContext();
+	/**
+	 * Retrieve access to the session's transaction coordinator.
+	 *
+	 * @return The transaction coordinator.
+	 */
+	public TransactionCoordinator getTransactionCoordinator();
 
 	/**
-	 * Determine whether the session is closed.  Provided seperately from
-	 * {@link #isOpen()} as this method does not attempt any JTA synch
+	 * Determine whether the session is closed.  Provided separately from
+	 * {@link #isOpen()} as this method does not attempt any JTA synchronization
 	 * registration, where as {@link #isOpen()} does; which makes this one
 	 * nicer to use for most internal purposes.
 	 *

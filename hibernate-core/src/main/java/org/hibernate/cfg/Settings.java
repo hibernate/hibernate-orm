@@ -23,19 +23,17 @@
  */
 package org.hibernate.cfg;
 
-import java.util.Map;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.engine.jdbc.JdbcSupport;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.jdbc.util.SQLStatementLogger;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.TransactionManagerLookup;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+
+import java.util.Map;
 
 /**
  * Settings that affect the behaviour of Hibernate at runtime.
@@ -75,9 +73,6 @@ public final class Settings {
 	private ConnectionReleaseMode connectionReleaseMode;
 	private RegionFactory regionFactory;
 	private QueryCacheFactory queryCacheFactory;
-	private TransactionFactory transactionFactory;
-	private TransactionManagerLookup transactionManagerLookup;
-	private BatchBuilder batchBuilder;
 	private QueryTranslatorFactory queryTranslatorFactory;
 	private boolean wrapResultSetsEnabled;
 	private boolean orderUpdatesEnabled;
@@ -93,6 +88,8 @@ public final class Settings {
 //	private BytecodeProvider bytecodeProvider;
 	private JdbcSupport jdbcSupport;
 	private String importFiles;
+
+	private JtaPlatform jtaPlatform;
 
 	/**
 	 * Package protected constructor
@@ -162,10 +159,6 @@ public final class Settings {
 		return jdbcFetchSize;
 	}
 
-	public TransactionFactory getTransactionFactory() {
-		return transactionFactory;
-	}
-
 	public String getSessionFactoryName() {
 		return sessionFactoryName;
 	}
@@ -188,10 +181,6 @@ public final class Settings {
 
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
-	}
-
-	public TransactionManagerLookup getTransactionManagerLookup() {
-		return transactionManagerLookup;
 	}
 
 	public boolean isQueryCacheEnabled() {
@@ -224,10 +213,6 @@ public final class Settings {
 
 	public boolean isFlushBeforeCompletionEnabled() {
 		return flushBeforeCompletionEnabled;
-	}
-
-	public BatchBuilder getBatchBuilder() {
-		return batchBuilder;
 	}
 
 	public boolean isAutoCloseSessionEnabled() {
@@ -349,10 +334,6 @@ public final class Settings {
 		jdbcFetchSize = integer;
 	}
 
-	void setTransactionFactory(TransactionFactory factory) {
-		transactionFactory = factory;
-	}
-
 	void setSessionFactoryName(String string) {
 		sessionFactoryName = string;
 	}
@@ -375,10 +356,6 @@ public final class Settings {
 
 	void setRegionFactory(RegionFactory regionFactory) {
 		this.regionFactory = regionFactory;
-	}
-
-	void setTransactionManagerLookup(TransactionManagerLookup lookup) {
-		transactionManagerLookup = lookup;
 	}
 
 	void setQueryCacheEnabled(boolean b) {
@@ -411,10 +388,6 @@ public final class Settings {
 
 	void setFlushBeforeCompletionEnabled(boolean flushBeforeCompletionEnabled) {
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
-	}
-
-	void setBatcherBuilder(BatchBuilder batchBuilder) {
-		this.batchBuilder = batchBuilder;
 	}
 
 	void setAutoCloseSessionEnabled(boolean autoCloseSessionEnabled) {
@@ -496,4 +469,13 @@ public final class Settings {
 //	void setBytecodeProvider(BytecodeProvider bytecodeProvider) {
 //		this.bytecodeProvider = bytecodeProvider;
 //	}
+
+
+	public JtaPlatform getJtaPlatform() {
+		return jtaPlatform;
+	}
+
+	void setJtaPlatform(JtaPlatform jtaPlatform) {
+		this.jtaPlatform = jtaPlatform;
+	}
 }

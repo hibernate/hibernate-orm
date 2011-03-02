@@ -23,18 +23,19 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 
 /**
  * Convenience base class for implementors of the Batch interface.
@@ -44,21 +45,20 @@ import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
 public abstract class AbstractBatchImpl implements Batch {
 	private static final Logger log = LoggerFactory.getLogger( AbstractBatchImpl.class );
 
-	private final SQLStatementLogger statementLogger;
-	private final SQLExceptionHelper exceptionHelper;
-	private Object key;
+	private final BatchKey key;
+	private final JdbcCoordinator jdbcCoordinator;
 	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
 	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
 
-	protected AbstractBatchImpl(Object key,
-								SQLStatementLogger statementLogger,
-								SQLExceptionHelper exceptionHelper) {
-		if ( key == null || statementLogger == null || exceptionHelper == null ) {
-			throw new IllegalArgumentException( "key, statementLogger, and exceptionHelper must be non-null." );
+	protected AbstractBatchImpl(BatchKey key, JdbcCoordinator jdbcCoordinator) {
+		if ( key == null ) {
+			throw new IllegalArgumentException( "batch key cannot be null" );
+		}
+		if ( jdbcCoordinator == null ) {
+			throw new IllegalArgumentException( "JDBC coordinator cannot be null" );
 		}
 		this.key = key;
-		this.statementLogger = statementLogger;
-		this.exceptionHelper = exceptionHelper;
+		this.jdbcCoordinator = jdbcCoordinator;
 	}
 
 	/**
@@ -74,8 +74,12 @@ public abstract class AbstractBatchImpl implements Batch {
 	 *
 	 * @return The underlying SQLException helper.
 	 */
-	protected SQLExceptionHelper getSqlExceptionHelper() {
-		return exceptionHelper;
+	protected SQLExceptionHelper sqlExceptionHelper() {
+		return jdbcCoordinator.getTransactionCoordinator()
+				.getTransactionContext()
+				.getTransactionEnvironment()
+				.getJdbcServices()
+				.getSqlExceptionHelper();
 	}
 
 	/**
@@ -83,8 +87,12 @@ public abstract class AbstractBatchImpl implements Batch {
 	 *
 	 * @return The underlying JDBC services.
 	 */
-	protected SQLStatementLogger getSqlStatementLogger() {
-		return statementLogger;
+	protected SQLStatementLogger sqlStatementLogger() {
+		return jdbcCoordinator.getTransactionCoordinator()
+				.getTransactionContext()
+				.getTransactionEnvironment()
+				.getJdbcServices()
+				.getSqlStatementLogger();
 	}
 
 	/**
@@ -96,62 +104,49 @@ public abstract class AbstractBatchImpl implements Batch {
 		return statements;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public final Object getKey() {
+	@Override
+	public final BatchKey getKey() {
 		return key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void addObserver(BatchObserver observer) {
 		observers.add( observer );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public final PreparedStatement getBatchStatement(Object key, String sql) {
-		checkConsistentBatchKey( key );
+	@Override
+	public PreparedStatement getBatchStatement(String sql, boolean callable) {
 		if ( sql == null ) {
 			throw new IllegalArgumentException( "sql must be non-null." );
 		}
 		PreparedStatement statement = statements.get( sql );
-		if ( statement != null ) {
-			log.debug( "reusing prepared statement" );
-			statementLogger.logStatement( sql );
-		}		
+		if ( statement == null ) {
+			statement = buildBatchStatement( sql, callable );
+			statements.put( sql, statement );
+		}
+		else {
+			log.debug( "reusing batch statement" );
+			sqlStatementLogger().logStatement( sql );
+		}
 		return statement;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	// TODO: should this be final???
+	private PreparedStatement buildBatchStatement(String sql, boolean callable) {
+		try {
+			if ( callable ) {
+				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareCall( sql );
+			}
+			else {
+				return jdbcCoordinator.getLogicalConnection().getShareableConnectionProxy().prepareStatement( sql );
+			}
+		}
+		catch ( SQLException sqle ) {
+			log.error( "sqlexception escaped proxy", sqle );
+			throw sqlExceptionHelper().convert( sqle, "could not prepare batch statement", sql );
+		}
+	}
+
 	@Override
-	public void addBatchStatement(Object key, String sql, PreparedStatement preparedStatement) {
-		checkConsistentBatchKey( key );
-		if ( sql == null ) {
-			throw new IllegalArgumentException( "sql must be non-null." );
-		}
-		if ( statements.put( sql, preparedStatement ) != null ) {
-			log.error( "PreparedStatement was already in the batch, [" + sql + "]." );
-		}
-	}
-
-	protected void checkConsistentBatchKey(Object key) {
-		if ( ! this.key.equals( key ) ) {
-			throw new IllegalStateException(
-					"specified key ["+ key + "] is different from internal batch key [" + this.key + "]."
-			);
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public final void execute() {
 		notifyObserversExplicitExecution();
 		if ( statements.isEmpty() ) {
@@ -162,7 +157,7 @@ public abstract class AbstractBatchImpl implements Batch {
 				doExecuteBatch();
 			}
 			finally {
-				release();
+				releaseStatements();
 			}
 		}
 		finally {
@@ -176,14 +171,16 @@ public abstract class AbstractBatchImpl implements Batch {
 				statement.close();
 			}
 			catch ( SQLException e ) {
-				log.error( "unable to release batch statement..." );
-				log.error( "sqlexception escaped proxy", e );
+				log.error( "unable to release batch statement; sqlexception escaped proxy", e );
 			}
 		}
 		getStatements().clear();
 	}
 
-	private void notifyObserversExplicitExecution() {
+	/**
+	 * Convenience method to notify registered observers of an explicit execution of this batch.
+	 */
+	protected final void notifyObserversExplicitExecution() {
 		for ( BatchObserver observer : observers ) {
 			observer.batchExplicitlyExecuted();
 		}
@@ -192,12 +189,13 @@ public abstract class AbstractBatchImpl implements Batch {
 	/**
 	 * Convenience method to notify registered observers of an implicit execution of this batch.
 	 */
-	protected void notifyObserversImplicitExecution() {
+	protected final void notifyObserversImplicitExecution() {
 		for ( BatchObserver observer : observers ) {
 			observer.batchImplicitlyExecuted();
 		}
 	}
 
+	@Override
 	public void release() {
 		if ( getStatements() != null && !getStatements().isEmpty() ) {
 			log.info( "On release of batch it still contained JDBC statements" );

@@ -1842,7 +1842,7 @@ public class Configuration implements Serializable {
 		Properties copy = new Properties();
 		copy.putAll( properties );
 		ConfigurationHelper.resolvePlaceHolders( copy );
-		Settings settings = buildSettings( copy, serviceRegistry.getService( JdbcServices.class ) );
+		Settings settings = buildSettings( copy, serviceRegistry );
 
 		return new SessionFactoryImpl(
 				this,
@@ -2825,18 +2825,18 @@ public class Configuration implements Serializable {
 	 *
 	 * @return The build settings
 	 */
-	public Settings buildSettings(JdbcServices jdbcServices) {
+	public Settings buildSettings(ServiceRegistry serviceRegistry) {
 		Properties clone = ( Properties ) properties.clone();
 		ConfigurationHelper.resolvePlaceHolders( clone );
-		return buildSettingsInternal( clone, jdbcServices );
+		return buildSettingsInternal( clone, serviceRegistry );
 	}
 
-	public Settings buildSettings(Properties props, JdbcServices jdbcServices) throws HibernateException {
-		return buildSettingsInternal( props, jdbcServices );
+	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) throws HibernateException {
+		return buildSettingsInternal( props, serviceRegistry );
 	}
 
-	private Settings buildSettingsInternal(Properties props, JdbcServices jdbcServices) {
-		final Settings settings = settingsFactory.buildSettings( props, jdbcServices );
+	private Settings buildSettingsInternal(Properties props, ServiceRegistry serviceRegistry) {
+		final Settings settings = settingsFactory.buildSettings( props, serviceRegistry );
 		settings.setEntityTuplizerFactory( this.getEntityTuplizerFactory() );
 //		settings.setComponentTuplizerFactory( this.getComponentTuplizerFactory() );
 		return settings;

@@ -23,32 +23,6 @@
  */
 package org.hibernate.impl;
 
-import java.io.IOException;
-import java.io.InvalidObjectException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
-import javax.transaction.TransactionManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.ConnectionReleaseMode;
@@ -76,10 +50,6 @@ import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.exception.SQLExceptionConverter;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.context.CurrentSessionContext;
 import org.hibernate.context.JTASessionContext;
 import org.hibernate.context.ManagedSessionContext;
@@ -92,12 +62,16 @@ import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.event.EventListeners;
+import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
@@ -113,6 +87,8 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
@@ -120,7 +96,6 @@ import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
@@ -128,6 +103,31 @@ import org.hibernate.type.TypeResolver;
 import org.hibernate.util.CollectionHelper;
 import org.hibernate.util.EmptyIterator;
 import org.hibernate.util.ReflectHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
+import javax.transaction.TransactionManager;
+import java.io.IOException;
+import java.io.InvalidObjectException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 
 /**
@@ -153,7 +153,8 @@ import org.hibernate.util.ReflectHelper;
  * @see org.hibernate.persister.collection.CollectionPersister
  * @author Gavin King
  */
-public final class SessionFactoryImpl implements SessionFactory, SessionFactoryImplementor {
+public final class SessionFactoryImpl
+		implements SessionFactory, SessionFactoryImplementor {
 
 	private static final Logger log = LoggerFactory.getLogger(SessionFactoryImpl.class);
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
@@ -178,7 +179,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
-	private final transient TransactionManager transactionManager;
 	private final transient QueryCache queryCache;
 	private final transient UpdateTimestampsCache updateTimestampsCache;
 	private final transient Map<String,QueryCache> queryCaches;
@@ -195,6 +195,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private transient boolean isClosed = false;
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
+	private final transient TransactionEnvironment transactionEnvironment;
 
 	public SessionFactoryImpl(
 			Configuration cfg,
@@ -386,17 +387,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			schemaExport = new SchemaExport( getJdbcServices(), cfg );
 		}
 
-		if ( settings.getTransactionManagerLookup()!=null ) {
-			log.debug("obtaining JTA TransactionManager");
-			transactionManager = settings.getTransactionManagerLookup().getTransactionManager(properties);
-		}
-		else {
-			if ( settings.getTransactionFactory().isTransactionManagerRequired() ) {
-				throw new HibernateException("The chosen transaction strategy requires access to the JTA TransactionManager");
-			}
-			transactionManager = null;
-		}
-
 		currentSessionContext = buildCurrentSessionContext();
 
 		if ( settings.isQueryCacheEnabled() ) {
@@ -480,7 +470,12 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
+		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	public TransactionEnvironment getTransactionEnvironment() {
+		return transactionEnvironment;
 	}
 
 	public Properties getProperties() {
@@ -726,14 +721,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	public Interceptor getInterceptor()
 	{
 		return interceptor;
-	}
-
-	public TransactionFactory getTransactionFactory() {
-		return settings.getTransactionFactory();
-	}
-
-	public TransactionManager getTransactionManager() {
-		return transactionManager;
 	}
 
 	public SQLExceptionConverter getSQLExceptionConverter() {
@@ -1229,19 +1216,34 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return (IdentifierGenerator) identifierGenerators.get(rootEntityName);
 	}
 
+	private org.hibernate.engine.transaction.spi.TransactionFactory transactionFactory() {
+		return serviceRegistry.getService( org.hibernate.engine.transaction.spi.TransactionFactory.class );
+	}
+
+	private boolean canAccessTransactionManager() {
+		try {
+			return serviceRegistry.getService( JtaPlatform.class ).retrieveTransactionManager() != null;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
 	private CurrentSessionContext buildCurrentSessionContext() {
 		String impl = properties.getProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS );
-		// for backward-compatability
-		if ( impl == null && transactionManager != null ) {
-			impl = "jta";
+		// for backward-compatibility
+		if ( impl == null ) {
+			if ( canAccessTransactionManager() ) {
+				impl = "jta";
+			}
+			else {
+				return null;
+			}
 		}
 
-		if ( impl == null ) {
-			return null;
-		}
-		else if ( "jta".equals( impl ) ) {
-			if ( settings.getTransactionFactory().areCallbacksLocalToHibernateTransactions() ) {
-				log.warn( "JTASessionContext being used with JDBCTransactionFactory; auto-flush will not operate correctly with getCurrentSession()" );
+		if ( "jta".equals( impl ) ) {
+			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
+				log.warn( "JTASessionContext being used with JdbcTransactionFactory; auto-flush will not operate correctly with getCurrentSession()" );
 			}
 			return new JTASessionContext( this );
 		}
@@ -1256,7 +1258,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 				Class implClass = ReflectHelper.classForName( impl );
 				return ( CurrentSessionContext ) implClass
 						.getConstructor( new Class[] { SessionFactoryImplementor.class } )
-						.newInstance( new Object[] { this } );
+						.newInstance( this );
 			}
 			catch( Throwable t ) {
 				log.error( "Unable to construct current session context [" + impl + "]", t );
@@ -1265,9 +1267,13 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 	}
 
-	public EventListeners getEventListeners()
-	{
+	public EventListeners getEventListeners() {
 		return eventListeners;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {

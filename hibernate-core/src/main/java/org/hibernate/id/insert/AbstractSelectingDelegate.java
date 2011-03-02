@@ -50,7 +50,10 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	public final Serializable performInsert(String insertSQL, SessionImplementor session, Binder binder) {
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
+			PreparedStatement insert = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( insertSQL, PreparedStatement.NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
 				insert.executeUpdate();
@@ -71,7 +74,10 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 		try {
 			//fetch the generated id in a separate query
-			PreparedStatement idSelect = session.getJDBCContext().getConnectionManager().prepareStatement( selectSQL, false );
+			PreparedStatement idSelect = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( session, idSelect, binder.getEntity() );
 				ResultSet rs = idSelect.executeQuery();

@@ -89,7 +89,10 @@ public class DbTimestampType extends TimestampType {
 	private Timestamp usePreparedStatement(String timestampSelectString, SessionImplementor session) {
 		PreparedStatement ps = null;
 		try {
-			ps = session.getJDBCContext().getConnectionManager().prepareStatement( timestampSelectString, false );
+			ps = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( timestampSelectString, false );
 			ResultSet rs = ps.executeQuery();
 			rs.next();
 			Timestamp ts = rs.getTimestamp( 1 );
@@ -102,12 +105,12 @@ public class DbTimestampType extends TimestampType {
 			}
 			return ts;
 		}
-		catch( SQLException sqle ) {
+		catch( SQLException e ) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        sqle,
+			        e,
 			        "could not select current db timestamp",
 			        timestampSelectString
-				);
+			);
 		}
 		finally {
 			if ( ps != null ) {
@@ -124,7 +127,10 @@ public class DbTimestampType extends TimestampType {
 	private Timestamp useCallableStatement(String callString, SessionImplementor session) {
 		CallableStatement cs = null;
 		try {
-			cs = session.getJDBCContext().getConnectionManager().prepareCallableStatement( callString );
+			cs = (CallableStatement) session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( callString, true );
 			cs.registerOutParameter( 1, java.sql.Types.TIMESTAMP );
 			cs.execute();
 			Timestamp ts = cs.getTimestamp( 1 );
@@ -137,12 +143,12 @@ public class DbTimestampType extends TimestampType {
 			}
 			return ts;
 		}
-		catch( SQLException sqle ) {
+		catch( SQLException e ) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        sqle,
+			        e,
 			        "could not call current db timestamp function",
 			        callString
-				);
+			);
 		}
 		finally {
 			if ( cs != null ) {

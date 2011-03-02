@@ -52,6 +52,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
@@ -144,13 +145,6 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * Get a class name, using query language imports
 	 */
 	public String getImportedClassName(String name);
-
-
-	/**
-	 * Get the JTA transaction manager
-	 */
-	public TransactionManager getTransactionManager();
-
 
 	/**
 	 * Get the default query cache
@@ -262,4 +256,5 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 */
 	public FetchProfile getFetchProfile(String name);
 
+	public ServiceRegistry getServiceRegistry();
 }

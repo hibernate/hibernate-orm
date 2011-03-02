@@ -23,15 +23,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -54,6 +45,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
+import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
@@ -87,6 +79,15 @@ import org.hibernate.util.FilterHelper;
 import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -1062,8 +1063,9 @@ public abstract class AbstractCollectionPersister
 		return qualifiedTableName;
 	}
 
-	public void remove(Serializable id, SessionImplementor session) throws HibernateException {
+	private BasicBatchKey removeBatchKey;
 
+	public void remove(Serializable id, SessionImplementor session) throws HibernateException {
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
 			if ( log.isDebugEnabled() ) {
@@ -1083,10 +1085,22 @@ public abstract class AbstractCollectionPersister
 				boolean useBatch = expectation.canBeBatched();
 				String sql = getSQLDeleteString();
 				if ( useBatch ) {
-					st = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
+					if ( removeBatchKey == null ) {
+						removeBatchKey = new BasicBatchKey(
+								getRole() + "#REMOVE",
+								expectation
+						);
+					}
+					st = session.getTransactionCoordinator()
+							.getJdbcCoordinator()
+							.getBatch( removeBatchKey )
+							.getBatchStatement( sql, callable );
 				}
 				else {
-					st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+					st = session.getTransactionCoordinator()
+							.getJdbcCoordinator()
+							.getStatementPreparer()
+							.prepareStatement( sql, callable );
 				}
 
 
@@ -1095,7 +1109,10 @@ public abstract class AbstractCollectionPersister
 
 					writeKey( st, id, offset, session );
 					if ( useBatch ) {
-						session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+						session.getTransactionCoordinator()
+								.getJdbcCoordinator()
+								.getBatch( removeBatchKey )
+								.addToBatch();
 					}
 					else {
 						expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1103,7 +1120,7 @@ public abstract class AbstractCollectionPersister
 				}
 				catch ( SQLException sqle ) {
 					if ( useBatch ) {
-						session.getJDBCContext().getConnectionManager().abortBatch();
+						session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 					}
 					throw sqle;
 				}
@@ -1130,6 +1147,8 @@ public abstract class AbstractCollectionPersister
 
 	}
 
+	private BasicBatchKey recreateBatchKey;
+
 	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 
@@ -1146,6 +1165,7 @@ public abstract class AbstractCollectionPersister
 				//create all the new entries
 				Iterator entries = collection.entries(this);
 				if ( entries.hasNext() ) {
+					Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
 					collection.preInsert( this );
 					int i = 0;
 					int count = 0;
@@ -1155,18 +1175,27 @@ public abstract class AbstractCollectionPersister
 						if ( collection.entryExists( entry, i ) ) {
 							int offset = 1;
 							PreparedStatement st = null;
-							Expectation expectation = Expectations.appropriateExpectation( getInsertCheckStyle() );
 							boolean callable = isInsertCallable();
 							boolean useBatch = expectation.canBeBatched();
 							String sql = getSQLInsertRowString();
 
 							if ( useBatch ) {
-								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
-										this, sql, callable
-								);
+								if ( recreateBatchKey == null ) {
+									recreateBatchKey = new BasicBatchKey(
+											getRole() + "#RECREATE",
+											expectation
+									);
+								}
+								st = session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getBatch( recreateBatchKey )
+										.getBatchStatement( sql, callable );
 							}
 							else {
-								st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+								st = session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getStatementPreparer()
+										.prepareStatement( sql, callable );
 							}
 
 
@@ -1184,7 +1213,10 @@ public abstract class AbstractCollectionPersister
 								loc = writeElement(st, collection.getElement(entry), loc, session );
 
 								if ( useBatch ) {
-									session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+									session.getTransactionCoordinator()
+											.getJdbcCoordinator()
+											.getBatch( recreateBatchKey )
+											.addToBatch();
 								}
 								else {
 									expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1195,7 +1227,7 @@ public abstract class AbstractCollectionPersister
 							}
 							catch ( SQLException sqle ) {
 								if ( useBatch ) {
-									session.getJDBCContext().getConnectionManager().abortBatch();
+									session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 								}
 								throw sqle;
 							}
@@ -1235,6 +1267,8 @@ public abstract class AbstractCollectionPersister
 		return true;
 	}
 
+	private BasicBatchKey deleteBatchKey;
+
 	public void deleteRows(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 
@@ -1248,7 +1282,7 @@ public abstract class AbstractCollectionPersister
 			}
 			
 			boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
-			
+			final Expectation expectation = Expectations.appropriateExpectation( getDeleteCheckStyle() );
 			try {
 				//delete all the deleted entries
 				Iterator deletes = collection.getDeletes( this, !deleteByIndex );
@@ -1257,18 +1291,27 @@ public abstract class AbstractCollectionPersister
 					int count = 0;
 					while ( deletes.hasNext() ) {
 						PreparedStatement st = null;
-						Expectation expectation = Expectations.appropriateExpectation( getDeleteCheckStyle() );
 						boolean callable = isDeleteCallable();
 						boolean useBatch = expectation.canBeBatched();
 						String sql = getSQLDeleteRowString();
 
 						if ( useBatch ) {
-							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
-									this, sql, callable
-							);
+							if ( deleteBatchKey == null ) {
+								deleteBatchKey = new BasicBatchKey(
+										getRole() + "#DELETE",
+										expectation
+								);
+							}
+							st = session.getTransactionCoordinator()
+									.getJdbcCoordinator()
+									.getBatch( deleteBatchKey )
+									.getBatchStatement( sql, callable );
 						}
 						else {
-							st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+							st = session.getTransactionCoordinator()
+									.getJdbcCoordinator()
+									.getStatementPreparer()
+									.prepareStatement( sql, callable );
 						}
 
 						try {
@@ -1290,7 +1333,10 @@ public abstract class AbstractCollectionPersister
 							}
 
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+								session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getBatch( deleteBatchKey )
+										.addToBatch();
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1299,7 +1345,7 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().abortBatch();
+								session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 							}
 							throw sqle;
 						}
@@ -1335,6 +1381,8 @@ public abstract class AbstractCollectionPersister
 		return true;
 	}
 
+	private BasicBatchKey insertBatchKey;
+
 	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 
@@ -1364,14 +1412,24 @@ public abstract class AbstractCollectionPersister
 					if ( collection.needsInserting( entry, i, elementType ) ) {
 
 						if ( useBatch ) {
-							if ( st == null ) {
-								st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
-										this, sql, callable
+							if ( insertBatchKey == null ) {
+								insertBatchKey = new BasicBatchKey(
+										getRole() + "#INSERT",
+										expectation
 								);
+							}
+							if ( st == null ) {
+								st = session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getBatch( insertBatchKey )
+										.getBatchStatement( sql, callable );
 							}
 						}
 						else {
-							st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+							st = session.getTransactionCoordinator()
+									.getJdbcCoordinator()
+									.getStatementPreparer()
+									.prepareStatement( sql, callable );
 						}
 
 						try {
@@ -1387,7 +1445,7 @@ public abstract class AbstractCollectionPersister
 							writeElement(st, collection.getElement(entry), offset, session );
 
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+								session.getTransactionCoordinator().getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
 							}
 							else {
 								expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -1397,7 +1455,7 @@ public abstract class AbstractCollectionPersister
 						}
 						catch ( SQLException sqle ) {
 							if ( useBatch ) {
-								session.getJDBCContext().getConnectionManager().abortBatch();
+								session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 							}
 							throw sqle;
 						}
@@ -1709,7 +1767,10 @@ public abstract class AbstractCollectionPersister
 
 	public int getSize(Serializable key, SessionImplementor session) {
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sqlSelectSizeString);
+			PreparedStatement st = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet(st, key, 1, session);
 				ResultSet rs = st.executeQuery();
@@ -1744,7 +1805,10 @@ public abstract class AbstractCollectionPersister
 
 	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SessionImplementor session) {
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sql);
+			PreparedStatement st = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( sql );
 			try {
 				getKeyType().nullSafeSet(st, key, 1, session);
 				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
@@ -1775,7 +1839,10 @@ public abstract class AbstractCollectionPersister
 
 	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner) {
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement(sqlSelectRowByIndexString);
+			PreparedStatement st = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( sqlSelectRowByIndexString );
 			try {
 				getKeyType().nullSafeSet(st, key, 1, session);
 				getIndexType().nullSafeSet( st, incrementIndexByBase(index), keyColumnNames.length + 1, session );

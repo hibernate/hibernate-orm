@@ -30,9 +30,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.testing.junit.functional.ExecutionEnvironment;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.transaction.CMTTransactionFactory;
+
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 

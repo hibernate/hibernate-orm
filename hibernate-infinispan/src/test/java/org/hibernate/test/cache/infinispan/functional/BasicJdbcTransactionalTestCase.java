@@ -25,10 +25,10 @@ package org.hibernate.test.cache.infinispan.functional;
 import java.util.Map;
 
 import org.hibernate.Session;
+import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.transaction.JDBCTransactionFactory;
-import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.transaction.TransactionManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -47,7 +47,7 @@ public class BasicJdbcTransactionalTestCase extends SingleNodeTestCase {
    }
 
    protected Class<? extends TransactionFactory> getTransactionFactoryClass() {
-      return JDBCTransactionFactory.class;
+      return JdbcTransactionFactory.class;
    }
 
    protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {

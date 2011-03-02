@@ -666,16 +666,10 @@ public abstract class AbstractEntityRegionAccessStrategyTestCase extends Abstrac
 		 serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 
          localCfg = createConfiguration(configName);
-         localRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistry.getService( JdbcServices.class ),
-				 localCfg
-		 );
+         localRegionFactory = CacheTestUtil.startRegionFactory( serviceRegistry, localCfg );
 
          remoteCfg = createConfiguration(configName);
-         remoteRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistry.getService( JdbcServices.class ),
-				 remoteCfg
-		 );
+         remoteRegionFactory = CacheTestUtil.startRegionFactory( serviceRegistry, remoteCfg );
       }
 
       @Override

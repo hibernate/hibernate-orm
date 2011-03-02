@@ -37,6 +37,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Utilities for cache testing.
@@ -72,11 +73,11 @@ public class CacheTestUtil {
       return cfg;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(JdbcServices jdbcServices,
-															Configuration cfg)
-		   throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+   public static InfinispanRegionFactory startRegionFactory(
+		   ServiceRegistry serviceRegistry,
+		   Configuration cfg) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
 
-      Settings settings = cfg.buildSettings( jdbcServices );
+      Settings settings = cfg.buildSettings( serviceRegistry );
       Properties properties = cfg.getProperties();
 
       String factoryType = cfg.getProperty(Environment.CACHE_REGION_FACTORY);
@@ -88,11 +89,11 @@ public class CacheTestUtil {
       return regionFactory;
    }
 
-   public static InfinispanRegionFactory startRegionFactory(JdbcServices jdbcServices,
-															Configuration cfg,
-															CacheTestSupport testSupport)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-      InfinispanRegionFactory factory = startRegionFactory(jdbcServices, cfg);
+   public static InfinispanRegionFactory startRegionFactory(
+		   ServiceRegistry serviceRegistry,
+		   Configuration cfg,
+		   CacheTestSupport testSupport) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+      InfinispanRegionFactory factory = startRegionFactory( serviceRegistry, cfg );
       testSupport.registerFactory(factory);
       return factory;
    }

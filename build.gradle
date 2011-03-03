@@ -67,7 +67,7 @@ libraries = [
         jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
 
         // testing
-        atomikos:       'com.atomikos:transactions-jdbc:3.6.4',
+        atomikos:       'com.atomikos:transactions-jdbc:3.7.0',
         junit:          'junit:junit:3.8.2',
         testng:         'org.testng:testng:5.8:jdk15',
         jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.0.Final',

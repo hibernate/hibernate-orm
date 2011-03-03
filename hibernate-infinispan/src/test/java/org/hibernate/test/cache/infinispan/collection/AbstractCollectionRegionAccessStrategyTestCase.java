@@ -43,7 +43,6 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
@@ -519,7 +518,9 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
       private final String configResource;
       private final String configName;
       private String preferIPv4Stack;
-      private ServiceRegistry serviceRegistry;
+
+      private ServiceRegistry localServiceRegistry;
+      private ServiceRegistry remoteServiceRegistry;
 
       public AccessStrategyTestSetup(Test test, String configName) {
          this(test, configName, null);
@@ -539,16 +540,13 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
          preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
          System.setProperty(PREFER_IPV4STACK, "true");
 
-         serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+		  localCfg = createConfiguration(configName, configResource);
+		  localServiceRegistry = ServiceRegistryBuilder.buildServiceRegistry( localCfg.getProperties() );
+		  localRegionFactory = CacheTestUtil.startRegionFactory( localServiceRegistry, localCfg );
 
-         localCfg = createConfiguration(configName, configResource);
-         localRegionFactory = CacheTestUtil.startRegionFactory( serviceRegistry, localCfg );
-
-         remoteCfg = createConfiguration(configName, configResource);
-         remoteRegionFactory = CacheTestUtil.startRegionFactory(
-				 serviceRegistry,
-				 remoteCfg
-		 );
+		  remoteCfg = createConfiguration(configName, configResource);
+		  remoteServiceRegistry = ServiceRegistryBuilder.buildServiceRegistry( remoteCfg.getProperties() );
+		  remoteRegionFactory = CacheTestUtil.startRegionFactory( remoteServiceRegistry, remoteCfg );
       }
 
       @Override
@@ -570,8 +568,11 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                remoteRegionFactory.stop();
 		  }
 		  finally {
-            if ( serviceRegistry != null ) {
-				ServiceRegistryBuilder.destroy( serviceRegistry );
+            if ( localServiceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( localServiceRegistry );
+            }
+            if ( remoteServiceRegistry != null ) {
+				ServiceRegistryBuilder.destroy( remoteServiceRegistry );
             }
 		  }
       }

@@ -106,15 +106,15 @@ public abstract class TestCase extends HibernateTestCase {
 	}
 
 	protected void handleUnclosedResources() {
-		cleanUnclosed( this.em );
-		for ( Iterator iter = isolatedEms.iterator(); iter.hasNext(); ) {
-			cleanUnclosed( ( EntityManager ) iter.next() );
-		}
-
 		cfg = null;
 	}
 
 	protected void closeResources() {
+		cleanUnclosed( this.em );
+		for ( Object isolatedEm : isolatedEms ) {
+			cleanUnclosed( (EntityManager) isolatedEm );
+		}
+
 		if ( factory != null ) {
 			factory.close();
 		}

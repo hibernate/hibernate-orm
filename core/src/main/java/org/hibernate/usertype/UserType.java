@@ -106,6 +106,7 @@ public interface UserType {
 	 * @return Object
 	 * @throws HibernateException
 	 * @throws SQLException
+	 * @deprecated SessionImplementor will be added as an argument in a future version (see HHH-5968)
 	 */
 	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException;
 
@@ -119,6 +120,7 @@ public interface UserType {
 	 * @param index statement parameter index
 	 * @throws HibernateException
 	 * @throws SQLException
+	 * @deprecated SessionImplementor will be added as an argument in a future version (see HHH-5968)
 	 */
 	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException;
 

@@ -51,6 +51,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.FetchProfile;
+import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -88,6 +89,16 @@ public interface Mappings {
 	 * @param namingStrategy The naming strategy to use.
 	 */
 	public void setNamingStrategy(NamingStrategy namingStrategy);
+
+	/**
+	 * Get the current persister class provider implementation
+	 */
+	public PersisterClassProvider getPersisterClassProvider();
+
+	/**
+	 * Set the current persister class provider implementation
+	 */
+	public void setPersisterClassProvider(PersisterClassProvider persisterClassProvider);
 
 	/**
 	 * Returns the currently bound default schema name.

@@ -85,7 +85,7 @@ public class MetadataTools {
         Element column_mapping = parent.element("column");
 
         if (column_mapping == null) {
-            return addColumn(parent, name, null, 0, 0, null);
+            return addColumn(parent, name, null, 0, 0, null, null, null);
         }
 
         if (!StringTools.isEmpty(name)) {
@@ -96,7 +96,7 @@ public class MetadataTools {
     }
 
     public static Element addColumn(Element parent, String name, Integer length, Integer scale, Integer precision,
-									String sqlType) {
+									String sqlType, String customRead, String customWrite) {
         Element column_mapping = parent.addElement("column");
 
         column_mapping.addAttribute("name", name);
@@ -111,6 +111,13 @@ public class MetadataTools {
 		}
 		if (!StringTools.isEmpty(sqlType)) {
             column_mapping.addAttribute("sql-type", sqlType);
+        }
+
+        if (!StringTools.isEmpty(customRead)) {
+            column_mapping.addAttribute("read", customRead);
+        }
+        if (!StringTools.isEmpty(customWrite)) {
+            column_mapping.addAttribute("write", customWrite);
         }
 
         return column_mapping;
@@ -180,7 +187,7 @@ public class MetadataTools {
         while (columns.hasNext()) {
             Column column = columns.next();
             addColumn(any_mapping, column.getName(), column.getLength(), column.getScale(), column.getPrecision(),
-					column.getSqlType());
+					column.getSqlType(), column.getCustomRead(), column.getCustomWrite());
         }
     }
 

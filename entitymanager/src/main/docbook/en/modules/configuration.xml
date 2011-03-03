@@ -685,10 +685,19 @@ EntityManagerFactory programmaticEmf =
             <row>
               <entry>hibernate.ejb.naming_strategy</entry>
 
-              <entry>An optional naming strategy. The default naming strategy
-              used is <classname>EJB3NamingStrategy</classname>. You also
-              might want to consider the
+              <entry>An optional naming strategy. The class must have a no-arg
+              constructor. The default naming strategy used is
+              <classname>EJB3NamingStrategy</classname>. You also might want
+              to consider the
               <classname>DefaultComponentSafeNamingStrategy</classname>.</entry>
+            </row>
+
+            <row>
+              <entry>hibernate.ejb.persister_class_provider</entry>
+
+              <entry>A optional <classname>PersisterClassProvider</classname>
+              implementation class name. The class must have a no-arg
+              constructor.</entry>
             </row>
 
             <row>

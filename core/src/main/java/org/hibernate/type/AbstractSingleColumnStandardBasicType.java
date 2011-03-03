@@ -64,6 +64,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @deprecated Use {@link #nullSafeGet(ResultSet, String, SessionImplementor)} instead
 	 */
 	public T nullSafeGet(ResultSet rs, String name) throws HibernateException, SQLException {
 		return nullSafeGet( rs, name, NO_OPTIONS );
@@ -71,6 +73,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @deprecated Use {@link #get(ResultSet, String, SessionImplementor)} instead.
 	 */
 	public Object get(ResultSet rs, String name) throws HibernateException, SQLException {
 		return nullSafeGet( rs, name );
@@ -88,6 +92,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @deprecated Use {@link #nullSafeSet(PreparedStatement, Object, int, SessionImplementor)} instead.
 	 */
 	public void nullSafeSet(PreparedStatement st, T value, int index) throws HibernateException, SQLException {
 		nullSafeSet( st, value, index, NO_OPTIONS );
@@ -95,6 +101,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @deprecated Use {@link #set(PreparedStatement, Object, int, SessionImplementor)} instead.
 	 */
 	public void set(PreparedStatement st, T value, int index) throws HibernateException, SQLException {
 		nullSafeSet( st, value, index );

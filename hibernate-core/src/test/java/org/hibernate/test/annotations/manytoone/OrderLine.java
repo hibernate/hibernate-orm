@@ -6,15 +6,18 @@ import javax.persistence.Id;
 import javax.persistence.GeneratedValue;
 import javax.persistence.ManyToOne;
 import javax.persistence.JoinColumn;
+import javax.persistence.SecondaryTable;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
+@SecondaryTable(name="OrderLine_Extension")
 public class OrderLine {
 	private Integer id;
 	private String item;
 	private Order order;
+	private Order replacementOrder;
 
 	@Id @GeneratedValue
 	public Integer getId() {
@@ -41,5 +44,15 @@ public class OrderLine {
 
 	public void setOrder(Order order) {
 		this.order = order;
+	}
+
+	@ManyToOne
+	@JoinColumn(name="replacement_order_nbr", table="OrderLine_Extension", referencedColumnName = "order_nbr")
+	public Order getReplacementOrder() {
+		return replacementOrder;
+	}
+
+	public void setReplacementOrder(Order replacementOrder) {
+		this.replacementOrder = replacementOrder;
 	}
 }

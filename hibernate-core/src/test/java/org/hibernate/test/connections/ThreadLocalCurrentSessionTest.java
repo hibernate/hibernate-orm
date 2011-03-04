@@ -8,6 +8,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.ThreadLocalSessionContext;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.spi.LocalStatus;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
@@ -36,6 +37,10 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	protected void release(Session session) {
+		if ( session.getTransaction().getLocalStatus() != LocalStatus.ACTIVE ) {
+			TestableThreadLocalContext.unbind( sfi() );
+			return;
+		}
 		long initialCount = getSessions().getStatistics().getSessionCloseCount();
 		session.getTransaction().commit();
 		long subsequentCount = getSessions().getStatistics().getSessionCloseCount();
@@ -45,8 +50,6 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 	}
 
 	protected void reconnect(Session session) throws Throwable {
-//		session.reconnect();
-		session.beginTransaction();
 	}
 
 	protected void checkSerializedState(Session session) {

@@ -544,19 +544,14 @@ public final class SessionImpl
 		return !isClosed() && transactionCoordinator.isTransactionInProgress();
 	}
 
+	@Override
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
 		log.debug( "disconnecting session" );
 		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
-	public void reconnect() throws HibernateException {
-		errorIfClosed();
-		log.debug( "reconnecting session" );
-		checkTransactionSynchStatus();
-		transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualReconnect( null );
-	}
-
+	@Override
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
 		log.debug( "reconnecting session" );

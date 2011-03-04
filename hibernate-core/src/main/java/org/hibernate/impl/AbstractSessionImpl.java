@@ -41,6 +41,7 @@ import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -48,7 +49,7 @@ import java.util.List;
  * 
  * @author Gavin King
  */
-public abstract class AbstractSessionImpl implements SessionImplementor, TransactionContext {
+public abstract class AbstractSessionImpl implements Serializable, SessionImplementor, TransactionContext {
 
 	protected transient SessionFactoryImpl factory;
 	private boolean closed = false;

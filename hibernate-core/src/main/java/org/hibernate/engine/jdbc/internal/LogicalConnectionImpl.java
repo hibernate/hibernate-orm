@@ -331,6 +331,15 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		releaseNonDurableObservers();
 	}
 
+	private void releaseNonDurableObservers() {
+		Iterator observers = this.observers.iterator();
+		while ( observers.hasNext() ) {
+			if ( NonDurableConnectionObserver.class.isInstance( observers.next() ) ) {
+				observers.remove();
+			}
+		}
+	}
+
 	@Override
 	public Connection manualDisconnect() {
 		if ( isClosed ) {
@@ -343,26 +352,20 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		return c;
 	}
 
-	private void releaseNonDurableObservers() {
-		Iterator observers = this.observers.iterator();
-		while ( observers.hasNext() ) {
-			if ( NonDurableConnectionObserver.class.isInstance( observers.next() ) ) {
-				observers.remove();
-			}
-		}
-	}
-
 	@Override
 	public void manualReconnect(Connection suppliedConnection) {
 		if ( isClosed ) {
 			throw new IllegalStateException( "cannot manually reconnect because logical connection is already closed" );
 		}
-		if ( isUserSuppliedConnection ) {
+		if ( !isUserSuppliedConnection ) {
+			throw new IllegalStateException( "cannot manually reconnect unless Connection was originally supplied" );
+		}
+		else {
 			if ( suppliedConnection == null ) {
 				throw new IllegalArgumentException( "cannot reconnect a null user-supplied connection" );
 			}
 			else if ( suppliedConnection == physicalConnection ) {
-				log.warn( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+				log.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
 			}
 			else if ( physicalConnection != null ) {
 				throw new IllegalArgumentException(
@@ -371,12 +374,6 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			}
 			physicalConnection = suppliedConnection;
 			log.debug( "reconnected JDBC connection" );
-		}
-		else {
-			if ( suppliedConnection != null ) {
-				throw new IllegalStateException( "unexpected user-supplied connection" );
-			}
-			log.debug( "called reconnect() with null connection (not user-supplied)" );
 		}
 	}
 

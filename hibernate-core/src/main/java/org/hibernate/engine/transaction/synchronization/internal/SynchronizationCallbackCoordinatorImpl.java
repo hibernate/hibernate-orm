@@ -139,9 +139,10 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	private static final ManagedFlushChecker STANDARD_MANAGED_FLUSH_CHECKER = new ManagedFlushChecker() {
 		@Override
 		public boolean shouldDoManagedFlush(TransactionCoordinator coordinator, int jtaStatus) {
-			return coordinator.getTransactionContext().isFlushModeNever() &&
+			return ! coordinator.getTransactionContext().isClosed() &&
+					! coordinator.getTransactionContext().isFlushModeNever() &&
 					coordinator.getTransactionContext().isFlushBeforeCompletionEnabled() &&
-					!JtaStatusHelper.isRollback( jtaStatus );
+					! JtaStatusHelper.isRollback( jtaStatus );
 		}
 	};
 

@@ -1253,7 +1253,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private static class ManagedFlushCheckerImpl implements ManagedFlushChecker {
 		@Override
 		public boolean shouldDoManagedFlush(TransactionCoordinator coordinator, int jtaStatus) {
-			return ! coordinator.getTransactionContext().isFlushModeNever() &&
+			return ! coordinator.getTransactionContext().isClosed() &&
+					! coordinator.getTransactionContext().isFlushModeNever() &&
 					! JtaStatusHelper.isRollback( jtaStatus );
 		}
 	}

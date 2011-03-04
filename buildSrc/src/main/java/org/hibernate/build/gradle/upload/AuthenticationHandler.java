@@ -53,7 +53,7 @@ public class AuthenticationHandler extends DefaultTask {
 	@TaskAction
 	public void configureUploadAuthentication() {
 		// todo : unfortunately I have no idea how to apply this to non MavenDeployer-type repos...
-		uploadTask.getRepositories().withType( MavenDeployer.class ).allObjects(
+		uploadTask.getRepositories().withType( MavenDeployer.class ).all(
 				new Action<MavenDeployer>() {
 					public void execute(MavenDeployer deployer) {
 						final RemoteRepository repository =  deployer.getRepository();

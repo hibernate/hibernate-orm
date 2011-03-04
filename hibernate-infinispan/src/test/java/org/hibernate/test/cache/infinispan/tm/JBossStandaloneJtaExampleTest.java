@@ -226,7 +226,7 @@ public class JBossStandaloneJtaExampleTest extends TestCase {
    }
 
    private void bindUserTransaction() throws Exception {
-      // also the UserTransaction must be registered on jndi: org.hibernate.transaction.JTATransactionFactory#getUserTransaction() requires this
+      // also the UserTransaction must be registered on jndi: org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory#getUserTransaction() requires this
       bind("UserTransaction", lookup.getUserTransaction(), lookup.getUserTransaction().getClass(), ctx);
    }
 

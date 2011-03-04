@@ -1731,11 +1731,17 @@ public abstract class Loader {
 		boolean hasFirstRow = getFirstRow( selection ) > 0;
 		boolean useOffset = hasFirstRow && useLimit && dialect.supportsLimitOffset();
 		boolean callable = queryParameters.isCallable();
-		
-		boolean useScrollableResultSetToSkip = hasFirstRow &&
+
+		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
+		final boolean useScrollableResultSetToSkip = hasFirstRow &&
 				!useOffset &&
 				getFactory().getSettings().isScrollableResultSetsEnabled();
-		ScrollMode scrollMode = scroll ? queryParameters.getScrollMode() : ScrollMode.SCROLL_INSENSITIVE;
+		final ScrollMode scrollMode =
+				canScroll
+						? scroll || useScrollableResultSetToSkip
+								? queryParameters.getScrollMode()
+								: ScrollMode.SCROLL_INSENSITIVE
+						: null;
 
 		if ( useLimit ) {
 			sql = dialect.getLimitString( 
@@ -1746,14 +1752,14 @@ public abstract class Loader {
 		}
 
 		sql = preprocessSQL( sql, queryParameters, dialect );
-		
+
 		PreparedStatement st = null;
 
-		st = session.getJDBCContext().getConnectionManager().prepareQueryStatement( 
+
+		st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 				sql,
-				scroll || useScrollableResultSetToSkip,
-				scrollMode,
-				callable
+				callable,
+				scrollMode
 		);
 
 		try {

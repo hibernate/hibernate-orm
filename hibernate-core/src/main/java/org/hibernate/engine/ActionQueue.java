@@ -265,7 +265,7 @@ public class ActionQueue {
 			execute( ( Executable ) list.get( i ) );
 		}
 		list.clear();
-		session.getJDBCContext().getConnectionManager().executeBatch();
+		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
 	}
 
 	public void execute(Executable executable) {

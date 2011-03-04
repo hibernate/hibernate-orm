@@ -43,6 +43,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.transaction.spi.TransactionContext;
+import org.hibernate.event.EventSource;
 
 /**
  * A {@link CurrentSessionContext} impl which scopes the notion of current
@@ -74,11 +78,11 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
 
 	private static final Logger log = LoggerFactory.getLogger( ThreadLocalSessionContext.class );
 	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
-			org.hibernate.classic.Session.class,
-	        org.hibernate.engine.SessionImplementor.class,
-	        org.hibernate.engine.jdbc.spi.JDBCContext.Context.class,
-	        org.hibernate.event.EventSource.class,
-			org.hibernate.engine.jdbc.LobCreationContext.class
+			Session.class,
+	        SessionImplementor.class,
+	        EventSource.class,
+			TransactionContext.class,
+			LobCreationContext.class
 	};
 
 	/**

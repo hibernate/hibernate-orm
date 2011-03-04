@@ -51,6 +51,7 @@ import org.hibernate.util.ReflectHelper;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SuppressWarnings( {"UnnecessaryUnboxing"})
 public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
 	private static final Logger log = LoggerFactory.getLogger( DriverManagerConnectionProviderImpl.class );
 
@@ -62,6 +63,8 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 	private final ArrayList<Connection> pool = new ArrayList<Connection>();
 	private int checkedOut = 0;
+
+	private boolean stopped;
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
@@ -144,6 +147,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			}
 		}
 		pool.clear();
+		stopped = true;
 	}
 
 	public Connection getConnection() throws SQLException {
@@ -157,7 +161,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 					log.trace( "using pooled JDBC connection, pool size: " + last );
 					checkedOut++;
 				}
-				Connection pooled = (Connection) pool.remove(last);
+				Connection pooled = pool.remove(last);
 				if ( isolation != null ) {
 					pooled.setTransactionIsolation( isolation.intValue() );
 				}
@@ -205,8 +209,11 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 		conn.close();
 	}
 
-	protected void finalize() {
-		stop();
+	protected void finalize() throws Throwable {
+		if ( !stopped ) {
+			stop();
+		}
+		super.finalize();
 	}
 
 	public boolean supportsAggressiveRelease() {

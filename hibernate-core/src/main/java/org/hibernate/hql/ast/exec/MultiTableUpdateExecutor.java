@@ -129,7 +129,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getJDBCContext().getConnectionManager().prepareStatement( idInsertSelect, false );
+					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
 //					int parameterStart = getWalker().getNumberOfParametersInSetClause();
 //					List allParams = getIdSelectParameterSpecifications();
 //					Iterator whereParams = allParams.subList( parameterStart, allParams.size() ).iterator();
@@ -161,7 +161,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 				}
 				try {
 					try {
-						ps = session.getJDBCContext().getConnectionManager().prepareStatement( updates[i], false );
+						ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
 						if ( hqlParameters[i] != null ) {
 							int position = 1; // jdbc params are 1-based
 							for ( int x = 0; x < hqlParameters[i].length; x++ ) {

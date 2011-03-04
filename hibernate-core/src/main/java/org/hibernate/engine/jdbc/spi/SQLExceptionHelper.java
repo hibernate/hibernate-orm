@@ -23,6 +23,7 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
+import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -41,7 +42,7 @@ import org.hibernate.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class SQLExceptionHelper {
+public class SQLExceptionHelper implements Serializable {
 	private static final Logger log = LoggerFactory.getLogger( SQLExceptionHelper.class );
 
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";

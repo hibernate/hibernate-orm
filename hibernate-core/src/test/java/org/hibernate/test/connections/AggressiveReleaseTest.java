@@ -1,11 +1,6 @@
 // $Id: AggressiveReleaseTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.connections;
 
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import junit.framework.Test;
 
 import org.hibernate.ConnectionReleaseMode;
@@ -14,13 +9,20 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.impl.SessionImpl;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
+import org.hibernate.test.common.jta.AtomikosJtaPlatform;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.testing.tm.ConnectionProviderImpl;
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
-import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.hibernate.transaction.CMTTransactionFactory;
 import org.hibernate.util.SerializationHelper;
+
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Implementation of AggressiveReleaseTest.
@@ -39,8 +41,8 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
-		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
+		cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
+		cfg.getProperties().put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -56,32 +58,36 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	protected void prepare() throws Throwable {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 	}
 
 	protected void done() throws Throwable {
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	// Some additional tests specifically for the aggressive-release functionality...
 
 	public void testSerializationOnAfterStatementAggressiveRelease() throws Throwable {
 		prepare();
-		Session s = getSessionUnderTest();
-		Silly silly = new Silly( "silly" );
-		s.save( silly );
+		try {
+			Session s = getSessionUnderTest();
+			Silly silly = new Silly( "silly" );
+			s.save( silly );
 
-		// this should cause the CM to obtain a connection, and then release it
-		s.flush();
+			// this should cause the CM to obtain a connection, and then release it
+			s.flush();
 
-		// We should be able to serialize the session at this point...
-		SerializationHelper.serialize( s );
+			// We should be able to serialize the session at this point...
+			SerializationHelper.serialize( s );
 
-		s.delete( silly );
-		s.flush();
+			s.delete( silly );
+			s.flush();
 
-		release( s );
-		done();
+			release( s );
+		}
+		finally {
+			done();
+		}
 	}
 
 	public void testSerializationFailsOnAfterStatementAggressiveReleaseWithOpenResources() throws Throwable {
@@ -188,7 +194,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	public void testSuppliedConnection() throws Throwable {
 		prepare();
 
-		Connection originalConnection = ConnectionProviderImpl.getActualConnectionProvider().getConnection();
+		Connection originalConnection = sfi().getServiceRegistry().getService( ConnectionProvider.class ).getConnection();
 		Session session = getSessions().openSession( originalConnection );
 
 		Silly silly = new Silly( "silly" );
@@ -197,8 +203,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		// this will cause the connection manager to cycle through the aggressive release logic;
 		// it should not release the connection since we explicitly suplied it ourselves.
 		session.flush();
-
-		assertTrue( "Different connections", originalConnection == session.connection() );
+		assertTrue( session.isConnected() );
 
 		session.delete( silly );
 		session.flush();
@@ -206,17 +211,33 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		release( session );
 		done();
 
-		ConnectionProviderImpl.getActualConnectionProvider().closeConnection( originalConnection );
+		sfi().getServiceRegistry().getService( ConnectionProvider.class ).closeConnection( originalConnection );
 	}
 
 	public void testBorrowedConnections() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
 
+		// todo : may need to come back here and make sure that closing the connection handles do not close the physical cached connection on LogicalConnection...
+
 		Connection conn = s.connection();
-		assertTrue( ( ( SessionImpl ) s ).getJDBCContext().getConnectionManager().hasBorrowedConnection() );
+		assertFalse( conn.isClosed() );
+		assertFalse(
+				((SessionImpl) s).getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getLogicalConnection()
+						.isPhysicallyConnected()
+		);
+		conn.getCatalog();
+		assertTrue(
+				((SessionImpl) s).getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getLogicalConnection()
+						.isPhysicallyConnected()
+		);
 		conn.close();
-		assertFalse( ( ( SessionImpl ) s ).getJDBCContext().getConnectionManager().hasBorrowedConnection() );
+		assertTrue( conn.isClosed() );
+		assertTrue( ( ( SessionImpl ) s ).getTransactionCoordinator().getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected() );
 
 		release( s );
 		done();

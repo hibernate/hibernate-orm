@@ -13,10 +13,10 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.StatefulPersistenceContext;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.tm.ConnectionProviderImpl;
 import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.hibernate.transaction.CMTTransactionFactory;
 import org.hibernate.util.SerializationHelper;
 
 /**

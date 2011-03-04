@@ -30,6 +30,7 @@ import javax.transaction.TransactionManager;
 
 import org.hibernate.TransactionException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
  * @author Gavin King
@@ -54,7 +55,7 @@ public final class JTAHelper {
 	 * and false in *every* other cases (including in a JDBC transaction).
 	 */
 	public static boolean isTransactionInProgress(SessionFactoryImplementor factory) {
-		TransactionManager tm = factory.getTransactionManager();
+		TransactionManager tm = factory.getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager();
 		try {
 			return tm != null && isTransactionInProgress( tm.getTransaction() );
 		}

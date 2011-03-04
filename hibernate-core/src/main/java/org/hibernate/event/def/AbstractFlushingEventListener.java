@@ -313,7 +313,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		log.trace("executing flush");
 
 		try {
-			session.getJDBCContext().getConnectionManager().flushBeginning();
+			session.getTransactionCoordinator().getJdbcCoordinator().flushBeginning();
 			// we need to lock the collection caches before
 			// executing entity inserts/updates in order to
 			// account for bidi associations
@@ -325,7 +325,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			throw he;
 		}
 		finally {
-			session.getJDBCContext().getConnectionManager().flushEnding();
+			session.getTransactionCoordinator().getJdbcCoordinator().flushEnding();
 		}
 	}
 

@@ -42,7 +42,7 @@ public interface Batch {
 	 *
 	 * @return The batch key.
 	 */
-	public Object getKey();
+	public BatchKey getKey();
 
 	/**
 	 * Adds an observer to this batch.
@@ -52,30 +52,19 @@ public interface Batch {
 	public void addObserver(BatchObserver observer);
 
 	/**
-	 * Get a statement which is part of the batch.
+	 * Get a statement which is part of the batch, creating if necessary (and storing for next time).
 	 *
 	 * @param sql The SQL statement.
-	 * @return the prepared statement representing the SQL statement, if the batch contained it;
-	 *         null, otherwise.
-	 */
-	public PreparedStatement getBatchStatement(Object key, String sql);
-
-	/**
-	 * Add a prepared statement to the batch.
+	 * @param callable Is the SQL statement callable?
 	 *
-	 * @param sql The SQL statement.
+	 * @return The prepared statement instance, representing the SQL statement.
 	 */
-	public void addBatchStatement(Object key, String sql, PreparedStatement preparedStatement);
-
+	public PreparedStatement getBatchStatement(String sql, boolean callable);
 
 	/**
 	 * Indicates completion of the current part of the batch.
-	 *
-	 * @param key
-	 * @param sql
-	 * @param expectation The expectation for the part's result.
 	 */
-	public void addToBatch(Object key, String sql, Expectation expectation);
+	public void addToBatch();
 
 	/**
 	 * Execute this batch.

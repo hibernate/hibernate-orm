@@ -87,14 +87,14 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
    public void testClearTimestampsRegionInIsolated() throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  getJdbcServices(), cfg, getCacheTestSupport()
+			  getServiceRegistry(), cfg, getCacheTestSupport()
 	  );
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
 
       Configuration cfg2 = createConfiguration();
       InfinispanRegionFactory regionFactory2 = CacheTestUtil.startRegionFactory(
-			  getJdbcServices(), cfg2, getCacheTestSupport()
+			  getServiceRegistry(), cfg2, getCacheTestSupport()
 	  );
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();

@@ -59,12 +59,7 @@ public class SQLExceptionConversionTest extends FunctionalTestCase {
 
 			fail("INSERT should have failed");
 		}
-		catch(SQLException sqle) {
-			JDBCExceptionReporter.logExceptions(sqle, "Just output!!!!");
-			JDBCException jdbcException = converter.convert(sqle, null, null);
-			assertEquals( "Bad conversion [" + sqle.getMessage() + "]", ConstraintViolationException.class , jdbcException.getClass() );
-			ConstraintViolationException ex = (ConstraintViolationException) jdbcException;
-			System.out.println("Violated constraint name: " + ex.getConstraintName());
+		catch (ConstraintViolationException expected) {
 		}
 		finally {
 			if ( ps != null ) {
@@ -95,8 +90,7 @@ public class SQLExceptionConversionTest extends FunctionalTestCase {
 
 			fail("SQL compilation should have failed");
 		}
-		catch( SQLException sqle ) {
-			assertEquals( "Bad conversion [" + sqle.getMessage() + "]", SQLGrammarException.class, converter.convert(sqle, null, null).getClass() );
+		catch (SQLGrammarException expected) {
 		}
 		finally {
 			if ( ps != null ) {

@@ -3,6 +3,13 @@
 package org.hibernate.test.annotations.manytomany;
 
 
+import org.hibernate.Hibernate;
+import org.hibernate.JDBCException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.test.annotations.TestCase;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -10,13 +17,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.hibernate.Hibernate;
-import org.hibernate.JDBCException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.criterion.Restrictions;
-import org.hibernate.test.annotations.TestCase;
 
 /**
  * Many to many tests
@@ -680,30 +680,29 @@ public class ManyToManyTest extends TestCase {
 	// or property.
 	public void testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy() throws Exception {
 		Session s;
-		Transaction tx;
 		s = openSession();
-		tx = s.beginTransaction();
+		s.getTransaction().begin();
 		Employee e = new Employee();
 		e.setName( "Sharon" );
 		List<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
 		Collection<Employee> employees = new ArrayList<Employee>();
 		employees.add( e );
-	   ContactInfo contactInfo = new ContactInfo();
+		ContactInfo contactInfo = new ContactInfo();
 		PhoneNumber number = new PhoneNumber();
 		number.setEmployees( employees );
 		phoneNumbers.add( number );
 		contactInfo.setPhoneNumbers( phoneNumbers );
 		e.setContactInfo( contactInfo );
 		s.persist( e );
-		s.flush();
-		s.clear();
-		tx.commit();
+		s.getTransaction().commit();
+		s.close();
 
-		tx.begin();
+		s = openSession();
+		s.getTransaction().begin();
 		e = (Employee)s.get( e.getClass(),e.getId() );
 		// follow both directions of many to many association 
 		assertEquals("same employee", e.getName(), e.getContactInfo().getPhoneNumbers().get(0).getEmployees().iterator().next().getName());
-		tx.commit();
+		s.getTransaction().commit();
 
 		s.close();
 	}
@@ -718,9 +717,8 @@ public class ManyToManyTest extends TestCase {
 	// with the dot notation is the name of the respective embedded field or property.
 	public void testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy() throws Exception {
 		Session s;
-		Transaction tx;
 		s = openSession();
-		tx = s.beginTransaction();
+		s.getTransaction().begin();
 		Employee e = new Employee();
 		JobInfo job = new JobInfo();
 		job.setJobDescription( "Sushi Chef" );
@@ -731,16 +729,16 @@ public class ManyToManyTest extends TestCase {
 		job.setPm(pm);
 		e.setJobInfo( job );
 		s.persist( e );
-		s.flush();
-		s.clear();
-		tx.commit();
+		s.getTransaction().commit();
+		s.close();
 
-		tx.begin();
+		s = openSession();
+		s.getTransaction().begin();
 		e = (Employee) s.get( e.getClass(), e.getId() );
 		assertEquals( "same job in both directions", 
 			e.getJobInfo().getJobDescription(),
 			e.getJobInfo().getPm().getManages().iterator().next().getJobInfo().getJobDescription()  );
-		tx.commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 

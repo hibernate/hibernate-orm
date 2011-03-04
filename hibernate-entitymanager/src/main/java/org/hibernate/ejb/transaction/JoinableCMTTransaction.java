@@ -21,79 +21,63 @@
  */
 package org.hibernate.ejb.transaction;
 
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-
 import org.hibernate.HibernateException;
-import org.hibernate.TransactionException;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
-import org.hibernate.transaction.CMTTransaction;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.util.JTAHelper;
+import org.hibernate.engine.transaction.internal.jta.CMTTransaction;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.engine.transaction.spi.JoinStatus;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 
 /**
  * Implements a joinable transaction. Until the transaction is marked for joined, the TM.isTransactionInProgress()
  * must return false
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 public class JoinableCMTTransaction extends CMTTransaction {
-	private JoinStatus status;
+	private JoinStatus joinStatus = JoinStatus.NOT_JOINED;
 
-	public JoinableCMTTransaction(JDBCContext jdbcContext, TransactionFactory.Context transactionContext) {
-		super( jdbcContext, transactionContext );
-		//status = JoinStatus.MARKED_FOR_JOINED;
-		//tryJoiningTransaction();
+	public JoinableCMTTransaction(TransactionCoordinator transactionCoordinator) {
+		super( transactionCoordinator );
 	}
 
-	public boolean isTransactionInProgress(
-			JDBCContext jdbcContext,
-			TransactionFactory.Context transactionContext) {
-		try {
-			return status == JoinStatus.JOINED && isTransactionInProgress(
-					transactionContext.getFactory().getTransactionManager().getTransaction()
-			);
-		}
-		catch (SystemException se) {
-			throw new TransactionException( "Unable to check transaction status", se );
-		}
+	boolean isJoinable() {
+		return joinStatus == JoinStatus.JOINED && JtaStatusHelper.isActive( transactionManager() );
 	}
 
-	private boolean isTransactionInProgress() {
-		try {
-			Transaction transaction = transactionContext.getFactory().getTransactionManager().getTransaction();
-			return isTransactionInProgress(transaction);
-		}
-		catch (SystemException se) {
-			throw new TransactionException( "Unable to check transaction status", se );
-		}
+	public JoinStatus getJoinStatus() {
+		return joinStatus;
 	}
 
-	private boolean isTransactionInProgress(Transaction tx) throws SystemException {
-		return JTAHelper.isTransactionInProgress(tx) && ! JTAHelper.isRollback( tx.getStatus() );
-	}
-
-	void tryJoiningTransaction() {
-		if ( status == JoinStatus.MARKED_FOR_JOINED ) {
-			if ( isTransactionInProgress() ) {
-				status = JoinStatus.JOINED;
+	@Override
+	public void join() {
+		if ( joinStatus == JoinStatus.MARKED_FOR_JOINED ) {
+			if ( JtaStatusHelper.isActive( transactionManager() ) ) {
+				joinStatus = JoinStatus.JOINED;
+				// register synchronization if needed
+				transactionCoordinator().pulse();
 			}
 			else {
-				status = JoinStatus.NOT_JOINED;
+				joinStatus = JoinStatus.NOT_JOINED;
 			}
 		}
+	}
+
+	@Override
+	public void resetJoinStatus() {
+		joinStatus = JoinStatus.NOT_JOINED;
 	}
 
 	@Override
 	public void begin() throws HibernateException {
 		super.begin();
-		status = JoinStatus.JOINED;
+		joinStatus = JoinStatus.JOINED;
 	}
 
 	@Override
 	public void commit() throws HibernateException {
 		/* this method is not supposed to be called
-		 * it breaks the flushBeforeCompletion flag optimizeation
+		 * it breaks the flushBeforeCompletion flag optimization
 		 * regarding flushing skip.
 		 * In its current form, it will generate too much flush() calls
 		 */
@@ -102,20 +86,11 @@ public class JoinableCMTTransaction extends CMTTransaction {
 
 
 	public JoinStatus getStatus() {
-		return status;
+		return joinStatus;
 	}
 
 	public void resetStatus() {
-		status = JoinStatus.NOT_JOINED;
+		joinStatus = JoinStatus.NOT_JOINED;
 	}
 
-	public void markForJoined() {
-		if ( status != JoinStatus.JOINED ) status = JoinStatus.MARKED_FOR_JOINED;
-	}
-
-	public static enum JoinStatus {
-		NOT_JOINED,
-		MARKED_FOR_JOINED,
-		JOINED
-	}
 }

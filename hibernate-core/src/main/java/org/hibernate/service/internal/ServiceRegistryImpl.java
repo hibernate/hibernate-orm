@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class ServiceRegistryImpl implements ServiceRegistry, ServiceProxyTargetS
 	}
 
 	public void destroy() {
-		ListIterator<Service> serviceIterator = serviceList.listIterator();
+		ListIterator<Service> serviceIterator = serviceList.listIterator( serviceList.size() );
 		while ( serviceIterator.hasPrevious() ) {
 			final Service service = serviceIterator.previous();
 			if ( Stoppable.class.isInstance( service ) ) {

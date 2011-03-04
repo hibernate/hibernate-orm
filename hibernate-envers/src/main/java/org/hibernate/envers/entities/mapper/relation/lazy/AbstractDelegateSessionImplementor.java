@@ -46,8 +46,8 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.NonFlushedChanges;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
@@ -138,14 +138,6 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 
     public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
         return delegate.getEntityUsingInterceptor(key);
-    }
-
-    public void afterTransactionCompletion(boolean successful, Transaction tx) {
-        delegate.afterTransactionCompletion(successful, tx);
-    }
-
-    public void beforeTransactionCompletion(Transaction tx) {
-        delegate.beforeTransactionCompletion(tx);
     }
 
     public Serializable getContextEntityIdentifier(Object object) {
@@ -280,11 +272,12 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
         return delegate.getFetchProfile();
     }
 
-    public JDBCContext getJDBCContext() {
-        return delegate.getJDBCContext();
-    }
+	@Override
+	public TransactionCoordinator getTransactionCoordinator() {
+		return delegate.getTransactionCoordinator();
+	}
 
-    public boolean isClosed() {
+	public boolean isClosed() {
         return delegate.isClosed();
     }
 }

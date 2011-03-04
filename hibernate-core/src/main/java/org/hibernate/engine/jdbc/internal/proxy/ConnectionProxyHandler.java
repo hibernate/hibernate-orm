@@ -36,19 +36,19 @@ import java.sql.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.stat.StatisticsImplementor;
+import org.hibernate.engine.jdbc.spi.NonDurableConnectionObserver;
 
 /**
  * The {@link InvocationHandler} for intercepting messages to {@link java.sql.Connection} proxies.
  *
  * @author Steve Ebersole
  */
-public class ConnectionProxyHandler extends AbstractProxyHandler implements InvocationHandler, ConnectionObserver {
+public class ConnectionProxyHandler
+		extends AbstractProxyHandler
+		implements InvocationHandler, NonDurableConnectionObserver {
 	private static final Logger log = LoggerFactory.getLogger( ConnectionProxyHandler.class );
 
 	private LogicalConnectionImplementor logicalConnection;
@@ -110,6 +110,10 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		if ( "close".equals( methodName ) ) {
 			explicitClose();
 			return null;
+		}
+
+		if ( "isClosed".equals( methodName ) ) {
+			return ! isValid();
 		}
 
 		errorIfInvalid();
@@ -185,9 +189,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	}
 
 	private void postProcessPreparedStatement(Statement statement) throws SQLException  {
-		if ( getStatisticsImplementorOrNull() != null ) {
-			getStatisticsImplementorOrNull().prepareStatement();
-		}
+		logicalConnection.notifyObserversStatementPrepared();
 		postProcessStatement( statement );
 	}
 
@@ -203,29 +205,25 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		invalidate();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	// ConnectionObserver ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
 	public void physicalConnectionObtained(Connection connection) {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void physicalConnectionReleased() {
 		log.info( "logical connection releasing its physical connection");
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void logicalConnectionClosed() {
 		log.info( "*** logical connection closed ***" );
 		invalidateHandle();
 	}
 
-	/* package-protected */
-	StatisticsImplementor getStatisticsImplementorOrNull() {
-		return getLogicalConnection().getStatisticsImplementor();
+	@Override
+	public void statementPrepared() {
+		// N/A
 	}
 }

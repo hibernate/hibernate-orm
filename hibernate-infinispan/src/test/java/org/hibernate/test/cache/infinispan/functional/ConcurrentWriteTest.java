@@ -47,12 +47,12 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaPlatformImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeConnectionProviderImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTransactionManagerLookup;
-import org.hibernate.transaction.TransactionManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -104,12 +104,12 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
        return DualNodeConnectionProviderImpl.class;
    }
 
-   @Override
-   protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {
-       return DualNodeTransactionManagerLookup.class;
-   }
+	@Override
+	protected Class<? extends JtaPlatform> getJtaPlatform() {
+		return DualNodeJtaPlatformImpl.class;
+	}
 
-   /**
+	/**
     * test that DB can be queried
     * 
     * @throws java.lang.Exception

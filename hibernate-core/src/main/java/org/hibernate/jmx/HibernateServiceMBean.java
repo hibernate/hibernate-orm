@@ -104,44 +104,47 @@ public interface HibernateServiceMBean {
 	public void setJndiName(String jndiName);
 
 	/**
-	 * The fully qualified class name of the Hibernate <tt>TransactionFactory</tt> implementation
+	 * The fully qualified class name of the Hibernate {@link org.hibernate.engine.transaction.spi.TransactionFactory}
+	 * implementation to use
+	 *
 	 * @return the class name
-	 * @see org.hibernate.transaction.TransactionFactory
 	 */
 	public String getTransactionStrategy();
 
 	/**
-	 * Set the fully qualified class name of the Hibernate <tt>TransactionFactory</tt> implementation
+	 * Set the fully qualified class name of the Hibernate {@link org.hibernate.engine.transaction.spi.TransactionFactory}
+	 * implementation to use.
+	 *
 	 * @param txnStrategy the class name
-	 * @see org.hibernate.transaction.TransactionFactory
 	 */
 	public void setTransactionStrategy(String txnStrategy);
 
 	/**
-	 * The JNDI name of the JTA UserTransaction object (used only be <tt>JTATransaction</tt>).
+	 * The JNDI name of the JTA UserTransaction object (used only be <tt>JtaTransaction</tt>).
 	 * @return the JNDI name
-	 * @see org.hibernate.transaction.JTATransaction
+	 * @see org.hibernate.engine.transaction.internal.jta.JtaTransaction
 	 */
 	public String getUserTransactionName();
 	/**
-	 * Set the JNDI name of the JTA UserTransaction object (used only by <tt>JTATransaction</tt>).
+	 * Set the JNDI name of the JTA UserTransaction object (used only by <tt>JtaTransaction</tt>).
 	 * @param utName the JNDI name
-	 * @see org.hibernate.transaction.JTATransaction
+	 * @see org.hibernate.engine.transaction.internal.jta.JtaTransaction
 	 */
 	public void setUserTransactionName(String utName);
 
 	/**
-	 * Get the strategy for obtaining the JTA <tt>TransactionManager</tt>
-	 * @return the class name
-	 * @see org.hibernate.transaction.TransactionManagerLookup
+	 * Get the name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use.
+	 *
+	 * @return The name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use.
 	 */
-	public String getTransactionManagerLookupStrategy();
+	public String getJtaPlatformName();
+
 	/**
-	 * Set the strategy for obtaining the JTA <tt>TransactionManager</tt>
-	 * @param lkpStrategy the class name
-	 * @see org.hibernate.transaction.TransactionManagerLookup
+	 * Sets the name of the {@link org.hibernate.service.jta.platform.spi.JtaPlatform} implementation to use.
+	 *
+	 * @param name The implementation class name.
 	 */
-	public void setTransactionManagerLookupStrategy(String lkpStrategy);
+	public void setJtaPlatformName(String name);
 
 	/**
 	 * Is SQL logging enabled?

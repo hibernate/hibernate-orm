@@ -23,20 +23,19 @@
  */
 package org.hibernate.test.jdbc.proxies;
 
+import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
+import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
+import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
+import org.hibernate.test.common.JournalingConnectionObserver;
+import org.hibernate.testing.junit.UnitTestCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
-import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
-import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
-import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * TODO : javadoc
@@ -47,22 +46,6 @@ public class AggressiveReleaseTest extends UnitTestCase {
 
 	private static final Logger log = LoggerFactory.getLogger( AggressiveReleaseTest.class );
 	private BasicTestingJdbcServiceImpl services = new BasicTestingJdbcServiceImpl();
-
-	private static class ConnectionCounter implements ConnectionObserver {
-		public int obtainCount = 0;
-		public int releaseCount = 0;
-
-		public void physicalConnectionObtained(Connection connection) {
-			obtainCount++;
-		}
-
-		public void physicalConnectionReleased() {
-			releaseCount++;
-		}
-
-		public void logicalConnectionClosed() {
-		}
-	}
 
 	public AggressiveReleaseTest(String string) {
 		super( string );
@@ -130,14 +113,9 @@ public class AggressiveReleaseTest extends UnitTestCase {
 	}
 
 	public void testBasicRelease() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
-				null,
-				ConnectionReleaseMode.AFTER_STATEMENT,
-				services,
-				null
-		);
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
-		ConnectionCounter observer = new ConnectionCounter();
+		JournalingConnectionObserver observer = new JournalingConnectionObserver();
 		logicalConnection.addObserver( observer );
 
 		try {
@@ -146,12 +124,12 @@ public class AggressiveReleaseTest extends UnitTestCase {
 			ps.setString( 2, "name" );
 			ps.execute();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 1, observer.obtainCount );
-			assertEquals( 0, observer.releaseCount );
+			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 0, observer.getPhysicalConnectionReleasedCount() );
 			ps.close();
 			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 1, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 		}
 		catch ( SQLException sqle ) {
 			fail( "incorrect exception type : sqlexception" );
@@ -164,14 +142,9 @@ public class AggressiveReleaseTest extends UnitTestCase {
 	}
 
 	public void testReleaseCircumventedByHeldResources() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
-				null,
-				ConnectionReleaseMode.AFTER_STATEMENT,
-				services,
-				null
-		);
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
-		ConnectionCounter observer = new ConnectionCounter();
+		JournalingConnectionObserver observer = new JournalingConnectionObserver();
 		logicalConnection.addObserver( observer );
 
 		try {
@@ -180,33 +153,32 @@ public class AggressiveReleaseTest extends UnitTestCase {
 			ps.setString( 2, "name" );
 			ps.execute();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 1, observer.obtainCount );
-			assertEquals( 0, observer.releaseCount );
+			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 0, observer.getPhysicalConnectionReleasedCount() );
 			ps.close();
 			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 1, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 
 			// open a result set and hold it open...
 			ps = proxiedConnection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			ps.executeQuery();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 2, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 
 			// open a second result set
 			PreparedStatement ps2 = proxiedConnection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			ps2.execute();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 2, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 			// and close it...
 			ps2.close();
 			// the release should be circumvented...
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 2, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 
 			// let the close of the logical connection below release all resources (hopefully)...
 		}
@@ -218,19 +190,14 @@ public class AggressiveReleaseTest extends UnitTestCase {
 		}
 
 		assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-		assertEquals( 2, observer.obtainCount );
-		assertEquals( 2, observer.releaseCount );
+		assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+		assertEquals( 2, observer.getPhysicalConnectionReleasedCount() );
 	}
 
 	public void testReleaseCircumventedManually() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
-				null,
-				ConnectionReleaseMode.AFTER_STATEMENT,
-				services,
-				null
-		);
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
-		ConnectionCounter observer = new ConnectionCounter();
+		JournalingConnectionObserver observer = new JournalingConnectionObserver();
 		logicalConnection.addObserver( observer );
 
 		try {
@@ -239,12 +206,12 @@ public class AggressiveReleaseTest extends UnitTestCase {
 			ps.setString( 2, "name" );
 			ps.execute();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 1, observer.obtainCount );
-			assertEquals( 0, observer.releaseCount );
+			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 0, observer.getPhysicalConnectionReleasedCount() );
 			ps.close();
 			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 1, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 1, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 
 			// disable releases...
 			logicalConnection.disableReleases();
@@ -253,14 +220,14 @@ public class AggressiveReleaseTest extends UnitTestCase {
 			ps = proxiedConnection.prepareStatement( "select * from SANDBOX_JDBC_TST" );
 			ps.executeQuery();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 2, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 			// and close it...
 			ps.close();
 			// the release should be circumvented...
 			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-			assertEquals( 2, observer.obtainCount );
-			assertEquals( 1, observer.releaseCount );
+			assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+			assertEquals( 1, observer.getPhysicalConnectionReleasedCount() );
 
 			// let the close of the logical connection below release all resources (hopefully)...
 		}
@@ -272,7 +239,7 @@ public class AggressiveReleaseTest extends UnitTestCase {
 		}
 
 		assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
-		assertEquals( 2, observer.obtainCount );
-		assertEquals( 2, observer.releaseCount );
+		assertEquals( 2, observer.getPhysicalConnectionObtainedCount() );
+		assertEquals( 2, observer.getPhysicalConnectionReleasedCount() );
 	}
 }

@@ -105,7 +105,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getJDBCContext().getConnectionManager().prepareStatement( idInsertSelect, false );
+					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
 					Iterator paramSpecifications = getIdSelectParameterSpecifications().iterator();
 					int pos = 1;
 					while ( paramSpecifications.hasNext() ) {
@@ -132,7 +132,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			for ( int i = 0; i < deletes.length; i++ ) {
 				try {
 					try {
-						ps = session.getJDBCContext().getConnectionManager().prepareStatement( deletes[i], false );
+						ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( deletes[i], false );
 						ps.executeUpdate();
 					}
 					finally {

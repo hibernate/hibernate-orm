@@ -39,16 +39,14 @@ import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.util.SQLStatementLogger;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.TransactionFactoryFactory;
-import org.hibernate.transaction.TransactionManagerLookup;
-import org.hibernate.transaction.TransactionManagerLookupFactory;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.util.ReflectHelper;
 import org.hibernate.util.StringHelper;
 
@@ -66,7 +64,8 @@ public class SettingsFactory implements Serializable {
 	protected SettingsFactory() {
 	}
 
-	public Settings buildSettings(Properties props, JdbcServices jdbcServices) {
+	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) {
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		Settings settings = new Settings();
 
 		//SessionFactory name:
@@ -90,10 +89,7 @@ public class SettingsFactory implements Serializable {
 		settings.setJdbcSupport( new JdbcSupport( ! ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, properties ) ) );
 
 		// Transaction settings:
-
-		TransactionFactory transactionFactory = createTransactionFactory(properties);
-		settings.setTransactionFactory(transactionFactory);
-		settings.setTransactionManagerLookup( createTransactionManagerLookup(properties) );
+		settings.setJtaPlatform( serviceRegistry.getService( JtaPlatform.class ) );
 
 		boolean flushBeforeCompletion = ConfigurationHelper.getBoolean(Environment.FLUSH_BEFORE_COMPLETION, properties);
 		log.info("Automatic flush during beforeCompletion(): " + enabledDisabled(flushBeforeCompletion) );
@@ -112,7 +108,6 @@ public class SettingsFactory implements Serializable {
 		boolean jdbcBatchVersionedData = ConfigurationHelper.getBoolean(Environment.BATCH_VERSIONED_DATA, properties, false);
 		if (batchSize>0) log.info("JDBC batch updates for versioned data: " + enabledDisabled(jdbcBatchVersionedData) );
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
-		settings.setBatcherBuilder( createBatchBuilder(properties, batchSize) );
 
 		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, meta.supportsScrollableResults());
 		log.info("Scrollable result sets: " + enabledDisabled(useScrollableResultSets) );
@@ -134,7 +129,7 @@ public class SettingsFactory implements Serializable {
 		log.info( "Connection release mode: " + releaseModeName );
 		ConnectionReleaseMode releaseMode;
 		if ( "auto".equals(releaseModeName) ) {
-			releaseMode = transactionFactory.getDefaultReleaseMode();
+			releaseMode = serviceRegistry.getService( TransactionFactory.class ).getDefaultReleaseMode();
 		}
 		else {
 			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
@@ -301,7 +296,9 @@ public class SettingsFactory implements Serializable {
 	}
 
 	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
-		String regionFactoryClassName = ConfigurationHelper.getString( Environment.CACHE_REGION_FACTORY, properties, null );
+		String regionFactoryClassName = ConfigurationHelper.getString(
+				Environment.CACHE_REGION_FACTORY, properties, null
+		);
 		if ( regionFactoryClassName == null && cachingEnabled ) {
 			String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, null );
 			if ( providerClassName != null ) {
@@ -344,35 +341,6 @@ public class SettingsFactory implements Serializable {
 		catch (Exception cnfe) {
 			throw new HibernateException("could not instantiate QueryTranslatorFactory: " + className, cnfe);
 		}
-	}
-
-	protected BatchBuilder createBatchBuilder(Properties properties, int batchSize) {
-		String batchBuilderClass = properties.getProperty(Environment.BATCH_STRATEGY);
-		BatchBuilder batchBuilder;
-		if (batchBuilderClass==null) {
-			batchBuilder = batchSize > 0
-					? new BatchBuilder( batchSize )
-					: new BatchBuilder();
-		}
-		else {
-			log.info("Batch factory: " + batchBuilderClass);
-			try {
-				batchBuilder = (BatchBuilder) ReflectHelper.classForName(batchBuilderClass).newInstance();
-			}
-			catch (Exception cnfe) {
-				throw new HibernateException("could not instantiate BatchBuilder: " + batchBuilderClass, cnfe);
-			}
-		}
-		batchBuilder.setJdbcBatchSize( batchSize );
-		return batchBuilder;
-	}
-
-	protected TransactionFactory createTransactionFactory(Properties properties) {
-		return TransactionFactoryFactory.buildTransactionFactory(properties);
-	}
-
-	protected TransactionManagerLookup createTransactionManagerLookup(Properties properties) {
-		return TransactionManagerLookupFactory.getTransactionManagerLookup(properties);
 	}
 
 }

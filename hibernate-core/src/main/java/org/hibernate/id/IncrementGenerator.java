@@ -121,7 +121,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
 		log.debug( "fetching initial value: " + sql );
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {

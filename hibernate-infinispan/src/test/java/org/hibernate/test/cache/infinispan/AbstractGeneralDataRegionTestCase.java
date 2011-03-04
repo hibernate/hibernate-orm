@@ -73,7 +73,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
    private void evictOrRemoveTest() throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  getJdbcServices(), cfg, getCacheTestSupport()
+			  getServiceRegistry(), cfg, getCacheTestSupport()
 	  );
       CacheAdapter localCache = getInfinispanCache(regionFactory);
       boolean invalidation = localCache.isClusteredInvalidation();
@@ -86,7 +86,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
       cfg = createConfiguration();
       regionFactory = CacheTestUtil.startRegionFactory(
-			  getJdbcServices(), cfg, getCacheTestSupport()
+			  getServiceRegistry(), cfg, getCacheTestSupport()
 	  );
 
       GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory,
@@ -126,7 +126,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
    private void evictOrRemoveAllTest(String configName) throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  getJdbcServices(), cfg, getCacheTestSupport()
+			  getServiceRegistry(), cfg, getCacheTestSupport()
 	  );
       CacheAdapter localCache = getInfinispanCache(regionFactory);
 
@@ -138,7 +138,7 @@ public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionIm
 
       cfg = createConfiguration();
       regionFactory = CacheTestUtil.startRegionFactory(
-			  getJdbcServices(), cfg, getCacheTestSupport()
+			  getServiceRegistry(), cfg, getCacheTestSupport()
 	  );
       CacheAdapter remoteCache = getInfinispanCache(regionFactory);
 

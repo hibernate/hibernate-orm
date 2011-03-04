@@ -164,7 +164,7 @@ import org.hibernate.util.ConfigHelper;
  * <tr>
  *   <td><tt>hibernate.transaction.factory_class</tt></td>
  *   <td>the factory to use for instantiating <tt>Transaction</tt>s.
- *   (Defaults to <tt>JDBCTransactionFactory</tt>.)</td>
+ *   (Defaults to <tt>JdbcTransactionFactory</tt>.)</td>
  * </tr>
  * <tr>
  *   <td><tt>hibernate.query.substitutions</tt></td><td>query language token substitutions</td>
@@ -376,7 +376,8 @@ public final class Environment {
 	 */
 	public static final String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 	/**
-	 * <tt>TransactionFactory</tt> implementor to use for creating <tt>Transaction</tt>s
+	 * Names the implementation of {@link org.hibernate.engine.transaction.spi.TransactionContext} to use for
+	 * creating {@link org.hibernate.Transaction} instances
 	 */
 	public static final String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
 	/**

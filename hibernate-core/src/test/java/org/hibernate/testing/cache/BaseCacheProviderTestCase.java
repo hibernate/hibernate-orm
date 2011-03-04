@@ -30,12 +30,12 @@ import org.hibernate.Transaction;
 import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.tm.ConnectionProviderImpl;
 import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.hibernate.transaction.JDBCTransactionFactory;
 
 /**
  * Common requirement testing for each {@link org.hibernate.cache.CacheProvider} impl.
@@ -78,7 +78,7 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 			cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
 		}
 		else {
-			cfg.setProperty( Environment.TRANSACTION_STRATEGY, JDBCTransactionFactory.class.getName() );
+			cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 		}
 	}
 

@@ -39,6 +39,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
@@ -190,6 +191,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return elementType.isEntityType(); //instanceof AssociationType;
 	}
 
+	private BasicBatchKey updateBatchKey;
+
 	protected int doUpdateRows(Serializable id, PersistentCollection collection, SessionImplementor session)
 			throws HibernateException {
 		
@@ -210,14 +213,22 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					int offset = 1;
 
 					if ( useBatch ) {
-						if ( st == null ) {
-							st = session.getJDBCContext().getConnectionManager().prepareBatchStatement(
-									this, sql, callable
+						if ( updateBatchKey == null ) {
+							updateBatchKey = new BasicBatchKey(
+									getRole() + "#UPDATE",
+									expectation
 							);
 						}
+						st = session.getTransactionCoordinator()
+								.getJdbcCoordinator()
+								.getBatch( updateBatchKey )
+								.getBatchStatement( sql, callable );
 					}
 					else {
-						st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+						st = session.getTransactionCoordinator()
+								.getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareStatement( sql, callable );
 					}
 
 					try {
@@ -237,7 +248,10 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 						}
 
 						if ( useBatch ) {
-							session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+							session.getTransactionCoordinator()
+									.getJdbcCoordinator()
+									.getBatch( updateBatchKey )
+									.addToBatch();
 						}
 						else {
 							expectation.verifyOutcome( st.executeUpdate(), st, -1 );
@@ -245,7 +259,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 					}
 					catch ( SQLException sqle ) {
 						if ( useBatch ) {
-							session.getJDBCContext().getConnectionManager().abortBatch();
+							session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 						}
 						throw sqle;
 					}

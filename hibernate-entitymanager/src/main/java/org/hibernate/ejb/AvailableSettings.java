@@ -247,7 +247,7 @@ public class AvailableSettings {
 	public static final String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";
 
 	/**
-	 * PersisterClassProvider class name, the class has to gave a no-arg constructor
+	 * PersisterClassResolver class name, the class has to gave a no-arg constructor
 	 */
 	public static final String PERSISTER_CLASS_PROVIDER = "hibernate.ejb.persister_class_provider";
 

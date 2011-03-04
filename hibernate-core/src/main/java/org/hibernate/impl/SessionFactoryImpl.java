@@ -80,11 +80,12 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.PersisterFactory;
+import org.hibernate.persister.internal.PersisterFactoryImpl;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -109,7 +110,6 @@ import org.slf4j.LoggerFactory;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import javax.transaction.TransactionManager;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -289,7 +289,12 @@ public final class SessionFactoryImpl
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
-			EntityPersister cp = PersisterFactory.createClassPersister( model, accessStrategy, this, mapping );
+			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
+					model,
+					accessStrategy,
+					this,
+					mapping
+			);
 			entityPersisters.put( model.getEntityName(), cp );
 			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
 		}
@@ -310,7 +315,12 @@ public final class SessionFactoryImpl
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
 				allCacheRegions.put( cacheRegionName, collectionRegion );
 			}
-			CollectionPersister persister = PersisterFactory.createCollectionPersister( cfg, model, accessStrategy, this) ;
+			CollectionPersister persister = serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
+					cfg,
+					model,
+					accessStrategy,
+					this
+			) ;
 			collectionPersisters.put( model.getRole(), persister.getCollectionMetadata() );
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {

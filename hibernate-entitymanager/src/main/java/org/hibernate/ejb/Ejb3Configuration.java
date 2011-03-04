@@ -91,7 +91,6 @@ import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.event.EventListeners;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -1049,18 +1048,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			cfg.setNamingStrategy( namingStrategy );
 		}
 
-		final PersisterClassProvider persisterClassProvider = instantiateCustomClassFromConfiguration(
-				preparedProperties,
-				null,
-				cfg.getPersisterClassProvider(),
-				AvailableSettings.PERSISTER_CLASS_PROVIDER,
-				"persister class provider",
-				PersisterClassProvider.class
-		);
-		if ( persisterClassProvider != null ) {
-			cfg.setPersisterClassProvider( persisterClassProvider );
-		}
-
 		if ( jaccKeys.size() > 0 ) {
 			addSecurity( jaccKeys, preparedProperties, workingVars );
 		}
@@ -1578,11 +1565,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	public Ejb3Configuration setNamingStrategy(NamingStrategy namingStrategy) {
 		cfg.setNamingStrategy( namingStrategy );
-		return this;
-	}
-
-	public Ejb3Configuration setPersisterClassProvider(PersisterClassProvider persisterClassProvider) {
-		cfg.setPersisterClassProvider( persisterClassProvider );
 		return this;
 	}
 

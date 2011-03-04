@@ -735,6 +735,7 @@ public class FumTest extends LegacyTestCase {
 		// Test insertions across serializations
 		Session s = getSessions().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
+		s.beginTransaction();
 
 		Simple simple = new Simple();
 		simple.setAddress("123 Main St. Anytown USA");
@@ -745,11 +746,11 @@ public class FumTest extends LegacyTestCase {
 		s.save( simple, new Long(10) );
 
 		// Now, try to serialize session without flushing...
-		s.disconnect();
+		s.getTransaction().commit();
 		Session s2 = spoofSerialization(s);
 		s.close();
 		s = s2;
-		s.reconnect();
+		s.beginTransaction();
 
 		simple = (Simple) s.load( Simple.class, new Long(10) );
 		Simple other = new Simple();
@@ -759,7 +760,7 @@ public class FumTest extends LegacyTestCase {
 		simple.setOther(other);
 		s.flush();
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		Simple check = simple;
 
@@ -767,6 +768,7 @@ public class FumTest extends LegacyTestCase {
 		// Test updates across serializations
 		s = getSessions().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
+		s.beginTransaction();
 
 		simple = (Simple) s.get( Simple.class, new Long(10) );
 		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
@@ -774,14 +776,14 @@ public class FumTest extends LegacyTestCase {
 
 		simple.setName("My updated name");
 
-		s.disconnect();
+		s.getTransaction().commit();
 		s2 = spoofSerialization(s);
 		s.close();
 		s = s2;
-		s.reconnect();
+		s.beginTransaction();
 		s.flush();
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 		check = simple;
 
@@ -789,6 +791,7 @@ public class FumTest extends LegacyTestCase {
 		// Test deletions across serializations
 		s = getSessions().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
+		s.beginTransaction();
 
 		simple = (Simple) s.get( Simple.class, new Long(10) );
 		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
@@ -797,20 +800,21 @@ public class FumTest extends LegacyTestCase {
 		// Now, lets delete across serialization...
 		s.delete(simple);
 
-		s.disconnect();
+		s.getTransaction().commit();
 		s2 = spoofSerialization(s);
 		s.close();
 		s = s2;
-		s.reconnect();
+		s.beginTransaction();
 		s.flush();
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		///////////////////////////////////////////////////////////////////////////
 		// Test collection actions across serializations
 		s = getSessions().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
+		s.beginTransaction();
 
 		Fum fum = new Fum( fumKey("uss-fum") );
 		fum.setFo( new Fum( fumKey("uss-fo") ) );
@@ -828,32 +832,33 @@ public class FumTest extends LegacyTestCase {
 		s.save( fum.getFo() );
 		s.save(fum);
 
-		s.disconnect();
+		s.getTransaction().commit();
 		s2 = spoofSerialization(s);
 		s.close();
 		s = s2;
-		s.reconnect();
+		s.beginTransaction();
 		s.flush();
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = getSessions().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
+		s.beginTransaction();
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 
 		assertTrue("the Fum.friends did not get saved", fum.getFriends().size() == 2);
 
 		fum.setFriends(null);
-		s.disconnect();
+		s.getTransaction().commit();
 		s2 = spoofSerialization(s);
 		s.close();
 		
 		s = s2;
-		s.reconnect();
+		s.beginTransaction();
 		s.flush();
 
-		s.connection().commit();
+		s.getTransaction().commit();
 		s.close();
 
 		s = getSessions().openSession();

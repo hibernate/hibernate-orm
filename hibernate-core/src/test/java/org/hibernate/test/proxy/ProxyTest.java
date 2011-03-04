@@ -181,7 +181,6 @@ public class ProxyTest extends FunctionalTestCase {
 		//close the original:
 		s.close();
 		
-		sclone.reconnect();
 		t = sclone.beginTransaction();
 		
 		DataPoint sdp = (DataPoint) sclone.load( DataPoint.class, new Long( dp.getId() ) );

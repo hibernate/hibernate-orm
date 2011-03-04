@@ -11,6 +11,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
@@ -20,6 +21,7 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.util.SerializationHelper;
 
 import javax.transaction.Transaction;
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -466,22 +468,6 @@ public class CMTTest extends FunctionalTestCase {
 		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
-	}
-
-	public void testAggressiveReleaseWithExplicitDisconnectReconnect() throws Exception {
-		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
-		Session s = getSessions().getCurrentSession();
-
-		s.createQuery( "from Item" ).list();
-
-		s.disconnect();
-		byte[] bytes = SerializationHelper.serialize( s );
-		s = ( Session ) SerializationHelper.deserialize( bytes );
-		s.reconnect();
-
-		s.createQuery( "from Item" ).list();
-
 		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 

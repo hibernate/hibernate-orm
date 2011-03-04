@@ -920,39 +920,25 @@ public interface Session extends Serializable {
 	public void doWork(Work work) throws HibernateException;
 
 	/**
-	 * Disconnect the <tt>Session</tt> from the current JDBC connection. If
-	 * the connection was obtained by Hibernate close it and return it to
-	 * the connection pool; otherwise, return it to the application.
+	 * Disconnect the session from its underlying JDBC connection.  This is intended for use in cases where the
+	 * application has supplied the JDBC connection to the session and which require long-sessions (aka, conversations).
 	 * <p/>
-	 * This is used by applications which supply JDBC connections to Hibernate
-	 * and which require long-sessions (or long-conversations)
+	 * It is considered an error to call this method on a session which was not opened by supplying the JDBC connection
+	 * and an exception will be thrown.
 	 * <p/>
-	 * Note that disconnect() called on a session where the connection was
-	 * retrieved by Hibernate through its configured
-	 * {@link org.hibernate.service.jdbc.connections.spi.ConnectionProvider} has no effect,
-	 * provided {@link ConnectionReleaseMode#ON_CLOSE} is not in effect.
+	 * For non-user-supplied scenarios, normal transaction management already handles disconnection and reconnection
+	 * automatically.
 	 *
-	 * @return the application-supplied connection or <tt>null</tt>
+	 * @return the application-supplied connection or {@literal null}
+	 *
+	 * @see SessionFactory#openSession(java.sql.Connection)
+	 * @see SessionFactory#openSession(java.sql.Connection, Interceptor)
 	 * @see #reconnect(Connection)
-	 * @see #reconnect()
 	 */
 	Connection disconnect() throws HibernateException;
 
 	/**
-	 * Obtain a new JDBC connection. This is used by applications which
-	 * require long transactions and do not supply connections to the
-	 * session.
-	 *
-	 * @see #disconnect()
-	 * @deprecated Manual reconnection is only needed in the case of
-	 * application-supplied connections, in which case the
-	 * {@link #reconnect(java.sql.Connection)} for should be used.
-	 */
-	void reconnect() throws HibernateException;
-
-	/**
-	 * Reconnect to the given JDBC connection. This is used by applications
-	 * which require long transactions and use application-supplied connections.
+	 * Reconnect to the given JDBC connection.
 	 *
 	 * @param connection a JDBC connection
 	 * @see #disconnect()

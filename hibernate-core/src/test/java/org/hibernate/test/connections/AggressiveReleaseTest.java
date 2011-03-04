@@ -53,8 +53,8 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		return openSession();
 	}
 
+	@Override
 	protected void reconnect(Session session) {
-		session.reconnect();
 	}
 
 	protected void prepare() throws Throwable {

@@ -23,6 +23,24 @@
  */
 package org.hibernate.id;
 
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.MappingException;
+import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.id.enhanced.AccessCallback;
+import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.mapping.Table;
+import org.hibernate.type.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,22 +48,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.MappingException;
-import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.id.enhanced.AccessCallback;
-import org.hibernate.id.enhanced.OptimizerFactory;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.TransactionHelper;
-import org.hibernate.mapping.Table;
-import org.hibernate.type.Type;
 
 /**
  *
@@ -78,11 +80,8 @@ import org.hibernate.type.Type;
  * @author Emmanuel Bernard
  * @author <a href="mailto:kr@hbt.de">Klaus Richarz</a>.
  */
-public class MultipleHiLoPerTableGenerator 
-	extends TransactionHelper
-	implements PersistentIdentifierGenerator, Configurable {
-	
-	private static final Logger log = LoggerFactory.getLogger(MultipleHiLoPerTableGenerator.class);
+public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenerator, Configurable {
+	private static final Logger log = LoggerFactory.getLogger( MultipleHiLoPerTableGenerator.class );
 	
 	public static final String ID_TABLE = "table";
 	public static final String PK_COLUMN_NAME = "primary_key_column";
@@ -146,66 +145,73 @@ public class MultipleHiLoPerTableGenerator
 		return tableName;
 	}
 
-	public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
-		int rows;
-		do {
-			SQL_STATEMENT_LOGGER.logStatement( query, FormatStyle.BASIC );
-			PreparedStatement qps = conn.prepareStatement( query );
-			PreparedStatement ips = null;
-			try {
-				ResultSet rs = qps.executeQuery();
-				boolean isInitialized = rs.next();
-				if ( !isInitialized ) {
-					value.initialize( 0 );
-					SQL_STATEMENT_LOGGER.logStatement( insert, FormatStyle.BASIC );
-					ips = conn.prepareStatement( insert );
-					value.bind( ips, 1 );
-					ips.execute();
-				}
-				else {
-					value.initialize( rs, 0 );
-				}
-				rs.close();
-			}
-			catch (SQLException sqle) {
-				log.error("could not read or init a hi value", sqle);
-				throw sqle;
-			}
-			finally {
-				if (ips != null) {
-					ips.close();
-				}
-				qps.close();
-			}
+	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
+		final ReturningWork<IntegralDataTypeHolder> work = new ReturningWork<IntegralDataTypeHolder>() {
+			@Override
+			public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
+				IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
+				SQLStatementLogger statementLogger = session
+						.getFactory()
+						.getServiceRegistry()
+						.getService( JdbcServices.class )
+						.getSqlStatementLogger();
+				int rows;
+				do {
+					statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
+					PreparedStatement qps = connection.prepareStatement( query );
+					PreparedStatement ips = null;
+					try {
+						ResultSet rs = qps.executeQuery();
+						boolean isInitialized = rs.next();
+						if ( !isInitialized ) {
+							value.initialize( 0 );
+							statementLogger.logStatement( insert, FormatStyle.BASIC.getFormatter() );
+							ips = connection.prepareStatement( insert );
+							value.bind( ips, 1 );
+							ips.execute();
+						}
+						else {
+							value.initialize( rs, 0 );
+						}
+						rs.close();
+					}
+					catch (SQLException sqle) {
+						log.error("could not read or init a hi value", sqle);
+						throw sqle;
+					}
+					finally {
+						if (ips != null) {
+							ips.close();
+						}
+						qps.close();
+					}
 
-			SQL_STATEMENT_LOGGER.logStatement( update, FormatStyle.BASIC );
-			PreparedStatement ups = conn.prepareStatement( update );
-			try {
-				value.copy().increment().bind( ups, 1 );
-				value.bind( ups, 2 );
-				rows = ups.executeUpdate();
-			}
-			catch (SQLException sqle) {
-				log.error("could not update hi value in: " + tableName, sqle);
-				throw sqle;
-			}
-			finally {
-				ups.close();
-			}
-		} while ( rows==0 );
+					statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
+					PreparedStatement ups = connection.prepareStatement( update );
+					try {
+						value.copy().increment().bind( ups, 1 );
+						value.bind( ups, 2 );
+						rows = ups.executeUpdate();
+					}
+					catch (SQLException sqle) {
+						log.error("could not update hi value in: " + tableName, sqle);
+						throw sqle;
+					}
+					finally {
+						ups.close();
+					}
+				} while ( rows==0 );
 
-		return value;
-	}
+				return value;
+			}
+		};
 
-	public synchronized Serializable generate(final SessionImplementor session, Object obj)
-		throws HibernateException {
 		// maxLo < 1 indicates a hilo generator with no hilo :?
 		if ( maxLo < 1 ) {
 			//keep the behavior consistent even for boundary usages
 			IntegralDataTypeHolder value = null;
 			while ( value == null || value.lt( 1 ) ) {
-				value = (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+				value = session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork( work, true );
 			}
 			return value.makeValue();
 		}
@@ -213,7 +219,7 @@ public class MultipleHiLoPerTableGenerator
 		return hiloOptimizer.generate(
 				new AccessCallback() {
 					public IntegralDataTypeHolder getNextValue() {
-						return (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+						return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork( work, true );
 					}
 				}
 		);

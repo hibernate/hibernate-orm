@@ -34,6 +34,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
@@ -78,6 +79,70 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 				if ( transacted ) {
 					connection.commit();
 				}
+			}
+			catch ( Exception e ) {
+				try {
+					if ( transacted && !connection.isClosed() ) {
+						connection.rollback();
+					}
+				}
+				catch ( Exception ignore ) {
+					log.info( "unable to rollback connection on exception [" + ignore + "]" );
+				}
+
+				if ( e instanceof HibernateException ) {
+					throw (HibernateException) e;
+				}
+				else if ( e instanceof SQLException ) {
+					throw sqlExceptionHelper().convert( (SQLException) e, "error performing isolated work" );
+				}
+				else {
+					throw new HibernateException( "error performing isolated work", e );
+				}
+			}
+			finally {
+				if ( transacted && wasAutoCommit ) {
+					try {
+						connection.setAutoCommit( true );
+					}
+					catch ( Exception ignore ) {
+						log.trace( "was unable to reset connection back to auto-commit" );
+					}
+				}
+				try {
+					connectionProvider().closeConnection( connection );
+				}
+				catch ( Exception ignore ) {
+					log.info( "Unable to release isolated connection [" + ignore + "]" );
+				}
+			}
+		}
+		catch ( SQLException sqle ) {
+			throw sqlExceptionHelper().convert( sqle, "unable to obtain isolated JDBC connection" );
+		}
+	}
+
+	@Override
+	public <T> T delegateWork(ReturningWork<T> work, boolean transacted) throws HibernateException {
+		boolean wasAutoCommit = false;
+		try {
+			// todo : should we use a connection proxy here?
+			Connection connection = connectionProvider().getConnection();
+			try {
+				if ( transacted ) {
+					if ( connection.getAutoCommit() ) {
+						wasAutoCommit = true;
+						connection.setAutoCommit( false );
+					}
+				}
+
+				T result = work.execute( connection );
+
+				if ( transacted ) {
+					connection.commit();
+				}
+
+				return result;
 			}
 			catch ( Exception e ) {
 				try {

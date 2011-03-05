@@ -37,6 +37,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
@@ -178,6 +179,114 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		}
 		catch ( SQLException sqle ) {
 			throw sqlExceptionHelper().convert( sqle, "unable to obtain isolated JDBC connection" );
+		}
+	}
+
+	@Override
+	public <T> T delegateWork(ReturningWork<T> work, boolean transacted) throws HibernateException {
+		TransactionManager transactionManager = transactionManager();
+
+		try {
+			// First we suspend any current JTA transaction
+			Transaction surroundingTransaction = transactionManager.suspend();
+			if ( log.isDebugEnabled() ) {
+				log.debug( "surrounding JTA transaction suspended [" + surroundingTransaction + "]" );
+			}
+
+			boolean hadProblems = false;
+			try {
+				// then perform the requested work
+				if ( transacted ) {
+					return doTheWorkInNewTransaction( work, transactionManager );
+				}
+				else {
+					return doTheWorkInNoTransaction( work );
+				}
+			}
+			catch ( HibernateException e ) {
+				hadProblems = true;
+				throw e;
+			}
+			finally {
+				try {
+					transactionManager.resume( surroundingTransaction );
+					if ( log.isDebugEnabled() ) {
+						log.debug( "surrounding JTA transaction resumed [" + surroundingTransaction + "]" );
+					}
+				}
+				catch( Throwable t ) {
+					// if the actually work had an error use that, otherwise error based on t
+					if ( !hadProblems ) {
+						//noinspection ThrowFromFinallyBlock
+						throw new HibernateException( "Unable to resume previously suspended transaction", t );
+					}
+				}
+			}
+		}
+		catch ( SystemException e ) {
+			throw new HibernateException( "Unable to suspend current JTA transaction", e );
+		}
+	}
+
+	private <T> T doTheWorkInNewTransaction(ReturningWork<T> work, TransactionManager transactionManager) {
+		T result = null;
+		try {
+			// start the new isolated transaction
+			transactionManager.begin();
+
+			try {
+				result = doTheWork( work );
+				// if everything went ok, commit the isolated transaction
+				transactionManager.commit();
+			}
+			catch ( Exception e ) {
+				try {
+					transactionManager.rollback();
+				}
+				catch ( Exception ignore ) {
+					log.info( "Unable to rollback isolated transaction on error [" + e + "] : [" + ignore + "]" );
+				}
+			}
+		}
+		catch ( SystemException e ) {
+			throw new HibernateException( "Unable to start isolated transaction", e );
+		}
+		catch ( NotSupportedException e ) {
+			throw new HibernateException( "Unable to start isolated transaction", e );
+		}
+		return result;
+	}
+
+	private <T> T doTheWorkInNoTransaction(ReturningWork<T> work) {
+		return doTheWork( work );
+	}
+
+	private <T> T doTheWork(ReturningWork<T> work) {
+		try {
+			// obtain our isolated connection
+			Connection connection = connectionProvider().getConnection();
+			try {
+				// do the actual work
+				return work.execute( connection );
+			}
+			catch ( HibernateException e ) {
+				throw e;
+			}
+			catch ( Exception e ) {
+				throw new HibernateException( "Unable to perform isolated work", e );
+			}
+			finally {
+				try {
+					// no matter what, release the connection (handle)
+					connectionProvider().closeConnection( connection );
+				}
+				catch ( Throwable ignore ) {
+					log.info( "Unable to release isolated connection [" + ignore + "]" );
+				}
+			}
+		}
+		catch ( SQLException e ) {
+			throw sqlExceptionHelper().convert( e, "unable to obtain isolated JDBC connection" );
 		}
 	}
 

@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.jdbc.util.Formatter;
 
 /**
  * Centralize logging for SQL statements.
@@ -90,9 +91,13 @@ public class SQLStatementLogger {
 	 */
 	public void logStatement(String statement) {
 		// for now just assume a DML log for formatting
+		logStatement( statement, FormatStyle.BASIC.getFormatter() );
+	}
+
+	public void logStatement(String statement, Formatter formatter) {
 		if ( format ) {
 			if ( logToStdout || log.isDebugEnabled() ) {
-				statement = FormatStyle.BASIC.getFormatter().format( statement );
+				statement = formatter.format( statement );
 			}
 		}
 		log.debug( statement );

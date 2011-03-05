@@ -21,37 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.transaction.spi;
+package org.hibernate.jdbc;
 
-import org.hibernate.HibernateException;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * Contract for performing work in a manner that isolates it from any current transaction.
+ * A discrete piece of work following the lines of {@link Work} but returning a result.
  *
  * @author Steve Ebersole
  */
-public interface IsolationDelegate {
+public interface ReturningWork<T> {
 	/**
-	 * Perform the given work in isolation from current transaction.
+	 * Execute the discrete work encapsulated by this work instance using the supplied connection.
 	 *
-	 * @param work The work to be performed.
-	 * @param transacted Should the work itself be done in a (isolated) transaction?
-	 *
-	 * @throws HibernateException Indicates a problem performing the work.
-	 */
-	public void delegateWork(Work work, boolean transacted) throws HibernateException;
-
-	/**
-	 * Perform the given work in isolation from current transaction.
-	 *
-	 * @param work The work to be performed.
-	 * @param transacted Should the work itself be done in a (isolated) transaction?
+	 * @param connection The connection on which to perform the work.
 	 *
 	 * @return The work result
-	 *
-	 * @throws HibernateException Indicates a problem performing the work.
+	 * 
+	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
+	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public <T> T delegateWork(ReturningWork<T> work, boolean transacted) throws HibernateException;
+	public T execute(Connection connection) throws SQLException;
 }

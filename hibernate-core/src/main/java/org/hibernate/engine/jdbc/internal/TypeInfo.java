@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.util.jdbc;
+package org.hibernate.engine.jdbc.internal;
 
 /**
  * Models type info extracted from {@link java.sql.DatabaseMetaData#getTypeInfo()}

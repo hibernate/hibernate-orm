@@ -46,7 +46,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.SubselectFetch;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.jdbc.Expectation;
@@ -178,7 +178,7 @@ public abstract class AbstractCollectionPersister
 	private final String entityName;
 
 	private final Dialect dialect;
-	private final SQLExceptionHelper sqlExceptionHelper;
+	private final SqlExceptionHelper sqlExceptionHelper;
 	private final SessionFactoryImplementor factory;
 	private final EntityPersister ownerPersister;
 	private final IdentifierGenerator identifierGenerator;
@@ -1695,7 +1695,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	// TODO: needed???
-	protected SQLExceptionHelper getSQLExceptionHelper() {
+	protected SqlExceptionHelper getSQLExceptionHelper() {
 		return sqlExceptionHelper;
 	}
 

@@ -28,11 +28,11 @@ import org.hibernate.LockMode;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.slf4j.Logger;
@@ -139,7 +139,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
-		final SQLStatementLogger statementLogger = session
+		final SqlStatementLogger statementLogger = session
 				.getFactory()
 				.getServiceRegistry()
 				.getService( JdbcServices.class )

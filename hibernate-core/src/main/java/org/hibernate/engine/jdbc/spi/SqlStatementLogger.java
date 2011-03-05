@@ -26,34 +26,34 @@ package org.hibernate.engine.jdbc.spi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.jdbc.util.Formatter;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.Formatter;
 
 /**
  * Centralize logging for SQL statements.
  *
  * @author Steve Ebersole
  */
-public class SQLStatementLogger {
-	private static final Logger log = LoggerFactory.getLogger( SQLStatementLogger.class );
+public class SqlStatementLogger {
+	private static final Logger log = LoggerFactory.getLogger( SqlStatementLogger.class );
 
 	private boolean logToStdout;
 	private boolean format;
 
 	/**
-	 * Constructs a new SQLStatementLogger instance.
+	 * Constructs a new SqlStatementLogger instance.
 	 */
-	public SQLStatementLogger() {
+	public SqlStatementLogger() {
 		this( false, false );
 	}
 
 	/**
-	 * Constructs a new SQLStatementLogger instance.
+	 * Constructs a new SqlStatementLogger instance.
 	 *
 	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
 	 * @param format Should we format the statements prior to logging
 	 */
-	public SQLStatementLogger(boolean logToStdout, boolean format) {
+	public SqlStatementLogger(boolean logToStdout, boolean format) {
 		this.logToStdout = logToStdout;
 		this.format = format;
 	}

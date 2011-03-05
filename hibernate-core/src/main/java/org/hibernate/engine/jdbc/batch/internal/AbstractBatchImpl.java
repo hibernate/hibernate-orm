@@ -27,8 +27,8 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	 *
 	 * @return The underlying SQLException helper.
 	 */
-	protected SQLExceptionHelper sqlExceptionHelper() {
+	protected SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcCoordinator.getTransactionCoordinator()
 				.getTransactionContext()
 				.getTransactionEnvironment()
@@ -87,7 +87,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	 *
 	 * @return The underlying JDBC services.
 	 */
-	protected SQLStatementLogger sqlStatementLogger() {
+	protected SqlStatementLogger sqlStatementLogger() {
 		return jdbcCoordinator.getTransactionCoordinator()
 				.getTransactionContext()
 				.getTransactionEnvironment()

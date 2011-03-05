@@ -42,8 +42,8 @@ import org.hibernate.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class SQLExceptionHelper implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( SQLExceptionHelper.class );
+public class SqlExceptionHelper implements Serializable {
+	private static final Logger log = LoggerFactory.getLogger( SqlExceptionHelper.class );
 
 	public static final String DEFAULT_EXCEPTION_MSG = "SQL Exception";
 	public static final String DEFAULT_WARNING_MSG = "SQL Warning";
@@ -61,7 +61,7 @@ public class SQLExceptionHelper implements Serializable {
 	/**
 	 * Create an exception helper with a default exception converter.
 	 */
-	public SQLExceptionHelper() {
+	public SqlExceptionHelper() {
 		sqlExceptionConverter = DEFAULT_CONVERTER;
 	}
 
@@ -70,7 +70,7 @@ public class SQLExceptionHelper implements Serializable {
 	 *
 	 * @param sqlExceptionConverter The exception converter to use.
 	 */
-	public SQLExceptionHelper(SQLExceptionConverter sqlExceptionConverter) {
+	public SqlExceptionHelper(SQLExceptionConverter sqlExceptionConverter) {
 		this.sqlExceptionConverter = sqlExceptionConverter;
 	}
 

@@ -21,61 +21,53 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.internal.util.jdbc;
+package org.hibernate.engine.jdbc.internal;
 
 import java.sql.DatabaseMetaData;
 
 /**
- * Describes the searchability of a data type as reported by the JDBC driver.
+ * Describes the instrinsic nullability of a data type as reported by the JDBC driver.
  *
  * @author Steve Ebersole
  */
-public enum TypeSearchability {
+public enum TypeNullability {
 	/**
-	 * Type is not searchable.
-	 * @see java.sql.DatabaseMetaData#typePredNone
+	 * The data type can accept nulls
+	 * @see DatabaseMetaData#typeNullable
 	 */
-	NONE,
+	NULLABLE,
 	/**
-	 * Type is fully searchable
-	 * @see java.sql.DatabaseMetaData#typeSearchable
+	 * The data type cannot accept nulls
+	 * @see DatabaseMetaData#typeNoNulls
 	 */
-	FULL,
+	NON_NULLABLE,
 	/**
-	 * Type is valid only in {@code WHERE ... LIKE}
-	 * @see java.sql.DatabaseMetaData#typePredChar
+	 * It is unknown if the data type accepts nulls
+	 * @see DatabaseMetaData#typeNullableUnknown
 	 */
-	CHAR,
-	/**
-	 * Type is supported only in {@code WHERE ... LIKE}
-	 * @see java.sql.DatabaseMetaData#typePredBasic
-	 */
-	BASIC;
+	UNKNOWN;
 
 	/**
-	 * Based on the code retrieved from {@link java.sql.DatabaseMetaData#getTypeInfo()} for the {@code SEARCHABLE}
+	 * Based on the code retrieved from {@link DatabaseMetaData#getTypeInfo()} for the {@code NULLABLE}
 	 * column, return the appropriate enum.
 	 *
 	 * @param code The retrieved code value.
 	 *
 	 * @return The corresponding enum.
 	 */
-	public static TypeSearchability interpret(short code) {
+	public static TypeNullability interpret(short code) {
 		switch ( code ) {
-			case DatabaseMetaData.typeSearchable: {
-				return FULL;
+			case DatabaseMetaData.typeNullable: {
+				return NULLABLE;
 			}
-			case DatabaseMetaData.typePredNone: {
-				return NONE;
+			case DatabaseMetaData.typeNoNulls: {
+				return NON_NULLABLE;
 			}
-			case DatabaseMetaData.typePredBasic: {
-				return BASIC;
-			}
-			case DatabaseMetaData.typePredChar: {
-				return CHAR;
+			case DatabaseMetaData.typeNullableUnknown: {
+				return UNKNOWN;
 			}
 			default: {
-				throw new IllegalArgumentException( "Unknown type searchability code [" + code + "] enountered" );
+				throw new IllegalArgumentException( "Unknown type nullability code [" + code + "] enountered" );
 			}
 		}
 	}

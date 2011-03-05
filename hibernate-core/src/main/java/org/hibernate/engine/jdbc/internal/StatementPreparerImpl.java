@@ -28,7 +28,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 
 import java.sql.Connection;
@@ -59,7 +59,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		return jdbcCoordinator.getLogicalConnection();
 	}
 
-	protected final SQLExceptionHelper sqlExceptionHelper() {
+	protected final SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcCoordinator.getTransactionCoordinator()
 				.getTransactionContext()
 				.getTransactionEnvironment()

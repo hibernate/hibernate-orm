@@ -19,6 +19,8 @@ import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+
 /**
  * BasicFormatterTest implementation
  *

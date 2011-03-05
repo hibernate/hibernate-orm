@@ -44,7 +44,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.util.ReflectHelper;
@@ -213,15 +212,6 @@ public class SettingsFactory implements Serializable {
 		if (useQueryCache) settings.setQueryCacheFactory( createQueryCacheFactory(properties) );
 
 		//Statistics and logging:
-
-		boolean showSql = ConfigurationHelper.getBoolean(Environment.SHOW_SQL, properties);
-		if (showSql) log.info("Echoing all SQL to stdout");
-//		settings.setShowSqlEnabled(showSql);
-
-		boolean formatSql = ConfigurationHelper.getBoolean(Environment.FORMAT_SQL, properties);
-//		settings.setFormatSqlEnabled(formatSql);
-
-		settings.setSqlStatementLogger( new SQLStatementLogger( showSql, formatSql ) );
 
 		boolean useStatistics = ConfigurationHelper.getBoolean(Environment.GENERATE_STATISTICS, properties);
 		log.info( "Statistics: " + enabledDisabled(useStatistics) );

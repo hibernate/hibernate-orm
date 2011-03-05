@@ -38,19 +38,17 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.internal.util.jdbc.TypeInfo;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.util.ReflectHelper;
-import org.hibernate.internal.util.jdbc.TypeInfoExtracter;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -75,8 +73,8 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 	}
 
 	private Dialect dialect;
-	private SQLStatementLogger sqlStatementLogger;
-	private SQLExceptionHelper sqlExceptionHelper;
+	private SqlStatementLogger sqlStatementLogger;
+	private SqlExceptionHelper sqlExceptionHelper;
 	private ExtractedDatabaseMetaData extractedMetaDataSupport;
 
 	public void configure(Map configValues) {
@@ -167,8 +165,8 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
 
 		this.dialect = dialect;
-		this.sqlStatementLogger =  new SQLStatementLogger( showSQL, formatSQL );
-		this.sqlExceptionHelper = new SQLExceptionHelper( dialect.buildSQLExceptionConverter() );
+		this.sqlStatementLogger =  new SqlStatementLogger( showSQL, formatSQL );
+		this.sqlExceptionHelper = new SqlExceptionHelper( dialect.buildSQLExceptionConverter() );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl(
 				metaSupportsScrollable,
 				metaSupportsGetGeneratedKeys,
@@ -321,11 +319,11 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 		return connectionProvider;
 	}
 
-	public SQLStatementLogger getSqlStatementLogger() {
+	public SqlStatementLogger getSqlStatementLogger() {
 		return sqlStatementLogger;
 	}
 
-	public SQLExceptionHelper getSqlExceptionHelper() {
+	public SqlExceptionHelper getSqlExceptionHelper() {
 		return sqlExceptionHelper;
 	}
 

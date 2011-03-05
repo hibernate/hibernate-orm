@@ -32,14 +32,14 @@ import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.util.FormatStyle;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.hibernate.util.StringHelper;
@@ -455,7 +455,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	@Override
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
-		final SQLStatementLogger statementLogger = session
+		final SqlStatementLogger statementLogger = session
 				.getFactory()
 				.getServiceRegistry()
 				.getService( JdbcServices.class )

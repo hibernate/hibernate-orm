@@ -26,7 +26,7 @@ package org.hibernate.metamodel.relational;
 /**
  * Models a JDBC {@link java.sql.Types DATATYPE}
  *
- * @todo Do we somehow link this in with {@link org.hibernate.internal.util.jdbc.TypeInfo} ?
+ * @todo Do we somehow link this in with {@link org.hibernate.engine.jdbc.internal.TypeInfo} ?
  *
  * @author Steve Ebersole
  */

@@ -29,7 +29,6 @@ import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.engine.jdbc.JdbcSupport;
 import org.hibernate.hql.QueryTranslatorFactory;
-import org.hibernate.jdbc.util.SQLStatementLogger;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -42,9 +41,6 @@ import java.util.Map;
  */
 public final class Settings {
 
-//	private boolean showSql;
-//	private boolean formatSql;
-	private SQLStatementLogger sqlStatementLogger;
 	private Integer maximumFetchDepth;
 	private Map querySubstitutions;
 	private int jdbcBatchSize;
@@ -99,24 +95,12 @@ public final class Settings {
 
 	// public getters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-//	public boolean isShowSqlEnabled() {
-//		return showSql;
-//	}
-//
-//	public boolean isFormatSqlEnabled() {
-//		return formatSql;
-//	}
-
 	public String getImportFiles() {
 		return importFiles;
 	}
 
 	public void setImportFiles(String importFiles) {
 		this.importFiles = importFiles;
-	}
-
-	public SQLStatementLogger getSqlStatementLogger() {
-		return sqlStatementLogger;
 	}
 
 	public String getDefaultSchemaName() {
@@ -281,18 +265,6 @@ public final class Settings {
 
 
 	// package protected setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-//	void setShowSqlEnabled(boolean b) {
-//		showSql = b;
-//	}
-//
-//	void setFormatSqlEnabled(boolean b) {
-//		formatSql = b;
-//	}
-
-	void setSqlStatementLogger(SQLStatementLogger sqlStatementLogger) {
-		this.sqlStatementLogger = sqlStatementLogger;
-	}
 
 	void setDefaultSchemaName(String string) {
 		defaultSchemaName = string;

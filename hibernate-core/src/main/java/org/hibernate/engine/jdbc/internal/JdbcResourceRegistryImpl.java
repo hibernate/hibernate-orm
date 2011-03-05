@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 
@@ -50,11 +50,11 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
-	private final SQLExceptionHelper exceptionHelper;
+	private final SqlExceptionHelper exceptionHelper;
 
 	private Statement lastQuery;
 
-	public JdbcResourceRegistryImpl(SQLExceptionHelper exceptionHelper) {
+	public JdbcResourceRegistryImpl(SqlExceptionHelper exceptionHelper) {
 		this.exceptionHelper = exceptionHelper;
 	}
 

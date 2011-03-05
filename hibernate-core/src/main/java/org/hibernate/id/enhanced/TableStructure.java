@@ -28,12 +28,12 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +118,7 @@ public class TableStructure implements DatabaseStructure {
 						new ReturningWork<IntegralDataTypeHolder>() {
 							@Override
 							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-								final SQLStatementLogger statementLogger = session
+								final SqlStatementLogger statementLogger = session
 										.getFactory()
 										.getServiceRegistry()
 										.getService( JdbcServices.class )

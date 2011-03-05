@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  *
  */
-package org.hibernate.jdbc.util;
+package org.hibernate.engine.jdbc.internal;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -39,12 +39,12 @@ import org.hibernate.util.StringHelper;
  */
 public class BasicFormatterImpl implements Formatter {
 
-	private static final Set BEGIN_CLAUSES = new HashSet();
-	private static final Set END_CLAUSES = new HashSet();
-	private static final Set LOGICAL = new HashSet();
-	private static final Set QUANTIFIERS = new HashSet();
-	private static final Set DML = new HashSet();
-	private static final Set MISC = new HashSet();
+	private static final Set<String> BEGIN_CLAUSES = new HashSet<String>();
+	private static final Set<String> END_CLAUSES = new HashSet<String>();
+	private static final Set<String> LOGICAL = new HashSet<String>();
+	private static final Set<String> QUANTIFIERS = new HashSet<String>();
+	private static final Set<String> DML = new HashSet<String>();
+	private static final Set<String> MISC = new HashSet<String>();
 
 	static {
 		BEGIN_CLAUSES.add( "left" );
@@ -101,8 +101,8 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterInsert = false;
 		int inFunction = 0;
 		int parensSinceSelect = 0;
-		private LinkedList parenCounts = new LinkedList();
-		private LinkedList afterByOrFromOrSelects = new LinkedList();
+		private LinkedList<Integer> parenCounts = new LinkedList<Integer>();
+		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<Boolean>();
 
 		int indent = 1;
 
@@ -273,11 +273,12 @@ public class BasicFormatterImpl implements Formatter {
 			}
 		}
 
+		@SuppressWarnings( {"UnnecessaryBoxing"})
 		private void select() {
 			out();
 			indent++;
 			newline();
-			parenCounts.addLast( new Integer( parensSinceSelect ) );
+			parenCounts.addLast( Integer.valueOf( parensSinceSelect ) );
 			afterByOrFromOrSelects.addLast( Boolean.valueOf( afterByOrSetOrFromOrSelect ) );
 			parensSinceSelect = 0;
 			afterByOrSetOrFromOrSelect = true;
@@ -330,12 +331,13 @@ public class BasicFormatterImpl implements Formatter {
 			afterValues = true;
 		}
 
+		@SuppressWarnings( {"UnnecessaryUnboxing"})
 		private void closeParen() {
 			parensSinceSelect--;
 			if ( parensSinceSelect < 0 ) {
 				indent--;
-				parensSinceSelect = ( ( Integer ) parenCounts.removeLast() ).intValue();
-				afterByOrSetOrFromOrSelect = ( ( Boolean ) afterByOrFromOrSelects.removeLast() ).booleanValue();
+				parensSinceSelect = parenCounts.removeLast().intValue();
+				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast().booleanValue();
 			}
 			if ( inFunction > 0 ) {
 				inFunction--;

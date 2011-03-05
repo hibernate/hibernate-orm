@@ -29,15 +29,13 @@ import java.util.Properties;
 import java.util.Set;
 import java.sql.Connection;
 
-import javax.transaction.TransactionManager;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.profile.FetchProfile;
@@ -202,12 +200,12 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	   // TODO: deprecate???
 
 	/**
-	 * Retrieves the SQLExceptionHelper in effect for this SessionFactory.
+	 * Retrieves the SqlExceptionHelper in effect for this SessionFactory.
 	 *
-	 * @return The SQLExceptionHelper for this SessionFactory.
+	 * @return The SqlExceptionHelper for this SessionFactory.
 	 *
 	 */
-	public SQLExceptionHelper getSQLExceptionHelper();
+	public SqlExceptionHelper getSQLExceptionHelper();
 
 	public Settings getSettings();
 

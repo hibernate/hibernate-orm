@@ -50,11 +50,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.jdbc.util.Formatter;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.util.ConfigHelper;
 import org.hibernate.util.JDBCExceptionReporter;
 import org.hibernate.util.ReflectHelper;
@@ -79,7 +79,7 @@ public class SchemaExport {
 	private final List exceptions = new ArrayList();
 	private boolean haltOnError = false;
 	private Formatter formatter;
-	private SQLStatementLogger sqlStatementLogger;
+	private SqlStatementLogger sqlStatementLogger;
 	private static final String DEFAULT_IMPORT_FILE = "/import.sql";
 
 	/**

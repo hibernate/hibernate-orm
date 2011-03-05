@@ -11,17 +11,14 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
 import org.hibernate.test.common.jta.AtomikosJtaPlatform;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.SerializationHelper;
 
 import javax.transaction.Transaction;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;

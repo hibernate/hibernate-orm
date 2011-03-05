@@ -6,7 +6,7 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.InvocationHandler;
 
 import org.hibernate.tuple.Instantiator;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.HibernateException;
 
 /**

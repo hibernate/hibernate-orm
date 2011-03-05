@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.StaleStateException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
-import org.hibernate.util.JDBCExceptionReporter;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.GenericJDBCException;
 
 import java.sql.CallableStatement;
@@ -44,6 +44,7 @@ import java.sql.Types;
  */
 public class Expectations {
 	private static final Logger log = LoggerFactory.getLogger( Expectations.class );
+	private static SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;
@@ -143,7 +144,7 @@ public class Expectations {
 				return toCallableStatement( statement ).getInt( parameterPosition );
 			}
 			catch( SQLException sqle ) {
-				JDBCExceptionReporter.logExceptions( sqle, "could not extract row counts from CallableStatement" );
+				sqlExceptionHelper.logExceptions( sqle, "could not extract row counts from CallableStatement" );
 				throw new GenericJDBCException( "could not extract row counts from CallableStatement", sqle );
 			}
 		}

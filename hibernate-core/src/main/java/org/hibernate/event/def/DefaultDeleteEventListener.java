@@ -46,11 +46,11 @@ import org.hibernate.engine.Status;
 import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.EventSource;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.util.IdentitySet;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities

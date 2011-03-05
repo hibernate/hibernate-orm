@@ -24,12 +24,12 @@
  */
 package org.hibernate.engine;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.AssociationType;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * @author Gavin King

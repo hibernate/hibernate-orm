@@ -37,7 +37,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable

@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
@@ -48,7 +49,6 @@ import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract

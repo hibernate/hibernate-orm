@@ -24,6 +24,15 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.exception.SQLExceptionConverter;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -33,15 +42,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.hibernate.HibernateException;
-import org.hibernate.exception.JDBCExceptionHelper;
-import org.hibernate.exception.SQLExceptionConverter;
-import org.hibernate.mapping.Table;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.util.StringHelper;
 
 /**
  * JDBC database metadata
@@ -97,7 +97,7 @@ public class DatabaseMetadata {
 					else if ( (isQuoted && meta.storesLowerCaseQuotedIdentifiers())
 							|| (!isQuoted && meta.storesLowerCaseIdentifiers() )) {
 						rs = meta.getTables( 
-								StringHelper.toLowerCase(catalog), 
+								StringHelper.toLowerCase( catalog ),
 								StringHelper.toLowerCase(schema), 
 								StringHelper.toLowerCase(name), 
 								TYPES 
@@ -124,12 +124,9 @@ public class DatabaseMetadata {
 					if (rs!=null) rs.close();
 				}
 			}
-			catch (SQLException sqle) {
-				throw JDBCExceptionHelper.convert(
-                        sqlExceptionConverter,
-				        sqle,
-				        "could not get table metadata: " + name
-					);
+			catch (SQLException sqlException) {
+				throw new SqlExceptionHelper( sqlExceptionConverter )
+						.convert( sqlException, "could not get table metadata: " + name );
 			}
 		}
 

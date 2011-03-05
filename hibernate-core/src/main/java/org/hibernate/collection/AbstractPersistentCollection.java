@@ -41,13 +41,13 @@ import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.IdentitySet;
-import org.hibernate.util.MarkerObject;
+import org.hibernate.internal.util.MarkerObject;
 
 /**
  * Base class implementing {@link PersistentCollection}

@@ -2,6 +2,7 @@ package org.hibernate.test.jpa;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.event.def.DefaultPersistEventListener;
 import org.hibernate.event.def.DefaultAutoFlushEventListener;
@@ -12,7 +13,6 @@ import org.hibernate.event.FlushEventListener;
 import org.hibernate.event.PersistEventListener;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.engine.CascadingAction;
-import org.hibernate.util.IdentityMap;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 import java.io.Serializable;

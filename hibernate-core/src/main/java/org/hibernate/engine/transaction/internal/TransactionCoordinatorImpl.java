@@ -40,8 +40,8 @@ import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization;
 import org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.util.CollectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

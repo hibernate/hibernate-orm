@@ -50,10 +50,10 @@ import org.hibernate.event.FlushEntityEvent;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEvent;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.Printer;
-import org.hibernate.util.IdentityMap;
-import org.hibernate.util.LazyIterator;
 
 /**
  * A convenience base class for listeners whose functionality results in flushing.

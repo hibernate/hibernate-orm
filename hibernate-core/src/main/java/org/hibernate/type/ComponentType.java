@@ -42,12 +42,12 @@ import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.EntityModeToTuplizerMapping;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Handles "component" mappings

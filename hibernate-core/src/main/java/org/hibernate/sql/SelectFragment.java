@@ -30,7 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A fragment of an SQL <tt>SELECT</tt> clause
@@ -117,7 +117,7 @@ public class SelectFragment {
 	}
 
 	public SelectFragment addFormula(String tableAlias, String formula, String formulaAlias) {
-		columns.add( StringHelper.replace(formula, Template.TEMPLATE, tableAlias) );
+		columns.add( StringHelper.replace( formula, Template.TEMPLATE, tableAlias ) );
 		columnAliases.add(formulaAlias);
 		return this;
 	}

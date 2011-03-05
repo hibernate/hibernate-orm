@@ -24,7 +24,7 @@
  */
 package org.hibernate.engine.query;
 
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import java.util.Map;
 import java.util.HashMap;

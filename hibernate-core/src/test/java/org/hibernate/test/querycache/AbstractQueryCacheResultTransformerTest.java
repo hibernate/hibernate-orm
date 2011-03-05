@@ -44,13 +44,13 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Gail Badner
@@ -2162,7 +2162,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 						( ( SessionFactoryImpl ) getSessions() )
 								.getEntityPersister( Student.class.getName() )
 								.getPropertyType( "name" );
-				return ReflectHelper.getConstructor( Student.class, new Type[] { Hibernate.LONG, studentNametype } );
+				return ReflectHelper.getConstructor( Student.class, new Type[] {Hibernate.LONG, studentNametype} );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {

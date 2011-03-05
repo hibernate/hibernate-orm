@@ -3,8 +3,8 @@ package org.hibernate.test.connections;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * Common test cases relating to session management and how the sessions

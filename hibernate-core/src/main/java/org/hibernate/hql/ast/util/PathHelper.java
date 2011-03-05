@@ -25,7 +25,7 @@
 package org.hibernate.hql.ast.util;
 
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import antlr.ASTFactory;
 import antlr.collections.AST;

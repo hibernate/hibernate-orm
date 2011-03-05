@@ -26,7 +26,7 @@ package org.hibernate.cfg;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Naming strategy implementing the EJB3 standards

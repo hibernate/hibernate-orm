@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -24,8 +24,8 @@
  */
 package org.hibernate.criterion;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * @deprecated Use <tt>Restrictions</tt>.

@@ -25,8 +25,8 @@ package org.hibernate.cache;
 
 import net.sf.ehcache.CacheManager;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.ConfigHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

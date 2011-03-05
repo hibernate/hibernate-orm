@@ -39,7 +39,7 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.CompositeType;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * A Javassist-based lazy initializer proxy.

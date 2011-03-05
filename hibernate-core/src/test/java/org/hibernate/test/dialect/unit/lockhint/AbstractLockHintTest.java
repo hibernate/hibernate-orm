@@ -2,9 +2,9 @@ package org.hibernate.test.dialect.unit.lockhint;
 
 import java.util.Collections;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit.UnitTestCase;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.util.StringHelper;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 

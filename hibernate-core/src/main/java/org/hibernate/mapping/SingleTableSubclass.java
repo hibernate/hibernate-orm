@@ -27,7 +27,7 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
-import org.hibernate.util.JoinedIterator;
+import org.hibernate.internal.util.collections.JoinedIterator;
 
 /**
  * @author Gavin King
@@ -39,7 +39,7 @@ public class SingleTableSubclass extends Subclass {
 	}
 	
 	protected Iterator getNonDuplicatedPropertyIterator() {
-		return new JoinedIterator( 
+		return new JoinedIterator(
 				getSuperclass().getUnjoinedPropertyIterator(),
 				getUnjoinedPropertyIterator()
 		);

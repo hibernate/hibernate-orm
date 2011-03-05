@@ -39,16 +39,15 @@ import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Value;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * @author Emmanuel Bernard
@@ -102,7 +101,7 @@ public abstract class ResultSetMappingBinder {
 
 	private static NativeSQLQueryRootReturn bindReturn(Element returnElem, Mappings mappings, int elementCount) {
 		String alias = returnElem.attributeValue( "alias" );
-		if( StringHelper.isEmpty(alias)) {
+		if( StringHelper.isEmpty( alias )) {
 			alias = "alias_" + elementCount; // hack/workaround as sqlquery impl depend on having a key.
 		}
 
@@ -184,7 +183,7 @@ public abstract class ResultSetMappingBinder {
 		Element discriminatorResult = returnElement.element("return-discriminator");
 		if(discriminatorResult!=null) {
 			ArrayList resultColumns = getResultColumns(discriminatorResult);
-			propertyresults.put("class", ArrayHelper.toStringArray(resultColumns) );
+			propertyresults.put("class", ArrayHelper.toStringArray( resultColumns ) );
 		}
 		Iterator iterator = returnElement.elementIterator("return-property");
 		List properties = new ArrayList();

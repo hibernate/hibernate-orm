@@ -27,9 +27,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * TODO : javadoc

@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.BinaryStream;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * A help for dealing with BLOB and CLOB data

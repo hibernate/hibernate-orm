@@ -44,7 +44,7 @@ import org.hibernate.engine.TypedValue;
 import org.hibernate.event.EventSource;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Defines a query execution plan for a native-SQL query.

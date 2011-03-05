@@ -32,9 +32,9 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
 import org.hibernate.envers.entities.PropertyData;
 
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -72,7 +72,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
         Setter setter = ReflectionTools.getSetter(obj.getClass(), idPropertyData);
 
         try {
-            Object subObj = ReflectHelper.getDefaultConstructor(getter.getReturnType()).newInstance();
+            Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
             setter.set(obj, subObj, null);
 
             for (IdMapper idMapper : ids.values()) {

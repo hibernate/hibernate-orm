@@ -35,12 +35,12 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.UnknownUnwrapTypeException;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides

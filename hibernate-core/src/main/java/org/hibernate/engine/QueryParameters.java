@@ -42,10 +42,10 @@ import org.hibernate.LockOptions;
 import org.hibernate.impl.FilterImpl;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ParserHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * @author Gavin King

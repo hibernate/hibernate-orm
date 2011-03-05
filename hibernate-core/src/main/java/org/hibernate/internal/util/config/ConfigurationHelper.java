@@ -30,8 +30,8 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Iterator;
 
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Collection of helper methods for dealing with configuration settings.

@@ -24,7 +24,7 @@
  */
 package org.hibernate.transform;
 
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * {@link ResultTransformer} implementation which limits the result tuple

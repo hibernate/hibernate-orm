@@ -13,7 +13,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
-import org.hibernate.util.ConfigHelper;
+import org.hibernate.internal.util.ConfigHelper;
 
 /**
  * @author Emmanuel Bernard

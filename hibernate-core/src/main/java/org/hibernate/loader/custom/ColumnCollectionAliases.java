@@ -26,9 +26,9 @@ package org.hibernate.loader.custom;
 
 import java.util.Map;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.SQLLoadableCollection;
-import org.hibernate.util.StringHelper;
 
 /**
  * CollectionAliases that uses columnnames instead of generated aliases.

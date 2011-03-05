@@ -23,13 +23,13 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.Hibernate;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.HibernateException;
 import org.hibernate.param.ParameterSpecification;
-import org.hibernate.util.StringHelper;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.engine.SessionFactoryImplementor;
 import antlr.SemanticException;

@@ -35,10 +35,9 @@ import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.transform.CacheableResultTransformer;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.util.EqualsHelper;
-import org.hibernate.util.CollectionHelper;
+import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses

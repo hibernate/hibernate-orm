@@ -29,8 +29,8 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.util.CalendarComparator;
 
 /**
  * Descriptor for {@link Calendar} handling.

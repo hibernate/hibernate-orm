@@ -20,6 +20,7 @@ import junit.framework.ComparisonFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -32,7 +33,6 @@ import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Test case superclass for testing QueryTranslator implementations.
@@ -323,7 +323,7 @@ public abstract class QueryTranslatorTestCase extends FunctionalTestCase {
 	private Map getTokens(String sql) {
 		Map result = new TreeMap();
 		if (sql==null) return result;
-		result.put( "=", new Integer( StringHelper.countUnquoted(sql, '=') ) );
+		result.put( "=", new Integer( StringHelper.countUnquoted( sql, '=' ) ) );
 		StringTokenizer tokenizer = new StringTokenizer( sql, "(),= " );
 		while ( tokenizer.hasMoreTokens() ) {
 			String fragment = tokenizer.nextToken();

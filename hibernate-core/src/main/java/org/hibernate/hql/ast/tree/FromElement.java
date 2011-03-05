@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.TypeDiscriminatorMetadata;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.QueryTranslator;
@@ -44,7 +45,6 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

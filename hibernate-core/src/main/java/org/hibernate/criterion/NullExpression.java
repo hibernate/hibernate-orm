@@ -28,7 +28,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Constrains a property to be null
@@ -48,8 +48,8 @@ public class NullExpression implements Criterion {
 	throws HibernateException {
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		String result = StringHelper.join(
-			" and ",
-			StringHelper.suffix( columns, " is null" )
+				" and ",
+				StringHelper.suffix( columns, " is null" )
 		);
 		if (columns.length>1) result = '(' + result + ')';
 		return result;

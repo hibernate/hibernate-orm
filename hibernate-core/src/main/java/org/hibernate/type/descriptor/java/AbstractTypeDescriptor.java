@@ -27,8 +27,8 @@ import java.io.Serializable;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
-import org.hibernate.util.ComparableComparator;
-import org.hibernate.util.EqualsHelper;
+import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Abstract adapter for Java type descriptors.
@@ -63,7 +63,7 @@ public abstract class AbstractTypeDescriptor<T> implements JavaTypeDescriptor<T>
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
 		this.comparator = Comparable.class.isAssignableFrom( type )
-				? (Comparator<T>)ComparableComparator.INSTANCE
+				? (Comparator<T>) ComparableComparator.INSTANCE
 				: null;
 	}
 

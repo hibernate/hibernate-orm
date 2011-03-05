@@ -25,7 +25,7 @@
 package org.hibernate.hql.classic;
 
 import org.hibernate.QueryException;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Parses the GROUP BY clause of an aggregate query

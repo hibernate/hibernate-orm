@@ -27,8 +27,8 @@ package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * A SQL fragment. The string {alias} will be replaced by the
@@ -53,7 +53,7 @@ public class SQLProjection implements Projection {
 
 	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
 	throws HibernateException {
-		return StringHelper.replace( groupBy, "{alias}", criteriaQuery.getSQLAlias(criteria) );
+		return StringHelper.replace( groupBy, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
 	}
 
 	public Type[] getTypes(Criteria crit, CriteriaQuery criteriaQuery)

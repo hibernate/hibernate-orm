@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.LockOptions;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
@@ -35,7 +36,6 @@ import org.hibernate.sql.QuerySelect;
 import org.hibernate.sql.Select;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-import org.hibernate.util.EqualsHelper;
 
 public class CustomPersister implements EntityPersister {
 

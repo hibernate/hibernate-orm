@@ -31,6 +31,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.annotations.PropertyBinder;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
@@ -40,7 +41,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.util.StringHelper;
 
 /**
  * We have to handle OneToOne in a second pass because:

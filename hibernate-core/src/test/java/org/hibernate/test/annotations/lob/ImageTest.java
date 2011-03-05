@@ -32,9 +32,9 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Tests eager materialization and mutation of data mapped by
@@ -147,7 +147,7 @@ public class ImageTest extends TestCase {
 	}
 
 	public static void assertEquals(byte[] val1, byte[] val2) {
-		if (!ArrayHelper.isEquals(val1, val2)) {
+		if (!ArrayHelper.isEquals( val1, val2 )) {
 			throw new AssertionFailedError("byte arrays did not match");
 		}
 	}

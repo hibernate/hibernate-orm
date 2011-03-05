@@ -28,8 +28,8 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.SingletonIterator;
+import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.SingletonIterator;
 
 /**
  * A sublass in a table-per-class-hierarchy mapping

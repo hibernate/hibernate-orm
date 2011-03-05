@@ -33,8 +33,8 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * A one-to-one association to an entity

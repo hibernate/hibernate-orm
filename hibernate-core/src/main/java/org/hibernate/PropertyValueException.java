@@ -24,7 +24,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Thrown when the (illegal) value of a property can not be persisted.

@@ -39,8 +39,8 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
+import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.ConfigHelper;
 
 
 /**
@@ -539,12 +539,12 @@ public final class Environment {
 	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
 	/**
-	 * The maximum number of strong references maintained by {@link org.hibernate.util.SoftLimitMRUCache}. Default is 128.
+	 * The maximum number of strong references maintained by {@link org.hibernate.internal.util.collections.SoftLimitMRUCache}. Default is 128.
 	 */
 	public static final String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
 
 	/**
-	 * The maximum number of soft references maintained by {@link org.hibernate.util.SoftLimitMRUCache}. Default is 2048.
+	 * The maximum number of soft references maintained by {@link org.hibernate.internal.util.collections.SoftLimitMRUCache}. Default is 2048.
 	 */
 	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
 
@@ -611,7 +611,7 @@ public final class Environment {
 		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.FALSE.toString() );
 
 		try {
-			InputStream stream = ConfigHelper.getResourceAsStream("/hibernate.properties");
+			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
 			try {
 				GLOBAL_PROPERTIES.load(stream);
 				log.info( "loaded properties from resource hibernate.properties: " + ConfigurationHelper.maskOut(GLOBAL_PROPERTIES, PASS) );

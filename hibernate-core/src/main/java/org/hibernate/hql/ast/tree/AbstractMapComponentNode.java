@@ -28,10 +28,10 @@ import antlr.collections.AST;
 
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.ast.util.ColumnHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.util.StringHelper;
 
 /**
  * TODO : javadoc

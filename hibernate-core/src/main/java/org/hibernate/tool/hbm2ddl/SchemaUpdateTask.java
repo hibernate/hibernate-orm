@@ -27,8 +27,8 @@ package org.hibernate.tool.hbm2ddl;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -164,14 +164,14 @@ public class SchemaUpdateTask extends MatchingTask {
 			}
 		}
 
-		return ArrayHelper.toStringArray(files);
+		return ArrayHelper.toStringArray( files );
 	}
 
 	private Configuration getConfiguration() throws Exception {
 		Configuration cfg = new Configuration();
 		if (namingStrategy!=null) {
 			cfg.setNamingStrategy(
-					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
+					(NamingStrategy) ReflectHelper.classForName( namingStrategy ).newInstance()
 				);
 		}
 		if (configurationFile!=null) {

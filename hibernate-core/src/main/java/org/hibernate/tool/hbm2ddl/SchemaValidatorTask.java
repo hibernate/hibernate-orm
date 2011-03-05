@@ -27,8 +27,8 @@ package org.hibernate.tool.hbm2ddl;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
@@ -137,7 +137,7 @@ public class SchemaValidatorTask extends MatchingTask {
 			}
 		}
 
-		return ArrayHelper.toStringArray(files);
+		return ArrayHelper.toStringArray( files );
 	}
 
 	private Configuration getConfiguration() throws Exception {

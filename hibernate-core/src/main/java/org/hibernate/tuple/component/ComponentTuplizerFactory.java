@@ -28,7 +28,7 @@ import java.lang.reflect.Constructor;
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Component;

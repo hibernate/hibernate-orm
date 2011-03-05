@@ -30,16 +30,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.EventSource;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.SqlGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectFragment;
-import org.hibernate.util.JDBCExceptionReporter;
-import org.hibernate.util.StringHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +151,11 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 				Statement statement = connection.createStatement();
 				try {
 					statement.executeUpdate( persister.getTemporaryIdTableDDL() );
-					JDBCExceptionReporter.handleAndClearWarnings( statement, CREATION_WARNING_HANDLER );
+					persister.getFactory()
+							.getServiceRegistry()
+							.getService( JdbcServices.class )
+							.getSqlExceptionHelper()
+							.handleAndClearWarnings( statement, CREATION_WARNING_HANDLER );
 				}
 				finally {
 					try {
@@ -189,7 +194,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 	}
 
-	private static JDBCExceptionReporter.WarningHandler CREATION_WARNING_HANDLER = new JDBCExceptionReporter.WarningHandlerLoggingSupport() {
+	private static SqlExceptionHelper.WarningHandler CREATION_WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 		public boolean doProcess() {
 			return LOG.isDebugEnabled();
 		}

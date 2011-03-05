@@ -89,18 +89,18 @@ import org.hibernate.ejb.util.NamingHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.event.EventListeners;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.xml.OriginImpl;
+import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.xml.MappingReader;
-import org.hibernate.util.xml.OriginImpl;
-import org.hibernate.util.xml.XmlDocument;
+import org.hibernate.internal.util.xml.MappingReader;
 
 /**
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
@@ -921,7 +921,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		String sessionInterceptorClassname = (String) properties.get( AvailableSettings.SESSION_INTERCEPTOR );
 		if ( StringHelper.isNotEmpty( sessionInterceptorClassname ) ) {
 			try {
-				Class interceptorClass = ReflectHelper.classForName( sessionInterceptorClassname, Ejb3Configuration.class );
+				Class interceptorClass = ReflectHelper.classForName(
+						sessionInterceptorClassname, Ejb3Configuration.class
+				);
 				interceptorClass.newInstance();
 				return interceptorClass;
 			}

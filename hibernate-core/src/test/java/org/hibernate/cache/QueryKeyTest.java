@@ -32,8 +32,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.hibernate.EntityMode;
-import org.hibernate.HibernateException;
-import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
 import org.hibernate.transform.CacheableResultTransformer;
@@ -45,9 +44,7 @@ import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.PassThroughResultTransformer;
 import org.hibernate.transform.ToListResultTransformer;
 import org.hibernate.transform.TupleSubsetResultTransformer;
-import org.hibernate.type.SerializationException;
-import org.hibernate.util.SerializationHelper;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.SerializationHelper;
 
 /**
  * Tests relating to {@link QueryKey} instances.

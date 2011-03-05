@@ -36,7 +36,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Tests lazy materialization of data mapped by

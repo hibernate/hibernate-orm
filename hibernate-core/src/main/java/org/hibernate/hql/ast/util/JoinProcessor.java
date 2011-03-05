@@ -28,18 +28,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Collection;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
 import org.hibernate.param.DynamicFilterParameterSpecification;
-import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.engine.JoinSequence;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.HqlSqlWalker;
@@ -50,8 +48,7 @@ import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,7 +228,11 @@ public class JoinProcessor implements SqlTokenTypes {
 				final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
 				final String typeBindFragment = StringHelper.join(
 						",",
-						ArrayHelper.fillArray( "?", type.getColumnSpan( walker.getSessionFactoryHelper().getFactory() ) )
+						ArrayHelper.fillArray(
+								"?", type.getColumnSpan(
+								walker.getSessionFactoryHelper().getFactory()
+						)
+						)
 				);
 				final String bindFragment = ( value != null && Collection.class.isInstance( value ) )
 						? StringHelper.join( ",", ArrayHelper.fillArray( typeBindFragment, ( ( Collection ) value ).size() ) )

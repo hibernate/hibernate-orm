@@ -43,6 +43,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.engine.Versioning;
 import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -55,8 +56,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Centralizes metamodel information about an entity.

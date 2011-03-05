@@ -1,13 +1,10 @@
-// $Id: SQLExceptionConversionTest.java 11339 2007-03-23 12:51:38Z steve.ebersole@jboss.com $
 package org.hibernate.test.exception;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 import junit.framework.Test;
 
-import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLMyISAMDialect;
 import org.hibernate.exception.ConstraintViolationException;
@@ -15,7 +12,6 @@ import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.JDBCExceptionReporter;
 
 /**
  * Implementation of SQLExceptionConversionTest.

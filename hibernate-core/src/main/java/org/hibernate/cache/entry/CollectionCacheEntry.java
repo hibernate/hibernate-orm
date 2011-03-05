@@ -27,8 +27,8 @@ package org.hibernate.cache.entry;
 import java.io.Serializable;
 
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * @author Gavin King

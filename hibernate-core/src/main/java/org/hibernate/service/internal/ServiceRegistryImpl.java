@@ -34,12 +34,11 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
 import org.hibernate.service.spi.proxy.ServiceProxyFactory;
 import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
-import org.hibernate.util.CollectionHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;

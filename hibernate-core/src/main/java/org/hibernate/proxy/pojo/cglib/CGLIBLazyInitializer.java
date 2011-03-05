@@ -35,11 +35,11 @@ import net.sf.cglib.proxy.NoOp;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.CompositeType;
-import org.hibernate.util.ReflectHelper;
 
 import org.slf4j.LoggerFactory;
 

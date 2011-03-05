@@ -31,8 +31,8 @@ import java.util.Set;
 import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.SingletonIterator;
+import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * The root class of an inheritance hierarchy

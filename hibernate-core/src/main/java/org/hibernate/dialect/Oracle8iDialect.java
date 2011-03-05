@@ -28,6 +28,8 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.CallableStatement;
 
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
@@ -40,10 +42,8 @@ import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.HibernateException;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.ReflectHelper;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.JDBCExceptionHelper;
 
 /**
  * A dialect for Oracle 8i.
@@ -381,7 +381,7 @@ public class Oracle8iDialect extends Dialect {
 		 * @return The extracted constraint name.
 		 */
 		public String extractConstraintName(SQLException sqle) {
-			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
 				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
 			}

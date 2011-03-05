@@ -37,7 +37,7 @@ import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Accesses property values via a get/set pair, which may be nonpublic.
@@ -341,7 +341,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		Method method = getterMethod(theClass, propertyName);
 
 		if (method!=null) {
-			if ( !ReflectHelper.isPublic(theClass, method) ) {
+			if ( !ReflectHelper.isPublic( theClass, method ) ) {
 				method.setAccessible(true);
 			}
 			return new BasicGetter(theClass, method, propertyName);

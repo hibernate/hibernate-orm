@@ -36,12 +36,11 @@ import org.hibernate.hql.ast.InvalidPathException;
 import org.hibernate.hql.ast.tree.DotNode;
 import org.hibernate.hql.ast.tree.FromClause;
 import org.hibernate.hql.ast.tree.IdentNode;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.util.ReflectHelper;
 
 import antlr.SemanticException;
 import antlr.collections.AST;

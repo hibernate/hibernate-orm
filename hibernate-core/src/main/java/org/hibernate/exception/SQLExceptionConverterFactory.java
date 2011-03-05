@@ -30,8 +30,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;

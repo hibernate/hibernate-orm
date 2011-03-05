@@ -26,7 +26,7 @@ package org.hibernate.hql.ast.tree;
 
 import antlr.collections.AST;
 import antlr.Token;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**

@@ -35,7 +35,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import java.util.List;
 

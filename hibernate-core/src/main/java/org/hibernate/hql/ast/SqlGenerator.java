@@ -34,7 +34,7 @@ import antlr.collections.AST;
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.tree.FunctionNode;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;

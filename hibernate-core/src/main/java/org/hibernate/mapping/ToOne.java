@@ -27,8 +27,8 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.Mapping;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * A simple-point association (ie. a reference to another entity).
@@ -78,7 +78,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public void setTypeUsingReflection(String className, String propertyName)
 	throws MappingException {
 		if (referencedEntityName==null) {
-			referencedEntityName = ReflectHelper.reflectedPropertyClass(className, propertyName).getName();
+			referencedEntityName = ReflectHelper.reflectedPropertyClass( className, propertyName ).getName();
 		}
 	}
 

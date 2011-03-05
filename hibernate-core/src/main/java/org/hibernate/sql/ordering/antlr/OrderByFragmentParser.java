@@ -30,9 +30,9 @@ import antlr.TokenStream;
 import antlr.CommonAST;
 import antlr.collections.AST;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.util.StringHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

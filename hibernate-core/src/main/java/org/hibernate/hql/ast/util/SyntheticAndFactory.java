@@ -35,12 +35,10 @@ import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.util.StringHelper;
-import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 
-import antlr.ASTFactory;
 import antlr.collections.AST;
 
 import org.slf4j.Logger;

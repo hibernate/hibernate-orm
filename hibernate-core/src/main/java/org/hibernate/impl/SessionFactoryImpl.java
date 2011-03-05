@@ -75,6 +75,8 @@ import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
@@ -100,9 +102,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -886,7 +886,7 @@ public final class SessionFactoryImpl
 		String result = (String) imports.get(className);
 		if (result==null) {
 			try {
-				ReflectHelper.classForName(className);
+				ReflectHelper.classForName( className );
 				return className;
 			}
 			catch (ClassNotFoundException cnfe) {

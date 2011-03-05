@@ -37,7 +37,7 @@ import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -36,9 +36,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.EqualsHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Superclass of single-column nullable types.

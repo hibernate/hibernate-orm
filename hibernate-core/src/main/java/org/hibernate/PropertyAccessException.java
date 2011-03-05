@@ -24,7 +24,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A problem occurred accessing a property of an instance of a

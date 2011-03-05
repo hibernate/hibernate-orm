@@ -30,10 +30,10 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.StringHelper;
 
 /**
  * An SQL dialect compatible with SAP DB.
@@ -155,7 +155,7 @@ public class SAPDBDialect extends Dialect {
 			.append(" foreign key ")
 			.append(constraintName)
 			.append(" (")
-			.append( StringHelper.join(", ", foreignKey) )
+			.append( StringHelper.join( ", ", foreignKey ) )
 			.append(") references ")
 			.append(referencedTable);
 		

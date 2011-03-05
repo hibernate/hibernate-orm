@@ -19,8 +19,8 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.ConfigHelper;
 
 /**
  * Test for various mapping exceptions thrown when mappings are not found or invalid.

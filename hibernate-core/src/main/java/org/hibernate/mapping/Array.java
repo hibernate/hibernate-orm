@@ -27,8 +27,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.

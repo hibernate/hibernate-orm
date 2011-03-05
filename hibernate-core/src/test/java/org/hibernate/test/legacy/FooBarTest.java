@@ -35,6 +35,8 @@ import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
@@ -58,8 +60,6 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.SerializationHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -2596,7 +2596,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s2.disconnect();
 
-		Session s3 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize(s2) );
+		Session s3 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize( s2 ) );
 		s2.close();
 		//s3.reconnect();
 		assertTrue( s3.load( Qux.class, new Long(666) )!=null ); //nonexistent

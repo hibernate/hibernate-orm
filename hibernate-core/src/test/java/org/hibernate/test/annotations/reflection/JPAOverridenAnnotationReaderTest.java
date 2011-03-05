@@ -89,8 +89,8 @@ import org.hibernate.annotations.Columns;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
-import org.hibernate.util.XMLHelper;
 
 
 /**

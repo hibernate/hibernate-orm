@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.ExternalSessionFactoryConfig;
 import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.util.ExternalSessionFactoryConfig;
 
 
 /**

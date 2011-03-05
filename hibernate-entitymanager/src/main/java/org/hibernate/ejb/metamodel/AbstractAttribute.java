@@ -32,7 +32,7 @@ import java.io.Serializable;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Models the commonality of the JPA {@link Attribute} hierarchy.

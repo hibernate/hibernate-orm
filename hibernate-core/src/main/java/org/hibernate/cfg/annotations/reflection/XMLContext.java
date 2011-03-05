@@ -38,7 +38,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;

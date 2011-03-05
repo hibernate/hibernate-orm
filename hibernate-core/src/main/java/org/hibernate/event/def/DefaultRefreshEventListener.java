@@ -46,7 +46,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.util.IdentityMap;
+import org.hibernate.internal.util.collections.IdentityMap;
 
 /**
  * Defines the default refresh event listener used by hibernate for refreshing entities

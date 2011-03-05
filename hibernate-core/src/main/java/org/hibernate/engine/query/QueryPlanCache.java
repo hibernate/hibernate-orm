@@ -23,10 +23,10 @@
  */
 package org.hibernate.engine.query;
 
+import org.hibernate.internal.util.collections.SoftLimitMRUCache;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.SimpleMRUCache;
-import org.hibernate.util.SoftLimitMRUCache;
-import org.hibernate.util.CollectionHelper;
+import org.hibernate.internal.util.collections.SimpleMRUCache;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;

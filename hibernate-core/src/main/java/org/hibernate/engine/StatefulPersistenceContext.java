@@ -48,6 +48,7 @@ import org.hibernate.NonUniqueObjectException;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.loading.LoadContexts;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -55,8 +56,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
-import org.hibernate.util.IdentityMap;
-import org.hibernate.util.MarkerObject;
+import org.hibernate.internal.util.MarkerObject;
 
 /**
  * A <tt>PersistenceContext</tt> represents the state of persistent "stuff" which

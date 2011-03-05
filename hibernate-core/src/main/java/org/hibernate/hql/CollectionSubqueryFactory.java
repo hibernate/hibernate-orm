@@ -28,7 +28,7 @@ import org.hibernate.engine.JoinSequence;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import java.util.Map;
 

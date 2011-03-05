@@ -29,7 +29,7 @@ import antlr.collections.AST;
 import org.hibernate.type.Type;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.HibernateException;
 
 /**

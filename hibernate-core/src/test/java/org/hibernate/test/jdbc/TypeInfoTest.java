@@ -32,7 +32,7 @@ import org.hibernate.engine.jdbc.internal.TypeInfoExtracter;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * TODO : javadoc

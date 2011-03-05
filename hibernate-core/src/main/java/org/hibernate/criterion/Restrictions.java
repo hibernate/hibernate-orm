@@ -28,8 +28,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * The <tt>criterion</tt> package may be used by applications as a framework for building

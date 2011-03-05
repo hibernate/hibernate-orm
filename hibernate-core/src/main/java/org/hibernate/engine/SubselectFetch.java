@@ -27,9 +27,9 @@ package org.hibernate.engine;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
-import org.hibernate.util.StringHelper;
 
 /**
  * @author Gavin King

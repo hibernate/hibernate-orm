@@ -41,9 +41,9 @@ import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Adapts {@link CompositeUserType} to the {@link Type} interface

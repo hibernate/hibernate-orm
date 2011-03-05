@@ -24,7 +24,7 @@
  */
 package org.hibernate.engine.query.sql;
 
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import java.util.Set;
 import java.util.Collection;

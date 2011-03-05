@@ -34,7 +34,7 @@ import java.io.Serializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.hibernate.util.IdentityMap;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.SessionImplementor;

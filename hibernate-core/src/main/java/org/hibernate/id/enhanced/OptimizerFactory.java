@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Factory for {@link Optimizer} instances.

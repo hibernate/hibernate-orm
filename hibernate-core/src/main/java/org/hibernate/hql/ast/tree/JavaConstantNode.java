@@ -24,11 +24,10 @@
  */
 package org.hibernate.hql.ast.tree;
 
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
 import org.hibernate.type.LiteralType;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.QueryException;

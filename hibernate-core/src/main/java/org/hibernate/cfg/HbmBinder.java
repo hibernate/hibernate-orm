@@ -43,6 +43,9 @@ import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.Versioning;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
@@ -93,10 +96,7 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.xml.XmlDocument;
+import org.hibernate.internal.util.xml.XmlDocument;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -690,8 +690,10 @@ public final class HbmBinder {
 		Attribute persisterNode = node.attribute( "persister" );
 		if ( persisterNode != null ) {
 			try {
-				entity.setEntityPersisterClass( ReflectHelper.classForName( persisterNode
-					.getValue() ) );
+				entity.setEntityPersisterClass( ReflectHelper.classForName(
+						persisterNode
+								.getValue()
+				) );
 			}
 			catch (ClassNotFoundException cnfe) {
 				throw new MappingException( "Could not find persister class: "

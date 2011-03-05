@@ -30,13 +30,13 @@ import java.util.List;
 
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.hql.ast.DetailedSemanticException;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import antlr.SemanticException;
 import antlr.collections.AST;

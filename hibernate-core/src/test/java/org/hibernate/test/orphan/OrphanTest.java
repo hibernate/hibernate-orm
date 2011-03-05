@@ -7,9 +7,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Gavin King
@@ -206,7 +206,7 @@ public class OrphanTest extends FunctionalTestCase {
 		
 		prod.getParts().remove(part);
 		
-		prod = (Product) SerializationHelper.clone(prod);
+		prod = (Product) SerializationHelper.clone( prod );
 		
 		session = openSession();
 		t = session.beginTransaction();

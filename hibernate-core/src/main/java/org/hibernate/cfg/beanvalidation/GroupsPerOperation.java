@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.HashMap;
 import javax.validation.groups.Default;
 
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.HibernateException;
 
 /**

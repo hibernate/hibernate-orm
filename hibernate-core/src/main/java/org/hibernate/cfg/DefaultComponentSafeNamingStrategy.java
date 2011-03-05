@@ -24,7 +24,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard

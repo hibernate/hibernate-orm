@@ -23,7 +23,7 @@
  */
 package org.hibernate.loader;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
 * TODO : javadoc

@@ -26,9 +26,9 @@ package org.hibernate.loader;
 
 import java.util.Map;
 
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * EntityAliases which handles the logic of selecting user provided aliases (via return-property),

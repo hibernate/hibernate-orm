@@ -43,7 +43,7 @@ import javax.xml.validation.Validator;
 
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

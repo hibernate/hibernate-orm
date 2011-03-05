@@ -30,11 +30,11 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.UnknownUnwrapTypeException;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.ConfigHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

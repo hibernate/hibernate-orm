@@ -40,11 +40,9 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.Type;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * The mapping for a component, composite element,

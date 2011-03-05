@@ -17,10 +17,10 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Gail Badner (adapted from org.hibernate.test.criteria.CriteriaQueryTest by Gavin King)
@@ -1049,7 +1049,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		
 		byte[] bytes = SerializationHelper.serialize(dc);
 		
-		dc = (DetachedCriteria) SerializationHelper.deserialize(bytes);
+		dc = (DetachedCriteria) SerializationHelper.deserialize( bytes );
 		
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

@@ -52,16 +52,14 @@ import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.impl.CriteriaImpl;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.transform.CacheableResultTransformer;
-import org.hibernate.transform.TupleSubsetResultTransformer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.StringRepresentableType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Gavin King

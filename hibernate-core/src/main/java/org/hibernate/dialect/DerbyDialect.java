@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an 

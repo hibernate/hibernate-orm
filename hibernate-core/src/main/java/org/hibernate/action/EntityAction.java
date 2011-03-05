@@ -26,9 +26,9 @@ package org.hibernate.action;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.util.StringHelper;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

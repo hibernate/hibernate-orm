@@ -25,7 +25,7 @@ package org.hibernate.cfg;
 
 import java.io.InputStream;
 
-import org.hibernate.util.DTDEntityResolver;
+import org.hibernate.internal.util.xml.DTDEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.slf4j.Logger;

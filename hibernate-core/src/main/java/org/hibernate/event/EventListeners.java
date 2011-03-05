@@ -53,7 +53,7 @@ import org.hibernate.event.def.DefaultSaveOrUpdateCopyEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.def.DefaultUpdateEventListener;
 import org.hibernate.event.def.DefaultPersistOnFlushEventListener;
-import org.hibernate.util.Cloneable;
+import org.hibernate.internal.util.Cloneable;
 
 /**
  * A convience holder for all defined session event listeners.

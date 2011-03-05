@@ -29,7 +29,7 @@ import org.hibernate.type.Type;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.param.NamedParameterSpecification;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 import java.util.Map;
 import java.util.Set;

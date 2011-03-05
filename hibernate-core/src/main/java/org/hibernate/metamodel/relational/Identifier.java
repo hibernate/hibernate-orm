@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Models an identifier (name).

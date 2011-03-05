@@ -45,11 +45,11 @@ import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.id.IdentityGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.CacheJoinFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.StringHelper;
 
 /**
  * Cach&eacute; 2007.1 dialect. This class is required in order to use Hibernate with Intersystems Cach� SQL.<br>

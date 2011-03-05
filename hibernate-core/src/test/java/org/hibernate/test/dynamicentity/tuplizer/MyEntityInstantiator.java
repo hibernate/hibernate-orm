@@ -7,7 +7,7 @@ import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.DataProxyHandler;
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Person;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.HibernateException;
 
 import java.io.Serializable;

@@ -47,14 +47,14 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.MarkerObject;
 
 /**
  * A type that handles Hibernate <tt>PersistentCollection</tt>s (including arrays).

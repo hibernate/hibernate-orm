@@ -32,14 +32,13 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.LoadQueryInfluencers;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.OuterJoinableAssociation;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Walker for one-to-many associations
@@ -104,7 +103,7 @@ public class OneToManyJoinWalker extends CollectionJoinWalker {
 				batchSize
 			);
 		String filter = oneToManyPersister.filterFragment( alias, getLoadQueryInfluencers().getEnabledFilters() );
-		whereString.insert( 0, StringHelper.moveAndToBeginning(filter) );
+		whereString.insert( 0, StringHelper.moveAndToBeginning( filter ) );
 
 		JoinFragment ojf = mergeOuterJoins(associations);
 		Select select = new Select( getDialect() )

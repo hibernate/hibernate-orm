@@ -35,7 +35,7 @@ import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Bytecode provider implementation for CGLIB.

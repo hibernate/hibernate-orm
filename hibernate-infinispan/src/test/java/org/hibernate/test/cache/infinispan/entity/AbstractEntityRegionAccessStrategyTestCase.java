@@ -40,12 +40,11 @@ import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.util.ComparableComparator;
+import org.hibernate.internal.util.compare.ComparableComparator;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

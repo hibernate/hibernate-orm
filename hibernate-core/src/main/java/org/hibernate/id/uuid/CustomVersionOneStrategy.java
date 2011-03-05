@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.UUIDGenerationStrategy;
-import org.hibernate.util.BytesHelper;
+import org.hibernate.internal.util.BytesHelper;
 
 /**
  * Applies a version 1 (time-based) generation strategy (using ip address rather than mac address) but applies them in a

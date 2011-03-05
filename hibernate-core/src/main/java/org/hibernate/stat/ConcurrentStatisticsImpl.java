@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Implementation of {@link Statistics}, as well as {@link StatisticsImplementor}, based on the

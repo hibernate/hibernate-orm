@@ -29,7 +29,6 @@ import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.util.JTAHelper;
 
 import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
@@ -77,7 +76,7 @@ public class JtaTransactionFactory implements TransactionFactory<JtaTransaction>
 			if ( transaction != null ) {
 				UserTransaction ut = transaction.getUserTransaction();
 				if ( ut != null ) {
-					return JTAHelper.isInProgress( ut.getStatus() );
+					return JtaStatusHelper.isActive( ut );
 				}
 			}
 
@@ -93,7 +92,7 @@ public class JtaTransactionFactory implements TransactionFactory<JtaTransaction>
 			}
 			else {
 				final UserTransaction ut = jtaPlatform.retrieveUserTransaction();
-				return ut != null && JTAHelper.isInProgress( ut.getStatus() );
+				return ut != null && JtaStatusHelper.isActive( ut );
 			}
 		}
 		catch ( SystemException se ) {

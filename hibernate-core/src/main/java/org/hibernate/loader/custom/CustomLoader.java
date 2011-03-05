@@ -43,6 +43,7 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.Loader;
@@ -54,8 +55,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 
 /**

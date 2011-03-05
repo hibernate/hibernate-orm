@@ -26,8 +26,8 @@ package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * A property value, or grouped property value

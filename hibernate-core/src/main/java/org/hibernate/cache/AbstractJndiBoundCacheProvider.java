@@ -33,8 +33,8 @@ import javax.naming.NamingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Support for CacheProvider implementations which are backed by caches bound

@@ -27,13 +27,13 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.exception.SQLGrammarException;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.test.hql.Animal;
 import org.hibernate.test.hql.Reptile;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Gavin King
@@ -346,7 +346,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		
 		byte[] bytes = SerializationHelper.serialize(dc);
 		
-		dc = (DetachedCriteria) SerializationHelper.deserialize(bytes);
+		dc = (DetachedCriteria) SerializationHelper.deserialize( bytes );
 		
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

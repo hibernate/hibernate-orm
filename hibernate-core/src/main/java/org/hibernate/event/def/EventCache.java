@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.Collection;
 
-import org.hibernate.util.IdentityMap;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.AssertionFailure;
 
 /**
@@ -57,7 +57,7 @@ class EventCache implements Map {
 		// key is an entity involved with the operation performed by the listener;
 		// value can be either a copy of the entity or the entity itself
 
-	private Map entityToOperatedOnFlagMap = IdentityMap.instantiate(10);
+	private Map entityToOperatedOnFlagMap = IdentityMap.instantiate( 10 );
 	    // key is an entity involved with the operation performed by the listener;
 	    // value is a flag indicating if the listener explicitly operates on the entity
 

@@ -26,8 +26,8 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.util.UUID;
 
+import org.hibernate.internal.util.BytesHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.util.BytesHelper;
 
 /**
  * Descriptor for {@link UUID} handling.

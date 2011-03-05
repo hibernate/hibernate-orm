@@ -21,15 +21,16 @@
  */
 package org.hibernate.ejb;
 
-import java.util.Map;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.TypedQuery;
-import javax.persistence.spi.PersistenceUnitTransactionType;
-
 import org.hibernate.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.util.JTAHelper;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+
+import javax.persistence.PersistenceContextType;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.transaction.TransactionManager;
+import java.util.Map;
 
 /**
  * @author Gavin King
@@ -54,8 +55,9 @@ public class CurrentEntityManagerImpl extends AbstractEntityManagerImpl {
 		 */
 
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) getEntityManagerFactory().getSessionFactory();
+		TransactionManager tm = sfi.getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager();
 		Session s;
-		if ( !JTAHelper.isTransactionInProgress( sfi ) ) {
+		if ( ! JtaStatusHelper.isActive( tm ) ) {
 			s = sfi.openTemporarySession();
 			( (SessionImplementor) s ).setAutoClear( true );
 		}

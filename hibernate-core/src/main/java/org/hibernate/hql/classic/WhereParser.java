@@ -35,15 +35,14 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
 import org.hibernate.hql.QueryTranslator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
-import org.hibernate.type.TypeFactory;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Parses the where clause of a hibernate query and translates it to an

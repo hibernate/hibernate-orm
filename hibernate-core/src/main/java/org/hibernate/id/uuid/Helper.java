@@ -26,7 +26,7 @@ package org.hibernate.id.uuid;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.hibernate.util.BytesHelper;
+import org.hibernate.internal.util.BytesHelper;
 
 /**
  * TODO : javadoc

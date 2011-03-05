@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * An SQL IN expression.
@@ -59,7 +59,7 @@ public class InFragment {
 	}
 
 	public InFragment setColumn(String alias, String columnName) {
-		this.columnName = StringHelper.qualify(alias, columnName);
+		this.columnName = StringHelper.qualify( alias, columnName );
 		return setColumn(this.columnName);
 	}
 

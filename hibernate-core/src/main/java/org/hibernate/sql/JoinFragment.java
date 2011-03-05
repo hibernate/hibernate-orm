@@ -24,7 +24,7 @@
  */
 package org.hibernate.sql;
 
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * An abstract SQL join fragment renderer

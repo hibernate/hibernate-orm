@@ -40,7 +40,7 @@ import org.hibernate.id.ForeignGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.util.IdentityMap;
+import org.hibernate.internal.util.collections.IdentityMap;
 
 /**
  * Defines the default create event listener used by hibernate for creating

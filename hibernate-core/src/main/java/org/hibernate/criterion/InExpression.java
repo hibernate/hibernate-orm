@@ -29,9 +29,9 @@ import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Constrains the property to a specified list of values

@@ -34,7 +34,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.util.EqualsHelper;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Abstract superclass of the built in Type hierarchy.

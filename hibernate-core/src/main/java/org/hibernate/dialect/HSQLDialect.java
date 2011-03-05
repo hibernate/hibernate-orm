@@ -31,6 +31,7 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
@@ -39,11 +40,10 @@ import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.dialect.lock.*;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -305,7 +305,7 @@ public class HSQLDialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			String constraintName = null;
 
-			int errorCode = JDBCExceptionHelper.extractErrorCode( sqle );
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
 			if ( errorCode == -8 ) {
 				constraintName = extractUsingTemplate(
@@ -342,7 +342,7 @@ public class HSQLDialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			String constraintName = null;
 
-			int errorCode = JDBCExceptionHelper.extractErrorCode( sqle );
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
 			if ( errorCode == -8 ) {
 				constraintName = extractUsingTemplate(

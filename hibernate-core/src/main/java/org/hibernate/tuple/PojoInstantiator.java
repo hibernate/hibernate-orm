@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.ReflectionOptimizer;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Component;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Defines a POJO-based instantiator for use from the tuplizers.
@@ -93,7 +93,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	private void readObject(java.io.ObjectInputStream stream)
 	throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
-		constructor = ReflectHelper.getDefaultConstructor(mappedClass);
+		constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 	}
 
 	public Object instantiate() {

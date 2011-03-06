@@ -87,8 +87,6 @@ public interface TransactionCoordinator extends Serializable {
 	 * Is the underlying transaction already joined?
 	 *
 	 * @return {@literal true} if the underlying transaction is already joined; {@literal false} otherwise.
-	 *
-	 * @see TransactionFactory#getJoinStatus(TransactionCoordinator, TransactionImplementor)
 	 */
 	public boolean isTransactionJoined();
 

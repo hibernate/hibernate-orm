@@ -47,6 +47,8 @@ import javax.transaction.TransactionManager;
  * @author Steve Ebersole
  */
 public class CMTTransaction extends AbstractTransactionImpl {
+	private JoinStatus joinStatus = JoinStatus.NOT_JOINED;
+
 	protected CMTTransaction(TransactionCoordinator transactionCoordinator) {
 		super( transactionCoordinator );
 	}
@@ -134,21 +136,38 @@ public class CMTTransaction extends AbstractTransactionImpl {
 	}
 
 	@Override
+	public void markForJoin() {
+		joinStatus = JoinStatus.MARKED_FOR_JOINED;
+	}
+
+	@Override
 	public void join() {
-		// todo : implement method body
+		if ( joinStatus != JoinStatus.MARKED_FOR_JOINED ) {
+			return;
+		}
+
+		if ( JtaStatusHelper.isActive( transactionManager() ) ) {
+			joinStatus = JoinStatus.JOINED;
+			// register synchronization if needed
+			transactionCoordinator().pulse();
+		}
+		else {
+			joinStatus = JoinStatus.NOT_JOINED;
+		}
 	}
 
 	@Override
 	public void resetJoinStatus() {
-		// todo : implement method body
+		joinStatus = JoinStatus.NOT_JOINED;
 	}
 
 	boolean isJoinable() {
-		return JtaStatusHelper.isActive( transactionManager() );
+		return ( joinStatus == JoinStatus.JOINED || joinStatus == JoinStatus.MARKED_FOR_JOINED ) &&
+				JtaStatusHelper.isActive( transactionManager() );
 	}
 
 	@Override
 	public JoinStatus getJoinStatus() {
-		return isJoinable() ? JoinStatus.JOINED : JoinStatus.NOT_JOINED;
+		return joinStatus;
 	}
 }

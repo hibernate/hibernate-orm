@@ -70,7 +70,7 @@ libraries = [
         atomikos:       'com.atomikos:transactions-jdbc:3.7.0',
         junit:          'junit:junit:3.8.2',
         testng:         'org.testng:testng:5.8:jdk15',
-        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.0.Final',
+        jpa_modelgen:   'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
         shrinkwrap_api: 'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-alpha-6',
         shrinkwrap:     'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-alpha-6'
 ]

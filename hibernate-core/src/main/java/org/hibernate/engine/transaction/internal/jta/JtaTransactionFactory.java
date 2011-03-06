@@ -100,9 +100,4 @@ public class JtaTransactionFactory implements TransactionFactory<JtaTransaction>
 		}
 	}
 
-	@Override
-	public JoinStatus getJoinStatus(TransactionCoordinator transactionCoordinator, JtaTransaction transaction) {
-		return null; // todo : implement method body
-	}
-
 }

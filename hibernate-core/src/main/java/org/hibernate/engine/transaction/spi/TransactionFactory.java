@@ -73,16 +73,6 @@ public interface TransactionFactory<T extends TransactionImplementor> extends Se
 	public boolean isJoinableJtaTransaction(TransactionCoordinator transactionCoordinator, T transaction);
 
 	/**
-	 * Retrieve the current join status of the Hibernate transaction
-	 *
-	 * @param transactionCoordinator The transaction coordinator
-	 * @param transaction The current Hibernate transaction
-	 *
-	 * @return The join status.
-	 */
-	public JoinStatus getJoinStatus(TransactionCoordinator transactionCoordinator, T transaction);
-
-	/**
 	 * Get the default connection release mode.
 	 *
 	 * @return The default release mode associated with this strategy

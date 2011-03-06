@@ -149,8 +149,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public boolean isTransactionInProgress() {
-		return getTransaction().isActive() &&
-				transactionFactory().getJoinStatus( this, getTransaction() ) == JoinStatus.JOINED;
+		return getTransaction().isActive() && getTransaction().getJoinStatus() == JoinStatus.JOINED;
 	}
 
 	@Override
@@ -278,7 +277,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	@Override
 	@SuppressWarnings( {"unchecked"})
 	public boolean isTransactionJoined() {
-		return transactionFactory().getJoinStatus( this, currentHibernateTransaction ) == JoinStatus.JOINED;
+		return currentHibernateTransaction != null && currentHibernateTransaction.getJoinStatus() == JoinStatus.JOINED;
 	}
 
 	public void setRollbackOnly() {

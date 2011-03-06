@@ -995,15 +995,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 
 		final SessionImplementor session = (SessionImplementor) getSession();
-		session.getTransactionCoordinator().pulse();
+		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
+		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
+
+		transaction.markForJoin();
+		transactionCoordinator.pulse();
 
 		log.debug( "Looking for a JTA transaction to join" );
-		if ( ! session.getTransactionCoordinator().isTransactionJoinable() ) {
+		if ( ! transactionCoordinator.isTransactionJoinable() ) {
 			log.warn( "Cannot join transaction: do not override {}", Environment.TRANSACTION_STRATEGY );
 		}
 
 		try {
-			final TransactionImplementor transaction = session.getTransactionCoordinator().getTransaction();
 
 			if ( transaction.getJoinStatus() == JoinStatus.JOINED ) {
 				log.debug( "Transaction already joined" );
@@ -1026,7 +1029,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			// register behavior changes
-			SynchronizationCallbackCoordinator callbackCoordinator = session.getTransactionCoordinator().getSynchronizationCallbackCoordinator();
+			SynchronizationCallbackCoordinator callbackCoordinator = transactionCoordinator.getSynchronizationCallbackCoordinator();
 			callbackCoordinator.setManagedFlushChecker( new ManagedFlushCheckerImpl() );
 			callbackCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
 			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( session, transactionType ) );

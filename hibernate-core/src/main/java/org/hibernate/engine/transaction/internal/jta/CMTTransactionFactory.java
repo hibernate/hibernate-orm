@@ -25,7 +25,6 @@ package org.hibernate.engine.transaction.internal.jta;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 
@@ -65,19 +64,12 @@ public class CMTTransactionFactory  implements TransactionFactory<CMTTransaction
 					.getTransactionContext()
 					.getTransactionEnvironment()
 					.getJtaPlatform()
-					.retrieveTransactionManager()
-					.getStatus();
+					.getCurrentStatus();
 			return JtaStatusHelper.isActive( status );
 		}
 		catch( SystemException se ) {
 			throw new TransactionException( "Unable to check transaction status", se );
 		}
-	}
-
-
-	@Override
-	public JoinStatus getJoinStatus(TransactionCoordinator transactionCoordinator, CMTTransaction transaction) {
-		return null; // todo : implement method body
 	}
 
 }

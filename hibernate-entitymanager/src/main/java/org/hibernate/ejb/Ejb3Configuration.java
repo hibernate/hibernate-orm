@@ -1,9 +1,10 @@
-// $Id$
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +23,63 @@
  */
 package org.hibernate.ejb;
 
+import org.dom4j.Element;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
+import org.hibernate.MappingException;
+import org.hibernate.MappingNotFoundException;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
+import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
+import org.hibernate.ejb.packaging.JarVisitorFactory;
+import org.hibernate.ejb.packaging.NamedInputStream;
+import org.hibernate.ejb.packaging.NativeScanner;
+import org.hibernate.ejb.packaging.PersistenceMetadata;
+import org.hibernate.ejb.packaging.PersistenceXmlLoader;
+import org.hibernate.ejb.packaging.Scanner;
+import org.hibernate.ejb.util.ConfigurationHelper;
+import org.hibernate.ejb.util.LogHelper;
+import org.hibernate.ejb.util.NamingHelper;
+import org.hibernate.engine.FilterDefinition;
+import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.event.EventListeners;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.xml.MappingReader;
+import org.hibernate.internal.util.xml.OriginImpl;
+import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.mapping.AuxiliaryDatabaseObject;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.secure.JACCConfiguration;
+import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.naming.BinaryRefAddr;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PersistenceException;
+import javax.persistence.spi.PersistenceUnitInfo;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -44,63 +102,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import javax.naming.BinaryRefAddr;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
-
-import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
-import org.hibernate.HibernateException;
-import org.hibernate.Interceptor;
-import org.hibernate.MappingException;
-import org.hibernate.MappingNotFoundException;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.cfg.annotations.reflection.XMLContext;
-import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
-import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
-import org.hibernate.ejb.packaging.JarVisitorFactory;
-import org.hibernate.ejb.packaging.NamedInputStream;
-import org.hibernate.ejb.packaging.NativeScanner;
-import org.hibernate.ejb.packaging.PersistenceMetadata;
-import org.hibernate.ejb.packaging.PersistenceXmlLoader;
-import org.hibernate.ejb.packaging.Scanner;
-import org.hibernate.ejb.transaction.JoinableCMTTransactionFactory;
-import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.ejb.util.LogHelper;
-import org.hibernate.ejb.util.NamingHelper;
-import org.hibernate.engine.FilterDefinition;
-import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
-import org.hibernate.event.EventListeners;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.xml.OriginImpl;
-import org.hibernate.internal.util.xml.XmlDocument;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.secure.JACCConfiguration;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.internal.util.xml.MappingReader;
 
 /**
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
@@ -1241,7 +1242,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		);
 		if ( ! hasTxStrategy && transactionType == PersistenceUnitTransactionType.JTA ) {
 			preparedProperties.setProperty(
-					Environment.TRANSACTION_STRATEGY, JoinableCMTTransactionFactory.class.getName()
+					Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName()
 			);
 		}
 		else if ( ! hasTxStrategy && transactionType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {

@@ -55,17 +55,8 @@ public final class JdbcTransactionFactory implements TransactionFactory<JdbcTran
 		return false;
 	}
 
-
-
-
-
 	@Override
 	public boolean isJoinableJtaTransaction(TransactionCoordinator transactionCoordinator, JdbcTransaction transaction) {
 		return false;
-	}
-
-	@Override
-	public JoinStatus getJoinStatus(TransactionCoordinator transactionCoordinator, JdbcTransaction transaction) {
-		return transaction.getJoinStatus();
 	}
 }

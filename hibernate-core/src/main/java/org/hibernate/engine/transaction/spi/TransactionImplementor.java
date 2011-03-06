@@ -46,6 +46,11 @@ public interface TransactionImplementor extends Transaction {
 	public JoinStatus getJoinStatus();
 
 	/**
+	 * Mark a transaction as joinable
+	 */
+	public void markForJoin();
+
+	/**
 	 * Perform a join to the underlying transaction
 	 */
 	public void join();

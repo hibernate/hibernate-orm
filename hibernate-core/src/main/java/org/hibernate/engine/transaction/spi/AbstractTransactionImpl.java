@@ -225,7 +225,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 	}
 
 	@Override
-	public void resetJoinStatus() {
+	public void markForJoin() {
 		// generally speaking this is no-op
 	}
 
@@ -234,4 +234,8 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 		// generally speaking this is no-op
 	}
 
+	@Override
+	public void resetJoinStatus() {
+		// generally speaking this is no-op
+	}
 }

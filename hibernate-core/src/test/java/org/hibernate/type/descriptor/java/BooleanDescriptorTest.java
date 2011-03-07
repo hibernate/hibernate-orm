@@ -25,8 +25,6 @@ package org.hibernate.type.descriptor.java;
 
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BooleanDescriptorTest extends AbstractDescriptorTest<Boolean> {

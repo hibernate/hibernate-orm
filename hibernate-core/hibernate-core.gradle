@@ -17,6 +17,7 @@ dependencies {
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
+    testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
     testCompile( libraries.validator ) {
         // for test runtime

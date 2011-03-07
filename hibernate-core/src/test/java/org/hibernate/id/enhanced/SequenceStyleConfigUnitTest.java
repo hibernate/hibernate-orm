@@ -22,10 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
+
 import java.util.Properties;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Environment;
@@ -34,22 +33,20 @@ import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PersistentIdentifierGenerator;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 /**
- * Tests that SequenceStyleGenerator configures itself as expected
- * in various scenarios
+ * Tests that SequenceStyleGenerator configures itself as expected in various scenarios
  *
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
-public class SequenceStyleConfigUnitTest extends TestCase {
-	public SequenceStyleConfigUnitTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new TestSuite( SequenceStyleConfigUnitTest.class );
-	}
-
+public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 	private void assertClassAssignability(Class expected, Class actual) {
 		if ( ! expected.isAssignableFrom( actual ) ) {
 			fail( "Actual type [" + actual.getName() + "] is not assignable to expected type [" + expected.getName() + "]" );
@@ -60,6 +57,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 	/**
 	 * Test all params defaulted with a dialect supporting sequences
 	 */
+	@Test
 	public void testDefaultedSequenceBackedConfiguration() {
 		Dialect dialect = new SequenceDialect();
 		Properties props = buildGeneratorPropertiesBase();
@@ -91,6 +89,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 	/**
 	 * Test all params defaulted with a dialect which does not support sequences
 	 */
+	@Test
 	public void testDefaultedTableBackedConfiguration() {
 		Dialect dialect = new TableDialect();
 		Properties props = buildGeneratorPropertiesBase();
@@ -107,6 +106,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 	 * based on the configured increment size; both in the case of the
 	 * dialect supporting pooled sequences (pooled) and not (hilo)
 	 */
+	@Test
 	public void testDefaultOptimizerBasedOnIncrementBackedBySequence() {
 		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
@@ -133,6 +133,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 	 * based on the configured increment size.  Here we always prefer
 	 * pooled.
 	 */
+	@Test
 	public void testDefaultOptimizerBasedOnIncrementBackedByTable() {
 		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
@@ -147,6 +148,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 	/**
 	 * Test forcing of table as backing strucuture with dialect supporting sequences
 	 */
+	@Test
 	public void testForceTableUse() {
 		Dialect dialect = new SequenceDialect();
 		Properties props = buildGeneratorPropertiesBase();
@@ -161,6 +163,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 	/**
 	 * Test explicitly specifying both optimizer and increment
 	 */
+	@Test
 	public void testExplicitOptimizerWithExplicitIncrementSize() {
 		// with sequence ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		final Dialect dialect = new SequenceDialect();
@@ -201,6 +204,7 @@ public class SequenceStyleConfigUnitTest extends TestCase {
 		assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
 	}
 
+	@Test
 	public void testPreferPooledLoSettingHonored() {
 		final Dialect dialect = new PooledSequenceDialect();
 

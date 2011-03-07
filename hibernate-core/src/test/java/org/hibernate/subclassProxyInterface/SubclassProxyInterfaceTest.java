@@ -22,19 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.subclassProxyInterface;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class SubclassProxyInterfaceTest extends TestCase {
+public class SubclassProxyInterfaceTest extends BaseUnitTestCase {
+	@Test
 	public void testSubclassProxyInterfaces() {
         final Configuration cfg = new Configuration()
 				.setProperty( Environment.DIALECT, H2Dialect.class.getName() )

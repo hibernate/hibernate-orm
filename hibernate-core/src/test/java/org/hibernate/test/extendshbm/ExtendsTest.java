@@ -1,28 +1,42 @@
 //$Id: ExtendsTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.extendshbm;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit.UnitTestCase;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
-public class ExtendsTest extends UnitTestCase {
+public class ExtendsTest extends BaseUnitTestCase {
+	private ServiceRegistryImpl serviceRegistry;
 
-	public ExtendsTest(String str) {
-		super( str );
+	@Before
+	public void setUp() {
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry();
 	}
 
-	public static Test suite() {
-		return new TestSuite( ExtendsTest.class );
+	@After
+	public void tearDown() {
+		ServiceRegistryBuilder.destroy( serviceRegistry );
 	}
 
 	private String getBaseForMappings() {
 		return "org/hibernate/test/";
 	}
 
+	@Test
 	public void testAllInOne() {
 		Configuration cfg = new Configuration();
 
@@ -33,6 +47,7 @@ public class ExtendsTest extends UnitTestCase {
 		assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );
 	}
 
+	@Test
 	public void testOutOfOrder() {
 		Configuration cfg = new Configuration();
 
@@ -45,7 +60,7 @@ public class ExtendsTest extends UnitTestCase {
 			cfg.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" );
 			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
 
-			cfg.buildSessionFactory( getServiceRegistry(cfg.getProperties()) );
+			cfg.buildSessionFactory( serviceRegistry );
 
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
@@ -58,6 +73,7 @@ public class ExtendsTest extends UnitTestCase {
 
 	}
 
+	@Test
 	public void testNwaitingForSuper() {
 		Configuration cfg = new Configuration();
 
@@ -90,6 +106,7 @@ public class ExtendsTest extends UnitTestCase {
 
 	}
 
+	@Test
 	public void testMissingSuper() {
 		Configuration cfg = new Configuration();
 
@@ -101,7 +118,7 @@ public class ExtendsTest extends UnitTestCase {
 			);
 			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
 
-			cfg.buildSessionFactory( getServiceRegistry( cfg.getProperties() ) );
+			cfg.buildSessionFactory( serviceRegistry );
 
 			fail( "Should not be able to build sessionfactory without a Person" );
 		}
@@ -111,13 +128,14 @@ public class ExtendsTest extends UnitTestCase {
 
 	}
 
+	@Test
 	public void testAllSeparateInOne() {
 		Configuration cfg = new Configuration();
 
 		try {
 			cfg.addResource( getBaseForMappings() + "extendshbm/allseparateinone.hbm.xml" );
 
-			cfg.buildSessionFactory( getServiceRegistry( cfg.getProperties() ) );
+			cfg.buildSessionFactory( serviceRegistry );
 
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
@@ -130,6 +148,7 @@ public class ExtendsTest extends UnitTestCase {
 
 	}
 
+	@Test
 	public void testJoinedSubclassAndEntityNamesOnly() {
 		Configuration cfg = new Configuration();
 
@@ -149,6 +168,7 @@ public class ExtendsTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testEntityNamesWithPackage() {
 		Configuration cfg = new Configuration();
 		try {
@@ -167,7 +187,7 @@ public class ExtendsTest extends UnitTestCase {
 		}
 	}
 
-
+	@Test
 	public void testUnionSubclass() {
 		Configuration cfg = new Configuration();
 

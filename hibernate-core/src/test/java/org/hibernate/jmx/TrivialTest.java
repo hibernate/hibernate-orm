@@ -22,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jmx;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * Test copied over from o.h.t.legacy.FooBarTest
- *
  * @author Steve Ebersole
  */
-public class TrivialTest extends TestCase {
+public class TrivialTest extends BaseUnitTestCase {
+	@Test
 	public void testService() throws Exception {
 		HibernateService hs = new HibernateService();
 		hs.setJndiName( "SessionFactory" );

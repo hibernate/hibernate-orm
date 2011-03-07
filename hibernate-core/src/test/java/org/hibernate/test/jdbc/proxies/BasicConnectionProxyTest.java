@@ -28,33 +28,38 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.internal.LogicalConnectionImpl;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
-import org.hibernate.testing.junit.UnitTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class BasicConnectionProxyTest extends UnitTestCase {
+public class BasicConnectionProxyTest extends BaseUnitTestCase {
 	private BasicTestingJdbcServiceImpl services = new BasicTestingJdbcServiceImpl();
 
-	public BasicConnectionProxyTest(String string) {
-		super( string );
-	}
-
+	@Before
 	public void setUp() {
 		services.prepare( false );
 	}
 
+	@After
 	public void tearDown() {
 		services.release();
 	}
 
+	@Test
 	public void testDatabaseMetaDataHandling() throws Throwable {
 		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
 				null,
@@ -73,7 +78,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 			metaData.getSchemas();
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		finally {
@@ -82,6 +87,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testExceptionHandling() {
 		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
 				null,
@@ -92,7 +98,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		try {
 			proxiedConnection.prepareStatement( "select count(*) from NON_EXISTENT" ).executeQuery();
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		catch ( JDBCException ok ) {
@@ -103,6 +109,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testBasicJdbcUsage() throws JDBCException {
 		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
 				null,
@@ -112,12 +119,12 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 
 		try {
-			Statement stmnt = proxiedConnection.createStatement();
-			stmnt.execute( "drop table SANDBOX_JDBC_TST if exists" );
-			stmnt.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
+			Statement statement = proxiedConnection.createStatement();
+			statement.execute( "drop table SANDBOX_JDBC_TST if exists" );
+			statement.execute( "create table SANDBOX_JDBC_TST ( ID integer, NAME varchar(100) )" );
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() );
-			stmnt.close();
+			statement.close();
 			assertFalse( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 			assertTrue( logicalConnection.isPhysicallyConnected() ); // after_transaction specified
 
@@ -131,7 +138,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 
 			assertTrue( logicalConnection.getResourceRegistry().hasRegisteredResources() );
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			fail( "incorrect exception type : sqlexception" );
 		}
 		finally {

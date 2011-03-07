@@ -1,5 +1,31 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.instrument.runtime;
 import java.lang.reflect.InvocationTargetException;
+
+import org.junit.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.InstrumentedClassLoader;
@@ -11,10 +37,6 @@ import org.hibernate.testing.junit.AbstractClassLoaderIsolatedTestCase;
  * @author Steve Ebersole
  */
 public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends AbstractClassLoaderIsolatedTestCase {
-
-	public AbstractTransformingClassLoaderInstrumentTestCase(String string) {
-		super( string );
-	}
 
 	protected ClassLoader buildIsolatedClassLoader(ClassLoader parent) {
 		BytecodeProvider provider = buildBytecodeProvider();
@@ -44,42 +66,52 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 
 	// the tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Test
 	public void testSetFieldInterceptor() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestInjectFieldInterceptorExecutable" );
 	}
 
+	@Test
 	public void testDirtyCheck() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestDirtyCheckExecutable" );
 	}
 
+	@Test
 	public void testFetchAll() throws Exception {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestFetchAllExecutable" );
 	}
 
+	@Test
 	public void testLazy() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyExecutable" );
 	}
 
+	@Test
 	public void testLazyManyToOne() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyManyToOneExecutable" );
 	}
 
+	@Test
 	public void testPropertyInitialized() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestIsPropertyInitializedExecutable" );
 	}
 
+	@Test
 	public void testManyToOneProxy() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestManyToOneProxyExecutable" );
 	}
 
+	@Test
 	public void testLazyPropertyCustomType() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable" );
 	}
 
+	@Test
 	public void testSharedPKOneToOne() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable" );
 	}
 
+	@Test
 	public void testCustomColumnReadAndWrite() {
 		executeExecutable( "org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite" );
 	}	

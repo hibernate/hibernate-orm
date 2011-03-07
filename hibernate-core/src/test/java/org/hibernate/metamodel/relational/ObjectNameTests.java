@@ -22,18 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class ObjectNameTests extends UnitTestCase {
-	public ObjectNameTests(String string) {
-		super( string );
-	}
-
+public class ObjectNameTests extends BaseUnitTestCase {
+	@Test
 	public void testMissingName() {
 		try {
 			new ObjectName( (String)null, null, null );
@@ -50,6 +50,7 @@ public class ObjectNameTests extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testIdentifierBuilding() {
 		ObjectName on = new ObjectName( "schema", "catalog", "name" );
 		assertEquals( "schema.catalog.name", on.getIdentifier() );

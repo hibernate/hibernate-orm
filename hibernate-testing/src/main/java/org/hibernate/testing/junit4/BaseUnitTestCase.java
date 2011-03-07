@@ -21,28 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing;
+package org.hibernate.testing.junit4;
 
-import java.util.Map;
-import java.util.Properties;
-import org.hibernate.cfg.Environment;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.junit.Rule;
+import org.junit.runner.RunWith;
 
 /**
+ * The most test adapter.  Applies both the {@link CustomRunner} and {@link Processor} rule.
+ *
  * @author Steve Ebersole
  */
-public class ServiceRegistryBuilder {
-	public static ServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
-		Properties properties = new Properties();
-		properties.putAll( serviceRegistryConfig );
-		Environment.verifyProperties( properties );
-		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new ServiceRegistryImpl( properties );
-	}
-
-	public static void destroy(ServiceRegistry serviceRegistry) {
-		( (ServiceRegistryImpl) serviceRegistry ).destroy();
-	}
+@RunWith( CustomRunner.class )
+public abstract class BaseUnitTestCase {
+	@Rule
+	public Processor processor = new Processor();
 }

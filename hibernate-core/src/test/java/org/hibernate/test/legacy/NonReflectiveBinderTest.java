@@ -1,9 +1,30 @@
-//$Id: NonReflectiveBinderTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 import java.util.Iterator;
 import java.util.Map;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
@@ -11,38 +32,41 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
-public class NonReflectiveBinderTest extends UnitTestCase {
-
+public class NonReflectiveBinderTest extends BaseUnitTestCase {
 	private Configuration cfg;
-
-	public NonReflectiveBinderTest(String x) {
-		super( x );
-	}
 
 	public String[] getMappings() {
 		return new String[] { "legacy/Wicked.hbm.xml"};
 	}
 
-	public static Test suite() {
-		return new TestSuite( NonReflectiveBinderTest.class );
-	}
-
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setUp() throws Exception {
 		cfg = new Configuration()
 				.addResource( "org/hibernate/test/legacy/Wicked.hbm.xml" )
 				.setProperty( "javax.persistence.validation.mode", "none" );
 		cfg.buildMappings();
 	}
 
+	@After
 	protected void tearDown() throws Exception {
 		cfg = null;
-		super.tearDown();
 	}
 
+	@Test
 	public void testMetaInheritance() {
 		PersistentClass cm = cfg.getClassMapping("org.hibernate.test.legacy.Wicked");
 		Map m = cm.getMetaAttributes();
@@ -95,7 +119,8 @@ public class NonReflectiveBinderTest extends UnitTestCase {
 		
 	}
 
-	// HBX-718
+	@Test
+	@TestForIssue( jiraKey = "HBX-718" )
 	public void testNonMutatedInheritance() {
 		PersistentClass cm = cfg.getClassMapping("org.hibernate.test.legacy.Wicked");
 		MetaAttribute metaAttribute = cm.getMetaAttribute( "globalmutated" );
@@ -176,7 +201,8 @@ public class NonReflectiveBinderTest extends UnitTestCase {
 		
 		
 	}
-	
+
+	@Test
 	public void testComparator() {
 		PersistentClass cm = cfg.getClassMapping("org.hibernate.test.legacy.Wicked");
 		

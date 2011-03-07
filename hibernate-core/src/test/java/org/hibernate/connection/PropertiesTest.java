@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,20 +20,21 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.connection;
 import java.util.Properties;
-import junit.framework.TestCase;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * Undocumented
- *
  * @author kbow
  */
-
-public class PropertiesTest extends TestCase {
+public class PropertiesTest extends BaseUnitTestCase {
+	@Test
 	public void testProperties() throws Exception {
 		final Properties props = new Properties();
 
@@ -46,8 +47,8 @@ public class PropertiesTest extends TestCase {
 		props.put("hibernate.connection.create", "true");
 
 		final Properties outputProps = ConnectionProviderInitiator.getConnectionProperties( props );
-		assertEquals(1, outputProps.size());
-		assertEquals("true", outputProps.get("create"));
+		Assert.assertEquals( 1, outputProps.size() );
+		Assert.assertEquals( "true", outputProps.get( "create" ) );
 	}
 
 }

@@ -22,22 +22,28 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
+
 import java.sql.Types;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class TableManipulationTests extends UnitTestCase {
+public class TableManipulationTests extends BaseUnitTestCase {
 	public static final Datatype VARCHAR = new Datatype( Types.VARCHAR, "VARCHAR", String.class );
 	public static final Datatype INTEGER = new Datatype( Types.INTEGER, "INTEGER", Long.class );
 
-	public TableManipulationTests(String string) {
-		super( string );
-	}
-
+	@Test
 	public void testTableCreation() {
 		Table table = new Table( new ObjectName( null, null, "my_table" ) );
 		assertNull( table.getObjectName().getSchema() );
@@ -80,6 +86,7 @@ public class TableManipulationTests extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testBasicForeignKeyDefinition() {
 		Table book = new Table( new ObjectName( null, null, "BOOK" ) );
 

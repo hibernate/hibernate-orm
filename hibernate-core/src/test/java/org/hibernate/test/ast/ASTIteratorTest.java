@@ -1,45 +1,55 @@
-// $Id: ASTIteratorTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.ast;
+
 import java.io.PrintWriter;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
+import antlr.ASTFactory;
+import antlr.collections.AST;
+
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.HqlParser;
 import org.hibernate.hql.ast.util.ASTIterator;
 import org.hibernate.hql.ast.util.ASTParentsFirstIterator;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.testing.junit.UnitTestCase;
-import antlr.ASTFactory;
-import antlr.collections.AST;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test ASTIterator.
  */
-public class ASTIteratorTest extends UnitTestCase {
-	private ASTFactory factory;
+public class ASTIteratorTest extends BaseUnitTestCase {
+	private ASTFactory factory = new ASTFactory();
 
-	/**
-	 * Standard JUnit test case constructor.
-	 *
-	 * @param name The name of the test case.
-	 */
-	public ASTIteratorTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new TestSuite( ASTIteratorTest.class );
-	}
-
-	protected void setUp() throws Exception {
-		super.setUp();
-		factory = new ASTFactory();
-	}
-
-	/**
-	 * Test a simple tree, make sure the iterator encounters every node.
-	 */
+	@Test
 	public void testSimpleTree() throws Exception {
 		String input = "select foo from foo in class org.hibernate.test.Foo, fee in class org.hibernate.test.Fee where foo.dependent = fee order by foo.string desc, foo.component.count asc, fee.id";
 		HqlParser parser = HqlParser.getInstance( input );
@@ -65,6 +75,7 @@ public class ASTIteratorTest extends UnitTestCase {
 		assertNotNull( uoe );
 	}
 
+	@Test
 	public void testParentsFirstIterator() throws Exception {
 		AST[] tree = new AST[4];
 		AST grandparent = tree[0] = ASTUtil.create( factory, 1, "grandparent" );

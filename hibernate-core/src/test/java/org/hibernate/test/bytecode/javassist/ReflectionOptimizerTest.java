@@ -1,20 +1,45 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.bytecode.javassist;
-import junit.framework.TestSuite;
+
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.bytecode.Bean;
 import org.hibernate.test.bytecode.BeanReflectionHelper;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
-public class ReflectionOptimizerTest extends UnitTestCase {
-
-	public ReflectionOptimizerTest(String string) {
-		super( string );
-	}
-
+public class ReflectionOptimizerTest extends BaseUnitTestCase {
+	@Test
 	public void testReflectionOptimization() {
 		BytecodeProviderImpl provider = new BytecodeProviderImpl();
 		ReflectionOptimizer optimizer = provider.getReflectionOptimizer(
@@ -42,9 +67,5 @@ public class ReflectionOptimizerTest extends UnitTestCase {
 		for ( int i = 0; i < checkValues.length; i++ ) {
 			assertEquals( "different values at index [" + i + "]", checkValues[i], values[i] );
 		}
-	}
-
-	public static TestSuite suite() {
-		return new TestSuite( ReflectionOptimizerTest.class );
 	}
 }

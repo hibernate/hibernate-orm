@@ -22,14 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class BasicPropertyAccessorTest extends TestCase {
+public class BasicPropertyAccessorTest extends BaseUnitTestCase {
 	public static abstract class Super {
 		public abstract Object getIt();
 		public abstract void setIt(Object it);
@@ -80,6 +83,7 @@ public class BasicPropertyAccessorTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testBridgeMethodDisregarded() {
 		BasicPropertyAccessor accessor = new BasicPropertyAccessor();
 

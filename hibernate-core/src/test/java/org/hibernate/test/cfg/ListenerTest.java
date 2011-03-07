@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -29,14 +29,20 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.def.DefaultDeleteEventListener;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * {@inheritDoc}
- *
  * @author Gail Badner
  */
-public class ListenerTest extends UnitTestCase {
+public class ListenerTest extends BaseUnitTestCase {
 
 	public static class InvalidListenerForTest {
 	}
@@ -57,10 +63,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
-	public ListenerTest(String string) {
-		super( string );
-	}
-
+	@Test
 	public void testSetListenerNullClass() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -68,6 +71,7 @@ public class ListenerTest extends UnitTestCase {
 		assertEquals( 0, cfg.getEventListeners().getDeleteEventListeners().length );
 	}
 
+	@Test
 	public void testSetListenersNullClass() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -75,6 +79,7 @@ public class ListenerTest extends UnitTestCase {
 		assertEquals( 0, cfg.getEventListeners().getDeleteEventListeners().length );
 	}
 
+	@Test
 	public void testSetListenerEmptyClassNameArray() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -87,6 +92,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersEmptyClassNsmeArray() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -94,6 +100,7 @@ public class ListenerTest extends UnitTestCase {
 		assertEquals( 0, cfg.getEventListeners().getDeleteEventListeners().length );
 	}
 
+	@Test
 	public void testSetListenerEmptyClassObjectArray() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -106,6 +113,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersEmptyClassObjectArray() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -118,6 +126,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenerEmptyClassArray() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -130,6 +139,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersEmptyClassArray() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -137,6 +147,7 @@ public class ListenerTest extends UnitTestCase {
 		assertEquals( 0, cfg.getEventListeners().getDeleteEventListeners().length );
 	}
 
+	@Test
 	public void testSetListenerUnknownClassName() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -149,6 +160,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersUnknownClassName() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -161,6 +173,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenerInvalidClassName() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -173,6 +186,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersInvalidClassName() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -185,6 +199,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenerClassName() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -193,6 +208,7 @@ public class ListenerTest extends UnitTestCase {
 		assertTrue( cfg.getEventListeners().getDeleteEventListeners()[0] instanceof DeleteListenerForTest );
 	}
 
+	@Test
 	public void testSetListenersClassName() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -201,6 +217,7 @@ public class ListenerTest extends UnitTestCase {
 		assertTrue( cfg.getEventListeners().getDeleteEventListeners()[0] instanceof DeleteListenerForTest );
 	}
 
+	@Test
 	public void testSetListenerClassNames() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -218,6 +235,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersClassNames() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -232,6 +250,7 @@ public class ListenerTest extends UnitTestCase {
 		assertTrue( cfg.getEventListeners().getDeleteEventListeners()[1] instanceof AnotherDeleteListenerForTest );
 	}
 
+	@Test
 	public void testSetListenerClassInstance() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -239,6 +258,7 @@ public class ListenerTest extends UnitTestCase {
 		assertEquals( 1, cfg.getEventListeners().getDeleteEventListeners().length );
 	}
 
+	@Test
 	public void testSetListenersClassInstances() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -253,6 +273,7 @@ public class ListenerTest extends UnitTestCase {
 		assertTrue( cfg.getEventListeners().getDeleteEventListeners()[1] instanceof AnotherDeleteListenerForTest );
 	}
 
+	@Test
 	public void testSetListenerInvalidClassInstance() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -265,6 +286,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersInvalidClassInstances() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -277,6 +299,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenerNullType() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -289,6 +312,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersNullType() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -301,6 +325,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenerUnknownType() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );
@@ -313,6 +338,7 @@ public class ListenerTest extends UnitTestCase {
 		}
 	}
 
+	@Test
 	public void testSetListenersUnknownType() {
 		Configuration cfg = new Configuration();
 		assertNotNull( cfg.getEventListeners().getDeleteEventListeners() );

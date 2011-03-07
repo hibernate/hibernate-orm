@@ -23,50 +23,53 @@
  */
 package org.hibernate.test.transaction.jdbc;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.service.spi.StandardServiceInitiators;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
-import org.hibernate.testing.junit.UnitTestCase;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class TestExpectedUsage extends UnitTestCase {
-	private ServiceRegistry serviceRegistry;
+public class TestExpectedUsage extends BaseUnitTestCase {
+	private ServiceRegistryImpl serviceRegistry;
 
-	public TestExpectedUsage(String string) {
-		super( string );
-	}
-
+	@Before
 	public void setUp() throws Exception {
-		super.setUp();
 		serviceRegistry = new ServiceRegistryImpl(
 				StandardServiceInitiators.LIST,
 				ConnectionProviderBuilder.getConnectionProviderProperties()
 		);
 	}
 
+	@After
 	public void tearDown() throws Exception {
-		( (ServiceRegistryImpl) serviceRegistry).destroy();
-		super.tearDown();
+		serviceRegistry.destroy();
 	}
 
+	@Test
 	public void testBasicUsage() {
 		final TransactionContext transactionContext = new TransactionContextImpl( new TransactionEnvironmentImpl( serviceRegistry ) ) {
 			@Override

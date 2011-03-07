@@ -3,5 +3,5 @@ apply plugin: 'java'
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( [group: 'c3p0', name: 'c3p0', version: '0.9.1'] )
-    testCompile( project(':hibernate-core').sourceSets.test.classes )
+    testCompile( project(':hibernate-testing') )
 }

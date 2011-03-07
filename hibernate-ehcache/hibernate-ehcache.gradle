@@ -3,5 +3,5 @@
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( [group: 'net.sf.ehcache', name: 'ehcache-core', version: '2.3.1'] )
-    testCompile( project(':hibernate-core').sourceSets.test.classes )
+    testCompile( project(':hibernate-testing') )
 }

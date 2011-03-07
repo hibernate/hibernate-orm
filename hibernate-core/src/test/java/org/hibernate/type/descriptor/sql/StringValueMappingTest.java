@@ -26,20 +26,23 @@ import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class StringValueMappingTest extends TestCase {
+public class StringValueMappingTest extends BaseUnitTestCase {
 	private final StringTypeDescriptor stringJavaDescriptor = new StringTypeDescriptor();
 
 	private final VarcharTypeDescriptor varcharSqlDescriptor = new VarcharTypeDescriptor();
@@ -62,6 +65,7 @@ public class StringValueMappingTest extends TestCase {
 	public static final String COLUMN_NAME = "n/a";
 	public static final int BIND_POSITION = -1;
 
+	@Test
 	public void testNormalVarcharHandling() throws SQLException {
 		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
 		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
@@ -76,6 +80,7 @@ public class StringValueMappingTest extends TestCase {
 		binder.bind( ps, fixture, BIND_POSITION, wrapperOptions );
 	}
 
+	@Test
 	public void testNullVarcharHandling() throws SQLException {
 		final ValueExtractor<String> extractor = varcharSqlDescriptor.getExtractor( stringJavaDescriptor );
 		final ValueBinder<String> binder = varcharSqlDescriptor.getBinder( stringJavaDescriptor );
@@ -90,6 +95,7 @@ public class StringValueMappingTest extends TestCase {
 		binder.bind( ps, fixture, BIND_POSITION, wrapperOptions );
 	}
 
+	@Test
 	public void testNormalClobHandling() throws SQLException {
 		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
 		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );
@@ -105,6 +111,7 @@ public class StringValueMappingTest extends TestCase {
 		binder.bind( ps, fixture, BIND_POSITION, wrapperOptions );
 	}
 
+	@Test
 	public void testNullClobHandling() throws SQLException {
 		final ValueExtractor<String> extractor = clobSqlDescriptor.getExtractor( stringJavaDescriptor );
 		final ValueBinder<String> binder = clobSqlDescriptor.getBinder( stringJavaDescriptor );

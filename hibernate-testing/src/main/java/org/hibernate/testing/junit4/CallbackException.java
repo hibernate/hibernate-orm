@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.cache;
+package org.hibernate.testing.junit4;
 
+import java.lang.reflect.Method;
 
 /**
+ * Indicates an exception while performing a callback on the test
+ *
  * @author Steve Ebersole
  */
-public class VersionedItem extends Item {
-	private Long version;
+public class CallbackException extends RuntimeException {
+    public CallbackException(Method method) {
+        this( Helper.extractMethodName( method ) );
+    }
 
-	public Long getVersion() {
-		return version;
+    public CallbackException(String message) {
+        super( message );
+    }
+
+    public CallbackException(Method method, Throwable cause) {
+		this( Helper.extractMethodName( method ), cause );
 	}
 
-	public void setVersion(Long version) {
-		this.version = version;
-	}
+    public CallbackException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache;
 
@@ -28,10 +27,13 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+
 import org.hibernate.EntityMode;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
@@ -49,7 +51,7 @@ import org.hibernate.transform.TupleSubsetResultTransformer;
  *
  * @author Steve Ebersole
  */
-public class QueryKeyTest extends TestCase {
+public class QueryKeyTest extends BaseUnitTestCase {
 	private static final String QUERY_STRING = "the query string";
 
 	public static class AClass implements Serializable {
@@ -73,6 +75,7 @@ public class QueryKeyTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testSerializedEqualityResultTransformer() throws Exception {
 		// settings are lazily initialized when calling transformTuple(),
 		// so they have not been initialized for the following test
@@ -127,6 +130,7 @@ public class QueryKeyTest extends TestCase {
 		assert transformer.equals( transformer2 ): "deep copy issue";
 	}
 
+	@Test
 	public void testSerializedEquality() throws Exception {
 		doTest( buildBasicKey( null ) );
 
@@ -138,6 +142,7 @@ public class QueryKeyTest extends TestCase {
 		doTest( buildBasicKey( CacheableResultTransformer.create( null, new String[] { "a", null }, new boolean[] { true, true } ) ) );
 	}
 
+	@Test
 	public void testSerializedEqualityWithTupleSubsetResultTransfprmer() throws Exception {
 		doTestWithTupleSubsetResultTransformer(
 				new AliasToBeanResultTransformer( AClass.class ),

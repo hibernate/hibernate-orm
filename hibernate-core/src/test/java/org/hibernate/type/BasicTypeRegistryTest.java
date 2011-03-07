@@ -27,22 +27,29 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class BasicTypeRegistryTest extends TestCase {
+public class BasicTypeRegistryTest extends BaseUnitTestCase {
 	private final BasicTypeRegistry registry = new BasicTypeRegistry();
 
+	@Test
 	public void testOverriding() {
 		BasicType type = registry.getRegisteredType( "uuid-binary" );
 		assertSame( UUIDBinaryType.INSTANCE, type );
@@ -61,6 +68,7 @@ public class BasicTypeRegistryTest extends TestCase {
 		assertSame( override, type );
 	}
 
+	@Test
 	public void testExpanding() {
 		BasicType type = registry.getRegisteredType( SomeNoopType.INSTANCE.getName() );
 		assertNull( type );
@@ -71,6 +79,7 @@ public class BasicTypeRegistryTest extends TestCase {
 		assertSame( SomeNoopType.INSTANCE, type );
 	}
 
+	@Test
 	public void testRegisteringUserTypes() {
 		registry.register( new TotallyIrrelevantUserType(), new String[] { "key" } );
 		BasicType type = registry.getRegisteredType( "key" );

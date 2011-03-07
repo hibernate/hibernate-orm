@@ -8,8 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
 import org.hibernate.InvalidMappingException;
@@ -17,23 +16,23 @@ import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test for various mapping exceptions thrown when mappings are not found or invalid.
  *
  * @author Max Rydahl Andersen
  */
-public class MappingExceptionTest extends UnitTestCase {
-
-	public MappingExceptionTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new TestSuite( MappingExceptionTest.class );
-	}
-
+public class MappingExceptionTest extends BaseUnitTestCase {
+	@Test
 	public void testNotFound() throws MappingException, MalformedURLException {
 		Configuration cfg = new Configuration();
 
@@ -129,10 +128,16 @@ public class MappingExceptionTest extends UnitTestCase {
 			cfg.buildMappings();
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), resourceName );
-			assertClassAssignability( inv.getCause().getClass(), DuplicateMappingException.class );
+		catch ( InvalidMappingException e ) {
+			assertEquals( e.getType(), "resource" );
+			assertEquals( e.getPath(), resourceName );
+			assertClassAssignability( DuplicateMappingException.class, e.getCause().getClass() );
+		}
+	}
+
+	private void assertClassAssignability(Class expected, Class actual) {
+		if ( !expected.isAssignableFrom( actual ) ) {
+			fail( "Actual class [" + actual.getName() + "] not assignable to expected [" + expected.getName() + "]" );
 		}
 	}
 

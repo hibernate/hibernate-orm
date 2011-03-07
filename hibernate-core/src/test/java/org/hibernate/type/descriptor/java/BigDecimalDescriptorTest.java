@@ -25,8 +25,6 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigDecimal;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BigDecimalDescriptorTest extends AbstractDescriptorTest<BigDecimal> {

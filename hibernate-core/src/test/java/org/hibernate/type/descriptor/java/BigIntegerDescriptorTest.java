@@ -25,8 +25,6 @@ package org.hibernate.type.descriptor.java;
 import java.math.BigInteger;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BigIntegerDescriptorTest extends AbstractDescriptorTest<BigInteger> {

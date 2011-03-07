@@ -1,0 +1,6 @@
+apply plugin: 'java'
+
+dependencies {
+    compile( project( ':hibernate-core' ) )
+    compile( [group: 'junit', name: 'junit', version: '4.8.2'] )
+}

@@ -22,16 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public abstract class AbstractHolderTest extends TestCase {
+@SuppressWarnings( {"UnusedDeclaration"})
+public abstract class AbstractHolderTest extends BaseUnitTestCase {
 	protected abstract IntegralDataTypeHolder makeHolder();
 
+	@Test
+	@SuppressWarnings( {"EmptyCatchBlock"})
 	public void testInitializationChecking() {
 		IntegralDataTypeHolder holder = makeHolder();
 		try {

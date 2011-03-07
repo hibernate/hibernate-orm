@@ -25,8 +25,6 @@ package org.hibernate.id;
 
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class LongHolderTest extends AbstractHolderTest {

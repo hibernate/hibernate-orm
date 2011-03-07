@@ -12,7 +12,7 @@ dependencies {
     }
     compile( libraries.ant )
     testCompile( libraries.testng )
-    testCompile( project(':hibernate-core').sourceSets.test.classes )
+    testCompile( project(':hibernate-testing') )
     testCompile( libraries.jpa )
     testRuntime( libraries.h2 )
     testRuntime( libraries.javassist )

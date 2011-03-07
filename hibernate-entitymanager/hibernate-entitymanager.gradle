@@ -11,7 +11,7 @@ dependencies {
     compile( libraries.jpa )
     compile( libraries.jta )
     compile( libraries.javassist )
-    testCompile( project(':hibernate-core').sourceSets.test.classes )
+    testCompile( project(':hibernate-testing') )
     testCompile( libraries.junit )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )

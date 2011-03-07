@@ -72,8 +72,8 @@ public class DialectFactoryImpl implements DialectFactory {
 		try {
 			return ( Dialect ) classLoaderService.classForName( dialectName ).newInstance();
 		}
-		catch ( ClassLoadingException cnfe ) {
-			throw new HibernateException( "Dialect class not found: " + dialectName, cnfe );
+		catch ( ClassLoadingException e ) {
+			throw new HibernateException( "Dialect class not found: " + dialectName, e );
 		}
 		catch ( HibernateException e ) {
 			throw e;

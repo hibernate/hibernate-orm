@@ -24,11 +24,15 @@
 package org.hibernate.type.descriptor.java;
 import java.sql.Blob;
 import java.sql.SQLException;
+
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.hibernate.engine.jdbc.BlobProxy;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
@@ -50,6 +54,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 		return false;
 	}
 
+	@Test
 	@Override
 	public void testEquality() {
 		// blobs of the same internal value are not really comparable
@@ -59,6 +64,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 		assertFalse( BlobTypeDescriptor.INSTANCE.areEqual( original, different ) );
 	}
 
+	@Test
 	@Override
 	public void testExternalization() {
 		// blobs of the same internal value are not really comparable

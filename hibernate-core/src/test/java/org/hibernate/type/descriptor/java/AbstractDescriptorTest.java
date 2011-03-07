@@ -25,14 +25,18 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
-import junit.framework.TestCase;
+
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public abstract class AbstractDescriptorTest<T> extends TestCase {
+public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 	protected class Data<T> {
 		private final T originalValue;
 		private final T copyOfOriginalValue;
@@ -53,9 +57,8 @@ public abstract class AbstractDescriptorTest<T> extends TestCase {
 
 	private Data<T> testData;
 
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setUp() throws Exception {
 		testData = getTestData();
 	}
 
@@ -63,6 +66,7 @@ public abstract class AbstractDescriptorTest<T> extends TestCase {
 
 	protected abstract boolean shouldBeMutable();
 
+	@Test
 	public void testEquality() {
 		assertFalse( testData.originalValue == testData.copyOfOriginalValue );
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, testData.originalValue ) );
@@ -70,6 +74,7 @@ public abstract class AbstractDescriptorTest<T> extends TestCase {
 		assertFalse( typeDescriptor.areEqual( testData.originalValue, testData.differentValue ) );
 	}
 
+	@Test
 	public void testExternalization() {
 		// ensure the symmetry of toString/fromString
 		String externalized = typeDescriptor.toString( testData.originalValue );
@@ -77,6 +82,7 @@ public abstract class AbstractDescriptorTest<T> extends TestCase {
 		assertTrue( typeDescriptor.areEqual( testData.originalValue, consumed ) );
 	}
 
+	@Test
 	public void testMutabilityPlan() {
 		assertTrue( shouldBeMutable() == typeDescriptor.getMutabilityPlan().isMutable() );
 

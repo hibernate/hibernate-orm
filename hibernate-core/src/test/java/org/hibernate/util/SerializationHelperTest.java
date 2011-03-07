@@ -24,10 +24,17 @@
 package org.hibernate.util;
 import java.io.InputStream;
 import java.io.Serializable;
-import junit.framework.TestCase;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.util.ByteCodeHelper;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * This is basically a test to assert the expectations of {@link org.hibernate.type.SerializableType}
@@ -35,21 +42,23 @@ import org.hibernate.internal.util.SerializationHelper;
  *
  * @author Steve Ebersole
  */
-public class SerializationHelperTest extends TestCase {
+public class SerializationHelperTest extends BaseUnitTestCase {
 	private ClassLoader original;
 	private CustomClassLoader custom;
 
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		original = Thread.currentThread().getContextClassLoader();
 		custom = new CustomClassLoader( original );
 		Thread.currentThread().setContextClassLoader( custom );
-
 	}
 
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		Thread.currentThread().setContextClassLoader( original );
 	}
 
+	@Test
 	public void testSerializeDeserialize() throws Exception {
 		Class clazz = Thread.currentThread().getContextClassLoader().loadClass( "org.hibernate.util.SerializableThing" );
 		Object instance = clazz.newInstance();

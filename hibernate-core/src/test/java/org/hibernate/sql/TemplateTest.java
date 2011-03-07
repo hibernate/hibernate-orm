@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.sql;
+
 import java.util.Collections;
-import junit.framework.TestCase;
+
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -33,12 +33,16 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.type.Type;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class TemplateTest extends TestCase {
+public class TemplateTest extends BaseUnitTestCase {
 	private static final PropertyMapping PROPERTY_MAPPING = new PropertyMapping() {
 		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 			if ( "sql".equals( propertyName ) ) {
@@ -82,6 +86,7 @@ public class TemplateTest extends TestCase {
 
 	private static final SQLFunctionRegistry FUNCTION_REGISTRY = new SQLFunctionRegistry( DIALECT, Collections.EMPTY_MAP );
 
+	@Test
 	public void testSqlExtractFunction() {
 		String fragment = "extract( year from col )";
 		String template = Template.renderWhereStringTemplate( fragment, Template.TEMPLATE, DIALECT, FUNCTION_REGISTRY );
@@ -89,6 +94,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "extract(year from " + Template.TEMPLATE + ".col)", template );
 	}
 
+	@Test
 	public void testSqlTrimFunction() {
 		String fragment = "trim( col )";
 		String template = Template.renderWhereStringTemplate( fragment, Template.TEMPLATE, DIALECT, FUNCTION_REGISTRY );
@@ -119,6 +125,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "trim(both 'b' from " + Template.TEMPLATE + ".col)", template );
 	}
 
+	@Test
 	public void testSQLReferences() {
 		String fragment = "sql asc, sql desc";
 		String template = doStandardRendering( fragment );
@@ -126,6 +133,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( Template.TEMPLATE + ".sql asc, " + Template.TEMPLATE + ".sql desc", template );
 	}
 
+	@Test
 	public void testQuotedSQLReferences() {
 		String fragment = "`sql` asc, `sql` desc";
 		String template = doStandardRendering( fragment );
@@ -133,6 +141,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( Template.TEMPLATE + ".\"sql\" asc, " + Template.TEMPLATE + ".\"sql\" desc", template );
 	}
 
+	@Test
 	public void testPropertyReference() {
 		String fragment = "property asc, property desc";
 		String template = doStandardRendering( fragment );
@@ -140,6 +149,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( Template.TEMPLATE + ".prop asc, " + Template.TEMPLATE + ".prop desc", template );
 	}
 
+	@Test
 	public void testFunctionReference() {
 		String fragment = "upper(sql) asc, lower(sql) desc";
 		String template = doStandardRendering( fragment );
@@ -147,6 +157,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "upper(" + Template.TEMPLATE + ".sql) asc, lower(" + Template.TEMPLATE + ".sql) desc", template );
 	}
 
+	@Test
 	public void testQualifiedFunctionReference() {
 		String fragment = "qual.upper(property) asc, qual.lower(property) desc";
 		String template = doStandardRendering( fragment );
@@ -154,6 +165,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "qual.upper(" + Template.TEMPLATE + ".prop) asc, qual.lower(" + Template.TEMPLATE + ".prop) desc", template );
 	}
 
+	@Test
 	public void testDoubleQualifiedFunctionReference() {
 		String fragment = "qual1.qual2.upper(property) asc, qual1.qual2.lower(property) desc";
 		String template = doStandardRendering( fragment );
@@ -161,6 +173,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "qual1.qual2.upper(" + Template.TEMPLATE + ".prop) asc, qual1.qual2.lower(" + Template.TEMPLATE + ".prop) desc", template );
 	}
 
+	@Test
 	public void testFunctionWithPropertyReferenceAsParam() {
 		String fragment = "upper(property) asc, lower(property) desc";
 		String template = doStandardRendering( fragment );
@@ -168,6 +181,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "upper(" + Template.TEMPLATE + ".prop) asc, lower(" + Template.TEMPLATE + ".prop) desc", template );
 	}
 
+	@Test
 	public void testNestedFunctionReferences() {
 		String fragment = "upper(lower(sql)) asc, lower(upper(sql)) desc";
 		String template = doStandardRendering( fragment );
@@ -175,6 +189,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "upper(lower(" + Template.TEMPLATE + ".sql)) asc, lower(upper(" + Template.TEMPLATE + ".sql)) desc", template );
 	}
 
+	@Test
 	public void testComplexNestedFunctionReferences() {
 		String fragment = "mod(mod(sql,2),3) asc";
 		String template = doStandardRendering( fragment );
@@ -182,6 +197,7 @@ public class TemplateTest extends TestCase {
 		assertEquals( "mod(mod(" + Template.TEMPLATE + ".sql, 2), 3) asc", template );
 	}
 
+	@Test
 	public void testCollation() {
 		String fragment = "`sql` COLLATE my_collation, `sql` COLLATE your_collation";
 		String template = doStandardRendering( fragment );
@@ -189,22 +205,23 @@ public class TemplateTest extends TestCase {
 		assertEquals( Template.TEMPLATE + ".\"sql\" collate my_collation, " + Template.TEMPLATE + ".\"sql\" collate your_collation", template );
 	}
 
+	@Test
 	public void testCollationAndOrdering() {
 		String fragment = "sql COLLATE my_collation, upper(prop) COLLATE your_collation asc, `sql` desc";
 		String template = doStandardRendering( fragment );
 
 		assertEquals( Template.TEMPLATE + ".sql collate my_collation, upper(" + Template.TEMPLATE + ".prop) collate your_collation asc, " + Template.TEMPLATE + ".\"sql\" desc", template );
-
 	}
 
+	@Test
 	public void testComponentReferences() {
 		String fragment = "component asc";
 		String template = doStandardRendering( fragment );
 
 		assertEquals( Template.TEMPLATE + ".comp_1 asc, " + Template.TEMPLATE + ".comp_2 asc", template );
-
 	}
 
+	@Test
 	public void testComponentDerefReferences() {
 		String fragment = "component.prop1 asc";
 		String template = doStandardRendering( fragment );

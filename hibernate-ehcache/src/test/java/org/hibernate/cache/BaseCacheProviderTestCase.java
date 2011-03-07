@@ -21,12 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.cache;
+package org.hibernate.cache;
 
 import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
@@ -43,7 +42,7 @@ import org.hibernate.testing.tm.TransactionManagerLookupImpl;
  */
 public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 
-	// note that a lot of the fucntionality here is intended to be used
+	// note that a lot of the functionality here is intended to be used
 	// in creating specific tests for each CacheProvider that would extend
 	// from a base test case (this) for common requirement testing...
 

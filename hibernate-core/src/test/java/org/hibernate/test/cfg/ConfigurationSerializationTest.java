@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009 by Red Hat Inc and/or its affiliates or by
- * third-party contributors as indicated by either @author tags or express
- * copyright attribution statements applied by the authors.  All
- * third-party contributions are distributed under license by Red Hat Inc.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -17,20 +19,22 @@
  * along with this distribution; if not, write to:
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA\
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cfg;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.spi.ServiceRegistry;
+
+import org.junit.Test;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit.UnitTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * Copied over mostly from ConfigurationPerformanceTest
@@ -38,15 +42,7 @@ import org.hibernate.testing.junit.UnitTestCase;
  * @author Steve Ebersole
  * @author Max Andersen
  */
-public class ConfigurationSerializationTest extends UnitTestCase {
-	public ConfigurationSerializationTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new TestSuite( ConfigurationSerializationTest.class );
-	}
-
+public class ConfigurationSerializationTest extends BaseUnitTestCase {
 	private static final String[] FILES = new String[] {
 			"legacy/ABC.hbm.xml",
 			"legacy/ABCExtends.hbm.xml",
@@ -92,7 +88,8 @@ public class ConfigurationSerializationTest extends UnitTestCase {
 			"cfg/orm-serializable.xml"
 	};
 
-	public void testConfiguraionSerializability() {
+	@Test
+	public void testConfigurationSerializability() {
 		Configuration cfg = new Configuration();
 		for ( String file : FILES ) {
 			cfg.addResource( "org/hibernate/test/" + file );

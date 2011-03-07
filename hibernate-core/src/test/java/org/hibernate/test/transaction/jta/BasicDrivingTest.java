@@ -23,6 +23,21 @@
  */
 package org.hibernate.test.transaction.jta;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
@@ -33,51 +48,40 @@ import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.service.spi.StandardServiceInitiators;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
 import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
 import org.hibernate.test.common.jta.AtomikosJtaPlatform;
-import org.hibernate.testing.junit.UnitTestCase;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Testing transaction handling when the JTA transaction facade is the driver.
  *
  * @author Steve Ebersole
  */
-public class BasicDrivingTest extends UnitTestCase {
-	private ServiceRegistry serviceRegistry;
+public class BasicDrivingTest extends BaseUnitTestCase {
+	private ServiceRegistryImpl serviceRegistry;
 
-	public BasicDrivingTest(String string) {
-		super( string );
-	}
-
+	@Before
+	@SuppressWarnings( {"unchecked"})
 	public void setUp() throws Exception {
-		super.setUp();
-
 		Map configValues = new HashMap();
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
 		configValues.put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
 		configValues.put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
-		serviceRegistry = new ServiceRegistryImpl( StandardServiceInitiators.LIST, configValues );
+		serviceRegistry = new ServiceRegistryImpl( configValues );
 	}
 
+	@After
 	public void tearDown() throws Exception {
-		( (ServiceRegistryImpl) serviceRegistry).destroy();
-		super.tearDown();
+		serviceRegistry.destroy();
 	}
 
+	@Test
 	public void testBasicUsage() throws Throwable {
 		final TransactionContext transactionContext = new TransactionContextImpl( new TransactionEnvironmentImpl( serviceRegistry ) );
 

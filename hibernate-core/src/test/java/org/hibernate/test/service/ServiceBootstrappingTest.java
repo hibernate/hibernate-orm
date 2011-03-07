@@ -24,6 +24,11 @@
 package org.hibernate.test.service;
 
 import java.util.Properties;
+
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -31,19 +36,15 @@ import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.ConnectionProviderBuilder;
-import org.hibernate.testing.junit.UnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class ServiceBootstrappingTest extends UnitTestCase {
-	public ServiceBootstrappingTest(String string) {
-		super( string );
-	}
-
+public class ServiceBootstrappingTest extends BaseUnitTestCase {
+	@Test
 	public void testBasicBuild() {
 		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
@@ -55,6 +56,7 @@ public class ServiceBootstrappingTest extends UnitTestCase {
 		serviceRegistry.destroy();
 	}
 
+	@Test
 	public void testBuildWithLogging() {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.put( Environment.SHOW_SQL, "true" );
@@ -69,6 +71,7 @@ public class ServiceBootstrappingTest extends UnitTestCase {
 		serviceRegistry.destroy();
 	}
 
+	@Test
 	public void testBuildWithServiceOverride() {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 

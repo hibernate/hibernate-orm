@@ -1,8 +1,34 @@
-//$Id: InstrumentTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.instrument.buildtime;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.intercept.FieldInterceptionHelper;
+
+import org.junit.Test;
+
+import org.hibernate.testing.Skip;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.instrument.cases.Executable;
 import org.hibernate.test.instrument.cases.TestCustomColumnReadAndWrite;
 import org.hibernate.test.instrument.cases.TestDirtyCheckExecutable;
@@ -15,57 +41,61 @@ import org.hibernate.test.instrument.cases.TestLazyPropertyCustomTypeExecutable;
 import org.hibernate.test.instrument.cases.TestManyToOneProxyExecutable;
 import org.hibernate.test.instrument.cases.TestSharedPKOneToOneExecutable;
 import org.hibernate.test.instrument.domain.Document;
-import org.hibernate.testing.junit.UnitTestCase;
 
 /**
  * @author Gavin King
  */
-public class InstrumentTest extends UnitTestCase {
-
-	public InstrumentTest(String str) {
-		super(str);
-	}
-
-	public static Test suite() {
-		return new TestSuite( InstrumentTest.class );
-	}
-
+@Skip(
+		message = "domain classes not instrumented for build-time instrumentation testing",
+		condition = InstrumentTest.SkipCheck.class
+)
+public class InstrumentTest extends BaseUnitTestCase {
+	@Test
 	public void testDirtyCheck() throws Exception {
 		execute( new TestDirtyCheckExecutable() );
 	}
 
+	@Test
 	public void testFetchAll() throws Exception {
 		execute( new TestFetchAllExecutable() );
 	}
 
+	@Test
 	public void testLazy() throws Exception {
 		execute( new TestLazyExecutable() );
 	}
 
+	@Test
 	public void testLazyManyToOne() throws Exception {
 		execute( new TestLazyManyToOneExecutable() );
 	}
 
+	@Test
 	public void testSetFieldInterceptor() throws Exception {
 		execute( new TestInjectFieldInterceptorExecutable() );
 	}
 
+	@Test
 	public void testPropertyInitialized() throws Exception {
 		execute( new TestIsPropertyInitializedExecutable() );
 	}
 
+	@Test
 	public void testManyToOneProxy() throws Exception {
 		execute( new TestManyToOneProxyExecutable() );
 	}
 
+	@Test
 	public void testLazyPropertyCustomTypeExecutable() throws Exception {
 		execute( new TestLazyPropertyCustomTypeExecutable() );
 	}
 
+	@Test
 	public void testSharedPKOneToOne() throws Exception {
 		execute( new TestSharedPKOneToOneExecutable() );
 	}
 
+	@Test
 	public void testCustomColumnReadAndWrite() throws Exception {
 		execute( new TestCustomColumnReadAndWrite() );
 	}	
@@ -80,17 +110,11 @@ public class InstrumentTest extends UnitTestCase {
 		}
 	}
 
-	protected void runTest() throws Throwable {
-		if ( isRunnable() ) {
-			super.runTest();
+	public static class SkipCheck implements Skip.Matcher {
+		@Override
+		public boolean isMatch() {
+			return ! FieldInterceptionHelper.isInstrumented( new Document() );
 		}
-		else {
-			reportSkip( "domain classes not instrumented", "build-time instrumentation" );
-		}
-	}
-
-	public static boolean isRunnable() {
-		return FieldInterceptionHelper.isInstrumented( new Document() );
 	}
 }
 

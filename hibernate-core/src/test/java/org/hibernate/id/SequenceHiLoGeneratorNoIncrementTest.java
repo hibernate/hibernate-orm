@@ -28,7 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
-import junit.framework.TestCase;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.TestingDatabaseInfo;
@@ -52,7 +52,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
-public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
+public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	private static final String TEST_SEQUENCE = "test_sequence";
 
 	private Configuration cfg;
@@ -60,7 +60,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
 
-	@Override
+	@Before
 	protected void setUp() throws Exception {
 		super.setUp();
 
@@ -100,7 +100,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 	}
 
-	@Override
+	@After
 	protected void tearDown() throws Exception {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
@@ -111,6 +111,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends TestCase {
 		super.tearDown();
 	}
 
+	@Test
 	public void testHiLoAlgorithm() {
 		SessionImpl session = (SessionImpl) sessionFactory.openSession();
 		session.beginTransaction();

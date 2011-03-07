@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,15 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.resolver;
 
-import java.sql.Connection;
-import java.util.Properties;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DB2Dialect;
@@ -47,73 +47,65 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TestingDialects;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.service.classloading.spi.ClassLoadingException;
 import org.hibernate.service.jdbc.dialect.internal.DialectFactoryImpl;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.internal.StandardDialectResolver;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class DialectFactoryTest extends TestCase {
-	private ServiceRegistry serviceRegistry;
+public class DialectFactoryTest extends BaseUnitTestCase {
+	private DialectFactoryImpl dialectFactory;
 
-	public DialectFactoryTest(String name) {
-		super( name );
+	@Before
+	public void setUp() {
+		dialectFactory = new DialectFactoryImpl();
+		dialectFactory.setClassLoaderService( new ClassLoaderServiceImpl( getClass().getClassLoader() ) );
+		dialectFactory.setDialectResolver( new StandardDialectResolver() );
 	}
 
-	@Override
-    protected void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-	}
+	@Test
+	public void testExplicitlySuppliedDialectClassName() {
+		final Map<String,String> configValues = new HashMap<String,String>();
 
-	@Override
-    protected void tearDown() {
-		if ( serviceRegistry != null ) {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
-		}
-	}
+		configValues.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
+		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 
-	public static Test suite() {
-		return new TestSuite( DialectFactoryTest.class );
-	}
-
-	// TODO: is it still possible to build a dialect using a class name???
-	/*
-	public void testBuildDialectByClass() {
-		assertEquals(
-				HSQLDialect.class,
-				DialectFactory.constructDialect( "org.hibernate.dialect.HSQLDialect" ).getClass()
-		);
-
+		configValues.put( Environment.DIALECT, "org.hibernate.dialect.NoSuchDialect" );
 		try {
-			DialectFactory.constructDialect( "org.hibernate.dialect.NoSuchDialect" );
+			dialectFactory.buildDialect( configValues, null );
 			fail();
 		}
 		catch ( HibernateException e ) {
-			assertEquals( "unexpected exception type", e.getCause().getClass(), ClassNotFoundException.class );
+			assertEquals( "unexpected exception type", ClassLoadingException.class, e.getCause().getClass() );
 		}
 
+		configValues.put( Environment.DIALECT, "java.lang.Object" );
 		try {
-			DialectFactory.constructDialect( "java.lang.Object" );
+			dialectFactory.buildDialect( configValues, null );
 			fail();
 		}
 		catch ( HibernateException e ) {
-			assertEquals( "unexpected exception type", e.getCause().getClass(), ClassCastException.class );
+			assertEquals( "unexpected exception type", ClassCastException.class, e.getCause().getClass() );
 		}
 	}
-    */
 
+	@Test
 	public void testBuildDialectByProperties() {
 		Properties props = new Properties();
 
 		try {
-			getDialectFactoryImpl( new StandardDialectResolver() ).buildDialect( props, null );
+			dialectFactory.buildDialect( props, null );
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -121,16 +113,10 @@ public class DialectFactoryTest extends TestCase {
 		}
 
 		props.setProperty( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
-		assertTrue( getDialectFactoryImpl( new StandardDialectResolver() ).buildDialect( props, null ) instanceof HSQLDialect );
+		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( props, null ).getClass() );
 	}
 
-	private DialectFactoryImpl getDialectFactoryImpl(DialectResolver dialectResolver) {
-		DialectFactoryImpl dialectFactoryImpl = new DialectFactoryImpl();
-		dialectFactoryImpl.setClassLoaderService( serviceRegistry.getService( ClassLoaderService.class ) );
-		dialectFactoryImpl.setDialectResolver( dialectResolver );
-		return dialectFactoryImpl;
-	}
-
+	@Test
 	public void testPreregisteredDialects() {
 		DialectResolver resolver = new StandardDialectResolver();
 		testDetermination( "HSQL Database Engine", HSQLDialect.class, resolver );
@@ -160,6 +146,7 @@ public class DialectFactoryTest extends TestCase {
 		testDetermination( "Oracle", 11, Oracle10gDialect.class, resolver );
 	}
 
+	@Test
 	public void testCustomDialects() {
 		DialectResolverSet resolvers = new DialectResolverSet();
 		resolvers.addResolver( new TestingDialects.MyDialectResolver1() );
@@ -183,7 +170,6 @@ public class DialectFactoryTest extends TestCase {
 			fail();
 		}
 		catch ( HibernateException e ) {
-//			log.info( "Expected SQL error in resolveDialect and ignored", e );
 		}
 
 		try {
@@ -191,14 +177,14 @@ public class DialectFactoryTest extends TestCase {
 			fail();
 		}
 		catch ( HibernateException e ) {
-//			log.info( "Expected runtime error in resolveDialect", e );
 		}
 	}
 
+	@Test
 	public void testDialectNotFound() {
-		Properties properties = new Properties();
+		Map properties = Collections.EMPTY_MAP;
 		try {
-			getDialectFactoryImpl( new StandardDialectResolver() ).buildDialect( properties, Mocks.createConnection( "NoSuchDatabase", 666 ) );
+			dialectFactory.buildDialect( properties, Mocks.createConnection( "NoSuchDatabase", 666 ) );
 			fail();
 		}
 		catch ( HibernateException e ) {
@@ -211,10 +197,9 @@ public class DialectFactoryTest extends TestCase {
 	}
 
 	private void testDetermination(String databaseName, int databaseMajorVersion, Class clazz, DialectResolver resolver) {
-		DialectFactoryImpl dialectFactoryImpl = getDialectFactoryImpl( new StandardDialectResolver() );
-		dialectFactoryImpl.setDialectResolver( resolver );
+		dialectFactory.setDialectResolver( resolver );
 		Properties properties = new Properties();
 		Connection conn = Mocks.createConnection( databaseName, databaseMajorVersion );
-		assertEquals( clazz, dialectFactoryImpl.buildDialect( properties, conn ).getClass() );
+		assertEquals( clazz, dialectFactory.buildDialect( properties, conn ).getClass() );
 	}
 }

@@ -23,6 +23,14 @@
  */
 package org.hibernate.test.transaction.jta;
 
+import javax.transaction.TransactionManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
@@ -34,39 +42,36 @@ import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.service.spi.StandardServiceInitiators;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
 import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
 import org.hibernate.test.common.jta.AtomikosJtaPlatform;
-import org.hibernate.testing.junit.UnitTestCase;
 
-import javax.transaction.TransactionManager;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * Testing transaction facacde handling when the transaction is being driven by somethign other than the facade.
+ * Testing transaction facade handling when the transaction is being driven by something other than the facade.
  *
  * @author Steve Ebersole
  */
-public class ManagedDrivingTest extends UnitTestCase {
-	private ServiceRegistry serviceRegistry;
+public class ManagedDrivingTest extends BaseUnitTestCase {
+	private ServiceRegistryImpl serviceRegistry;
 
-	public ManagedDrivingTest(String string) {
-		super( string );
-	}
-
+	@Before
+	@SuppressWarnings( {"unchecked"})
 	public void setUp() throws Exception {
-		super.setUp();
-
 		Map configValues = new HashMap();
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
@@ -76,12 +81,12 @@ public class ManagedDrivingTest extends UnitTestCase {
 		serviceRegistry = new ServiceRegistryImpl( StandardServiceInitiators.LIST, configValues );
 	}
 
-
+	@After
 	public void tearDown() throws Exception {
-		( (ServiceRegistryImpl) serviceRegistry).destroy();
-		super.tearDown();
+		serviceRegistry.destroy();
 	}
 
+	@Test
 	public void testBasicUsage() throws Throwable {
 		final TransactionContext transactionContext = new TransactionContextImpl( new TransactionEnvironmentImpl( serviceRegistry ) ) {
 			@Override

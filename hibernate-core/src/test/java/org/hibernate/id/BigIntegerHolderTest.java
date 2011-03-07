@@ -25,8 +25,6 @@ package org.hibernate.id;
 import java.math.BigInteger;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BigIntegerHolderTest extends AbstractHolderTest {

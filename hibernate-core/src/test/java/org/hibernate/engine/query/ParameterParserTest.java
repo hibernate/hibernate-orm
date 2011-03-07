@@ -23,14 +23,20 @@
  *
  */
 package org.hibernate.engine.query;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * Unit tests of the ParameterParser class
  *
  * @author Steve Ebersole
  */
-public class ParameterParserTest extends TestCase {
+public class ParameterParserTest extends BaseUnitTestCase {
+	@Test
 	public void testEscapeCallRecognition() {
 		assertTrue( ParameterParser.startsWithEscapeCallTemplate( "{ ? = call abc(?) }" ) );
 		assertFalse( ParameterParser.startsWithEscapeCallTemplate( "from User u where u.userName = ? and u.userType = 'call'" ) );

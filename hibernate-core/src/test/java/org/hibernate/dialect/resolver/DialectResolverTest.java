@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,13 +20,14 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.dialect.resolver;
 import java.sql.SQLException;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
+import org.junit.Test;
+import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.TestingDialects;
@@ -34,18 +35,13 @@ import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.jdbc.dialect.internal.BasicDialectResolver;
 import org.hibernate.service.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class DialectResolverTest extends TestCase {
-
-	public DialectResolverTest(String name) {
-		super( name );
-	}
-
+public class DialectResolverTest extends BaseUnitTestCase {
+	@Test
 	public void testDialects() throws Exception {
 		DialectResolverSet resolvers = new DialectResolverSet();
 
@@ -62,6 +58,7 @@ public class DialectResolverTest extends TestCase {
 		testDetermination( resolvers, "MyTrickyDatabase1", 1, TestingDialects.MyDialect1.class );
 	}
 
+	@Test
 	public void testErrorAndOrder() throws Exception {
 		DialectResolverSet resolvers = new DialectResolverSet();
 		resolvers.addResolverAtFirst( new TestingDialects.MyDialectResolver1() );
@@ -84,6 +81,7 @@ public class DialectResolverTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testBasicDialectResolver() throws Exception {
 		DialectResolverSet resolvers = new DialectResolverSet();
 		// Simulating MyDialectResolver1 by BasicDialectResolvers
@@ -113,9 +111,5 @@ public class DialectResolverTest extends TestCase {
 		else {
 			assertEquals( dialectClass, dialect.getClass() );
 		}
-	}
-
-	public static Test suite() {
-		return new TestSuite( DialectResolverTest.class );
 	}
 }

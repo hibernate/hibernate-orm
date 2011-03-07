@@ -1,41 +1,57 @@
-// $Id: ASTUtilTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.ast;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.testing.junit.UnitTestCase;
+
 import antlr.ASTFactory;
 import antlr.collections.AST;
+
+import org.hibernate.hql.ast.util.ASTUtil;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * Unit test for ASTUtil.
  */
-public class ASTUtilTest extends UnitTestCase {
-	private ASTFactory factory;
+public class ASTUtilTest extends BaseUnitTestCase {
+	private ASTFactory factory = new ASTFactory();
 
-	/**
-	 * Standard JUnit test case constructor.
-	 *
-	 * @param name The name of the test case.
-	 */
-	public ASTUtilTest(String name) {
-		super( name );
-	}
-
-	protected void setUp() throws Exception {
-		super.setUp();
-		factory = new ASTFactory();
-	}
-
+	@Test
 	public void testCreate() throws Exception {
 		AST n = ASTUtil.create( factory, 1, "one");
 		assertNull( n.getFirstChild() );
-		assertEquals("one",n.getText());
-		assertEquals(1,n.getType());
+		assertEquals( "one", n.getText() );
+		assertEquals( 1, n.getType() );
 	}
-	/**
-	 * Test adding a tree of children.
-	 */
+
+	@Test
 	public void testCreateTree() throws Exception {
 		AST[] tree = new AST[4];
 		AST grandparent = tree[0] = ASTUtil.create(factory, 1, "grandparent");
@@ -46,9 +62,10 @@ public class ASTUtilTest extends UnitTestCase {
 		assertSame(t,grandparent);
 		assertSame(parent,t.getFirstChild());
 		assertSame(child,t.getFirstChild().getFirstChild());
-		assertSame(baby,t.getFirstChild().getFirstChild().getFirstChild());
+		assertSame( baby, t.getFirstChild().getFirstChild().getFirstChild() );
 	}
 
+	@Test
 	public void testFindPreviousSibling() throws Exception {
 		AST child1 = ASTUtil.create(factory,2, "child1");
 		AST child2 = ASTUtil.create(factory,3, "child2");
@@ -67,9 +84,4 @@ public class ASTUtilTest extends UnitTestCase {
 		}
 		assertNotNull(e);
 	}
-
-	public static Test suite() {
-		return new TestSuite( ASTUtilTest.class );
-	}
-
 }

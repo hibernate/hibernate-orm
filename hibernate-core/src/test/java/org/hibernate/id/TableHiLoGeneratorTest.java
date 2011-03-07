@@ -27,8 +27,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
-import junit.framework.TestCase;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.TestingDatabaseInfo;
@@ -43,7 +42,15 @@ import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.service.spi.ServiceRegistry;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -52,7 +59,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
-public class TableHiLoGeneratorTest extends TestCase {
+public class TableHiLoGeneratorTest extends BaseUnitTestCase {
 	private static final String GEN_TABLE = "generator_table";
 	private static final String GEN_COLUMN = TableHiLoGenerator.DEFAULT_COLUMN_NAME;
 
@@ -61,10 +68,8 @@ public class TableHiLoGeneratorTest extends TestCase {
 	private SessionFactoryImplementor sessionFactory;
 	private TableHiLoGenerator generator;
 
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
-
+	@Before
+	public void setUp() throws Exception {
 		Properties properties = new Properties();
 		properties.setProperty( TableGenerator.TABLE, GEN_TABLE );
 		properties.setProperty( TableGenerator.COLUMN, GEN_COLUMN );
@@ -109,18 +114,17 @@ public class TableHiLoGeneratorTest extends TestCase {
 		sessionFactory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 	}
 
-	@Override
-	protected void tearDown() throws Exception {
+	@After
+	public void tearDown() throws Exception {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
-
-		super.tearDown();
 	}
 
+	@Test
 	public void testHiLoAlgorithm() {
 		SessionImpl session = (SessionImpl) sessionFactory.openSession();
 		session.beginTransaction();

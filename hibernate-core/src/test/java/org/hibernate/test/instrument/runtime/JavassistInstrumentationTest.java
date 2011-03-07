@@ -1,7 +1,28 @@
-//$Id: $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.instrument.runtime;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
 
@@ -9,52 +30,7 @@ import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
  * @author Steve Ebersole
  */
 public class JavassistInstrumentationTest extends AbstractTransformingClassLoaderInstrumentTestCase {
-	public JavassistInstrumentationTest(String string) {
-		super( string );
-	}
-
 	protected BytecodeProvider buildBytecodeProvider() {
 		return new BytecodeProviderImpl();
 	}
-
-	public static Test suite() {
-		return new TestSuite( JavassistInstrumentationTest.class );
-	}
-
-	public void testSetFieldInterceptor() {
-		super.testSetFieldInterceptor();
-	}
-
-	public void testDirtyCheck() {
-		super.testDirtyCheck();
-	}
-
-	public void testFetchAll() throws Exception {
-		super.testFetchAll();
-	}
-
-	public void testLazy() {
-		super.testLazy();
-	}
-
-	public void testLazyManyToOne() {
-		super.testLazyManyToOne();
-	}
-
-	public void testPropertyInitialized() {
-		super.testPropertyInitialized();
-	}
-
-	public void testManyToOneProxy() {
-		super.testManyToOneProxy();
-	}
-
-	public void testSharedPKOneToOne() {
-		super.testSharedPKOneToOne();
-	}
-
-	public void testCustomColumnReadAndWrite() {
-		super.testCustomColumnReadAndWrite();
-	}	
-	
 }

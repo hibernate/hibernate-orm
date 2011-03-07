@@ -36,19 +36,45 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
-import junit.framework.TestCase;
+
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class TypeTest extends TestCase {
+@SuppressWarnings( {"UnnecessaryBoxing"})
+public class TypeTest extends BaseUnitTestCase {
+	private SessionImplementor session;
+
+	@Before
+	public void setUp() throws Exception {
+		session = (SessionImplementor) Proxy.newProxyInstance(
+				getClass().getClassLoader(),
+				new Class[] { Session.class, SessionImplementor.class },
+				new SessionProxyHandler()
+		);
+	}
+
+	public static class SessionProxyHandler implements InvocationHandler {
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			if ( "getEntityMode".equals( method.getName() ) ) {
+				return EntityMode.POJO;
+			}
+			throw new UnsupportedOperationException( "Unexpected method call : " + method.getName() );
+		}
+	}
+
+	@Test
 	public void testBigDecimalType() {
 		final BigDecimal original = BigDecimal.valueOf( 100 );
 		final BigDecimal copy = BigDecimal.valueOf( 100 );
@@ -57,6 +83,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( BigDecimalType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testBigIntegerType() {
 		final BigInteger original = BigInteger.valueOf( 100 );
 		final BigInteger copy = BigInteger.valueOf( 100 );
@@ -65,6 +92,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( BigIntegerType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testBinaryType() {
 		final byte[] original = new byte[] { 1, 2, 3, 4 };
 		final byte[] copy = new byte[] { 1, 2, 3, 4 };
@@ -75,6 +103,8 @@ public class TypeTest extends TestCase {
 		runBasicTests( MaterializedBlobType.INSTANCE, original, copy, different );
 	}
 
+	@Test
+	@SuppressWarnings( {"BooleanConstructorCall"})
 	public void testBooleanType() {
 		final Boolean original = Boolean.TRUE;
 		final Boolean copy = new Boolean( true );
@@ -86,6 +116,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( TrueFalseType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testByteType() {
 		final Byte original = 0;
 		final Byte copy = new Byte( (byte) 0 );
@@ -94,6 +125,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( ByteType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testCalendarDateType() {
 		final Calendar original = new GregorianCalendar();
 		final Calendar copy = new GregorianCalendar();
@@ -105,6 +137,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( CalendarDateType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testCalendarType() {
 		final long now = System.currentTimeMillis();
 		final Calendar original = new GregorianCalendar();
@@ -119,6 +152,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( CalendarType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testCharacterArrayType() {
 		final Character[] original = new Character[] { 'a', 'b' };
 		final Character[] copy = new Character[] { 'a', 'b' };
@@ -127,6 +161,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( CharacterArrayType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testCharacterType() {
 		final Character original = 'a';
 		final Character copy = new Character( 'a' );
@@ -135,6 +170,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( CharacterType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testCharArrayType() {
 		final char[] original = new char[] { 'a', 'b' };
 		final char[] copy = new char[] { 'a', 'b' };
@@ -144,14 +180,16 @@ public class TypeTest extends TestCase {
 		runBasicTests( CharArrayType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testClassType() {
 		final Class original = TypeTest.class;
 		final Class copy = (Class) SerializationHelper.clone( original );
-		final Class different = TestCase.class;
+		final Class different = String.class;
 
 		runBasicTests( ClassType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testCurrencyType() {
 		final Currency original = Currency.getInstance( Locale.US );
 		final Currency copy = Currency.getInstance( Locale.US );
@@ -160,6 +198,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( CurrencyType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testDateType() {
 		final long now = System.currentTimeMillis();
 		final java.sql.Date original = new java.sql.Date( now );
@@ -173,6 +212,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( DateType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testDoubleType() {
 		final Double original = Double.valueOf( 100 );
 		final Double copy = Double.valueOf( 100 );
@@ -181,6 +221,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( DoubleType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testFloatType() {
 		final Float original = Float.valueOf( 100 );
 		final Float copy = Float.valueOf( 100 );
@@ -189,6 +230,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( FloatType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testIntegerType() {
 		final Integer original = 100;
 		final Integer copy = new Integer( 100 );
@@ -197,6 +239,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( IntegerType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testLocaleType() {
 		final Locale original = new Locale( "ab" );
 		final Locale copy = new Locale( "ab" );
@@ -205,6 +248,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( LocaleType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testLongType() {
 		final Long original = 100L;
 		final Long copy = new Long( 100L );
@@ -218,10 +262,13 @@ public class TypeTest extends TestCase {
 		SerializableImpl(int number) {
 			this.number = number;
 		}
+		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
 		public boolean equals(Object obj) {
 			return this.number == ( (SerializableImpl) obj ).number;
 		}
 	}
+
+	@Test
 	public void testSerializableType() {
 		final SerializableImpl original = new SerializableImpl(1);
 		final SerializableImpl copy = new SerializableImpl(1);
@@ -231,6 +278,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( new SerializableType<SerializableImpl>( SerializableImpl.class ), original, copy, different );
 	}
 
+	@Test
 	public void testShortType() {
 		final Short original = 100;
 		final Short copy = new Short( (short) 100 );
@@ -239,6 +287,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( ShortType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testStringType() {
 		final String original = "abc";
 		final String copy = new String( original.toCharArray() );
@@ -249,6 +298,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( MaterializedClobType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testTimestampType() {
 		final long now = System.currentTimeMillis();
 		final Timestamp original = new Timestamp( now );
@@ -258,6 +308,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( TimestampType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testTimeType() {
 		final long now = System.currentTimeMillis();
 		final Time original = new Time( now );
@@ -267,6 +318,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( TimeType.INSTANCE, original, copy, different );
 	}
 
+	@Test
 	public void testDates() {
 		final long now = System.currentTimeMillis();
 		final java.util.Date original = new java.util.Date( now );
@@ -279,6 +331,7 @@ public class TypeTest extends TestCase {
 		runBasicTests( DateType.INSTANCE, original, copy, different2 );
 	}
 
+	@Test
 	public void testTimeZoneType() {
 		final TimeZone original = new SimpleTimeZone( -1, "abc" );
 		final TimeZone copy = new SimpleTimeZone( -1, "abc" );
@@ -287,11 +340,8 @@ public class TypeTest extends TestCase {
 		runBasicTests( TimeZoneType.INSTANCE, original, copy, different );
 	}
 
-
-
 	protected <T> void runBasicTests(AbstractSingleColumnStandardBasicType<T> type, T original, T copy, T different) {
-		final boolean nonCopyable = Class.class.isInstance( original )
-				|| Currency.class.isInstance( original );
+		final boolean nonCopyable = Class.class.isInstance( original ) || Currency.class.isInstance( original );
 		if ( ! nonCopyable ) {
 			// these checks exclude classes which cannot really be cloned (singetons/enums)
 			assertFalse( original == copy );
@@ -324,23 +374,4 @@ public class TypeTest extends TestCase {
 		assertTrue( type.isModified( original, different, ArrayHelper.TRUE, session ) );
 	}
 
-	private SessionImplementor session;
-
-	@Override
-	protected void setUp() throws Exception {
-		session = (SessionImplementor) Proxy.newProxyInstance(
-				getClass().getClassLoader(),
-				new Class[] { Session.class, SessionImplementor.class },
-				new SessionProxyHandler()
-		);
-	}
-
-	public static class SessionProxyHandler implements InvocationHandler {
-		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-			if ( "getEntityMode".equals( method.getName() ) ) {
-				return EntityMode.POJO;
-			}
-			throw new UnsupportedOperationException( "Unexpected method call : " + method.getName() );
-		}
-	}
 }

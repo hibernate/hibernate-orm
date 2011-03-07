@@ -23,37 +23,44 @@
  */
 package org.hibernate.jdbc;
 
-import java.sql.*;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.SQLException;
 import java.util.Properties;
 
-import junit.framework.TestCase;
-
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.internal.LobCreatorBuilder;
+import org.hibernate.engine.jdbc.BlobImplementer;
+import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.BlobImplementer;
-import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.NClobImplementer;
+import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.WrappedClob;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.jdbc.internal.LobCreatorBuilder;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class LobCreatorTest extends TestCase {
+public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCase {
 
+	@Test
 	public void testConnectedLobCreator() throws SQLException {
 		final Connection connection = createConnectionProxy( 4, new JdbcLobBuilderImpl( true ) );
 		LobCreationContext lobCreationContext = new LobCreationContextImpl( connection );
@@ -152,7 +159,7 @@ public class LobCreatorTest extends TestCase {
 			this.connection = connection;
 		}
 
-		public Object execute( LobCreationContext.Callback callback) {
+		public <T> T execute(LobCreationContext.Callback<T> callback) {
 			try {
 				return callback.executeOnConnection( connection );
 			}

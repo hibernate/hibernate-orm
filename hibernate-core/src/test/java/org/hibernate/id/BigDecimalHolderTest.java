@@ -25,8 +25,6 @@ package org.hibernate.id;
 import java.math.BigDecimal;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BigDecimalHolderTest extends AbstractHolderTest {

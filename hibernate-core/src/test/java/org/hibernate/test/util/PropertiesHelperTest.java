@@ -1,26 +1,27 @@
 package org.hibernate.test.util;
 import java.util.Properties;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class PropertiesHelperTest extends UnitTestCase {
-
+public class PropertiesHelperTest extends BaseUnitTestCase {
 	private Properties props;
 
-	public PropertiesHelperTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new TestSuite( PropertiesHelperTest.class );
-	}
-
-	protected void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		props = new Properties();
 
 		props.setProperty( "my.nonexistent.prop", "${}" );
@@ -45,6 +46,7 @@ public class PropertiesHelperTest extends UnitTestCase {
 		props.setProperty( "parse.error", "steve" );
 	}
 
+	@Test
 	public void testPlaceholderReplacement() {
 		ConfigurationHelper.resolvePlaceHolders( props );
 
@@ -85,6 +87,7 @@ public class PropertiesHelperTest extends UnitTestCase {
 		assertEquals( "partial replacement (midst)", "basedir/tmp/myfile.txt", str );
 	}
 
+	@Test
 	public void testParseExceptions() {
 		boolean b = ConfigurationHelper.getBoolean( "parse.error", props );
 		assertFalse( "parse exception case - boolean", b );

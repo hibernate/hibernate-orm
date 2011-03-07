@@ -22,11 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * {@inheritDoc}
@@ -34,15 +38,8 @@ import org.hibernate.id.IntegralDataTypeHolder;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "deprecation" })
-public class OptimizerUnitTest extends TestCase {
-	public OptimizerUnitTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new TestSuite( OptimizerUnitTest.class );
-	}
-
+public class OptimizerUnitTest extends BaseUnitTestCase {
+	@Test
 	public void testBasicNoOptimizerUsage() {
 		// test historic sequence behavior, where the initial values start at 1...
 		SourceMock sequence = new SourceMock( 1 );
@@ -65,6 +62,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( 10, sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testBasicHiLoOptimizerUsage() {
 		int increment = 10;
 		Long next;
@@ -100,6 +98,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( 2, sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testBasicPooledOptimizerUsage() {
 		Long next;
 		// test historic sequence behavior, where the initial values start at 1...
@@ -118,6 +117,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( 21, sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testSubsequentPooledOptimizerUsage() {
 		// test the pooled optimizer in situation where the sequence is already beyond its initial value on init.
 		//		cheat by telling the sequence to start with 1000
@@ -150,6 +150,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( (1001+6), sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testBasicPooledLoOptimizerUsage() {
 		final SourceMock sequence = new SourceMock( 1, 3 );
 		final Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.POOL_LO, Long.class, 3 );
@@ -179,6 +180,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( (1+3), sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testSubsequentPooledLoOptimizerUsage() {
 		// test the pooled optimizer in situation where the sequence is already beyond its initial value on init.
 		//		cheat by telling the sequence to start with 1000
@@ -211,6 +213,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( (1001+6), sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testRecoveredPooledOptimizerUsage() {
 		final SourceMock sequence = new SourceMock( 1, 3 );
 		final Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.POOL, Long.class, 3, 1 );
@@ -231,6 +234,7 @@ public class OptimizerUnitTest extends TestCase {
 		assertEquals( 7, sequence.getCurrentValue() );
 	}
 
+	@Test
 	public void testRecoveredPooledLoOptimizerUsage() {
 		final SourceMock sequence = new SourceMock( 1, 3 );
 		final Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.POOL_LO, Long.class, 3, 1 );
@@ -305,31 +309,5 @@ public class OptimizerUnitTest extends TestCase {
 			return value == null ? -1 : value.getActualLongValue();
 		}
 	}
-
-//	public void testNoopDumping() {
-//		SourceMock sequence = new SourceMock( 1 );
-//		Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.NONE, Long.class, 1 );
-//		for ( int i = 1; i <= 41; i++ ) {
-//			System.out.println( i + " => " + optimizer.generate( sequence ) + " (" + sequence.getCurrentValue() + ")" );
-//		}
-//	}
-//
-//	public void testHiLoDumping() {
-//		int increment = 10;
-//		SourceMock sequence = new SourceMock( 1 );
-//		Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.HILO, Long.class, increment );
-//		for ( int i = 1; i <= 41; i++ ) {
-//			System.out.println( i + " => " + optimizer.generate( sequence ) + " (" + sequence.getCurrentValue() + ")" );
-//		}
-//	}
-//
-//	public void testPooledDumping() {
-//		int increment = 10;
-//		SourceMock sequence = new SourceMock( 1, increment );
-//		Optimizer optimizer = OptimizerFactory.buildOptimizer( OptimizerFactory.POOL, Long.class, increment );
-//		for ( int i = 1; i <= 41; i++ ) {
-//			System.out.println( i + " => " + optimizer.generate( sequence ) + " (" + sequence.getCurrentValue() + ")" );
-//		}
-//	}
 
 }

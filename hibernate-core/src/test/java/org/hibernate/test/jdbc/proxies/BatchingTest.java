@@ -23,6 +23,10 @@
  */
 package org.hibernate.test.jdbc.proxies;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
@@ -38,40 +42,41 @@ import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.service.spi.StandardServiceInitiators;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.test.common.JournalingBatchObserver;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
-import org.hibernate.testing.junit.UnitTestCase;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class BatchingTest extends UnitTestCase implements BatchKey {
-	private ServiceRegistry serviceRegistry;
+public class BatchingTest extends BaseUnitTestCase implements BatchKey {
+	private ServiceRegistryImpl serviceRegistry;
 
-	public BatchingTest(String string) {
-		super( string );
-	}
-
+	@Before
 	public void setUp() throws Exception {
-		super.setUp();
 		serviceRegistry = new ServiceRegistryImpl(
 				StandardServiceInitiators.LIST,
 				ConnectionProviderBuilder.getConnectionProviderProperties()
 		);
 	}
 
+	@After
 	public void tearDown() throws Exception {
-		( (ServiceRegistryImpl) serviceRegistry).destroy();
-		super.tearDown();
+		serviceRegistry.destroy();
 	}
 
 	@Override
@@ -84,6 +89,7 @@ public class BatchingTest extends UnitTestCase implements BatchKey {
 		return Expectations.BASIC;
 	}
 
+	@Test
 	public void testNonBatchingUsage() throws Exception {
 		final TransactionContext transactionContext = new TransactionContextImpl( new TransactionEnvironmentImpl( serviceRegistry ) );
 
@@ -141,6 +147,7 @@ public class BatchingTest extends UnitTestCase implements BatchKey {
 		logicalConnection.close();
 	}
 
+	@Test
 	public void testBatchingUsage() throws Exception {
 		final TransactionContext transactionContext = new TransactionContextImpl( new TransactionEnvironmentImpl( serviceRegistry ) );
 

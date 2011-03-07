@@ -25,17 +25,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.ServiceRegistry;
+
+import org.junit.Test;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit.UnitTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
  */
-public class PersisterClassProviderTest extends UnitTestCase {
-	public PersisterClassProviderTest(String string) {
-		super( string );
-	}
-
+public class PersisterClassProviderTest extends BaseUnitTestCase {
+	@Test
 	public void testPersisterClassProvider() throws Exception {
 
 		Configuration cfg = new Configuration();

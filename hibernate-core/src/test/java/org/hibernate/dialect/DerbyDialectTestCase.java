@@ -22,14 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-import junit.framework.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Testing of patched support for Derby limit and ofset queries; see HHH-3972
+ * Testing of patched support for Derby limit and offset queries; see HHH-3972
  *
  * @author Evan Leonard
  */
-public class DerbyDialectTestCase extends TestCase {
+@TestForIssue( jiraKey = "HHH-3972" )
+public class DerbyDialectTestCase extends BaseUnitTestCase {
 
 	private static class LocalDerbyDialect extends DerbyDialect {
 		protected boolean isTenPointFiveReleaseOrNewer() {
@@ -37,6 +43,7 @@ public class DerbyDialectTestCase extends TestCase {
 		}
 	}
 
+	@Test
 	public void testInsertLimitClause() {
 		final int limit = 50;
 		final String input = "select * from tablename t where t.cat = 5";
@@ -46,6 +53,7 @@ public class DerbyDialectTestCase extends TestCase {
 		assertEquals( expected, actual );
 	}
 
+	@Test
 	public void testInsertLimitWithOffsetClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -56,7 +64,7 @@ public class DerbyDialectTestCase extends TestCase {
 		assertEquals( expected, actual );
 	}
 
-
+	@Test
 	public void testInsertLimitWithForUpdateClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -68,6 +76,7 @@ public class DerbyDialectTestCase extends TestCase {
 		assertEquals( expected, actual );
 	}
 
+	@Test
 	public void testInsertLimitWithWithClause() {
 		final int limit = 50;
 		final int offset = 200;
@@ -79,6 +88,7 @@ public class DerbyDialectTestCase extends TestCase {
 		assertEquals( expected, actual );
 	}
 
+	@Test
 	public void testInsertLimitWithForUpdateAndWithClauses() {
 		final int limit = 50;
 		final int offset = 200;

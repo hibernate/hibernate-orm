@@ -25,8 +25,6 @@ package org.hibernate.util;
 import java.io.Serializable;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class SerializableThing implements Serializable {

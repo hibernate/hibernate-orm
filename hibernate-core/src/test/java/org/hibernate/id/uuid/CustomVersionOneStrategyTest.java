@@ -19,22 +19,23 @@
  * along with this distribution; if not, write to:
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+ * Boston, MA  02110-1301  USABasicFormatterTes
  */
 package org.hibernate.id.uuid;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import java.util.UUID;
-import junit.framework.TestCase;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class CustomVersionOneStrategyTest extends TestCase {
-	public static void main(String[] args) {
-		System.out.println( System.currentTimeMillis() );
-		System.out.println( Long.MAX_VALUE );
-	}
+public class CustomVersionOneStrategyTest extends BaseUnitTestCase {
+	@Test
 	public void testUniqueCounter() {
 		CustomVersionOneStrategy strategy = new CustomVersionOneStrategy();
 		long now = System.currentTimeMillis();
@@ -57,6 +58,7 @@ public class CustomVersionOneStrategyTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testRangeOfValues() {
 		CustomVersionOneStrategy strategy = new CustomVersionOneStrategy();
 

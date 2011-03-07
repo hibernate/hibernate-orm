@@ -22,26 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.cacheable.annotation;
-import java.util.Properties;
+
 import javax.persistence.SharedCacheMode;
+import java.util.Properties;
+
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.junit.UnitTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class ConfigurationTest extends UnitTestCase {
-	public ConfigurationTest(String string) {
-		super( string );
-	}
-
+public class ConfigurationTest extends BaseUnitTestCase {
+	@Test
 	public void testSharedCacheModeNone() {
 		Ejb3Configuration config = buildConfiguration( SharedCacheMode.NONE );
 
@@ -55,6 +58,7 @@ public class ConfigurationTest extends UnitTestCase {
 		assertNull( pc.getCacheConcurrencyStrategy() );
 	}
 
+	@Test
 	public void testSharedCacheModeUnspecified() {
 		Ejb3Configuration config = buildConfiguration( SharedCacheMode.UNSPECIFIED );
 
@@ -68,6 +72,7 @@ public class ConfigurationTest extends UnitTestCase {
 		assertNull( pc.getCacheConcurrencyStrategy() );
 	}
 
+	@Test
 	public void testSharedCacheModeAll() {
 		Ejb3Configuration config = buildConfiguration( SharedCacheMode.ALL );
 
@@ -81,6 +86,7 @@ public class ConfigurationTest extends UnitTestCase {
 		assertNotNull( pc.getCacheConcurrencyStrategy() );
 	}
 
+	@Test
 	public void testSharedCacheModeEnable() {
 		Ejb3Configuration config = buildConfiguration( SharedCacheMode.ENABLE_SELECTIVE );
 
@@ -94,6 +100,7 @@ public class ConfigurationTest extends UnitTestCase {
 		assertNull( pc.getCacheConcurrencyStrategy() );
 	}
 
+	@Test
 	public void testSharedCacheModeDisable() {
 		Ejb3Configuration config = buildConfiguration( SharedCacheMode.DISABLE_SELECTIVE );
 

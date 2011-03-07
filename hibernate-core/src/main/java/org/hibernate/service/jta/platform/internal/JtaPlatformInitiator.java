@@ -53,6 +53,7 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 		return JtaPlatform.class;
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	@Override
 	public JtaPlatform initiateService(Map configVales, ServiceRegistry registry) {
 		final Object platform = getConfiguredPlatform( configVales, registry );
@@ -64,14 +65,27 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 			return (JtaPlatform) platform;
 		}
 
-		final String platformImplName = platform.toString();
+		final Class<JtaPlatform> jtaPlatformImplClass;
 
-		ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+		if ( Class.class.isInstance( platform ) ) {
+			jtaPlatformImplClass = (Class<JtaPlatform>) platform;
+		}
+		else {
+			final String platformImplName = platform.toString();
+			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+			try {
+				jtaPlatformImplClass = (Class<JtaPlatform>) classLoaderService.classForName( platformImplName );
+			}
+			catch ( Exception e ) {
+				throw new HibernateException( "Unable to locate specified JtaPlatform class [" + platformImplName + "]", e );
+			}
+		}
+
 		try {
-			return (JtaPlatform) classLoaderService.classForName( platformImplName ).newInstance();
+			return jtaPlatformImplClass.newInstance();
 		}
 		catch ( Exception e ) {
-			throw new HibernateException( "Unable to create specified JtaPlatform class [" + platformImplName + "]", e );
+			throw new HibernateException( "Unable to create specified JtaPlatform class [" + jtaPlatformImplClass.getName() + "]", e );
 		}
 	}
 

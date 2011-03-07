@@ -158,6 +158,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
@@ -1848,6 +1849,36 @@ public class Configuration implements Serializable {
 				getInitializedEventListeners(),
 				sessionFactoryObserver
 			);
+	}
+
+	/**
+	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
+	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
+	 * building the {@link SessionFactory} will not affect it.
+	 *
+	 * @return The build {@link SessionFactory}
+	 *
+	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
+	 *
+	 * @deprecated Use {@link #buildSessionFactory(ServiceRegistry)} instead
+	 */
+	public SessionFactory buildSessionFactory() throws HibernateException {
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+		final ServiceRegistry serviceRegistry =  new ServiceRegistryImpl( properties );
+		setSessionFactoryObserver(
+				new SessionFactoryObserver() {
+					@Override
+					public void sessionFactoryCreated(SessionFactory factory) {
+					}
+
+					@Override
+					public void sessionFactoryClosed(SessionFactory factory) {
+						( (ServiceRegistryImpl ) serviceRegistry ).destroy();
+					}
+				}
+		);
+		return buildSessionFactory( serviceRegistry );
 	}
 
 	private static final String LEGACY_VALIDATOR_EVENT_LISTENER = "org.hibernate.validator.event.ValidateEventListener";

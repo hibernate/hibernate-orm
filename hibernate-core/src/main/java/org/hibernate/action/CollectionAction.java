@@ -44,10 +44,11 @@ import java.io.Serializable;
  */
 public abstract class CollectionAction implements Executable, Serializable, Comparable {
 	private transient CollectionPersister persister;
-	private final Serializable key;
-	private final SessionImplementor session;
-	private final String collectionRole;
+	private transient SessionImplementor session;
 	private final PersistentCollection collection;
+
+	private final Serializable key;
+	private final String collectionRole;
 
 	public CollectionAction(
 			final CollectionPersister persister, 
@@ -65,9 +66,19 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		return collection;
 	}
 
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		ois.defaultReadObject();
-		persister = session.getFactory().getCollectionPersister( collectionRole );
+	/**
+	 * Reconnect to session after deserialization...
+	 */
+	public void afterDeserialize(SessionImplementor session) {
+		if ( this.session != null || this.persister != null ) {
+			throw new IllegalStateException( "already attached to a session." );
+		}
+		// IMPL NOTE: non-flushed changes code calls this method with session == null...
+		// guard against NullPointerException
+		if ( session != null ) {
+			this.session = session;
+			this.persister = session.getFactory().getCollectionPersister( collectionRole );
+		}
 	}
 
 	public final void beforeExecutions() throws CacheException {
@@ -132,8 +143,8 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 					key, 
 					persister.getKeyType(), 
 					persister.getRole(), 
-					session.getEntityMode(), 
-					session.getFactory() 
+					session.getEntityMode(),
+					session.getFactory()
 				);
 			persister.getCacheAccessStrategy().remove( ck );
 		}

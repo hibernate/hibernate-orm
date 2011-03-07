@@ -6,6 +6,7 @@ import java.util.Collection;
 
 import junit.framework.Test;
 
+import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
@@ -104,6 +105,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 2 );
@@ -178,6 +180,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		s.persist( dupe );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();

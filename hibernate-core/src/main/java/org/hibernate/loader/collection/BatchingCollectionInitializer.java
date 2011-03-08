@@ -29,10 +29,10 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * "Batch" loads collections, using multiple foreign key values in the
@@ -109,7 +109,7 @@ public class BatchingCollectionInitializer implements CollectionInitializer {
 			final SessionFactoryImplementor factory,
 			final LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
 		if ( maxBatchSize > 1 ) {
-			int[] batchSizesToCreate = ArrayHelper.getBatchSizes(maxBatchSize);
+			int[] batchSizesToCreate = ArrayHelper.getBatchSizes( maxBatchSize );
 			Loader[] loadersToCreate = new Loader[ batchSizesToCreate.length ];
 			for ( int i=0; i<batchSizesToCreate.length; i++ ) {
 				loadersToCreate[i] = new BasicCollectionLoader( persister, batchSizesToCreate[i], factory, loadQueryInfluencers );

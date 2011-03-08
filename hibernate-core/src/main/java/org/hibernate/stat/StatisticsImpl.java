@@ -23,12 +23,13 @@
  *
  */
 package org.hibernate.stat;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**

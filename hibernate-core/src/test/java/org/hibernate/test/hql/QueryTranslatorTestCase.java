@@ -1,5 +1,6 @@
 // $Id: QueryTranslatorTestCase.java 11361 2007-03-29 12:48:35Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
+
 import java.sql.Connection;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
@@ -27,9 +28,9 @@ import org.hibernate.hql.ast.HqlToken;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Test case superclass for testing QueryTranslator implementations.
@@ -86,11 +87,13 @@ public abstract class QueryTranslatorTestCase extends FunctionalTestCase {
 		};
 	}
 
-	public boolean createSchema() {
+	@Override
+    public boolean createSchema() {
 		return false;
 	}
 
-	public boolean recreateSchemaAfterFailure() {
+	@Override
+    public boolean recreateSchemaAfterFailure() {
 		return false;
 	}
 
@@ -308,19 +311,19 @@ public abstract class QueryTranslatorTestCase extends FunctionalTestCase {
 		Map oldMap = getTokens(oldsql);
 		Map newMap = getTokens(newsql);
 		if ( !oldMap.equals(newMap) ) {
-			assertEquals(message, oldsql, newsql);			
+			assertEquals(message, oldsql, newsql);
 		}
-		
+
 		//String oldsqlStripped = stripExtraSpaces( oldsql );
 		//String newsqlStripped = stripExtraSpaces( newsql );
 		//assertEquals( message, oldsqlStripped, newsqlStripped );
 	}
 
-	
+
 	private Map getTokens(String sql) {
 		Map result = new TreeMap();
 		if (sql==null) return result;
-		result.put( "=", new Integer( StringHelper.countUnquoted(sql, '=') ) );
+		result.put( "=", new Integer( StringHelper.countUnquoted( sql, '=' ) ) );
 		StringTokenizer tokenizer = new StringTokenizer( sql, "(),= " );
 		while ( tokenizer.hasMoreTokens() ) {
 			String fragment = tokenizer.nextToken();
@@ -337,7 +340,7 @@ public abstract class QueryTranslatorTestCase extends FunctionalTestCase {
 		}
 		return result;
 	}
-	
+
 	private String stripExtraSpaces(String string) {
 		if ( string == null ) {
 			return null;

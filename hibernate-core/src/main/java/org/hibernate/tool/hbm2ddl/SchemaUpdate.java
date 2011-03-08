@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
+
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.Writer;
@@ -39,12 +40,12 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.jdbc.util.Formatter;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -65,7 +66,7 @@ public class SchemaUpdate {
 	private String outputFile = null;
 	private String delimiter;
 	private Formatter formatter;
-	private SQLStatementLogger sqlStatementLogger;
+	private SqlStatementLogger sqlStatementLogger;
 
 	public SchemaUpdate(Configuration cfg) throws HibernateException {
 		this( cfg, cfg.getProperties() );

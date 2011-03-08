@@ -24,7 +24,7 @@
  */
 package org.hibernate.id;
 import java.net.InetAddress;
-import org.hibernate.util.BytesHelper;
+import org.hibernate.internal.util.BytesHelper;
 
 /**
  * The base class for identifier generators that use a UUID algorithm. This

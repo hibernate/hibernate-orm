@@ -27,8 +27,8 @@ import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * A SQL fragment. The string {alias} will be replaced by the
@@ -43,7 +43,7 @@ public class SQLCriterion implements Criterion {
 		Criteria criteria,
 		CriteriaQuery criteriaQuery)
 	throws HibernateException {
-		return StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias(criteria) );
+		return StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
 	}
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery)

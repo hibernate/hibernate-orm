@@ -1,5 +1,6 @@
 //$Id: CustomPersister.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -25,6 +26,7 @@ import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.PreLoadEvent;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
@@ -33,19 +35,18 @@ import org.hibernate.sql.Select;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-import org.hibernate.util.EqualsHelper;
 
 public class CustomPersister implements EntityPersister {
 
 	private static final Hashtable INSTANCES = new Hashtable();
 	private static final IdentifierGenerator GENERATOR = new UUIDHexGenerator();
-	
+
 	private SessionFactoryImplementor factory;
 
 	public CustomPersister(
-			PersistentClass model, 
+			PersistentClass model,
 			EntityRegionAccessStrategy cacheAccessStrategy,
-			SessionFactoryImplementor factory, 
+			SessionFactoryImplementor factory,
 			Mapping mapping) {
 		this.factory = factory;
 	}
@@ -67,7 +68,7 @@ public class CustomPersister implements EntityPersister {
 	public boolean isInherited() {
 		return false;
 	}
-	
+
 	public SessionFactoryImplementor getFactory() {
 		return factory;
 	}
@@ -101,7 +102,7 @@ public class CustomPersister implements EntityPersister {
 	public boolean isMutable() {
 		return true;
 	}
-	
+
 	public boolean isSelectBeforeUpdateRequired() {
 		return false;
 	}
@@ -333,29 +334,29 @@ public class CustomPersister implements EntityPersister {
 		Custom obj = (Custom) INSTANCES.get(id);
 		if (obj!=null) {
 			clone = (Custom) obj.clone();
-			TwoPhaseLoad.addUninitializedEntity( 
-					new EntityKey( id, this, session.getEntityMode() ), 
-					clone, 
-					this, 
-					LockMode.NONE, 
+			TwoPhaseLoad.addUninitializedEntity(
+					new EntityKey( id, this, session.getEntityMode() ),
+					clone,
+					this,
+					LockMode.NONE,
 					false,
 					session
 				);
 			TwoPhaseLoad.postHydrate(
-					this, id, 
-					new String[] { obj.getName() }, 
-					null, 
-					clone, 
-					LockMode.NONE, 
-					false, 
+					this, id,
+					new String[] { obj.getName() },
+					null,
+					clone,
+					LockMode.NONE,
+					false,
 					session
 				);
-			TwoPhaseLoad.initializeEntity( 
-					clone, 
-					false, 
-					session, 
-					new PreLoadEvent( (EventSource) session ), 
-					new PostLoadEvent( (EventSource) session ) 
+			TwoPhaseLoad.initializeEntity(
+					clone,
+					false,
+					session,
+					new PreLoadEvent( (EventSource) session ),
+					new PostLoadEvent( (EventSource) session )
 				);
 		}
 		return clone;
@@ -586,19 +587,19 @@ public class CustomPersister implements EntityPersister {
 
 	public void applyFilters(Select select, String alias, Map filters) {
 	}
-	
-	
+
+
 	public void afterInitialize(Object entity, boolean fetched, SessionImplementor session) {
 	}
 
 	public void afterReassociate(Object entity, SessionImplementor session) {
 	}
 
-	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session) 
+	public Object[] getDatabaseSnapshot(Serializable id, SessionImplementor session)
 	throws HibernateException {
 		return null;
 	}
-	
+
 	public boolean[] getPropertyVersionability() {
 		return MUTABILITY;
 	}

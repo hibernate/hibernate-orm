@@ -29,8 +29,8 @@ import java.util.Set;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.SingletonIterator;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.SingletonIterator;
 import org.jboss.logging.Logger;
 
 /**

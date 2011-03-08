@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.BinaryStream;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * TODO : javadoc
@@ -47,7 +48,8 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 			this.type = type;
 		}
 
-		@SuppressWarnings({ "unchecked" })
+		@Override
+        @SuppressWarnings({ "unchecked" })
 		public S deepCopyNotNull(S value) {
 			return (S) SerializationHelper.clone( value );
 		}

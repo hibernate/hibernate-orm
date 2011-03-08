@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -67,6 +68,7 @@ import org.hibernate.event.PreLoadEvent;
 import org.hibernate.hql.HolderInstantiator;
 import org.hibernate.impl.FetchingScrollableResultsImpl;
 import org.hibernate.impl.ScrollableResultsImpl;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -79,7 +81,6 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -1707,10 +1708,16 @@ public abstract class Loader {
 		boolean useOffset = hasFirstRow && useLimit && dialect.supportsLimitOffset();
 		boolean callable = queryParameters.isCallable();
 
-		boolean useScrollableResultSetToSkip = hasFirstRow &&
+		final boolean canScroll = getFactory().getSettings().isScrollableResultSetsEnabled();
+		final boolean useScrollableResultSetToSkip = hasFirstRow &&
 				!useOffset &&
 				getFactory().getSettings().isScrollableResultSetsEnabled();
-		ScrollMode scrollMode = scroll ? queryParameters.getScrollMode() : ScrollMode.SCROLL_INSENSITIVE;
+		final ScrollMode scrollMode =
+				canScroll
+						? scroll || useScrollableResultSetToSkip
+								? queryParameters.getScrollMode()
+								: ScrollMode.SCROLL_INSENSITIVE
+						: null;
 
 		if ( useLimit ) {
 			sql = dialect.getLimitString(
@@ -1724,11 +1731,11 @@ public abstract class Loader {
 
 		PreparedStatement st = null;
 
-		st = session.getJDBCContext().getConnectionManager().prepareQueryStatement(
+
+		st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 				sql,
-				scroll || useScrollableResultSetToSkip,
-				scrollMode,
-				callable
+				callable,
+				scrollMode
 		);
 
 		try {

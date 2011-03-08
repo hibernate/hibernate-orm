@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.search;
+
 import java.util.Properties;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateLogger;
@@ -32,7 +33,7 @@ import org.hibernate.event.PostCollectionUpdateEventListener;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

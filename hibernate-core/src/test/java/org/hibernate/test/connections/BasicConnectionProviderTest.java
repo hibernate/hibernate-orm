@@ -27,7 +27,6 @@ public class BasicConnectionProviderTest extends ConnectionManagementTestCase {
 	}
 
 	protected void reconnect(Session session) {
-		session.reconnect();
 	}
 
 	public void configure(Configuration cfg) {

@@ -35,7 +35,7 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	public static final BlobType INSTANCE = new BlobType();
 
 	public BlobType() {
-		super( org.hibernate.type.descriptor.sql.BlobTypeDescriptor.INSTANCE, BlobTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.sql.BlobTypeDescriptor.DEFAULT, BlobTypeDescriptor.INSTANCE );
 	}
 
 	/**

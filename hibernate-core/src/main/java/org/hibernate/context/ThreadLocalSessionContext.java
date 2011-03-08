@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.context;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -40,6 +41,10 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.transaction.spi.TransactionContext;
+import org.hibernate.event.EventSource;
 import org.jboss.logging.Logger;
 
 /**
@@ -73,11 +78,11 @@ public class ThreadLocalSessionContext implements CurrentSessionContext {
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
                                                                        ThreadLocalSessionContext.class.getName());
 	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
-			org.hibernate.classic.Session.class,
-	        org.hibernate.engine.SessionImplementor.class,
-	        org.hibernate.engine.jdbc.spi.JDBCContext.Context.class,
-	        org.hibernate.event.EventSource.class,
-			org.hibernate.engine.jdbc.LobCreationContext.class
+			Session.class,
+	        SessionImplementor.class,
+	        EventSource.class,
+			TransactionContext.class,
+			LobCreationContext.class
 	};
 
 	/**

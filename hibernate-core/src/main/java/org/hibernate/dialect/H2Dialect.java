@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateLogger;
@@ -32,8 +33,8 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

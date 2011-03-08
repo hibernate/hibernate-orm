@@ -100,6 +100,9 @@ public class ServiceInitializer {
 
 		// PHASE 1 : create service
 		T service = createService( serviceRole );
+		if ( service == null ) {
+			return null;
+		}
 
 		// PHASE 2 : configure service (***potentially recursive***)
 		configureService( service );
@@ -144,13 +147,18 @@ public class ServiceInitializer {
 	}
 
 	private <T extends Service> void applyInjections(T service) {
-		for ( Method method : service.getClass().getMethods() ) {
-			InjectService injectService = method.getAnnotation( InjectService.class );
-			if ( injectService == null ) {
-				continue;
-			}
+		try {
+			for ( Method method : service.getClass().getMethods() ) {
+				InjectService injectService = method.getAnnotation( InjectService.class );
+				if ( injectService == null ) {
+					continue;
+				}
 
-			applyInjection( service, method, injectService );
+				applyInjection( service, method, injectService );
+			}
+		}
+		catch (NullPointerException e) {
+            LOG.error("NPE injecting service deps : " + service.getClass().getName());
 		}
 	}
 

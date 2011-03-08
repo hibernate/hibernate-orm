@@ -23,19 +23,20 @@
  *
  */
 package org.hibernate.persister.entity;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.Mapping;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.sql.Template;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -275,7 +276,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 				int length = types[i].getColumnSpan(factory);
 				String[] columnSlice = ArrayHelper.slice(columns, begin, length);
 				String[] columnReaderSlice = ArrayHelper.slice(columnReaders, begin, length);
-				String[] columnReaderTemplateSlice = ArrayHelper.slice(columnReaderTemplates, begin, length);
+				String[] columnReaderTemplateSlice = ArrayHelper.slice( columnReaderTemplates, begin, length );
 				String[] formulaSlice = formulaTemplates==null ?
 						null : ArrayHelper.slice(formulaTemplates, begin, length);
 				initPropertyPaths(subpath, types[i], columnSlice, columnReaderSlice, columnReaderTemplateSlice, formulaSlice, factory);

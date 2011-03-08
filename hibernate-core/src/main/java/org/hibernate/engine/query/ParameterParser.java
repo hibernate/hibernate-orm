@@ -25,7 +25,7 @@
 package org.hibernate.engine.query;
 import org.hibernate.QueryException;
 import org.hibernate.hql.classic.ParserHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * The single available method {@link #parse} is responsible for parsing a

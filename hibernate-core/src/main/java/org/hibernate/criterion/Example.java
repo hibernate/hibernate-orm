@@ -31,10 +31,10 @@ import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Support for query by example.

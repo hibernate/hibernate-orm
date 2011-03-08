@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.cfg.annotations.reflection;
+
 import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -126,8 +127,8 @@ import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.Filter;
 import org.hibernate.annotations.common.reflection.ReflectionUtil;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -140,6 +141,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public class JPAOverridenAnnotationReader implements AnnotationReader {
+
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
                                                                        JPAOverridenAnnotationReader.class.getName());
 	private static final Map<Class, String> annotationToXml;

@@ -23,8 +23,9 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import antlr.Token;
 import antlr.collections.AST;
 
@@ -59,7 +60,8 @@ public class Node extends antlr.CommonAST {
 		return getText();
 	}
 
-	public void initialize(Token tok) {
+	@Override
+    public void initialize(Token tok) {
 		super.initialize(tok);
 		filename = tok.getFilename();
 		line = tok.getLine();
@@ -68,7 +70,8 @@ public class Node extends antlr.CommonAST {
 		textLength = StringHelper.isEmpty(text) ? 0 : text.length();
 	}
 
-	public void initialize(AST t) {
+	@Override
+    public void initialize(AST t) {
 		super.initialize( t );
 		if ( t instanceof Node ) {
 			Node n = (Node)t;
@@ -83,11 +86,13 @@ public class Node extends antlr.CommonAST {
 		return filename;
 	}
 
-	public int getLine() {
+	@Override
+    public int getLine() {
 		return line;
 	}
 
-	public int getColumn() {
+	@Override
+    public int getColumn() {
 		return column;
 	}
 

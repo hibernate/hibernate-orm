@@ -23,12 +23,13 @@
  *
  */
 package org.hibernate.hql.classic;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.QueryException;
 import org.hibernate.hql.CollectionProperties;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  *

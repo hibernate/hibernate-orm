@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.lang.reflect.Method;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -233,7 +234,7 @@ public String getForUpdateString() {
     public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
-	
+
 	@Override
     public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;

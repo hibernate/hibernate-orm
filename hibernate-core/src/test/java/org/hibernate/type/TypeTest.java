@@ -40,8 +40,8 @@ import junit.framework.TestCase;
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.SerializationHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.SerializationHelper;
 
 /**
  * TODO : javadoc

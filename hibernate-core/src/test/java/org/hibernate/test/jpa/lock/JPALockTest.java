@@ -1,14 +1,15 @@
 package org.hibernate.test.jpa.lock;
+
 import junit.framework.Test;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.MyEntity;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Tests specifically relating to section 3.3.5.3 [Lock Modes] of the

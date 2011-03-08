@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -40,8 +41,8 @@ import javax.persistence.criteria.ParameterExpression;
 import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

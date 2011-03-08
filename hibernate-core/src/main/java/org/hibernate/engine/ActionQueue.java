@@ -38,9 +38,11 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.action.AfterTransactionCompletionProcess;
 import org.hibernate.action.BeforeTransactionCompletionProcess;
 import org.hibernate.action.BulkOperationCleanupAction;
+import org.hibernate.action.CollectionAction;
 import org.hibernate.action.CollectionRecreateAction;
 import org.hibernate.action.CollectionRemoveAction;
 import org.hibernate.action.CollectionUpdateAction;
+import org.hibernate.action.EntityAction;
 import org.hibernate.action.EntityDeleteAction;
 import org.hibernate.action.EntityIdentityInsertAction;
 import org.hibernate.action.EntityInsertAction;
@@ -260,7 +262,7 @@ public class ActionQueue {
 			execute( ( Executable ) list.get( i ) );
 		}
 		list.clear();
-		session.getJDBCContext().getConnectionManager().executeBatch();
+		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
 	}
 
 	public void execute(Executable executable) {
@@ -476,42 +478,54 @@ public class ActionQueue {
         LOG.trace("Starting deserialization of [" + queueSize + "] insertions entries");
 		rtn.insertions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			rtn.insertions.add( ois.readObject() );
+			EntityAction action = ( EntityAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.insertions.add( action );
 		}
 
 		queueSize = ois.readInt();
         LOG.trace("Starting deserialization of [" + queueSize + "] deletions entries");
 		rtn.deletions = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			rtn.deletions.add( ois.readObject() );
+			EntityAction action = ( EntityAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.deletions.add( action );
 		}
 
 		queueSize = ois.readInt();
         LOG.trace("Starting deserialization of [" + queueSize + "] updates entries");
 		rtn.updates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			rtn.updates.add( ois.readObject() );
+			EntityAction action = ( EntityAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.updates.add( action );
 		}
 
 		queueSize = ois.readInt();
         LOG.trace("Starting deserialization of [" + queueSize + "] collectionUpdates entries");
 		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			rtn.collectionUpdates.add( ois.readObject() );
+			CollectionAction action = ( CollectionAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.collectionUpdates.add( action );
 		}
 
 		queueSize = ois.readInt();
         LOG.trace("Starting deserialization of [" + queueSize + "] collectionRemovals entries");
 		rtn.collectionRemovals = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			rtn.collectionRemovals.add( ois.readObject() );
+			CollectionAction action = ( CollectionAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.collectionRemovals.add( action );
 		}
 
 		queueSize = ois.readInt();
         LOG.trace("Starting deserialization of [" + queueSize + "] collectionCreations entries");
 		rtn.collectionCreations = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			rtn.collectionCreations.add( ois.readObject() );
+			CollectionAction action = ( CollectionAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.collectionCreations.add( action );
 		}
 		return rtn;
 	}

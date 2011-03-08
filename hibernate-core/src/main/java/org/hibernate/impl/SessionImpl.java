@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2005-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.impl;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -66,7 +66,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionException;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeHelper;
@@ -81,16 +80,19 @@ import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.internal.JDBCContextImpl;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.FilterQueryPlan;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
+import org.hibernate.engine.transaction.spi.TransactionContext;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.event.AutoFlushEvent;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.DeleteEvent;
@@ -120,6 +122,9 @@ import org.hibernate.event.ReplicateEvent;
 import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.event.SaveOrUpdateEventListener;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
@@ -134,55 +139,56 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.SessionStatisticsImpl;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
-
 /**
- * Concrete implementation of a Session, and also the central, organizing component
- * of Hibernate's internal implementation. As such, this class exposes two interfaces;
- * Session itself, to the application, and SessionImplementor, to other components
- * of Hibernate. This class is not threadsafe.
+ * Concrete implementation of a Session.
+ *
+ * Exposes two interfaces:<ul>
+ *     <li>{@link Session} to the application</li>
+ *     <li>{@link org.hibernate.engine.SessionImplementor} to other Hibernate components (SPI)</li>
+ * </ul>
+ *
+ * This class is not thread-safe.
  *
  * @author Gavin King
  */
-public final class SessionImpl extends AbstractSessionImpl
-		implements EventSource, org.hibernate.classic.Session, JDBCContext.Context, LobCreationContext {
+public final class SessionImpl
+		extends AbstractSessionImpl
+		implements EventSource,
+				   org.hibernate.classic.Session,
+				   TransactionContext,
+				   LobCreationContext {
 
 	// todo : need to find a clean way to handle the "event source" role
-	// a seperate classs responsible for generating/dispatching events just duplicates most of the Session methods...
-	// passing around seperate reto interceptor, factory, actionQueue, and persistentContext is not manageable...
+	// a separate class responsible for generating/dispatching events just duplicates most of the Session methods...
+	// passing around separate interceptor, factory, actionQueue, and persistentContext is not manageable...
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SessionImpl.class.getName());
 
-	private transient EntityMode entityMode = EntityMode.POJO;
-	private transient boolean autoClear; //for EJB3
-
 	private transient long timestamp;
-	private transient FlushMode flushMode = FlushMode.AUTO;
-	private transient CacheMode cacheMode = CacheMode.NORMAL;
-
-	private transient Interceptor interceptor;
-
-	private transient int dontFlushFromFind = 0;
 
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
-	private transient JDBCContextImpl jdbcContext;
+	private transient TransactionCoordinatorImpl transactionCoordinator;
 	private transient EventListeners listeners;
+	private transient Interceptor interceptor;
+	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
+	private transient ConnectionReleaseMode connectionReleaseMode;
+	private transient FlushMode flushMode = FlushMode.AUTO;
+	private transient CacheMode cacheMode = CacheMode.NORMAL;
+	private transient EntityMode entityMode = EntityMode.POJO;
+	private transient boolean autoClear; //for EJB3
+
+	private transient int dontFlushFromFind = 0;
 	private transient boolean flushBeforeCompletionEnabled;
 	private transient boolean autoCloseSessionEnabled;
-	private transient ConnectionReleaseMode connectionReleaseMode;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
 	private transient Session rootSession;
 	private transient Map childSessionsByEntityMode;
-
-	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
 	/**
 	 * Constructor used in building "child sessions".
@@ -194,7 +200,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		super( parent.factory );
 		this.rootSession = parent;
 		this.timestamp = parent.timestamp;
-		this.jdbcContext = parent.jdbcContext;
+		this.transactionCoordinator = parent.transactionCoordinator;
 		this.interceptor = parent.interceptor;
 		this.listeners = parent.listeners;
 		this.actionQueue = new ActionQueue( this );
@@ -246,7 +252,11 @@ public final class SessionImpl extends AbstractSessionImpl
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
 		this.autoCloseSessionEnabled = autoCloseSessionEnabled;
 		this.connectionReleaseMode = connectionReleaseMode;
-		this.jdbcContext = new JDBCContextImpl( this, connection, interceptor );
+
+		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
+		this.transactionCoordinator.getJdbcCoordinator().getLogicalConnection().addObserver(
+				new ConnectionObserverStatsBridge( factory )
+		);
 
 		loadQueryInfluencers = new LoadQueryInfluencers( factory );
 
@@ -321,7 +331,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			}
 
 			if ( rootSession == null ) {
-				return jdbcContext.getConnectionManager().close();
+				return transactionCoordinator.close();
 			}
 			else {
 				return null;
@@ -334,7 +344,6 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public ConnectionReleaseMode getConnectionReleaseMode() {
-		checkTransactionSynchStatus();
 		return connectionReleaseMode;
 	}
 
@@ -514,50 +523,32 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Connection connection() throws HibernateException {
 		errorIfClosed();
-		return jdbcContext.borrowConnection();
+		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getDistinctConnectionProxy();
 	}
 
 	public boolean isConnected() {
 		checkTransactionSynchStatus();
-		return !isClosed() && jdbcContext.getConnectionManager().isCurrentlyConnected();
+		return !isClosed() && transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isOpen();
 	}
 
 	public boolean isTransactionInProgress() {
 		checkTransactionSynchStatus();
-		return !isClosed() && jdbcContext.isTransactionInProgress();
+		return !isClosed() && transactionCoordinator.isTransactionInProgress();
 	}
 
+	@Override
 	public Connection disconnect() throws HibernateException {
 		errorIfClosed();
         LOG.debugf("Disconnecting session");
-		return jdbcContext.getConnectionManager().manualDisconnect();
+		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualDisconnect();
 	}
 
-	public void reconnect() throws HibernateException {
-		errorIfClosed();
-        LOG.debugf("Reconnecting session");
-		checkTransactionSynchStatus();
-		jdbcContext.getConnectionManager().manualReconnect();
-	}
-
+	@Override
 	public void reconnect(Connection conn) throws HibernateException {
 		errorIfClosed();
         LOG.debugf("Reconnecting session");
 		checkTransactionSynchStatus();
-		jdbcContext.getConnectionManager().manualReconnect( conn );
-	}
-
-	public void beforeTransactionCompletion(Transaction tx) {
-        LOG.trace("Before transaction completion");
-		actionQueue.beforeTransactionCompletion();
-		if ( rootSession == null ) {
-			try {
-				interceptor.beforeTransactionCompletion(tx);
-			}
-			catch (Throwable t) {
-                LOG.exceptionInBeforeTransactionCompletionInterceptor(t);
-			}
-		}
+		transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
 	}
 
 	public void setAutoClear(boolean enabled) {
@@ -572,18 +563,39 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * completion processing
 	 */
 	public void afterOperation(boolean success) {
-		if ( !jdbcContext.isTransactionInProgress() ) {
-			jdbcContext.afterNontransactionalQuery( success );
+		if ( ! transactionCoordinator.isTransactionInProgress() ) {
+			transactionCoordinator.afterNonTransactionalQuery( success );
 		}
 	}
 
-	public void afterTransactionCompletion(boolean success, Transaction tx) {
-        LOG.trace("After transaction completion");
-		persistenceContext.afterTransactionCompletion();
-		actionQueue.afterTransactionCompletion(success);
-		if ( rootSession == null && tx != null ) {
+	@Override
+	public void afterTransactionBegin(TransactionImplementor hibernateTransaction) {
+		errorIfClosed();
+		interceptor.afterTransactionBegin( hibernateTransaction );
+	}
+
+	@Override
+	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction) {
+		LOG.trace( "before transaction completion" );
+		actionQueue.beforeTransactionCompletion();
+		if ( rootSession == null ) {
 			try {
-				interceptor.afterTransactionCompletion(tx);
+				interceptor.beforeTransactionCompletion( hibernateTransaction );
+			}
+			catch (Throwable t) {
+                LOG.exceptionInBeforeTransactionCompletionInterceptor(t);
+			}
+		}
+	}
+
+	@Override
+	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful) {
+		LOG.trace( "after transaction completion" );
+		persistenceContext.afterTransactionCompletion();
+		actionQueue.afterTransactionCompletion( successful );
+		if ( rootSession == null && hibernateTransaction != null ) {
+			try {
+				interceptor.afterTransactionCompletion( hibernateTransaction );
 			}
 			catch (Throwable t) {
                 LOG.exceptionInAfterTransactionCompletionInterceptor(t);
@@ -651,11 +663,11 @@ public final class SessionImpl extends AbstractSessionImpl
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void saveOrUpdate(Object object) throws HibernateException {
-		saveOrUpdate(null, object);
+		saveOrUpdate( null, object );
 	}
 
 	public void saveOrUpdate(String entityName, Object obj) throws HibernateException {
-		fireSaveOrUpdate( new SaveOrUpdateEvent(entityName, obj, this) );
+		fireSaveOrUpdate( new SaveOrUpdateEvent( entityName, obj, this ) );
 	}
 
 	private void fireSaveOrUpdate(SaveOrUpdateEvent event) {
@@ -675,15 +687,15 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public Serializable save(Object obj) throws HibernateException {
-		return save(null, obj);
+		return save( null, obj );
 	}
 
 	public Serializable save(String entityName, Object object) throws HibernateException {
-		return fireSave( new SaveOrUpdateEvent(entityName, object, this) );
+		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
 
 	public void save(String entityName, Object object, Serializable id) throws HibernateException {
-		fireSave( new SaveOrUpdateEvent(entityName, object, id, this) );
+		fireSave( new SaveOrUpdateEvent( entityName, object, id, this ) );
 	}
 
 	private Serializable fireSave(SaveOrUpdateEvent event) {
@@ -704,15 +716,15 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void update(Object obj, Serializable id) throws HibernateException {
-		update(null, obj, id);
+		update( null, obj, id );
 	}
 
 	public void update(String entityName, Object object) throws HibernateException {
-		fireUpdate( new SaveOrUpdateEvent(entityName, object, this) );
+		fireUpdate( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
 
 	public void update(String entityName, Object object, Serializable id) throws HibernateException {
-		fireUpdate(new SaveOrUpdateEvent(entityName, object, id, this));
+		fireUpdate( new SaveOrUpdateEvent( entityName, object, id, this ) );
 	}
 
 	private void fireUpdate(SaveOrUpdateEvent event) {
@@ -744,7 +756,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	private void fireLock( Object object, LockOptions options) {
-		fireLock( new LockEvent( object, options, this) );
+		fireLock( new LockEvent( object, options, this ) );
 	}
 
 	private void fireLock(LockEvent lockEvent) {
@@ -760,16 +772,16 @@ public final class SessionImpl extends AbstractSessionImpl
 	// persist() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void persist(String entityName, Object object) throws HibernateException {
-		firePersist( new PersistEvent(entityName, object, this) );
+		firePersist( new PersistEvent( entityName, object, this ) );
 	}
 
 	public void persist(Object object) throws HibernateException {
-		persist(null, object);
+		persist( null, object );
 	}
 
 	public void persist(String entityName, Object object, Map copiedAlready)
 	throws HibernateException {
-		firePersist( copiedAlready, new PersistEvent(entityName, object, this) );
+		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
 
 	private void firePersist(Map copiedAlready, PersistEvent event) {
@@ -795,16 +807,16 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void persistOnFlush(String entityName, Object object)
 			throws HibernateException {
-		firePersistOnFlush( new PersistEvent(entityName, object, this) );
+		firePersistOnFlush( new PersistEvent( entityName, object, this ) );
 	}
 
 	public void persistOnFlush(Object object) throws HibernateException {
-		persist(null, object);
+		persist( null, object );
 	}
 
 	public void persistOnFlush(String entityName, Object object, Map copiedAlready)
 			throws HibernateException {
-		firePersistOnFlush( copiedAlready, new PersistEvent(entityName, object, this) );
+		firePersistOnFlush( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
 
 	private void firePersistOnFlush(Map copiedAlready, PersistEvent event) {
@@ -829,15 +841,15 @@ public final class SessionImpl extends AbstractSessionImpl
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public Object merge(String entityName, Object object) throws HibernateException {
-		return fireMerge( new MergeEvent(entityName, object, this) );
+		return fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
 	public Object merge(Object object) throws HibernateException {
-		return merge(null, object);
+		return merge( null, object );
 	}
 
 	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
-		fireMerge( copiedAlready, new MergeEvent(entityName, object, this) );
+		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
 
 	private Object fireMerge(MergeEvent event) {
@@ -864,7 +876,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Object saveOrUpdateCopy(String entityName, Object object)
 			throws HibernateException {
-		return fireSaveOrUpdateCopy( new MergeEvent(entityName, object, this) );
+		return fireSaveOrUpdateCopy( new MergeEvent( entityName, object, this ) );
 	}
 
 	public Object saveOrUpdateCopy(Object object) throws HibernateException {
@@ -873,7 +885,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Object saveOrUpdateCopy(String entityName, Object object, Serializable id)
 			throws HibernateException {
-		return fireSaveOrUpdateCopy( new MergeEvent(entityName, object, id, this) );
+		return fireSaveOrUpdateCopy( new MergeEvent( entityName, object, id, this ) );
 	}
 
 	public Object saveOrUpdateCopy(Object object, Serializable id)
@@ -1028,7 +1040,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public Object load(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return load( entityClass.getName(), id, lockOptions);
+		return load( entityClass.getName(), id, lockOptions );
 	}
 
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
@@ -1048,7 +1060,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public Object get(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
-		return get( entityClass.getName(), id, lockOptions);
+		return get( entityClass.getName(), id, lockOptions );
 	}
 
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
@@ -1059,7 +1071,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
 		LoadEvent event = new LoadEvent(id, entityName, lockOptions, this);
-	   	fireLoad(event, LoadEventListener.GET);
+	   	fireLoad( event, LoadEventListener.GET );
 		return event.getResult();
 	}
 
@@ -1088,7 +1100,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void refresh(Object object, Map refreshedAlready) throws HibernateException {
-		fireRefresh( refreshedAlready, new RefreshEvent(object, this) );
+		fireRefresh( refreshedAlready, new RefreshEvent( object, this ) );
 	}
 
 	private void fireRefresh(RefreshEvent refreshEvent) {
@@ -1118,7 +1130,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void replicate(String entityName, Object obj, ReplicationMode replicationMode)
 	throws HibernateException {
-		fireReplicate( new ReplicateEvent(entityName, obj, replicationMode, this) );
+		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
 	}
 
 	private void fireReplicate(ReplicateEvent event) {
@@ -1138,7 +1150,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * (references held by application or other persistant instances are okay)
 	 */
 	public void evict(Object object) throws HibernateException {
-		fireEvict( new EvictEvent(object, this) );
+		fireEvict( new EvictEvent( object, this ) );
 	}
 
 	private void fireEvict(EvictEvent evictEvent) {
@@ -1274,7 +1286,7 @@ public final class SessionImpl extends AbstractSessionImpl
         errorIfClosed();
         checkTransactionSynchStatus();
         queryParameters.validateParameters();
-        NativeSQLQueryPlan plan = getNativeSQLQueryPlan(nativeQuerySpecification);
+        NativeSQLQueryPlan plan = getNativeSQLQueryPlan( nativeQuerySpecification );
 
 
         autoFlushIfRequired( plan.getCustomQuery().getQuerySpaces() );
@@ -1377,11 +1389,11 @@ public final class SessionImpl extends AbstractSessionImpl
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		return super.getNamedQuery(queryName);
+		return super.getNamedQuery( queryName );
 	}
 
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
-		return instantiate( factory.getEntityPersister(entityName), id );
+		return instantiate( factory.getEntityPersister( entityName ), id );
 	}
 
 	/**
@@ -1428,7 +1440,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public Transaction getTransaction() throws HibernateException {
 		errorIfClosed();
-		return jdbcContext.getTransaction();
+		return transactionCoordinator.getTransaction();
 	}
 
 	public Transaction beginTransaction() throws HibernateException {
@@ -1440,11 +1452,6 @@ public final class SessionImpl extends AbstractSessionImpl
 		Transaction result = getTransaction();
 		result.begin();
 		return result;
-	}
-
-	public void afterTransactionBegin(Transaction tx) {
-		errorIfClosed();
-		interceptor.afterTransactionBegin(tx);
 	}
 
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
@@ -1500,7 +1507,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	public Serializable getContextEntityIdentifier(Object object) {
 		errorIfClosed();
 		if ( object instanceof HibernateProxy ) {
-			return getProxyIdentifier(object);
+			return getProxyIdentifier( object );
 		}
 		else {
 			EntityEntry entry = persistenceContext.getEntry(object);
@@ -1735,13 +1742,13 @@ public final class SessionImpl extends AbstractSessionImpl
 	public Query createQuery(String queryString) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		return super.createQuery(queryString);
+		return super.createQuery( queryString );
 	}
 
 	public SQLQuery createSQLQuery(String sql) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		return super.createSQLQuery(sql);
+		return super.createSQLQuery( sql );
 	}
 
 	public Query createSQLQuery(String sql, String returnAlias, Class returnClass) {
@@ -1813,7 +1820,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		}
 	}
 
-	public SessionFactory getSessionFactory() {
+	public SessionFactoryImplementor getSessionFactory() {
 		checkTransactionSynchStatus();
 		return factory;
 	}
@@ -1832,7 +1839,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		if (object instanceof HibernateProxy) {
 			LazyInitializer initializer = ( ( HibernateProxy ) object ).getHibernateLazyInitializer();
 			// it is possible for this method to be called during flush processing,
-			// so make certain that we do not accidently initialize an uninitialized proxy
+			// so make certain that we do not accidentally initialize an uninitialized proxy
 			if ( initializer.isUninitialized() ) {
 				return initializer.getEntityName();
 			}
@@ -1878,7 +1885,7 @@ public final class SessionImpl extends AbstractSessionImpl
 
 	public void cancelQuery() throws HibernateException {
 		errorIfClosed();
-		getJDBCContext().getConnectionManager().cancelLastQuery();
+		getTransactionCoordinator().getJdbcCoordinator().cancelLastQuery();
 	}
 
 	public Interceptor getInterceptor() {
@@ -1957,23 +1964,17 @@ public final class SessionImpl extends AbstractSessionImpl
 	}
 
 	public void doWork(Work work) throws HibernateException {
-		try {
-			work.execute( jdbcContext.getConnectionManager().getConnection() );
-			jdbcContext.getConnectionManager().afterStatement();
-		}
-		catch ( SQLException e ) {
-			throw factory.getSQLExceptionHelper().convert( e, "error executing work" );
-		}
+		transactionCoordinator.getJdbcCoordinator().coordinateWork( work );
 	}
 
 	public void afterScrollOperation() {
 		// nothing to do in a stateful session
 	}
 
-	public JDBCContext getJDBCContext() {
+	@Override
+	public TransactionCoordinator getTransactionCoordinator() {
 		errorIfClosed();
-		checkTransactionSynchStatus();
-		return jdbcContext;
+		return transactionCoordinator;
 	}
 
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
@@ -2072,8 +2073,8 @@ public final class SessionImpl extends AbstractSessionImpl
 
 
 	private void checkTransactionSynchStatus() {
-		if ( jdbcContext != null && !isClosed() ) {
-			jdbcContext.registerSynchronizationIfPossible();
+		if ( !isClosed() ) {
+			transactionCoordinator.pulse();
 		}
 	}
 
@@ -2105,7 +2106,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		listeners = factory.getEventListeners();
 
 		if ( isRootSession ) {
-			jdbcContext = JDBCContextImpl.deserialize( ois, this, interceptor );
+			transactionCoordinator = TransactionCoordinatorImpl.deserialize( ois, this );
 		}
 
 		persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
@@ -2130,7 +2131,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			while ( iter.hasNext() ) {
 				final SessionImpl child = ( ( SessionImpl ) iter.next() );
 				child.rootSession = this;
-				child.jdbcContext = this.jdbcContext;
+				child.transactionCoordinator = this.transactionCoordinator;
 			}
 		}
 	}
@@ -2142,7 +2143,7 @@ public final class SessionImpl extends AbstractSessionImpl
 	 * @throws IOException Indicates a general IO stream exception
 	 */
 	private void writeObject(ObjectOutputStream oos) throws IOException {
-		if ( !jdbcContext.isReadyForSerialization() ) {
+		if ( ! transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isReadyForSerialization() ) {
 			throw new IllegalStateException( "Cannot serialize a session while connected" );
 		}
 
@@ -2164,7 +2165,7 @@ public final class SessionImpl extends AbstractSessionImpl
 		factory.serialize( oos );
 
 		if ( rootSession == null ) {
-			jdbcContext.serialize( oos );
+			transactionCoordinator.serialize( oos );
 		}
 
 		persistenceContext.serialize( oos );
@@ -2178,8 +2179,8 @@ public final class SessionImpl extends AbstractSessionImpl
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object execute(Callback callback) {
-		Connection connection = jdbcContext.getConnectionManager().getConnection();
+	public Object execute(LobCreationContext.Callback callback) {
+		Connection connection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnection();
 		try {
 			return callback.executeOnConnection( connection );
 		}
@@ -2190,7 +2191,7 @@ public final class SessionImpl extends AbstractSessionImpl
 			);
 		}
 		finally {
-			jdbcContext.getConnectionManager().afterStatement();
+			transactionCoordinator.getJdbcCoordinator().getLogicalConnection().afterStatementExecution();
 		}
 	}
 

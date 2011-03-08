@@ -23,14 +23,15 @@
  *
  */
 package org.hibernate.cache;
+
 import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

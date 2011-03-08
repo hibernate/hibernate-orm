@@ -32,12 +32,12 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownUnwrapTypeException;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -49,6 +49,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SuppressWarnings( {"UnnecessaryUnboxing"})
 public class DriverManagerConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
@@ -62,6 +63,8 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 
 	private final ArrayList<Connection> pool = new ArrayList<Connection>();
 	private int checkedOut = 0;
+
+	private boolean stopped;
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
@@ -137,6 +140,7 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 			}
 		}
 		pool.clear();
+		stopped = true;
 	}
 
 	public Connection getConnection() throws SQLException {
@@ -197,8 +201,11 @@ public class DriverManagerConnectionProviderImpl implements ConnectionProvider, 
 	}
 
 	@Override
-    protected void finalize() {
-		stop();
+    protected void finalize() throws Throwable {
+		if ( !stopped ) {
+			stop();
+		}
+		super.finalize();
 	}
 
 	public boolean supportsAggressiveRelease() {

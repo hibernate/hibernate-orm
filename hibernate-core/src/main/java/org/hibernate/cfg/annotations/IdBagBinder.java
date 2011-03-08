@@ -41,7 +41,7 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Emmanuel Bernard

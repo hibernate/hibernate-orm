@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,7 +31,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.classic.ParserHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

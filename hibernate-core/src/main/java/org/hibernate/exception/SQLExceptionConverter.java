@@ -23,6 +23,8 @@
  *
  */
 package org.hibernate.exception;
+
+import java.io.Serializable;
 import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
@@ -40,9 +42,9 @@ import org.hibernate.JDBCException;
  * @author Steve Ebersole
  * @see SQLExceptionConverterFactory
  */
-public interface SQLExceptionConverter {
+public interface SQLExceptionConverter extends Serializable {
 	/**
-	 * Convert the given SQLException into Hibernate's JDBCException hierarchy.
+	 * Convert the given SQLException into the Hibernate {@link JDBCException} hierarchy.
 	 *
 	 * @param sqlException The SQLException to be converted.
 	 * @param message      An optional error message.

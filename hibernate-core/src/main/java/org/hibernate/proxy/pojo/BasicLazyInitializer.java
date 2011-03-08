@@ -22,18 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.proxy.pojo;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
-import org.hibernate.util.MarkerObject;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Lazy initializer for POJOs
- * 
+ *
  * @author Gavin King
  */
 public abstract class BasicLazyInitializer extends AbstractLazyInitializer {

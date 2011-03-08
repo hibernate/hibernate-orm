@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import org.hibernate.MappingException;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * This class maps a type to names. Associations

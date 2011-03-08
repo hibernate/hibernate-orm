@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,14 +47,14 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
-import org.hibernate.jdbc.util.Formatter;
-import org.hibernate.util.ConfigHelper;
-import org.hibernate.util.JDBCExceptionReporter;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -76,7 +77,7 @@ public class SchemaExport {
 	private final List exceptions = new ArrayList();
 	private boolean haltOnError = false;
 	private Formatter formatter;
-	private SQLStatementLogger sqlStatementLogger;
+	private SqlStatementLogger sqlStatementLogger;
 	private static final String DEFAULT_IMPORT_FILE = "/import.sql";
 
 	/**
@@ -93,7 +94,7 @@ public class SchemaExport {
 	 * Create a schema exporter for the given Configuration and given settings
 	 *
 	 * @param cfg The configuration from which to build a schema export.
-	 * @param settings The 'parsed' settings.
+	 * @param jdbcServices The jdbc services
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
 	public SchemaExport(JdbcServices jdbcServices, Configuration cfg) throws HibernateException {
@@ -170,7 +171,7 @@ public class SchemaExport {
 	 *
 	 * @param filename The import file name.
 	 * @return this
-	 * @deprecated use {@link org.hibernate.cfg.Environment.HBM2DDL_IMPORT_FILE}
+	 * @deprecated use {@link org.hibernate.cfg.Environment#HBM2DDL_IMPORT_FILES}
 	 */
 	@Deprecated
     public SchemaExport setImportFile(String filename) {
@@ -400,6 +401,8 @@ public class SchemaExport {
 
 	private void execute(boolean script, boolean export, Writer fileOutput, Statement statement, final String sql)
 			throws IOException, SQLException {
+		final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
+
 		String formatted = formatter.format( sql );
         if (delimiter != null) formatted += delimiter;
         if (script) System.out.println(formatted);
@@ -413,7 +416,7 @@ public class SchemaExport {
 			try {
 				SQLWarning warnings = statement.getWarnings();
 				if ( warnings != null) {
-					JDBCExceptionReporter.logAndClearWarnings( connectionHelper.getConnection() );
+					sqlExceptionHelper.logAndClearWarnings( connectionHelper.getConnection() );
 				}
 			}
 			catch( SQLException sqle ) {

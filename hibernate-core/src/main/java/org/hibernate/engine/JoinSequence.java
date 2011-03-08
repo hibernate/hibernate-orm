@@ -23,17 +23,18 @@
  *
  */
 package org.hibernate.engine;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.QueryJoinFragment;
 import org.hibernate.type.AssociationType;
-import org.hibernate.util.CollectionHelper;
 
 /**
  * @author Gavin King
@@ -50,7 +51,8 @@ public class JoinSequence {
 	private JoinSequence next;
 	private boolean isFromPart = false;
 
-	public String toString() {
+	@Override
+    public String toString() {
 		StringBuffer buf = new StringBuffer();
 		buf.append( "JoinSequence{" );
 		if ( rootJoinable != null ) {
@@ -102,7 +104,8 @@ public class JoinSequence {
 			return lhsColumns;
 		}
 
-		public String toString() {
+		@Override
+        public String toString() {
 			return joinable.toString() + '[' + alias + ']';
 		}
 	}

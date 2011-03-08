@@ -44,8 +44,8 @@ import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,7 @@ import org.hibernate.hql.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.TypeDiscriminatorMetadata;
 import org.hibernate.hql.ast.util.ASTUtil;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.DiscriminatorMetadata;
@@ -43,7 +45,6 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

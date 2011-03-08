@@ -37,6 +37,8 @@ import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.JoinHelper;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
@@ -52,8 +54,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Walks the metamodel, searching for joins, and collecting
@@ -775,11 +775,13 @@ public class JoinWalker {
 			this.columns = columns;
 			this.table = table;
 		}
-		public boolean equals(Object other) {
+		@Override
+        public boolean equals(Object other) {
 			AssociationKey that = (AssociationKey) other;
 			return that.table.equals(table) && Arrays.equals(columns, that.columns);
 		}
-		public int hashCode() {
+		@Override
+        public int hashCode() {
 			return table.hashCode(); //TODO: inefficient
 		}
 	}
@@ -990,7 +992,7 @@ public class JoinWalker {
 		aliases = new String[joins];
 		owners = new int[joins];
 		ownerAssociationTypes = new EntityType[joins];
-		lockModeArray = ArrayHelper.fillArray(lockOptions.getLockMode(), joins);
+		lockModeArray = ArrayHelper.fillArray( lockOptions.getLockMode(), joins );
 
 		int i=0;
 		int j=0;

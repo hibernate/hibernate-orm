@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,12 +43,12 @@ import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

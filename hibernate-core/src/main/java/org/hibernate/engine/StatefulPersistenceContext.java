@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.engine;
+
 import static org.jboss.logging.Logger.Level.WARN;
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -48,14 +49,14 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.loading.LoadContexts;
+import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.ElementWrapper;
-import org.hibernate.util.IdentityMap;
-import org.hibernate.util.MarkerObject;
 import org.jboss.logging.Logger;
 
 /**

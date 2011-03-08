@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.PreparedStatement;
@@ -40,12 +41,12 @@ import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.tuple.EntityModeToTuplizerMapping;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Handles "component" mappings
@@ -117,7 +118,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return span;
 	}
 
-	public final boolean isComponentType() {
+	@Override
+    public final boolean isComponentType() {
 		return true;
 	}
 
@@ -125,7 +127,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return tuplizerMapping.getTuplizer( EntityMode.POJO ).getMappedClass(); //TODO
 	}
 
-	public boolean isSame(Object x, Object y, EntityMode entityMode) throws HibernateException {
+	@Override
+    public boolean isSame(Object x, Object y, EntityMode entityMode) throws HibernateException {
 		if ( x == y ) {
 			return true;
 		}
@@ -142,7 +145,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return true;
 	}
 
-	public boolean isEqual(Object x, Object y, EntityMode entityMode)
+	@Override
+    public boolean isEqual(Object x, Object y, EntityMode entityMode)
 			throws HibernateException {
 		if ( x == y ) {
 			return true;
@@ -160,7 +164,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return true;
 	}
 
-	public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory)
+	@Override
+    public boolean isEqual(Object x, Object y, EntityMode entityMode, SessionFactoryImplementor factory)
 			throws HibernateException {
 		if ( x == y ) {
 			return true;
@@ -178,7 +183,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return true;
 	}
 
-	public int compare(Object x, Object y, EntityMode entityMode) {
+	@Override
+    public int compare(Object x, Object y, EntityMode entityMode) {
 		if ( x == y ) {
 			return 0;
 		}
@@ -197,7 +203,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return false;
 	}
 
-	public int getHashCode(Object x, EntityMode entityMode) {
+	@Override
+    public int getHashCode(Object x, EntityMode entityMode) {
 		int result = 17;
 		Object[] values = getPropertyValues( x, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -210,7 +217,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return result;
 	}
 
-	public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) {
+	@Override
+    public int getHashCode(Object x, EntityMode entityMode, SessionFactoryImplementor factory) {
 		int result = 17;
 		Object[] values = getPropertyValues( x, entityMode );
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -223,7 +231,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return result;
 	}
 
-	public boolean isDirty(Object x, Object y, SessionImplementor session)
+	@Override
+    public boolean isDirty(Object x, Object y, SessionImplementor session)
 			throws HibernateException {
 		if ( x == y ) {
 			return false;
@@ -276,7 +285,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return false;
 	}
 
-	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
+	@Override
+    public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
 			throws HibernateException {
 
 		if ( current == null ) {
@@ -473,7 +483,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return result;
 	}
 
-	public Object replace(
+	@Override
+    public Object replace(
 			Object original,
 			Object target,
 			SessionImplementor session,
@@ -538,7 +549,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return true;
 	}
 
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
+	@Override
+    public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( value == null ) {
@@ -553,7 +565,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		}
 	}
 
-	public Object assemble(Serializable object, SessionImplementor session, Object owner)
+	@Override
+    public Object assemble(Serializable object, SessionImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( object == null ) {
@@ -575,7 +588,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return joinedFetch[i];
 	}
 
-	public Object hydrate(
+	@Override
+    public Object hydrate(
 			final ResultSet rs,
 			final String[] names,
 			final SessionImplementor session,
@@ -604,7 +618,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return notNull ? values : null;
 	}
 
-	public Object resolve(Object value, SessionImplementor session, Object owner)
+	@Override
+    public Object resolve(Object value, SessionImplementor session, Object owner)
 			throws HibernateException {
 
 		if ( value != null ) {
@@ -622,7 +637,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		}
 	}
 
-	public Object semiResolve(Object value, SessionImplementor session, Object owner)
+	@Override
+    public Object semiResolve(Object value, SessionImplementor session, Object owner)
 			throws HibernateException {
 		//note that this implementation is kinda broken
 		//for components with many-to-one associations
@@ -633,7 +649,8 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return propertyNullability;
 	}
 
-	public boolean isXMLElement() {
+	@Override
+    public boolean isXMLElement() {
 		return true;
 	}
 

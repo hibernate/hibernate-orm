@@ -41,7 +41,7 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.XmlRepresentableType;
-import org.hibernate.util.CollectionHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * A persistent wrapper for an XML element

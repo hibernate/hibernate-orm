@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -98,7 +99,7 @@ public class SequenceIdentityGenerator extends SequenceGenerator
 
 		@Override
         protected PreparedStatement prepare(String insertSQL, SessionImplementor session) throws SQLException {
-			return session.getJDBCContext().getConnectionManager().prepareStatement( insertSQL, keyColumns );
+			return session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( insertSQL, keyColumns );
 		}
 
 		@Override

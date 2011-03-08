@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.context;
+
 import java.util.Hashtable;
 import java.util.Map;
 import javax.transaction.Synchronization;
@@ -33,7 +34,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.util.JTAHelper;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.jboss.logging.Logger;
 
 /**
@@ -74,7 +76,8 @@ public class JTASessionContext implements CurrentSessionContext {
 	 * {@inheritDoc}
 	 */
 	public Session currentSession() throws HibernateException {
-		TransactionManager transactionManager = factory.getTransactionManager();
+		final JtaPlatform jtaPlatform = factory.getServiceRegistry().getService( JtaPlatform.class );
+		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();
 		if ( transactionManager == null ) {
 			throw new HibernateException( "No TransactionManagerLookup specified" );
 		}
@@ -85,9 +88,9 @@ public class JTASessionContext implements CurrentSessionContext {
 			if ( txn == null ) {
 				throw new HibernateException( "Unable to locate current JTA transaction" );
 			}
-			if ( !JTAHelper.isInProgress( txn.getStatus() ) ) {
+			if ( !JtaStatusHelper.isActive( txn.getStatus() ) ) {
 				// We could register the session against the transaction even though it is
-				// not started, but we'd have no guarentee of ever getting the map
+				// not started, but we'd have no guarantee of ever getting the map
 				// entries cleaned up (aside from spawning threads).
 				throw new HibernateException( "Current transaction is not in progress" );
 			}
@@ -99,9 +102,7 @@ public class JTASessionContext implements CurrentSessionContext {
 			throw new HibernateException( "Problem locating/validating JTA transaction", t );
 		}
 
-		final Object txnIdentifier = factory.getSettings().getTransactionManagerLookup() == null
-				? txn
-				: factory.getSettings().getTransactionManagerLookup().getTransactionIdentifier( txn );
+		final Object txnIdentifier = jtaPlatform.getTransactionIdentifier( txn );
 
 		Session currentSession = ( Session ) currentSessionMap.get( txnIdentifier );
 

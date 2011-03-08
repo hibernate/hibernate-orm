@@ -23,14 +23,15 @@
  *
  */
 package org.hibernate.loader;
+
 import java.util.Map;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * EntityAliases which handles the logic of selecting user provided aliases (via return-property),
- * before using the default aliases. 
+ * before using the default aliases.
  *
  * @author max
  *
@@ -43,7 +44,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	private final String suffixedDiscriminatorColumn;
 	private final String suffix;
 	private final String rowIdAlias;
-	private final Map userProvidedAliases;	
+	private final Map userProvidedAliases;
 
 	/**
 	 * Calculate and cache select-clause aliases
@@ -109,16 +110,16 @@ public class DefaultEntityAliases implements EntityAliases {
 	protected String[] getIdentifierAliases(Loadable persister, String suffix) {
 		return persister.getIdentifierAliases(suffix);
 	}
-	
+
 	protected String[] getPropertyAliases(Loadable persister, int j) {
 		return persister.getPropertyAliases(suffix, j);
 	}
-	
+
 	private String[] getUserProvidedAliases(String propertyPath, String[] defaultAliases) {
 		String[] result = (String[]) userProvidedAliases.get(propertyPath);
 		if (result==null) {
-			return defaultAliases;			
-		} 
+			return defaultAliases;
+		}
 		else {
 			return result;
 		}
@@ -128,7 +129,7 @@ public class DefaultEntityAliases implements EntityAliases {
 		String[] columns = (String[]) userProvidedAliases.get(propertyPath);
 		if (columns==null) {
 			return defaultAlias;
-		} 
+		}
 		else {
 			return columns[0];
 		}
@@ -147,7 +148,7 @@ public class DefaultEntityAliases implements EntityAliases {
 			);
 			suffixedPropertyAliases[j] = StringHelper.unquote( suffixedPropertyAliases[j], persister.getFactory().getDialect() );
 			intern( suffixedPropertyAliases[j] );
-		}			
+		}
 		return suffixedPropertyAliases;
 	}
 
@@ -185,7 +186,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	public String getRowIdAlias() {
 		return rowIdAlias;
 	}
-	
+
 	private static void intern(String[] strings) {
 		for (int i=0; i<strings.length; i++ ) {
 			strings[i] = strings[i].intern();

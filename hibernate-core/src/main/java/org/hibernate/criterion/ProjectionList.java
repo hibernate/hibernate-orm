@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * @author Gavin King
@@ -150,7 +150,7 @@ public class ProjectionList implements EnhancedProjection {
 		List result = new ArrayList( getLength() );
 		for ( int i=0; i<getLength(); i++ ) {
 			String[] aliases = getProjection(i).getAliases();
-			ArrayHelper.addAll(result, aliases);
+			ArrayHelper.addAll( result, aliases );
 		}
 		return ArrayHelper.toStringArray(result);
 

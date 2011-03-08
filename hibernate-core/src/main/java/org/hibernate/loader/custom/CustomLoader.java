@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.loader.custom;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -41,6 +42,8 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.HolderInstantiator;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.Loader;
@@ -52,18 +55,16 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
 
 
 /**
  * Extension point for loaders which use a SQL result set with "unexpected" column aliases.
- * 
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public class CustomLoader extends Loader {
-	
+
 	// Currently *not* cachable if autodiscover types is in effect (e.g. "select * ...")
 
 	private final String sql;
@@ -287,11 +288,13 @@ public class CustomLoader extends Loader {
 		return ( Queryable ) getFactory().getEntityPersister( entityName );
 	}
 
-	protected String getQueryIdentifier() {
+	@Override
+    protected String getQueryIdentifier() {
 		return sql;
 	}
 
-	protected String getSQLString() {
+	@Override
+    protected String getSQLString() {
 		return sql;
 	}
 
@@ -299,23 +302,28 @@ public class CustomLoader extends Loader {
 		return querySpaces;
 	}
 
-	protected LockMode[] getLockModes(LockOptions lockOptions) {
+	@Override
+    protected LockMode[] getLockModes(LockOptions lockOptions) {
 		return lockModes;
 	}
 
-	protected Loadable[] getEntityPersisters() {
+	@Override
+    protected Loadable[] getEntityPersisters() {
 		return entityPersisters;
 	}
 
-	protected CollectionPersister[] getCollectionPersisters() {
+	@Override
+    protected CollectionPersister[] getCollectionPersisters() {
 		return collectionPersisters;
 	}
 
-	protected int[] getCollectionOwners() {
+	@Override
+    protected int[] getCollectionOwners() {
 		return collectionOwners;
 	}
-	
-	protected int[] getOwners() {
+
+	@Override
+    protected int[] getOwners() {
 		return entiytOwners;
 	}
 
@@ -325,7 +333,7 @@ public class CustomLoader extends Loader {
 
 	public ScrollableResults scroll(
 			final QueryParameters queryParameters,
-			final SessionImplementor session) throws HibernateException {		
+			final SessionImplementor session) throws HibernateException {
 		return scroll(
 				queryParameters,
 				resultTypes,
@@ -333,7 +341,7 @@ public class CustomLoader extends Loader {
 				session
 		);
 	}
-	
+
 	static private HolderInstantiator getHolderInstantiator(ResultTransformer resultTransformer, String[] queryReturnAliases) {
 		if ( resultTransformer == null ) {
 			return HolderInstantiator.NOOP_INSTANTIATOR;
@@ -343,19 +351,23 @@ public class CustomLoader extends Loader {
 		}
 	}
 
-	protected String[] getResultRowAliases() {
+	@Override
+    protected String[] getResultRowAliases() {
 		return transformerAliases;
 	}
 
-	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
+	@Override
+    protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return HolderInstantiator.resolveResultTransformer( null, resultTransformer );
 	}
 
-	protected boolean[] includeInResultRow() {
+	@Override
+    protected boolean[] includeInResultRow() {
 		return includeInResultRow;
 	}
 
-	protected Object getResultColumnOrRow(
+	@Override
+    protected Object getResultColumnOrRow(
 			Object[] row,
 	        ResultTransformer transformer,
 	        ResultSet rs,
@@ -363,12 +375,14 @@ public class CustomLoader extends Loader {
 		return rowProcessor.buildResultRow( row, rs, transformer != null, session );
 	}
 
-	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
+	@Override
+    protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 		return rowProcessor.buildResultRow( row, rs, session );
 	}
 
-	protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
+	@Override
+    protected List getResultList(List results, ResultTransformer resultTransformer) throws QueryException {
 		// meant to handle dynamic instantiation queries...(Copy from QueryLoader)
 		HolderInstantiator holderInstantiator = HolderInstantiator.getHolderInstantiator(
 				null,
@@ -381,7 +395,7 @@ public class CustomLoader extends Loader {
 				Object result = holderInstantiator.instantiate(row);
 				results.set( i, result );
 			}
-			
+
 			return resultTransformer.transformList(results);
 		}
 		else {
@@ -392,16 +406,19 @@ public class CustomLoader extends Loader {
 	private String[] getReturnAliasesForTransformer() {
 		return transformerAliases;
 	}
-	
-	protected EntityAliases[] getEntityAliases() {
+
+	@Override
+    protected EntityAliases[] getEntityAliases() {
 		return entityAliases;
 	}
 
-	protected CollectionAliases[] getCollectionAliases() {
+	@Override
+    protected CollectionAliases[] getCollectionAliases() {
 		return collectionAliases;
 	}
-	
-	public int[] getNamedParameterLocs(String name) throws QueryException {
+
+	@Override
+    public int[] getNamedParameterLocs(String name) throws QueryException {
 		Object loc = namedParameterBindPoints.get( name );
 		if ( loc == null ) {
 			throw new QueryException(
@@ -547,7 +564,8 @@ public class CustomLoader extends Loader {
 		}
 	}
 
-	protected void autoDiscoverTypes(ResultSet rs) {
+	@Override
+    protected void autoDiscoverTypes(ResultSet rs) {
 		try {
 			Metadata metadata = new Metadata( getFactory(), rs );
 			List aliases = new ArrayList();

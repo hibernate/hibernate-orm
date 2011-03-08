@@ -23,18 +23,19 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.hql.ast.DetailedSemanticException;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -66,7 +67,7 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 	public boolean isMap() {
 		return isMap;
 	}
-	
+
 	public boolean isList() {
 		return isList;
 	}
@@ -112,7 +113,8 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 		}
 	}
 
-	protected AST getFirstSelectExpression() {
+	@Override
+    protected AST getFirstSelectExpression() {
 		// Collect the select expressions, skip the first child because it is the class name.
 		return getFirstChild().getNextSibling();
 	}
@@ -120,7 +122,9 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 	/**
 	 * @deprecated (tell clover to ignore this method)
 	 */
-	public Type getDataType() {
+	@Deprecated
+    @Override
+    public Type getDataType() {
 /*
 		// Return the type of the object created by the constructor.
 		AST firstChild = getFirstChild();
@@ -181,7 +185,7 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 			throw new DetailedSemanticException( "Unable to locate appropriate constructor on class [" + className + "]", e );
 		}
 	}
-	
+
 	public Constructor getConstructor() {
 		return constructor;
 	}
@@ -210,11 +214,11 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 		// Constructors are always considered scalar results.
 		return true;
 	}
-	
+
 	public void setAlias(String alias) {
 		throw new UnsupportedOperationException("constructor may not be aliased");
 	}
-	
+
 	public String getAlias() {
 		throw new UnsupportedOperationException("constructor may not be aliased");
 	}

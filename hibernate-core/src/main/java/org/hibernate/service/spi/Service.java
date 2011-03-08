@@ -23,11 +23,14 @@
  */
 package org.hibernate.service.spi;
 
+import java.io.Serializable;
 
 /**
  * Marker interface for services.
+ * <p/>
+ * NOTE : All services must be {@link Serializable}!
  *
  * @author Steve Ebersole
  */
-public interface Service {
+public interface Service extends Serializable {
 }

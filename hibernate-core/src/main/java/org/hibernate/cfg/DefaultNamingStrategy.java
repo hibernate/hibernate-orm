@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * The default <tt>NamingStrategy</tt>

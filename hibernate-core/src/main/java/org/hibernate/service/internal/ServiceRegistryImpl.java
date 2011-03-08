@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.internal.proxy.javassist.ServiceProxyFactoryFactoryImpl;
 import org.hibernate.service.spi.Service;
@@ -39,7 +40,6 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownServiceException;
 import org.hibernate.service.spi.proxy.ServiceProxyFactory;
 import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
-import org.hibernate.util.CollectionHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -72,7 +72,7 @@ public class ServiceRegistryImpl implements ServiceProxyTargetSource {
 	}
 
 	public void destroy() {
-		ListIterator<Service> serviceIterator = serviceList.listIterator();
+		ListIterator<Service> serviceIterator = serviceList.listIterator( serviceList.size() );
 		while ( serviceIterator.hasPrevious() ) {
 			final Service service = serviceIterator.previous();
 			if ( Stoppable.class.isInstance( service ) ) {

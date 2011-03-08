@@ -1,15 +1,18 @@
 package org.hibernate.test.cache.infinispan.functional;
+
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.transaction.CMTTransactionFactory;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.TransactionManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -26,23 +29,26 @@ public abstract class SingleNodeTestCase extends FunctionalTestCase {
       tm = getTransactionManager();
    }
 
-   protected TransactionManager getTransactionManager() {
-      try {
-         if (getTransactionManagerLookupClass() == null)
-            return null;
-         else
-            return getTransactionManagerLookupClass().newInstance().getTransactionManager(null);
-      } catch (Exception e) {
-         log.error("Error", e);
-         throw new RuntimeException(e);
-      }
-   }
+	protected TransactionManager getTransactionManager() {
+		try {
+			Class<? extends JtaPlatform> jtaPlatformClass = getJtaPlatform();
+			if ( jtaPlatformClass == null ) {
+				return null;
+			}
+			else {
+				return jtaPlatformClass.newInstance().retrieveTransactionManager();
+			}
+		}
+		catch (Exception e) {
+			log.error("Error", e);
+			throw new RuntimeException(e);
+		}
+	}
 
-   
    public String[] getMappings() {
-      return new String[] { 
-               "cache/infinispan/functional/Item.hbm.xml", 
-               "cache/infinispan/functional/Customer.hbm.xml", 
+      return new String[] {
+               "cache/infinispan/functional/Item.hbm.xml",
+               "cache/infinispan/functional/Customer.hbm.xml",
                "cache/infinispan/functional/Contact.hbm.xml"};
    }
 
@@ -63,25 +69,27 @@ public abstract class SingleNodeTestCase extends FunctionalTestCase {
       return org.hibernate.test.cache.infinispan.tm.XaConnectionProvider.class;
    }
 
-   protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {
-      return org.hibernate.test.cache.infinispan.tm.XaTransactionManagerLookup.class;
-   }
+	protected Class<? extends JtaPlatform> getJtaPlatform() {
+		return JtaPlatformImpl.class;
+	}
 
    protected boolean getUseQueryCache() {
       return true;
    }
 
-   public void configure(Configuration cfg) {
+   @Override
+public void configure(Configuration cfg) {
       super.configure(cfg);
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
       cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
       cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
-      cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      if (getTransactionManagerLookupClass() != null) {
-         cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
-      }
-      cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
+
+	   if ( getJtaPlatform() != null ) {
+		   cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatform() );
+	   }
+	   cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+	   cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
    }
 
    protected void beginTx() throws Exception {
@@ -107,5 +115,5 @@ public abstract class SingleNodeTestCase extends FunctionalTestCase {
       if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
       else tm.rollback();
    }
-   
+
 }

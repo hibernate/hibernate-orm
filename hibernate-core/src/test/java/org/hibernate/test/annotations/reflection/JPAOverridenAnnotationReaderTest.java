@@ -21,8 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.reflection;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -83,12 +83,11 @@ import org.hibernate.annotations.Columns;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
+import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
-import org.hibernate.util.XMLHelper;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotSupportedException;
-
 
 /**
  * @author Emmanuel Bernard

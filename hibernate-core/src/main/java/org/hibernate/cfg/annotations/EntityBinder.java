@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -74,6 +75,8 @@ import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.Versioning;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -82,9 +85,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.Value;
-import org.hibernate.persister.PersisterClassProvider;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -243,9 +243,6 @@ public class EntityBinder {
 		persistentClass.setSelectBeforeUpdate( selectBeforeUpdate );
 
 		//set persister if needed
-		//@Persister has precedence over @Entity.persister
-		//in both fail we look for the PersisterClassProvider
-		//if all fail, the persister is left null and the Hibernate defaults kick in
 		Persister persisterAnn = annotatedClass.getAnnotation( Persister.class );
 		Class persister = null;
 		if ( persisterAnn != null ) {
@@ -259,12 +256,6 @@ public class EntityBinder {
 				}
 				catch (ClassNotFoundException cnfe) {
 					throw new AnnotationException( "Could not find persister class: " + persister );
-				}
-			}
-			else {
-				final PersisterClassProvider persisterClassProvider = mappings.getPersisterClassProvider();
-				if ( persisterClassProvider != null ) {
-					persister = persisterClassProvider.getEntityPersisterClass( persistentClass.getEntityName() );
 				}
 			}
 		}

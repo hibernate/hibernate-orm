@@ -24,20 +24,21 @@
  *
  */
 package org.hibernate.test.annotations.lob;
+
 import junit.framework.AssertionFailedError;
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.testing.junit.RequiresDialect;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Tests eager materialization and mutation of data mapped by
  * {@link org.hibernate.type.ImageType}.
- * 
+ *
  * @author Gail Badner
  */
 @RequiresDialect( { SybaseASE15Dialect.class, SQLServerDialect.class,
@@ -145,7 +146,7 @@ public class ImageTest extends TestCase {
 	}
 
 	public static void assertEquals(byte[] val1, byte[] val2) {
-		if (!ArrayHelper.isEquals(val1, val2)) {
+		if (!ArrayHelper.isEquals( val1, val2 )) {
 			throw new AssertionFailedError("byte arrays did not match");
 		}
 	}
@@ -159,7 +160,8 @@ public class ImageTest extends TestCase {
 		return new String[] { "org.hibernate.test.annotations.lob" };
 	}
 
-	public Class<?>[] getAnnotatedClasses() {
+	@Override
+    public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { ImageHolder.class };
 	}
 

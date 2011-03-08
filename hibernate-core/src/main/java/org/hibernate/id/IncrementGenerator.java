@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,9 +34,9 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -120,7 +121,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 
         LOG.debugf("Fetching initial value: %s", sql);
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {

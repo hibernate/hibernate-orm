@@ -26,11 +26,11 @@ import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.StringHelper;
 
 /**
  * Informix dialect.<br>
@@ -204,7 +204,7 @@ public class InformixDialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			String constraintName = null;
 			
-			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 			if ( errorCode == -268 ) {
 				constraintName = extractUsingTemplate( "Unique constraint (", ") violated.", sqle.getMessage() );
 			}

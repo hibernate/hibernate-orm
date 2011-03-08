@@ -23,12 +23,15 @@
  *
  */
 package org.hibernate.cache;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import junit.framework.TestCase;
 import org.hibernate.EntityMode;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.transform.AliasToBeanResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.AliasedTupleSubsetResultTransformer;
@@ -40,8 +43,6 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.RootEntityResultTransformer;
 import org.hibernate.transform.ToListResultTransformer;
 import org.hibernate.transform.TupleSubsetResultTransformer;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * Tests relating to {@link QueryKey} instances.

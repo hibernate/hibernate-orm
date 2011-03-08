@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.engine.query;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -39,9 +40,9 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.event.EventSource;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.custom.sql.SQLCustomQuery;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -190,7 +191,7 @@ public class NativeSQLQueryPlan implements Serializable {
 					session );
 			String sql = queryParameters.getFilteredSQL();
 
-			ps = session.getJDBCContext().getConnectionManager().prepareStatement( sql, false );
+			ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 
 			try {
 				int col = 1;

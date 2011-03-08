@@ -26,8 +26,8 @@
 package org.hibernate.test.lob;
 import junit.framework.AssertionFailedError;
 import org.hibernate.Session;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Tests eager materialization and mutation of long byte arrays.

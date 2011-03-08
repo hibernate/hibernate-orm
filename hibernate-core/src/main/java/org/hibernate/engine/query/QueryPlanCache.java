@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.query;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,10 +38,10 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.SimpleMRUCache;
+import org.hibernate.internal.util.collections.SoftLimitMRUCache;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.SimpleMRUCache;
-import org.hibernate.util.SoftLimitMRUCache;
 import org.jboss.logging.Logger;
 
 /**

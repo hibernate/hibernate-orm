@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast;
+
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
@@ -32,7 +33,7 @@ import org.hibernate.hql.antlr.HqlBaseParser;
 import org.hibernate.hql.antlr.HqlTokenTypes;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;

@@ -22,6 +22,8 @@
 package org.hibernate.util;
 import junit.framework.TestCase;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * TODO : javadoc
  *
@@ -29,24 +31,24 @@ import junit.framework.TestCase;
  */
 public class StringHelperTest extends TestCase {
 	private static final String BASE_PACKAGE = "org.hibernate";
-	private static final String STRING_HELPER_FQN = "org.hibernate.util.StringHelper";
+	private static final String STRING_HELPER_FQN = "org.hibernate.internal.util.StringHelper";
 	private static final String STRING_HELPER_NAME = StringHelper.unqualify( STRING_HELPER_FQN );
 
 	public void testNameCollapsing() {
 		assertNull( StringHelper.collapse( null ) );
 		assertEquals( STRING_HELPER_NAME, StringHelper.collapse( STRING_HELPER_NAME ) );
-		assertEquals( "o.h.u.StringHelper", StringHelper.collapse( STRING_HELPER_FQN ) );
+		assertEquals( "o.h.i.u.StringHelper", StringHelper.collapse( STRING_HELPER_FQN ) );
 	}
 
 	public void testPartialNameUnqualification() {
 		assertNull( StringHelper.partiallyUnqualify( null, BASE_PACKAGE ) );
 		assertEquals( STRING_HELPER_NAME, StringHelper.partiallyUnqualify( STRING_HELPER_NAME, BASE_PACKAGE ) );
-		assertEquals( "util.StringHelper", StringHelper.partiallyUnqualify( STRING_HELPER_FQN, BASE_PACKAGE ) );
+		assertEquals( "internal.util.StringHelper", StringHelper.partiallyUnqualify( STRING_HELPER_FQN, BASE_PACKAGE ) );
 	}
 
 	public void testBasePackageCollapsing() {
 		assertNull( StringHelper.collapseQualifierBase( null, BASE_PACKAGE ) );
 		assertEquals( STRING_HELPER_NAME, StringHelper.collapseQualifierBase( STRING_HELPER_NAME, BASE_PACKAGE ) );
-		assertEquals( "o.h.util.StringHelper", StringHelper.collapseQualifierBase( STRING_HELPER_FQN, BASE_PACKAGE ) );
+		assertEquals( "o.h.internal.util.StringHelper", StringHelper.collapseQualifierBase( STRING_HELPER_FQN, BASE_PACKAGE ) );
 	}
 }

@@ -2,8 +2,8 @@
 package org.hibernate.test.connections;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * Common test cases relating to session management and how the sessions
@@ -74,6 +74,10 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 		}
 	}
 
+	protected void disconnect(Session session) throws Throwable {
+		session.disconnect();
+	}
+
 	/**
 	 * Perform any steps needed to reconnect a fixture session.
 	 *
@@ -138,7 +142,7 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 
 		sessionUnderTest.enableFilter( "nameIsNull" );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		sessionUnderTest.disconnect();
+		disconnect( sessionUnderTest );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
 
 		byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
@@ -146,7 +150,7 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
 		reconnect( sessionUnderTest );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
-		sessionUnderTest.disconnect();
+		disconnect( sessionUnderTest );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
 
 		Session s2 = ( Session ) SerializationHelper.deserialize( bytes );
@@ -155,7 +159,7 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 		reconnect( s2 );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
 
-		s2.disconnect();
+		disconnect( s2 );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
 		reconnect( s2 );
 		assertNotNull( sessionUnderTest.getEnabledFilter( "nameIsNull" ) );
@@ -173,7 +177,7 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
 
-		sessionUnderTest.disconnect();
+		disconnect( sessionUnderTest );
 
 		SerializationHelper.serialize( sessionUnderTest );
 		checkSerializedState( sessionUnderTest );
@@ -190,7 +194,7 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 		prepare();
 		Session sessionUnderTest = getSessionUnderTest();
 
-		sessionUnderTest.disconnect();
+		disconnect( sessionUnderTest );
 
 		byte[] bytes = SerializationHelper.serialize( sessionUnderTest );
 		checkSerializedState( sessionUnderTest );
@@ -199,7 +203,7 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 
 		reconnect( s2 );
 
-		s2.disconnect();
+		disconnect( s2 );
 		reconnect( s2 );
 
 		release( sessionUnderTest );
@@ -223,14 +227,14 @@ public abstract class ConnectionManagementTestCase extends FunctionalTestCase {
 
 		sessionUnderTest.createQuery( "from Silly" ).iterate();
 
-		sessionUnderTest.disconnect();
+		disconnect( sessionUnderTest );
 		SerializationHelper.serialize( sessionUnderTest );
 		checkSerializedState( sessionUnderTest );
 
 		reconnect( sessionUnderTest );
 		sessionUnderTest.createQuery( "from Silly" ).scroll();
 
-		sessionUnderTest.disconnect();
+		disconnect( sessionUnderTest );
 		SerializationHelper.serialize( sessionUnderTest );
 		checkSerializedState( sessionUnderTest );
 

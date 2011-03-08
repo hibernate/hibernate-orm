@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * A registry allowing users to define the default {@link EntityTuplizer} class to use per {@link EntityMode}.

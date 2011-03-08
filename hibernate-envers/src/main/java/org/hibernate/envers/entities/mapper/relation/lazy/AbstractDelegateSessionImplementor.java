@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.relation.lazy;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Iterator;
@@ -35,7 +36,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Transaction;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -44,8 +44,8 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
@@ -138,14 +138,6 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
         return delegate.getEntityUsingInterceptor(key);
     }
 
-    public void afterTransactionCompletion(boolean successful, Transaction tx) {
-        delegate.afterTransactionCompletion(successful, tx);
-    }
-
-    public void beforeTransactionCompletion(Transaction tx) {
-        delegate.beforeTransactionCompletion(tx);
-    }
-
     public Serializable getContextEntityIdentifier(Object object) {
         return delegate.getContextEntityIdentifier(object);
     }
@@ -215,7 +207,7 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 	}
 
 	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException {
-		delegate.applyNonFlushedChanges( nonFlushedChanges );		
+		delegate.applyNonFlushedChanges( nonFlushedChanges );
 	}
 
     public EntityMode getEntityMode() {
@@ -278,11 +270,12 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
         return delegate.getFetchProfile();
     }
 
-    public JDBCContext getJDBCContext() {
-        return delegate.getJDBCContext();
-    }
+	@Override
+	public TransactionCoordinator getTransactionCoordinator() {
+		return delegate.getTransactionCoordinator();
+	}
 
-    public boolean isClosed() {
+	public boolean isClosed() {
         return delegate.isClosed();
     }
 }

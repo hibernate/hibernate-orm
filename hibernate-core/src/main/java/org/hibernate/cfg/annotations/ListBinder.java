@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
+
 import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateLogger;
@@ -37,13 +38,13 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

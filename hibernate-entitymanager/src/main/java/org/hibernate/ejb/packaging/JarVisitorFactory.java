@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +28,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import org.hibernate.ejb.EntityManagerLogger;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-import org.hibernate.util.StringHelper;
+
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Provides centralized normalization of how database object names are handled.

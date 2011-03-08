@@ -22,16 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.StringHelper;
 
 /**
  * An SQL dialect compatible with SAP DB.
@@ -57,7 +58,7 @@ public class SAPDBDialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "fixed($p,$s)" );
 		registerColumnType( Types.CLOB, "long varchar" );
 		registerColumnType( Types.BLOB, "long byte" );
-		
+
 		registerFunction( "abs", new StandardSQLFunction("abs") );
 		registerFunction( "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER) );
 
@@ -125,7 +126,7 @@ public class SAPDBDialect extends Dialect {
 		registerFunction( "index", new StandardSQLFunction("index", StandardBasicTypes.INTEGER) );
 
 		registerFunction( "value", new StandardSQLFunction( "value" ) );
-		
+
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 		registerFunction( "substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING ) );
 		registerFunction( "locate", new StandardSQLFunction("index", StandardBasicTypes.INTEGER) );
@@ -144,25 +145,25 @@ public class SAPDBDialect extends Dialect {
 	}
 
 	public String getAddForeignKeyConstraintString(
-			String constraintName, 
-			String[] foreignKey, 
-			String referencedTable, 
+			String constraintName,
+			String[] foreignKey,
+			String referencedTable,
 			String[] primaryKey, boolean referencesPrimaryKey
 	) {
 		StringBuffer res = new StringBuffer(30)
 			.append(" foreign key ")
 			.append(constraintName)
 			.append(" (")
-			.append( StringHelper.join(", ", foreignKey) )
+			.append( StringHelper.join( ", ", foreignKey ) )
 			.append(") references ")
 			.append(referencedTable);
-		
+
 		if(!referencesPrimaryKey) {
 			res.append(" (")
 			   .append( StringHelper.join(", ", primaryKey) )
 			   .append(')');
 		}
-			
+
 		return res.toString();
 	}
 

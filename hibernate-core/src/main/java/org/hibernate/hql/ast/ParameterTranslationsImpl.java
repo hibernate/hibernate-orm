@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,11 +32,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.hibernate.hql.ParameterTranslations;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.NamedParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.param.PositionalParameterSpecification;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Defines the information available for parameters encountered during

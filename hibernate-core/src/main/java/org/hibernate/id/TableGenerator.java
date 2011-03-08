@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,9 +36,11 @@ import org.hibernate.LockMode;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.TransactionHelper;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -68,8 +70,7 @@ import org.jboss.logging.Logger;
  * @see TableHiLoGenerator
  * @author Gavin King
  */
-public class TableGenerator extends TransactionHelper
-	implements PersistentIdentifierGenerator, Configurable {
+public class TableGenerator implements PersistentIdentifierGenerator, Configurable {
 	/* COLUMN and TABLE should be renamed but it would break the public API */
 	/** The column parameter */
 	public static final String COLUMN = "column";
@@ -137,7 +138,63 @@ public class TableGenerator extends TransactionHelper
 	}
 
 	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
-		return (IntegralDataTypeHolder) doWorkInNewTransaction( session );
+		final SqlStatementLogger statementLogger = session
+				.getFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getSqlStatementLogger();
+		return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
+				new ReturningWork<IntegralDataTypeHolder>() {
+					@Override
+					public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
+						IntegralDataTypeHolder value = buildHolder();
+						int rows;
+						do {
+							// The loop ensures atomicity of the
+							// select + update even for no transaction
+							// or read committed isolation level
+
+							statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
+							PreparedStatement qps = connection.prepareStatement( query );
+							try {
+								ResultSet rs = qps.executeQuery();
+								if ( !rs.next() ) {
+									String err = "could not read a hi value - you need to populate the table: " + tableName;
+									LOG.error(err);
+									throw new IdentifierGenerationException(err);
+								}
+								value.initialize( rs, 1 );
+								rs.close();
+							}
+							catch (SQLException e) {
+								LOG.error("Could not read a hi value", e);
+								throw e;
+							}
+							finally {
+								qps.close();
+							}
+
+							statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
+							PreparedStatement ups = connection.prepareStatement(update);
+							try {
+								value.copy().increment().bind( ups, 1 );
+								value.bind( ups, 2 );
+								rows = ups.executeUpdate();
+							}
+							catch (SQLException sqle) {
+								LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
+								throw sqle;
+							}
+							finally {
+								ups.close();
+							}
+						}
+						while (rows==0);
+						return value;
+					}
+				},
+				true
+		);
 	}
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
@@ -161,67 +218,6 @@ public class TableGenerator extends TransactionHelper
 
 	public Object generatorKey() {
 		return tableName;
-	}
-
-	/**
-	 * Get the next value.
-	 *
-	 * @param conn The sql connection to use.
-	 * @param sql n/a
-	 *
-	 * @return Prior to 3.5 this method returned an {@link Integer}.  Since 3.5 it now
-	 * returns a {@link IntegralDataTypeHolder}
-	 *
-	 * @throws SQLException
-	 */
-	@Override
-    public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		IntegralDataTypeHolder value = buildHolder();
-		int rows;
-		do {
-			// The loop ensures atomicity of the
-			// select + update even for no transaction
-			// or read committed isolation level
-
-			sql = query;
-			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
-			PreparedStatement qps = conn.prepareStatement(query);
-			try {
-				ResultSet rs = qps.executeQuery();
-				if ( !rs.next() ) {
-                    String err = LOG.unableToReadHiValue(tableName);
-                    LOG.error(err);
-					throw new IdentifierGenerationException(err);
-				}
-				value.initialize( rs, 1 );
-				rs.close();
-			}
-			catch (SQLException sqle) {
-                LOG.error(LOG.unableToReadHiValue(tableName), sqle);
-				throw sqle;
-			}
-			finally {
-				qps.close();
-			}
-
-			sql = update;
-			SQL_STATEMENT_LOGGER.logStatement( sql, FormatStyle.BASIC );
-			PreparedStatement ups = conn.prepareStatement(update);
-			try {
-				value.copy().increment().bind( ups, 1 );
-				value.bind( ups, 2 );
-				rows = ups.executeUpdate();
-			}
-			catch (SQLException sqle) {
-                LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
-				throw sqle;
-			}
-			finally {
-				ups.close();
-			}
-		}
-		while (rows==0);
-		return value;
 	}
 
 	protected IntegralDataTypeHolder buildHolder() {

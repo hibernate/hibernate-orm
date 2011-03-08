@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-import org.hibernate.util.StringHelper;
+
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Models an identifier (name).

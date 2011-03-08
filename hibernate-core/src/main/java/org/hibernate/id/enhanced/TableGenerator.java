@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,16 +41,18 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.engine.TransactionHelper;
+import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.FormatStyle;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -125,7 +128,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class TableGenerator extends TransactionHelper implements PersistentIdentifierGenerator, Configurable {
+public class TableGenerator implements PersistentIdentifierGenerator, Configurable {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TableGenerator.class.getName());
 
@@ -174,9 +177,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 	private Optimizer optimizer;
 	private long accessCount = 0;
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object generatorKey() {
 		return tableName;
 	}
@@ -281,9 +282,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		return accessCount;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {
 		identifierType = type;
 
@@ -454,94 +453,96 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		return "insert into " + tableName + " (" + segmentColumnName + ", " + valueColumnName + ") " + " values (?,?)";
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
+		final SqlStatementLogger statementLogger = session
+				.getFactory()
+				.getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getSqlStatementLogger();
 		return optimizer.generate(
 				new AccessCallback() {
+					@Override
 					public IntegralDataTypeHolder getNextValue() {
-						return ( IntegralDataTypeHolder ) doWorkInNewTransaction( session );
+						return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
+								new ReturningWork<IntegralDataTypeHolder>() {
+									@Override
+									public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
+										IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
+										int rows;
+										do {
+											statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
+											PreparedStatement selectPS = connection.prepareStatement( selectQuery );
+											try {
+												selectPS.setString( 1, segmentValue );
+												ResultSet selectRS = selectPS.executeQuery();
+												if ( !selectRS.next() ) {
+													value.initialize( initialValue );
+													PreparedStatement insertPS = null;
+													try {
+														statementLogger.logStatement( insertQuery, FormatStyle.BASIC.getFormatter() );
+														insertPS = connection.prepareStatement( insertQuery );
+														insertPS.setString( 1, segmentValue );
+														value.bind( insertPS, 2 );
+														insertPS.execute();
+													}
+													finally {
+														if ( insertPS != null ) {
+															insertPS.close();
+														}
+													}
+												}
+												else {
+													value.initialize( selectRS, 1 );
+												}
+												selectRS.close();
+											}
+											catch ( SQLException e ) {
+											    LOG.unableToReadOrInitHiValue(e);
+												throw e;
+											}
+											finally {
+												selectPS.close();
+											}
+
+											statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
+											PreparedStatement updatePS = connection.prepareStatement( updateQuery );
+											try {
+												final IntegralDataTypeHolder updateValue = value.copy();
+												if ( optimizer.applyIncrementSizeToSourceValues() ) {
+													updateValue.add( incrementSize );
+												}
+												else {
+													updateValue.increment();
+												}
+												updateValue.bind( updatePS, 1 );
+												value.bind( updatePS, 2 );
+												updatePS.setString( 3, segmentValue );
+												rows = updatePS.executeUpdate();
+											}
+											catch ( SQLException e ) {
+												LOG.unableToUpdateQueryHiValue(tableName, e);
+												throw e;
+											}
+											finally {
+												updatePS.close();
+											}
+										}
+										while ( rows == 0 );
+
+										accessCount++;
+
+										return value;
+									}
+								},
+								true
+						);
 					}
 				}
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
-    public Serializable doWorkInCurrentTransaction(Connection conn, String sql) throws SQLException {
-		IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );
-		int rows;
-		do {
-			SQL_STATEMENT_LOGGER.logStatement( selectQuery, FormatStyle.BASIC );
-			PreparedStatement selectPS = conn.prepareStatement( selectQuery );
-			try {
-				selectPS.setString( 1, segmentValue );
-				ResultSet selectRS = selectPS.executeQuery();
-				if ( !selectRS.next() ) {
-					value.initialize( initialValue );
-					PreparedStatement insertPS = null;
-					try {
-						SQL_STATEMENT_LOGGER.logStatement( insertQuery, FormatStyle.BASIC );
-						insertPS = conn.prepareStatement( insertQuery );
-						insertPS.setString( 1, segmentValue );
-						value.bind( insertPS, 2 );
-						insertPS.execute();
-					}
-					finally {
-						if ( insertPS != null ) {
-							insertPS.close();
-						}
-					}
-				}
-				else {
-					value.initialize( selectRS, 1 );
-				}
-				selectRS.close();
-			}
-			catch ( SQLException sqle ) {
-                LOG.unableToReadOrInitHiValue(sqle);
-				throw sqle;
-			}
-			finally {
-				selectPS.close();
-			}
-
-			SQL_STATEMENT_LOGGER.logStatement( updateQuery, FormatStyle.BASIC );
-			PreparedStatement updatePS = conn.prepareStatement( updateQuery );
-			try {
-				final IntegralDataTypeHolder updateValue = value.copy();
-				if ( optimizer.applyIncrementSizeToSourceValues() ) {
-					updateValue.add( incrementSize );
-				}
-				else {
-					updateValue.increment();
-				}
-				updateValue.bind( updatePS, 1 );
-				value.bind( updatePS, 2 );
-				updatePS.setString( 3, segmentValue );
-				rows = updatePS.executeUpdate();
-			}
-			catch ( SQLException sqle ) {
-                LOG.unableToUpdateQueryHiValue(tableName, sqle);
-				throw sqle;
-			}
-			finally {
-				updatePS.close();
-			}
-		}
-		while ( rows == 0 );
-
-		accessCount++;
-
-		return value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
 				new StringBuffer()
@@ -564,9 +565,7 @@ public class TableGenerator extends TransactionHelper implements PersistentIdent
 		};
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] sqlDropStrings(Dialect dialect) throws HibernateException {
 		StringBuffer sqlDropString = new StringBuffer().append( "drop table " );
 		if ( dialect.supportsIfExistsBeforeTableName() ) {

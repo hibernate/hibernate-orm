@@ -23,12 +23,13 @@
  *
  */
 package org.hibernate.engine.query.sql;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Defines the specification or blue-print for a native-sql query.
@@ -80,7 +81,8 @@ public class NativeSQLQuerySpecification {
 		return querySpaces;
 	}
 
-	public boolean equals(Object o) {
+	@Override
+    public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
@@ -96,7 +98,8 @@ public class NativeSQLQuerySpecification {
 	}
 
 
-	public int hashCode() {
+	@Override
+    public int hashCode() {
 		return hashCode;
 	}
 }

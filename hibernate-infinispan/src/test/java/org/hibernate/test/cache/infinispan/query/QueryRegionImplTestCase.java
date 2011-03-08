@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.query;
+
 import static org.hibernate.TestLogger.LOG;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -91,7 +92,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 
     private void putDoesNotBlockGetTest() throws Exception {
         Configuration cfg = createConfiguration();
-        InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(getJdbcServices(), cfg, getCacheTestSupport());
+        InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(getServiceRegistry(), cfg, getCacheTestSupport());
 
         // Sleep a bit to avoid concurrent FLUSH problem
         avoidConcurrentFlush();
@@ -176,7 +177,7 @@ public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 
     private void getDoesNotBlockPutTest() throws Exception {
         Configuration cfg = createConfiguration();
-        InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(getJdbcServices(), cfg, getCacheTestSupport());
+        InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(getServiceRegistry(), cfg, getCacheTestSupport());
 
         // Sleep a bit to avoid concurrent FLUSH problem
         avoidConcurrentFlush();

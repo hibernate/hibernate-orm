@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,7 +30,7 @@ import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.util.JDBCExceptionReporter;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -43,6 +44,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ResultSetWrapperProxy.class.getName());
 	private static final Class[] PROXY_INTERFACES = new Class[] { ResultSet.class };
+	private static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
 
 	private final ResultSet rs;
 	private final ColumnNameCache columnNameCache;
@@ -81,12 +83,11 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		return cl;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( "findColumn".equals( method.getName() ) ) {
-			return new Integer( findColumn( ( String ) args[0] ) );
+			return Integer.valueOf( findColumn( ( String ) args[0] ) );
 		}
 
 		if ( isFirstArgColumnLabel( method, args ) ) {
@@ -105,7 +106,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 						.append( "] as first argument for method: [" )
 						.append( method )
 						.append( "]" );
-				JDBCExceptionReporter.logExceptions( ex, buf.toString() );
+				sqlExceptionHelper.logExceptions( ex, buf.toString() );
 			}
 			catch ( NoSuchMethodException ex ) {
                 LOG.unableToSwitchToMethodUsingColumnIndex(method);
@@ -166,9 +167,10 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		return columnNameMethod.getDeclaringClass().getMethod( columnNameMethod.getName(), actualParameterTypes );
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	private Object[] buildColumnIndexMethodArgs(Object[] incomingArgs, int columnIndex) {
 		Object actualArgs[] = new Object[incomingArgs.length];
-		actualArgs[0] = new Integer( columnIndex );
+		actualArgs[0] = Integer.valueOf( columnIndex );
 		System.arraycopy( incomingArgs, 1, actualArgs, 1, incomingArgs.length - 1 );
 		return actualArgs;
 	}

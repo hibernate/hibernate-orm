@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
@@ -103,16 +102,16 @@ public abstract class TestCase extends HibernateTestCase {
 
 	@Override
     protected void handleUnclosedResources() {
-		cleanUnclosed( this.em );
-		for ( Iterator iter = isolatedEms.iterator(); iter.hasNext(); ) {
-			cleanUnclosed( ( EntityManager ) iter.next() );
-		}
-
 		cfg = null;
 	}
 
 	@Override
     protected void closeResources() {
+		cleanUnclosed( this.em );
+		for ( Object isolatedEm : isolatedEms ) {
+			cleanUnclosed( (EntityManager) isolatedEm );
+		}
+
 		if ( factory != null ) {
 			factory.close();
 		}

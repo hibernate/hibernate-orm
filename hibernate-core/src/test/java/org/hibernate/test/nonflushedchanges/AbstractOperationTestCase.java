@@ -1,4 +1,5 @@
 package org.hibernate.test.nonflushedchanges;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,11 +12,11 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.NonFlushedChanges;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.StatefulPersistenceContext;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.tm.ConnectionProviderImpl;
 import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.hibernate.transaction.CMTTransactionFactory;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * {@inheritDoc}
@@ -29,7 +30,8 @@ public abstract class AbstractOperationTestCase extends FunctionalTestCase {
 		super( name );
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
 		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
@@ -51,7 +53,8 @@ public abstract class AbstractOperationTestCase extends FunctionalTestCase {
 		};
 	}
 
-	public String getCacheConcurrencyStrategy() {
+	@Override
+    public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 

@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.bytecode.javassist;
+
 import java.lang.reflect.Modifier;
 import org.hibernate.HibernateLogger;
 import org.hibernate.bytecode.BytecodeProvider;
@@ -31,7 +32,7 @@ import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.ClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

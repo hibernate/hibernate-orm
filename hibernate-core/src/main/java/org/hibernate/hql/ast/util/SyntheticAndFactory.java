@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.util;
+
 import java.util.Map;
 import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
@@ -32,11 +33,11 @@ import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.ast.tree.RestrictableStatement;
 import org.hibernate.hql.ast.tree.SqlFragment;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.collections.AST;
 

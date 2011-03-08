@@ -8,10 +8,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.ExternalSessionFactoryConfig;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.util.ExternalSessionFactoryConfig;
 import org.jboss.logging.Logger;
 
 
@@ -31,6 +32,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	private String boundName;
 	private Properties properties = new Properties();
 
+	@Override
 	public void start() throws HibernateException {
 		boundName = getJndiName();
 		try {
@@ -43,6 +45,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 		}
 	}
 
+	@Override
 	public void stop() {
         LOG.stoppingService();
 		try {
@@ -62,100 +65,125 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	}
 
 	@Override
-    protected Map getExtraProperties() {
+	protected Map getExtraProperties() {
 		return properties;
 	}
 
+	@Override
 	public String getTransactionStrategy() {
 		return getProperty(Environment.TRANSACTION_STRATEGY);
 	}
 
+	@Override
 	public void setTransactionStrategy(String txnStrategy) {
 		setProperty(Environment.TRANSACTION_STRATEGY, txnStrategy);
 	}
 
+	@Override
 	public String getUserTransactionName() {
 		return getProperty(Environment.USER_TRANSACTION);
 	}
 
+	@Override
 	public void setUserTransactionName(String utName) {
 		setProperty(Environment.USER_TRANSACTION, utName);
 	}
 
-	public String getTransactionManagerLookupStrategy() {
-		return getProperty(Environment.TRANSACTION_MANAGER_STRATEGY);
+	@Override
+	public String getJtaPlatformName() {
+		return getProperty( JtaPlatformInitiator.JTA_PLATFORM );
 	}
 
-	public void setTransactionManagerLookupStrategy(String lkpStrategy) {
-		setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, lkpStrategy);
+	@Override
+	public void setJtaPlatformName(String name) {
+		setProperty( JtaPlatformInitiator.JTA_PLATFORM, name );
 	}
 
+	@Override
 	public String getPropertyList() {
 		return buildProperties().toString();
 	}
 
+	@Override
 	public String getProperty(String property) {
 		return properties.getProperty(property);
 	}
 
+	@Override
 	public void setProperty(String property, String value) {
 		properties.setProperty(property, value);
 	}
 
+	@Override
 	public void dropSchema() {
 		new SchemaExport( buildConfiguration() ).drop(false, true);
 	}
 
+	@Override
 	public void createSchema() {
 		new SchemaExport( buildConfiguration() ).create(false, true);
-	}	public String getName() {
+	}
+
+	public String getName() {
 		return getProperty(Environment.SESSION_FACTORY_NAME);
 	}
 
+	@Override
 	public String getDatasource() {
 		return getProperty(Environment.DATASOURCE);
 	}
 
+	@Override
 	public void setDatasource(String datasource) {
 		setProperty(Environment.DATASOURCE, datasource);
 	}
 
+	@Override
 	public String getJndiName() {
 		return getProperty(Environment.SESSION_FACTORY_NAME);
 	}
 
+	@Override
 	public void setJndiName(String jndiName) {
 		setProperty(Environment.SESSION_FACTORY_NAME, jndiName);
 	}
 
+	@Override
 	public String getUserName() {
 		return getProperty(Environment.USER);
 	}
 
+	@Override
 	public void setUserName(String userName) {
 		setProperty(Environment.USER, userName);
 	}
 
+	@Override
 	public String getPassword() {
 		return getProperty(Environment.PASS);
 	}
 
+	@Override
 	public void setPassword(String password) {
 		setProperty(Environment.PASS, password);
 	}
 
+	@Override
 	public void setFlushBeforeCompletionEnabled(String enabled) {
 		setProperty(Environment.FLUSH_BEFORE_COMPLETION, enabled);
 	}
 
+	@Override
 	public String getFlushBeforeCompletionEnabled() {
 		return getProperty(Environment.FLUSH_BEFORE_COMPLETION);
 	}
 
+	@Override
 	public void setAutoCloseSessionEnabled(String enabled) {
 		setProperty(Environment.AUTO_CLOSE_SESSION, enabled);
 	}
 
+	@Override
 	public String getAutoCloseSessionEnabled() {
 		return getProperty(Environment.AUTO_CLOSE_SESSION);
 	}

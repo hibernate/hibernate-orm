@@ -24,8 +24,8 @@
 package org.hibernate.test.cfg;
 import java.io.File;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * Tests using of cacheable configuration files.

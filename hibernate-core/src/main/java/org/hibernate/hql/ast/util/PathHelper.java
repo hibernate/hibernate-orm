@@ -23,9 +23,10 @@
  *
  */
 package org.hibernate.hql.ast.util;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.ASTFactory;
 import antlr.collections.AST;

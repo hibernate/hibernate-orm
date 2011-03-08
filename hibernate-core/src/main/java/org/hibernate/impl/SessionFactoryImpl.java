@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
+
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -43,7 +44,6 @@ import java.util.concurrent.ConcurrentMap;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import javax.transaction.TransactionManager;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.ConnectionReleaseMode;
@@ -85,30 +85,35 @@ import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.event.EventListeners;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
-import org.hibernate.persister.PersisterFactory;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.stat.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
@@ -116,14 +121,10 @@ import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.transaction.TransactionFactory;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 
@@ -150,7 +151,8 @@ import org.jboss.logging.Logger;
  * @see org.hibernate.persister.collection.CollectionPersister
  * @author Gavin King
  */
-public final class SessionFactoryImpl implements SessionFactory, SessionFactoryImplementor {
+public final class SessionFactoryImpl
+		implements SessionFactory, SessionFactoryImplementor {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, SessionFactoryImpl.class.getName());
 	private static final IdentifierGenerator UUID_GENERATOR = UUIDGenerator.buildSessionFactoryUniqueIdentifierGenerator();
@@ -175,7 +177,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
-	private final transient TransactionManager transactionManager;
 	private final transient QueryCache queryCache;
 	private final transient UpdateTimestampsCache updateTimestampsCache;
 	private final transient Map<String,QueryCache> queryCaches;
@@ -192,6 +193,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 	private transient boolean isClosed = false;
 	private final transient TypeResolver typeResolver;
 	private final transient TypeHelper typeHelper;
+	private final transient TransactionEnvironment transactionEnvironment;
 
 	public SessionFactoryImpl(
 			Configuration cfg,
@@ -278,7 +280,12 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 					allCacheRegions.put( cacheRegionName, entityRegion );
 				}
 			}
-			EntityPersister cp = PersisterFactory.createClassPersister( model, accessStrategy, this, mapping );
+			EntityPersister cp = serviceRegistry.getService( PersisterFactory.class ).createEntityPersister(
+					model,
+					accessStrategy,
+					this,
+					mapping
+			);
 			entityPersisters.put( model.getEntityName(), cp );
 			classMeta.put( model.getEntityName(), cp.getClassMetadata() );
 		}
@@ -299,7 +306,12 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 				entityAccessStrategies.put( cacheRegionName, accessStrategy );
 				allCacheRegions.put( cacheRegionName, collectionRegion );
 			}
-			CollectionPersister persister = PersisterFactory.createCollectionPersister( cfg, model, accessStrategy, this) ;
+			CollectionPersister persister = serviceRegistry.getService( PersisterFactory.class ).createCollectionPersister(
+					cfg,
+					model,
+					accessStrategy,
+					this
+			) ;
 			collectionPersisters.put( model.getRole(), persister.getCollectionMetadata() );
 			Type indexType = persister.getIndexType();
 			if ( indexType != null && indexType.isAssociationType() && !indexType.isAnyType() ) {
@@ -374,17 +386,6 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 		if ( settings.isAutoDropSchema() ) {
 			schemaExport = new SchemaExport( getJdbcServices(), cfg );
-		}
-
-		if ( settings.getTransactionManagerLookup()!=null ) {
-            LOG.debugf("Obtaining JTA TransactionManager");
-			transactionManager = settings.getTransactionManagerLookup().getTransactionManager(properties);
-		}
-		else {
-			if ( settings.getTransactionFactory().isTransactionManagerRequired() ) {
-				throw new HibernateException("The chosen transaction strategy requires access to the JTA TransactionManager");
-			}
-			transactionManager = null;
 		}
 
 		currentSessionContext = buildCurrentSessionContext();
@@ -468,7 +469,12 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
 
+		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	public TransactionEnvironment getTransactionEnvironment() {
+		return transactionEnvironment;
 	}
 
 	public Properties getProperties() {
@@ -716,19 +722,11 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return interceptor;
 	}
 
-	public TransactionFactory getTransactionFactory() {
-		return settings.getTransactionFactory();
-	}
-
-	public TransactionManager getTransactionManager() {
-		return transactionManager;
-	}
-
 	public SQLExceptionConverter getSQLExceptionConverter() {
 		return getSQLExceptionHelper().getSqlExceptionConverter();
 	}
 
-	public SQLExceptionHelper getSQLExceptionHelper() {
+	public SqlExceptionHelper getSQLExceptionHelper() {
 		return getJdbcServices().getSqlExceptionHelper();
 	}
 
@@ -871,7 +869,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		String result = (String) imports.get(className);
 		if (result==null) {
 			try {
-				ReflectHelper.classForName(className);
+				ReflectHelper.classForName( className );
 				return className;
 			}
 			catch (ClassNotFoundException cnfe) {
@@ -1191,18 +1189,35 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		return (IdentifierGenerator) identifierGenerators.get(rootEntityName);
 	}
 
+	private org.hibernate.engine.transaction.spi.TransactionFactory transactionFactory() {
+		return serviceRegistry.getService( org.hibernate.engine.transaction.spi.TransactionFactory.class );
+	}
+
+	private boolean canAccessTransactionManager() {
+		try {
+			return serviceRegistry.getService( JtaPlatform.class ).retrieveTransactionManager() != null;
+		}
+		catch (Exception e) {
+			return false;
+		}
+	}
+
 	private CurrentSessionContext buildCurrentSessionContext() {
 		String impl = properties.getProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS );
-		// for backward-compatability
-		if ( impl == null && transactionManager != null ) {
-			impl = "jta";
+		// for backward-compatibility
+		if ( impl == null ) {
+			if ( canAccessTransactionManager() ) {
+				impl = "jta";
+			}
+			else {
+				return null;
+			}
 		}
 
-		if ( impl == null ) {
-			return null;
-		}
-		else if ( "jta".equals( impl ) ) {
-            if (settings.getTransactionFactory().areCallbacksLocalToHibernateTransactions()) LOG.autoFlushWillNotWork();
+		if ( "jta".equals( impl ) ) {
+			if ( ! transactionFactory().compatibleWithJtaSynchronization() ) {
+                LOG.autoFlushWillNotWork();
+			}
 			return new JTASessionContext( this );
 		}
 		else if ( "thread".equals( impl ) ) {
@@ -1216,7 +1231,7 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 				Class implClass = ReflectHelper.classForName( impl );
 				return ( CurrentSessionContext ) implClass
 						.getConstructor( new Class[] { SessionFactoryImplementor.class } )
-						.newInstance( new Object[] { this } );
+						.newInstance( this );
 			}
 			catch( Throwable t ) {
                 LOG.unableToConstructCurrentSessionContext(impl, t);
@@ -1225,9 +1240,13 @@ public final class SessionFactoryImpl implements SessionFactory, SessionFactoryI
 		}
 	}
 
-	public EventListeners getEventListeners()
-	{
+	public EventListeners getEventListeners() {
 		return eventListeners;
+	}
+
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {

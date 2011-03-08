@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
+
 import java.util.Properties;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.StringHelper;
 import com.opensymphony.oscache.base.CacheEntry;
 import com.opensymphony.oscache.base.Config;
 
@@ -68,7 +69,7 @@ public class OSCacheProvider implements CacheProvider {
 			OSCACHE_PROPERTIES,
 			CacheEntry.INDEFINITE_EXPIRY
 		);
-		String cron = OSCACHE_PROPERTIES.getProperty( StringHelper.qualify(region, OSCACHE_CRON) );
+		String cron = OSCACHE_PROPERTIES.getProperty( StringHelper.qualify( region, OSCACHE_CRON ) );
 
 		// construct the cache
 		final OSCache cache = new OSCache(refreshPeriod, cron, region);

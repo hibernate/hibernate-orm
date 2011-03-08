@@ -37,7 +37,7 @@ public class MaterializedBlobType extends AbstractSingleColumnStandardBasicType<
 	public static final MaterializedBlobType INSTANCE = new MaterializedBlobType();
 
 	public MaterializedBlobType() {
-		super( BlobTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
+		super( BlobTypeDescriptor.DEFAULT, PrimitiveByteArrayTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

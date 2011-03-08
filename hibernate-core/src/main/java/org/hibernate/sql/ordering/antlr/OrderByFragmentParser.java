@@ -23,11 +23,12 @@
  *
  */
 package org.hibernate.sql.ordering.antlr;
+
 import java.util.ArrayList;
 import org.hibernate.HibernateLogger;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.CommonAST;
 import antlr.TokenStream;

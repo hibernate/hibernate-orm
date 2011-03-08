@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.hibernate.internal.util.jdbc.TypeInfo;
+import org.hibernate.engine.jdbc.internal.TypeInfo;
 
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
@@ -104,7 +105,7 @@ public interface ExtractedDatabaseMetaData {
 	 * Did the driver report that updates to a LOB locator affect a copy of the LOB?
 	 *
 	 * @return True if updates to the state of a LOB locator update only a copy.
-	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy() 
+	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
 	 */
 	public boolean doesLobLocatorUpdateCopy();
 
@@ -124,7 +125,7 @@ public interface ExtractedDatabaseMetaData {
 
 	/**
 	 * Set of type info reported by the driver.
-	 * 
+	 *
 	 * @return
 	 */
 	public LinkedHashSet<TypeInfo> getTypeInfoSet();

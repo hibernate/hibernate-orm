@@ -20,10 +20,11 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.cache.infinispan.tm;
+
 import java.util.Properties;
 import javax.transaction.TransactionManager;
 import org.hibernate.cfg.Settings;
-import org.hibernate.transaction.TransactionManagerLookup;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 /**
  * HibernateTransactionManagerLookup.
@@ -32,20 +33,19 @@ import org.hibernate.transaction.TransactionManagerLookup;
  * @since 3.5
  */
 public class HibernateTransactionManagerLookup implements org.infinispan.transaction.lookup.TransactionManagerLookup {
-   private final TransactionManagerLookup hibernateLookup;
-   
-   private final Properties properties;
-   
-   public HibernateTransactionManagerLookup(Settings settings, Properties properties) {
-      if (settings != null)
-         this.hibernateLookup = settings.getTransactionManagerLookup();
-      else
-         this.hibernateLookup = null;
-      this.properties = properties;
-   }
-   
-   public TransactionManager getTransactionManager() throws Exception {
-      return hibernateLookup == null ? null : hibernateLookup.getTransactionManager(properties);
-   }
+	private final JtaPlatform jtaPlatform;
+
+	public HibernateTransactionManagerLookup(Settings settings, Properties properties) {
+		if ( settings != null ) {
+			jtaPlatform = settings.getJtaPlatform();
+		}
+		else {
+			jtaPlatform = null;
+		}
+	}
+
+	public TransactionManager getTransactionManager() throws Exception {
+		return jtaPlatform == null ? null : jtaPlatform.retrieveTransactionManager();
+	}
    
 }

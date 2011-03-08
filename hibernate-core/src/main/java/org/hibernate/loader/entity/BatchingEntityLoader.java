@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.loader.entity;
+
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -32,11 +33,11 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.Loader;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * "Batch" loads entities, using multiple primary key values in the
@@ -64,11 +65,11 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 		Iterator iter = results.iterator();
 		while ( iter.hasNext() ) {
 			Object obj = iter.next();
-			final boolean equal = idType.isEqual( 
-					id, 
-					session.getContextEntityIdentifier(obj), 
-					session.getEntityMode(), 
-					session.getFactory() 
+			final boolean equal = idType.isEqual(
+					id,
+					session.getContextEntityIdentifier(obj),
+					session.getEntityMode(),
+					session.getFactory()
 			);
 			if ( equal ) return obj;
 		}
@@ -87,26 +88,26 @@ public class BatchingEntityLoader implements UniqueEntityLoader {
 		Serializable[] batch = session.getPersistenceContext()
 			.getBatchFetchQueue()
 			.getEntityBatch( persister, id, batchSizes[0], session.getEntityMode() );
-		
+
 		for ( int i=0; i<batchSizes.length-1; i++) {
 			final int smallBatchSize = batchSizes[i];
 			if ( batch[smallBatchSize-1]!=null ) {
 				Serializable[] smallBatch = new Serializable[smallBatchSize];
 				System.arraycopy(batch, 0, smallBatch, 0, smallBatchSize);
 				final List results = loaders[i].loadEntityBatch(
-						session, 
-						smallBatch, 
-						idType, 
-						optionalObject, 
-						persister.getEntityName(), 
-						id, 
+						session,
+						smallBatch,
+						idType,
+						optionalObject,
+						persister.getEntityName(),
+						id,
 						persister,
 						lockOptions
 				);
 				return getObjectFromList(results, id, session); //EARLY EXIT
 			}
 		}
-		
+
 		return ( (UniqueEntityLoader) loaders[batchSizes.length-1] ).load(id, optionalObject, session);
 
 	}

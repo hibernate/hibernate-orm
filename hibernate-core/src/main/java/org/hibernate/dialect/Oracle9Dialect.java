@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,11 +35,11 @@ import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -279,7 +280,7 @@ public class Oracle9Dialect extends Dialect {
 		 * @return The extracted constraint name.
 		 */
 		public String extractConstraintName(SQLException sqle) {
-			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
 				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
 			}

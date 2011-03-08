@@ -50,7 +50,6 @@ import org.hibernate.mapping.MetadataSource;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
-import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.type.TypeResolver;
 
 /**
@@ -88,16 +87,6 @@ public interface Mappings {
 	 * @param namingStrategy The naming strategy to use.
 	 */
 	public void setNamingStrategy(NamingStrategy namingStrategy);
-
-	/**
-	 * Get the current persister class provider implementation
-	 */
-	public PersisterClassProvider getPersisterClassProvider();
-
-	/**
-	 * Set the current persister class provider implementation
-	 */
-	public void setPersisterClassProvider(PersisterClassProvider persisterClassProvider);
 
 	/**
 	 * Returns the currently bound default schema name.

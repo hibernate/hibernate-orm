@@ -105,7 +105,7 @@ public class SequenceGenerator implements PersistentIdentifierGenerator, Configu
 
 	protected IntegralDataTypeHolder generateHolder(SessionImplementor session) {
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				ResultSet rs = st.executeQuery();
 				try {

@@ -36,7 +36,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Map a Byte[] into a Blob

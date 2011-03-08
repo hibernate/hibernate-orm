@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
@@ -47,10 +48,10 @@ import org.hibernate.event.EventSource;
 import org.hibernate.event.FlushEntityEvent;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEvent;
+import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.Printer;
-import org.hibernate.util.IdentityMap;
-import org.hibernate.util.LazyIterator;
 import org.jboss.logging.Logger;
 
 /**
@@ -310,7 +311,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
         LOG.trace("Executing flush");
 
 		try {
-			session.getJDBCContext().getConnectionManager().flushBeginning();
+			session.getTransactionCoordinator().getJdbcCoordinator().flushBeginning();
 			// we need to lock the collection caches before
 			// executing entity inserts/updates in order to
 			// account for bidi associations
@@ -322,7 +323,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			throw he;
 		}
 		finally {
-			session.getJDBCContext().getConnectionManager().flushEnding();
+			session.getTransactionCoordinator().getJdbcCoordinator().flushEnding();
 		}
 	}
 

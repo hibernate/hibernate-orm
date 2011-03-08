@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.InputStream;
 import org.hibernate.HibernateLogger;
-import org.hibernate.util.DTDEntityResolver;
+import org.hibernate.internal.util.xml.DTDEntityResolver;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;

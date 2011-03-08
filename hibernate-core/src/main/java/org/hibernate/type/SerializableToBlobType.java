@@ -39,9 +39,9 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.usertype.ParameterizedType;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Emmanuel Bernard

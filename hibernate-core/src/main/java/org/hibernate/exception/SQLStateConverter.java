@@ -23,12 +23,14 @@
  *
  */
 package org.hibernate.exception;
+
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 
 /**
  * A SQLExceptionConverter implementation which performs converion based on
@@ -80,10 +82,10 @@ public class SQLStateConverter implements SQLExceptionConverter {
 	 * @return The resulting JDBCException.
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
-		String sqlState = JDBCExceptionHelper.extractSqlState( sqlException );
+		String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 
 		if ( sqlState != null ) {
-			String sqlStateClassCode = JDBCExceptionHelper.determineSqlStateClassCode( sqlState );
+			String sqlStateClassCode = JdbcExceptionHelper.determineSqlStateClassCode( sqlState );
 
 			if ( sqlStateClassCode != null ) {
 				if ( SQL_GRAMMAR_CATEGORIES.contains( sqlStateClassCode ) ) {

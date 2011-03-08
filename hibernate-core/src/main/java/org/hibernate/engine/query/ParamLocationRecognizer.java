@@ -23,11 +23,12 @@
  *
  */
 package org.hibernate.engine.query;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Implements a parameter parser recognizer specifically for the purpose

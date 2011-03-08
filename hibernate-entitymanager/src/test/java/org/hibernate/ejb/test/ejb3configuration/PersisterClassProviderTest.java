@@ -40,8 +40,11 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.PersisterClassProvider;
+import org.hibernate.persister.internal.PersisterClassResolverInitiator;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -54,7 +57,7 @@ import org.hibernate.type.VersionType;
 public class PersisterClassProviderTest extends junit.framework.TestCase {
 	public void testPersisterClassProvider() {
 		Ejb3Configuration conf = new Ejb3Configuration();
-		conf.setPersisterClassProvider( new GoofyPersisterClassProvider() );
+		conf.getProperties().put( PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class );
 		conf.addAnnotatedClass( Bell.class );
 		try {
 			final EntityManagerFactory entityManagerFactory = conf.buildEntityManagerFactory();
@@ -68,13 +71,14 @@ public class PersisterClassProviderTest extends junit.framework.TestCase {
 		}
 	}
 
-	public static class GoofyPersisterClassProvider implements PersisterClassProvider {
-
-		public Class<? extends EntityPersister> getEntityPersisterClass(String entityName) {
+	public static class GoofyPersisterClassProvider implements PersisterClassResolver {
+		@Override
+		public Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata) {
 			return GoofyProvider.class;
 		}
 
-		public Class<? extends CollectionPersister> getCollectionPersisterClass(String collectionPersister) {
+		@Override
+		public Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata) {
 			return null;
 		}
 	}

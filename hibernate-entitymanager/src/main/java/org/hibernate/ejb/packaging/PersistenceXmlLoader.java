@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.packaging;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -42,7 +43,7 @@ import javax.xml.validation.Validator;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.EntityManagerLogger;
 import org.hibernate.ejb.util.ConfigurationHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

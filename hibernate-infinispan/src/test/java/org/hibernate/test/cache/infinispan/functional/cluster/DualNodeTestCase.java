@@ -28,9 +28,11 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.testing.junit.functional.ExecutionEnvironment;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.transaction.CMTTransactionFactory;
+
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
@@ -131,20 +133,14 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
       return DualNodeConnectionProviderImpl.class;
    }
 
-   protected Class getTransactionManagerLookupClass() {
-      return DualNodeTransactionManagerLookup.class;
+   protected Class getJtaPlatformClass() {
+      return DualNodeJtaPlatformImpl.class;
    }
 
    protected Class getTransactionFactoryClass() {
       return CMTTransactionFactory.class;
    }
 
-   /**
-    * Apply any node-specific configurations to our first node.
-    * 
-    * @param the
-    *           Configuration to update.
-    */
    protected void configureFirstNode(Configuration cfg) {
       cfg.setProperty(NODE_ID_PROP, LOCAL);
    }
@@ -153,12 +149,6 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
 		return Collections.singletonMap( NODE_ID_FIELD, LOCAL );
 	}
 
-   /**
-    * Apply any node-specific configurations to our second node.
-    * 
-    * @param the
-    *           Configuration to update.
-    */
    protected void configureSecondNode(Configuration cfg) {
       cfg.setProperty(NODE_ID_PROP, REMOTE);
    }
@@ -184,7 +174,7 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
       super.configure(cfg);
 
       cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
+      cfg.setProperty( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatformClass().getName());
       cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
       cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
       cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));

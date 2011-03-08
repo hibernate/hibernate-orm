@@ -23,13 +23,14 @@
  *
  */
 package org.hibernate.sql;
+
 import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Gavin King

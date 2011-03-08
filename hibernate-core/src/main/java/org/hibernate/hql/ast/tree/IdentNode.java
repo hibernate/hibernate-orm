@@ -23,17 +23,18 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.antlr.SqlTokenTypes;
 import org.hibernate.hql.ast.util.ColumnHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -279,7 +280,8 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		return element;
 	}
 
-	public Type getDataType() {
+	@Override
+    public Type getDataType() {
 		Type type = super.getDataType();
 		if ( type != null ) {
 			return type;
@@ -312,7 +314,8 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		}
 	}
 
-	public String getDisplayText() {
+	@Override
+    public String getDisplayText() {
 		StringBuffer buf = new StringBuffer();
 
 		if (getType() == SqlTokenTypes.ALIAS_REF) {

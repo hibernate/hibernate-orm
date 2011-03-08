@@ -30,13 +30,13 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.Mapping;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Represents a property as part of an entity or a component.
@@ -160,7 +160,7 @@ public class Property implements Serializable, MetaAttributable {
 		final boolean[] columnInsertability = value.getColumnInsertability();
 		return insertable && (
 				columnInsertability.length==0 ||
-				!ArrayHelper.isAllFalse(columnInsertability)
+				!ArrayHelper.isAllFalse( columnInsertability )
 			);
 	}
 

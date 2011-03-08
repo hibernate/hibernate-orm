@@ -37,11 +37,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
@@ -103,7 +103,7 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 			throws HibernateException, SQLException {
-		return userType.nullSafeGet(rs, names, owner);
+		return userType.nullSafeGet(rs, names, session, owner);
 	}
 
 	public Object nullSafeGet(ResultSet rs, String columnName, SessionImplementor session, Object owner)
@@ -134,13 +134,13 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session)
 			throws HibernateException, SQLException {
 		if ( settable[0] ) {
-			userType.nullSafeSet( st, value, index );
+			userType.nullSafeSet( st, value, index, session );
 		}
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
 			throws HibernateException, SQLException {
-		userType.nullSafeSet( st, value, index );
+		userType.nullSafeSet( st, value, index, session );
 	}
 
 	@SuppressWarnings({ "UnusedDeclaration" })

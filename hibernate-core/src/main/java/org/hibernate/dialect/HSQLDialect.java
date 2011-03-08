@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -43,12 +44,12 @@ import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.exception.JDBCExceptionHelper;
 import org.hibernate.exception.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -309,7 +310,7 @@ public class HSQLDialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			String constraintName = null;
 
-			int errorCode = JDBCExceptionHelper.extractErrorCode( sqle );
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
 			if ( errorCode == -8 ) {
 				constraintName = extractUsingTemplate(
@@ -346,7 +347,7 @@ public class HSQLDialect extends Dialect {
 		public String extractConstraintName(SQLException sqle) {
 			String constraintName = null;
 
-			int errorCode = JDBCExceptionHelper.extractErrorCode( sqle );
+			int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
 
 			if ( errorCode == -8 ) {
 				constraintName = extractUsingTemplate(

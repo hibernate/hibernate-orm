@@ -23,7 +23,8 @@
  *
  */
 package org.hibernate;
-import org.hibernate.util.StringHelper;
+
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Thrown when the (illegal) value of a property can not be persisted.
@@ -53,7 +54,8 @@ public class PropertyValueException extends HibernateException {
 		return propertyName;
 	}
 
-	public String getMessage() {
+	@Override
+    public String getMessage() {
 		return super.getMessage() + ": " +
 			StringHelper.qualify(entityName, propertyName);
 	}

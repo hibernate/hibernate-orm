@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.util.Set;
-import org.hibernate.util.xml.XmlDocument;
+import org.hibernate.internal.util.xml.XmlDocument;
 
 /**
  * Represents a mapping queued for delayed processing to await

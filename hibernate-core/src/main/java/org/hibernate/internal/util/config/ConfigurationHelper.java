@@ -23,13 +23,14 @@
  *
  */
 package org.hibernate.internal.util.config;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * Collection of helper methods for dealing with configuration settings.

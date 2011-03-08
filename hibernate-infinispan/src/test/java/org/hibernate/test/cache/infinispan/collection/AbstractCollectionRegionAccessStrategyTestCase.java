@@ -48,14 +48,12 @@ import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.util.ComparableComparator;
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
 
 /**
@@ -121,10 +119,10 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
     protected void setUp() throws Exception {
         super.setUp();
 
-        // Sleep a bit to avoid concurrent FLUSH problem
+       // Sleep a bit to avoid concurrent FLUSH problem
         avoidConcurrentFlush();
 
-        localCollectionRegion = localRegionFactory.buildCollectionRegion(REGION_NAME,
+       localCollectionRegion = localRegionFactory.buildCollectionRegion(REGION_NAME,
                                                                          localCfg.getProperties(),
                                                                          getCacheDataDescription());
         localCache = ((BaseRegion)localCollectionRegion).getCacheAdapter();
@@ -132,19 +130,19 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         invalidation = localCache.isClusteredInvalidation();
         synchronous = localCache.isSynchronous();
 
-        // Sleep a bit to avoid concurrent FLUSH problem
+       // Sleep a bit to avoid concurrent FLUSH problem
         avoidConcurrentFlush();
 
-        remoteCollectionRegion = remoteRegionFactory.buildCollectionRegion(REGION_NAME,
+       remoteCollectionRegion = remoteRegionFactory.buildCollectionRegion(REGION_NAME,
                                                                            remoteCfg.getProperties(),
                                                                            getCacheDataDescription());
         remoteCache = ((BaseRegion)remoteCollectionRegion).getCacheAdapter();
         remoteAccessStrategy = remoteCollectionRegion.buildAccessStrategy(getAccessType());
 
-        node1Exception = null;
+       node1Exception = null;
         node2Exception = null;
 
-        node1Failure = null;
+       node1Failure = null;
         node2Failure = null;
     }
 
@@ -153,22 +151,22 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
         super.tearDown();
 
-        try {
+       try {
             localCache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
         } catch (Exception e) {
             LOG.error("Problem purging local cache", e);
         }
 
-        try {
+       try {
             remoteCache.withFlags(FlagAdapter.CACHE_MODE_LOCAL).clear();
         } catch (Exception e) {
             LOG.error("Problem purging remote cache", e);
         }
 
-        node1Exception = null;
+       node1Exception = null;
         node2Exception = null;
 
-        node1Failure = null;
+       node1Failure = null;
         node2Failure = null;
     }
 
@@ -227,14 +225,14 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         final TransactionalAccessDelegate delegate = new TransactionalAccessDelegate((CollectionRegionImpl)localCollectionRegion,
                                                                                      validator);
 
-        Callable<Void> pferCallable = new Callable<Void>() {
+       Callable<Void> pferCallable = new Callable<Void>() {
             public Void call() throws Exception {
                 delegate.putFromLoad("k1", "v1", 0, null);
                 return null;
             }
         };
 
-        Callable<Void> removeCallable = new Callable<Void>() {
+       Callable<Void> removeCallable = new Callable<Void>() {
             public Void call() throws Exception {
                 removeLatch.await();
                 delegate.remove("k1");
@@ -243,14 +241,14 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             }
         };
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
+       ExecutorService executorService = Executors.newCachedThreadPool();
         Future<Void> pferFuture = executorService.submit(pferCallable);
         Future<Void> removeFuture = executorService.submit(removeCallable);
 
-        pferFuture.get();
+       pferFuture.get();
         removeFuture.get();
 
-        assertFalse(localCache.containsKey("k1"));
+       assertFalse(localCache.containsKey("k1"));
     }
 
     /**
@@ -280,30 +278,30 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
      */
     private void putFromLoadTest( final boolean useMinimalAPI ) throws Exception {
 
-        final String KEY = KEY_BASE + testCount++;
+       final String KEY = KEY_BASE + testCount++;
 
-        final CountDownLatch writeLatch1 = new CountDownLatch(1);
+       final CountDownLatch writeLatch1 = new CountDownLatch(1);
         final CountDownLatch writeLatch2 = new CountDownLatch(1);
         final CountDownLatch completionLatch = new CountDownLatch(2);
 
-        Thread node1 = new Thread() {
+       Thread node1 = new Thread() {
 
-            @Override
+          @Override
             public void run() {
 
-                try {
+             try {
                     long txTimestamp = System.currentTimeMillis();
                     BatchModeTransactionManager.getInstance().begin();
 
-                    assertEquals("node1 starts clean", null, localAccessStrategy.get(KEY, txTimestamp));
+                assertEquals("node1 starts clean", null, localAccessStrategy.get(KEY, txTimestamp));
 
-                    writeLatch1.await();
+                writeLatch1.await();
 
-                    if (useMinimalAPI) {
+                if (useMinimalAPI) {
                         localAccessStrategy.putFromLoad(KEY, VALUE2, txTimestamp, new Integer(2), true);
                     } else {
                         localAccessStrategy.putFromLoad(KEY, VALUE2, txTimestamp, new Integer(2));
-                    }
+                }
 
                     BatchModeTransactionManager.getInstance().commit();
                 } catch (Exception e) {
@@ -321,30 +319,30 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             }
         };
 
-        Thread node2 = new Thread() {
+       Thread node2 = new Thread() {
 
-            @Override
+          @Override
             public void run() {
 
-                try {
+             try {
                     long txTimestamp = System.currentTimeMillis();
                     BatchModeTransactionManager.getInstance().begin();
 
-                    assertNull("node2 starts clean", remoteAccessStrategy.get(KEY, txTimestamp));
+                assertNull("node2 starts clean", remoteAccessStrategy.get(KEY, txTimestamp));
 
-                    // Let node1 write
+                // Let node1 write
                     writeLatch1.countDown();
                     // Wait for node1 to finish
                     writeLatch2.await();
 
-                    // Let the first PFER propagate
+                // Let the first PFER propagate
                     sleep(200);
 
-                    if (useMinimalAPI) {
+                if (useMinimalAPI) {
                         remoteAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1), true);
                     } else {
                         remoteAccessStrategy.putFromLoad(KEY, VALUE1, txTimestamp, new Integer(1));
-                    }
+                }
 
                     BatchModeTransactionManager.getInstance().commit();
                 } catch (Exception e) {
@@ -363,21 +361,21 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
         node1.setDaemon(true);
         node2.setDaemon(true);
 
-        node1.start();
+       node1.start();
         node2.start();
 
-        assertTrue("Threads completed", completionLatch.await(2, TimeUnit.SECONDS));
+       assertTrue("Threads completed", completionLatch.await(2, TimeUnit.SECONDS));
 
-        if (node1Failure != null) throw node1Failure;
+       if (node1Failure != null) throw node1Failure;
         if (node2Failure != null) throw node2Failure;
 
-        assertEquals("node1 saw no exceptions", null, node1Exception);
+       assertEquals("node1 saw no exceptions", null, node1Exception);
         assertEquals("node2 saw no exceptions", null, node2Exception);
 
-        // let the final PFER propagate
+       // let the final PFER propagate
         sleep(100);
 
-        long txTimestamp = System.currentTimeMillis();
+       long txTimestamp = System.currentTimeMillis();
         String msg1 = "Correct node1 value";
         String msg2 = "Correct node2 value";
         Object expected1 = null;
@@ -395,7 +393,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             expected2 = VALUE2;
         }
 
-        assertEquals(msg1, expected1, localAccessStrategy.get(KEY, txTimestamp));
+       assertEquals(msg1, expected1, localAccessStrategy.get(KEY, txTimestamp));
         assertEquals(msg2, expected2, remoteAccessStrategy.get(KEY, txTimestamp));
     }
 
@@ -431,70 +429,70 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
     private void evictOrRemoveTest( boolean evict ) {
 
-        final String KEY = KEY_BASE + testCount++;
+       final String KEY = KEY_BASE + testCount++;
 
-        assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
+       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
         assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+       localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        // Wait for async propagation
+       // Wait for async propagation
         sleep(250);
 
-        if (evict) localAccessStrategy.evict(KEY);
+       if (evict) localAccessStrategy.evict(KEY);
         else localAccessStrategy.remove(KEY);
 
-        assertEquals(null, localAccessStrategy.get(KEY, System.currentTimeMillis()));
+       assertEquals(null, localAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
+       assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
     }
 
     private void evictOrRemoveAllTest( boolean evict ) {
 
-        final String KEY = KEY_BASE + testCount++;
+       final String KEY = KEY_BASE + testCount++;
 
-        assertEquals(0, getValidKeyCount(localCache.keySet()));
+       assertEquals(0, getValidKeyCount(localCache.keySet()));
 
-        assertEquals(0, getValidKeyCount(remoteCache.keySet()));
+       assertEquals(0, getValidKeyCount(remoteCache.keySet()));
 
-        assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
+       assertNull("local is clean", localAccessStrategy.get(KEY, System.currentTimeMillis()));
         assertNull("remote is clean", remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
+       localAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, localAccessStrategy.get(KEY, System.currentTimeMillis()));
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        // Wait for async propagation
+       // Wait for async propagation
         sleep(250);
 
-        if (evict) localAccessStrategy.evictAll();
+       if (evict) localAccessStrategy.evictAll();
         else localAccessStrategy.removeAll();
 
-        // This should re-establish the region root node
+       // This should re-establish the region root node
         assertNull(localAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        assertEquals(0, getValidKeyCount(localCache.keySet()));
+       assertEquals(0, getValidKeyCount(localCache.keySet()));
 
-        // Re-establishing the region root on the local node doesn't
+       // Re-establishing the region root on the local node doesn't
         // propagate it to other nodes. Do a get on the remote node to re-establish
         assertEquals(null, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        assertEquals(0, getValidKeyCount(remoteCache.keySet()));
+       assertEquals(0, getValidKeyCount(remoteCache.keySet()));
 
-        // Test whether the get above messes up the optimistic version
+       // Test whether the get above messes up the optimistic version
         remoteAccessStrategy.putFromLoad(KEY, VALUE1, System.currentTimeMillis(), new Integer(1));
         assertEquals(VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
 
-        assertEquals(1, getValidKeyCount(remoteCache.keySet()));
+       assertEquals(1, getValidKeyCount(remoteCache.keySet()));
 
-        // Wait for async propagation of the putFromLoad
+       // Wait for async propagation of the putFromLoad
         sleep(250);
 
-        assertEquals("local is correct",
+       assertEquals("local is correct",
                      (isUsingInvalidation() ? null : VALUE1),
                      localAccessStrategy.get(KEY, System.currentTimeMillis()));
         assertEquals("remote is correct", VALUE1, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
@@ -513,17 +511,19 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 
         private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
 
-        private final String configResource;
+       private final String configResource;
         private final String configName;
         private String preferIPv4Stack;
-        private ServiceRegistry serviceRegistry;
 
-        public AccessStrategyTestSetup( Test test,
+       private ServiceRegistry localServiceRegistry;
+        private ServiceRegistry remoteServiceRegistry;
+
+       public AccessStrategyTestSetup( Test test,
                                         String configName ) {
             this(test, configName, null);
         }
 
-        public AccessStrategyTestSetup( Test test,
+       public AccessStrategyTestSetup( Test test,
                                         String configName,
                                         String configResource ) {
             super(test);
@@ -531,24 +531,24 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
             this.configResource = configResource;
         }
 
-        @Override
+       @Override
         protected void setUp() throws Exception {
             super.setUp();
 
-            // Try to ensure we use IPv4; otherwise cluster formation is very slow
+          // Try to ensure we use IPv4; otherwise cluster formation is very slow
             preferIPv4Stack = System.getProperty(PREFER_IPV4STACK);
             System.setProperty(PREFER_IPV4STACK, "true");
 
-            serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(Environment.getProperties());
+           localCfg = createConfiguration(configName, configResource);
+            localServiceRegistry = ServiceRegistryBuilder.buildServiceRegistry(localCfg.getProperties());
+            localRegionFactory = CacheTestUtil.startRegionFactory(localServiceRegistry, localCfg);
 
-            localCfg = createConfiguration(configName, configResource);
-            localRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistry.getService(JdbcServices.class), localCfg);
-
-            remoteCfg = createConfiguration(configName, configResource);
-            remoteRegionFactory = CacheTestUtil.startRegionFactory(serviceRegistry.getService(JdbcServices.class), remoteCfg);
+           remoteCfg = createConfiguration(configName, configResource);
+            remoteServiceRegistry = ServiceRegistryBuilder.buildServiceRegistry(remoteCfg.getProperties());
+            remoteRegionFactory = CacheTestUtil.startRegionFactory(remoteServiceRegistry, remoteCfg);
         }
 
-        @Override
+       @Override
         protected void tearDown() throws Exception {
             try {
                 super.tearDown();
@@ -557,13 +557,16 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
                 else System.setProperty(PREFER_IPV4STACK, preferIPv4Stack);
             }
 
-            try {
+           try {
                 if (localRegionFactory != null) localRegionFactory.stop();
 
-                if (remoteRegionFactory != null) remoteRegionFactory.stop();
+             if (remoteRegionFactory != null) remoteRegionFactory.stop();
             } finally {
-                if (serviceRegistry != null) {
-                    ServiceRegistryBuilder.destroy(serviceRegistry);
+                if (localServiceRegistry != null) {
+                    ServiceRegistryBuilder.destroy(localServiceRegistry);
+                }
+                if (remoteServiceRegistry != null) {
+                    ServiceRegistryBuilder.destroy(remoteServiceRegistry);
                 }
             }
         }

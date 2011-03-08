@@ -1,5 +1,6 @@
 //$Id: CreateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.nonflushedchanges;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import junit.framework.Test;
@@ -101,6 +102,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 2 );
@@ -175,6 +177,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		s.persist( dupe );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();

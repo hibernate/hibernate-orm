@@ -94,7 +94,7 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 		}
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				lockable.getVersionType().nullSafeSet( st, version, 1, session );
 				int offset = 2;

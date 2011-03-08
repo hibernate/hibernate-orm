@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.engine.loading;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.util.HashMap;
@@ -35,9 +36,9 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.CollectionKey;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.util.IdentityMap;
 import org.jboss.logging.Logger;
 
 /**

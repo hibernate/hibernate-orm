@@ -40,7 +40,7 @@ import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.

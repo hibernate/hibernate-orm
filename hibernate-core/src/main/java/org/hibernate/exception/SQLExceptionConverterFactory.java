@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.exception;
+
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -31,8 +32,8 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -22,18 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.testing.cache;
+
 import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.tm.ConnectionProviderImpl;
 import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.hibernate.transaction.JDBCTransactionFactory;
 
 /**
  * Common requirement testing for each {@link org.hibernate.cache.CacheProvider} impl.
@@ -59,7 +60,8 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 		return new String[] { "cache/Item.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
@@ -76,7 +78,7 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 			cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
 		}
 		else {
-			cfg.setProperty( Environment.TRANSACTION_STRATEGY, JDBCTransactionFactory.class.getName() );
+			cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 		}
 	}
 

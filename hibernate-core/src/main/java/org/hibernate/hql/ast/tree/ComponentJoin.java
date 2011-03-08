@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
+
 import org.hibernate.QueryException;
 import org.hibernate.hql.NameGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Models an explicit join terminating at a component value (e.g. <tt>... from Person p join p.name as n ...</tt>)
@@ -80,14 +81,16 @@ public class ComponentJoin extends FromElement {
 	}
 
 
-	public Type getDataType() {
+	@Override
+    public Type getDataType() {
 		return getComponentType();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public String getIdentityColumn() {
+	@Override
+    public String getIdentityColumn() {
 		// used to "resolve" the IdentNode when our alias is encountered *by itself* in the query; so
 		//		here we use the component
 		// NOTE : ^^ is true *except for* when encountered by itself in the SELECT clause.  That gets
@@ -99,7 +102,8 @@ public class ComponentJoin extends FromElement {
 	/**
 	 * {@inheritDoc}
 	 */
-	public String getDisplayText() {
+	@Override
+    public String getDisplayText() {
 		return "ComponentJoin{path=" + getComponentPath() + ", type=" + componentType.getReturnedClass() + "}";
 	}
 
@@ -110,33 +114,38 @@ public class ComponentJoin extends FromElement {
 			super( fromElement );
 		}
 
-		public Type getDataType() {
+		@Override
+        public Type getDataType() {
 			return getComponentType();
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
-		public QueryableCollection getQueryableCollection() {
+		@Override
+        public QueryableCollection getQueryableCollection() {
 			return null;
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
-		public PropertyMapping getPropertyMapping(String propertyName) {
+		@Override
+        public PropertyMapping getPropertyMapping(String propertyName) {
 			return propertyMapping;
 		}
 
 		/**
 		 * {@inheritDoc}
 		 */
-		public Type getPropertyType(String propertyName, String propertyPath) {
+		@Override
+        public Type getPropertyType(String propertyName, String propertyPath) {
 			int index = getComponentType().getPropertyIndex( propertyName );
 			return getComponentType().getSubtypes()[index];
 		}
 
-		public String renderScalarIdentifierSelect(int i) {
+		@Override
+        public String renderScalarIdentifierSelect(int i) {
 			String[] cols = getBasePropertyMapping().toColumns( getTableAlias(), getComponentProperty() );
 			StringBuffer buf = new StringBuffer();
 			// For property references generate <tablealias>.<columnname> as <projectionalias>

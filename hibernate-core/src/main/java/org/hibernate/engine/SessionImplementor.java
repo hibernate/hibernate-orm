@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.engine;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Iterator;
@@ -36,10 +37,9 @@ import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.Transaction;
 import org.hibernate.collection.PersistentCollection;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
@@ -63,13 +63,13 @@ public interface SessionImplementor extends Serializable {
 	 * @return The interceptor.
 	 */
 	public Interceptor getInterceptor();
-	
+
 	/**
 	 * Enable/disable automatic cache clearing from after transaction
 	 * completion (for EJB3)
 	 */
 	public void setAutoClear(boolean enabled);
-		
+
 	/**
 	 * Does this <tt>Session</tt> have an active Hibernate transaction
 	 * or is there a JTA transaction in progress?
@@ -79,22 +79,22 @@ public interface SessionImplementor extends Serializable {
 	/**
 	 * Initialize the collection (if not already initialized)
 	 */
-	public void initializeCollection(PersistentCollection collection, boolean writing) 
+	public void initializeCollection(PersistentCollection collection, boolean writing)
 	throws HibernateException;
-	
+
 	/**
-	 * Load an instance without checking if it was deleted. 
-	 * 
-	 * When <tt>nullable</tt> is disabled this method may create a new proxy or 
+	 * Load an instance without checking if it was deleted.
+	 *
+	 * When <tt>nullable</tt> is disabled this method may create a new proxy or
 	 * return an existing proxy; if it does not exist, throw an exception.
-	 * 
-	 * When <tt>nullable</tt> is enabled, the method does not create new proxies 
-	 * (but might return an existing proxy); if it does not exist, return 
+	 *
+	 * When <tt>nullable</tt> is enabled, the method does not create new proxies
+	 * (but might return an existing proxy); if it does not exist, return
 	 * <tt>null</tt>.
-	 * 
+	 *
 	 * When <tt>eager</tt> is enabled, the object is eagerly fetched
 	 */
-	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable) 
+	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
 	throws HibernateException;
 
 	/**
@@ -132,7 +132,7 @@ public interface SessionImplementor extends Serializable {
 	 * Execute a criteria query
 	 */
 	public List list(CriteriaImpl criteria);
-	
+
 	/**
 	 * Execute a filter
 	 */
@@ -141,14 +141,14 @@ public interface SessionImplementor extends Serializable {
 	 * Iterate a filter
 	 */
 	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
-	
+
 	/**
 	 * Get the <tt>EntityPersister</tt> for any instance
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
 	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
-	
+
 	/**
 	 * Get the entity instance associated with the given <tt>Key</tt>,
 	 * calling the Interceptor if necessary
@@ -156,21 +156,7 @@ public interface SessionImplementor extends Serializable {
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException;
 
 	/**
-	 * Notify the session that the transaction completed, so we no longer
-	 * own the old locks. (Also we should release cache softlocks.) May
-	 * be called multiple times during the transaction completion process.
-	 * Also called after an autocommit, in which case the second argument
-	 * is null.
-	 */
-	public void afterTransactionCompletion(boolean successful, Transaction tx);
-	
-	/**
-	 * Notify the session that the transaction is about to complete
-	 */
-	public void beforeTransactionCompletion(Transaction tx);
-
-	/**
-	 * Return the identifier of the persistent object, or null if 
+	 * Return the identifier of the persistent object, or null if
 	 * not associated with the session
 	 */
 	public Serializable getContextEntityIdentifier(Object object);
@@ -179,27 +165,27 @@ public interface SessionImplementor extends Serializable {
 	 * The best guess entity name for an entity not in an association
 	 */
 	public String bestGuessEntityName(Object object);
-	
+
 	/**
 	 * The guessed entity name for an entity not in an association
 	 */
 	public String guessEntityName(Object entity) throws HibernateException;
-	
-	/** 
+
+	/**
 	 * Instantiate the entity class, initializing with the given identifier
 	 */
 	public Object instantiate(String entityName, Serializable id) throws HibernateException;
-	
+
 	/**
 	 * Execute an SQL Query
 	 */
-	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) 
+	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	throws HibernateException;
-	
+
 	/**
 	 * Execute an SQL Query
 	 */
-	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) 
+	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	throws HibernateException;
 
 	/**
@@ -232,7 +218,8 @@ public interface SessionImplementor extends Serializable {
 	 * @return The filter parameter value.
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
-	public Object getFilterParameterValue(String filterParameterName);
+	@Deprecated
+    public Object getFilterParameterValue(String filterParameterName);
 
 	/**
 	 * Retreive the type for a given filter parrameter.
@@ -242,7 +229,8 @@ public interface SessionImplementor extends Serializable {
 	 * @return The filter param type
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
-	public Type getFilterParameterType(String filterParameterName);
+	@Deprecated
+    public Type getFilterParameterType(String filterParameterName);
 
 	/**
 	 * Return the currently enabled filters.  The filter map is keyed by filter
@@ -251,29 +239,30 @@ public interface SessionImplementor extends Serializable {
 	 * @return The currently enabled filters.
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
-	public Map getEnabledFilters();
-	
+	@Deprecated
+    public Map getEnabledFilters();
+
 	public int getDontFlushFromFind();
-	
+
 	/**
 	 * Retrieves the configured event listeners from this event source.
 	 *
 	 * @return The configured event listeners.
 	 */
 	public EventListeners getListeners();
-	
+
 	//TODO: temporary
-	
+
 	/**
 	 * Get the persistence context for this session
 	 */
 	public PersistenceContext getPersistenceContext();
-	
+
 	/**
 	 * Execute a HQL update or delete query
 	 */
 	int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException;
-	
+
 	/**
 	 * Execute a native SQL update or delete query
 	 */
@@ -295,10 +284,10 @@ public interface SessionImplementor extends Serializable {
 	 * <p/>
 	 * @param nonFlushedChanges the non-flushed changes
 	 */
-	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException;	
+	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException;
 
 	// copied from Session:
-	
+
 	public EntityMode getEntityMode();
 	public CacheMode getCacheMode();
 	public void setCacheMode(CacheMode cm);
@@ -308,7 +297,7 @@ public interface SessionImplementor extends Serializable {
 	public void setFlushMode(FlushMode fm);
 	public Connection connection();
 	public void flush();
-	
+
 	/**
 	 * Get a Query instance for a named query or named native SQL query
 	 */
@@ -317,7 +306,7 @@ public interface SessionImplementor extends Serializable {
 	 * Get a Query instance for a named native SQL query
 	 */
 	public Query getNamedSQLQuery(String name);
-	
+
 	public boolean isEventSource();
 
 	public void afterScrollOperation();
@@ -328,7 +317,8 @@ public interface SessionImplementor extends Serializable {
 	 * @return The current internal fetch profile, or null if none currently associated.
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
-	public String getFetchProfile();
+	@Deprecated
+    public String getFetchProfile();
 
 	/**
 	 * Set the current <i>internal</i> fetch profile for this session.
@@ -336,13 +326,19 @@ public interface SessionImplementor extends Serializable {
 	 * @param name The internal fetch profile name to use
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
-	public void setFetchProfile(String name);
-
-	public JDBCContext getJDBCContext();
+	@Deprecated
+    public void setFetchProfile(String name);
 
 	/**
-	 * Determine whether the session is closed.  Provided seperately from
-	 * {@link #isOpen()} as this method does not attempt any JTA synch
+	 * Retrieve access to the session's transaction coordinator.
+	 *
+	 * @return The transaction coordinator.
+	 */
+	public TransactionCoordinator getTransactionCoordinator();
+
+	/**
+	 * Determine whether the session is closed.  Provided separately from
+	 * {@link #isOpen()} as this method does not attempt any JTA synchronization
 	 * registration, where as {@link #isOpen()} does; which makes this one
 	 * nicer to use for most internal purposes.
 	 *

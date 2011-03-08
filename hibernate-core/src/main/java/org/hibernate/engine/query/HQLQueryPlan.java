@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.engine.query;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,11 +45,11 @@ import org.hibernate.hql.FilterTranslator;
 import org.hibernate.hql.ParameterTranslations;
 import org.hibernate.hql.QuerySplitter;
 import org.hibernate.hql.QueryTranslator;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
+import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.IdentitySet;
-import org.hibernate.util.JoinedIterator;
 import org.jboss.logging.Logger;
 
 /**

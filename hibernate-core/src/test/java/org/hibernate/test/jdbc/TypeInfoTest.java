@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.jdbc;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.LinkedHashSet;
-import org.hibernate.internal.util.jdbc.TypeInfo;
-import org.hibernate.internal.util.jdbc.TypeInfoExtracter;
+import org.hibernate.engine.jdbc.internal.TypeInfo;
+import org.hibernate.engine.jdbc.internal.TypeInfoExtracter;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * TODO : javadoc

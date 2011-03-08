@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.event;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -51,7 +52,7 @@ import org.hibernate.event.def.DefaultSaveEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateCopyEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.def.DefaultUpdateEventListener;
-import org.hibernate.util.Cloneable;
+import org.hibernate.internal.util.Cloneable;
 
 /**
  * A convience holder for all defined session event listeners.
@@ -74,12 +75,12 @@ public class EventListeners extends Cloneable implements Serializable {
 	private LockEventListener[] lockEventListeners = { new DefaultLockEventListener() };
 	private RefreshEventListener[] refreshEventListeners = { new DefaultRefreshEventListener() };
 	private FlushEntityEventListener[] flushEntityEventListeners = { new DefaultFlushEntityEventListener() };
-	private InitializeCollectionEventListener[] initializeCollectionEventListeners = 
+	private InitializeCollectionEventListener[] initializeCollectionEventListeners =
 			{ new DefaultInitializeCollectionEventListener() };
 
 	private PostLoadEventListener[] postLoadEventListeners = { new DefaultPostLoadEventListener() };
 	private PreLoadEventListener[] preLoadEventListeners = { new DefaultPreLoadEventListener() };
-	
+
 	private PreDeleteEventListener[] preDeleteEventListeners = {};
 	private PreUpdateEventListener[] preUpdateEventListeners = {};
 	private PreInsertEventListener[] preInsertEventListeners = {};
@@ -95,7 +96,7 @@ public class EventListeners extends Cloneable implements Serializable {
 	private PreCollectionRemoveEventListener[] preCollectionRemoveEventListeners = {};
 	private PostCollectionRemoveEventListener[] postCollectionRemoveEventListeners = {};
 	private PreCollectionUpdateEventListener[] preCollectionUpdateEventListeners = {};
-	private PostCollectionUpdateEventListener[] postCollectionUpdateEventListeners = {};	
+	private PostCollectionUpdateEventListener[] postCollectionUpdateEventListeners = {};
 
 	private SaveOrUpdateEventListener[] saveEventListeners = { new DefaultSaveEventListener() };
 	private SaveOrUpdateEventListener[] updateEventListeners = { new DefaultUpdateEventListener() };
@@ -145,7 +146,7 @@ public class EventListeners extends Cloneable implements Serializable {
 
 	public Class getListenerClassFor(String type) {
 		Class clazz = (Class) eventInterfaceFromType.get(type);
-		
+
 		if (clazz == null) {
 			throw new MappingException("Unrecognized listener type [" + type + "]");
 		}
@@ -304,35 +305,35 @@ public class EventListeners extends Cloneable implements Serializable {
 	public void setInitializeCollectionEventListeners(InitializeCollectionEventListener[] initializeCollectionEventListener) {
 		this.initializeCollectionEventListeners = initializeCollectionEventListener;
 	}
-	
+
 	public FlushEntityEventListener[] getFlushEntityEventListeners() {
 		return flushEntityEventListeners;
 	}
-	
+
 	public void setFlushEntityEventListeners(FlushEntityEventListener[] flushEntityEventListener) {
 		this.flushEntityEventListeners = flushEntityEventListener;
 	}
-	
+
 	public SaveOrUpdateEventListener[] getSaveOrUpdateEventListeners() {
 		return saveOrUpdateEventListeners;
 	}
-	
+
 	public void setSaveOrUpdateEventListeners(SaveOrUpdateEventListener[] saveOrUpdateEventListener) {
 		this.saveOrUpdateEventListeners = saveOrUpdateEventListener;
 	}
-	
+
 	public MergeEventListener[] getMergeEventListeners() {
 		return mergeEventListeners;
 	}
-	
+
 	public void setMergeEventListeners(MergeEventListener[] mergeEventListener) {
 		this.mergeEventListeners = mergeEventListener;
 	}
-	
+
 	public PersistEventListener[] getPersistEventListeners() {
 		return persistEventListeners;
 	}
-	
+
 	public void setPersistEventListeners(PersistEventListener[] createEventListener) {
 		this.persistEventListeners = createEventListener;
 	}
@@ -344,27 +345,27 @@ public class EventListeners extends Cloneable implements Serializable {
 	public void setPersistOnFlushEventListeners(PersistEventListener[] createEventListener) {
 		this.persistOnFlushEventListeners = createEventListener;
 	}
-	
+
 	public MergeEventListener[] getSaveOrUpdateCopyEventListeners() {
 		return saveOrUpdateCopyEventListeners;
 	}
-	
+
 	public void setSaveOrUpdateCopyEventListeners(MergeEventListener[] saveOrUpdateCopyEventListener) {
 		this.saveOrUpdateCopyEventListeners = saveOrUpdateCopyEventListener;
 	}
-	
+
 	public SaveOrUpdateEventListener[] getSaveEventListeners() {
 		return saveEventListeners;
 	}
-	
+
 	public void setSaveEventListeners(SaveOrUpdateEventListener[] saveEventListener) {
 		this.saveEventListeners = saveEventListener;
 	}
-	
+
 	public SaveOrUpdateEventListener[] getUpdateEventListeners() {
 		return updateEventListeners;
 	}
-	
+
 	public void setUpdateEventListeners(SaveOrUpdateEventListener[] updateEventListener) {
 		this.updateEventListeners = updateEventListener;
 	}
@@ -412,27 +413,27 @@ public class EventListeners extends Cloneable implements Serializable {
 	public PostDeleteEventListener[] getPostDeleteEventListeners() {
 		return postDeleteEventListeners;
 	}
-	
+
 	public PostInsertEventListener[] getPostInsertEventListeners() {
 		return postInsertEventListeners;
 	}
-	
+
 	public PostUpdateEventListener[] getPostUpdateEventListeners() {
 		return postUpdateEventListeners;
 	}
-	
+
 	public void setPostDeleteEventListeners(PostDeleteEventListener[] postDeleteEventListener) {
 		this.postDeleteEventListeners = postDeleteEventListener;
 	}
-	
+
 	public void setPostInsertEventListeners(PostInsertEventListener[] postInsertEventListener) {
 		this.postInsertEventListeners = postInsertEventListener;
 	}
-	
+
 	public void setPostUpdateEventListeners(PostUpdateEventListener[] postUpdateEventListener) {
 		this.postUpdateEventListeners = postUpdateEventListener;
 	}
-	
+
 	public PostCollectionRecreateEventListener[] getPostCollectionRecreateEventListeners() {
 		return postCollectionRecreateEventListeners;
 	}
@@ -447,7 +448,7 @@ public class EventListeners extends Cloneable implements Serializable {
 
 	public void setPostCollectionRemoveEventListeners(PostCollectionRemoveEventListener[] postCollectionRemoveEventListener) {
 		this.postCollectionRemoveEventListeners = postCollectionRemoveEventListener;
-	}	        
+	}
 
 	public PostCollectionUpdateEventListener[] getPostCollectionUpdateEventListeners() {
 		return postCollectionUpdateEventListeners;
@@ -460,23 +461,23 @@ public class EventListeners extends Cloneable implements Serializable {
 	public PreDeleteEventListener[] getPreDeleteEventListeners() {
 		return preDeleteEventListeners;
 	}
-	
+
 	public void setPreDeleteEventListeners(PreDeleteEventListener[] preDeleteEventListener) {
 		this.preDeleteEventListeners = preDeleteEventListener;
 	}
-	
+
 	public PreInsertEventListener[] getPreInsertEventListeners() {
 		return preInsertEventListeners;
 	}
-	
+
 	public void setPreInsertEventListeners(PreInsertEventListener[] preInsertEventListener) {
 		this.preInsertEventListeners = preInsertEventListener;
 	}
-	
+
 	public PreUpdateEventListener[] getPreUpdateEventListeners() {
 		return preUpdateEventListeners;
 	}
-	
+
 	public void setPreUpdateEventListeners(PreUpdateEventListener[] preUpdateEventListener) {
 		this.preUpdateEventListeners = preUpdateEventListener;
 	}

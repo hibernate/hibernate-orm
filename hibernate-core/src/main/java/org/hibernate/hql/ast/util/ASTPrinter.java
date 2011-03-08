@@ -23,13 +23,14 @@
  *
  */
 package org.hibernate.hql.ast.util;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Map;
 import org.hibernate.hql.ast.tree.DisplayableNode;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import antlr.collections.AST;
 
 /**

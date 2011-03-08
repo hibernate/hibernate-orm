@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.entities.mapper.id;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,9 +30,9 @@ import java.util.Map;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -41,7 +42,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 
     public EmbeddedIdMapper(PropertyData idPropertyData, String compositeIdClass) {
         super(compositeIdClass);
-        
+
         this.idPropertyData = idPropertyData;
     }
 
@@ -69,7 +70,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
         Setter setter = ReflectionTools.getSetter(obj.getClass(), idPropertyData);
 
         try {
-            Object subObj = ReflectHelper.getDefaultConstructor(getter.getReturnType()).newInstance();
+            Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
             setter.set(obj, subObj, null);
 
             for (IdMapper idMapper : ids.values()) {

@@ -27,10 +27,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
+import org.hibernate.engine.EntityEntry;
+import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -43,9 +45,9 @@ public abstract class EntityAction
 
 	private final String entityName;
 	private final Serializable id;
-	private final Object instance;
-	private final SessionImplementor session;
 
+	private transient Object instance;
+	private transient SessionImplementor session;
 	private transient EntityPersister persister;
 
 	/**
@@ -96,9 +98,16 @@ public abstract class EntityAction
 	 */
 	public final Serializable getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
-			return session.getPersistenceContext().getEntry( instance ).getId();
+			Serializable eeId = session.getPersistenceContext().getEntry( instance ).getId();
+			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
 		return id;
+	}
+
+	public final DelayedPostInsertIdentifier getDelayedId() {
+		return DelayedPostInsertIdentifier.class.isInstance( id ) ?
+				DelayedPostInsertIdentifier.class.cast( id ) :
+				null;
 	}
 
 	/**
@@ -154,15 +163,19 @@ public abstract class EntityAction
 	}
 
 	/**
-	 * Serialization...
-	 *
-	 * @param ois Thed object stream
-	 * @throws IOException Problem performing the default stream reading
-	 * @throws ClassNotFoundException Problem performing the default stream reading
+	 * Reconnect to session after deserialization...
 	 */
-	private void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		ois.defaultReadObject();
-		persister = session.getFactory().getEntityPersister( entityName );
+	public void afterDeserialize(SessionImplementor session) {
+		if ( this.session != null || this.persister != null ) {
+			throw new IllegalStateException( "already attached to a session." );
+		}
+		// IMPL NOTE: non-flushed changes code calls this method with session == null...
+		// guard against NullPointerException
+		if ( session != null ) {
+			this.session = session;
+			this.persister = session.getFactory().getEntityPersister( entityName );
+			this.instance = session.getPersistenceContext().getEntity( new EntityKey( id, persister, session.getEntityMode() ) );
+		}
 	}
 }
 

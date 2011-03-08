@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import java.util.List;
 import java.util.Map;
 import org.hibernate.HibernateLogger;
@@ -33,6 +34,7 @@ import org.hibernate.hql.CollectionProperties;
 import org.hibernate.hql.CollectionSubqueryFactory;
 import org.hibernate.hql.NameGenerator;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
 import org.hibernate.persister.collection.CollectionPropertyNames;
@@ -43,7 +45,6 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**

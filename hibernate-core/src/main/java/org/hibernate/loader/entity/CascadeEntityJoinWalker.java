@@ -30,10 +30,10 @@ import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.AbstractEntityJoinWalker;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
-import org.hibernate.util.CollectionHelper;
 
 public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 	
@@ -50,16 +50,19 @@ public class CascadeEntityJoinWalker extends AbstractEntityJoinWalker {
 		initAll( whereCondition.toString(), "", LockOptions.READ );
 	}
 
-	protected boolean isJoinedFetchEnabled(AssociationType type, FetchMode config, CascadeStyle cascadeStyle) {
+	@Override
+    protected boolean isJoinedFetchEnabled(AssociationType type, FetchMode config, CascadeStyle cascadeStyle) {
 		return ( type.isEntityType() || type.isCollectionType() ) &&
 				( cascadeStyle==null || cascadeStyle.doCascade(cascadeAction) );
 	}
 
-	protected boolean isTooManyCollections() {
+	@Override
+    protected boolean isTooManyCollections() {
 		return countCollectionPersisters(associations)>0;
 	}
 
-	public String getComment() {
+	@Override
+    public String getComment() {
 		return "load " + getPersister().getEntityName();
 	}
 	

@@ -1,5 +1,6 @@
 //$Id: FooBarTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import static org.hibernate.TestLogger.LOG;
 import java.io.Serializable;
 import java.sql.Connection;
@@ -52,12 +53,12 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.test.common.ConnectionProviderBuilder;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.SerializationHelper;
 
 
 public class FooBarTest extends LegacyTestCase {
@@ -1352,9 +1353,7 @@ public class FooBarTest extends LegacyTestCase {
 		Object b = result[0];
 		assertTrue( s.getCurrentLockMode(b)==LockMode.WRITE && s.getCurrentLockMode( result[1] )==LockMode.WRITE );
 		tx.commit();
-		s.disconnect();
 
-		s.reconnect();
 		tx = s.beginTransaction();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
 		s.createQuery( "from Foo foo" ).list();
@@ -1365,9 +1364,7 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( s.getCurrentLockMode(b)==LockMode.READ);
 		s.evict(baz);
 		tx.commit();
-		s.disconnect();
 
-		s.reconnect();
 		tx = s.beginTransaction();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
 		s.delete( s.load( Baz.class, baz.getCode() ) );
@@ -2569,12 +2566,9 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( baz.getCascadingBars().size()==1 );
 		txn.commit();
 
-		s.disconnect();
-
 		s2 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize(s) );
 		s.close();
 
-		s2.reconnect();
 		txn2 = s2.beginTransaction();
 		baz = (Baz) s2.load(Baz.class, baz.getCode());
 		assertTrue( ( (Long) s2.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue()==3 );
@@ -2597,7 +2591,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s2.disconnect();
 
-		Session s3 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize(s2) );
+		Session s3 = (Session) SerializationHelper.deserialize( SerializationHelper.serialize( s2 ) );
 		s2.close();
 		//s3.reconnect();
 		assertTrue( s3.load( Qux.class, new Long(666) )!=null ); //nonexistent
@@ -3945,35 +3939,6 @@ public class FooBarTest extends LegacyTestCase {
 		}
 	}
 
-	public void testDisconnect() throws Exception {
-		Session s = openSession();
-		s.beginTransaction();
-		Foo foo = new Foo();
-		Foo foo2 = new Foo();
-		s.save(foo);
-		s.save(foo2);
-		foo2.setFoo(foo);
-		s.getTransaction().commit();
-
-		s.disconnect();
-		s.reconnect();
-
-		s.beginTransaction();
-		s.delete(foo);
-		foo2.setFoo(null);
-		s.getTransaction().commit();
-
-		s.disconnect();
-		s.reconnect();
-
-		s.beginTransaction();
-		s.delete(foo2);
-		s.getTransaction().commit();
-		s.close();
-	}
-
-
-
 	public void testOrderBy() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4832,9 +4797,7 @@ public class FooBarTest extends LegacyTestCase {
 		t = s.beginTransaction();
 		Foo foo = (Foo) s.get(Foo.class, id);
 		t.commit();
-		s.disconnect();
 
-		s.reconnect();
 		t = s.beginTransaction();
 		s.flush();
 		t.commit();

@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,8 +40,8 @@ import org.apache.tools.ant.types.FileSet;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * An Ant task for <tt>SchemaUpdate</tt>.
@@ -121,7 +122,8 @@ public class SchemaUpdateTask extends MatchingTask {
 	/**
 	 * Execute the task
 	 */
-	public void execute() throws BuildException {
+	@Override
+    public void execute() throws BuildException {
 		try {
 			log("Running Hibernate Core SchemaUpdate."); 
 			log("This is an Ant task supporting only mapping files, if you want to use annotations see http://tools.hibernate.org.");
@@ -161,14 +163,14 @@ public class SchemaUpdateTask extends MatchingTask {
 			}
 		}
 
-		return ArrayHelper.toStringArray(files);
+		return ArrayHelper.toStringArray( files );
 	}
 
 	private Configuration getConfiguration() throws Exception {
 		Configuration cfg = new Configuration();
 		if (namingStrategy!=null) {
 			cfg.setNamingStrategy(
-					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
+					(NamingStrategy) ReflectHelper.classForName( namingStrategy ).newInstance()
 				);
 		}
 		if (configurationFile!=null) {

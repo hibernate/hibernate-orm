@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
@@ -31,11 +32,11 @@ import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.classic.Validatable;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -78,6 +79,10 @@ public final class TypeFactory implements Serializable {
 
 	public void injectSessionFactory(SessionFactoryImplementor factory) {
 		typeScope.injectSessionFactory( factory );
+	}
+
+	public SessionFactoryImplementor resolveSessionFactory() {
+		return typeScope.resolveFactory();
 	}
 
 	public Type byClass(Class clazz, Properties parameters) {

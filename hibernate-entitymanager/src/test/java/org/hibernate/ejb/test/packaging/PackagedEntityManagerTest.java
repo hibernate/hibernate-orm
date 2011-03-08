@@ -57,7 +57,7 @@ import org.hibernate.ejb.test.pack.various.Seat;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.stat.Statistics;
-import org.hibernate.util.ConfigHelper;
+import org.hibernate.internal.util.ConfigHelper;
 
 /**
  * In this test we verify that  it is possible to bootstrap Hibernate/JPA from

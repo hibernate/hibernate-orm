@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.jdbc;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -31,8 +32,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.StaleStateException;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.util.JDBCExceptionReporter;
 import org.jboss.logging.Logger;
 
 /**
@@ -43,6 +44,7 @@ import org.jboss.logging.Logger;
 public class Expectations {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Expectations.class.getName());
+	private static SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
 
 	public static final int USUAL_EXPECTED_COUNT = 1;
 	public static final int USUAL_PARAM_POSITION = 1;
@@ -136,7 +138,7 @@ public class Expectations {
 				return toCallableStatement( statement ).getInt( parameterPosition );
 			}
 			catch( SQLException sqle ) {
-				JDBCExceptionReporter.logExceptions( sqle, "could not extract row counts from CallableStatement" );
+				sqlExceptionHelper.logExceptions( sqle, "could not extract row counts from CallableStatement" );
 				throw new GenericJDBCException( "could not extract row counts from CallableStatement", sqle );
 			}
 		}

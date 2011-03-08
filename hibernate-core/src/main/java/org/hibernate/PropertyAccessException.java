@@ -23,7 +23,8 @@
  *
  */
 package org.hibernate;
-import org.hibernate.util.StringHelper;
+
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A problem occurred accessing a property of an instance of a
@@ -58,7 +59,8 @@ public class PropertyAccessException extends HibernateException {
 		return propertyName;
 	}
 
-	public String getMessage() {
+	@Override
+    public String getMessage() {
 		return super.getMessage() +
 		( wasSetter ? " setter of " : " getter of ") +
 		StringHelper.qualify( persistentClass.getName(), propertyName );

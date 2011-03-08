@@ -22,16 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.common;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.JdbcSupport;
+import org.hibernate.engine.jdbc.internal.TypeInfo;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
-import org.hibernate.internal.util.jdbc.TypeInfo;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 
@@ -45,8 +46,8 @@ import org.hibernate.service.spi.Stoppable;
 public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	private ConnectionProvider connectionProvider;
 	private Dialect dialect;
-	private SQLStatementLogger sqlStatementLogger;
-	private SQLExceptionHelper exceptionHelper;
+	private SqlStatementLogger sqlStatementLogger;
+	private SqlExceptionHelper exceptionHelper;
 	private final ExtractedDatabaseMetaData metaDataSupport = new MetaDataSupportImpl();
 
 
@@ -60,8 +61,8 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 	public void prepare(boolean allowAggressiveRelease) {
 		connectionProvider = ConnectionProviderBuilder.buildConnectionProvider( allowAggressiveRelease );
 		dialect = ConnectionProviderBuilder.getCorrespondingDialect();
-		sqlStatementLogger = new SQLStatementLogger( true, false );
-		exceptionHelper = new SQLExceptionHelper();
+		sqlStatementLogger = new SqlStatementLogger( true, false );
+		exceptionHelper = new SqlExceptionHelper();
 
 	}
 
@@ -83,11 +84,11 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 		return null;
 	}
 
-	public SQLStatementLogger getSqlStatementLogger() {
+	public SqlStatementLogger getSqlStatementLogger() {
 		return sqlStatementLogger;
 	}
 
-	public SQLExceptionHelper getSqlExceptionHelper() {
+	public SqlExceptionHelper getSqlExceptionHelper() {
 		return exceptionHelper;
 	}
 

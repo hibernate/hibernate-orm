@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.exec;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -33,10 +34,10 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.DeleteStatement;
 import org.hibernate.hql.ast.tree.FromElement;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Delete;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -104,7 +105,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getJDBCContext().getConnectionManager().prepareStatement( idInsertSelect, false );
+					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
 					Iterator paramSpecifications = getIdSelectParameterSpecifications().iterator();
 					int pos = 1;
 					while ( paramSpecifications.hasNext() ) {
@@ -131,7 +132,7 @@ public class MultiTableDeleteExecutor extends AbstractStatementExecutor {
 			for ( int i = 0; i < deletes.length; i++ ) {
 				try {
 					try {
-						ps = session.getJDBCContext().getConnectionManager().prepareStatement( deletes[i], false );
+						ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( deletes[i], false );
 						ps.executeUpdate();
 					}
 					finally {

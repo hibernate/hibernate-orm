@@ -1,10 +1,11 @@
 package org.hibernate.test.dialect.unit.lockhint;
+
 import java.util.Collections;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.StringHelper;
 
 /**
  * {@inheritDoc}
@@ -21,12 +22,14 @@ public abstract class AbstractLockHintTest extends UnitTestCase {
 	protected abstract String getLockHintUsed();
 	protected abstract Dialect getDialectUnderTest();
 
-	protected void setUp() throws Exception {
+	@Override
+    protected void setUp() throws Exception {
 		super.setUp();
 		this.dialect = getDialectUnderTest();
 	}
 
-	protected void tearDown() throws Exception {
+	@Override
+    protected void tearDown() throws Exception {
 		this.dialect = null;
 		super.tearDown();
 	}

@@ -27,6 +27,7 @@ import java.io.Serializable;
 import junit.framework.TestCase;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.util.ByteCodeHelper;
+import org.hibernate.internal.util.SerializationHelper;
 
 /**
  * This is basically a test to assert the expectations of {@link org.hibernate.type.SerializableType}

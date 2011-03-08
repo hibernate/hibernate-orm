@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.engine;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,10 +39,10 @@ import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.pretty.Printer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**

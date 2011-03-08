@@ -1,6 +1,7 @@
 //$Id$
 //$Id$
 package org.hibernate.test.annotations.manytomany;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -57,11 +58,11 @@ public class ManyToManyTest extends TestCase {
 		assertNotNull( store );
 		assertNotNull( store.getCustomers() );
 		assertEquals( 1, store.getCustomers().size() );
-		knownClient = (KnownClient) store.getCustomers().iterator().next();
+		knownClient = store.getCustomers().iterator().next();
 		assertEquals( emmanuel.getName(), knownClient.getName() );
 		assertNotNull( store.getImplantedIn() );
 		assertEquals( 1, store.getImplantedIn().size() );
-		city = (City) store.getImplantedIn().iterator().next();
+		city = store.getImplantedIn().iterator().next();
 		assertEquals( paris.getName(), city.getName() );
 		tx.commit();
 		s.close();
@@ -72,7 +73,7 @@ public class ManyToManyTest extends TestCase {
 		assertNotNull( knownClient );
 		assertNotNull( knownClient.getStores() );
 		assertEquals( 1, knownClient.getStores().size() );
-		store = (Store) knownClient.getStores().iterator().next();
+		store = knownClient.getStores().iterator().next();
 		assertEquals( fnac.getName(), store.getName() );
 		tx.commit();
 		s.close();
@@ -177,7 +178,7 @@ public class ManyToManyTest extends TestCase {
 		assertNotNull( store );
 		assertNotNull( store.getSuppliers() );
 		assertEquals( 1, store.getSuppliers().size() );
-		supplier = (Supplier) store.getSuppliers().iterator().next();
+		supplier = store.getSuppliers().iterator().next();
 		assertEquals( emi.getName(), supplier.getName() );
 		tx.commit();
 		s.close();
@@ -188,7 +189,7 @@ public class ManyToManyTest extends TestCase {
 		assertNotNull( supplier );
 		assertNotNull( supplier.getSuppStores() );
 		assertEquals( 1, supplier.getSuppStores().size() );
-		store = (Store) supplier.getSuppStores().iterator().next();
+		store = supplier.getSuppStores().iterator().next();
 		assertEquals( fnac.getName(), store.getName() );
 		tx.commit();
 		s.close();
@@ -438,7 +439,7 @@ public class ManyToManyTest extends TestCase {
 		assertNotNull( f );
 		assertNotNull( f.getFriends() );
 		assertEquals( 1, f.getFriends().size() );
-		Friend fromDb2ndFrnd = (Friend) f.getFriends().iterator().next();
+		Friend fromDb2ndFrnd = f.getFriends().iterator().next();
 		assertEquals( fromDb2ndFrnd.getId(), sndF.getId() );
 		assertEquals( 0, fromDb2ndFrnd.getFriends().size() );
 		tx.commit();
@@ -677,30 +678,29 @@ public class ManyToManyTest extends TestCase {
 	// or property.
 	public void testManyToManyEmbeddableBiDirectionalDotNotationInMappedBy() throws Exception {
 		Session s;
-		Transaction tx;
 		s = openSession();
-		tx = s.beginTransaction();
+		s.getTransaction().begin();
 		Employee e = new Employee();
 		e.setName( "Sharon" );
 		List<PhoneNumber> phoneNumbers = new ArrayList<PhoneNumber>();
 		Collection<Employee> employees = new ArrayList<Employee>();
 		employees.add( e );
-	   ContactInfo contactInfo = new ContactInfo();
+		ContactInfo contactInfo = new ContactInfo();
 		PhoneNumber number = new PhoneNumber();
 		number.setEmployees( employees );
 		phoneNumbers.add( number );
 		contactInfo.setPhoneNumbers( phoneNumbers );
 		e.setContactInfo( contactInfo );
 		s.persist( e );
-		s.flush();
-		s.clear();
-		tx.commit();
+		s.getTransaction().commit();
+		s.close();
 
-		tx.begin();
+		s = openSession();
+		s.getTransaction().begin();
 		e = (Employee)s.get( e.getClass(),e.getId() );
 		// follow both directions of many to many association 
 		assertEquals("same employee", e.getName(), e.getContactInfo().getPhoneNumbers().get(0).getEmployees().iterator().next().getName());
-		tx.commit();
+		s.getTransaction().commit();
 
 		s.close();
 	}
@@ -715,9 +715,8 @@ public class ManyToManyTest extends TestCase {
 	// with the dot notation is the name of the respective embedded field or property.
 	public void testOneToManyEmbeddableBiDirectionalDotNotationInMappedBy() throws Exception {
 		Session s;
-		Transaction tx;
 		s = openSession();
-		tx = s.beginTransaction();
+		s.getTransaction().begin();
 		Employee e = new Employee();
 		JobInfo job = new JobInfo();
 		job.setJobDescription( "Sushi Chef" );
@@ -728,23 +727,24 @@ public class ManyToManyTest extends TestCase {
 		job.setPm(pm);
 		e.setJobInfo( job );
 		s.persist( e );
-		s.flush();
-		s.clear();
-		tx.commit();
+		s.getTransaction().commit();
+		s.close();
 
-		tx.begin();
+		s = openSession();
+		s.getTransaction().begin();
 		e = (Employee) s.get( e.getClass(), e.getId() );
 		assertEquals( "same job in both directions", 
 			e.getJobInfo().getJobDescription(),
 			e.getJobInfo().getPm().getManages().iterator().next().getJobInfo().getJobDescription()  );
-		tx.commit();
+		s.getTransaction().commit();
 		s.close();
 	}
 
 	/**
 	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
 	 */
-	protected Class[] getAnnotatedClasses() {
+	@Override
+    protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Friend.class,
 				Employer.class,

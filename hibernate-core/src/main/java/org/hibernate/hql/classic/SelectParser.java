@@ -32,7 +32,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.QuerySplitter;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Parsers the select clause of a Hibernate query.

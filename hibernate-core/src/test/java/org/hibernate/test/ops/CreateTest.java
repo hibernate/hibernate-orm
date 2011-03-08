@@ -121,7 +121,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s.persist(dupe);
 		try {
 			tx.commit();
-			assertFalse(true);
+			fail( "Expecting constraint failure" );
 		}
 		catch (ConstraintViolationException cve) {
 			//verify that an exception is thrown!

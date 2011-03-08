@@ -24,9 +24,9 @@
  */
 package org.hibernate.loader;
 import java.util.Map;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * CollectionAliases which handles the logic of selecting user provided aliases (via return-property),
@@ -67,7 +67,7 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 	}
 
 	public GeneratedCollectionAliases(CollectionPersister persister, String string) {
-		this(CollectionHelper.EMPTY_MAP, persister, string);
+		this( CollectionHelper.EMPTY_MAP, persister, string);
 	}
 
 	/**
@@ -116,7 +116,8 @@ public class GeneratedCollectionAliases implements CollectionAliases {
 		return suffix;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return super.toString() + " [suffix=" + suffix +
 		        ", suffixedKeyAliases=[" + join( keyAliases ) +
 		        "], suffixedIndexAliases=[" + join( indexAliases ) +

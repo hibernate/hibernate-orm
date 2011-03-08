@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.manytomany.batchload;
+
 import java.util.List;
 import junit.framework.Assert;
 import junit.framework.Test;
@@ -29,11 +30,11 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.stat.CollectionStatistics;
@@ -59,26 +60,23 @@ public class BatchedManyToManyTest extends FunctionalTestCase {
 		return new String[] { "manytomany/batchload/UserGroupBatchLoad.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.BATCH_STRATEGY, TestingBatchBuilder.class.getName() );
 	}
 
-	public static class TestingBatchBuilder extends BatchBuilder {
-		private int jdbcBatchSize;
-
-		public void setJdbcBatchSize(int jdbcBatchSize) {
-			this.jdbcBatchSize = jdbcBatchSize;
-		}
-		public Batch buildBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper) {
-			return new TestingBatch(key, statementLogger, exceptionHelper, jdbcBatchSize );
+	public static class TestingBatchBuilder extends BatchBuilderImpl {
+		@Override
+		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
+			return new TestingBatch( key, jdbcCoordinator );
 		}
 	}
 
 	public static class TestingBatch extends NonBatchingBatch {
-		public TestingBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
-			super( key, statementLogger, exceptionHelper );
+		public TestingBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
+			super( key, jdbcCoordinator );
 		}
 	}
 
@@ -110,7 +108,8 @@ public class BatchedManyToManyTest extends FunctionalTestCase {
 				.getCollectionStatistics( Group.class.getName() + ".users" );
 
 		Interceptor testingInterceptor = new EmptyInterceptor() {
-			public String onPrepareStatement(String sql) {
+			@Override
+            public String onPrepareStatement(String sql) {
 				// ugh, this is the best way I could come up with to assert this.
 				// unfortunately, this is highly dependent on the dialect and its
 				// outer join fragment.  But at least this wil fail on the majority

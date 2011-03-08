@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.Properties;
 import java.util.UUID;
@@ -31,9 +32,9 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,13 +50,13 @@ import org.hibernate.event.EventListeners;
 import org.hibernate.event.PreDeleteEventListener;
 import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.event.PreUpdateEventListener;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -58,7 +58,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.transaction.Status;
 import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 import org.hibernate.AssertionFailure;
@@ -75,7 +74,6 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.Transaction;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
@@ -83,7 +81,6 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ValueHandlerFactory;
 import org.hibernate.ejb.criteria.expression.CompoundSelectionImpl;
-import org.hibernate.ejb.transaction.JoinableCMTTransaction;
 import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
@@ -93,15 +90,18 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.engine.transaction.spi.JoinStatus;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.engine.transaction.synchronization.spi.AfterCompletionAction;
+import org.hibernate.engine.transaction.synchronization.spi.ExceptionMapper;
+import org.hibernate.engine.transaction.synchronization.spi.ManagedFlushChecker;
+import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.synchronization.AfterCompletionAction;
-import org.hibernate.transaction.synchronization.BeforeCompletionManagedFlushChecker;
-import org.hibernate.transaction.synchronization.CallbackCoordinator;
-import org.hibernate.transaction.synchronization.ExceptionMapper;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.util.JTAHelper;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -938,6 +938,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return ( ( SessionImplementor ) getRawSession() ).isTransactionInProgress();
 	}
 
+	private SessionFactoryImplementor sfi() {
+		return ( SessionFactoryImplementor ) getRawSession().getSessionFactory();
+	}
+
 	protected void markAsRollback() {
         LOG.debugf("Mark transaction for rollback");
 		if ( tx.isActive() ) {
@@ -946,8 +950,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		else {
 			//no explicit use of the tx. boundaries methods
 			if ( PersistenceUnitTransactionType.JTA == transactionType ) {
-				TransactionManager transactionManager =
-						( ( SessionFactoryImplementor ) getRawSession().getSessionFactory() ).getTransactionManager();
+				TransactionManager transactionManager = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager();
 				if ( transactionManager == null ) {
 					throw new PersistenceException(
 							"Using a JTA persistence context wo setting hibernate.transaction.manager_lookup_class"
@@ -981,95 +984,56 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	private void joinTransaction(boolean ignoreNotJoining) {
-		//set the joined status
-		getSession().isOpen(); //for sync
-		if ( transactionType == PersistenceUnitTransactionType.JTA ) {
-			try {
-                LOG.debugf("Looking for a JTA transaction to join");
-				final Session session = getSession();
-				final Transaction transaction = session.getTransaction();
-				if ( transaction != null && transaction instanceof JoinableCMTTransaction ) {
-					//can't handle it if not a joinnable transaction
-					final JoinableCMTTransaction joinableCMTTransaction = ( JoinableCMTTransaction ) transaction;
+		if ( transactionType != PersistenceUnitTransactionType.JTA ) {
+			if ( !ignoreNotJoining ) {
+			    LOG.callingJoinTransactionOnNonJtaEntityManager();
+			}
+			return;
+		}
 
-					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.JOINED ) {
-                        LOG.debugf("Transaction already joined");
-						return; //no-op
-					}
-					joinableCMTTransaction.markForJoined();
-					session.isOpen(); //register to the Tx
-					if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.NOT_JOINED ) {
-						if ( ignoreNotJoining ) {
-                            LOG.debugf("No JTA transaction found");
-							return;
-						}
-                        throw new TransactionRequiredException("No active JTA transaction on joinTransaction call");
-					}
-					else if ( joinableCMTTransaction.getStatus() == JoinableCMTTransaction.JoinStatus.MARKED_FOR_JOINED ) {
-						throw new AssertionFailure( "Transaction MARKED_FOR_JOINED after isOpen() call" );
-					}
-					//flush before completion and
-					//register clear on rollback
-                    LOG.trace("Adding flush() and close() synchronization");
-					CallbackCoordinator callbackCoordinator = ( (SessionImplementor ) getSession() ).getJDBCContext().getJtaSynchronizationCallbackCoordinator();
-					if ( callbackCoordinator == null ) {
-						throw new AssertionFailure( "Expecting CallbackCoordinator to be non-null" );
-					}
-					callbackCoordinator.setBeforeCompletionManagedFlushChecker(
-							new BeforeCompletionManagedFlushChecker() {
-								public boolean shouldDoManagedFlush(TransactionFactory.Context ctx, javax.transaction.Transaction jtaTransaction)
-										throws SystemException {
-                            if (transaction == null) LOG.transactionNotAvailableOnBeforeCompletion();
-									return !ctx.isFlushModeNever()
-											&& ( jtaTransaction == null || !JTAHelper.isRollback( jtaTransaction.getStatus() ) );
-								}
-							}
-					);
-					callbackCoordinator.setAfterCompletionAction(
-							new AfterCompletionAction() {
-								public void doAction(TransactionFactory.Context ctx, int status) {
-									try {
-										if ( !ctx.isClosed() ) {
-											if ( Status.STATUS_ROLLEDBACK == status
-													&& transactionType == PersistenceUnitTransactionType.JTA ) {
-												session.clear();
-											}
-											JoinableCMTTransaction joinable = ( JoinableCMTTransaction ) session.getTransaction();
-											joinable.resetStatus();
-										}
-									}
-									catch ( HibernateException e ) {
-										throw convert( e );
-									}
-								}
-							}
-					);
-					callbackCoordinator.setExceptionMapper(
-							new ExceptionMapper() {
-								public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
-									throw new PersistenceException( message, systemException );
-								}
+		final SessionImplementor session = (SessionImplementor) getSession();
+		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
+		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
 
-								public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
-									if ( HibernateException.class.isInstance( failure ) ) {
-										throw convert( failure );
-									}
-									if ( PersistenceException.class.isInstance( failure ) ) {
-										throw failure;
-									}
-									throw new PersistenceException( message, failure );
-								}
-							}
-					);
+		transaction.markForJoin();
+		transactionCoordinator.pulse();
+
+		LOG.debug( "Looking for a JTA transaction to join" );
+		if ( ! transactionCoordinator.isTransactionJoinable() ) {
+            LOG.unableToJoinTransaction(Environment.TRANSACTION_STRATEGY);
+		}
+
+		try {
+
+			if ( transaction.getJoinStatus() == JoinStatus.JOINED ) {
+				LOG.debug( "Transaction already joined" );
+				return; // noop
+			}
+
+			// join the transaction and then recheck the status
+			transaction.join();
+			if ( transaction.getJoinStatus() == JoinStatus.NOT_JOINED ) {
+				if ( ignoreNotJoining ) {
+					LOG.debug( "No JTA transaction found" );
+					return;
 				}
 				else {
-                    LOG.unableToJoinTransaction(Environment.TRANSACTION_STRATEGY);
+					throw new TransactionRequiredException( "No active JTA transaction on joinTransaction call" );
 				}
 			}
-			catch ( HibernateException he ) {
-				throw convert( he );
+			else if ( transaction.getJoinStatus() == JoinStatus.MARKED_FOR_JOINED ) {
+				throw new AssertionFailure( "Transaction MARKED_FOR_JOINED after isOpen() call" );
 			}
-        } else if (!ignoreNotJoining) LOG.callingJoinTransactionOnNonJtaEntityManager();
+
+			// register behavior changes
+			SynchronizationCallbackCoordinator callbackCoordinator = transactionCoordinator.getSynchronizationCallbackCoordinator();
+			callbackCoordinator.setManagedFlushChecker( new ManagedFlushCheckerImpl() );
+			callbackCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
+			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( session, transactionType ) );
+		}
+		catch ( HibernateException he ) {
+			throw convert( he );
+		}
 	}
 
 	/**
@@ -1260,5 +1224,56 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			pe = new OptimisticLockException( e );
 		}
 		return pe;
+	}
+
+	private static class AfterCompletionActionImpl implements AfterCompletionAction {
+		private final SessionImplementor session;
+		private final PersistenceUnitTransactionType transactionType;
+
+		private AfterCompletionActionImpl(SessionImplementor session, PersistenceUnitTransactionType transactionType) {
+			this.session = session;
+			this.transactionType = transactionType;
+		}
+
+		@Override
+		public void doAction(TransactionCoordinator transactionCoordinator, int status) {
+			if ( session.isClosed() ) {
+                LOG.trace("Session was closed; nothing to do");
+				return;
+			}
+
+			final boolean successful = JtaStatusHelper.isCommitted( status );
+			if ( !successful && transactionType == PersistenceUnitTransactionType.JTA ) {
+				( (Session) session ).clear();
+			}
+			session.getTransactionCoordinator().resetJoinStatus();
+		}
+	}
+
+	private static class ManagedFlushCheckerImpl implements ManagedFlushChecker {
+		@Override
+		public boolean shouldDoManagedFlush(TransactionCoordinator coordinator, int jtaStatus) {
+			return ! coordinator.getTransactionContext().isClosed() &&
+					! coordinator.getTransactionContext().isFlushModeNever() &&
+					! JtaStatusHelper.isRollback( jtaStatus );
+		}
+	}
+
+	private class CallbackExceptionMapperImpl implements ExceptionMapper {
+		@Override
+		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
+			throw new PersistenceException( message, systemException );
+		}
+
+		@Override
+		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
+			if ( HibernateException.class.isInstance( failure ) ) {
+				throw convert( failure );
+			}
+			if ( PersistenceException.class.isInstance( failure ) ) {
+				throw failure;
+			}
+			throw new PersistenceException( message, failure );
+		}
 	}
 }

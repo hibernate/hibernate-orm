@@ -22,15 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
@@ -236,7 +237,8 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 		return type;
 	}
 
-	public Type getDataType() {
+	@Override
+    public Type getDataType() {
 		// logic operators by definition resolve to booleans
 		return Hibernate.BOOLEAN;
 	}

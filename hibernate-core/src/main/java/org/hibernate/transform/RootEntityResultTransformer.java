@@ -23,7 +23,8 @@
  *
  */
 package org.hibernate.transform;
-import org.hibernate.util.ArrayHelper;
+
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * {@link ResultTransformer} implementation which limits the result tuple
@@ -48,7 +49,8 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 	/**
 	 * Return just the root entity from the row tuple.
 	 */
-	public Object transformTuple(Object[] tuple, String[] aliases) {
+	@Override
+    public Object transformTuple(Object[] tuple, String[] aliases) {
 		return tuple[ tuple.length-1 ];
 	}
 

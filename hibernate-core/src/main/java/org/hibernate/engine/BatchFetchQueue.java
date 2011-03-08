@@ -33,7 +33,7 @@ import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.util.MarkerObject;
+import org.hibernate.internal.util.MarkerObject;
 
 /**
  * Tracks entity and collection keys that are available for batch

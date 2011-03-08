@@ -14,14 +14,15 @@
  * Red Hat Author(s): Steve Ebersole
  */
 package org.hibernate.test.collection.backref.map.compkey;
+
 import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * BackrefCompositeMapKeyTest implementation.  Test access to a composite map-key

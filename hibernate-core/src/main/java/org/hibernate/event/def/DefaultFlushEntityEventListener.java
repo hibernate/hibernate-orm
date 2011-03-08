@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -42,10 +43,10 @@ import org.hibernate.event.EventSource;
 import org.hibernate.event.FlushEntityEvent;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**

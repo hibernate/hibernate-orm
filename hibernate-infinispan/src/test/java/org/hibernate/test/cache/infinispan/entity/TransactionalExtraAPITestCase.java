@@ -60,7 +60,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
        if (getEntityAccessStrategy() == null) {
            Configuration cfg = createConfiguration();
            InfinispanRegionFactory rf  = CacheTestUtil.startRegionFactory(
-				   getJdbcServices(), cfg, getCacheTestSupport()
+				   getServiceRegistry(), cfg, getCacheTestSupport()
 		   );
            
            // Sleep a bit to avoid concurrent FLUSH problem
@@ -98,44 +98,26 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
        localAccessStrategy = strategy;
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#lockItem(java.lang.Object, java.lang.Object)}.
-    */
    public void testLockItem() {
        assertNull(getEntityAccessStrategy().lockItem(KEY, new Integer(1)));
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#lockRegion()}.
-    */
    public void testLockRegion() {
        assertNull(getEntityAccessStrategy().lockRegion());
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#unlockItem(java.lang.Object, org.hibernate.cache.access.SoftLock)}.
-    */
    public void testUnlockItem() {
        getEntityAccessStrategy().unlockItem(KEY, new MockSoftLock());
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#unlockRegion(org.hibernate.cache.access.SoftLock)}.
-    */
    public void testUnlockRegion() {
        getEntityAccessStrategy().unlockItem(KEY, new MockSoftLock());
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#afterInsert(java.lang.Object, java.lang.Object, java.lang.Object)}.
-    */
    public void testAfterInsert() {
        assertFalse("afterInsert always returns false", getEntityAccessStrategy().afterInsert(KEY, VALUE1, new Integer(1)));
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#afterUpdate(java.lang.Object, java.lang.Object, java.lang.Object, java.lang.Object, org.hibernate.cache.access.SoftLock)}.
-    */
    public void testAfterUpdate() {
        assertFalse("afterInsert always returns false", getEntityAccessStrategy().afterUpdate(KEY, VALUE2, new Integer(1), new Integer(2), new MockSoftLock()));
    }

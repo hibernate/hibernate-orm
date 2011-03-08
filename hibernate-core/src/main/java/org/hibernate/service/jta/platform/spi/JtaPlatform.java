@@ -23,6 +23,8 @@
  */
 package org.hibernate.service.jta.platform.spi;
 import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 import org.hibernate.service.spi.Service;
@@ -36,25 +38,46 @@ public interface JtaPlatform extends Service {
 	/**
 	 * A configuration value key used to indicate that it is safe to cache
 	 * {@link TransactionManager} references.
-	 *
-	 * @todo add to Environment.
-	 * @todo same for UserTransaction too?  On many platforms UserTransaction and TransactionManager are the same
 	 */
 	public static final String CACHE_TM = "hibernate.jta.cacheTransactionManager";
+	/**
+	 * A configuration value key used to indicate that it is safe to cache
+	 * {@link UserTransaction} references.
+	 */
+	public static final String CACHE_UT = "hibernate.jta.cacheUserTransaction";
 
 	/**
 	 * Locate the {@link TransactionManager}
 	 *
 	 * @return The {@link TransactionManager}
 	 */
-	public TransactionManager resolveTransactionManager();
+	public TransactionManager retrieveTransactionManager();
 
 	/**
 	 * Locate the {@link UserTransaction}
 	 *
 	 * @return The {@link UserTransaction}
 	 */
-	public UserTransaction resolveUserTransaction();
+	public UserTransaction retrieveUserTransaction();
+
+	/**
+	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
+	 * <p/>
+	 * Generally speaking the transaction itself will be returned here.  This method was added specifically
+	 * for use in WebSphere and other unfriendly JEE containers (although WebSphere is still the only known
+	 * such brain-dead, sales-driven impl).
+	 *
+	 * @param transaction The transaction to be identified.
+	 * @return An appropriate identifier
+	 */
+	public Object getTransactionIdentifier(Transaction transaction);
+
+	/**
+	 * Can we currently register a {@link Synchronization}?
+	 *
+	 * @return True if registering a {@link Synchronization} is currently allowed; false otherwise.
+	 */
+	public boolean canRegisterSynchronization();
 
 	/**
 	 * Register a JTA {@link Synchronization} in the means defined by the platform.
@@ -64,9 +87,11 @@ public interface JtaPlatform extends Service {
 	public void registerSynchronization(Synchronization synchronization);
 
 	/**
-	 * Can we currently regsiter a {@link Synchronization}?
+	 * Obtain the current transaction status using whatever means is preferred for this platform
 	 *
-	 * @return True if regsitering a {@link Synchronization} is currently allowed; false otherwise.
+	 * @return The current status.
+	 *
+	 * @throws SystemException Indicates a problem access the underlying status
 	 */
-	public boolean canRegisterSynchronization();
+	public int getCurrentStatus() throws SystemException;
 }

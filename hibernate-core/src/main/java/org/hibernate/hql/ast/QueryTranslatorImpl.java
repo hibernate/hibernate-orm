@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -56,12 +57,12 @@ import org.hibernate.hql.ast.tree.Statement;
 import org.hibernate.hql.ast.util.ASTPrinter;
 import org.hibernate.hql.ast.util.ASTUtil;
 import org.hibernate.hql.ast.util.NodeTraverser;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
-import org.hibernate.util.IdentitySet;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.ANTLRException;
 import antlr.RecognitionException;

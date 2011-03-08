@@ -76,7 +76,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 		final String sql = determineSql( timeout );
 		SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
 				if ( getLockable().isVersioned() ) {

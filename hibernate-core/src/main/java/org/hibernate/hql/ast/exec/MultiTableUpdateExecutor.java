@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.exec;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,10 +37,10 @@ import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.tree.AssignmentSpecification;
 import org.hibernate.hql.ast.tree.FromElement;
 import org.hibernate.hql.ast.tree.UpdateStatement;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.Update;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -128,7 +129,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 			int resultCount = 0;
 			try {
 				try {
-					ps = session.getJDBCContext().getConnectionManager().prepareStatement( idInsertSelect, false );
+					ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( idInsertSelect, false );
 //					int parameterStart = getWalker().getNumberOfParametersInSetClause();
 //					List allParams = getIdSelectParameterSpecifications();
 //					Iterator whereParams = allParams.subList( parameterStart, allParams.size() ).iterator();
@@ -160,7 +161,7 @@ public class MultiTableUpdateExecutor extends AbstractStatementExecutor {
 				}
 				try {
 					try {
-						ps = session.getJDBCContext().getConnectionManager().prepareStatement( updates[i], false );
+						ps = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( updates[i], false );
 						if ( hqlParameters[i] != null ) {
 							int position = 1; // jdbc params are 1-based
 							for ( int x = 0; x < hqlParameters[i].length; x++ ) {

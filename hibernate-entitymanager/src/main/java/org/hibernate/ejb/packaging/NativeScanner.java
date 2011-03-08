@@ -31,7 +31,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 import org.hibernate.AssertionFailure;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author Emmanuel Bernard

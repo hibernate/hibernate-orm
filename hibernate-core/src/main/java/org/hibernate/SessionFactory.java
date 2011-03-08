@@ -116,8 +116,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 * for use.
 	 * <p/>
 	 * Note that for backwards compatibility, if a {@link org.hibernate.context.CurrentSessionContext}
-	 * is not configured but a JTA {@link org.hibernate.transaction.TransactionManagerLookup}
-	 * is configured this will default to the {@link org.hibernate.context.JTASessionContext}
+	 * is not configured but JTA is configured this will default to the {@link org.hibernate.context.JTASessionContext}
 	 * impl.
 	 *
 	 * @return The current session.

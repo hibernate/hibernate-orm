@@ -53,14 +53,14 @@ public interface JdbcServices extends Service {
 	 *
 	 * @return The SQL statement logger.
 	 */
-	public SQLStatementLogger getSqlStatementLogger();
+	public SqlStatementLogger getSqlStatementLogger();
 
 	/**
 	 * Obtain service for dealing with exceptions.
 	 *
 	 * @return The exception helper service.
 	 */
-	public SQLExceptionHelper getSqlExceptionHelper();
+	public SqlExceptionHelper getSqlExceptionHelper();
 
 	/**
 	 * Obtain infomration about supported behavior reported by the JDBC driver.

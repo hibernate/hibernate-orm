@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.sql;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,10 +34,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.sql.ordering.antlr.OrderByFragmentTranslator;
 import org.hibernate.sql.ordering.antlr.TranslationContext;
-import org.hibernate.util.StringHelper;
 
 /**
  * Parses SQL fragments specified in mapping documents
@@ -83,7 +84,7 @@ public final class Template {
 
 		BEFORE_TABLE_KEYWORDS.add("from");
 		BEFORE_TABLE_KEYWORDS.add("join");
-		
+
 		FUNCTION_KEYWORDS.add("as");
 		FUNCTION_KEYWORDS.add("leading");
 		FUNCTION_KEYWORDS.add("trailing");
@@ -111,7 +112,8 @@ public final class Template {
 	 *
 	 * @deprecated Only intended for annotations usage; use {@link #renderWhereStringTemplate(String, String, Dialect, SQLFunctionRegistry)} instead
 	 */
-	@SuppressWarnings({ "JavaDoc" })
+	@Deprecated
+    @SuppressWarnings({ "JavaDoc" })
 	public static String renderWhereStringTemplate(String sqlWhereString, String placeholder, Dialect dialect) {
 		return renderWhereStringTemplate( sqlWhereString, placeholder, dialect, new SQLFunctionRegistry( dialect, java.util.Collections.EMPTY_MAP ) );
 	}
@@ -638,7 +640,8 @@ public final class Template {
 	 *
 	 * @deprecated Use {@link #renderOrderByStringTemplate(String,ColumnMapper,SessionFactoryImplementor,Dialect,SQLFunctionRegistry)} instead
 	 */
-	public static String renderOrderByStringTemplate(
+	@Deprecated
+    public static String renderOrderByStringTemplate(
 			String orderByFragment,
 			Dialect dialect,
 			SQLFunctionRegistry functionRegistry) {

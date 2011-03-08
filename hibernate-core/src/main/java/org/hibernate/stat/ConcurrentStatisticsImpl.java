@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.stat;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**

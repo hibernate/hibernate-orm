@@ -27,11 +27,9 @@ import junit.framework.Test;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.type.descriptor.java.DataHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * Tests lazy materialization of data mapped by

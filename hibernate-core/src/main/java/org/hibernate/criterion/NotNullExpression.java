@@ -26,7 +26,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Constrains a property to be non-null
@@ -46,8 +46,8 @@ public class NotNullExpression implements Criterion {
 	throws HibernateException {
 		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
 		String result = StringHelper.join(
-			" or ",
-			StringHelper.suffix( columns, " is not null" )
+				" or ",
+				StringHelper.suffix( columns, " is not null" )
 		);
 		if (columns.length>1) result = '(' + result + ')';
 		return result;

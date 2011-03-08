@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.collection;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,10 +35,10 @@ import org.dom4j.Element;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
-import org.hibernate.util.CollectionHelper;
 
 /**
  * A persistent wrapper for an XML element
@@ -46,17 +47,17 @@ import org.hibernate.util.CollectionHelper;
  */
 public class PersistentElementHolder extends AbstractPersistentCollection {
 	protected Element element;
-	
+
 	public PersistentElementHolder(SessionImplementor session, Element element) {
 		super(session);
 		this.element = element;
 		setInitialized();
 	}
 
-	public Serializable getSnapshot(CollectionPersister persister) 
+	public Serializable getSnapshot(CollectionPersister persister)
 	throws HibernateException {
-		
-		final Type elementType = persister.getElementType();		
+
+		final Type elementType = persister.getElementType();
 		List elements = element.elements( persister.getElementNodeName() );
 		ArrayList snapshot = new ArrayList( elements.size() );
 		for ( int i=0; i<elements.size(); i++ ) {
@@ -66,16 +67,17 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 			snapshot.add(copy);
 		}
 		return snapshot;
-		
+
 	}
 
-	public Collection getOrphans(Serializable snapshot, String entityName) 
+	@Override
+    public Collection getOrphans(Serializable snapshot, String entityName)
 	throws HibernateException {
 		//orphan delete not supported for EntityMode.DOM4J
-		return CollectionHelper.EMPTY_COLLECTION; 
+		return CollectionHelper.EMPTY_COLLECTION;
 	}
 
-	public PersistentElementHolder(SessionImplementor session, CollectionPersister persister, Serializable key) 
+	public PersistentElementHolder(SessionImplementor session, CollectionPersister persister, Serializable key)
 	throws HibernateException {
 		super(session);
 		Element owner = (Element) session.getPersistenceContext().getCollectionOwner(key, persister);
@@ -97,7 +99,7 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		Type elementType = persister.getElementType();
-		
+
 		ArrayList snapshot = (ArrayList) getSnapshot();
 		List elements = element.elements( persister.getElementNodeName() );
 		if ( snapshot.size()!= elements.size() ) return false;
@@ -113,8 +115,9 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return ( (Collection) snapshot ).isEmpty();
 	}
-	
-	public boolean empty() {
+
+	@Override
+    public boolean empty() {
 		return !element.elementIterator().hasNext();
 	}
 
@@ -123,12 +126,12 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 		Object object = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
 		final Type elementType = persister.getElementType();
 		Element subelement = element.addElement( persister.getElementNodeName() );
-		elementType.setToXMLNode( subelement, object, persister.getFactory() ); 
+		elementType.setToXMLNode( subelement, object, persister.getFactory() );
 		return object;
 	}
 
 	public Iterator entries(CollectionPersister persister) {
-		
+
 		final Type elementType = persister.getElementType();
 		List elements =  element.elements( persister.getElementNodeName() );
 		int length = elements.size();
@@ -143,13 +146,14 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {}
 
-	public boolean isDirectlyAccessible() {
+	@Override
+    public boolean isDirectlyAccessible() {
 		return true;
 	}
 
 	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
 	throws HibernateException {
-		
+
 		Type elementType = persister.getElementType();
 		Serializable[] cached = (Serializable[]) disassembled;
 		for ( int i=0; i<cached.length; i++ ) {
@@ -157,11 +161,11 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 			Element subelement = element.addElement( persister.getElementNodeName() );
 			elementType.setToXMLNode( subelement, object, persister.getFactory() );
 		}
-		
+
 	}
 
 	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
-		
+
 		Type elementType = persister.getElementType();
 		List elements =  element.elements( persister.getElementNodeName() );
 		int length = elements.size();
@@ -174,13 +178,14 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 		return result;
 	}
 
-	public Object getValue() {
+	@Override
+    public Object getValue() {
 		return element;
 	}
 
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) 
+	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula)
 	throws HibernateException {
-		
+
 		Type elementType = persister.getElementType();
 		ArrayList snapshot = (ArrayList) getSnapshot();
 		List elements = element.elements( persister.getElementNodeName() );
@@ -197,16 +202,16 @@ public class PersistentElementHolder extends AbstractPersistentCollection {
 			}
 		}
 		return result.iterator();
-		
+
 	}
 
-	public boolean needsInserting(Object entry, int i, Type elementType) 
+	public boolean needsInserting(Object entry, int i, Type elementType)
 	throws HibernateException {
 		ArrayList snapshot = (ArrayList) getSnapshot();
 		return i>=snapshot.size() || elementType.isDirty( snapshot.get(i), entry, getSession() );
 	}
 
-	public boolean needsUpdating(Object entry, int i, Type elementType) 
+	public boolean needsUpdating(Object entry, int i, Type elementType)
 	throws HibernateException {
 		return false;
 	}

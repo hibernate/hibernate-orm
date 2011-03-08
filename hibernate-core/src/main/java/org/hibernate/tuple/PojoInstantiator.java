@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.tuple;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -30,9 +31,9 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.ReflectionOptimizer;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -83,7 +84,7 @@ public class PojoInstantiator implements Instantiator, Serializable {
 	private void readObject(java.io.ObjectInputStream stream)
 	throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
-		constructor = ReflectHelper.getDefaultConstructor(mappedClass);
+		constructor = ReflectHelper.getDefaultConstructor( mappedClass );
 	}
 
 	public Object instantiate() {

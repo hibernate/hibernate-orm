@@ -9,7 +9,7 @@ import junit.framework.TestCase;
 import org.dom4j.io.SAXReader;
 import org.hibernate.cfg.EJB3DTDEntityResolver;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
-import org.hibernate.util.XMLHelper;
+import org.hibernate.internal.util.xml.XMLHelper;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXNotSupportedException;
 

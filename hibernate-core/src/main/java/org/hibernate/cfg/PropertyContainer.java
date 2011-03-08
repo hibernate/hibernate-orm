@@ -25,6 +25,7 @@
 // $Id$
 
 package org.hibernate.cfg;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +45,7 @@ import org.hibernate.annotations.Target;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

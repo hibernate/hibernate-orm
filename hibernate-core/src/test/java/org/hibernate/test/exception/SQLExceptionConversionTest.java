@@ -1,10 +1,8 @@
-// $Id: SQLExceptionConversionTest.java 11339 2007-03-23 12:51:38Z steve.ebersole@jboss.com $
 package org.hibernate.test.exception;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import junit.framework.Test;
-import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLMyISAMDialect;
 import org.hibernate.exception.ConstraintViolationException;
@@ -12,7 +10,6 @@ import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.JDBCExceptionReporter;
 
 /**
  * Implementation of SQLExceptionConversionTest.
@@ -56,12 +53,7 @@ public class SQLExceptionConversionTest extends FunctionalTestCase {
 
 			fail("INSERT should have failed");
 		}
-		catch(SQLException sqle) {
-			JDBCExceptionReporter.logExceptions(sqle, "Just output!!!!");
-			JDBCException jdbcException = converter.convert(sqle, null, null);
-			assertEquals( "Bad conversion [" + sqle.getMessage() + "]", ConstraintViolationException.class , jdbcException.getClass() );
-			ConstraintViolationException ex = (ConstraintViolationException) jdbcException;
-			System.out.println("Violated constraint name: " + ex.getConstraintName());
+		catch (ConstraintViolationException expected) {
 		}
 		finally {
 			if ( ps != null ) {
@@ -92,8 +84,7 @@ public class SQLExceptionConversionTest extends FunctionalTestCase {
 
 			fail("SQL compilation should have failed");
 		}
-		catch( SQLException sqle ) {
-			assertEquals( "Bad conversion [" + sqle.getMessage() + "]", SQLGrammarException.class, converter.convert(sqle, null, null).getClass() );
+		catch (SQLGrammarException expected) {
 		}
 		finally {
 			if ( ps != null ) {

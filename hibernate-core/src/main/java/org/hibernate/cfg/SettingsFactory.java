@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
@@ -35,18 +36,15 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.impl.NoCachingRegionFactory;
 import org.hibernate.cache.impl.bridge.RegionFactoryCacheProviderBridge;
 import org.hibernate.engine.jdbc.JdbcSupport;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.util.SQLStatementLogger;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.TransactionFactoryFactory;
-import org.hibernate.transaction.TransactionManagerLookup;
-import org.hibernate.transaction.TransactionManagerLookupFactory;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
@@ -65,7 +63,8 @@ public class SettingsFactory implements Serializable {
 	protected SettingsFactory() {
 	}
 
-	public Settings buildSettings(Properties props, JdbcServices jdbcServices) {
+	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) {
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		Settings settings = new Settings();
 
 		//SessionFactory name:
@@ -89,10 +88,7 @@ public class SettingsFactory implements Serializable {
 		settings.setJdbcSupport( new JdbcSupport( ! ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, properties ) ) );
 
 		// Transaction settings:
-
-		TransactionFactory transactionFactory = createTransactionFactory(properties);
-		settings.setTransactionFactory(transactionFactory);
-		settings.setTransactionManagerLookup( createTransactionManagerLookup(properties) );
+		settings.setJtaPlatform( serviceRegistry.getService( JtaPlatform.class ) );
 
 		boolean flushBeforeCompletion = ConfigurationHelper.getBoolean(Environment.FLUSH_BEFORE_COMPLETION, properties);
         LOG.autoFlush(enabledDisabled(flushBeforeCompletion));
@@ -111,7 +107,6 @@ public class SettingsFactory implements Serializable {
 		boolean jdbcBatchVersionedData = ConfigurationHelper.getBoolean(Environment.BATCH_VERSIONED_DATA, properties, false);
         if (batchSize > 0) LOG.jdbcBatchUpdates(enabledDisabled(jdbcBatchVersionedData));
 		settings.setJdbcBatchVersionedData(jdbcBatchVersionedData);
-		settings.setBatcherBuilder( createBatchBuilder(properties, batchSize) );
 
 		boolean useScrollableResultSets = ConfigurationHelper.getBoolean(Environment.USE_SCROLLABLE_RESULTSET, properties, meta.supportsScrollableResults());
         LOG.scrollabelResultSets(enabledDisabled(useScrollableResultSets));
@@ -133,7 +128,7 @@ public class SettingsFactory implements Serializable {
         LOG.connectionReleaseMode(releaseModeName);
 		ConnectionReleaseMode releaseMode;
 		if ( "auto".equals(releaseModeName) ) {
-			releaseMode = transactionFactory.getDefaultReleaseMode();
+			releaseMode = serviceRegistry.getService( TransactionFactory.class ).getDefaultReleaseMode();
 		}
 		else {
 			releaseMode = ConnectionReleaseMode.parse( releaseModeName );
@@ -218,15 +213,6 @@ public class SettingsFactory implements Serializable {
 
 		//Statistics and logging:
 
-		boolean showSql = ConfigurationHelper.getBoolean(Environment.SHOW_SQL, properties);
-		if (showSql) LOG.echoingSql();
-//		settings.setShowSqlEnabled(showSql);
-
-		boolean formatSql = ConfigurationHelper.getBoolean(Environment.FORMAT_SQL, properties);
-//		settings.setFormatSqlEnabled(formatSql);
-
-		settings.setSqlStatementLogger( new SQLStatementLogger( showSql, formatSql ) );
-
 		boolean useStatistics = ConfigurationHelper.getBoolean(Environment.GENERATE_STATISTICS, properties);
 		LOG.statistics( enabledDisabled(useStatistics) );
 		settings.setStatisticsEnabled(useStatistics);
@@ -300,7 +286,9 @@ public class SettingsFactory implements Serializable {
 	}
 
 	public static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled) {
-		String regionFactoryClassName = ConfigurationHelper.getString( Environment.CACHE_REGION_FACTORY, properties, null );
+		String regionFactoryClassName = ConfigurationHelper.getString(
+				Environment.CACHE_REGION_FACTORY, properties, null
+		);
 		if ( regionFactoryClassName == null && cachingEnabled ) {
 			String providerClassName = ConfigurationHelper.getString( Environment.CACHE_PROVIDER, properties, null );
 			if ( providerClassName != null ) {
@@ -340,34 +328,5 @@ public class SettingsFactory implements Serializable {
 		catch (Exception cnfe) {
 			throw new HibernateException("could not instantiate QueryTranslatorFactory: " + className, cnfe);
 		}
-	}
-
-	protected BatchBuilder createBatchBuilder(Properties properties, int batchSize) {
-		String batchBuilderClass = properties.getProperty(Environment.BATCH_STRATEGY);
-		BatchBuilder batchBuilder;
-		if (batchBuilderClass==null) {
-			batchBuilder = batchSize > 0
-					? new BatchBuilder( batchSize )
-					: new BatchBuilder();
-		}
-		else {
-            LOG.batcherFactory(batchBuilderClass);
-			try {
-				batchBuilder = (BatchBuilder) ReflectHelper.classForName(batchBuilderClass).newInstance();
-			}
-			catch (Exception cnfe) {
-				throw new HibernateException("could not instantiate BatchBuilder: " + batchBuilderClass, cnfe);
-			}
-		}
-		batchBuilder.setJdbcBatchSize( batchSize );
-		return batchBuilder;
-	}
-
-	protected TransactionFactory createTransactionFactory(Properties properties) {
-		return TransactionFactoryFactory.buildTransactionFactory(properties);
-	}
-
-	protected TransactionManagerLookup createTransactionManagerLookup(Properties properties) {
-		return TransactionManagerLookupFactory.getTransactionManagerLookup(properties);
 	}
 }

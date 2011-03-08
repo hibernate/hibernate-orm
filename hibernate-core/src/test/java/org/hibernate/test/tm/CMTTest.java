@@ -1,5 +1,6 @@
 //$Id: CMTTest.java 11303 2007-03-19 22:06:14Z steve.ebersole@jboss.com $
 package org.hibernate.test.tm;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -13,13 +14,13 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
+import org.hibernate.test.common.jta.AtomikosJtaPlatform;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.testing.tm.ConnectionProviderImpl;
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
-import org.hibernate.testing.tm.TransactionManagerLookupImpl;
-import org.hibernate.transaction.CMTTransactionFactory;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Gavin King
@@ -34,9 +35,10 @@ public class CMTTest extends FunctionalTestCase {
 		return new String[] { "tm/Item.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
-		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
+	@Override
+    public void configure(Configuration cfg) {
+		cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
+		cfg.getProperties().put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		cfg.setProperty( Environment.AUTO_CLOSE_SESSION, "true" );
 		cfg.setProperty( Environment.FLUSH_BEFORE_COMPLETION, "true" );
@@ -46,7 +48,8 @@ public class CMTTest extends FunctionalTestCase {
 		cfg.setProperty( Environment.DEFAULT_ENTITY_MODE, EntityMode.MAP.toString() );
 	}
 
-	public String getCacheConcurrencyStrategy() {
+	@Override
+    public String getCacheConcurrencyStrategy() {
 		return "transactional";
 	}
 
@@ -59,7 +62,7 @@ public class CMTTest extends FunctionalTestCase {
 		assertNotNull( sfi().getEntityPersister( "Item" ).getCacheAccessStrategy() );
 		assertEquals( 0, getSessions().getStatistics().getEntityLoadCount() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();
 		foo.put( "name", "Foo" );
@@ -69,46 +72,46 @@ public class CMTTest extends FunctionalTestCase {
 		bar.put( "name", "Bar" );
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		getSessions().evictEntity( "Item" );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s1 = openSession();
 		foo = ( Map ) s1.get( "Item", "Foo" );
 		//foo.put("description", "a big red foo");
 		//s1.flush();
-		Transaction tx1 = SimpleJtaTransactionManagerImpl.getInstance().suspend();
+		Transaction tx1 = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s2 = openSession();
 		foo = ( Map ) s2.get( "Item", "Foo" );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().resume( tx1 );
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
 		tx1.commit();
 
 		getSessions().evictEntity( "Item" );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s1 = openSession();
 		s1.createCriteria( "Item" ).list();
 		//foo.put("description", "a big red foo");
 		//s1.flush();
-		tx1 = SimpleJtaTransactionManagerImpl.getInstance().suspend();
+		tx1 = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s2 = openSession();
 		s2.createCriteria( "Item" ).list();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().resume( tx1 );
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
 		tx1.commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s2 = openSession();
 		s2.createCriteria( "Item" ).list();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		assertEquals( 7, getSessions().getStatistics().getEntityLoadCount() );
 		assertEquals( 0, getSessions().getStatistics().getEntityFetchCount() );
@@ -116,15 +119,15 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( 0, getSessions().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 0, getSessions().getStatistics().getQueryCacheMissCount() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	public void testConcurrentCachedQueries() throws Exception {
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();
 		foo.put( "name", "Foo" );
@@ -134,7 +137,7 @@ public class CMTTest extends FunctionalTestCase {
 		bar.put( "name", "Bar" );
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		synchronized ( this ) {
 			wait( 1000 );
@@ -144,23 +147,23 @@ public class CMTTest extends FunctionalTestCase {
 
 		getSessions().evictEntity( "Item" );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s4 = openSession();
-		Transaction tx4 = SimpleJtaTransactionManagerImpl.getInstance().suspend();
+		Transaction tx4 = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s1 = openSession();
 		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r1.size(), 2 );
-		Transaction tx1 = SimpleJtaTransactionManagerImpl.getInstance().suspend();
+		Transaction tx1 = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheHitCount(), 2 );
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -171,14 +174,14 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
 		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 1 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().resume( tx1 );
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
 		tx1.commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s3 = openSession();
 		s3.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheHitCount(), 4 );
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -189,7 +192,7 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 2 );
 		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 1 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().resume( tx4 );
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r4.size(), 2 );
@@ -204,10 +207,10 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 3 );
 		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 1 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	public void testConcurrentCachedDirtyQueries() throws Exception {
@@ -216,7 +219,7 @@ public class CMTTest extends FunctionalTestCase {
 			return;
 		}
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();
 		foo.put( "name", "Foo" );
@@ -226,7 +229,7 @@ public class CMTTest extends FunctionalTestCase {
 		bar.put( "name", "Bar" );
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		synchronized ( this ) {
 			wait( 1000 );
@@ -236,11 +239,11 @@ public class CMTTest extends FunctionalTestCase {
 
 		getSessions().evictEntity( "Item" );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s4 = openSession();
-		Transaction tx4 = SimpleJtaTransactionManagerImpl.getInstance().suspend();
+		Transaction tx4 = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s1 = openSession();
 		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
@@ -248,14 +251,14 @@ public class CMTTest extends FunctionalTestCase {
 		foo = ( Map ) r1.get( 0 );
 		foo.put( "description", "a big red foo" );
 		s1.flush();
-		Transaction tx1 = SimpleJtaTransactionManagerImpl.getInstance().suspend();
+		Transaction tx1 = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheHitCount(), 0 );
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -266,14 +269,14 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
 		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().resume( tx1 );
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
 		tx1.commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s3 = openSession();
 		s3.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheHitCount(), 0 );
 		assertEquals( getSessions().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -284,7 +287,7 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
 		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 3 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().resume( tx4 );
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r4.size(), 2 );
@@ -299,42 +302,42 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
 		assertEquals( getSessions().getStatistics().getQueryCacheMissCount(), 3 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	public void testCMT() throws Exception {
 		getSessions().getStatistics().clear();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = openSession();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
 		assertEquals( getSessions().getStatistics().getFlushCount(), 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().rollback();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().rollback();
 		assertFalse( s.isOpen() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		Map item = new HashMap();
 		item.put( "name", "The Item" );
 		item.put( "description", "The only item we have" );
 		s.persist( "Item", item );
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		item = ( Map ) s.createQuery( "from Item" ).uniqueResult();
 		assertNotNull( item );
 		s.delete( item );
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
 		assertEquals( getSessions().getStatistics().getTransactionCount(), 4 );
@@ -346,19 +349,19 @@ public class CMTTest extends FunctionalTestCase {
 		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
 		assertEquals( getSessions().getStatistics().getFlushCount(), 2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 	}
 
 	public void testCurrentSession() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = getSessions().getCurrentSession();
 		Session s2 = getSessions().getCurrentSession();
 		assertSame( s, s2 );
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
 		// TODO : would be nice to automate-test that the SF internal map actually gets cleaned up
@@ -366,7 +369,7 @@ public class CMTTest extends FunctionalTestCase {
 	}
 
 	public void testCurrentSessionWithIterate() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = openSession();
 		Map item1 = new HashMap();
 		item1.put( "name", "Item - 1" );
@@ -377,11 +380,11 @@ public class CMTTest extends FunctionalTestCase {
 		item2.put( "name", "Item - 2" );
 		item2.put( "description", "The second item" );
 		s.persist( "Item", item2 );
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		// First, test iterating the partial iterator; iterate to past
 		// the first, but not the second, item
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		Iterator itr = s.createQuery( "from Item" ).iterate();
 		if ( !itr.hasNext() ) {
@@ -391,10 +394,10 @@ public class CMTTest extends FunctionalTestCase {
 		if ( !itr.hasNext() ) {
 			fail( "Only one result in iterator" );
 		}
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		// Next, iterate the entire result
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		itr = s.createQuery( "from Item" ).iterate();
 		if ( !itr.hasNext() ) {
@@ -403,16 +406,16 @@ public class CMTTest extends FunctionalTestCase {
 		while ( itr.hasNext() ) {
 			itr.next();
 		}
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	public void testCurrentSessionWithScroll() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = getSessions().getCurrentSession();
 		Map item1 = new HashMap();
 		item1.put( "name", "Item - 1" );
@@ -423,66 +426,50 @@ public class CMTTest extends FunctionalTestCase {
 		item2.put( "name", "Item - 2" );
 		item2.put( "description", "The second item" );
 		s.persist( "Item", item2 );
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		// First, test partially scrolling the result with out closing
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		ScrollableResults results = s.createQuery( "from Item" ).scroll();
 		results.next();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		// Next, test partially scrolling the result with closing
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
 		results.next();
 		results.close();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		// Next, scroll the entire result (w/o closing)
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
 		while ( results.next() ) {
 			// do nothing
 		}
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		// Next, scroll the entire result (closing)
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
 		while ( results.next() ) {
 			// do nothing
 		}
 		results.close();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		s = getSessions().getCurrentSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
-	}
-
-	public void testAggressiveReleaseWithExplicitDisconnectReconnect() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
-		Session s = getSessions().getCurrentSession();
-
-		s.createQuery( "from Item" ).list();
-
-		s.disconnect();
-		byte[] bytes = SerializationHelper.serialize( s );
-		s = ( Session ) SerializationHelper.deserialize( bytes );
-		s.reconnect();
-
-		s.createQuery( "from Item" ).list();
-
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	public void testAggressiveReleaseWithConnectionRetreival() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 		Session s = openSession();
 		Map item1 = new HashMap();
 		item1.put( "name", "Item - 1" );
@@ -493,20 +480,20 @@ public class CMTTest extends FunctionalTestCase {
 		item2.put( "name", "Item - 2" );
 		item2.put( "description", "The second item" );
 		s.save( "Item", item2 );
-		SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 
 		try {
-			SimpleJtaTransactionManagerImpl.getInstance().begin();
+			sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 			s = getSessions().getCurrentSession();
 			s.createQuery( "from Item" ).scroll().next();
 			s.connection();
-			SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+			sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 		}
 		finally {
-			SimpleJtaTransactionManagerImpl.getInstance().begin();
+			sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 			s = openSession();
 			s.createQuery( "delete from Item" ).executeUpdate();
-			SimpleJtaTransactionManagerImpl.getInstance().getTransaction().commit();
+			sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 		}
 	}
 

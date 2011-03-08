@@ -1,5 +1,6 @@
 //$Id: ProxyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.proxy;
+
 import java.math.BigDecimal;
 import java.util.List;
 import junit.framework.Test;
@@ -13,16 +14,16 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.impl.SessionImpl;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Gavin King
  */
 public class ProxyTest extends FunctionalTestCase {
-	
+
 	public ProxyTest(String name) {
 		super( name );
 	}
@@ -31,12 +32,14 @@ public class ProxyTest extends FunctionalTestCase {
 		return new String[] { "proxy/DataPoint.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" ); // problem on HSQLDB (go figure)
 	}
 
-	public String getCacheConcurrencyStrategy() {
+	@Override
+    public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
@@ -54,23 +57,23 @@ public class ProxyTest extends FunctionalTestCase {
 		s.persist(dp);
 		s.flush();
 		s.clear();
-		
+
 		dp = (DataPoint) s.load(DataPoint.class, new Long( dp.getId() ) );
 		assertFalse( Hibernate.isInitialized(dp) );
-		
+
 		try {
 			dp.getClass().getDeclaredMethod( "finalize", (Class[]) null );
 			fail();
-			
-		} 
+
+		}
 		catch (NoSuchMethodException e) {}
-		
+
 		s.delete(dp);
 		t.commit();
 		s.close();
-		
+
 	}
-	
+
 	public void testProxyException() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -81,10 +84,10 @@ public class ProxyTest extends FunctionalTestCase {
 		s.persist(dp);
 		s.flush();
 		s.clear();
-		
+
 		dp = (DataPoint) s.load(DataPoint.class, new Long( dp.getId() ) );
 		assertFalse( Hibernate.isInitialized(dp) );
-		
+
 		try {
 			dp.exception();
 			fail();
@@ -164,35 +167,34 @@ public class ProxyTest extends FunctionalTestCase {
 		assertTrue( Hibernate.isInitialized(dp) );
 		Object none = s.load( DataPoint.class, new Long(666));
 		assertFalse( Hibernate.isInitialized(none) );
-		
+
 		t.commit();
 		s.disconnect();
-		
+
 		Object[] holder = new Object[] { s, dp, none };
-		
+
 		holder = (Object[]) SerializationHelper.clone(holder);
 		Session sclone = (Session) holder[0];
 		dp = (DataPoint) holder[1];
 		none = holder[2];
-		
+
 		//close the original:
 		s.close();
-		
-		sclone.reconnect();
+
 		t = sclone.beginTransaction();
-		
+
 		DataPoint sdp = (DataPoint) sclone.load( DataPoint.class, new Long( dp.getId() ) );
 		assertSame(dp, sdp);
 		assertFalse(sdp instanceof HibernateProxy);
 		Object snone = sclone.load( DataPoint.class, new Long(666) );
 		assertSame(none, snone);
 		assertTrue(snone instanceof HibernateProxy);
-		
+
 		sclone.delete(dp);
-		
+
 		t.commit();
 		sclone.close();
-		
+
 	}
 
 	public void testProxy() {

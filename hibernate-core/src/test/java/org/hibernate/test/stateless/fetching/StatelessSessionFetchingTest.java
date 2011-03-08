@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.stateless.fetching;
+
 import static org.hibernate.TestLogger.LOG;
 import java.util.Date;
 import junit.framework.Test;
@@ -28,9 +29,9 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.DefaultNamingStrategy;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.StringHelper;
 
 /**
  * TODO : javadoc

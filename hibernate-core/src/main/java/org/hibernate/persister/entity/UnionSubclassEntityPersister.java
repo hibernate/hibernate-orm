@@ -42,6 +42,9 @@ import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.id.IdentityGenerator;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
@@ -49,9 +52,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.SingletonIterator;
 
 /**
  * Implementation of the "table-per-concrete-class" or "roll-down" mapping 

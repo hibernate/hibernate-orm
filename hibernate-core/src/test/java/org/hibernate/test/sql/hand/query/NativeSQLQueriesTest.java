@@ -1,4 +1,5 @@
 package org.hibernate.test.sql.hand.query;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -16,6 +17,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Group;
@@ -36,7 +38,6 @@ import org.hibernate.type.FloatType;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.TimestampType;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Tests of various features of native SQL queries.
@@ -54,7 +55,8 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		return new String[] { "sql/hand/query/NativeSQLQueries.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}

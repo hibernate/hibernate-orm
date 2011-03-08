@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -44,17 +45,17 @@ import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeConnectionProviderImpl;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaPlatformImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTransactionManagerLookup;
-import org.hibernate.transaction.TransactionManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
- * 
+ *
  * @author nikita_tovstoles@mba.berkeley.edu
  * @author Galder Zamarreño
  */
@@ -101,14 +102,14 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
        return DualNodeConnectionProviderImpl.class;
    }
 
-   @Override
-   protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {
-       return DualNodeTransactionManagerLookup.class;
-   }
+	@Override
+	protected Class<? extends JtaPlatform> getJtaPlatform() {
+		return DualNodeJtaPlatformImpl.class;
+	}
 
-   /**
+	/**
     * test that DB can be queried
-    * 
+    *
     * @throws java.lang.Exception
     */
    public void testPingDb() throws Exception {
@@ -263,7 +264,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
    /**
     * read first contact of every Customer participating in this test. this forces concurrent cache
     * writes of Customer.contacts Collection cache node
-    * 
+    *
     * @return who cares
     * @throws java.lang.Exception
     */
@@ -290,7 +291,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 
    /**
     * -load existing Customer -get customer's contacts; return 1st one
-    * 
+    *
     * @param customerId
     * @return first Contact or null if customer has none
     */
@@ -315,7 +316,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 
    /**
     * -load existing Customer -create a new Contact and add to customer's contacts
-    * 
+    *
     * @param customerId
     * @return added Contact
     */
@@ -344,7 +345,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 
    /**
     * remove existing 'contact' from customer's list of contacts
-    * 
+    *
     * @param customerId
     * @throws IllegalStateException
     *            if customer does not own a contact
@@ -499,7 +500,7 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 
    /**
     * sleep between 0 and THINK_TIME_MILLIS.
-    * 
+    *
     * @throws RuntimeException
     *            if sleep is interrupted or TERMINATE_ALL_USERS flag was set to true i n the
     *            meantime

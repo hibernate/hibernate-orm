@@ -32,11 +32,11 @@ import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.Mapping;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
@@ -230,7 +230,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	 *
 	 * @param owner The owner
 	 */
-	public void setOwner(PersistentClass owner) {
+	@Deprecated
+    public void setOwner(PersistentClass owner) {
 		this.owner = owner;
 	}
 
@@ -533,7 +534,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return manyToManyFilters;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return getClass().getName() + '(' + getRole() + ')';
 	}
 

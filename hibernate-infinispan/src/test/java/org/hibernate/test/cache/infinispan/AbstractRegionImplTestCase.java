@@ -28,7 +28,7 @@ import org.hibernate.cache.Region;
 import org.hibernate.cache.impl.CacheDataDescriptionImpl;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.util.ComparableComparator;
+import org.hibernate.internal.util.compare.ComparableComparator;
 
 /**
  * Base class for tests of Region implementations.

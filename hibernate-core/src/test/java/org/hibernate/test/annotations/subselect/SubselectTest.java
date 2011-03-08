@@ -42,8 +42,7 @@ public class SubselectTest extends TestCase {
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		tx.begin();
-		
+
 		//We don't use auto-generated ids because these seem to cause the session to flush.
 		//We want to test that the session flushes because of the 'synchronize' annotation
 		long itemId = 1;

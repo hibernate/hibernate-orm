@@ -26,7 +26,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * An identifier constraint
@@ -46,8 +46,8 @@ public class IdentifierEqExpression implements Criterion {
 		String[] columns = criteriaQuery.getIdentifierColumns(criteria);
 
 		String result = StringHelper.join(
-			" and ",
-			StringHelper.suffix( columns, " = ?" )
+				" and ",
+				StringHelper.suffix( columns, " = ?" )
 		);
 		if (columns.length>1) result = '(' + result + ')';
 		return result;

@@ -46,4 +46,9 @@ public interface ConnectionObserver {
 	 * The logical connection was closed.
 	 */
 	public void logicalConnectionClosed();
+
+	/**
+	 * Notification of a statement being prepared
+	 */
+	public void statementPrepared();
 }

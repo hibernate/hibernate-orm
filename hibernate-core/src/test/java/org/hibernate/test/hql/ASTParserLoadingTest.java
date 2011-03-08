@@ -1,5 +1,6 @@
 // $Id: ASTParserLoadingTest.java 11373 2007-03-29 19:09:07Z steve.ebersole@jboss.com $
 package org.hibernate.test.hql;
+
 import static org.hibernate.TestLogger.LOG;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -35,6 +36,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.test.any.IntegerPropertyValue;
@@ -53,7 +55,6 @@ import org.hibernate.transform.Transformers;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using

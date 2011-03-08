@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionImplementor;
 
 /**
  * This interface should be implemented by user-defined "types".
@@ -98,27 +99,30 @@ public interface UserType {
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
 	 * should handle possibility of null values.
 	 *
+	 *
 	 * @param rs a JDBC result set
 	 * @param names the column names
-	 * @param owner the containing entity
-	 * @return Object
+	 * @param session
+	 *@param owner the containing entity  @return Object
 	 * @throws HibernateException
 	 * @throws SQLException
 	 */
-	public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException;
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException;
 
 	/**
 	 * Write an instance of the mapped class to a prepared statement. Implementors
 	 * should handle possibility of null values. A multi-column type should be written
 	 * to parameters starting from <tt>index</tt>.
 	 *
+	 *
 	 * @param st a JDBC prepared statement
 	 * @param value the object to write
 	 * @param index statement parameter index
+	 * @param session
 	 * @throws HibernateException
 	 * @throws SQLException
 	 */
-	public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException;
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException;
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at

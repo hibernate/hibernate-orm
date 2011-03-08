@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id.enhanced;
+
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

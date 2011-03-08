@@ -1,9 +1,10 @@
-// $Id$
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -75,26 +77,25 @@ import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.packaging.PersistenceMetadata;
 import org.hibernate.ejb.packaging.PersistenceXmlLoader;
 import org.hibernate.ejb.packaging.Scanner;
-import org.hibernate.ejb.transaction.JoinableCMTTransactionFactory;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LogHelper;
 import org.hibernate.ejb.util.NamingHelper;
 import org.hibernate.engine.FilterDefinition;
+import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.event.EventListeners;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.xml.MappingReader;
+import org.hibernate.internal.util.xml.OriginImpl;
+import org.hibernate.internal.util.xml.XmlDocument;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.transaction.JDBCTransactionFactory;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.xml.MappingReader;
-import org.hibernate.util.xml.OriginImpl;
-import org.hibernate.util.xml.XmlDocument;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -913,7 +914,9 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		String sessionInterceptorClassname = (String) properties.get( AvailableSettings.SESSION_INTERCEPTOR );
 		if ( StringHelper.isNotEmpty( sessionInterceptorClassname ) ) {
 			try {
-				Class interceptorClass = ReflectHelper.classForName( sessionInterceptorClassname, Ejb3Configuration.class );
+				Class interceptorClass = ReflectHelper.classForName(
+						sessionInterceptorClassname, Ejb3Configuration.class
+				);
 				interceptorClass.newInstance();
 				return interceptorClass;
 			}
@@ -1036,18 +1039,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		);
 		if ( namingStrategy != null ) {
 			cfg.setNamingStrategy( namingStrategy );
-		}
-
-		final PersisterClassProvider persisterClassProvider = instantiateCustomClassFromConfiguration(
-				preparedProperties,
-				null,
-				cfg.getPersisterClassProvider(),
-				AvailableSettings.PERSISTER_CLASS_PROVIDER,
-				"persister class provider",
-				PersisterClassProvider.class
-		);
-		if ( persisterClassProvider != null ) {
-			cfg.setPersisterClassProvider( persisterClassProvider );
 		}
 
 		if ( jaccKeys.size() > 0 ) {
@@ -1227,11 +1218,11 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		);
 		if ( ! hasTxStrategy && transactionType == PersistenceUnitTransactionType.JTA ) {
 			preparedProperties.setProperty(
-					Environment.TRANSACTION_STRATEGY, JoinableCMTTransactionFactory.class.getName()
+					Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName()
 			);
 		}
 		else if ( ! hasTxStrategy && transactionType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
-			preparedProperties.setProperty( Environment.TRANSACTION_STRATEGY, JDBCTransactionFactory.class.getName() );
+			preparedProperties.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 		}
         if (hasTxStrategy) LOG.overridingTransactionStrategyDangerous(Environment.TRANSACTION_STRATEGY);
 		if ( preparedProperties.getProperty( Environment.FLUSH_BEFORE_COMPLETION ).equals( "true" ) ) {
@@ -1544,11 +1535,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	public Ejb3Configuration setNamingStrategy(NamingStrategy namingStrategy) {
 		cfg.setNamingStrategy( namingStrategy );
-		return this;
-	}
-
-	public Ejb3Configuration setPersisterClassProvider(PersisterClassProvider persisterClassProvider) {
-		cfg.setPersisterClassProvider( persisterClassProvider );
 		return this;
 	}
 

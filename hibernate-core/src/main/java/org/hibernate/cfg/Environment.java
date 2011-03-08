@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -35,8 +36,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.Version;
 import org.hibernate.bytecode.BytecodeProvider;
+import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.ConfigHelper;
 import org.jboss.logging.Logger;
 
 
@@ -161,7 +162,7 @@ import org.jboss.logging.Logger;
  * <tr>
  *   <td><tt>hibernate.transaction.factory_class</tt></td>
  *   <td>the factory to use for instantiating <tt>Transaction</tt>s.
- *   (Defaults to <tt>JDBCTransactionFactory</tt>.)</td>
+ *   (Defaults to <tt>JdbcTransactionFactory</tt>.)</td>
  * </tr>
  * <tr>
  *   <td><tt>hibernate.query.substitutions</tt></td><td>query language token substitutions</td>
@@ -373,7 +374,8 @@ public final class Environment {
 	 */
 	public static final String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 	/**
-	 * <tt>TransactionFactory</tt> implementor to use for creating <tt>Transaction</tt>s
+	 * Names the implementation of {@link org.hibernate.engine.transaction.spi.TransactionContext} to use for
+	 * creating {@link org.hibernate.Transaction} instances
 	 */
 	public static final String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
 	/**
@@ -535,12 +537,12 @@ public final class Environment {
 	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
 	/**
-	 * The maximum number of strong references maintained by {@link org.hibernate.util.SoftLimitMRUCache}. Default is 128.
+	 * The maximum number of strong references maintained by {@link org.hibernate.internal.util.collections.SoftLimitMRUCache}. Default is 128.
 	 */
 	public static final String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
 
 	/**
-	 * The maximum number of soft references maintained by {@link org.hibernate.util.SoftLimitMRUCache}. Default is 2048.
+	 * The maximum number of soft references maintained by {@link org.hibernate.internal.util.collections.SoftLimitMRUCache}. Default is 2048.
 	 */
 	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
 
@@ -605,7 +607,7 @@ public final class Environment {
 		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.FALSE.toString() );
 
 		try {
-			InputStream stream = ConfigHelper.getResourceAsStream("/hibernate.properties");
+			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
 			try {
 				GLOBAL_PROPERTIES.load(stream);
                 LOG.propertiesLoaded(ConfigurationHelper.maskOut(GLOBAL_PROPERTIES, PASS));

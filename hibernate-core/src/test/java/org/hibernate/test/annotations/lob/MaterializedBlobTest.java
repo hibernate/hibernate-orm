@@ -22,9 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
+
 import java.util.Arrays;
 import org.hibernate.Session;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.test.annotations.TestCase;
 import org.hibernate.testing.junit.DialectChecks;
@@ -42,7 +42,7 @@ public class MaterializedBlobTest extends TestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		cfg.setProperty( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 	}
 
 	@Override

@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -28,7 +29,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

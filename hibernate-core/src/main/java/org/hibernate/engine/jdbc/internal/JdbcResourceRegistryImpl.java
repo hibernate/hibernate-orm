@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -34,7 +35,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.InvalidatableWrapper;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 
@@ -50,11 +51,11 @@ public class JdbcResourceRegistryImpl implements JdbcResourceRegistry {
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
-	private final SQLExceptionHelper exceptionHelper;
+	private final SqlExceptionHelper exceptionHelper;
 
 	private Statement lastQuery;
 
-	public JdbcResourceRegistryImpl(SQLExceptionHelper exceptionHelper) {
+	public JdbcResourceRegistryImpl(SqlExceptionHelper exceptionHelper) {
 		this.exceptionHelper = exceptionHelper;
 	}
 

@@ -23,7 +23,7 @@ package org.hibernate.ejb.event;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.event.FlushEventListener;
 import org.hibernate.event.def.DefaultFlushEventListener;
-import org.hibernate.util.IdentityMap;
+import org.hibernate.internal.util.collections.IdentityMap;
 
 /**
  * In EJB3, it is the create operation that is cascaded to unmanaged

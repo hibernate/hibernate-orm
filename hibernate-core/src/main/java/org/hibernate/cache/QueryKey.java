@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Iterator;
@@ -32,10 +33,10 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.RowSelection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.TypedValue;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.transform.CacheableResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.EqualsHelper;
 
 /**
  * A key that identifies a particular query with bound parameter values.  This is the object Hibernate uses
@@ -53,7 +54,7 @@ public class QueryKey implements Serializable {
 	private final Integer maxRows;
 	private final EntityMode entityMode;
 	private final Set filterKeys;
-	
+
 	// the user provided resulttransformer, not the one used with "select new". Here to avoid mangling
 	// transformed/non-transformed results.
 	private final CacheableResultTransformer customTransformer;
@@ -158,7 +159,7 @@ public class QueryKey implements Serializable {
 			Object[] positionalParameterValues,
 			Map namedParameters,
 			Integer firstRow,
-			Integer maxRows, 
+			Integer maxRows,
 			Set filterKeys,
 			EntityMode entityMode,
 			CacheableResultTransformer customTransformer) {
@@ -208,7 +209,8 @@ public class QueryKey implements Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public boolean equals(Object other) {
+	@Override
+    public boolean equals(Object other) {
 		if ( !( other instanceof QueryKey ) ) {
 			return false;
 		}
@@ -251,14 +253,16 @@ public class QueryKey implements Serializable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public int hashCode() {
+	@Override
+    public int hashCode() {
 		return hashCode;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public String toString() {
+	@Override
+    public String toString() {
 		StringBuffer buf = new StringBuffer()
 				.append( "sql: " )
 				.append( sqlQueryString );
@@ -285,5 +289,5 @@ public class QueryKey implements Serializable {
 		}
 		return buf.toString();
 	}
-	
+
 }

@@ -23,10 +23,12 @@
  *
  */
 package org.hibernate.exception;
+
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.JDBCException;
+import org.hibernate.internal.util.JdbcExceptionHelper;
 
 /**
  * A SQLExceptionConverter implementation specific to Cach&eacute; SQL,
@@ -80,8 +82,8 @@ public class CacheSQLStateConverter implements SQLExceptionConverter {
 	 * @return The resulting JDBCException.
 	 */
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
-		String sqlStateClassCode = JDBCExceptionHelper.extractSqlStateClassCode( sqlException );
-		Integer errorCode = new Integer( JDBCExceptionHelper.extractErrorCode( sqlException ) );
+		String sqlStateClassCode = JdbcExceptionHelper.extractSqlStateClassCode( sqlException );
+		Integer errorCode = new Integer( JdbcExceptionHelper.extractErrorCode( sqlException ) );
 		if ( sqlStateClassCode != null ) {
 			if ( SQL_GRAMMAR_CATEGORIES.contains( sqlStateClassCode ) ) {
 				return new SQLGrammarException( message, sqlException, sql );

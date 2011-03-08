@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -88,7 +89,6 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.DirtyCheckEventListener;
@@ -124,7 +124,20 @@ import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.DefaultIdentifierGeneratorFactory;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.impl.SessionFactoryImpl;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.internal.util.xml.MappingReader;
+import org.hibernate.internal.util.xml.Origin;
+import org.hibernate.internal.util.xml.OriginImpl;
+import org.hibernate.internal.util.xml.XMLHelper;
+import org.hibernate.internal.util.xml.XmlDocument;
+import org.hibernate.internal.util.xml.XmlDocumentImpl;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -144,9 +157,9 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.persister.PersisterClassProvider;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
@@ -158,19 +171,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.CollectionHelper;
-import org.hibernate.util.ConfigHelper;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.SerializationHelper;
-import org.hibernate.util.StringHelper;
-import org.hibernate.util.XMLHelper;
-import org.hibernate.util.xml.MappingReader;
-import org.hibernate.util.xml.Origin;
-import org.hibernate.util.xml.OriginImpl;
-import org.hibernate.util.xml.XmlDocument;
-import org.hibernate.util.xml.XmlDocumentImpl;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -259,7 +259,6 @@ public class Configuration implements Serializable {
 
 	protected transient XMLHelper xmlHelper;
 	protected NamingStrategy namingStrategy;
-	private PersisterClassProvider persisterClassProvider;
 	private SessionFactoryObserver sessionFactoryObserver;
 
 	private EventListeners eventListeners;
@@ -357,7 +356,6 @@ public class Configuration implements Serializable {
 		propertyRefResolver = new HashMap<String, String>();
 		caches = new ArrayList<CacheHolder>();
 		namingStrategy = EJB3NamingStrategy.INSTANCE;
-		persisterClassProvider = null;
 		setEntityResolver( new EJB3DTDEntityResolver() );
 		anyMetaDefs = new HashMap<String, AnyMetaDef>();
 		propertiesAnnotatedWithMapsId = new HashMap<XClass, Map<String, PropertyData>>();
@@ -437,7 +435,7 @@ public class Configuration implements Serializable {
 	/**
 	 * Set a custom entity resolver. This entity resolver must be
 	 * set before addXXX(misc) call.
-	 * Default value is {@link org.hibernate.util.DTDEntityResolver}
+	 * Default value is {@link org.hibernate.internal.util.xml.DTDEntityResolver}
 	 *
 	 * @param entityResolver entity resolver to use
 	 */
@@ -1824,7 +1822,7 @@ public class Configuration implements Serializable {
 		Properties copy = new Properties();
 		copy.putAll( properties );
 		ConfigurationHelper.resolvePlaceHolders( copy );
-		Settings settings = buildSettings( copy, serviceRegistry.getService( JdbcServices.class ) );
+		Settings settings = buildSettings( copy, serviceRegistry );
 
 		return new SessionFactoryImpl(
 				this,
@@ -1834,6 +1832,36 @@ public class Configuration implements Serializable {
 				getInitializedEventListeners(),
 				sessionFactoryObserver
 			);
+	}
+
+	/**
+	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
+	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
+	 * building the {@link SessionFactory} will not affect it.
+	 *
+	 * @return The build {@link SessionFactory}
+	 *
+	 * @throws HibernateException usually indicates an invalid configuration or invalid mapping information
+	 *
+	 * @deprecated Use {@link #buildSessionFactory(ServiceRegistry)} instead
+	 */
+	public SessionFactory buildSessionFactory() throws HibernateException {
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+		final ServiceRegistry serviceRegistry =  new ServiceRegistryImpl( properties );
+		setSessionFactoryObserver(
+				new SessionFactoryObserver() {
+					@Override
+					public void sessionFactoryCreated(SessionFactory factory) {
+					}
+
+					@Override
+					public void sessionFactoryClosed(SessionFactory factory) {
+						( (ServiceRegistryImpl ) serviceRegistry ).destroy();
+					}
+				}
+		);
+		return buildSessionFactory( serviceRegistry );
 	}
 
 	private static final String LEGACY_VALIDATOR_EVENT_LISTENER = "org.hibernate.validator.event.ValidateEventListener";
@@ -1981,7 +2009,7 @@ public class Configuration implements Serializable {
 	/**
 	 * Set the current {@link Interceptor}
 	 *
-	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory() built}
+	 * @param interceptor The {@link Interceptor} to use for the {@link #buildSessionFactory) built}
 	 * {@link SessionFactory}.
 	 *
 	 * @return this for method chaining
@@ -2806,18 +2834,18 @@ public class Configuration implements Serializable {
 	 *
 	 * @return The build settings
 	 */
-	public Settings buildSettings(JdbcServices jdbcServices) {
+	public Settings buildSettings(ServiceRegistry serviceRegistry) {
 		Properties clone = ( Properties ) properties.clone();
 		ConfigurationHelper.resolvePlaceHolders( clone );
-		return buildSettingsInternal( clone, jdbcServices );
+		return buildSettingsInternal( clone, serviceRegistry );
 	}
 
-	public Settings buildSettings(Properties props, JdbcServices jdbcServices) throws HibernateException {
-		return buildSettingsInternal( props, jdbcServices );
+	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) throws HibernateException {
+		return buildSettingsInternal( props, serviceRegistry );
 	}
 
-	private Settings buildSettingsInternal(Properties props, JdbcServices jdbcServices) {
-		final Settings settings = settingsFactory.buildSettings( props, jdbcServices );
+	private Settings buildSettingsInternal(Properties props, ServiceRegistry serviceRegistry) {
+		final Settings settings = settingsFactory.buildSettings( props, serviceRegistry );
 		settings.setEntityTuplizerFactory( this.getEntityTuplizerFactory() );
 //		settings.setComponentTuplizerFactory( this.getComponentTuplizerFactory() );
 		return settings;
@@ -2844,26 +2872,6 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration setNamingStrategy(NamingStrategy namingStrategy) {
 		this.namingStrategy = namingStrategy;
-		return this;
-	}
-
-	public PersisterClassProvider getPersisterClassProvider() {
-		return persisterClassProvider;
-	}
-
-	/**
-	 * Defines a custom persister class provider.
-	 *
-	 * The persister class is chosen according to the following rules in decreasing priority:
-	 *  - the persister class defined explicitly via annotation or XML
-	 *  - the persister class returned by the PersisterClassProvider implementation (if not null)
-	 *  - the default provider as chosen by Hibernate Core (best choice most of the time)
-	 *
-	 *
-	 * @param persisterClassProvider implementation
-	 */
-	public Configuration setPersisterClassProvider(PersisterClassProvider persisterClassProvider) {
-		this.persisterClassProvider = persisterClassProvider;
 		return this;
 	}
 
@@ -3097,14 +3105,6 @@ public class Configuration implements Serializable {
 
 		public void setNamingStrategy(NamingStrategy namingStrategy) {
 			Configuration.this.namingStrategy = namingStrategy;
-		}
-
-		public PersisterClassProvider getPersisterClassProvider() {
-			return persisterClassProvider;
-		}
-
-		public void setPersisterClassProvider(PersisterClassProvider persisterClassProvider) {
-			Configuration.this.persisterClassProvider = persisterClassProvider;
 		}
 
 		public TypeResolver getTypeResolver() {

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.EventSource;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -40,7 +42,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.hibernate.util.CollectionHelper;
 import org.jboss.logging.Logger;
 
 /**

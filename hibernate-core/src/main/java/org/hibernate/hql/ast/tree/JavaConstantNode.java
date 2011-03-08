@@ -23,14 +23,15 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.QueryTranslator;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * A node representing a static Java constant.
@@ -47,7 +48,8 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 
 	private Type expectedType;
 
-	public void setText(String s) {
+	@Override
+    public void setText(String s) {
 		// for some reason the antlr.CommonAST initialization routines force
 		// this method to get called twice.  The first time with an empty string
 		if ( StringHelper.isNotEmpty( s ) ) {
@@ -70,7 +72,8 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 		this.factory = factory;
 	}
 
-	public String getRenderText(SessionFactoryImplementor sessionFactory) {
+	@Override
+    public String getRenderText(SessionFactoryImplementor sessionFactory) {
 		Type type = expectedType == null
 				? heuristicType
 				: Number.class.isAssignableFrom( heuristicType.getReturnedClass() )

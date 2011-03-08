@@ -23,11 +23,11 @@
  *
  */
 package org.hibernate.engine;
+
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import javax.transaction.TransactionManager;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -40,7 +40,7 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.QueryPlanCache;
 import org.hibernate.exception.SQLExceptionConverter;
@@ -49,6 +49,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.stat.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
@@ -142,13 +143,6 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 */
 	public String getImportedClassName(String name);
 
-
-	/**
-	 * Get the JTA transaction manager
-	 */
-	public TransactionManager getTransactionManager();
-
-
 	/**
 	 * Get the default query cache
 	 */
@@ -159,7 +153,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return the existing cache, or a newly created cache if none by that region name
 	 */
 	public QueryCache getQueryCache(String regionName) throws HibernateException;
-	
+
 	/**
 	 * Get the cache of table update timestamps
 	 */
@@ -168,7 +162,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * Statistics SPI
 	 */
 	public StatisticsImplementor getStatisticsImplementor();
-	
+
 	public NamedQueryDefinition getNamedQuery(String queryName);
 	public NamedSQLQueryDefinition getNamedSQLQuery(String queryName);
 	public ResultSetMappingDefinition getResultSetMapping(String name);
@@ -177,7 +171,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * Get the identifier generator for the hierarchy
 	 */
 	public IdentifierGenerator getIdentifierGenerator(String rootEntityName);
-	
+
 	/**
 	 * Get a named second-level cache region
 	 *
@@ -194,7 +188,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return The map of regions
 	 */
 	public Map getAllSecondLevelCacheRegions();
-	
+
 	/**
 	 * Retrieves the SQLExceptionConverter in effect for this SessionFactory.
 	 *
@@ -205,12 +199,12 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	   // TODO: deprecate???
 
 	/**
-	 * Retrieves the SQLExceptionHelper in effect for this SessionFactory.
+	 * Retrieves the SqlExceptionHelper in effect for this SessionFactory.
 	 *
-	 * @return The SQLExceptionHelper for this SessionFactory.
+	 * @return The SqlExceptionHelper for this SessionFactory.
 	 *
 	 */
-	public SQLExceptionHelper getSQLExceptionHelper();
+    public SqlExceptionHelper getSQLExceptionHelper();
 
 	public Settings getSettings();
 
@@ -259,4 +253,5 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 */
 	public FetchProfile getFetchProfile(String name);
 
+	public ServiceRegistry getServiceRegistry();
 }

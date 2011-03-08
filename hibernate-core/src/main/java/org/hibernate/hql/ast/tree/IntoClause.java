@@ -23,13 +23,14 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.QueryException;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 import antlr.collections.AST;
 
 /**

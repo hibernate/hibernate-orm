@@ -22,6 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
+
+import java.io.Serializable;
 import java.sql.Connection;
 
 /**
@@ -29,7 +31,7 @@ import java.sql.Connection;
  *
  * @author Steve Ebersole
  */
-public interface LogicalConnection {
+public interface LogicalConnection extends Serializable {
 	/**
 	 * Is this logical connection open?  Another phraseology sometimes used is: "are we
 	 * logically connected"?
@@ -53,9 +55,26 @@ public interface LogicalConnection {
 	 * connection has either not yet been obtained (non-UserSuppliedConnectionProvider)
 	 * or has previously been aggressively released.
 	 *
+	 * @todo ?? Move this to {@link LogicalConnectionImplementor} in lieu of {@link #getShareableConnectionProxy} and {@link #getDistinctConnectionProxy} ??
+	 *
 	 * @return The current Connection.
 	 */
 	public Connection getConnection();
+
+	/**
+	 * Retrieves the shareable connection proxy (see {@link org.hibernate.engine.jdbc.internal.proxy} for details).
+	 *
+	 * @return The shareable connection proxy.
+	 */
+	public Connection getShareableConnectionProxy();
+
+	/**
+	 * Retrieves a distinct connection proxy (see {@link org.hibernate.engine.jdbc.internal.proxy} for details).  It
+	 * is distinct in that it is not shared with others unless the caller explicitly shares it.
+	 *
+	 * @return The distinct connection proxy.
+	 */
+	public Connection getDistinctConnectionProxy();
 
 	/**
 	 * Release the underlying connection and clean up any other resources associated
@@ -66,4 +85,6 @@ public interface LogicalConnection {
 	 * @return The physical connection which was being used.
 	 */
 	public Connection close();
+
+	public void afterTransaction();
 }

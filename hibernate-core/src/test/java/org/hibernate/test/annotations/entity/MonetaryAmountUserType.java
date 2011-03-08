@@ -60,8 +60,8 @@ public class MonetaryAmountUserType implements CompositeUserType {
 
 	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 			throws HibernateException, SQLException {
-		BigDecimal amt = (BigDecimal) Hibernate.BIG_DECIMAL.nullSafeGet( rs, names[0] );
-		Currency cur = (Currency) Hibernate.CURRENCY.nullSafeGet( rs, names[1] );
+		BigDecimal amt = (BigDecimal) Hibernate.BIG_DECIMAL.nullSafeGet( rs, names[0], session);
+		Currency cur = (Currency) Hibernate.CURRENCY.nullSafeGet( rs, names[1], session );
 		if ( amt == null ) return null;
 		return new MonetaryAmount( amt, cur );
 	}
@@ -73,8 +73,8 @@ public class MonetaryAmountUserType implements CompositeUserType {
 		MonetaryAmount ma = (MonetaryAmount) value;
 		BigDecimal amt = ma == null ? null : ma.getAmount();
 		Currency cur = ma == null ? null : ma.getCurrency();
-		Hibernate.BIG_DECIMAL.nullSafeSet( st, amt, index );
-		Hibernate.CURRENCY.nullSafeSet( st, cur, index + 1 );
+		Hibernate.BIG_DECIMAL.nullSafeSet( st, amt, index, session );
+		Hibernate.CURRENCY.nullSafeSet( st, cur, index + 1, session );
 	}
 
 	public Object deepCopy(Object value) throws HibernateException {

@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache;
+
 import java.net.URL;
 import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import org.hibernate.cfg.Environment;
-import org.hibernate.util.ConfigHelper;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,6 +82,8 @@ import org.hibernate.hql.ast.util.SyntheticAndFactory;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.CollectionFilterKeyParameterSpecification;
 import org.hibernate.param.NamedParameterSpecification;
 import org.hibernate.param.ParameterSpecification;
@@ -95,8 +98,6 @@ import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.usertype.UserVersionType;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.ASTFactory;
 import antlr.RecognitionException;
@@ -1063,7 +1064,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			return new int[]{( ( Integer ) o ).intValue()};
 		}
 		else {
-			return ArrayHelper.toIntArray( ( ArrayList ) o );
+			return ArrayHelper.toIntArray( (ArrayList) o );
 		}
 	}
 

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal.proxy;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -32,11 +33,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.hibernate.HibernateLogger;
-import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.stat.StatisticsImplementor;
+import org.hibernate.engine.jdbc.spi.NonDurableConnectionObserver;
 import org.jboss.logging.Logger;
 
 /**
@@ -44,7 +44,9 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class ConnectionProxyHandler extends AbstractProxyHandler implements InvocationHandler, ConnectionObserver {
+public class ConnectionProxyHandler
+		extends AbstractProxyHandler
+		implements InvocationHandler, NonDurableConnectionObserver {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
                                                                        ConnectionProxyHandler.class.getName());
@@ -109,6 +111,10 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		if ( "close".equals( methodName ) ) {
 			explicitClose();
 			return null;
+		}
+
+		if ( "isClosed".equals( methodName ) ) {
+			return ! isValid();
 		}
 
 		errorIfInvalid();
@@ -184,9 +190,7 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 	}
 
 	private void postProcessPreparedStatement(Statement statement) throws SQLException  {
-		if ( getStatisticsImplementorOrNull() != null ) {
-			getStatisticsImplementorOrNull().prepareStatement();
-		}
+		logicalConnection.notifyObserversStatementPrepared();
 		postProcessStatement( statement );
 	}
 
@@ -202,28 +206,25 @@ public class ConnectionProxyHandler extends AbstractProxyHandler implements Invo
 		invalidate();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	// ConnectionObserver ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
 	public void physicalConnectionObtained(Connection connection) {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void physicalConnectionReleased() {
         LOG.logicalConnectionReleasingPhysicalConnection();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void logicalConnectionClosed() {
         LOG.logicalConnectionClosed();
 		invalidateHandle();
 	}
 
-    StatisticsImplementor getStatisticsImplementorOrNull() {
-        return getLogicalConnection().getStatisticsImplementor();
-    }
+	@Override
+	public void statementPrepared() {
+		// N/A
+	}
 }

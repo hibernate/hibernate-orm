@@ -23,12 +23,13 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.util.JDBCExceptionReporter;
 
 /**
  * A {@link ConnectionHelper} implementation based on an internally
@@ -63,7 +64,7 @@ class ManagedProviderConnectionHelper implements ConnectionHelper {
 	public void release() throws SQLException {
 		if ( connection != null ) {
 			try {
-				JDBCExceptionReporter.logAndClearWarnings( connection );
+				new SqlExceptionHelper().logAndClearWarnings( connection );
 				connectionProvider.closeConnection( connection );
 			}
 			finally {

@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
+
 import java.util.Map;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.StringHelper;
 
 /**
  * A factory for building/retrieving PropertyAccessor instances.
@@ -111,9 +112,9 @@ public final class PropertyAccessorFactory {
 		return MAP_ACCESSOR;
 	}
 
-	public static PropertyAccessor getDom4jPropertyAccessor(String nodeName, Type type, SessionFactoryImplementor factory) 
+	public static PropertyAccessor getDom4jPropertyAccessor(String nodeName, Type type, SessionFactoryImplementor factory)
 	throws MappingException {
-		//TODO: need some caching scheme? really comes down to decision 
+		//TODO: need some caching scheme? really comes down to decision
 		//      regarding amount of state (if any) kept on PropertyAccessors
 		return new Dom4jAccessor( nodeName, type, factory );
 	}
@@ -121,7 +122,7 @@ public final class PropertyAccessorFactory {
 	private static PropertyAccessor resolveCustomAccessor(String accessorName) {
 		Class accessorClass;
 		try {
-			accessorClass = ReflectHelper.classForName(accessorName);
+			accessorClass = ReflectHelper.classForName( accessorName );
 		}
 		catch (ClassNotFoundException cnfe) {
 			throw new MappingException("could not find PropertyAccessor class: " + accessorName, cnfe);
@@ -149,7 +150,7 @@ public final class PropertyAccessorFactory {
 		if ( "map".equals(type) ) return MAP_ACCESSOR;
 		if ( "embedded".equals(type) ) return EMBEDDED_PROPERTY_ACCESSOR;
 		if ( "noop".equals(type)) return NOOP_ACCESSOR;
-		
+
 		return resolveCustomAccessor(type);
 	}
 }

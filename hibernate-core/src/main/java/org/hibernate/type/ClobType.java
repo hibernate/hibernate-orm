@@ -35,7 +35,7 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.INSTANCE, ClobTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

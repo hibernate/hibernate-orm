@@ -25,7 +25,7 @@
 package org.hibernate.sql.ordering.antlr;
 import org.hibernate.HibernateLogger;
 import org.hibernate.hql.ast.util.ASTPrinter;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.collections.AST;
 

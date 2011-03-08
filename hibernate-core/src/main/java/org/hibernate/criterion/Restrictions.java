@@ -23,11 +23,12 @@
  *
  */
 package org.hibernate.criterion;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * The <tt>criterion</tt> package may be used by applications as a framework for building
@@ -325,7 +326,7 @@ public class Restrictions {
 		}
 		return conj;
 	}
-	
+
 	/**
 	 * Constrain a collection valued property to be empty
 	 */
@@ -339,51 +340,51 @@ public class Restrictions {
 	public static Criterion isNotEmpty(String propertyName) {
 		return new NotEmptyExpression(propertyName);
 	}
-	
+
 	/**
 	 * Constrain a collection valued property by size
 	 */
 	public static Criterion sizeEq(String propertyName, int size) {
 		return new SizeExpression(propertyName, size, "=");
 	}
-	
+
 	/**
 	 * Constrain a collection valued property by size
 	 */
 	public static Criterion sizeNe(String propertyName, int size) {
 		return new SizeExpression(propertyName, size, "<>");
 	}
-	
+
 	/**
 	 * Constrain a collection valued property by size
 	 */
 	public static Criterion sizeGt(String propertyName, int size) {
 		return new SizeExpression(propertyName, size, "<");
 	}
-	
+
 	/**
 	 * Constrain a collection valued property by size
 	 */
 	public static Criterion sizeLt(String propertyName, int size) {
 		return new SizeExpression(propertyName, size, ">");
 	}
-	
+
 	/**
 	 * Constrain a collection valued property by size
 	 */
 	public static Criterion sizeGe(String propertyName, int size) {
 		return new SizeExpression(propertyName, size, "<=");
 	}
-	
+
 	/**
 	 * Constrain a collection valued property by size
 	 */
 	public static Criterion sizeLe(String propertyName, int size) {
 		return new SizeExpression(propertyName, size, ">=");
 	}
-	
+
 	public static NaturalIdentifier naturalId() {
 		return new NaturalIdentifier();
 	}
-		
+
 }

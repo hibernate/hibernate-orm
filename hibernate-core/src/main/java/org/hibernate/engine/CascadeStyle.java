@@ -27,7 +27,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import org.hibernate.MappingException;
-import org.hibernate.util.ArrayHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 
 /**
  * A contract for defining the aspects of cascading various persistence actions.
@@ -97,7 +97,7 @@ public abstract class CascadeStyle implements Serializable {
 			return false;
 		}
 		public String toString() {
-			return ArrayHelper.toString(styles);
+			return ArrayHelper.toString( styles );
 		}
 	}
 

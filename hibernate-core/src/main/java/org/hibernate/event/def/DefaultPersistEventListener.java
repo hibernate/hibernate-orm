@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
+
 import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
@@ -34,10 +35,10 @@ import org.hibernate.event.EventSource;
 import org.hibernate.event.PersistEvent;
 import org.hibernate.event.PersistEventListener;
 import org.hibernate.id.ForeignGenerator;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.util.IdentityMap;
 import org.jboss.logging.Logger;
 
 /**

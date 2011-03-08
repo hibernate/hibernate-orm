@@ -28,6 +28,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.type.StringType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -58,7 +60,7 @@ public class CustomEnumUserType implements UserType {
         return (x == null) ? 0 : x.hashCode();
     }
 
-    public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
+    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
         String name = rs.getString(names[0]);
         if (rs.wasNull()) {
             return null;
@@ -66,7 +68,7 @@ public class CustomEnumUserType implements UserType {
         return CustomEnum.fromYesNo(name);
     }
 
-    public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
         CustomEnum val = (CustomEnum) value;
         if (val == null) {
             st.setNull(index, Types.VARCHAR);

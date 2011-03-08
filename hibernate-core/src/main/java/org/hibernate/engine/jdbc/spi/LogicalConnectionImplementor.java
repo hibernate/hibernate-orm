@@ -23,7 +23,10 @@
  */
 package org.hibernate.engine.jdbc.spi;
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.jdbc.internal.proxy.ConnectionProxyHandler;
 import org.hibernate.stat.StatisticsImplementor;
+
+import java.sql.Connection;
 
 /**
  * The "internal" contract for LogicalConnection
@@ -39,13 +42,6 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	public JdbcServices getJdbcServices();
 
 	/**
-	 * Obtains the statistics implementor.
-	 *
-	 * @return the statistics implementor
-	 */
-	public StatisticsImplementor getStatisticsImplementor();
-
-	/**
 	 * Obtains the JDBC resource registry associated with this logical connection.
 	 *
 	 * @return The JDBC resource registry.
@@ -58,6 +54,13 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * @param observer The observer.
 	 */
 	public void addObserver(ConnectionObserver observer);
+
+	/**
+	 * Remove an observer
+	 *
+	 * @param connectionObserver The observer to remove.
+	 */
+	public void removeObserver(ConnectionObserver connectionObserver);
 
 	/**
 	 * The release mode under which this logical connection is operating.
@@ -90,5 +93,26 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 */
 	public void enableReleases();
 
+	/**
+	 * Manually disconnect the underlying JDBC Connection.  The assumption here
+	 * is that the manager will be reconnected at a later point in time.
+	 *
+	 * @return The connection maintained here at time of disconnect.  Null if
+	 * there was no connection cached internally.
+	 */
+	public Connection manualDisconnect();
 
+	/**
+	 * Manually reconnect the underlying JDBC Connection.  Should be called at some point after manualDisconnect().
+	 *
+	 * @param suppliedConnection For user supplied connection strategy the user needs to hand us the connection
+	 * with which to reconnect.  It is an error to pass a connection in the other strategies.
+	 */
+	public void manualReconnect(Connection suppliedConnection);
+
+	public boolean isAutoCommit();
+
+	public boolean isReadyForSerialization();
+
+	public void notifyObserversStatementPrepared();
 }

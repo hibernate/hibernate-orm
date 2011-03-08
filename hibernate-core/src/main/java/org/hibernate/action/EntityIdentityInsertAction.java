@@ -23,9 +23,11 @@
  *
  */
 package org.hibernate.action;
+
 import java.io.Serializable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
@@ -37,7 +39,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 public final class EntityIdentityInsertAction extends EntityAction  {
 
-	private final Object[] state;
+	private transient Object[] state;
 	private final boolean isDelayed;
 	private final EntityKey delayedEntityKey;
 	//private CacheEntry cacheEntry;
@@ -49,7 +51,12 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 	        EntityPersister persister,
 	        SessionImplementor session,
 	        boolean isDelayed) throws HibernateException {
-		super( session, null, instance, persister );
+		super(
+				session,
+				( isDelayed ? generateDelayedPostInsertIdentifier() : null ),
+				instance,
+				persister
+		);
 		this.state = state;
 		this.isDelayed = isDelayed;
 		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
@@ -59,7 +66,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		final EntityPersister persister = getPersister();
 		final SessionImplementor session = getSession();
 		final Object instance = getInstance();
-		
+
 		boolean veto = preInsert();
 
 		// Don't need to lock the cache here, since if someone
@@ -84,7 +91,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 			cacheEntry = new CacheEntry(object, persister, session);
 			persister.getCache().insert(generatedId, cacheEntry);
 		}*/
-		
+
 		postInsert();
 
 		if ( session.getFactory().getStatistics().isStatisticsEnabled() && !veto ) {
@@ -93,12 +100,14 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 
 	}
 
-	public boolean needsAfterTransactionCompletion() {
+	@Override
+    public boolean needsAfterTransactionCompletion() {
 		//TODO: simply remove this override if we fix the above todos
 		return hasPostCommitEventListeners();
 	}
 
-	protected boolean hasPostCommitEventListeners() {
+	@Override
+    protected boolean hasPostCommitEventListeners() {
 		return getSession().getListeners().getPostCommitInsertEventListeners().length>0;
 	}
 
@@ -140,7 +149,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 					generatedId,
 					state,
 					getPersister(),
-					(EventSource) getSession() 
+					(EventSource) getSession()
 			);
 			for ( int i = 0; i < postListeners.length; i++ ) {
 				postListeners[i].onPostInsert(postEvent);
@@ -169,10 +178,25 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		return delayedEntityKey;
 	}
 
-	private synchronized EntityKey generateDelayedEntityKey() {
+	private synchronized static DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {
+		return new DelayedPostInsertIdentifier();
+	}
+
+	private EntityKey generateDelayedEntityKey() {
 		if ( !isDelayed ) {
 			throw new AssertionFailure( "cannot request delayed entity-key for non-delayed post-insert-id generation" );
 		}
-		return new EntityKey( new DelayedPostInsertIdentifier(), getPersister(), getSession().getEntityMode() );
+		return new EntityKey( getDelayedId(), getPersister(), getSession().getEntityMode() );
+	}
+
+	@Override
+    public void afterDeserialize(SessionImplementor session) {
+		super.afterDeserialize( session );
+		// IMPL NOTE: non-flushed changes code calls this method with session == null...
+		// guard against NullPointerException
+		if ( session != null ) {
+			EntityEntry entityEntry = session.getPersistenceContext().getEntry( getInstance() );
+			this.state = entityEntry.getLoadedState();
+		}
 	}
 }

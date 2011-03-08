@@ -23,6 +23,7 @@ package org.hibernate.test.cfg.persister;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit.UnitTestCase;
@@ -44,10 +45,9 @@ public class PersisterClassProviderTest extends UnitTestCase {
 		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		sessionFactory.close();
 
-
+		serviceRegistry.registerService( PersisterClassResolver.class, new GoofyPersisterClassProvider() );
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
-		cfg.setPersisterClassProvider( new GoofyPersisterClassProvider() );
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
@@ -63,7 +63,6 @@ public class PersisterClassProviderTest extends UnitTestCase {
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
 		cfg.addAnnotatedClass( Window.class );
-		cfg.setPersisterClassProvider( new GoofyPersisterClassProvider() );
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();

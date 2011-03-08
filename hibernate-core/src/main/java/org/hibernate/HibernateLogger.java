@@ -1802,4 +1802,16 @@ public interface HibernateLogger extends BasicLogger {
     @LogMessage( level = INFO )
     @Message( value = "Writing generated schema to file: %s", id = 417 )
     void writingGeneratedSchemaToFile( String outputFile );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Adding override for %s: %s", id = 418 )
+    void addingOverrideFor( String name,
+                            String name2 );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Resolved SqlTypeDescriptor is for a different SQL code. %s has sqlCode=%s; type override %s has sqlCode=%s", id = 419 )
+    void resolvedSqlTypeDescriptorForDifferentSqlCode( String name,
+                                                       String valueOf,
+                                                       String name2,
+                                                       String valueOf2 );
 }

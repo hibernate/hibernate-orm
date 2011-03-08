@@ -43,7 +43,7 @@ public class UploadAuthenticationManager implements Plugin<Project> {
 		//		code for just that.
 		final AuthenticationProviderRegistry registry = new AuthenticationProviderRegistry();
 
-		project.getTasks().withType( Upload.class ).allTasks(
+		project.getTasks().withType( Upload.class ).all(
 			new Action<Upload>() {
 				@Override
 				public void execute(final Upload uploadTask) {

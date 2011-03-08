@@ -34,12 +34,12 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.Mapping;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.EmptyIterator;
+import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.sql.Alias;
-import org.hibernate.util.EmptyIterator;
-import org.hibernate.util.JoinedIterator;
-import org.hibernate.util.ReflectHelper;
-import org.hibernate.util.SingletonIterator;
-import org.hibernate.util.StringHelper;
 
 /**
  * Mapping for an entity.
@@ -131,7 +131,7 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 	public Class getProxyInterface() {
 		if (proxyInterfaceName==null) return null;
 		try {
-			return ReflectHelper.classForName(proxyInterfaceName);
+			return ReflectHelper.classForName( proxyInterfaceName );
 		}
 		catch (ClassNotFoundException cnfe) {
 			throw new MappingException("proxy class not found: " + proxyInterfaceName, cnfe);
@@ -506,7 +506,8 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(name);
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return getClass().getName() + '(' + getEntityName() + ')';
 	}
 	

@@ -1492,7 +1492,6 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			assertFalse( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
 		finally {
-			s.beginTransaction();
 			s.delete( dp );
 			s.getTransaction().commit();
 			s.close();
@@ -1651,7 +1650,6 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 			assertFalse( ( ( HibernateProxy ) dp ).getHibernateLazyInitializer().isReadOnlySettingAvailable() );
 		}
 		finally {
-			s.beginTransaction();
 			s.delete( dp );
 			s.getTransaction().commit();
 			s.close();

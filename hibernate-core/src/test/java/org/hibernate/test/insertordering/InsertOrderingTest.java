@@ -1,4 +1,5 @@
 package org.hibernate.test.insertordering;
+
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -7,18 +8,16 @@ import junit.framework.Test;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilder;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
+import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.spi.SQLExceptionHelper;
-import org.hibernate.engine.jdbc.spi.SQLStatementLogger;
-import org.hibernate.jdbc.Expectation;
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
 public class InsertOrderingTest extends FunctionalTestCase {
@@ -34,11 +33,12 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		return new String[] { "insertordering/Mapping.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ORDER_INSERTS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "10" );
-		cfg.setProperty( Environment.BATCH_STRATEGY, StatsBatchBuilder.class.getName() );
+		cfg.setProperty( BatchBuilderInitiator.BUILDER, StatsBatchBuilder.class.getName() );
 	}
 
 	public void testBatchOrdering() {
@@ -77,8 +77,8 @@ public class InsertOrderingTest extends FunctionalTestCase {
 		private static List batchSizes = new ArrayList();
 		private static int currentBatch = -1;
 
-		public StatsBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper, int jdbcBatchSize) {
-			super( key, statementLogger, exceptionHelper, jdbcBatchSize );
+		public StatsBatch(BatchKey key, JdbcCoordinator jdbcCoordinator, int jdbcBatchSize) {
+			super( key, jdbcCoordinator, jdbcBatchSize );
 		}
 
 		static void reset() {
@@ -87,39 +87,35 @@ public class InsertOrderingTest extends FunctionalTestCase {
 			batchSQL = null;
 		}
 
-		public void addBatchStatement(Object key, String sql, PreparedStatement ps) {
+		@Override
+		public PreparedStatement getBatchStatement(String sql, boolean callable) {
 			if ( batchSQL == null || ! batchSQL.equals( sql ) ) {
 				currentBatch++;
 				batchSQL = sql;
 				batchSizes.add( currentBatch, new Counter() );
-				System.out.println( "--------------------------------------------------------" );
-				System.out.println( "Preparing statement [" + sql + "]" );
 			}
-			super.addBatchStatement( key, sql, ps );
+			return super.getBatchStatement( sql, callable );
 		}
 
-		public void addToBatch(Object key, String sql, Expectation expectation) {
+		@Override
+		public void addToBatch() {
 			Counter counter = ( Counter ) batchSizes.get( currentBatch );
 			counter.count++;
-			System.out.println( "Adding to batch [" + batchSQL + "]" );
-			super.addToBatch( key, sql, expectation );
-		}
-
-		protected void doExecuteBatch() {
-			System.out.println( "executing batch [" + batchSQL + "]" );
-			System.out.println( "--------------------------------------------------------" );
-			super.doExecuteBatch();
+			super.addToBatch();
 		}
 	}
 
-	public static class StatsBatchBuilder extends BatchBuilder {
+	public static class StatsBatchBuilder extends BatchBuilderImpl {
 		private int jdbcBatchSize;
 
-		public void setJdbcBatchSize(int jdbcBatchSize) {
+		@Override
+        public void setJdbcBatchSize(int jdbcBatchSize) {
 			this.jdbcBatchSize = jdbcBatchSize;
 		}
-		public Batch buildBatch(Object key, SQLStatementLogger statementLogger, SQLExceptionHelper exceptionHelper) {
-			return new StatsBatch(key, statementLogger, exceptionHelper, jdbcBatchSize );
+
+		@Override
+		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
+			return new StatsBatch( key, jdbcCoordinator, jdbcBatchSize );
 		}
 	}
 }

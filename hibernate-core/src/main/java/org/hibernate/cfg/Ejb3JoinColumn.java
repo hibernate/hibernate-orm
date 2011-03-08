@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -35,13 +36,13 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.util.StringHelper;
 
 /**
  * Wrap state of an EJB3 @JoinColumn annotation
@@ -144,7 +145,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		JoinColumnOrFormula [] ann = anns.value();
 		Ejb3JoinColumn [] joinColumns = new Ejb3JoinColumn[ann.length];
 		for (int i = 0; i < ann.length; i++) {
-			JoinColumnOrFormula join = (JoinColumnOrFormula) ann[i];
+			JoinColumnOrFormula join = ann[i];
 			JoinFormula formula = join.formula();
 			if (formula.value() != null && !formula.value().equals("")) {
 				joinColumns[i] = buildJoinFormula(
@@ -157,10 +158,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				)[0];
 			}
 		}
-				 
+
 		return joinColumns;
 	}
-	
+
 	/**
 	 * build join formula
 	 */
@@ -255,7 +256,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
 			joinColumn.setJoinAnnotation( ann, null );
-			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() ) 
+			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
 				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
 			}
@@ -431,7 +432,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		getMappingColumn().setName( columnName );
 		setLogicalColumnName( columnName );
 	}
-	
+
 	private String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
 		String columnName;
 		boolean mappedBySide = mappedByTableName != null || mappedByPropertyName != null;
@@ -505,7 +506,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		linkWithValue( value );
 	}
 
-	protected void addColumnBinding(SimpleValue value) {
+	@Override
+    protected void addColumnBinding(SimpleValue value) {
 		if ( StringHelper.isEmpty( mappedBy ) ) {
 			String unquotedLogColName = StringHelper.unquote( getLogicalColumnName() );
 			String unquotedRefColumn = StringHelper.unquote( getReferencedColumn() );
@@ -600,7 +602,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 	/**
 	 * Called to apply column definitions from the referenced FK column to this column.
-	 * 
+	 *
 	 * @param column the referenced column.
 	 */
 	public void overrideFromReferencedColumnIfNecessary(org.hibernate.mapping.Column column) {

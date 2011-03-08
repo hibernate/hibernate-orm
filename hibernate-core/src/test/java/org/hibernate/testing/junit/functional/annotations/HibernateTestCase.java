@@ -37,6 +37,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -46,7 +47,6 @@ import org.hibernate.testing.junit.RequiresDialect;
 import org.hibernate.testing.junit.RequiresDialectFeature;
 import org.hibernate.testing.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.util.StringHelper;
 
 /**
  * A base class for all tests.

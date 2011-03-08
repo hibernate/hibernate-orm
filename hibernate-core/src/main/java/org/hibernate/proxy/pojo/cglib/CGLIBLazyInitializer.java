@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.proxy.pojo.cglib;
+
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,10 +35,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.type.CompositeType;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

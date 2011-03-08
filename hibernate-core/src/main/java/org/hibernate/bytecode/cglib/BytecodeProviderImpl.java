@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.bytecode.cglib;
+
 import java.lang.reflect.Modifier;
 import net.sf.cglib.beans.BulkBean;
 import net.sf.cglib.beans.BulkBeanException;
@@ -32,7 +33,7 @@ import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.ProxyFactoryFactory;
 import org.hibernate.bytecode.ReflectionOptimizer;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

@@ -13,7 +13,7 @@ import org.hibernate.criterion.Example;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.Transformers;
-import org.hibernate.util.XMLHelper;
+import org.hibernate.internal.util.xml.XMLHelper;
 
 /**
  * @author Gavin King

@@ -23,11 +23,12 @@
  *
  */
 package org.hibernate.transform;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * A ResultTransformer that is used to transfor tuples to a value(s)

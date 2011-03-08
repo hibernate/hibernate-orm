@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast.util;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -43,11 +44,11 @@ import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.ast.tree.QueryNode;
 import org.hibernate.hql.classic.ParserHelper;
 import org.hibernate.impl.FilterImpl;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -223,7 +224,11 @@ public class JoinProcessor implements SqlTokenTypes {
 				final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
 				final String typeBindFragment = StringHelper.join(
 						",",
-						ArrayHelper.fillArray( "?", type.getColumnSpan( walker.getSessionFactoryHelper().getFactory() ) )
+						ArrayHelper.fillArray(
+								"?", type.getColumnSpan(
+								walker.getSessionFactoryHelper().getFactory()
+						)
+						)
 				);
 				final String bindFragment = ( value != null && Collection.class.isInstance( value ) )
 						? StringHelper.join( ",", ArrayHelper.fillArray( typeBindFragment, ( ( Collection ) value ).size() ) )

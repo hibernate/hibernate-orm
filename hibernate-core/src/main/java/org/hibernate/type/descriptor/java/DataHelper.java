@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,8 +30,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.BinaryStream;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

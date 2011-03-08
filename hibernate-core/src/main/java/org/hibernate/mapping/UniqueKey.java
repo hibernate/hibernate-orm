@@ -25,7 +25,7 @@ package org.hibernate.mapping;
 import java.util.Iterator;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.Mapping;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A relational unique key constraint

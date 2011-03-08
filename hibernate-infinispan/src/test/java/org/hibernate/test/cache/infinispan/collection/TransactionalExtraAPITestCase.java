@@ -54,7 +54,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
        if (getCollectionAccessStrategy() == null) {
            Configuration cfg = createConfiguration();
            InfinispanRegionFactory rf  = CacheTestUtil.startRegionFactory(
-				   getJdbcServices(), cfg, getCacheTestSupport()
+				   getServiceRegistry(), cfg, getCacheTestSupport()
 		   );
            
            // Sleep a bit to avoid concurrent FLUSH problem
@@ -92,30 +92,18 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
        localAccessStrategy = strategy;
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#lockItem(java.lang.Object, java.lang.Object)}.
-    */
    public void testLockItem() {
        assertNull(getCollectionAccessStrategy().lockItem(KEY, new Integer(1)));
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#lockRegion()}.
-    */
    public void testLockRegion() {
        assertNull(getCollectionAccessStrategy().lockRegion());
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#unlockItem(java.lang.Object, org.hibernate.cache.access.SoftLock)}.
-    */
    public void testUnlockItem() {
        getCollectionAccessStrategy().unlockItem(KEY, new MockSoftLock());
    }
 
-   /**
-    * Test method for {@link TransactionalAccess#unlockRegion(org.hibernate.cache.access.SoftLock)}.
-    */
    public void testUnlockRegion() {
        getCollectionAccessStrategy().unlockItem(KEY, new MockSoftLock());
    }

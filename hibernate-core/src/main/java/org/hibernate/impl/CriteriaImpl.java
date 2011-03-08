@@ -43,7 +43,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Implementation of the <tt>Criteria</tt> interface

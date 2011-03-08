@@ -127,11 +127,11 @@ public class BasicTypeRegistryTest extends TestCase {
 			return 0;
 		}
 
-		public Object nullSafeGet(ResultSet rs, String[] names, Object owner) throws HibernateException, SQLException {
+		public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
 			return null;
 		}
 
-		public void nullSafeSet(PreparedStatement st, Object value, int index) throws HibernateException, SQLException {
+		public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
 		}
 
 		public Object deepCopy(Object value) throws HibernateException {

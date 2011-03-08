@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.annotations;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -91,6 +92,7 @@ import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Collection;
@@ -107,9 +109,6 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Table;
-import org.hibernate.persister.PersisterClassProvider;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -400,21 +399,9 @@ public abstract class CollectionBinder {
 		OptimisticLock lockAnn = property.getAnnotation( OptimisticLock.class );
 		if ( lockAnn != null ) collection.setOptimisticLocked( !lockAnn.excluded() );
 
-		//@Persister has priority over PersisterClassProvider
-		//if all fail, left null and Hibernate defaults kick in
 		Persister persisterAnn = property.getAnnotation( Persister.class );
 		if ( persisterAnn != null ) {
 			collection.setCollectionPersisterClass( persisterAnn.impl() );
-		}
-		else {
-			final PersisterClassProvider persisterClassProvider = mappings.getPersisterClassProvider();
-			if (persisterClassProvider != null) {
-				final Class<? extends CollectionPersister> persister =
-						persisterClassProvider.getCollectionPersisterClass( collection.getRole() );
-				if (persister != null) {
-					collection.setCollectionPersisterClass( persister );
-				}
-			}
 		}
 
 		// set ordering

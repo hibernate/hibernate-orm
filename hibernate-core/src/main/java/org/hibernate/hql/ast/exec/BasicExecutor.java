@@ -77,7 +77,7 @@ public class BasicExecutor extends AbstractStatementExecutor {
 
 		try {
 			try {
-				st = session.getJDBCContext().getConnectionManager().prepareStatement( sql, false );
+				st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
 				Iterator parameterSpecifications = this.parameterSpecifications.iterator();
 				int pos = 1;
 				while ( parameterSpecifications.hasNext() ) {

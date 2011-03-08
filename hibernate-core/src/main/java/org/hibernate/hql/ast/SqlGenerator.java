@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.ast;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -39,9 +40,9 @@ import org.hibernate.hql.ast.tree.Node;
 import org.hibernate.hql.ast.tree.ParameterContainer;
 import org.hibernate.hql.ast.tree.ParameterNode;
 import org.hibernate.hql.ast.util.ASTPrinter;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 import antlr.RecognitionException;
 import antlr.collections.AST;

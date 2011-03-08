@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.tool.hbm2ddl;
+
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -33,7 +34,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

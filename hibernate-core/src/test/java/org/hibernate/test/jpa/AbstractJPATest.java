@@ -1,4 +1,5 @@
 package org.hibernate.test.jpa;
+
 import java.io.Serializable;
 import javax.persistence.EntityNotFoundException;
 import org.hibernate.cfg.Configuration;
@@ -12,9 +13,9 @@ import org.hibernate.event.def.DefaultAutoFlushEventListener;
 import org.hibernate.event.def.DefaultFlushEntityEventListener;
 import org.hibernate.event.def.DefaultFlushEventListener;
 import org.hibernate.event.def.DefaultPersistEventListener;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.util.IdentityMap;
 
 /**
  * An abstract test for all JPA spec related tests.
@@ -30,7 +31,8 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 		return new String[] { "jpa/Part.hbm.xml", "jpa/Item.hbm.xml", "jpa/MyEntity.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.JPAQL_STRICT_COMPLIANCE, "true" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
@@ -42,7 +44,8 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 		cfg.getEventListeners().setFlushEntityEventListeners( buildFlushEntityEventListeners() );
 	}
 
-	public String getCacheConcurrencyStrategy() {
+	@Override
+    public String getCacheConcurrencyStrategy() {
 		// no second level caching
 		return null;
 	}
@@ -83,7 +86,8 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 	}
 
 	public static class JPAPersistOnFlushEventListener extends JPAPersistEventListener {
-		protected CascadingAction getCascadeAction() {
+		@Override
+        protected CascadingAction getCascadeAction() {
 			return CascadingAction.PERSIST_ON_FLUSH;
 		}
 	}
@@ -92,11 +96,13 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 		// not sure why EM code has this ...
 		public static final AutoFlushEventListener INSTANCE = new JPAAutoFlushEventListener();
 
-		protected CascadingAction getCascadingAction() {
+		@Override
+        protected CascadingAction getCascadingAction() {
 			return CascadingAction.PERSIST_ON_FLUSH;
 		}
 
-		protected Object getAnything() {
+		@Override
+        protected Object getAnything() {
 			return IdentityMap.instantiate( 10 );
 		}
 	}
@@ -105,11 +111,13 @@ public abstract class AbstractJPATest extends FunctionalTestCase {
 		// not sure why EM code has this ...
 		public static final FlushEventListener INSTANCE = new JPAFlushEventListener();
 
-		protected CascadingAction getCascadingAction() {
+		@Override
+        protected CascadingAction getCascadingAction() {
 			return CascadingAction.PERSIST_ON_FLUSH;
 		}
 
-		protected Object getAnything() {
+		@Override
+        protected Object getAnything() {
 			return IdentityMap.instantiate( 10 );
 		}
 	}

@@ -20,12 +20,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import org.hibernate.util.ReflectHelper;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
@@ -38,7 +39,8 @@ public class ListenerCallback extends Callback {
 		this.listener = listener;
 	}
 
-	public void invoke(Object bean) {
+	@Override
+    public void invoke(Object bean) {
 		try {
 			callbackMethod.invoke( listener, new Object[]{bean} );
 		}

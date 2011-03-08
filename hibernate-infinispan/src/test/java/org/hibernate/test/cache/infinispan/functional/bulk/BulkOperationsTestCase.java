@@ -20,6 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.functional.bulk;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,20 +32,22 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Session;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
+import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.transaction.CMTTransactionFactory;
-import org.hibernate.transaction.TransactionFactory;
-import org.hibernate.transaction.TransactionManagerLookup;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 /**
  * BulkOperationsTestCase.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
@@ -79,26 +82,27 @@ public class BulkOperationsTestCase extends FunctionalTestCase {
       return org.hibernate.test.cache.infinispan.tm.XaConnectionProvider.class;
    }
 
-   protected Class<? extends TransactionManagerLookup> getTransactionManagerLookupClass() {
-      return org.hibernate.test.cache.infinispan.tm.XaTransactionManagerLookup.class;
-   }
+	protected JtaPlatform getJtaPlatform() {
+		return new JtaPlatformImpl();
+	}
 
-   public void configure(Configuration cfg) {
+   @Override
+public void configure(Configuration cfg) {
       super.configure(cfg);
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
       cfg.setProperty(Environment.USE_QUERY_CACHE, "false");
       cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
-      cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      cfg.setProperty(Environment.TRANSACTION_MANAGER_STRATEGY, getTransactionManagerLookupClass().getName());
       cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
+      cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatform() );
+      cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
    }
 
    public void testBulkOperations() throws Throwable {
       log.info("*** testBulkOperations()");
       boolean cleanedUp = false;
       try {
-         tm = getTransactionManagerLookupClass().newInstance().getTransactionManager(null);
+         tm = getJtaPlatform().retrieveTransactionManager();
 
          createContacts();
 

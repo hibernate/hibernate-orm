@@ -23,11 +23,12 @@
  *
  */
 package org.hibernate.hql.ast.tree;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 import antlr.collections.AST;
 
 /**
@@ -42,7 +43,8 @@ public abstract class AbstractNullnessCheckNode extends UnaryLogicOperatorNode {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void initialize() {
+	@Override
+    public void initialize() {
 		// TODO : this really needs to be delayed unitl after we definitively know the operand node type;
 		// where this is currently a problem is parameters for which where we cannot unequivocally
 		// resolve an expected type

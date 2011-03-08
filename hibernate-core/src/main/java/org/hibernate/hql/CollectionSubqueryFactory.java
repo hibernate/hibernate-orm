@@ -23,18 +23,19 @@
  *
  */
 package org.hibernate.hql;
+
 import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.JoinSequence;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.JoinFragment;
-import org.hibernate.util.StringHelper;
 
 /**
  * Provides the SQL for collection subqueries.
  * <br>
  * Moved here from PathExpressionParser to make it re-useable.
- * 
+ *
  * @author josh
  */
 public final class CollectionSubqueryFactory {

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.persister.entity;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -63,14 +64,18 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.engine.Versioning;
+import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.impl.FilterHelper;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.intercept.FieldInterceptor;
 import org.hibernate.intercept.LazyPropertyInitializer;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
@@ -104,9 +109,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
-import org.hibernate.util.ArrayHelper;
-import org.hibernate.util.FilterHelper;
-import org.hibernate.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -845,7 +847,10 @@ public abstract class AbstractEntityPersister
 						// null sql means that the only lazy properties
 						// are shared PK one-to-one associations which are
 						// handled differently in the Type#nullSafeGet code...
-						ps = session.getJDBCContext().getConnectionManager().prepareSelectStatement(lazySelect);
+						ps = session.getTransactionCoordinator()
+								.getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareStatement( lazySelect );
 						getIdentifierType().nullSafeSet( ps, id, 1, session );
 						rs = ps.executeQuery();
 						rs.next();
@@ -1091,7 +1096,10 @@ public abstract class AbstractEntityPersister
                                             + MessageHelper.infoString(this, id, getFactory()));
 
 		try {
-			PreparedStatement ps = session.getJDBCContext().getConnectionManager().prepareSelectStatement( getSQLSnapshotSelectString() );
+			PreparedStatement ps = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( getSQLSnapshotSelectString() );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
 				//if ( isVersioned() ) getVersionType().nullSafeSet( ps, version, getIdentifierColumnSpan()+1, session );
@@ -1101,7 +1109,6 @@ public abstract class AbstractEntityPersister
 					if ( !rs.next() ) {
 						return null;
 					}
-
 					//otherwise return the "hydrated" state (ie. associations are not resolved)
 					Type[] types = getPropertyTypes();
 					Object[] values = new Object[types.length];
@@ -1121,13 +1128,12 @@ public abstract class AbstractEntityPersister
 				ps.close();
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not retrieve snapshot: " +
-					MessageHelper.infoString( this, id, getFactory() ),
+					e,
+					"could not retrieve snapshot: " + MessageHelper.infoString( this, id, getFactory() ),
 			        getSQLSnapshotSelectString()
-				);
+			);
 		}
 
 	}
@@ -1301,8 +1307,11 @@ public abstract class AbstractEntityPersister
 		String versionIncrementString = generateVersionIncrementUpdateString();
 		PreparedStatement st = null;
 		try {
+			st = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( versionIncrementString, false );
 			try {
-				st = session.getJDBCContext().getConnectionManager().prepareStatement( versionIncrementString, false );
 				getVersionType().nullSafeSet( st, nextVersion, 1, session );
 				getIdentifierType().nullSafeSet( st, id, 2, session );
 				getVersionType().nullSafeSet( st, currentVersion, 2 + getIdentifierColumnSpan(), session );
@@ -1347,11 +1356,12 @@ public abstract class AbstractEntityPersister
         if (LOG.isTraceEnabled()) LOG.trace("Getting version: " + MessageHelper.infoString(this, id, getFactory()));
 
 		try {
-
-			PreparedStatement st = session.getJDBCContext().getConnectionManager().prepareSelectStatement( getVersionSelectString() );
+			PreparedStatement st = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( getVersionSelectString() );
 			try {
 				getIdentifierType().nullSafeSet( st, id, 1, session );
-
 				ResultSet rs = st.executeQuery();
 				try {
 					if ( !rs.next() ) {
@@ -1369,17 +1379,14 @@ public abstract class AbstractEntityPersister
 			finally {
 				st.close();
 			}
-
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not retrieve version: " +
-					MessageHelper.infoString( this, id, getFactory() ),
+					e,
+					"could not retrieve version: " + MessageHelper.infoString( this, id, getFactory() ),
 					getVersionSelectString()
-				);
+			);
 		}
-
 	}
 
 	protected void initLockers() {
@@ -2203,7 +2210,10 @@ public abstract class AbstractEntityPersister
 				final String sql = rootPersister.getSequentialSelect( getEntityName() );
 				if ( sql != null ) {
 					//TODO: I am not so sure about the exception handling in this bit!
-					sequentialSelect = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+					sequentialSelect = session.getTransactionCoordinator()
+							.getJdbcCoordinator()
+							.getStatementPreparer()
+							.prepareStatement( sql );
 					rootPersister.getIdentifierType().nullSafeSet( sequentialSelect, id, 1, session );
 					sequentialResultSet = sequentialSelect.executeQuery();
 					if ( !sequentialResultSet.next() ) {
@@ -2333,6 +2343,8 @@ public abstract class AbstractEntityPersister
 			.toStatementString();
 	}
 
+	private BasicBatchKey inserBatchKey;
+
 	/**
 	 * Perform an SQL INSERT.
 	 * <p/>
@@ -2363,20 +2375,33 @@ public abstract class AbstractEntityPersister
             if (j == 0 && isVersioned()) LOG.trace("Version: " + Versioning.getVersion(fields, this));
 		}
 
-		Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
-		boolean callable = isInsertCallable( j );
+		// TODO : shouldn't inserts be Expectations.NONE?
+		final Expectation expectation = Expectations.appropriateExpectation( insertResultCheckStyles[j] );
 		// we can't batch joined inserts, *especially* not if it is an identity insert;
 		// nor can we batch statements where the expectation is based on an output param
 		final boolean useBatch = j == 0 && expectation.canBeBatched();
-		try {
+		if ( useBatch && inserBatchKey == null ) {
+			inserBatchKey = new BasicBatchKey(
+					getEntityName() + "#INSERT",
+					expectation
+			);
+		}
+		final boolean callable = isInsertCallable( j );
 
+		try {
 			// Render the SQL query
 			final PreparedStatement insert;
 			if ( useBatch ) {
-				insert = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
+				insert = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getBatch( inserBatchKey )
+						.getBatchStatement( sql, callable );
 			}
 			else {
-				insert = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+				insert = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql, callable );
 			}
 
 			try {
@@ -2389,19 +2414,18 @@ public abstract class AbstractEntityPersister
 				dehydrate( id, fields, null, notNull, propertyColumnInsertable, j, insert, session, index );
 
 				if ( useBatch ) {
-					// TODO : shouldnt inserts be Expectations.NONE?
-					session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+					session.getTransactionCoordinator().getJdbcCoordinator().getBatch( inserBatchKey ).addToBatch();
 				}
 				else {
 					expectation.verifyOutcome( insert.executeUpdate(), insert, -1 );
 				}
 
 			}
-			catch ( SQLException sqle ) {
+			catch ( SQLException e ) {
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().abortBatch();
+					session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 				}
-				throw sqle;
+				throw e;
 			}
 			finally {
 				if ( !useBatch ) {
@@ -2409,12 +2433,12 @@ public abstract class AbstractEntityPersister
 				}
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
+					e,
 					"could not insert: " + MessageHelper.infoString( this ),
 					sql
-				);
+			);
 		}
 
 	}
@@ -2463,6 +2487,8 @@ public abstract class AbstractEntityPersister
 
 	}
 
+	private BasicBatchKey updateBatchKey;
+
 	protected boolean update(
 			final Serializable id,
 	        final Object[] fields,
@@ -2475,10 +2501,16 @@ public abstract class AbstractEntityPersister
 	        final String sql,
 	        final SessionImplementor session) throws HibernateException {
 
-		final boolean useVersion = j == 0 && isVersioned();
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
-		final boolean callable = isUpdateCallable( j );
 		final boolean useBatch = j == 0 && expectation.canBeBatched() && isBatchable(); //note: updates to joined tables can't be batched...
+		if ( useBatch && updateBatchKey == null ) {
+			updateBatchKey = new BasicBatchKey(
+					getEntityName() + "#UPDATE",
+					expectation
+			);
+		}
+		final boolean callable = isUpdateCallable( j );
+		final boolean useVersion = j == 0 && isVersioned();
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("Updating entity: " + MessageHelper.infoString(this, id, getFactory()));
@@ -2486,18 +2518,22 @@ public abstract class AbstractEntityPersister
 		}
 
 		try {
-
 			int index = 1; // starting index
 			final PreparedStatement update;
 			if ( useBatch ) {
-				update = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
+				update = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getBatch( updateBatchKey )
+						.getBatchStatement( sql, callable );
 			}
 			else {
-				update = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+				update = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql, callable );
 			}
 
 			try {
-
 				index+= expectation.prepare( update );
 
 				//Now write the values of fields onto the prepared statement
@@ -2533,7 +2569,7 @@ public abstract class AbstractEntityPersister
 				}
 
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+					session.getTransactionCoordinator().getJdbcCoordinator().getBatch( updateBatchKey ).addToBatch();
 					return true;
 				}
 				else {
@@ -2541,11 +2577,11 @@ public abstract class AbstractEntityPersister
 				}
 
 			}
-			catch ( SQLException sqle ) {
+			catch ( SQLException e ) {
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().abortBatch();
+					session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 				}
-				throw sqle;
+				throw e;
 			}
 			finally {
 				if ( !useBatch ) {
@@ -2554,14 +2590,16 @@ public abstract class AbstractEntityPersister
 			}
 
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
+					e,
 					"could not update: " + MessageHelper.infoString( this, id, getFactory() ),
 					sql
 				);
 		}
 	}
+
+	private BasicBatchKey deleteBatchKey;
 
 	/**
 	 * Perform an SQL DELETE
@@ -2583,6 +2621,12 @@ public abstract class AbstractEntityPersister
 		final boolean callable = isDeleteCallable( j );
 		final Expectation expectation = Expectations.appropriateExpectation( deleteResultCheckStyles[j] );
 		final boolean useBatch = j == 0 && isBatchable() && expectation.canBeBatched();
+		if ( useBatch && deleteBatchKey == null ) {
+			deleteBatchKey = new BasicBatchKey(
+					getEntityName() + "#DELETE",
+					expectation
+			);
+		}
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("Deleting entity: " + MessageHelper.infoString(this, id, getFactory()));
@@ -2595,15 +2639,20 @@ public abstract class AbstractEntityPersister
 		}
 
 		try {
-
 			//Render the SQL query
 			PreparedStatement delete;
 			int index = 1;
 			if ( useBatch ) {
-				delete = session.getJDBCContext().getConnectionManager().prepareBatchStatement( this, sql, callable );
+				delete = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getBatch( deleteBatchKey )
+						.getBatchStatement( sql, callable );
 			}
 			else {
-				delete = session.getJDBCContext().getConnectionManager().prepareStatement( sql, callable );
+				delete = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getStatementPreparer()
+						.prepareStatement( sql, callable );
 			}
 
 			try {
@@ -2635,7 +2684,7 @@ public abstract class AbstractEntityPersister
 				}
 
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().addToBatch( this, sql, expectation );
+					session.getTransactionCoordinator().getJdbcCoordinator().getBatch( deleteBatchKey ).addToBatch();
 				}
 				else {
 					check( delete.executeUpdate(), id, j, expectation, delete );
@@ -2644,7 +2693,7 @@ public abstract class AbstractEntityPersister
 			}
 			catch ( SQLException sqle ) {
 				if ( useBatch ) {
-					session.getJDBCContext().getConnectionManager().abortBatch();
+					session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 				}
 				throw sqle;
 			}
@@ -3907,11 +3956,14 @@ public abstract class AbstractEntityPersister
 	        SessionImplementor session,
 	        String selectionSQL,
 	        ValueInclusion[] includeds) {
-
-		session.getJDBCContext().getConnectionManager().executeBatch(); //force immediate execution of the insert
+		// force immediate execution of the insert batch (if one)
+		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
 
 		try {
-			PreparedStatement ps = session.getJDBCContext().getConnectionManager().prepareSelectStatement( selectionSQL );
+			PreparedStatement ps = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( selectionSQL );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
 				ResultSet rs = ps.executeQuery();
@@ -3940,9 +3992,9 @@ public abstract class AbstractEntityPersister
 				ps.close();
 			}
 		}
-		catch( SQLException sqle ) {
+		catch( SQLException e ) {
 			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
+					e,
 					"unable to select generated column values",
 					selectionSQL
 			);
@@ -4006,7 +4058,10 @@ public abstract class AbstractEntityPersister
 
 		Object[] snapshot = new Object[ naturalIdPropertyCount ];
 		try {
-			PreparedStatement ps = session.getJDBCContext().getConnectionManager().prepareSelectStatement( sql );
+			PreparedStatement ps = session.getTransactionCoordinator()
+					.getJdbcCoordinator()
+					.getStatementPreparer()
+					.prepareStatement( sql );
 			try {
 				getIdentifierType().nullSafeSet( ps, id, 1, session );
 				ResultSet rs = ps.executeQuery();
@@ -4015,7 +4070,6 @@ public abstract class AbstractEntityPersister
 					if ( !rs.next() ) {
 						return null;
 					}
-
 					final EntityKey key = new EntityKey( id, this, session.getEntityMode() );
 					Object owner = session.getPersistenceContext().getEntity( key );
 					for ( int i = 0; i < naturalIdPropertyCount; i++ ) {
@@ -4034,13 +4088,12 @@ public abstract class AbstractEntityPersister
 				ps.close();
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch ( SQLException e ) {
 			throw getFactory().getSQLExceptionHelper().convert(
-					sqle,
-					"could not retrieve snapshot: " +
-					MessageHelper.infoString( this, id, getFactory() ),
+					e,
+					"could not retrieve snapshot: " + MessageHelper.infoString( this, id, getFactory() ),
 			        sql
-				);
+			);
 		}
 	}
 

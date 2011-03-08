@@ -31,8 +31,8 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.event.EventListeners;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * This class has no hard dependency on Bean Validation APIs

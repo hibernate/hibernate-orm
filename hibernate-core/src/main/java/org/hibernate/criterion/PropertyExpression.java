@@ -26,7 +26,7 @@ package org.hibernate.criterion;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.TypedValue;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * superclass for comparisons between two properties (with SQL binary operators)
@@ -52,7 +52,7 @@ public class PropertyExpression implements Criterion {
 		String[] ycols = criteriaQuery.findColumns(otherPropertyName, criteria);
 		String result = StringHelper.join(
 			" and ",
-			StringHelper.add(xcols, getOp(), ycols)
+			StringHelper.add( xcols, getOp(), ycols )
 		);
 		if (xcols.length>1) result = '(' + result + ')';
 		return result;

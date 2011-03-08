@@ -16,7 +16,6 @@ public class PolymorphismTest extends TestCase {
 		car2.setModel( "350Z" );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		tx.begin();
 		s.persist( car );
 		s.persist( car2 );
 		s.flush();

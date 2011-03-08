@@ -41,9 +41,9 @@ import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.HibernateProxyHelper;
-import org.hibernate.util.ArrayHelper;
 
 /**
  * Handles "any" mappings
@@ -167,9 +167,9 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return ArrayHelper.join(
-				metaType.sqlTypes(mapping),
-				identifierType.sqlTypes(mapping)
-			);
+				metaType.sqlTypes( mapping ),
+				identifierType.sqlTypes( mapping )
+		);
 	}
 
 	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory) {

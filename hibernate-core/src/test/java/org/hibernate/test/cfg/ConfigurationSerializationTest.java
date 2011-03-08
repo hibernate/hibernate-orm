@@ -27,10 +27,10 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * Copied over mostly from ConfigurationPerformanceTest

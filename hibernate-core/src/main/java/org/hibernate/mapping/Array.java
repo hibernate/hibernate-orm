@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Mappings;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.PrimitiveType;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -58,13 +59,15 @@ public class Array extends List {
 		}
 	}
 
-	public CollectionType getDefaultCollectionType() throws MappingException {
+	@Override
+    public CollectionType getDefaultCollectionType() throws MappingException {
 		return getMappings().getTypeResolver()
 				.getTypeFactory()
 				.array( getRole(), getReferencedPropertyName(), isEmbedded(), getElementClass() );
 	}
 
-	public boolean isArray() {
+	@Override
+    public boolean isArray() {
 		return true;
 	}
 
@@ -80,8 +83,9 @@ public class Array extends List {
 	public void setElementClassName(String elementClassName) {
 		this.elementClassName = elementClassName;
 	}
-	
-	public Object accept(ValueVisitor visitor) {
+
+	@Override
+    public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
 }

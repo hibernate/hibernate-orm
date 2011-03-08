@@ -33,13 +33,13 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.LoadQueryInfluencers;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.OuterJoinLoader;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
-import org.hibernate.util.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -69,14 +69,14 @@ public class CollectionElementLoader extends OuterJoinLoader {
 		this.entityName = persister.getEntityName();
 
 		JoinWalker walker = new EntityJoinWalker(
-				persister,
+				persister, 
 				ArrayHelper.join(
 						collectionPersister.getKeyColumnNames(),
 						collectionPersister.getIndexColumnNames()
-					),
-				1,
-				LockMode.NONE,
-				factory,
+				),
+				1, 
+				LockMode.NONE, 
+				factory, 
 				loadQueryInfluencers
 			);
 		initFromWalker( walker );

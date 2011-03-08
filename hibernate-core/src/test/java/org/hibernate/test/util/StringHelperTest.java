@@ -1,8 +1,9 @@
 package org.hibernate.test.util;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit.UnitTestCase;
-import org.hibernate.util.StringHelper;
 
 /**
  * @author Steve Ebersole

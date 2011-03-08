@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tuple.component;
+
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * A registry allowing users to define the default {@link ComponentTuplizer} class to use per {@link EntityMode}.

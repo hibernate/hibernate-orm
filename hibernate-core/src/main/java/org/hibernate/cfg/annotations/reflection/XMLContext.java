@@ -25,6 +25,7 @@
 // $Id$
 
 package org.hibernate.cfg.annotations.reflection;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +36,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.jboss.logging.Logger;
 
 /**

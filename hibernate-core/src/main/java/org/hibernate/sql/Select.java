@@ -26,7 +26,7 @@ package org.hibernate.sql;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 
 
 /**
@@ -78,7 +78,7 @@ public class Select {
 					buf.append( " and " );
 				}
 			}
-			if ( StringHelper.isNotEmpty(whereClause) ) {
+			if ( StringHelper.isNotEmpty( whereClause ) ) {
 				buf.append(whereClause);
 			}
 		}

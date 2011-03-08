@@ -59,8 +59,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
 				null,
 				ConnectionReleaseMode.AFTER_TRANSACTION,
-				services,
-				null
+				services
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		try {
@@ -87,8 +86,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
 				null,
 				ConnectionReleaseMode.AFTER_TRANSACTION,
-				services,
-				null
+				services
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		try {
@@ -109,8 +107,7 @@ public class BasicConnectionProxyTest extends UnitTestCase {
 		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
 				null,
 				ConnectionReleaseMode.AFTER_TRANSACTION,
-				services,
-				null
+				services
 		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 

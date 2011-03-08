@@ -1,5 +1,6 @@
 //$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
 package org.hibernate.test.readonly;
+
 import java.util.List;
 import junit.framework.Test;
 import org.hibernate.Criteria;
@@ -14,16 +15,16 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.util.SerializationHelper;
 
 /**
  * @author Gail Badner (adapted from org.hibernate.test.criteria.CriteriaQueryTest by Gavin King)
  */
 public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
-	
+
 	public ReadOnlyCriteriaQueryTest(String str) {
 		super(str);
 	}
@@ -32,14 +33,15 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		return new String[] { "readonly/Enrolment.hbm.xml" };
 	}
 
-	public void configure(Configuration cfg) {
+	@Override
+    public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "criteriaquerytest" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
-	
+
 	public static Test suite() {
 		return new FunctionalTestClassTestSuite( ReadOnlyCriteriaQueryTest.class );
 	}
@@ -586,7 +588,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		assertFalse( Hibernate.isInitialized( coursePreferred ) );
 		checkProxyReadOnly( s, coursePreferred, false );
 		Hibernate.initialize( coursePreferred );
-		checkProxyReadOnly( s, coursePreferred, false );		
+		checkProxyReadOnly( s, coursePreferred, false );
 		assertFalse( Hibernate.isInitialized( gavin.getEnrolments() ) );
 		Hibernate.initialize( gavin.getEnrolments() );
 		assertTrue( Hibernate.isInitialized( gavin.getEnrolments() ) );
@@ -881,7 +883,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.close();
 	}
-	
+
 	public void testScrollCriteria() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -899,12 +901,12 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		assertTrue( session.isReadOnly( course ) );
 		sr.close();
 		session.delete(course);
-		
+
 		t.commit();
 		session.close();
-		
+
 	}
-	
+
 	public void testSubselect() {
 
 		Session s = openSession();
@@ -914,7 +916,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		course.setCourseCode("HIB");
 		course.setDescription("Hibernate Training");
 		s.persist(course);
-		
+
 		Course coursePreferred = new Course();
 		coursePreferred.setCourseCode( "JBOSS" );
 		coursePreferred.setDescription( "JBoss" );
@@ -1035,19 +1037,19 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		s.delete( enrolment.getCourse() );
 		s.delete(enrolment);
 		t.commit();
-		s.close();		
+		s.close();
 	}
-	
+
 	public void testDetachedCriteria() {
-		
+
 		DetachedCriteria dc = DetachedCriteria.forClass(Student.class)
 			.add( Property.forName("name").eq("Gavin King") )
 			.addOrder( Order.asc("studentNumber") );
-		
+
 		byte[] bytes = SerializationHelper.serialize(dc);
-		
-		dc = (DetachedCriteria) SerializationHelper.deserialize(bytes);
-		
+
+		dc = (DetachedCriteria) SerializationHelper.deserialize( bytes );
+
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
@@ -1084,26 +1086,26 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		t.commit();
 		session.close();
 	}
-	
+
 		public void testTwoAliasesCache() {
 			Session s = openSession();
 			Transaction t = s.beginTransaction();
-			
+
 			Course course = new Course();
 			course.setCourseCode("HIB");
 			course.setDescription("Hibernate Training");
 			s.save(course);
-			
+
 			Student gavin = new Student();
 			gavin.setName("Gavin King");
 			gavin.setStudentNumber(666);
 			s.save(gavin);
-			
+
 			Student xam = new Student();
 			xam.setName("Max Rydahl Andersen");
 			xam.setStudentNumber(101);
 			s.save(xam);
-			
+
 			Enrolment enrolment1 = new Enrolment();
 			enrolment1.setCourse(course);
 			enrolment1.setCourseCode(course.getCourseCode());
@@ -1113,7 +1115,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 			enrolment1.setStudentNumber(xam.getStudentNumber());
 			xam.getEnrolments().add(enrolment1);
 			s.save(enrolment1);
-			
+
 			Enrolment enrolment2 = new Enrolment();
 			enrolment2.setCourse(course);
 			enrolment2.setCourseCode(course.getCourseCode());
@@ -1128,7 +1130,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 
 			s = openSession();
 			t = s.beginTransaction();
-			
+
 			List list = s.createCriteria(Enrolment.class)
 				.createAlias("student", "s")
 				.createAlias("course", "c")
@@ -1136,7 +1138,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 				.setCacheable(true)
 				.setReadOnly( true )
 				.list();
-			
+
 			assertEquals( list.size(), 2 );
 
 			Enrolment e = ( Enrolment ) list.get( 0 );
@@ -1162,10 +1164,10 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 
 			t.commit();
 			s.close();
-	
+
 			s = openSession();
 			t = s.beginTransaction();
-			
+
 			list = s.createCriteria(Enrolment.class)
 				.createAlias("student", "s")
 				.createAlias("course", "c")
@@ -1174,7 +1176,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 				.setCacheable(true)
 				.setReadOnly( true )
 				.list();
-		
+
 			assertEquals( list.size(), 2 );
 
 			e = ( Enrolment ) list.get( 0 );
@@ -1200,10 +1202,10 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 
 			t.commit();
 			s.close();
-	
+
 			s = openSession();
 			t = s.beginTransaction();
-			
+
 			list = s.createCriteria(Enrolment.class)
 				.setReadOnly( true )
 				.createAlias("student", "s")
@@ -1211,7 +1213,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 				.add( Restrictions.isNotEmpty("s.enrolments") )
 				.setCacheable(true)
 				.list();
-			
+
 			assertEquals( list.size(), 2 );
 
 			e = ( Enrolment ) list.get( 0 );
@@ -1240,7 +1242,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 			s.delete( enrolment1.getCourse() );
 			s.delete( enrolment1.getStudent() );
 			s.delete( enrolment2.getStudent() );
-		
+
 			t.commit();
 			s.close();
 	}
@@ -1249,22 +1251,22 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 	public void testProjectionsUsingProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		
+
 		Course course = new Course();
 		course.setCourseCode("HIB");
 		course.setDescription("Hibernate Training");
 		s.save(course);
-		
+
 		Student gavin = new Student();
 		gavin.setName("Gavin King");
 		gavin.setStudentNumber(667);
 		s.save(gavin);
-		
+
 		Student xam = new Student();
 		xam.setName("Max Rydahl Andersen");
 		xam.setStudentNumber(101);
 		s.save(xam);
-		
+
 		Enrolment enrolment = new Enrolment();
 		enrolment.setCourse(course);
 		enrolment.setCourseCode(course.getCourseCode());
@@ -1274,7 +1276,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		enrolment.setStudentNumber(xam.getStudentNumber());
 		xam.getEnrolments().add(enrolment);
 		s.save(enrolment);
-		
+
 		enrolment = new Enrolment();
 		enrolment.setCourse(course);
 		enrolment.setCourseCode(course.getCourseCode());
@@ -1284,14 +1286,14 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		enrolment.setStudentNumber(gavin.getStudentNumber());
 		gavin.getEnrolments().add(enrolment);
 		s.save(enrolment);
-		
+
 		s.flush();
-		
+
 		Long count = (Long) s.createCriteria(Enrolment.class)
 			.setProjection( Property.forName("studentNumber").count().setDistinct() )
 			.uniqueResult();
 		assertEquals(count, new Long(2));
-		
+
 		Object object = s.createCriteria(Enrolment.class)
 			.setProjection( Projections.projectionList()
 					.add( Property.forName("studentNumber").count() )
@@ -1300,14 +1302,14 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 					.add( Property.forName("studentNumber").avg() )
 			)
 			.uniqueResult();
-		Object[] result = (Object[])object; 
-		
+		Object[] result = (Object[])object;
+
 		assertEquals(new Long(2),result[0]);
 		assertEquals(new Long(667),result[1]);
 		assertEquals(new Long(101),result[2]);
 		assertEquals(384.0, ( (Double) result[3] ).doubleValue(), 0.01);
-		
-		
+
+
 		s.createCriteria(Enrolment.class)
 		    .add( Property.forName("studentNumber").gt( new Long(665) ) )
 		    .add( Property.forName("studentNumber").lt( new Long(668) ) )
@@ -1315,7 +1317,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		    .add( Property.forName("year").eq( new Short( (short) 1999 ) ) )
 		    .addOrder( Property.forName("studentNumber").asc() )
 			.uniqueResult();
-	
+
 		List resultWithMaps = s.createCriteria(Enrolment.class)
 			.setProjection( Projections.projectionList()
 					.add( Property.forName("studentNumber").as("stNumber") )
@@ -1326,27 +1328,27 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		    .addOrder( Property.forName("studentNumber").asc() )
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
 			.list();
-		
+
 		assertEquals(1, resultWithMaps.size());
 		Map m1 = (Map) resultWithMaps.get(0);
-		
+
 		assertEquals(new Long(667), m1.get("stNumber"));
-		assertEquals(course.getCourseCode(), m1.get("cCode"));		
+		assertEquals(course.getCourseCode(), m1.get("cCode"));
 
 		resultWithMaps = s.createCriteria(Enrolment.class)
 			.setProjection( Property.forName("studentNumber").as("stNumber") )
 		    .addOrder( Order.desc("stNumber") )
 			.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP)
 			.list();
-		
+
 		assertEquals(2, resultWithMaps.size());
 		Map m0 = (Map) resultWithMaps.get(0);
 		m1 = (Map) resultWithMaps.get(1);
-		
+
 		assertEquals(new Long(101), m1.get("stNumber"));
 		assertEquals(new Long(667), m0.get("stNumber"));
 
-	
+
 		List resultWithAliasedBean = s.createCriteria(Enrolment.class)
 			.createAlias("student", "st")
 			.createAlias("course", "co")
@@ -1357,13 +1359,13 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 			.addOrder( Order.desc("studentName") )
 			.setResultTransformer( Transformers.aliasToBean(StudentDTO.class) )
 			.list();
-		
+
 		assertEquals(2, resultWithAliasedBean.size());
-		
+
 		StudentDTO dto = (StudentDTO) resultWithAliasedBean.get(0);
 		assertNotNull(dto.getDescription());
 		assertNotNull(dto.getName());
-	
+
 		s.createCriteria(Student.class)
 			.add( Restrictions.like("name", "Gavin", MatchMode.START) )
 			.addOrder( Order.asc("name") )
@@ -1380,27 +1382,27 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 					.add( Property.forName("c.description") )
 				)
 			.uniqueResult();
-			
+
 		Projection p1 = Projections.projectionList()
 			.add( Property.forName("studentNumber").count() )
 			.add( Property.forName("studentNumber").max() )
 			.add( Projections.rowCount() );
-		
+
 		Projection p2 = Projections.projectionList()
 			.add( Property.forName("studentNumber").min() )
 			.add( Property.forName("studentNumber").avg() )
 			.add( Projections.sqlProjection(
-					"1 as constOne, count(*) as countStar", 
-					new String[] { "constOne", "countStar" }, 
+					"1 as constOne, count(*) as countStar",
+					new String[] { "constOne", "countStar" },
 					new Type[] { Hibernate.INTEGER, Hibernate.INTEGER }
 			) );
-	
+
 		Object[] array = (Object[]) s.createCriteria(Enrolment.class)
 			.setProjection( Projections.projectionList().add(p1).add(p2) )
 			.uniqueResult();
-		
+
 		assertEquals( array.length, 7 );
-		
+
 		List list = s.createCriteria(Enrolment.class)
 			.createAlias("student", "st")
 			.createAlias("course", "co")
@@ -1410,13 +1412,13 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 					.add( Property.forName("year").group() )
 			)
 			.list();
-		
+
 		assertEquals( list.size(), 2 );
-		
+
 		s.delete(gavin);
 		s.delete(xam);
 		s.delete(course);
-		
+
 		t.commit();
 		s.close();
 	}
@@ -1537,7 +1539,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		t.commit();
 		session.close();
 	}
-	
+
 	public void testAliasJoinCriterion() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -1576,9 +1578,9 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 			.setProjection( Property.forName("pc.courseCode") )
 			.addOrder(Order.asc("pc.courseCode"))
 			.list();
-		
+
 		assertEquals( 3, result.size() );
-		
+
 		// can't be sure of NULL comparison ordering aside from they should
 		// either come first or last
 		if ( result.get( 0 ) == null ) {
@@ -1590,26 +1592,26 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 			assertNull( result.get(1) );
 			assertEquals( "HIB-A", result.get(0) );
 		}
-		
+
 		// test == on non existent value
 		result = session.createCriteria( Student.class )
 		.createAlias( "preferredCourse", "pc", Criteria.LEFT_JOIN, Restrictions.eq("pc.courseCode", "HIB-R") )
 		.setProjection( Property.forName("pc.courseCode") )
 		.addOrder(Order.asc("pc.courseCode"))
 		.list();
-	
+
 		assertEquals( 3, result.size() );
 		assertNull( result.get(2) );
 		assertNull( result.get(1) );
 		assertNull(result.get(0) );
-		
+
 		// test != on one existing value
 		result = session.createCriteria( Student.class )
 		.createAlias( "preferredCourse", "pc", Criteria.LEFT_JOIN, Restrictions.ne("pc.courseCode", "HIB-A") )
 		.setProjection( Property.forName("pc.courseCode") )
 		.addOrder(Order.asc("pc.courseCode"))
 		.list();
-	
+
 		assertEquals( 3, result.size() );
 		// can't be sure of NULL comparison ordering aside from they should
 		// either come first or last
@@ -1632,7 +1634,7 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 		session.close();
 	}
 	*/
-	
+
 	private void checkProxyReadOnly(Session s, Object proxy, boolean expectedReadOnly) {
 		assertTrue( proxy instanceof HibernateProxy );
 		LazyInitializer li = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer();

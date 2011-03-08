@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.ast.tree;
+
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.util.StringHelper;
+import org.hibernate.internal.util.StringHelper;
 import antlr.SemanticException;
 
 /**
@@ -59,7 +60,8 @@ public class ResultVariableRefNode extends HqlSqlWalkerNode {
 	/**
 	 *  {@inheritDoc}
 	 */
-	public String getRenderText(SessionFactoryImplementor sessionFactory) {
+	@Override
+    public String getRenderText(SessionFactoryImplementor sessionFactory) {
 		int scalarColumnIndex = selectExpression.getScalarColumnIndex();
 		if ( scalarColumnIndex < 0 ) {
 			throw new IllegalStateException(
@@ -86,6 +88,6 @@ public class ResultVariableRefNode extends HqlSqlWalkerNode {
 	}
 
 	private String getColumnNamesString(int scalarColumnIndex) {
-		return StringHelper.join( ", ", getWalker().getSelectClause().getColumnNames()[ scalarColumnIndex ] );
+		return StringHelper.join( ", ", getWalker().getSelectClause().getColumnNames()[scalarColumnIndex] );
 	}
 }

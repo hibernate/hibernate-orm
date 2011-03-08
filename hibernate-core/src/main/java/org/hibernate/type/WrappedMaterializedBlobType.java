@@ -35,7 +35,7 @@ public class WrappedMaterializedBlobType extends AbstractSingleColumnStandardBas
 	public static final WrappedMaterializedBlobType INSTANCE = new WrappedMaterializedBlobType();
 
 	public WrappedMaterializedBlobType() {
-		super( BlobTypeDescriptor.INSTANCE, ByteArrayTypeDescriptor.INSTANCE );
+		super( BlobTypeDescriptor.DEFAULT, ByteArrayTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

@@ -36,8 +36,8 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.ReflectHelper;
 
 /**
  * Any value that maps to columns.
@@ -326,7 +326,8 @@ public class SimpleValue implements KeyValue {
 		return typeParameters;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		return getClass().getName() + '(' + columns.toString() + ')';
 	}
 

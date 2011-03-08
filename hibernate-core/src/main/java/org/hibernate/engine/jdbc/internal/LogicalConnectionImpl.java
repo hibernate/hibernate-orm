@@ -22,27 +22,33 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.jdbc.BorrowedConnectionProxy;
-import org.hibernate.stat.StatisticsImplementor;
+import org.hibernate.engine.jdbc.spi.NonDurableConnectionObserver;
+import org.hibernate.engine.transaction.spi.TransactionContext;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.jboss.logging.Logger;
 
 /**
- * LogicalConnectionImpl implementation
+ * Standard Hibernate {@link org.hibernate.engine.jdbc.spi.LogicalConnection} implementation
+ * <p/>
+ * IMPL NOTE : Custom serialization handling!
  *
  * @author Steve Ebersole
  */
@@ -50,14 +56,13 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LogicalConnectionImpl.class.getName());
 
-	private Connection physicalConnection;
-	private Connection borrowedConnection;
+	private transient Connection physicalConnection;
+	private transient Connection shareableConnectionProxy;
 
-	private final ConnectionReleaseMode connectionReleaseMode;
-	private final JdbcServices jdbcServices;
-	private final StatisticsImplementor statisticsImplementor;
-	private final JdbcResourceRegistry jdbcResourceRegistry;
-	private final List<ConnectionObserver> observers = new ArrayList<ConnectionObserver>();
+	private final transient ConnectionReleaseMode connectionReleaseMode;
+	private final transient JdbcServices jdbcServices;
+	private final transient JdbcResourceRegistry jdbcResourceRegistry;
+	private final transient List<ConnectionObserver> observers;
 
 	private boolean releasesEnabled = true;
 
@@ -65,40 +70,41 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
 	private boolean isClosed;
 
-	public LogicalConnectionImpl(Connection userSuppliedConnection,
-								 ConnectionReleaseMode connectionReleaseMode,
-								 JdbcServices jdbcServices,
-								 StatisticsImplementor statisticsImplementor
-	) {
-		this( connectionReleaseMode,
+	public LogicalConnectionImpl(
+			Connection userSuppliedConnection,
+			ConnectionReleaseMode connectionReleaseMode,
+			JdbcServices jdbcServices) {
+		this(
+				connectionReleaseMode,
 				jdbcServices,
-				statisticsImplementor,
-				userSuppliedConnection != null,
-				false
+				(userSuppliedConnection != null),
+				false,
+				new ArrayList<ConnectionObserver>()
 		);
 		this.physicalConnection = userSuppliedConnection;
 	}
 
-	private LogicalConnectionImpl(ConnectionReleaseMode connectionReleaseMode,
-								  JdbcServices jdbcServices,
-								  StatisticsImplementor statisticsImplementor,
-								  boolean isUserSuppliedConnection,
-								  boolean isClosed) {
+	private LogicalConnectionImpl(
+			ConnectionReleaseMode connectionReleaseMode,
+			JdbcServices jdbcServices,
+			boolean isUserSuppliedConnection,
+			boolean isClosed,
+			List<ConnectionObserver> observers) {
 		this.connectionReleaseMode = determineConnectionReleaseMode(
 				jdbcServices, isUserSuppliedConnection, connectionReleaseMode
 		);
 		this.jdbcServices = jdbcServices;
-		this.statisticsImplementor = statisticsImplementor;
-		this.jdbcResourceRegistry =
-				new JdbcResourceRegistryImpl( getJdbcServices().getSqlExceptionHelper() );
+		this.jdbcResourceRegistry = new JdbcResourceRegistryImpl( getJdbcServices().getSqlExceptionHelper() );
+		this.observers = observers;
 
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.isClosed = isClosed;
 	}
 
-	private static ConnectionReleaseMode determineConnectionReleaseMode(JdbcServices jdbcServices,
-																		boolean isUserSuppliedConnection,
-																		ConnectionReleaseMode connectionReleaseMode) {
+	private static ConnectionReleaseMode determineConnectionReleaseMode(
+			JdbcServices jdbcServices,
+			boolean isUserSuppliedConnection,
+			ConnectionReleaseMode connectionReleaseMode) {
 		if ( isUserSuppliedConnection ) {
 			return ConnectionReleaseMode.ON_CLOSE;
 		}
@@ -112,60 +118,37 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public JdbcServices getJdbcServices() {
 		return jdbcServices;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public StatisticsImplementor getStatisticsImplementor() {
-		return statisticsImplementor;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public JdbcResourceRegistry getResourceRegistry() {
 		return jdbcResourceRegistry;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void addObserver(ConnectionObserver observer) {
 		observers.add( observer );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	public void removeObserver(ConnectionObserver connectionObserver) {
+		observers.remove( connectionObserver );
+	}
+
+	@Override
 	public boolean isOpen() {
 		return !isClosed;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean isLogicallyConnected() {
-		return isUserSuppliedConnection ?
-				isPhysicallyConnected() :
-				isOpen();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isPhysicallyConnected() {
 		return physicalConnection != null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Connection getConnection() throws HibernateException {
 		if ( isClosed ) {
 			throw new HibernateException( "Logical connection is closed" );
@@ -180,16 +163,33 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		return physicalConnection;
 	}
 
+	@Override
+	public Connection getShareableConnectionProxy() {
+		if ( shareableConnectionProxy == null ) {
+			shareableConnectionProxy = buildConnectionProxy();
+		}
+		return shareableConnectionProxy;
+	}
+
+	private Connection buildConnectionProxy() {
+		return ProxyBuilder.buildConnection( this );
+	}
+
+	@Override
+	public Connection getDistinctConnectionProxy() {
+		return buildConnectionProxy();
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
 	public Connection close() {
-		Connection c = physicalConnection;
+		LOG.trace( "Closing logical connection" );
+		Connection c = isUserSuppliedConnection ? physicalConnection : null;
 		try {
-			releaseBorrowedConnection();
-            LOG.trace("Closing logical connection");
+			releaseProxies();
+			jdbcResourceRegistry.close();
 			if ( !isUserSuppliedConnection && physicalConnection != null ) {
-				jdbcResourceRegistry.close();
 				releaseConnection();
 			}
 			return c;
@@ -202,46 +202,28 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			for ( ConnectionObserver observer : observers ) {
 				observer.logicalConnectionClosed();
 			}
+			observers.clear();
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	private void releaseProxies() {
+		if ( shareableConnectionProxy != null ) {
+			try {
+				shareableConnectionProxy.close();
+			}
+			catch (SQLException e) {
+				LOG.debug( "Error releasing shared connection proxy", e );
+			}
+		}
+		shareableConnectionProxy = null;
+	}
+
+	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return connectionReleaseMode;
 	}
 
-	public boolean hasBorrowedConnection() {
-		return borrowedConnection != null;
-	}
-
-	public Connection borrowConnection() {
-		if ( isClosed ) {
-			throw new HibernateException( "connection has been closed" );
-		}
-		if ( isUserSuppliedConnection ) {
-			return physicalConnection;
-		}
-		else {
-			if ( borrowedConnection == null ) {
-				borrowedConnection = BorrowedConnectionProxy.generateProxy( this );
-			}
-			return borrowedConnection;
-		}
-	}
-
-	public void releaseBorrowedConnection() {
-		if ( borrowedConnection != null ) {
-			try {
-				BorrowedConnectionProxy.renderUnuseable( borrowedConnection );
-			}
-			finally {
-				borrowedConnection = null;
-			}
-		}
-	}
-
+	@Override
 	public void afterStatementExecution() {
         LOG.trace("Starting after statement execution processing [" + connectionReleaseMode + "]");
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
@@ -252,11 +234,12 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 			if ( jdbcResourceRegistry.hasRegisteredResources() ) {
                 LOG.debugf("Skipping aggressive release due to registered resources");
 				return;
-            } else if (borrowedConnection != null) LOG.debugf("Skipping aggressive release due to borrowed connection");
+			}
 			releaseConnection();
 		}
 	}
 
+	@Override
 	public void afterTransaction() {
 		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ||
 				connectionReleaseMode == ConnectionReleaseMode.AFTER_TRANSACTION ) {
@@ -268,20 +251,21 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 	}
 
+	@Override
 	public void disableReleases() {
         LOG.trace("Disabling releases");
 		releasesEnabled = false;
 	}
 
+	@Override
 	public void enableReleases() {
         LOG.trace("(Re)enabling releases");
 		releasesEnabled = true;
-		//FIXME: uncomment after new batch stuff is integrated!!!
-		//afterStatementExecution();
+		afterStatementExecution();
 	}
 
 	/**
-	 * Force aggresive release of the underlying connection.
+	 * Force aggressive release of the underlying connection.
 	 */
 	public void aggressiveRelease() {
         if (isUserSuppliedConnection) LOG.debugf("Cannot aggressively release user-supplied connection; skipping");
@@ -295,7 +279,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
 
 	/**
-	 * Pysically opens a JDBC Connection.
+	 * Physically opens a JDBC Connection.
 	 *
 	 * @throws org.hibernate.JDBCException Indicates problem opening a connection
 	 */
@@ -335,70 +319,114 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		for ( ConnectionObserver observer : observers ) {
 			observer.physicalConnectionReleased();
 		}
+		releaseNonDurableObservers();
 	}
 
-	/**
-	 * Manually disconnect the underlying JDBC Connection.  The assumption here
-	 * is that the manager will be reconnected at a later point in time.
-	 *
-	 * @return The connection mantained here at time of disconnect.  Null if
-	 * there was no connection cached internally.
-	 */
+	private void releaseNonDurableObservers() {
+		Iterator observers = this.observers.iterator();
+		while ( observers.hasNext() ) {
+			if ( NonDurableConnectionObserver.class.isInstance( observers.next() ) ) {
+				observers.remove();
+			}
+		}
+	}
+
+	@Override
 	public Connection manualDisconnect() {
 		if ( isClosed ) {
 			throw new IllegalStateException( "cannot manually disconnect because logical connection is already closed" );
 		}
+		releaseProxies();
 		Connection c = physicalConnection;
 		jdbcResourceRegistry.releaseResources();
 		releaseConnection();
 		return c;
 	}
 
-	/**
-	 * Manually reconnect the underlying JDBC Connection.  Should be called at
-	 * some point after manualDisconnect().
-	 * <p/>
-	 * This form is used for user-supplied connections.
-	 */
-	public void reconnect(Connection suppliedConnection) {
-        if (isClosed) throw new IllegalStateException("cannot manually reconnect because logical connection is already closed");
-		if ( isUserSuppliedConnection ) {
-            if (suppliedConnection == null) throw new IllegalArgumentException("cannot reconnect a null user-supplied connection");
-            else if (suppliedConnection == physicalConnection) LOG.reconnectingConnectedConnection();
-            else if (physicalConnection != null) throw new IllegalArgumentException(
-                                                                                    "cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting.");
+	@Override
+	public void manualReconnect(Connection suppliedConnection) {
+		if ( isClosed ) {
+			throw new IllegalStateException( "cannot manually reconnect because logical connection is already closed" );
+		}
+		if ( !isUserSuppliedConnection ) {
+			throw new IllegalStateException( "cannot manually reconnect unless Connection was originally supplied" );
+		}
+		else {
+			if ( suppliedConnection == null ) {
+				throw new IllegalArgumentException( "cannot reconnect a null user-supplied connection" );
+			}
+			else if ( suppliedConnection == physicalConnection ) {
+                LOG.debug("reconnecting the same connection that is already connected; should this connection have been disconnected?");
+			}
+			else if ( physicalConnection != null ) {
+				throw new IllegalArgumentException(
+						"cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
+				);
+			}
 			physicalConnection = suppliedConnection;
             LOG.debugf("Reconnected JDBC connection");
 		}
-		else {
-            if (suppliedConnection != null) throw new IllegalStateException("unexpected user-supplied connection");
-            LOG.debugf("Called reconnect() with null connection (not user-supplied)");
+	}
+
+	@Override
+	public boolean isAutoCommit() {
+		if ( !isOpen() || ! isPhysicallyConnected() ) {
+			return true;
+		}
+
+		try {
+			return getConnection().getAutoCommit();
+		}
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert( e, "could not inspect JDBC autocommit mode" );
 		}
 	}
 
+	@Override
+	public void notifyObserversStatementPrepared() {
+		for ( ConnectionObserver observer : observers ) {
+			observer.statementPrepared();
+		}
+	}
+
+	@Override
 	public boolean isReadyForSerialization() {
-		return isUserSuppliedConnection ?
-				! isPhysicallyConnected() :
-				! getResourceRegistry().hasRegisteredResources()
-				;
+		return isUserSuppliedConnection
+				? ! isPhysicallyConnected()
+				: ! getResourceRegistry().hasRegisteredResources();
 	}
 
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeBoolean( isUserSuppliedConnection );
 		oos.writeBoolean( isClosed );
+		List<ConnectionObserver> durableConnectionObservers = new ArrayList<ConnectionObserver>();
+		for ( ConnectionObserver observer : observers ) {
+			if ( ! NonDurableConnectionObserver.class.isInstance( observer ) ) {
+				durableConnectionObservers.add( observer );
+			}
+		}
+		oos.writeInt( durableConnectionObservers.size() );
+		for ( ConnectionObserver observer : durableConnectionObservers ) {
+			oos.writeObject( observer );
+		}
 	}
 
-	public static LogicalConnectionImpl deserialize(ObjectInputStream ois,
-													JdbcServices jdbcServices,
-													StatisticsImplementor statisticsImplementor,
-													ConnectionReleaseMode connectionReleaseMode
-	) throws IOException {
+	public static LogicalConnectionImpl deserialize(
+			ObjectInputStream ois,
+			TransactionContext transactionContext) throws IOException, ClassNotFoundException {
+		boolean isUserSuppliedConnection = ois.readBoolean();
+		boolean isClosed = ois.readBoolean();
+		int observerCount = ois.readInt();
+		List<ConnectionObserver> observers = CollectionHelper.arrayList( observerCount );
+		for ( int i = 0; i < observerCount; i++ ) {
+			observers.add( (ConnectionObserver) ois.readObject() );
+		}
 		return new LogicalConnectionImpl(
-				connectionReleaseMode,
-				jdbcServices,
-				statisticsImplementor,
-				ois.readBoolean(),
-				ois.readBoolean()
+				transactionContext.getConnectionReleaseMode(),
+				transactionContext.getTransactionEnvironment().getJdbcServices(),
+				isUserSuppliedConnection,
+				isClosed,
+				observers
 		);
  	}
 }

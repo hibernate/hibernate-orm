@@ -50,8 +50,8 @@ import org.hibernate.engine.query.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
-import org.hibernate.util.StringHelper;
 
 /**
  * Implementation of the {@link SQLQuery} contract.
@@ -193,14 +193,16 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		throw new UnsupportedOperationException("SQL queries do not currently support iteration");
 	}
 
-	public QueryParameters getQueryParameters(Map namedParams) {
+	@Override
+    public QueryParameters getQueryParameters(Map namedParams) {
 		QueryParameters qp = super.getQueryParameters(namedParams);
 		qp.setCallable(callable);
 		qp.setAutoDiscoverScalarTypes( autoDiscoverTypes );
 		return qp;
 	}
 
-	protected void verifyParameters() {
+	@Override
+    protected void verifyParameters() {
 		// verifyParameters is called at the start of all execution type methods, so we use that here to perform
 		// some preparation work.
 		prepare();
@@ -239,11 +241,13 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		}
 	}
 
-	public String[] getReturnAliases() throws HibernateException {
+	@Override
+    public String[] getReturnAliases() throws HibernateException {
 		throw new UnsupportedOperationException("SQL queries do not currently support returning aliases");
 	}
 
-	public Type[] getReturnTypes() throws HibernateException {
+	@Override
+    public Type[] getReturnTypes() throws HibernateException {
 		throw new UnsupportedOperationException("not yet implemented for SQL queries");
 	}
 
@@ -255,7 +259,8 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 		throw new UnsupportedOperationException("cannot set lock options for a native SQL query");
 	}
 
-	public LockOptions getLockOptions() {
+	@Override
+    public LockOptions getLockOptions() {
 		//we never need to apply locks to the SQL
 		return null;
 	}

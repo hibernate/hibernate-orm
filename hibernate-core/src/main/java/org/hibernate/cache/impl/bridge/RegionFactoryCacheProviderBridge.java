@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.impl.bridge;
+
 import java.util.Properties;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cache.CacheDataDescription;
@@ -36,8 +37,8 @@ import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**

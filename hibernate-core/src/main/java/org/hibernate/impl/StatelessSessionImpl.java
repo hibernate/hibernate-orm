@@ -20,6 +20,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.impl;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Collections;
@@ -53,13 +54,16 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.Versioning;
-import org.hibernate.engine.jdbc.internal.JDBCContextImpl;
-import org.hibernate.engine.jdbc.spi.JDBCContext;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
+import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
+import org.hibernate.engine.transaction.spi.TransactionCoordinator;
+import org.hibernate.engine.transaction.spi.TransactionEnvironment;
+import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.event.EventListeners;
 import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -68,25 +72,34 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
-import org.hibernate.util.CollectionHelper;
 import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
  */
-public class StatelessSessionImpl extends AbstractSessionImpl
-		implements JDBCContext.Context, StatelessSession {
+public class StatelessSessionImpl extends AbstractSessionImpl implements StatelessSession {
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, StatelessSessionImpl.class.getName());
 
-	private JDBCContextImpl jdbcContext;
+	private TransactionCoordinator transactionCoordinator;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
 
 	StatelessSessionImpl(Connection connection, SessionFactoryImpl factory) {
 		super( factory );
-		this.jdbcContext = new JDBCContextImpl( this, connection, EmptyInterceptor.INSTANCE );
+		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
 	}
 
+	// TransactionContext ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public TransactionCoordinator getTransactionCoordinator() {
+		return transactionCoordinator;
+	}
+
+	@Override
+	public TransactionEnvironment getTransactionEnvironment() {
+		return factory.getTransactionEnvironment();
+	}
 
 	// inserts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -317,22 +330,33 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		if ( isClosed() ) {
 			throw new SessionException( "Session was already closed!" );
 		}
-		jdbcContext.getConnectionManager().close();
+		transactionCoordinator.close();
 		setClosed();
 	}
 
 	public void managedFlush() {
 		errorIfClosed();
-		getJDBCContext().getConnectionManager().executeBatch();
+		getTransactionCoordinator().getJdbcCoordinator().executeBatch();
 	}
 
 	public boolean shouldAutoClose() {
 		return isAutoCloseSessionEnabled() && !isClosed();
 	}
 
-	public void afterTransactionCompletion(boolean successful, Transaction tx) {}
+	@Override
+	public void afterTransactionBegin(TransactionImplementor hibernateTransaction) {
+		// nothing to do here
+	}
 
-	public void beforeTransactionCompletion(Transaction tx) {}
+	@Override
+	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction) {
+		// nothing to do here
+	}
+
+	@Override
+	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful) {
+		// nothing to do here
+	}
 
 	public String bestGuessEntityName(Object object) {
 		if (object instanceof HibernateProxy) {
@@ -343,7 +367,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 	public Connection connection() {
 		errorIfClosed();
-		return jdbcContext.borrowConnection();
+		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getDistinctConnectionProxy();
 	}
 
 	public int executeUpdate(String query, QueryParameters queryParameters)
@@ -437,11 +461,11 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 
 	public boolean isConnected() {
-		return jdbcContext.getConnectionManager().isCurrentlyConnected();
+		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isPhysicallyConnected();
 	}
 
 	public boolean isTransactionInProgress() {
-		return jdbcContext.isTransactionInProgress();
+		return transactionCoordinator.isTransactionInProgress();
 	}
 
 	public void setAutoClear(boolean enabled) {
@@ -458,7 +482,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 
 	public Transaction getTransaction() throws HibernateException {
 		errorIfClosed();
-		return jdbcContext.getTransaction();
+		return transactionCoordinator.getTransaction();
 	}
 
 	public Transaction beginTransaction() throws HibernateException {
@@ -510,8 +534,8 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	}
 
 	public void afterOperation(boolean success) {
-		if ( !jdbcContext.isTransactionInProgress() ) {
-			jdbcContext.afterNontransactionalQuery(success);
+		if ( ! transactionCoordinator.isTransactionInProgress() ) {
+			transactionCoordinator.afterNonTransactionalQuery( success );;
 		}
 	}
 
@@ -612,7 +636,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	throws HibernateException {
 		errorIfClosed();
 		CustomLoader loader = new CustomLoader( customQuery, getFactory() );
-		return loader.scroll(queryParameters, this);
+		return loader.scroll( queryParameters, this );
 	}
 
 	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
@@ -639,10 +663,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 		return null;
 	}
 
-	public JDBCContext getJDBCContext() {
-		return jdbcContext;
-	}
-
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return LoadQueryInfluencers.NONE;
 	}
@@ -659,8 +679,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl
 	}
 
 	public void setFetchProfile(String name) {}
-
-	public void afterTransactionBegin(Transaction tx) {}
 
 	protected boolean autoFlushIfRequired(Set querySpaces) throws HibernateException {
 		// no auto-flushing to support in stateless session

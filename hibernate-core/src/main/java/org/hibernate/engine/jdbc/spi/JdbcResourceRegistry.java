@@ -22,6 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
+
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
@@ -30,7 +32,7 @@ import java.sql.Statement;
  *
  * @author Steve Ebersole
  */
-public interface JdbcResourceRegistry {
+public interface JdbcResourceRegistry extends Serializable {
 	/**
 	 * Register a JDBC statement.
 	 *

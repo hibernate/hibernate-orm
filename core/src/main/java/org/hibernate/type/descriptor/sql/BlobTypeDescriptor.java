@@ -72,7 +72,7 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 						@Override
 						public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 								throws SQLException {
-							st.setBytes( index, ( byte[] ) value );
+							st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
 						}
 					};
 				}

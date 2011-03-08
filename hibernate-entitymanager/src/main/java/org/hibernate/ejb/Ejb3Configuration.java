@@ -69,6 +69,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -1048,6 +1049,18 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			cfg.setNamingStrategy( namingStrategy );
 		}
 
+		final SessionFactoryObserver observer = instantiateCustomClassFromConfiguration(
+				preparedProperties,
+				null,
+				cfg.getSessionFactoryObserver(),
+				AvailableSettings.SESSION_FACTORY_OBSERVER,
+				"SessionFactory observer",
+				SessionFactoryObserver.class
+		);
+		if ( observer != null ) {
+			cfg.setSessionFactoryObserver( observer );
+		}
+
 		if ( jaccKeys.size() > 0 ) {
 			addSecurity( jaccKeys, preparedProperties, workingVars );
 		}
@@ -1546,6 +1559,11 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	public Ejb3Configuration setNamingStrategy(NamingStrategy namingStrategy) {
 		cfg.setNamingStrategy( namingStrategy );
+		return this;
+	}
+
+	public Ejb3Configuration setSessionFactoryObserver(SessionFactoryObserver observer) {
+		cfg.setSessionFactoryObserver( observer );
 		return this;
 	}
 

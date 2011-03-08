@@ -243,6 +243,11 @@ public class AvailableSettings {
 	public static final String SESSION_INTERCEPTOR = "hibernate.ejb.interceptor.session_scoped";
 
 	/**
+	 * SessionFactoryObserver class name, the class must have a no-arg constructor
+	 */
+	public static final String SESSION_FACTORY_OBSERVER = "hibernate.ejb.session_factory_observer";
+
+	/**
 	 * Naming strategy class name, the class has to have a no-arg constructor
 	 */
 	public static final String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";

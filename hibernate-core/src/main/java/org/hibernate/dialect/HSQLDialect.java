@@ -84,7 +84,7 @@ public class HSQLDialect extends Dialect {
 		}
 
 		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BINARY, "binary" );
+		registerColumnType( Types.BINARY, "binary($l)" );
 		registerColumnType( Types.BIT, "bit" );
         registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.CHAR, "char($l)" );

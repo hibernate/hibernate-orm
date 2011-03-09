@@ -13,7 +13,6 @@ dependencies {
     compile( libraries.javassist )
     testCompile( project(':hibernate-core').sourceSets.test.classes )
     testCompile( libraries.junit )
-    testCompile( libraries.jpa_modelgen )
     testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
@@ -65,8 +64,3 @@ copyBundleResources.dependsOn bundlesTargetDir
 
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources
-
-
-
-
-

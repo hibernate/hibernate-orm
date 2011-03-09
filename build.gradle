@@ -217,7 +217,7 @@ subprojects { subProject ->
                 license {
                     name 'GNU Lesser General Public License'
                     url 'http://www.gnu.org/licenses/lgpl-2.1.html'
-                    comments 'See discussion at http://hibernate.org/356.html for more details.'
+                    comments 'See discussion at http://hibernate.org/license for more details.'
                     distribution 'repo'
                 }
             }

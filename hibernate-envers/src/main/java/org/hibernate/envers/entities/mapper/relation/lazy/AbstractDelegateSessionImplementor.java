@@ -82,7 +82,12 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
         delegate.setAutoClear(enabled);
     }
 
-    public boolean isTransactionInProgress() {
+	@Override
+	public void disableTransactionAutoJoin() {
+		delegate.disableTransactionAutoJoin();
+	}
+
+	public boolean isTransactionInProgress() {
         return delegate.isTransactionInProgress();
     }
 

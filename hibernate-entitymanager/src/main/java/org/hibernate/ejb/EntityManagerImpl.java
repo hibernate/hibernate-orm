@@ -113,6 +113,9 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl {
 			if ( persistenceContextType == PersistenceContextType.TRANSACTION ) {
 				( (SessionImplementor) session ).setAutoClear( true );
 			}
+			if ( getTransactionType() == PersistenceUnitTransactionType.JTA ) {
+				( (SessionImplementor) session ).disableTransactionAutoJoin();
+			}
 		}
 		return session;
 	}

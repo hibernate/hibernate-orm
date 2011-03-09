@@ -154,6 +154,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	public PersistenceUnitTransactionType getTransactionType() {
+		return transactionType;
+	}
+
 	protected void postInit() {
 		//register in Sync if needed
 		if ( PersistenceUnitTransactionType.JTA.equals( transactionType ) ) {

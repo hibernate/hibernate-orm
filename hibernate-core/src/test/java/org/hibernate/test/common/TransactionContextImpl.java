@@ -49,6 +49,11 @@ public class TransactionContextImpl implements TransactionContext {
 	}
 
 	@Override
+	public boolean shouldAutoJoinTransaction() {
+		return true;
+	}
+
+	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return false;
 	}

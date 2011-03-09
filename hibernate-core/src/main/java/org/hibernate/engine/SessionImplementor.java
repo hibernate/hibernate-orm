@@ -71,6 +71,15 @@ public interface SessionImplementor extends Serializable {
 	public void setAutoClear(boolean enabled);
 
 	/**
+	 * Disable automatic transaction joining.  The really only has any effect for CMT transactions.  The default
+	 * Hibernate behavior is to auto join any active JTA transaction (register {@link javax.transaction.Synchronization}).
+	 * JPA however defines an explicit join transaction operation.
+	 *
+	 * See javax.persistence.EntityManager#joinTransaction
+	 */
+	public void disableTransactionAutoJoin();
+
+	/**
 	 * Does this <tt>Session</tt> have an active Hibernate transaction
 	 * or is there a JTA transaction in progress?
 	 */

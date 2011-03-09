@@ -115,6 +115,10 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 			currentHibernateTransaction.invalidate();
 		}
 		currentHibernateTransaction = transactionFactory().createTransaction( this );
+		if ( transactionContext.shouldAutoJoinTransaction() ) {
+			currentHibernateTransaction.markForJoin();
+			currentHibernateTransaction.join();
+		}
 
 		// IMPL NOTE : reset clears synchronizations (following jta spec), but not observers!
 		synchronizationRegistry.clearSynchronizations();

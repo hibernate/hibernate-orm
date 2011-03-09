@@ -51,6 +51,14 @@ public interface TransactionContext extends Serializable {
 	public ConnectionReleaseMode getConnectionReleaseMode();
 
 	/**
+	 * Should transactions be auto joined?  Generally this is only a concern for CMT transactions.  The default
+	 * should be to auto join.  JPA defines an explicit operation for joining a CMT transaction.
+	 *
+	 * @return Should we automatically join transactions
+	 */
+	public boolean shouldAutoJoinTransaction();
+
+	/**
 	 * Should session automatically be closed after transaction completion in this context?
 	 *
 	 * @return {@literal true}/{@literal false} appropriately.

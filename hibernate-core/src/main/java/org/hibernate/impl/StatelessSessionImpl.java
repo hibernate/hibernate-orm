@@ -314,6 +314,11 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		return factory.getSettings().getConnectionReleaseMode();
 	}
 
+	@Override
+	public boolean shouldAutoJoinTransaction() {
+		return true;
+	}
+
 	public boolean isAutoCloseSessionEnabled() {
 		return factory.getSettings().isAutoCloseSessionEnabled();
 	}
@@ -469,6 +474,11 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	}
 
 	public void setAutoClear(boolean enabled) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void disableTransactionAutoJoin() {
 		throw new UnsupportedOperationException();
 	}
 

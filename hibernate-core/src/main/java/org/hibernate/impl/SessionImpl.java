@@ -180,6 +180,7 @@ public final class SessionImpl
 	private transient CacheMode cacheMode = CacheMode.NORMAL;
 	private transient EntityMode entityMode = EntityMode.POJO;
 	private transient boolean autoClear; //for EJB3
+	private transient boolean autoJoinTransactions = true;
 
 	private transient int dontFlushFromFind = 0;
 	private transient boolean flushBeforeCompletionEnabled;
@@ -347,6 +348,11 @@ public final class SessionImpl
 		return connectionReleaseMode;
 	}
 
+	@Override
+	public boolean shouldAutoJoinTransaction() {
+		return autoJoinTransactions;
+	}
+
 	public boolean isAutoCloseSessionEnabled() {
 		return autoCloseSessionEnabled;
 	}
@@ -369,7 +375,7 @@ public final class SessionImpl
             LOG.trace("Skipping auto-flush due to session closed");
 			return;
 		}
-        LOG.trace("Automatically flushing session");
+        LOG.trace( "Automatically flushing session" );
 		flush();
 
 		if ( childSessionsByEntityMode != null ) {
@@ -517,7 +523,7 @@ public final class SessionImpl
 	}
 
 	public void managedClose() {
-        LOG.trace("Automatically closing session");
+        LOG.trace( "Automatically closing session" );
 		close();
 	}
 
@@ -554,6 +560,12 @@ public final class SessionImpl
 	public void setAutoClear(boolean enabled) {
 		errorIfClosed();
 		autoClear = enabled;
+	}
+
+	@Override
+	public void disableTransactionAutoJoin() {
+		errorIfClosed();
+		autoJoinTransactions = false;
 	}
 
 	/**
@@ -2096,6 +2108,7 @@ public final class SessionImpl
 		connectionReleaseMode = ConnectionReleaseMode.parse( ( String ) ois.readObject() );
 		entityMode = EntityMode.parse( ( String ) ois.readObject() );
 		autoClear = ois.readBoolean();
+		autoJoinTransactions = ois.readBoolean();
 		flushMode = FlushMode.parse( ( String ) ois.readObject() );
 		cacheMode = CacheMode.parse( ( String ) ois.readObject() );
 		flushBeforeCompletionEnabled = ois.readBoolean();
@@ -2155,6 +2168,7 @@ public final class SessionImpl
 		oos.writeObject( connectionReleaseMode.toString() );
 		oos.writeObject( entityMode.toString() );
 		oos.writeBoolean( autoClear );
+		oos.writeBoolean( autoJoinTransactions );
 		oos.writeObject( flushMode.toString() );
 		oos.writeObject( cacheMode.toString() );
 		oos.writeBoolean( flushBeforeCompletionEnabled );

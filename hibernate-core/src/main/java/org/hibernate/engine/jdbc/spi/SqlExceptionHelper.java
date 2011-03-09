@@ -26,6 +26,8 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.Statement;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.SQLExceptionConverter;

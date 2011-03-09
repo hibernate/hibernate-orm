@@ -48,7 +48,7 @@
         <license>
             <name>GNU Lesser General Public License</name>
             <url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
-            <comments>See discussion at http://hibernate.org/356.html for more details.</comments>
+            <comments>See discussion at http://hibernate.org/license for more details.</comments>
             <distribution>repo</distribution>
         </license>
     </licenses>

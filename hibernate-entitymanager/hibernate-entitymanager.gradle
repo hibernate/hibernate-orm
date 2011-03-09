@@ -19,38 +19,42 @@ dependencies {
     testRuntime( libraries.validator )
 }
 
-generatedJpaMetamodelSrcDir = dir( buildDirName + "/generated-src/jpamodelgen/test" )
+aptDumpDir = file( buildDirName + "/temp/apt" )
 
-sourceSets{
-    test {
-        java {
-            srcDir( generatedJpaMetamodelSrcDir.dir )
-        }
-    }
+sourceSets.test {
+    originalJavaSrcDirs = java.srcDirs
+    generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
+    java.srcDir generatedJpaMetamodelSrcDir
 }
 
-task generateJpaMetamodelClasses(type: Compile, dependsOn: generatedJpaMetamodelSrcDir) {
+task generateJpaMetamodelClasses(type: Compile) {
     classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
-    source = compileTestJava.source
-    destinationDir = generatedJpaMetamodelSrcDir.dir
+    source = sourceSets.test.originalJavaSrcDirs
+    destinationDir = aptDumpDir
     options.define(
             compilerArgs: [
                     "-proc:only",
                     "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
-                    "-s", "$generatedJpaMetamodelSrcDir.dir.absolutePath"
+                    "-s", "$sourceSets.test.generatedJpaMetamodelSrcDir.absolutePath"
             ]
-    )
+    );
+    outputs.dir sourceSets.test.generatedJpaMetamodelSrcDir;
+    doFirst {
+        sourceSets.test.generatedJpaMetamodelSrcDir.mkdirs()
+    }
 }
+
+// for the time being eat the annoying output from running the annotation processors
+generateJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
 
 compileTestJava.dependsOn generateJpaMetamodelClasses
 compileTestJava.options.define(compilerArgs: ["-proc:none"])
 
 
-bundlesTargetDirName = "$buildDirName/bundles"
-bundlesTargetDir = dir( bundlesTargetDirName )
+bundlesTargetDir = file( "$buildDirName/bundles" )
 task copyBundleResources (type: Copy) {
     from file('src/test/bundles') 
-    into bundlesTargetDir.dir
+    into bundlesTargetDir
     filter(ReplaceTokens, tokens: [
             buildDirName: buildDir.absolutePath,
             'db.dialect': 'org.hibernate.dialect.H2Dialect',
@@ -58,9 +62,11 @@ task copyBundleResources (type: Copy) {
             'jdbc.user': 'sa',
             'jdbc.pass': '',
             'jdbc.url': 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE',
-    ])
+    ]);
+    doFirst {
+        bundlesTargetDir.mkdirs()
+    }
 }
-copyBundleResources.dependsOn bundlesTargetDir
 
 // make sure that the bundles for the packaged test (PackagingTestCase) are copied as well
 processTestResources.dependsOn copyBundleResources

@@ -20,6 +20,33 @@ dependencies {
     testRuntime( libraries.validator )
 }
 
+generatedJpaMetamodelSrcDir = dir( buildDirName + "/generated-src/jpamodelgen/test" )
+
+sourceSets{
+    test {
+        java {
+            srcDir( generatedJpaMetamodelSrcDir.dir )
+        }
+    }
+}
+
+task generateJpaMetamodelClasses(type: Compile, dependsOn: generatedJpaMetamodelSrcDir) {
+    classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
+    source = compileTestJava.source
+    destinationDir = generatedJpaMetamodelSrcDir.dir
+    options.define(
+            compilerArgs: [
+                    "-proc:only",
+                    "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
+                    "-s", "$generatedJpaMetamodelSrcDir.dir.absolutePath"
+            ]
+    )
+}
+
+compileTestJava.dependsOn generateJpaMetamodelClasses
+compileTestJava.options.define(compilerArgs: ["-proc:none"])
+
+
 bundlesTargetDirName = "$buildDirName/bundles"
 bundlesTargetDir = dir( bundlesTargetDirName )
 task copyBundleResources (type: Copy) {

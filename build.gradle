@@ -100,6 +100,12 @@ subprojects { subProject ->
                 // todo : need to make sure these are non-exported
                 description = 'Non-exported compile-time dependencies.'
             }
+            jbossLoggingTool {
+                description = "Dependencies for running the JBoss logging AnnotationProcessor tool"
+            }
+            hibernateJpaModelGenTool {
+                description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
+            }
             deployerJars {
                 description = 'Jars needed for doing deployment to JBoss Nexus repo'
             }
@@ -108,7 +114,6 @@ subprojects { subProject ->
         // appropriately inject the common dependencies into each sub-project
         dependencies {
 		    compile( libraries.logging )
-		    compile( libraries.logging_tools )
             compile( libraries.slf4j_api )
             testCompile( libraries.junit )
             testCompile( libraries.atomikos )
@@ -118,42 +123,64 @@ subprojects { subProject ->
             testRuntime( libraries.jcl )
             testRuntime( libraries.javassist )
             testRuntime( libraries.h2 )
+		    jbossLoggingTool( libraries.logging_tools )
+            hibernateJpaModelGenTool( libraries.jpa_modelgen )
             deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
         }
-        
-		generatedSrcDirName = buildDirName + "/generated-src/main/java"
-		generatedSrcDir = dir( generatedSrcDirName )
-		
-		task compileJavaAnnotations(type: Compile, dependsOn: generatedSrcDir) {
-		    classpath = compileJava.classpath
-		    source = compileJava.source
-		    destinationDir = compileJava.destinationDir
-		    options.define(compilerArgs: ["-proc:only", "-s", "$generatedSrcDir.dir.absolutePath"])
-		}
 
-		compileJava.dependsOn compileJavaAnnotations
-		compileJava.source += fileTree(generatedSrcDirName)
- 		compileJava.options.define(compilerArgs: ["-proc:none"])
-        
-		generatedTestSrcDirName = buildDirName + "/generated-src/test/java"
-		generatedTestSrcDir = dir( generatedTestSrcDirName )
+        generatedLoggingSrcMainDir = dir( buildDirName + "/generated-src/logging/main" )
+        generatedLoggingSrcTestDir = dir( buildDirName + "/generated-src/logging/test" )
 
-		task compileTestJavaAnnotations(type: Compile, dependsOn: generatedTestSrcDir) {
-		    classpath = compileTestJava.classpath
-		    source = compileTestJava.source
-		    destinationDir = compileTestJava.destinationDir
-		    options.define(compilerArgs: ["-proc:only", "-s", "$generatedTestSrcDir.dir.absolutePath"])
-		}
-
-		compileTestJava.dependsOn compileTestJavaAnnotations
-		compileTestJava.source += fileTree(generatedTestSrcDirName)
- 		compileTestJava.options.define(compilerArgs: ["-proc:none"])
-
-        sourceSets {
+        sourceSets{
             main {
+                java {
+                    srcDir( generatedLoggingSrcMainDir.dir )
+                }
                 compileClasspath += configurations.provided
             }
+            test {
+                java {
+                    srcDir( generatedLoggingSrcTestDir.dir )
+                }
+            }
         }
+
+
+        task generateMainLoggingClasses(type: Compile, dependsOn: generatedLoggingSrcMainDir) {
+		    classpath = compileJava.classpath + configurations.jbossLoggingTool
+		    source = compileJava.source
+		    destinationDir = generatedLoggingSrcMainDir.dir
+		    options.define(
+                    compilerArgs: [
+                            "-nowarn",
+                            "-proc:only",
+                            "-processor", "org.jboss.logging.LoggingToolsProcessor",
+                            "-s", "$generatedLoggingSrcMainDir.dir.absolutePath"
+                    ]
+            )
+        }
+
+		compileJava.dependsOn generateMainLoggingClasses
+        compileJava.options.define(compilerArgs: ["-proc:none"])
+
+
+        task generateTestLoggingClasses(type: Compile, dependsOn: generatedLoggingSrcTestDir) {
+		    classpath = compileTestJava.classpath + configurations.jbossLoggingTool
+		    source = compileTestJava.source
+		    destinationDir = generatedLoggingSrcTestDir.dir
+		    options.define(
+                    compilerArgs: [
+                            "-nowarn",
+                            "-proc:only",
+                            "-processor", "org.jboss.logging.LoggingToolsProcessor",
+                            "-s", "$generatedLoggingSrcTestDir.dir.absolutePath"
+                    ]
+            )
+        }
+
+		compileTestJava.dependsOn generateTestLoggingClasses
+        compileTestJava.options.define(compilerArgs: ["-proc:none"])
+
 
         manifest.mainAttributes(
                 provider: 'gradle',
@@ -190,8 +217,8 @@ subprojects { subProject ->
             whenConfigured { module ->
                 module.dependencies*.exported = true
             }
-	        testSourceDirs.add( file( generatedSrcDirName ) )
-	        testSourceDirs.add( file( generatedTestSrcDirName ) )
+//	        testSourceDirs.add( file( generatedSrcDirName ) )
+//	        testSourceDirs.add( file( generatedTestSrcDirName ) )
         }
 		eclipseClasspath {
 			plusConfigurations.add( configurations.provided )

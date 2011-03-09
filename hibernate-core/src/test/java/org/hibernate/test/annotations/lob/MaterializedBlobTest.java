@@ -26,15 +26,14 @@ package org.hibernate.test.annotations.lob;
 import java.util.Arrays;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.Type;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)

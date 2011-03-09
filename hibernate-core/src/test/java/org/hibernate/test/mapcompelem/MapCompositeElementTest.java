@@ -1,29 +1,50 @@
-//$Id: MapCompositeElementTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.mapcompelem;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class MapCompositeElementTest extends FunctionalTestCase {
-	
-	public MapCompositeElementTest(String str) {
-		super(str);
-	}
-
+public class MapCompositeElementTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "mapcompelem/ProductPart.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MapCompositeElementTest.class );
-	}
-	
+	@SuppressWarnings( {"unchecked"})
+	@Test
 	public void testMapCompositeElementWithFormula() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -61,7 +82,9 @@ public class MapCompositeElementTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
+	@SuppressWarnings( {"unchecked"})
+	@Test
 	public void testQueryMapCompositeElement() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

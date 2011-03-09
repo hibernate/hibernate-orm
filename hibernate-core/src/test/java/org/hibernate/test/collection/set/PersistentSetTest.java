@@ -1,6 +1,30 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.collection.set;
+
 import java.util.HashSet;
-import junit.framework.Test;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -8,32 +32,32 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.collection.PersistentSet;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.stat.CollectionStatistics;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * todo: describe PersistentSetTest
- *
  * @author Steve Ebersole
  */
-public class PersistentSetTest extends FunctionalTestCase {
-	public PersistentSetTest(String name) {
-		super( name );
-	}
-
+public class PersistentSetTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/set/Mappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( PersistentSetTest.class );
-	}
-
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Test
 	public void testWriteMethodDirtying() {
 		Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );
@@ -85,6 +109,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testCollectionMerging() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -96,7 +121,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		CollectionStatistics stats =  sfi().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
+		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
@@ -119,6 +144,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testCollectiondirtyChecking() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -130,7 +156,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		CollectionStatistics stats =  sfi().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
+		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Parent.class.getName() + ".children" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
@@ -153,6 +179,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testCompositeElementWriteMethodDirtying() {
 		Container container = new Container( "p1" );
 		Container.Content c1 = new Container.Content( "c1" );
@@ -202,8 +229,9 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
-	public void testCompositeElementMergingFailureExpected() {
-		// HHH-2485
+	@Test
+	@FailureExpected( jiraKey = "HHH-2485" )
+	public void testCompositeElementMerging() {
 		Session session = openSession();
 		session.beginTransaction();
 		Container container = new Container( "p1" );
@@ -213,7 +241,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		CollectionStatistics stats =  sfi().getStatistics().getCollectionStatistics( Container.class.getName() + ".contents" );
+		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Container.class.getName() + ".contents" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
@@ -238,8 +266,9 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
-	public void testCompositeElementCollectionDirtyCheckingFailureExpected() {
-		// HHH-2485
+	@Test
+	@FailureExpected( jiraKey = "HHH-2485" )
+	public void testCompositeElementCollectionDirtyChecking() {
 		Session session = openSession();
 		session.beginTransaction();
 		Container container = new Container( "p1" );
@@ -249,7 +278,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		CollectionStatistics stats =  sfi().getStatistics().getCollectionStatistics( Container.class.getName() + ".contents" );
+		CollectionStatistics stats =  sessionFactory().getStatistics().getCollectionStatistics( Container.class.getName() + ".contents" );
 		long recreateCount = stats.getRecreateCount();
 		long updateCount = stats.getUpdateCount();
 
@@ -273,6 +302,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testLoadChildCheckParentContainsChildCache() {
 		Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );
@@ -334,6 +364,7 @@ public class PersistentSetTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testLoadChildCheckParentContainsChildNoCache() {
 		Parent parent = new Parent( "p1" );
 		Child child = new Child( "c1" );

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -18,6 +18,18 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.transform.BasicTransformerAdapter;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TimestampType;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.Group;
@@ -29,15 +41,13 @@ import org.hibernate.test.sql.hand.Product;
 import org.hibernate.test.sql.hand.SpaceShip;
 import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.TextHolder;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.transform.BasicTransformerAdapter;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TimestampType;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests of various features of native SQL queries.
@@ -45,12 +55,7 @@ import org.hibernate.type.TimestampType;
  * @author Steve Ebersole
  */
 @SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
-public class NativeSQLQueriesTest extends FunctionalTestCase {
-
-	public NativeSQLQueriesTest(String x) {
-		super( x );
-	}
-
+public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "sql/hand/query/NativeSQLQueries.hbm.xml" };
 	}
@@ -59,10 +64,6 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
     public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( NativeSQLQueriesTest.class );
 	}
 
 	protected String getOrganizationFetchJoinEmploymentSQL() {
@@ -112,6 +113,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		return "select PHOTO from IMAGEHOLDER";
 	}
 
+	@Test
 	public void testFailOnNoAddEntityOrScalar() {
 		// Note: this passes, but for the wrong reason.
 		//      there is actually an exception thrown, but it is the database
@@ -139,6 +141,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testManualSynchronization() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -163,6 +166,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSQLQueryInterface() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -179,7 +183,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		List l = s.createSQLQuery( getOrgEmpRegionSQL() )
 				.addEntity("org", Organization.class)
 				.addJoin("emp", "org.employments")
-				.addScalar("regionCode", Hibernate.STRING)
+				.addScalar("regionCode", StringType.INSTANCE)
 				.list();
 		assertEquals( 2, l.size() );
 
@@ -220,6 +224,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testResultSetMappingDefinition() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -252,6 +257,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testScalarValues() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -328,6 +334,8 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"deprecation", "UnusedDeclaration"})
 	public void testMappedAliasStrategy() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -361,7 +369,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		list = sqlQuery.list();
 		assertEquals(1,list.size() );
 		Object res = list.get(0);
-		assertClassAssignability(res.getClass(),Map.class);
+		assertClassAssignability( Map.class, res.getClass() );
 		Map m = (Map) res;
 		assertEquals(2,m.size());
 		t.commit();
@@ -409,8 +417,10 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	/* test for native sql composite id joins which has never been implemented */
-	public void testCompositeIdJoinsFailureExpected() {
+	@Test
+	@SuppressWarnings( {"unchecked"})
+	@FailureExpected( jiraKey = "unknown" )
+	public void testCompositeIdJoins() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Person person = new Person();
@@ -477,6 +487,8 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedDeclaration", "deprecation", "UnusedAssignment"})
 	public void testAutoDetectAliasing() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -531,8 +543,8 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		assertEquals(1, list.size());
 		o = (Object[]) list.get(0);
 		assertEquals(2, o.length);
-		assertClassAssignability( o[0].getClass(), Number.class);
-		assertClassAssignability( o[1].getClass(), Employment.class);
+		assertClassAssignability( Number.class, o[0].getClass() );
+		assertClassAssignability( Employment.class, o[1].getClass() );
 
 
 
@@ -608,9 +620,10 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.delete( enterprise );
 		t.commit();
 		s.close();
-
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public void testExplicitReturnAPI() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -692,6 +705,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMixAndMatchEntityScalar() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -723,6 +737,8 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		}
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedDeclaration"})
 	public void testAddJoinForManyToMany() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -780,6 +796,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTextTypeInSQLQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -799,6 +816,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testImageTypeInSQLQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -840,6 +858,7 @@ public class NativeSQLQueriesTest extends FunctionalTestCase {
 		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	private static class UpperCasedAliasToEntityMapResultTransformer extends BasicTransformerAdapter implements Serializable {
 		public Object transformTuple(Object[] tuple, String[] aliases) {
 			Map result = new HashMap( tuple.length );

@@ -1,15 +1,20 @@
 package org.hibernate.test.jpa.lock;
 
-import junit.framework.Test;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.internal.util.ReflectHelper;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.MyEntity;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests specifically relating to section 3.3.5.3 [Lock Modes] of the
@@ -17,15 +22,8 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Steve Ebersole
  */
+@RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
 public class JPALockTest extends AbstractJPATest {
-	public JPALockTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( JPALockTest.class );
-	}
-
 	/**
 	 * Test the equivalent of EJB3 LockModeType.READ
 	 * <p/>
@@ -54,35 +52,14 @@ public class JPALockTest extends AbstractJPATest {
 	 * <p/>
 	 * EJB3 LockModeType.READ actually maps to the Hibernate LockMode.OPTIMISTIC
 	 */
+	@Test
 	public void testLockModeTypeRead() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;
 		}
-		if ( getDialect().doesReadCommittedCauseWritersToBlockReaders() ) {
-			reportSkip( "deadlock", "jpa read locking" );
-			return;
-		}
-		if ( getDialect() instanceof HSQLDialect ) {
-			int hsqldbVersion = 18;
-			try {
-				Class props = ReflectHelper
-						.classForName( "org.hsqldb.persist.HsqlDatabaseProperties" );
-				String versionString = (String) props.getDeclaredField(
-						"THIS_VERSION").get(null);
-
-				hsqldbVersion = Integer.parseInt( versionString.substring( 0, 1 ) ) * 10;
-				hsqldbVersion += Integer
-						.parseInt( versionString.substring( 2, 3 ) );
-			} catch ( Throwable e ) {
-				// must be a very old version
-			}
-			if ( hsqldbVersion < 20 )
-				reportSkip( "hsqldb 1.8.x only supports read uncommitted", "lock doesn't work on hsqldb 1.8.x");
-			return;
-		}
 		final String initialName = "lock test";
 		// set up some test data
-		Session s1 = getSessions().openSession();
+		Session s1 = sessionFactory().openSession();
 		Transaction t1 = s1.beginTransaction();
 		Item item = new Item();
 		item.setName( initialName );
@@ -93,14 +70,14 @@ public class JPALockTest extends AbstractJPATest {
 		Long itemId = item.getId();
 
 		// do the isolated update
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		item = (Item) s1.get( Item.class, itemId );
 		s1.lock( item, LockMode.UPGRADE );
 		item.setName( "updated" );
 		s1.flush();
 
-		Session s2 = getSessions().openSession();
+		Session s2 = sessionFactory().openSession();
 		Transaction t2 = s2.beginTransaction();
 		Item item2 = (Item) s2.get( Item.class, itemId );
 		assertEquals( "isolation not maintained", initialName, item2.getName() );
@@ -113,7 +90,7 @@ public class JPALockTest extends AbstractJPATest {
 		t2.commit();
 		s2.close();
 
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		s1.delete( item );
 		t1.commit();
@@ -142,17 +119,14 @@ public class JPALockTest extends AbstractJPATest {
 	 * Due to the requirement that LockModeType.WRITE needs to force a version increment,
 	 * a new Hibernate LockMode was added to support this behavior: {@link org.hibernate.LockMode#FORCE}.
 	 */
+	@Test
 	public void testLockModeTypeWrite() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;
 		}
-		if ( getDialect().doesReadCommittedCauseWritersToBlockReaders() ) {
-			reportSkip( "deadlock", "jpa write locking" );
-			return;
-		}
 		final String initialName = "lock test";
 		// set up some test data
-		Session s1 = getSessions().openSession();
+		Session s1 = sessionFactory().openSession();
 		Transaction t1 = s1.beginTransaction();
 		Item item = new Item();
 		item.setName( initialName );
@@ -166,7 +140,7 @@ public class JPALockTest extends AbstractJPATest {
 		Long itemId = item.getId();
 		long initialVersion = item.getVersion();
 
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		item = (Item) s1.get( Item.class, itemId );
 		s1.lock( item, LockMode.FORCE );
@@ -179,7 +153,7 @@ public class JPALockTest extends AbstractJPATest {
 		s1.lock( item, LockMode.FORCE );
 		assertEquals( "subsequent LockMode.FORCE did not no-op", initialVersion + 1, item.getVersion() );
 
-		Session s2 = getSessions().openSession();
+		Session s2 = sessionFactory().openSession();
 		Transaction t2 = s2.beginTransaction();
 		Item item2 = (Item) s2.get( Item.class, itemId );
 		assertEquals( "isolation not maintained", initialName, item2.getName() );
@@ -205,7 +179,7 @@ public class JPALockTest extends AbstractJPATest {
 			s2.close();
 		}
 
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		s1.delete( item );
 		s1.delete( myEntity );

@@ -1,33 +1,55 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.keymanytoone.bidir.component;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class LazyKeyManyToOneTest extends FunctionalTestCase {
-	public LazyKeyManyToOneTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( LazyKeyManyToOneTest.class );
-	}
-
+public class LazyKeyManyToOneTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "keymanytoone/bidir/component/LazyMapping.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Test
 	public void testQueryingOnMany2One() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -54,6 +76,7 @@ public class LazyKeyManyToOneTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveCascadedToKeyManyToOne() {
 		// test cascading a save to an association with a key-many-to-one which refers to a
 		// just saved entity
@@ -70,6 +93,7 @@ public class LazyKeyManyToOneTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLoadingStrategies() {
 		Session s = openSession();
 		s.beginTransaction();

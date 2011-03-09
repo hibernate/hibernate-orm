@@ -1,3 +1,26 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.sql.hand.custom;
 
 import java.io.Serializable;
@@ -7,12 +30,19 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.sql.hand.Employment;
 import org.hibernate.test.sql.hand.ImageHolder;
 import org.hibernate.test.sql.hand.Organization;
 import org.hibernate.test.sql.hand.Person;
 import org.hibernate.test.sql.hand.TextHolder;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract test case defining tests for the support for user-supplied (aka
@@ -20,17 +50,13 @@ import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase
  *
  * @author Steve Ebersole
  */
-public abstract class CustomSQLTestSupport extends DatabaseSpecificFunctionalTestCase {
-
-	public CustomSQLTestSupport(String name) {
-		super( name );
-	}
-
-	@Override
-    public String getCacheConcurrencyStrategy() {
+@SuppressWarnings( {"UnusedDeclaration"})
+public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
+	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
+	@Test
 	public void testHandSQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -52,9 +78,9 @@ public abstract class CustomSQLTestSupport extends DatabaseSpecificFunctionalTes
 		t.commit();
 		s.close();
 
-		getSessions().evict( Organization.class );
-		getSessions().evict( Person.class );
-		getSessions().evict( Employment.class );
+		getSessions().getCache().evictEntityRegion( Organization.class );
+		getSessions().getCache().evictEntityRegion( Person.class );
+		getSessions().getCache().evictEntityRegion( Employment.class );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -64,7 +90,7 @@ public abstract class CustomSQLTestSupport extends DatabaseSpecificFunctionalTes
 		emp = ( Employment ) jboss.getEmployments().iterator().next();
 		gavin = emp.getEmployee();
 		assertEquals( gavin.getName(), "GAVIN" );
-		assertEquals( s.getCurrentLockMode( gavin ), LockMode.UPGRADE );
+		assertEquals( s.getCurrentLockMode( gavin ), LockMode.PESSIMISTIC_WRITE );
 		emp.setEndDate( new Date() );
 		Employment emp3 = new Employment( gavin, jboss, "US" );
 		s.save( emp3 );
@@ -73,27 +99,28 @@ public abstract class CustomSQLTestSupport extends DatabaseSpecificFunctionalTes
 
 		s = openSession();
 		t = s.beginTransaction();
-		Iterator iter = s.getNamedQuery( "allOrganizationsWithEmployees" ).list().iterator();
-		assertTrue( iter.hasNext() );
-		Organization o = ( Organization ) iter.next();
+		Iterator itr = s.getNamedQuery( "allOrganizationsWithEmployees" ).list().iterator();
+		assertTrue( itr.hasNext() );
+		Organization o = ( Organization ) itr.next();
 		assertEquals( o.getEmployments().size(), 3 );
-		Iterator iter2 = o.getEmployments().iterator();
-		while ( iter2.hasNext() ) {
-			Employment e = ( Employment ) iter2.next();
+		Iterator itr2 = o.getEmployments().iterator();
+		while ( itr2.hasNext() ) {
+			Employment e = ( Employment ) itr2.next();
 			s.delete( e );
 		}
-		iter2 = o.getEmployments().iterator();
-		while ( iter2.hasNext() ) {
-			Employment e = ( Employment ) iter2.next();
+		itr2 = o.getEmployments().iterator();
+		while ( itr2.hasNext() ) {
+			Employment e = ( Employment ) itr2.next();
 			s.delete( e.getEmployee() );
 		}
 		s.delete( o );
-		assertFalse( iter.hasNext() );
+		assertFalse( itr.hasNext() );
 		s.delete( ifa );
 		t.commit();
 		s.close();
 	}
 
+	@Test
 	public void testTextProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -122,6 +149,7 @@ public abstract class CustomSQLTestSupport extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
 	public void testImageProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

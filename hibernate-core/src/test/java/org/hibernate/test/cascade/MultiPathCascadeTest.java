@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,39 +20,36 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-
 package org.hibernate.test.cascade;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author <a href="mailto:ovidiu@feodorov.com">Ovidiu Feodorov</a>
  * @author Gail Badner
- *
  */
-
-public class MultiPathCascadeTest extends FunctionalTestCase {
-
-	public MultiPathCascadeTest(String name) {
-		super( name );
-	}
-
+public class MultiPathCascadeTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"cascade/MultiPathCascade.hbm.xml"
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MultiPathCascadeTest.class );
-	}
-
+	@Override
 	protected void cleanupTest() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -62,8 +58,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		s.createQuery( "delete from H" );
 	}
 
-	public void testMultiPathMergeModifiedDetached() throws Exception
-	{
+	@Test
+	public void testMultiPathMergeModifiedDetached() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -79,15 +75,15 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		a = ( A ) s.merge( a );
+		a = (A) s.merge( a );
 		s.getTransaction().commit();
 		s.close();
 
 		verifyModifications( a.getId() );
 	}
 
-	public void testMultiPathMergeModifiedDetachedIntoProxy() throws Exception
-	{
+	@Test
+	public void testMultiPathMergeModifiedDetachedIntoProxy() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -103,7 +99,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		A aLoaded = ( A ) s.load( A.class, new Long( a.getId() ) );
+		A aLoaded = (A) s.load( A.class, new Long( a.getId() ) );
 		assertTrue( aLoaded instanceof HibernateProxy );
 		assertSame( aLoaded, s.merge( a ) );
 		s.getTransaction().commit();
@@ -112,8 +108,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		verifyModifications( a.getId() );
 	}
 
-	public void testMultiPathUpdateModifiedDetached() throws Exception
-	{
+	@Test
+	public void testMultiPathUpdateModifiedDetached() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -136,8 +132,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		verifyModifications( a.getId() );
 	}
 
-	public void testMultiPathGetAndModify() throws Exception
-	{
+	@Test
+	public void testMultiPathGetAndModify() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -151,7 +147,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		// retrieve the previously saved instance from the database, and update it
-		a = ( A ) s.get( A.class, new Long( a.getId() ) );
+		a = (A) s.get( A.class, new Long( a.getId() ) );
 		modifyEntity( a );
 		s.getTransaction().commit();
 		s.close();
@@ -159,8 +155,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		verifyModifications( a.getId() );
 	}
 
-	public void testMultiPathMergeNonCascadedTransientEntityInCollection() throws Exception
-	{
+	@Test
+	public void testMultiPathMergeNonCascadedTransientEntityInCollection() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -176,7 +172,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		a = ( A ) s.merge( a );
+		a = (A) s.merge( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -185,7 +181,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		// add a new (transient) G to collection in h
 		// there is no cascade from H to the collection, so this should fail when merged
 		assertEquals( 1, a.getHs().size() );
-		H h = ( H ) a.getHs().iterator().next();
+		H h = (H) a.getHs().iterator().next();
 		G gNew = new G();
 		gNew.setData( "Gail" );
 		gNew.getHs().add( h );
@@ -199,7 +195,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch ( TransientObjectException ex ) {
+		catch (TransientObjectException ex) {
 			// expected
 		}
 		finally {
@@ -208,8 +204,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	public void testMultiPathMergeNonCascadedTransientEntityInOneToOne() throws Exception
-	{
+	@Test
+	public void testMultiPathMergeNonCascadedTransientEntityInOneToOne() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -225,7 +221,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		a = ( A ) s.merge( a );
+		a = (A) s.merge( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -248,7 +244,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch ( TransientObjectException ex ) {
+		catch (TransientObjectException ex) {
 			// expected
 		}
 		finally {
@@ -257,8 +253,8 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	public void testMultiPathMergeNonCascadedTransientEntityInManyToOne() throws Exception
-	{
+	@Test
+	public void testMultiPathMergeNonCascadedTransientEntityInManyToOne() throws Exception {
 		// persist a simple A in the database
 
 		Session s = openSession();
@@ -274,7 +270,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		a = ( A ) s.merge( a );
+		a = (A) s.merge( a );
 		s.getTransaction().commit();
 		s.close();
 
@@ -283,7 +279,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		// change the many-to-one association from h to be a new (transient) A
 		// there is no cascade from H to A, so this should fail when merged
 		assertEquals( 1, a.getHs().size() );
-		H h = ( H ) a.getHs().iterator().next();
+		H h = (H) a.getHs().iterator().next();
 		a.getHs().remove( h );
 		A aNew = new A();
 		aNew.setData( "Alice" );
@@ -297,7 +293,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown TransientObjectException" );
 		}
-		catch ( TransientObjectException ex ) {
+		catch (TransientObjectException ex) {
 			// expected
 		}
 		finally {
@@ -308,7 +304,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 
 	private void modifyEntity(A a) {
 		// create a *circular* graph in detached entity
-		a.setData("Anthony");
+		a.setData( "Anthony" );
 
 		G g = new G();
 		g.setData( "Giovanni" );
@@ -331,7 +327,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		s.beginTransaction();
 
 		// retrieve the A object and check it
-		A a = ( A ) s.get( A.class, new Long( aId ) );
+		A a = (A) s.get( A.class, new Long( aId ) );
 		assertEquals( aId, a.getId() );
 		assertEquals( "Anthony", a.getData() );
 		assertNotNull( a.getG() );
@@ -339,7 +335,7 @@ public class MultiPathCascadeTest extends FunctionalTestCase {
 		assertEquals( 1, a.getHs().size() );
 
 		G gFromA = a.getG();
-		H hFromA = ( H ) a.getHs().iterator().next();
+		H hFromA = (H) a.getHs().iterator().next();
 
 		// check the G object
 		assertEquals( "Giovanni", gFromA.getData() );

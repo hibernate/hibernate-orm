@@ -31,7 +31,7 @@ import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.junit.SkipForDialect;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Emmanuel Bernard

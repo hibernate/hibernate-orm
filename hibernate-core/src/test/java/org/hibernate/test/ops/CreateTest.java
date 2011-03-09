@@ -1,27 +1,49 @@
-//$Id: CreateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.ops;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import junit.framework.Test;
+
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
 public class CreateTest extends AbstractOperationTestCase {
-
-	public CreateTest(String str) {
-		super( str );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CreateTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testNoUpdatesOnCreateVersionedWithCollection() {
 		clearCounts();
 
@@ -49,8 +71,8 @@ public class CreateTest extends AbstractOperationTestCase {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateTree() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -79,8 +101,9 @@ public class CreateTest extends AbstractOperationTestCase {
 		assertUpdateCount(0);
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateTreeWithGeneratedId() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -97,7 +120,7 @@ public class CreateTest extends AbstractOperationTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		root = (NumberedNode) s.get( NumberedNode.class, new Long( root.getId() ) );
+		root = (NumberedNode) s.get( NumberedNode.class, Long.valueOf( root.getId() ) );
 		NumberedNode child2 = new NumberedNode("child2");
 		root.addChild(child2);
 		tx.commit();
@@ -107,6 +130,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		assertUpdateCount(0);
 	}
 
+	@Test
 	public void testCreateException() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -146,6 +170,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCreateExceptionWithGeneratedId() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -183,6 +208,8 @@ public class CreateTest extends AbstractOperationTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testBasic() throws Exception {
 		Session s;
 		Transaction tx;

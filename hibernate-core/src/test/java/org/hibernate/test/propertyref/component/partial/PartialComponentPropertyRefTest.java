@@ -22,29 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.propertyref.component.partial;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 
 /**
  * @author Gavin King
  */
-public class PartialComponentPropertyRefTest extends FunctionalTestCase {
-	
-	public PartialComponentPropertyRefTest(String name) {
-		super( name );
-	}
-
+public class PartialComponentPropertyRefTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "propertyref/component/partial/Mapping.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( PartialComponentPropertyRefTest.class );
-	}
-	
+	@Test
 	public void testComponentPropertyRef() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -75,9 +75,9 @@ public class PartialComponentPropertyRefTest extends FunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( a.getOwner() ) );
 		
 		s.clear();
-		
-		getSessions().evict(Account.class);
-		getSessions().evict(Person.class);
+
+		sessionFactory().getCache().evictEntityRegion( Account.class );
+		sessionFactory().getCache().evictEntityRegion( Person.class );
 		
 		a = (Account) s.get(Account.class, "123-12345-1236");
 		assertTrue( Hibernate.isInitialized( a.getOwner() ) );

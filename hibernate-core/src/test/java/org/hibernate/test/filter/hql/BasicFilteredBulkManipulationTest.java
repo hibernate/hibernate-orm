@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,22 +20,24 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.filter.hql;
+
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * Tests for application of filters 
+ * Tests for application of filters
  *
  * @author Steve Ebersole
  */
-public class BasicFilteredBulkManipulationTest extends FunctionalTestCase {
-	public BasicFilteredBulkManipulationTest(String string) {
-		super( string );
-	}
-
+public class BasicFilteredBulkManipulationTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{
 			"filter/hql/filter-defs.hbm.xml",
@@ -43,6 +45,7 @@ public class BasicFilteredBulkManipulationTest extends FunctionalTestCase {
 		};
 	}
 
+	@Test
 	public void testBasicFilteredHqlDelete() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -67,6 +70,7 @@ public class BasicFilteredBulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBasicFilteredHqlUpdate() {
 		Session s = openSession();
 		s.beginTransaction();

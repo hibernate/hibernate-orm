@@ -31,12 +31,12 @@ import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.InstrumentedClassLoader;
 import org.hibernate.bytecode.util.BasicClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.testing.junit.AbstractClassLoaderIsolatedTestCase;
+import org.hibernate.testing.junit4.BaseClassLoaderIsolatedTestCase;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends AbstractClassLoaderIsolatedTestCase {
+public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends BaseClassLoaderIsolatedTestCase {
 
 	protected ClassLoader buildIsolatedClassLoader(ClassLoader parent) {
 		BytecodeProvider provider = buildBytecodeProvider();

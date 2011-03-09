@@ -31,8 +31,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * @author Vladimir Klyushnikov

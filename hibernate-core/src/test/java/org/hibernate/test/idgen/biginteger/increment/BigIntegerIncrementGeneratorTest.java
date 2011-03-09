@@ -23,29 +23,24 @@
  */
 package org.hibernate.test.idgen.biginteger.increment;
 import java.math.BigInteger;
-import junit.framework.Test;
+
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
-public class BigIntegerIncrementGeneratorTest extends FunctionalTestCase {
-	public BigIntegerIncrementGeneratorTest(String string) {
-		super( string );
-	}
-
+public class BigIntegerIncrementGeneratorTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "idgen/biginteger/increment/Mapping.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BigIntegerIncrementGeneratorTest.class );
-	}
-
+	@Test
 	public void testBasics() {
 		Session s = openSession();
 		s.beginTransaction();

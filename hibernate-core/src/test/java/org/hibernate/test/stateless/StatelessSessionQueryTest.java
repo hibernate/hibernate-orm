@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.stateless;
 import java.util.ArrayList;
@@ -31,18 +30,29 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * 
  * @author stliu
  */
-public class StatelessSessionQueryTest extends FunctionalTestCase {
-
-	public StatelessSessionQueryTest( String string ) {
-		super( string );
+public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
+	@Override
+	public void configure( Configuration cfg ) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "1" );
 	}
 
+	@Override
+	public String[] getMappings() {
+		return new String[] { "stateless/Contact.hbm.xml" };
+	}
+
+	@Test
 	public void testCriteria() {
 		TestData testData=new TestData();
 		testData.createData();
@@ -52,6 +62,7 @@ public class StatelessSessionQueryTest extends FunctionalTestCase {
 		testData.cleanData();
 	}
 
+	@Test
 	public void testCriteriaWithSelectFetchMode() {
 		TestData testData=new TestData();
 		testData.createData();
@@ -62,6 +73,7 @@ public class StatelessSessionQueryTest extends FunctionalTestCase {
 		testData.cleanData();
 	}
 
+	@Test
 	public void testHQL() {
 		TestData testData=new TestData();
 		testData.createData();
@@ -71,6 +83,7 @@ public class StatelessSessionQueryTest extends FunctionalTestCase {
 		s.close();
 		testData.cleanData();
 	}
+
 	private class TestData{
 		List list = new ArrayList();
 		public void createData(){
@@ -100,16 +113,4 @@ public class StatelessSessionQueryTest extends FunctionalTestCase {
 			session.close();
 		}
 	}
-
-
-	@Override
-	public void configure( Configuration cfg ) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "1" );
-	}
-
-	public String[] getMappings() {
-		return new String[] { "stateless/Contact.hbm.xml" };
-	}
-
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache;
+package org.hibernate.testing.junit4;
 
 /**
  * @author Steve Ebersole
  */
-public class VersionedItem extends Item {
-	private Long version;
+public class SkipMarker {
+	private final String testName;
+	private final String reason;
 
-	public Long getVersion() {
-		return version;
+	public SkipMarker(String testName, String reason) {
+		this.testName = testName;
+		this.reason = reason;
 	}
 
-	public void setVersion(Long version) {
-		this.version = version;
+	public String getTestName() {
+		return testName;
+	}
+
+	public String getReason() {
+		return reason;
 	}
 }

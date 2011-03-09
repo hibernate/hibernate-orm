@@ -1,34 +1,55 @@
-// $Id: RefreshTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.cascade;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.jdbc.Work;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Implementation of RefreshTest.
  *
  * @author Steve Ebersole
  */
-public class RefreshTest extends FunctionalTestCase {
-
-	public RefreshTest(String name) {
-		super( name );
-	}
-
+public class RefreshTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "cascade/Job.hbm.xml", "cascade/JobBatch.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( RefreshTest.class );
-	}
-
+	@Test
 	public void testRefreshCascade() throws Throwable {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -42,7 +63,7 @@ public class RefreshTest extends FunctionalTestCase {
 		session.flush();
 
 		// behind the session's back, let's modify the statuses
-		updateStatuses( session.connection() );
+		updateStatuses( session );
 
 		// Now lets refresh the persistent batch, and see if the refresh cascaded to the jobs collection elements
 		session.refresh( batch );
@@ -57,20 +78,27 @@ public class RefreshTest extends FunctionalTestCase {
 		session.close();
 	}
 
-	private void updateStatuses(Connection connection) throws Throwable {
-		PreparedStatement stmnt = null;
-		try {
-			stmnt = connection.prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
-			stmnt.executeUpdate();
-		}
-		finally {
-			if ( stmnt != null ) {
-				try {
-					stmnt.close();
+	private void updateStatuses(Session session) throws Throwable {
+		session.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						PreparedStatement stmnt = null;
+						try {
+							stmnt = connection.prepareStatement( "UPDATE T_JOB SET JOB_STATUS = 1" );
+							stmnt.executeUpdate();
+						}
+						finally {
+							if ( stmnt != null ) {
+								try {
+									stmnt.close();
+								}
+								catch( Throwable ignore ) {
+								}
+							}
+						}
+					}
 				}
-				catch( Throwable ignore ) {
-				}
-			}
-		}
+		);
 	}
 }

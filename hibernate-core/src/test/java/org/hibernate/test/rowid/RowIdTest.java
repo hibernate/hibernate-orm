@@ -1,26 +1,48 @@
-//$Id: RowIdTest.java 11353 2007-03-28 16:03:40Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.rowid;
+
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.jdbc.Work;
+
+import org.junit.Test;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Gavin King
  */
-public class RowIdTest extends DatabaseSpecificFunctionalTestCase {
-	
-	public RowIdTest(String str) {
-		super(str);
-	}
-
+@RequiresDialect( value = Oracle9iDialect.class )
+public class RowIdTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "rowid/Point.hbm.xml" };
 	}
@@ -29,47 +51,28 @@ public class RowIdTest extends DatabaseSpecificFunctionalTestCase {
 		return null;
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( RowIdTest.class );
-	}
-
-	public boolean appliesTo(Dialect dialect) {
-		return dialect instanceof Oracle9iDialect;
-	}
-
 	public boolean createSchema() {
 		return false;
 	}
 
-	public void afterSessionFactoryBuilt(SessionFactoryImplementor sfi) {
-		super.afterSessionFactoryBuilt( sfi );
-		Session session = null;
-		try {
-			session = sfi.openSession();
-			Statement st = session.connection().createStatement();
-			try {
-				st.execute( "drop table Point");
-			}
-			catch( Throwable ignore ) {
-				// ignore
-			}
-			st.execute("create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
-		}
-		catch ( SQLException e ) {
-			throw new RuntimeException( "Unable to build actual schema : " + e.getMessage() );
-		}
-		finally {
-			if ( session != null ) {
-				try {
-					session.close();
+	public void afterSessionFactoryBuilt() {
+		super.afterSessionFactoryBuilt();
+		Session session = sfi().openSession();
+		session.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						Statement st = connection.createStatement();
+						st.execute( "drop table Point");
+						st.execute("create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
+						st.close();
+					}
 				}
-				catch( Throwable ignore ) {
-					// ignore
-				}
-			}
-		}
+		);
+		session.close();
 	}
 
+	@Test
 	public void testRowId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -95,7 +98,6 @@ public class RowIdTest extends DatabaseSpecificFunctionalTestCase {
 		p.setDescription("new new new desc");
 		t.commit();
 		s.close();
-		
 	}
 
 }

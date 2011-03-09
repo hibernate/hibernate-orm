@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -27,26 +27,26 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * 
- * @author Strong Liu <stliu@redhat.com>
- *
+  @author Strong Liu <stliu@redhat.com>
  */
-public class MySQLRoundFunctionTest extends FunctionalTestCase {
-
-	public MySQLRoundFunctionTest( String string ) {
-		super( string );
-	}
-
+@RequiresDialect( MySQLDialect.class )
+public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{"dialect/function/Product.hbm.xml"};
 	}
-	
-	public void testRoundFuntion(){
-		if(!(getDialect() instanceof MySQLDialect))
-			return;
+
+	@Test
+	public void testRoundFunction(){
 		Product product = new Product();
 		product.setLength( 100 );
 		product.setPrice( new BigDecimal( 1.298 ) );

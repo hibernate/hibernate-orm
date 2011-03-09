@@ -1,40 +1,67 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.bytecode.javassist;
 import java.text.ParseException;
-import junit.framework.TestSuite;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
 import org.hibernate.cfg.Environment;
+
+import org.junit.Test;
+
+import org.hibernate.testing.Skip;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.bytecode.Bean;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 /**
- * Test that the Javassist-based lazy initializer properly handles
- * InvocationTargetExceptions
+ * Test that the Javassist-based lazy initializer properly handles InvocationTargetExceptions
  *
  * @author Steve Ebersole
  */
-public class InvocationTargetExceptionTest extends FunctionalTestCase {
-	public InvocationTargetExceptionTest(String name) {
-		super( name );
+@Skip(
+		condition = InvocationTargetExceptionTest.LocalSkipMatcher.class,
+		message = "environment not configured for javassist bytecode provider"
+)
+public class InvocationTargetExceptionTest extends BaseCoreFunctionalTestCase {
+	public static class LocalSkipMatcher implements Skip.Matcher {
+		@Override
+		public boolean isMatch() {
+			return ! BytecodeProviderImpl.class.isInstance( Environment.getBytecodeProvider() );
+		}
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "bytecode/Bean.hbm.xml" };
 	}
 
-	public static TestSuite suite() {
-		return new FunctionalTestClassTestSuite( InvocationTargetExceptionTest.class );
-	}
-
+	@Test
 	public void testProxiedInvocationException() {
-		if ( !( Environment.getBytecodeProvider() instanceof org.hibernate.bytecode.javassist.BytecodeProviderImpl ) ) {
-			// because of the scoping :(
-			reportSkip(
-					"env not configured for javassist provider", "bytecode-provider InvocationTargetException handling"
-			);
-			return;
-		}
 		Session s = openSession();
 		s.beginTransaction();
 		Bean bean = new Bean();

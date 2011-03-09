@@ -1,6 +1,28 @@
-//$Id: SaveOrUpdateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.ops;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -9,18 +31,33 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
-public class SaveOrUpdateTest extends FunctionalTestCase {
-
-	public SaveOrUpdateTest(String str) {
-		super( str );
+public class SaveOrUpdateTest extends BaseCoreFunctionalTestCase {
+	@Override
+	public void configure(Configuration cfg) {
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	@Override
+	public String[] getMappings() {
+		return new String[] {"ops/Node.hbm.xml"};
+	}
+
+	@Test
 	public void testSaveOrUpdateDeepTree() {
 		clearCounts();
 
@@ -80,6 +117,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveOrUpdateDeepTreeWithGeneratedId() {
 		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
 		clearCounts();
@@ -139,6 +177,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveOrUpdateTree() {
 		clearCounts();
 
@@ -178,6 +217,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveOrUpdateTreeWithGeneratedId() {
 		clearCounts();
 
@@ -217,6 +257,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveOrUpdateManaged() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -238,10 +279,10 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 
 		tx = s.beginTransaction();
 		assertEquals(
+				Long.valueOf( 2 ),
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-		        new Long( 2 )
+						.uniqueResult()
 		);
 		s.delete( root );
 		s.delete( child );
@@ -250,7 +291,10 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 	}
 
 
+	@Test
 	public void testSaveOrUpdateGot() {
+		clearCounts();
+
 		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
 
 		Session s = openSession();
@@ -306,7 +350,10 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveOrUpdateGotWithMutableProp() {
+		clearCounts();
+
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Node root = new Node( "root" );
@@ -360,6 +407,7 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEvictThenSaveOrUpdate() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -434,31 +482,17 @@ public class SaveOrUpdateTest extends FunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( count, updates );
 	}
-
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
-	}
-
-	public String[] getMappings() {
-		return new String[] {"ops/Node.hbm.xml"};
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( SaveOrUpdateTest.class );
-	}
-
 }
 

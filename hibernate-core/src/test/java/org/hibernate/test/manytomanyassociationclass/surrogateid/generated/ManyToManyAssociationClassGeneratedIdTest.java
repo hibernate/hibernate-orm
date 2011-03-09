@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,16 +20,19 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.manytomanyassociationclass.surrogateid.generated;
 import java.util.HashSet;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
+
+import org.junit.Test;
+
 import org.hibernate.test.manytomanyassociationclass.AbstractManyToManyAssociationClassTest;
 import org.hibernate.test.manytomanyassociationclass.Membership;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.fail;
 
 /**
  * Tests on many-to-many association using an association class with a surrogate ID that is generated.
@@ -37,22 +40,17 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Gail Badner
  */
 public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToManyAssociationClassTest {
-	public ManyToManyAssociationClassGeneratedIdTest(String string) {
-		super( string );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "manytomanyassociationclass/surrogateid/generated/Mappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ManyToManyAssociationClassGeneratedIdTest.class );
-	}
-
+	@Override
 	public Membership createMembership(String name) {
 		return new Membership( name );
 	}
 
+	@Test
 	public void testRemoveAndAddEqualElement() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		addMembership( getUser(), getGroup(), createMembership( "membership" ) );
@@ -78,6 +76,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		}
 	}
 
+	@Test
 	public void testRemoveAndAddEqualCollection() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		getUser().setMemberships( new HashSet() );
@@ -105,6 +104,7 @@ public class ManyToManyAssociationClassGeneratedIdTest extends AbstractManyToMan
 		}
 	}
 
+	@Test
 	public void testRemoveAndAddEqualElementNonKeyModified() {
 		deleteMembership( getUser(), getGroup(), getMembership() );
 		Membership membershipNew = createMembership( "membership" );

@@ -1,9 +1,31 @@
-//$Id: ComponentTest.java 11346 2007-03-26 17:24:58Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.component.basic;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -18,37 +40,41 @@ import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
-public class ComponentTest extends FunctionalTestCase {
-	
-	public ComponentTest(String str) {
-		super(str);
-	}
-
+public class ComponentTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "component/basic/User.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ComponentTest.class );
-	}
-
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Override
 	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 		super.afterConfigurationBuilt( mappings, dialect );
 		// Oracle and Postgres do not have year() functions, so we need to
 		// redefine the 'User.person.yob' formula
 		//
 		// consider temporary until we add the capability to define
-		// mapping foprmulas which can use dialect-registered functions...
+		// mapping formulas which can use dialect-registered functions...
 		PersistentClass user = mappings.getClass( User.class.getName() );
 		org.hibernate.mapping.Property personProperty = user.getProperty( "person" );
 		Component component = ( Component ) personProperty.getValue();
@@ -66,9 +92,10 @@ public class ComponentTest extends FunctionalTestCase {
 			f.setFormula( yearFunction.render( Hibernate.INTEGER, args, null ) );
 		}
 	}
-	
+
+	@Test
 	public void testUpdateFalse() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -79,8 +106,8 @@ public class ComponentTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 		
-		assertEquals( 1, getSessions().getStatistics().getEntityInsertCount() );
-		assertEquals( 0, getSessions().getStatistics().getEntityUpdateCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityInsertCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getEntityUpdateCount() );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -90,9 +117,10 @@ public class ComponentTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 		
-		assertEquals( 1, getSessions().getStatistics().getEntityDeleteCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityDeleteCount() );
 	}
 	
+	@Test
 	public void testComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -124,8 +152,9 @@ public class ComponentTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-2366" )
 	public void testComponentStateChangeAndDirtiness() {
-		// test for HHH-2366
 		Session s = openSession();
 		s.beginTransaction();
 		User u = new User( "steve", "hibernater", new Person( "Steve Ebersole", new Date(), "Main St") );
@@ -144,6 +173,7 @@ public class ComponentTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponentQueries() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -167,14 +197,14 @@ public class ComponentTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	// Sybase should translate "current_timestamp" in HQL to "getdate()";
-	// This fails currently due to HHH-3510. The following test should be 
-	// deleted and testComponentQueries() should be updated (as noted
-	// in that test case) when HHH-3510 is fixed.
+	@Test
+	@RequiresDialect( value = SybaseASE15Dialect.class )
+	@FailureExpected( jiraKey = "HHH-3150" )
 	public void testComponentQueryMethodNoParensFailureExpected() {
-		if ( ! ( getDialect() instanceof SybaseASE15Dialect ) ) {
-			fail( "Dialect does not apply to test that is expected to fail; force failure" );
-		}
+		// Sybase should translate "current_timestamp" in HQL to "getdate()";
+		// This fails currently due to HHH-3510. The following test should be
+		// deleted and testComponentQueries() should be updated (as noted
+		// in that test case) when HHH-3510 is fixed.
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Employee emp = new Employee();
@@ -188,7 +218,8 @@ public class ComponentTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-	
+
+	@Test
 	public void testComponentFormulaQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -206,6 +237,7 @@ public class ComponentTest extends FunctionalTestCase {
 		s.close();
 	}
 	
+	@Test
 	public void testCustomColumnReadAndWrite() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -247,7 +279,7 @@ public class ComponentTest extends FunctionalTestCase {
 		s.close();
 	}
 	
-
+	@Test
 	public void testNamedQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -258,6 +290,7 @@ public class ComponentTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMergeComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

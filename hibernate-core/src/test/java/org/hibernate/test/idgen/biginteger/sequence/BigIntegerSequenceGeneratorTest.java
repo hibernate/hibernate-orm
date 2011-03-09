@@ -22,35 +22,25 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.idgen.biginteger.sequence;
-import junit.framework.Test;
+
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
-public class BigIntegerSequenceGeneratorTest extends DatabaseSpecificFunctionalTestCase {
-	public BigIntegerSequenceGeneratorTest(String string) {
-		super( string );
-	}
-
+@RequiresDialectFeature( value = DialectChecks.SupportsSequences.class )
+public class BigIntegerSequenceGeneratorTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "idgen/biginteger/sequence/Mapping.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BigIntegerSequenceGeneratorTest.class );
-	}
-
-	@Override
-	public boolean appliesTo(Dialect dialect) {
-		return dialect.supportsSequences();
-	}
-
+	@Test
 	public void testBasics() {
 		Session s = openSession();
 		s.beginTransaction();

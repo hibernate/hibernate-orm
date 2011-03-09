@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -26,23 +26,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests AST parser processing of ORDER BY clauses.
  *
  * @author Gail Badner
  */
-public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
-
+public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	StateProvince stateProvince;
 	private Zoo zoo1;
 	private Zoo zoo2;
@@ -55,10 +60,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 	Human zoo2Director1;
 	Human zoo2Director2;
 
-	public ASTParserLoadingOrderByTest(String name) {
-		super( name );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"hql/Animal.hbm.xml",
@@ -66,19 +68,15 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.QUERY_TRANSLATOR, ASTQueryTranslatorFactory.class.getName() );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ASTParserLoadingOrderByTest.class );
-	}
-
 	@Override
-    protected void prepareTest() {
+	protected void prepareTest() {
 		cleanupData();
 	}
 
@@ -200,6 +198,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOrderByNoSelectAliasRef() {
 		createData();
 
@@ -310,7 +309,9 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
-	public void testOrderByComponentDescNoSelectAliasRefFailureExpected() {
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testOrderByComponentDescNoSelectAliasRef() {
 		createData();
 
 		Session s = openSession();
@@ -338,6 +339,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
+	@Test
 	public void testOrderBySelectAliasRef() {
 		createData();
 
@@ -487,6 +489,8 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
+	@Test
+	@FailureExpected( jiraKey = "unknown")
 	public void testOrderByComponentDescSelectAliasRefFailureExpected() {
 		createData();
 
@@ -512,6 +516,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
+	@Test
 	public void testOrderByEntityWithFetchJoinedCollection() {
 		createData();
 
@@ -532,6 +537,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
+	@Test
 	public void testOrderBySelectNewArgAliasRef() {
 		createData();
 
@@ -575,6 +581,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
+	@Test
 	public void testOrderBySelectNewMapArgAliasRef() {
 		createData();
 
@@ -624,6 +631,7 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
+	@Test
 	public void testOrderByAggregatedArgAliasRef() {
 		createData();
 
@@ -651,12 +659,13 @@ public class ASTParserLoadingOrderByTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
-	private void checkTestOrderByResults(List results,
-										 Zoo zoo1,
-										 Zoo zoo2,
-										 Zoo zoo3,
-										 Zoo zoo4,
-										 Set<Zoo> zoosUnordered) {
+	private void checkTestOrderByResults(
+			List results,
+			Zoo zoo1,
+			Zoo zoo2,
+			Zoo zoo3,
+			Zoo zoo4,
+			Set<Zoo> zoosUnordered) {
 		assertEquals( 4, results.size() );
 		Set<Zoo> zoosUnorderedCopy = ( zoosUnordered == null ? null : new HashSet<Zoo>( zoosUnordered ) );
 		checkTestOrderByResult( results.get( 0 ), zoo1, zoosUnorderedCopy );

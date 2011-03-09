@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,30 +20,30 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.readonly;
-import junit.framework.Test;
+
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Gail Badner
  */
 public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
-
-	public ReadOnlyVersionedNodesTest(String str) {
-		super( str );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "readonly/VersionedNode.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ReadOnlyVersionedNodesTest.class );
-	}
-
+	@Test
 	public void testSetReadOnlyTrueAndFalse() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -118,6 +117,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testUpdateSetReadOnlyTwice() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -155,6 +155,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testUpdateSetModifiable() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -192,7 +193,9 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 1 );
 	}
 
-	public void testUpdateSetReadOnlySetModifiableFailureExpected() throws Exception {
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testUpdateSetReadOnlySetModifiable() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
 		VersionedNode node = new VersionedNode( "node", "node" );
@@ -225,7 +228,9 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
-	public void testSetReadOnlyUpdateSetModifiableFailureExpected() throws Exception {
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testSetReadOnlyUpdateSetModifiable() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
 		VersionedNode node = new VersionedNode( "node", "node" );
@@ -258,6 +263,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testAddNewChildToReadOnlyParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -294,6 +300,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateParentWithNewChildCommitWithReadOnlyParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -340,6 +347,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testMergeDetachedParentWithNewChildCommitWithReadOnlyParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -386,6 +394,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testGetParentMakeReadOnlyThenMergeDetachedParentWithNewChildC() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -432,6 +441,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testMergeUnchangedDetachedParentChildren() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -495,6 +505,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testAddNewParentToReadOnlyChild() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -535,6 +546,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testUpdateChildWithNewParentCommitWithReadOnlyChild() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -581,6 +593,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testMergeDetachedChildWithNewParentCommitWithReadOnlyChild() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -627,6 +640,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testGetChildMakeReadOnlyThenMergeDetachedChildWithNewParent() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -681,7 +695,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 	}
 
 	private void cleanup() {
-		Session s = sfi().openSession();
+		Session s = sessionFactory().openSession();
 		s.beginTransaction();
 
 		s.createQuery( "delete from VersionedNode where parent is not null" ).executeUpdate();

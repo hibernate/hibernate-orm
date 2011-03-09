@@ -1,13 +1,45 @@
-// $Id: ScrollableCollectionFetchingTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.hql;
-import junit.framework.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests the new functionality of allowing scrolling of results which
@@ -15,20 +47,12 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Steve Ebersole
  */
-public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
-
-	public ScrollableCollectionFetchingTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ScrollableCollectionFetchingTest.class );
-	}
-
+public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "hql/Animal.hbm.xml" };
 	}
 
+	@Test
 	public void testTupleReturnFails() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -45,6 +69,7 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testScrollingJoinFetchesEmptyResultSet() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -111,6 +136,7 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testScrollingJoinFetchesSingleRowResultSet() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -232,11 +258,12 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsResultSetPositioningOnForwardOnlyCursorCheck.class,
+			comment = "Driver does not support result set positioning  methods on forward-only cursors"
+	)
 	public void testScrollingJoinFetchesForward() {
-		if ( ! supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() ) {
-			return;
-		}
-
 		TestData data = new TestData();
 		data.prepare();
 
@@ -262,6 +289,7 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testScrollingJoinFetchesReverse() {
 		TestData data = new TestData();
 		data.prepare();
@@ -290,6 +318,7 @@ public class ScrollableCollectionFetchingTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testScrollingJoinFetchesPositioning() {
 		TestData data = new TestData();
 		data.prepare();

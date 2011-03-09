@@ -28,22 +28,28 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Set of tests originally developed to verify and fix HHH-5853
  *
  * @author Steve Ebersole
  */
-public class CachedPropertyRefCollectionTest extends FunctionalTestCase {
-	public CachedPropertyRefCollectionTest(String string) {
-		super( string );
-	}
-
+@TestForIssue( jiraKey = "HHH-5853" )
+public class CachedPropertyRefCollectionTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{"propertyref/cachedcollections/Mappings.hbm.xml"};
 	}
 
+	@Test
 	public void testRetrievalOfCachedCollectionWithPropertyRefKey() {
 		// create the test data...
 		Session session = openSession();

@@ -22,40 +22,36 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.mixed;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Gavin King
  */
-public class MixedTest extends FunctionalTestCase {
-
-	public MixedTest(String str) {
-		super( str );
-	}
-
+@SkipForDialect( SybaseASE15Dialect.class )
+public class MixedTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{"mixed/Item.hbm.xml"};
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MixedTest.class );
-	}
-
-	@Override
-	public boolean appliesTo(Dialect dialect) {
-		return !(dialect instanceof SybaseASE15Dialect);
-	}
-
+	@Test
 	public void testMixedInheritance() {
 		Session s = openSession( new DocumentInterceptor() );
 		Transaction t = s.beginTransaction();
@@ -83,7 +79,7 @@ public class MixedTest extends FunctionalTestCase {
 		s.close();
 
 		if ( ! getDialect().supportsExpectedLobUsagePattern() ) {
-			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
+			SkipLog.reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
 			return;
 		}
 

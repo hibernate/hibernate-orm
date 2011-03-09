@@ -1,28 +1,47 @@
-//$Id: OneToManyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.onetomany;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gavin King
  */
-public class OneToManyTest extends FunctionalTestCase {
-	
-	public OneToManyTest(String str) {
-		super(str);
-	}
-
+public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "onetomany/Parent.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( OneToManyTest.class );
-	}
-	
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
+	@Test
 	public void testOneToManyLinkTable() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -78,10 +97,10 @@ public class OneToManyTest extends FunctionalTestCase {
 
 	}
 
+	@Test
 	public void testManyToManySize() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		//this test raise an exception right now HHH-570
 		assertEquals( 0, s.createQuery("from Parent p where size(p.children) = 0").list().size() );
 		assertEquals( 0, s.createQuery("from Parent p where p.children.size = 0").list().size() );
 		t.commit();

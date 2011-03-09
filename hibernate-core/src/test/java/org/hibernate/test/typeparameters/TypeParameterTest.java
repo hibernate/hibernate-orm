@@ -1,68 +1,97 @@
-//$Id: TypeParameterTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.typeparameters;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import junit.framework.Test;
+import java.sql.SQLException;
+
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.jdbc.Work;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for parameterizable types.
  * 
  * @author Michael Gloegl
  */
-public class TypeParameterTest extends FunctionalTestCase {
-
-	public TypeParameterTest(String name) {
-		super(name);
-	}
-
+public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
-		return new String[] { "typeparameters/Typedef.hbm.xml", "typeparameters/Widget.hbm.xml" };
+		return new String[] {
+				"typeparameters/Typedef.hbm.xml",
+				"typeparameters/Widget.hbm.xml"
+		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( TypeParameterTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testSave() throws Exception {
 		deleteData();
 
 		Session s = openSession();
-
-		Transaction t = s.beginTransaction();
-
+		s.beginTransaction();
 		Widget obj = new Widget();
 		obj.setValueThree(5);
-
-		Integer id = (Integer) s.save(obj);
-
-		t.commit();
+		final Integer id = (Integer) s.save(obj);
+		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
-		t = s.beginTransaction();
+		s.beginTransaction();
 
-		Connection connection = s.connection();
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM STRANGE_TYPED_OBJECT WHERE ID=?");
-		statement.setInt(1, id.intValue());
-		ResultSet resultSet = statement.executeQuery();
+		s.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						PreparedStatement statement = connection.prepareStatement("SELECT * FROM STRANGE_TYPED_OBJECT WHERE ID=?");
+						statement.setInt(1, id.intValue());
+						ResultSet resultSet = statement.executeQuery();
 
-		assertTrue("A row should have been returned", resultSet.next());
-		assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_ONE") == null);
-		assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_TWO") == null);
-		assertEquals("Non-Default value should not be changed", resultSet.getInt("VALUE_THREE"), 5);
-		assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_FOUR") == null);
+						assertTrue("A row should have been returned", resultSet.next());
+						assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_ONE") == null);
+						assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_TWO") == null);
+						assertEquals("Non-Default value should not be changed", resultSet.getInt("VALUE_THREE"), 5);
+						assertTrue("Default value should have been mapped to null", resultSet.getObject("VALUE_FOUR") == null);
+					}
+				}
+		);
 
-		
-		t.commit();
+		s.getTransaction().commit();
 		s.close();
+
 		deleteData();
 	}
 
+	@Test
 	public void testLoading() throws Exception {
 		initData();
 
@@ -114,7 +143,7 @@ public class TypeParameterTest extends FunctionalTestCase {
 	private void deleteData() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.delete("from Widget");
+		s.createQuery( "delete from Widget" ).executeUpdate();
 		t.commit();
 		s.close();
 	}

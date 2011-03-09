@@ -21,42 +21,37 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
+package org.hibernate.testing.junit4;
 
-package org.hibernate.testing.junit;
-import org.hibernate.dialect.Dialect;
+
+import org.junit.After;
+import org.junit.Before;
 
 /**
- * Container class for different implementation of the {@code DialectCheck} interface.
+ * A specialized TestCase for running tests in an isolated class-loader
  *
- * @author Hardy Ferentschik
+ * @author Steve Ebersole
  */
-abstract public class DialectChecks {
+public abstract class BaseClassLoaderIsolatedTestCase extends BaseUnitTestCase {
+	private ClassLoader parentLoader;
+	private ClassLoader isolatedLoader;
 
-	abstract public boolean include(Dialect dialect);
-
-	public static class SupportsSequences extends DialectChecks {
-		public boolean include(Dialect dialect) {
-			return dialect.supportsSequences();
-		}
+	@Before
+	public void setUp() throws Exception {
+		parentLoader = Thread.currentThread().getContextClassLoader();
+		isolatedLoader = buildIsolatedClassLoader( parentLoader );
+		Thread.currentThread().setContextClassLoader( isolatedLoader );
 	}
 
-	public static class SupportsExpectedLobUsagePattern extends DialectChecks {
-		public boolean include(Dialect dialect) {
-			return dialect.supportsExpectedLobUsagePattern();
-		}
+	@After
+	public void tearDown() throws Exception {
+		Thread.currentThread().setContextClassLoader( parentLoader );
+		releaseIsolatedClassLoader( isolatedLoader );
+		parentLoader = null;
+		isolatedLoader = null;
 	}
 
-	public static class SupportsIdentityColumns extends DialectChecks {
-		public boolean include(Dialect dialect) {
-			return dialect.supportsIdentityColumns();
-		}
-	}
+	protected abstract ClassLoader buildIsolatedClassLoader(ClassLoader parent);
 
-	public static class SupportsColumnCheck extends DialectChecks {
-		public boolean include(Dialect dialect) {
-			return dialect.supportsColumnCheck();
-		}
-	}
+	protected abstract void releaseIsolatedClassLoader(ClassLoader isolatedLoader);
 }
-
-

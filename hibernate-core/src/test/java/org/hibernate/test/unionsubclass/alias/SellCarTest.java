@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -25,22 +25,25 @@ package org.hibernate.test.unionsubclass.alias;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
- * http://opensource.atlassian.com/projects/hibernate/browse/HHH-4825
  * @author Strong Liu <stliu@redhat.com>
  */
-public class SellCarTest extends FunctionalTestCase {
-
-    public SellCarTest( String string ) {
-        super( string );
-    }
-
+@TestForIssue( jiraKey = "HHH-4825" )
+public class SellCarTest extends BaseCoreFunctionalTestCase {
     public String[] getMappings() {
         return new String[] { "unionsubclass/alias/mapping.hbm.xml" };
     }
 
+	@Test
     public void testSellCar() throws Exception {
         prepareData();
         Session session = openSession();
@@ -61,7 +64,8 @@ public class SellCarTest extends FunctionalTestCase {
         session.close();
     }
 
-    private Object createData() {
+    @SuppressWarnings( {"unchecked"})
+	private Object createData() {
         Seller stliu = new Seller();
         stliu.setId( createID( "stliu" ) );
         CarBuyer zd = new CarBuyer();
@@ -72,10 +76,11 @@ public class SellCarTest extends FunctionalTestCase {
         return stliu;
     }
 
-    private PersonID createID( String name ) {
+    @SuppressWarnings( {"UnnecessaryBoxing"})
+	private PersonID createID( String name ) {
         PersonID id = new PersonID();
         id.setName( name );
-        id.setNum( new Long( 100 ) );
+        id.setNum( Long.valueOf( 100 ) );
         return id;
     }
 }

@@ -24,18 +24,20 @@
 package org.hibernate.test.orphan.one2one.fk.reversed.unidirectional;
 import java.util.List;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class DeleteOneToOneOrphansTest extends FunctionalTestCase {
-	public DeleteOneToOneOrphansTest(String string) {
-		super( string );
-	}
-
+public class DeleteOneToOneOrphansTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "orphan/one2one/fk/reversed/unidirectional/Mapping.hbm.xml" };
 	}
@@ -59,6 +61,7 @@ public class DeleteOneToOneOrphansTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanedWhileManaged() {
 		createData();
 
@@ -88,7 +91,9 @@ public class DeleteOneToOneOrphansTest extends FunctionalTestCase {
 		cleanupData();
 	}
 
-	public void testOrphanedWhileDetachedFailureExpected() {
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testOrphanedWhileDetached() {
 		createData();
 
 		Session session = openSession();

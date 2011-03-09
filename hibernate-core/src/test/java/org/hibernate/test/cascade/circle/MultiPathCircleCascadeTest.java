@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,12 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-
 package org.hibernate.test.cascade.circle;
+
 import java.util.Iterator;
-import junit.framework.Test;
+
 import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
@@ -34,8 +32,16 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * The test case uses the following model:
@@ -52,34 +58,27 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *  Arrows indicate the direction of cascade-merge.
  *
  * It reproduced the following issues:
- *    http://opensource.atlassian.com/projects/hibernate/browse/HHH-3046
- *    http://opensource.atlassian.com/projects/hibernate/browse/HHH-3810
- *
+ * http://opensource.atlassian.com/projects/hibernate/browse/HHH-3046
+ * http://opensource.atlassian.com/projects/hibernate/browse/HHH-3810
+ * <p/>
  * This tests that merge is cascaded properly from each entity.
- * 
+ *
  * @author Pavol Zibrita, Gail Badner
  */
-public class MultiPathCircleCascadeTest extends FunctionalTestCase {
-
-	public MultiPathCircleCascadeTest(String string) {
-		super(string);
-	}
-
+public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"cascade/circle/MultiPathCircleCascade.hbm.xml"
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MultiPathCircleCascadeTest.class );
-	}
-	
 	protected void cleanupTest() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -88,12 +87,12 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		s.createQuery( "delete from Node" );
 		s.createQuery( "delete from Route" );
 	}
-	
-	public void testMergeEntityWithNonNullableTransientEntity()
-	{
+
+	@Test
+	public void testMergeEntityWithNonNullableTransientEntity() {
 		Route route = getUpdatedDetachedEntity();
 
-		Node node = ( Node ) route.getNodes().iterator().next();
+		Node node = (Node) route.getNodes().iterator().next();
 		route.getNodes().remove( node );
 
 		Route routeNew = new Route();
@@ -109,10 +108,10 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
-		catch ( Exception ex ) {
+		catch (Exception ex) {
 			checkExceptionFromNullValueForNonNullable(
 					ex,
-					( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability(),
+					((SessionImplementor) s).getFactory().getSettings().isCheckNullability(),
 					false
 			);
 		}
@@ -122,11 +121,11 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		}
 	}
 
-	public void testMergeEntityWithNonNullableEntityNull()
-	{
+	@Test
+	public void testMergeEntityWithNonNullableEntityNull() {
 		Route route = getUpdatedDetachedEntity();
 
-		Node node = ( Node ) route.getNodes().iterator().next();
+		Node node = (Node) route.getNodes().iterator().next();
 		route.getNodes().remove( node );
 		node.setRoute( null );
 
@@ -138,10 +137,10 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
-		catch ( Exception ex ) {
+		catch (Exception ex) {
 			checkExceptionFromNullValueForNonNullable(
 					ex,
-					( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability(),
+					((SessionImplementor) s).getFactory().getSettings().isCheckNullability(),
 					true
 			);
 		}
@@ -151,10 +150,10 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		}
 	}
 
-	public void testMergeEntityWithNonNullablePropSetToNull()
-	{
+	@Test
+	public void testMergeEntityWithNonNullablePropSetToNull() {
 		Route route = getUpdatedDetachedEntity();
-		Node node = ( Node ) route.getNodes().iterator().next();
+		Node node = (Node) route.getNodes().iterator().next();
 		node.setName( null );
 
 		Session s = openSession();
@@ -165,10 +164,10 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 			s.getTransaction().commit();
 			fail( "should have thrown an exception" );
 		}
-		catch ( Exception ex ) {
+		catch (Exception ex) {
 			checkExceptionFromNullValueForNonNullable(
 					ex,
-					( ( SessionImplementor ) s ).getFactory().getSettings().isCheckNullability(),
+					((SessionImplementor) s).getFactory().getSettings().isCheckNullability(),
 					true
 			);
 		}
@@ -178,8 +177,8 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		}
 	}
 
-	public void testMergeRoute()
-	{
+	@Test
+	public void testMergeRoute() {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -188,7 +187,7 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		s.merge(route);
+		s.merge( route );
 
 		s.getTransaction().commit();
 		s.close();
@@ -198,14 +197,14 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		route = ( Route ) s.get( Route.class, route.getRouteID() );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 		checkResults( route, true );
 		s.getTransaction().commit();
 		s.close();
 	}
 
-	public void testMergePickupNode()
-	{
+	@Test
+	public void testMergePickupNode() {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -214,19 +213,19 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		Iterator it=route.getNodes().iterator();
-		Node node = ( Node ) it.next();
+		Iterator it = route.getNodes().iterator();
+		Node node = (Node) it.next();
 		Node pickupNode;
-		if ( node.getName().equals( "pickupNodeB") ) {
+		if ( node.getName().equals( "pickupNodeB" ) ) {
 			pickupNode = node;
 		}
 		else {
-			node = ( Node ) it.next();
+			node = (Node) it.next();
 			assertEquals( "pickupNodeB", node.getName() );
 			pickupNode = node;
 		}
 
-		pickupNode = ( Node ) s.merge( pickupNode );
+		pickupNode = (Node) s.merge( pickupNode );
 
 		s.getTransaction().commit();
 		s.close();
@@ -236,14 +235,14 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		route = ( Route ) s.get( Route.class, route.getRouteID() );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
 	}
 
-	public void testMergeDeliveryNode()
-	{
+	@Test
+	public void testMergeDeliveryNode() {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -252,19 +251,19 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		Iterator it=route.getNodes().iterator();
-		Node node = ( Node ) it.next();
+		Iterator it = route.getNodes().iterator();
+		Node node = (Node) it.next();
 		Node deliveryNode;
-		if ( node.getName().equals( "deliveryNodeB") ) {
+		if ( node.getName().equals( "deliveryNodeB" ) ) {
 			deliveryNode = node;
 		}
 		else {
-			node = ( Node ) it.next();
+			node = (Node) it.next();
 			assertEquals( "deliveryNodeB", node.getName() );
 			deliveryNode = node;
 		}
 
-		deliveryNode = ( Node ) s.merge( deliveryNode );
+		deliveryNode = (Node) s.merge( deliveryNode );
 
 		s.getTransaction().commit();
 		s.close();
@@ -274,14 +273,14 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		route = ( Route ) s.get( Route.class, route.getRouteID() );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
 	}
 
-	public void testMergeTour()
-	{
+	@Test
+	public void testMergeTour() {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -290,7 +289,7 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		Tour tour = ( Tour ) s.merge( ( ( Node ) route.getNodes().toArray()[0]).getTour() );
+		Tour tour = (Tour) s.merge( ((Node) route.getNodes().toArray()[0]).getTour() );
 
 		s.getTransaction().commit();
 		s.close();
@@ -300,14 +299,14 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		route = ( Route ) s.get( Route.class, route.getRouteID() );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
 	}
 
-	public void testMergeTransport()
-	{
+	@Test
+	public void testMergeTransport() {
 
 		Route route = getUpdatedDetachedEntity();
 
@@ -316,16 +315,16 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		Node node = ( ( Node ) route.getNodes().toArray()[0]);
+		Node node = ((Node) route.getNodes().toArray()[0]);
 		Transport transport;
 		if ( node.getPickupTransports().size() == 1 ) {
-			transport = ( Transport ) node.getPickupTransports().toArray()[0];
+			transport = (Transport) node.getPickupTransports().toArray()[0];
 		}
 		else {
-			transport = ( Transport ) node.getDeliveryTransports().toArray()[0];
+			transport = (Transport) node.getDeliveryTransports().toArray()[0];
 		}
 
-		transport = ( Transport ) s.merge( transport  );
+		transport = (Transport) s.merge( transport );
 
 		s.getTransaction().commit();
 		s.close();
@@ -335,7 +334,7 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		route = ( Route ) s.get( Route.class, route.getRouteID() );
+		route = (Route) s.get( Route.class, route.getRouteID() );
 		checkResults( route, false );
 		s.getTransaction().commit();
 		s.close();
@@ -347,46 +346,46 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		s.beginTransaction();
 
 		Route route = new Route();
-		route.setName("routeA");
+		route.setName( "routeA" );
 
 		s.save( route );
 		s.getTransaction().commit();
 		s.close();
 
 		route.setName( "new routeA" );
-		route.setTransientField(new String("sfnaouisrbn"));
+		route.setTransientField( new String( "sfnaouisrbn" ) );
 
 		Tour tour = new Tour();
-		tour.setName("tourB");
+		tour.setName( "tourB" );
 
 		Transport transport = new Transport();
-		transport.setName("transportB");
+		transport.setName( "transportB" );
 
 		Node pickupNode = new Node();
-		pickupNode.setName("pickupNodeB");
+		pickupNode.setName( "pickupNodeB" );
 
 		Node deliveryNode = new Node();
-		deliveryNode.setName("deliveryNodeB");
+		deliveryNode.setName( "deliveryNodeB" );
 
-		pickupNode.setRoute(route);
-		pickupNode.setTour(tour);
-		pickupNode.getPickupTransports().add(transport);
-		pickupNode.setTransientField("pickup node aaaaaaaaaaa");
+		pickupNode.setRoute( route );
+		pickupNode.setTour( tour );
+		pickupNode.getPickupTransports().add( transport );
+		pickupNode.setTransientField( "pickup node aaaaaaaaaaa" );
 
-		deliveryNode.setRoute(route);
-		deliveryNode.setTour(tour);
-		deliveryNode.getDeliveryTransports().add(transport);
-		deliveryNode.setTransientField("delivery node aaaaaaaaa");
+		deliveryNode.setRoute( route );
+		deliveryNode.setTour( tour );
+		deliveryNode.getDeliveryTransports().add( transport );
+		deliveryNode.setTransientField( "delivery node aaaaaaaaa" );
 
-		tour.getNodes().add(pickupNode);
-		tour.getNodes().add(deliveryNode);
+		tour.getNodes().add( pickupNode );
+		tour.getNodes().add( deliveryNode );
 
-		route.getNodes().add(pickupNode);
-		route.getNodes().add(deliveryNode);
+		route.getNodes().add( pickupNode );
+		route.getNodes().add( deliveryNode );
 
-		transport.setPickupNode(pickupNode);
-		transport.setDeliveryNode(deliveryNode);
-		transport.setTransientField("aaaaaaaaaaaaaa");
+		transport.setPickupNode( pickupNode );
+		transport.setDeliveryNode( deliveryNode );
+		transport.setTransientField( "aaaaaaaaaaaaaa" );
 
 		return route;
 	}
@@ -400,16 +399,16 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		assertEquals( 2, route.getNodes().size() );
 		Node deliveryNode = null;
 		Node pickupNode = null;
-		for( Iterator it=route.getNodes().iterator(); it.hasNext(); ) {
-			Node node = ( Node ) it.next();
-			if( "deliveryNodeB".equals( node.getName(  )  ) ) {
+		for ( Iterator it = route.getNodes().iterator(); it.hasNext(); ) {
+			Node node = (Node) it.next();
+			if ( "deliveryNodeB".equals( node.getName() ) ) {
 				deliveryNode = node;
 			}
-			else if( "pickupNodeB".equals( node.getName() ) ) {
+			else if ( "pickupNodeB".equals( node.getName() ) ) {
 				pickupNode = node;
 			}
 			else {
-				fail( "unknown node");
+				fail( "unknown node" );
 			}
 		}
 		assertNotNull( deliveryNode );
@@ -426,13 +425,15 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		assertNotNull( pickupNode.getTour() );
 		assertEquals( "node original value", pickupNode.getTransientField() );
 
-		assertTrue( ! deliveryNode.getNodeID().equals( pickupNode.getNodeID() ) );
+		assertTrue( !deliveryNode.getNodeID().equals( pickupNode.getNodeID() ) );
 		assertSame( deliveryNode.getTour(), pickupNode.getTour() );
-		assertSame( deliveryNode.getDeliveryTransports().iterator().next(),
-				pickupNode.getPickupTransports().iterator().next() );
+		assertSame(
+				deliveryNode.getDeliveryTransports().iterator().next(),
+				pickupNode.getPickupTransports().iterator().next()
+		);
 
 		Tour tour = deliveryNode.getTour();
-		Transport transport = ( Transport ) deliveryNode.getDeliveryTransports().iterator().next();
+		Transport transport = (Transport) deliveryNode.getDeliveryTransports().iterator().next();
 
 		assertEquals( "tourB", tour.getName() );
 		assertEquals( 2, tour.getNodes().size() );
@@ -445,14 +446,14 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		assertEquals( "transport original value", transport.getTransientField() );
 	}
 
-	public void testMergeData3Nodes()
-	{
+	@Test
+	public void testMergeData3Nodes() {
 
 		Session s = openSession();
 		s.beginTransaction();
 
 		Route route = new Route();
-		route.setName("routeA");
+		route.setName( "routeA" );
 
 		s.save( route );
 		s.getTransaction().commit();
@@ -463,63 +464,63 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
-		route = (Route) s.get(Route.class, new Long(1));
+		route = (Route) s.get( Route.class, new Long( 1 ) );
 		//System.out.println(route);
 		route.setName( "new routA" );
 
-		route.setTransientField(new String("sfnaouisrbn"));
+		route.setTransientField( new String( "sfnaouisrbn" ) );
 
 		Tour tour = new Tour();
-		tour.setName("tourB");
+		tour.setName( "tourB" );
 
 		Transport transport1 = new Transport();
-		transport1.setName("TRANSPORT1");
+		transport1.setName( "TRANSPORT1" );
 
 		Transport transport2 = new Transport();
-		transport2.setName("TRANSPORT2");
+		transport2.setName( "TRANSPORT2" );
 
 		Node node1 = new Node();
-		node1.setName("NODE1");
+		node1.setName( "NODE1" );
 
 		Node node2 = new Node();
-		node2.setName("NODE2");
+		node2.setName( "NODE2" );
 
 		Node node3 = new Node();
-		node3.setName("NODE3");
+		node3.setName( "NODE3" );
 
-		node1.setRoute(route);
-		node1.setTour(tour);
-		node1.getPickupTransports().add(transport1);
-		node1.setTransientField("node 1");
+		node1.setRoute( route );
+		node1.setTour( tour );
+		node1.getPickupTransports().add( transport1 );
+		node1.setTransientField( "node 1" );
 
-		node2.setRoute(route);
-		node2.setTour(tour);
-		node2.getDeliveryTransports().add(transport1);
-		node2.getPickupTransports().add(transport2);
-		node2.setTransientField("node 2");
+		node2.setRoute( route );
+		node2.setTour( tour );
+		node2.getDeliveryTransports().add( transport1 );
+		node2.getPickupTransports().add( transport2 );
+		node2.setTransientField( "node 2" );
 
-		node3.setRoute(route);
-		node3.setTour(tour);
-		node3.getDeliveryTransports().add(transport2);
-		node3.setTransientField("node 3");
+		node3.setRoute( route );
+		node3.setTour( tour );
+		node3.getDeliveryTransports().add( transport2 );
+		node3.setTransientField( "node 3" );
 
-		tour.getNodes().add(node1);
-		tour.getNodes().add(node2);
-		tour.getNodes().add(node3);
+		tour.getNodes().add( node1 );
+		tour.getNodes().add( node2 );
+		tour.getNodes().add( node3 );
 
-		route.getNodes().add(node1);
-		route.getNodes().add(node2);
-		route.getNodes().add(node3);
+		route.getNodes().add( node1 );
+		route.getNodes().add( node2 );
+		route.getNodes().add( node3 );
 
-		transport1.setPickupNode(node1);
-		transport1.setDeliveryNode(node2);
-		transport1.setTransientField("aaaaaaaaaaaaaa");
+		transport1.setPickupNode( node1 );
+		transport1.setDeliveryNode( node2 );
+		transport1.setTransientField( "aaaaaaaaaaaaaa" );
 
-		transport2.setPickupNode(node2);
-		transport2.setDeliveryNode(node3);
-		transport2.setTransientField("bbbbbbbbbbbbb");
+		transport2.setPickupNode( node2 );
+		transport2.setDeliveryNode( node3 );
+		transport2.setTransientField( "bbbbbbbbbbbbb" );
 
-		Route mergedRoute = (Route) s.merge(route);
+		Route mergedRoute = (Route) s.merge( route );
 
 		s.getTransaction().commit();
 		s.close();
@@ -528,7 +529,9 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 		assertUpdateCount( 1 );
 	}
 
-	protected void checkExceptionFromNullValueForNonNullable(Exception ex, boolean checkNullability, boolean isNullValue ) {
+	protected void checkExceptionFromNullValueForNonNullable(
+			Exception ex, boolean checkNullability, boolean isNullValue
+	) {
 		if ( checkNullability ) {
 			if ( isNullValue ) {
 				assertTrue( ex instanceof PropertyValueException );
@@ -543,21 +546,21 @@ public class MultiPathCircleCascadeTest extends FunctionalTestCase {
 	}
 
 	protected void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = (int) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( "unexpected insert count", expected, inserts );
 	}
 
 	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = (int) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( "unexpected update counts", expected, updates );
 	}
 
 	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
+		int deletes = (int) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
-	}	
+	}
 }

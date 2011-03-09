@@ -22,24 +22,26 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.id.uuid.sqlrep.sqlbinary;
+
 import org.hibernate.Session;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.id.uuid.sqlrep.Node;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class UUIDBinaryTest extends FunctionalTestCase {
-	public UUIDBinaryTest(String string) {
-		super( string );
-	}
-
+public class UUIDBinaryTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "id/uuid/sqlrep/Node.hbm.xml" };
 	}
 
+	@Test
 	public void testUsage() {
 		Session session = openSession();
 		session.beginTransaction();

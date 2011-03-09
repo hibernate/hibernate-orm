@@ -1,41 +1,60 @@
-//$Id: AuctionTest2.java 10981 2006-12-13 00:14:17Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.bidi;
+
 import java.math.BigDecimal;
 import java.util.Date;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class AuctionTest2 extends FunctionalTestCase {
-
-	public AuctionTest2(String str) {
-		super( str );
-	}
-
+@RequiresDialectFeature(
+		value = DialectChecks.SupportsExistsInSelectCheck.class,
+		comment = "dialect does not support exist predicates in the select clause"
+)
+public class AuctionTest2 extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "bidi/Auction2.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( AuctionTest2.class );
-	}
-
-	public boolean createSchema() {
-		return getDialect().supportsExistsInSelect();
-	}
-
+	@Test
 	public void testLazy() {
-		if ( ! getDialect().supportsExistsInSelect() ) {
-			reportSkip( "dialect does not support exist fragments in the select clause", "bidi support" );
-			return;
-		}
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Auction a = new Auction();

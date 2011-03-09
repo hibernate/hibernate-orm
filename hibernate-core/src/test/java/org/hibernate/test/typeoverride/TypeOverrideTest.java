@@ -27,8 +27,6 @@ import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
@@ -36,16 +34,21 @@ import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 /**
- *
  * @author Gail Badner
  */
-public class TypeOverrideTest extends FunctionalTestCase {
-
-	public TypeOverrideTest(String string)  {
-		super( string );
-	}
-
+public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "typeoverride/Entity.hbm.xml" };
 	}
@@ -55,6 +58,7 @@ public class TypeOverrideTest extends FunctionalTestCase {
 		cfg.registerTypeOverride( StoredPrefixedStringType.INSTANCE );
 	}
 
+	@Test
 	public void testStandardBasicSqlTypeDescriptor() {
 		// no override
 		assertTrue( StandardBasicTypes.isStandardBasicSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
@@ -83,6 +87,7 @@ public class TypeOverrideTest extends FunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testNonStandardSqlTypeDescriptor() {
 		// no override
 		SqlTypeDescriptor sqlTypeDescriptor = new IntegerTypeDescriptor();
@@ -95,6 +100,7 @@ public class TypeOverrideTest extends FunctionalTestCase {
 		assertSame( ClobTypeDescriptor.CLOB_BINDING, getResolvedSqlTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING ) );
 	}
 
+	@Test
 	public void testDialectWithNonStandardSqlTypeDescriptor() {
 		assertNotSame( VarcharTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getSqlTypeDescriptor() );
 		if ( H2DialectOverridePrefixedVarcharSqlTypeDesc.class.isInstance( getDialect() ) ) {
@@ -132,6 +138,7 @@ public class TypeOverrideTest extends FunctionalTestCase {
 				.resolveSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
+	@Test
 	public void testInsert() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -150,6 +157,7 @@ public class TypeOverrideTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRegisteredFunction() {
 		Session s = openSession();
 		s.getTransaction().begin();

@@ -1,20 +1,24 @@
 package org.hibernate.test.generatedkeys.identity;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCase {
-	public IdentityGeneratedKeysTest(String name) {
-		super( name );
-	}
-
+@RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class )
+public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -24,14 +28,7 @@ public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCas
 		return new String[] { "generatedkeys/identity/MyEntity.hbm.xml" };
 	}
 
-	public boolean appliesTo(Dialect dialect) {
-		return dialect.supportsIdentityColumns();
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( IdentityGeneratedKeysTest.class );
-	}
-
+	@Test
 	public void testIdentityColumnGeneratedIds() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -44,6 +41,7 @@ public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCas
 		s.close();
 	}
 
+	@Test
 	public void testPersistOutsideTransaction() {
 		Session s = openSession();
 
@@ -73,6 +71,8 @@ public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCas
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testPersistOutsideTransactionCascadedToNonInverseCollection() {
 		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
 		Session s = openSession();
@@ -93,6 +93,8 @@ public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCas
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testPersistOutsideTransactionCascadedToInverseCollection() {
 		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
 		Session s = openSession();
@@ -115,6 +117,7 @@ public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCas
 		s.close();
 	}
 
+	@Test
 	public void testPersistOutsideTransactionCascadedToManyToOne() {
 		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
 		Session s = openSession();
@@ -135,6 +138,7 @@ public class IdentityGeneratedKeysTest extends DatabaseSpecificFunctionalTestCas
 		s.close();
 	}
 
+	@Test
 	public void testPersistOutsideTransactionCascadedFromManyToOne() {
 		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
 		Session s = openSession();

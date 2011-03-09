@@ -23,22 +23,22 @@
  */
 package org.hibernate.test.id.uuid.strategy;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class CustomStrategyTest extends FunctionalTestCase {
-	public CustomStrategyTest(String string) {
-		super( string );
-	}
-
+public class CustomStrategyTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "id/uuid/strategy/Node.hbm.xml" };
 	}
 
+	@Test
 	public void testUsage() {
 		Session session = openSession();
 		session.beginTransaction();

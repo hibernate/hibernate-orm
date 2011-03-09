@@ -23,13 +23,19 @@
  */
 package org.hibernate.test.lob;
 import java.sql.Clob;
-import junit.framework.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.type.descriptor.java.DataHelper;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests lazy materialization of data mapped by
@@ -38,29 +44,18 @@ import org.hibernate.type.descriptor.java.DataHelper;
  *
  * @author Steve Ebersole
  */
-public class ClobLocatorTest extends DatabaseSpecificFunctionalTestCase {
+@RequiresDialectFeature(
+		value = DialectChecks.SupportsExpectedLobUsagePattern.class,
+		comment = "database/driver does not support expected LOB usage pattern"
+)
+public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 	private static final int CLOB_SIZE = 10000;
-
-	public ClobLocatorTest(String name) {
-		super( name );
-	}
 
 	public String[] getMappings() {
 		return new String[] { "lob/LobMappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ClobLocatorTest.class );
-	}
-
-	public boolean appliesTo(Dialect dialect) {
-		if ( ! dialect.supportsExpectedLobUsagePattern() ) {
-			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
-			return false;
-		}
-		return true;
-	}
-
+	@Test
 	public void testBoundedClobLocatorAccess() throws Throwable {
 		String original = buildRecursively( CLOB_SIZE, 'x' );
 		String changed = buildRecursively( CLOB_SIZE, 'y' );
@@ -83,7 +78,7 @@ public class ClobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s.close();
 
 		// test mutation via setting the new clob data...
-		if ( supportsLobValueChangePropogation() ) {
+		if ( getDialect().supportsLobValueChangePropogation() ) {
 			s = openSession();
 			s.beginTransaction();
 			entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
@@ -138,11 +133,12 @@ public class ClobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
+	)
 	public void testUnboundedClobLocatorAccess() throws Throwable {
-		if ( ! supportsUnboundedLobLocatorMaterialization() ) {
-			return;
-		}
-
 		// Note: unbounded mutation of the underlying lob data is completely
 		// unsupported; most databases would not allow such a construct anyway.
 		// Thus here we are only testing materialization...

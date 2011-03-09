@@ -23,27 +23,24 @@
  */
 package org.hibernate.test.cascade;
 import java.util.Collections;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
-/**
- * @author Wallace Wadge (based on code by Gail Badner)
- */
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test case to illustrate that when a child table attempts to cascade to a parent and the parent's Id
  * is set to assigned, an exception thrown (not-null property references a null or transient value). 
  * This error only occurs if the parent link in marked as not nullable.
+ *
+ * @author Wallace Wadge (based on code by Gail Badner)
  */
-public class CascadeTestWithAssignedParentIdTest extends FunctionalTestCase {
-
-	public CascadeTestWithAssignedParentIdTest(String name) {
-		super( name );
-	}
-
+public class CascadeTestWithAssignedParentIdTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {
 				"cascade/ChildForParentWithAssignedId.hbm.xml",
@@ -51,10 +48,8 @@ public class CascadeTestWithAssignedParentIdTest extends FunctionalTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CascadeTestWithAssignedParentIdTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testSaveChildWithParent() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -62,7 +57,7 @@ public class CascadeTestWithAssignedParentIdTest extends FunctionalTestCase {
 		Child child = new Child();
 		child.setParent( parent );
 		parent.setChildren( Collections.singleton( child ) );
-		parent.setId(new Long(123L));
+		parent.setId( Long.valueOf(123L) );
 		// this should figure out that the parent needs saving first since id is assigned.
 		session.save( child );
 		txn.commit();

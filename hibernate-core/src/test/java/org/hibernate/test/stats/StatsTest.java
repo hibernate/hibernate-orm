@@ -1,8 +1,30 @@
-//$Id: StatsTest.java 15731 2008-12-26 23:42:56Z gbadner $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.stats;
 import java.util.HashSet;
 import java.util.Iterator;
-import junit.framework.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -14,20 +36,21 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Collection;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Show the difference between fetch and load
  *
  * @author Emmanuel Bernard
  */
-public class StatsTest extends FunctionalTestCase {
-
-	public StatsTest(String x) {
-		super(x);
-	}
-
+public class StatsTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "stats/Continent.hbm.xml" };
 	}
@@ -37,10 +60,8 @@ public class StatsTest extends FunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( StatsTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testCollectionFetchVsLoad() throws Exception {
 		Statistics stats = getSessions().getStatistics();
 		stats.clear();
@@ -80,10 +101,10 @@ public class StatsTest extends FunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		Collection coll = getCfg().getCollectionMapping(Continent.class.getName() + ".countries");
+		Collection coll = configuration().getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.JOIN);
 		coll.setLazy(false);
-		SessionFactory sf = getCfg().buildSessionFactory( getServiceRegistry( getCfg().getProperties()) );
+		SessionFactory sf = configuration().buildSessionFactory( serviceRegistry() );
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
@@ -102,10 +123,10 @@ public class StatsTest extends FunctionalTestCase {
 		s.close();
 		sf.close();
 
-		coll = getCfg().getCollectionMapping(Continent.class.getName() + ".countries");
+		coll = configuration().getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.SELECT);
 		coll.setLazy(false);
-		sf = getCfg().buildSessionFactory( getServiceRegistry( getCfg().getProperties() ) );
+		sf = configuration().buildSessionFactory( serviceRegistry() );
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
@@ -120,15 +141,15 @@ public class StatsTest extends FunctionalTestCase {
 		europe2 = (Continent) s.get( Continent.class, europe.getId() );
 		assertEquals( 1, stats.getCollectionLoadCount() );
 		assertEquals( "Should do explicit collection load, not part of the first one", 1, stats.getCollectionFetchCount() );
-		Iterator countries = europe2.getCountries().iterator();
-		while ( countries.hasNext() ) {
-			s.delete( countries.next() );
+		for ( Object o : europe2.getCountries() ) {
+			s.delete( o );
 		}
 		cleanDb( s );
 		tx.commit();
 		s.close();
 	}
 
+	@Test
 	public void testQueryStatGathering() {
 		Statistics stats = getSessions().getStatistics();
 		stats.clear();

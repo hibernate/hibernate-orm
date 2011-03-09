@@ -1,4 +1,26 @@
-//$Id: ParentChildTest.java 11089 2007-01-24 14:34:22Z max.andersen@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 import java.io.Serializable;
 import java.sql.Connection;
@@ -10,7 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -28,15 +50,21 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 public class ParentChildTest extends LegacyTestCase {
-
-	public ParentChildTest(String x) {
-		super(x);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/ParentChild.hbm.xml",
@@ -60,10 +88,7 @@ public class ParentChildTest extends LegacyTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ParentChildTest.class );
-	}
-
+	@Test
 	public void testReplicate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -105,6 +130,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQueryOneToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -129,7 +155,9 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	public void testProxyReuseFailureExpected() throws Exception {
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testProxyReuse() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		FooProxy foo = new Foo();
@@ -205,6 +233,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComplexCriteria() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -336,6 +365,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testArrayHQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -353,11 +383,10 @@ public class ParentChildTest extends LegacyTestCase {
 
 		t.rollback();
 		s.close();
-
 	}
 
+	@Test
 	public void testArrayCriteria() {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Baz baz = new Baz();
@@ -376,6 +405,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLazyManyToOneHQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -394,11 +424,10 @@ public class ParentChildTest extends LegacyTestCase {
 
 		t.rollback();
 		s.close();
-
 	}
 
+	@Test
 	public void testLazyManyToOneCriteria() {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Baz baz = new Baz();
@@ -418,8 +447,8 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLazyManyToOneGet() {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Baz baz = new Baz();
@@ -439,6 +468,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testClassWhere() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -470,6 +500,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testClassWhereManyToMany() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -501,6 +532,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -601,6 +633,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testParentChild() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -649,6 +682,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testParentNullChild() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -675,6 +709,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToMany() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -722,6 +757,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testContainer() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -863,6 +899,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascadeCompositeElements() throws Exception {
 		Container c = new Container();
 		List list = new ArrayList();
@@ -911,6 +948,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBag() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -985,6 +1023,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCircularCascade() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -1027,6 +1066,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDeleteEmpty() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1036,6 +1076,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLocking() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -1113,6 +1154,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testObjectType() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1134,6 +1176,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {

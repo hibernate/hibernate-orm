@@ -1,6 +1,28 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 
-import java.util.Iterator;
 import org.hibernate.Query;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.DefaultNamingStrategy;
@@ -9,19 +31,23 @@ import org.hibernate.classic.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.type.Type;
+
+import org.junit.Before;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class LegacyTestCase extends FunctionalTestCase {
-
+public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 	public static final String USE_ANTLR_PARSER_PROP = "legacy.use_antlr_hql_parser";
-	private final boolean useAntlrParser;
 
-	public LegacyTestCase(String x) {
-		super( x );
+	private boolean useAntlrParser;
+
+	@Before
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
+	public void checkAntlrParserSetting() {
 		useAntlrParser = Boolean.valueOf( extractFromSystem( USE_ANTLR_PARSER_PROP ) ).booleanValue();
 	}
 
@@ -35,7 +61,7 @@ public abstract class LegacyTestCase extends FunctionalTestCase {
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		if ( !useAntlrParser ) {
 			cfg.setProperty( Environment.QUERY_TRANSLATOR, ClassicQueryTranslatorFactory.class.getName() );
@@ -72,21 +98,10 @@ public abstract class LegacyTestCase extends FunctionalTestCase {
 		return doDelete( session, query );
 	}
 
-	protected int doDelete(Session session, String queryString, Object[] params, Type[] paramTypes) {
-		Query query = session.createQuery( queryString );
-		if ( params != null ) {
-			for ( int i = 0; i < params.length; i++ ) {
-				query.setParameter( i, params[i], paramTypes[i] );
-			}
-		}
-		return doDelete( session, query );
-	}
-
 	protected int doDelete(Session session, Query selectQuery) {
 		int count = 0;
-		Iterator itr = selectQuery.list().iterator();
-		while ( itr.hasNext() ) {
-			session.delete( itr.next() );
+		for ( Object o : selectQuery.list() ) {
+			session.delete( o );
 			count++;
 		}
 		return count;

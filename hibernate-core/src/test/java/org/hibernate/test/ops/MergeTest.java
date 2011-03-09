@@ -1,31 +1,52 @@
-//$Id: MergeTest.java 11037 2007-01-09 16:04:16Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.ops;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
 public class MergeTest extends AbstractOperationTestCase {
-
-	public MergeTest(String str) {
-		super( str );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MergeTest.class );
-	}
-
+	@Test
 	public void testMergeStaleVersionFails() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
@@ -59,6 +80,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		}
 	}
 
+	@Test
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
@@ -88,6 +110,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMergeBidiForeignKeyOneToOne() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
@@ -119,7 +142,9 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.close();
 	}
 
-    public void testNoExtraUpdatesOnMerge() throws Exception {
+	@Test
+    @SuppressWarnings( {"UnusedAssignment"})
+	public void testNoExtraUpdatesOnMerge() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
 		Node node = new Node( "test" );
@@ -156,6 +181,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
     }
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeWithCollection() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
@@ -197,7 +224,9 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
-    public void testNoExtraUpdatesOnMergeVersioned() throws Exception {
+	@Test
+    @SuppressWarnings( {"UnusedAssignment"})
+	public void testNoExtraUpdatesOnMergeVersioned() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
 		VersionedEntity entity = new VersionedEntity( "entity", "entity" );
@@ -236,7 +265,9 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
     }
 
-    public void testNoExtraUpdatesOnMergeVersionedWithCollection() throws Exception {
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
+	public void testNoExtraUpdatesOnMergeVersionedWithCollection() throws Exception {
 		Session s = openSession();
         s.beginTransaction();
 		VersionedEntity parent = new VersionedEntity( "parent", "parent" );
@@ -280,6 +311,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
     }
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment", "UnusedDeclaration"})
 	public void testNoExtraUpdatesOnPersistentMergeVersionedWithCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -329,6 +362,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		// cleanup();
 	}
 
+	@Test
 	public void testPersistThenMergeInSameTxnWithVersion() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -351,6 +385,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testPersistThenMergeInSameTxnWithTimestamp() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -373,8 +408,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testMergeDeepTree() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -434,8 +469,9 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	}
 
+	@SuppressWarnings( {"UnusedAssignment"})
+	@Test
 	public void testMergeDeepTreeWithGeneratedId() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -469,7 +505,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertUpdateCount(1);
 		clearCounts();
 
-		getSessions().evict(NumberedNode.class);
+		getSessions().getCache().evictEntityRegion( NumberedNode.class );
 
 		NumberedNode child2 = new NumberedNode("child2");
 		NumberedNode grandchild3 = new NumberedNode("grandchild3");
@@ -478,7 +514,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		s = openSession();
 		tx = s.beginTransaction();
-		root = (NumberedNode) s.merge(root);
+		root = (NumberedNode) s.merge( root );
 		tx.commit();
 		s.close();
 
@@ -493,11 +529,10 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.createQuery("delete from NumberedNode").executeUpdate();
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testMergeTree() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -531,8 +566,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testMergeTreeWithGeneratedId() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -566,8 +601,9 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@Test
 	public void testMergeManaged() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		NumberedNode root = new NumberedNode("root");
@@ -595,21 +631,22 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertEquals( root.getChildren().size(), 1 );
 		assertTrue( root.getChildren().contains(mergedChild) );
 
-		tx = s.beginTransaction();
+		s.beginTransaction();
 		assertEquals(
-			s.createCriteria(NumberedNode.class)
-				.setProjection( Projections.rowCount() )
-				.uniqueResult(),
-			new Long(2)
+				Long.valueOf( 2 ),
+				s.createCriteria( NumberedNode.class )
+						.setProjection( Projections.rowCount() )
+						.uniqueResult()
 		);
-
+		s.getTransaction().commit();
 		s.close();
 
 		cleanup();
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@Test
 	public void testMergeManagedUninitializedCollection() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		NumberedNode root = new NumberedNode( "root" );
@@ -640,10 +677,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		tx = s.beginTransaction();
 		assertEquals(
-			s.createCriteria(NumberedNode.class)
-				.setProjection( Projections.rowCount() )
-				.uniqueResult(),
-			new Long(2)
+				Long.valueOf( 2 ),
+				s.createCriteria(NumberedNode.class)
+						.setProjection( Projections.rowCount() )
+						.uniqueResult()
 		);
 		tx.commit();
 
@@ -652,8 +689,9 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@Test
 	public void testMergeManagedInitializedCollection() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		NumberedNode root = new NumberedNode( "root" );
@@ -685,10 +723,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		tx = s.beginTransaction();
 		assertEquals(
-			s.createCriteria(NumberedNode.class)
-				.setProjection( Projections.rowCount() )
-				.uniqueResult(),
-			new Long(2)
+				Long.valueOf( 2 ),
+				s.createCriteria(NumberedNode.class)
+						.setProjection( Projections.rowCount() )
+						.uniqueResult()
 		);
 		tx.commit();
 
@@ -697,6 +735,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testRecursiveMergeTransient() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -717,6 +757,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@Test
 	public void testDeleteAndMerge() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -731,7 +773,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.delete( otherJboss );
 		s.getTransaction().commit();
 		s.clear();
-		jboss.setVers( new Integer(1) );
+		jboss.setVers( Integer.valueOf( 1 ) );
 		s.getTransaction().begin();
 		s.merge( jboss );
 		s.getTransaction().commit();
@@ -740,6 +782,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@SuppressWarnings( {"unchecked"})
+	@Test
 	public void testMergeManyToManyWithCollectionDeference() throws Exception {
 		// setup base data...
 		Session s = openSession();
@@ -783,6 +827,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	private void cleanup() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -799,9 +844,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.createQuery( "delete from Competitor" ).executeUpdate();
 		s.createQuery( "delete from Competition" ).executeUpdate();
 
-		Iterator itr = s.createQuery( "from Employer" ).list().iterator();
-		while ( itr.hasNext() ) {
-			final Employer employer = ( Employer ) itr.next();
+		for ( Employer employer : (List<Employer>) s.createQuery( "from Employer" ).list() ) {
 			s.delete( employer );
 		}
 

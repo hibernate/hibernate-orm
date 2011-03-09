@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.querycache;
 
@@ -29,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -46,17 +46,26 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Gail Badner
  */
-public abstract class AbstractQueryCacheResultTransformerTest extends FunctionalTestCase {
-
+public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFunctionalTestCase {
 	private Student yogiExpected;
 	private Student shermanExpected;
 	private CourseMeeting courseMeetingExpected1;
@@ -65,16 +74,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 	private Enrolment yogiEnrolmentExpected;
 	private Enrolment shermanEnrolmentExpected;
 
-	public AbstractQueryCacheResultTransformerTest(String str) {
-		super( str );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "querycache/Enrolment.hbm.xml" };
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "foo" );
@@ -196,15 +202,6 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 	protected void deleteData() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-/*
-		List students = s.createQuery( "from Student" ).list();
-		for ( Iterator it = students.iterator(); it.hasNext(); ) {
-			s.delete( it.next() );
-		}
-		s.createQuery( "delete from Enrolment" ).executeUpdate();
-		s.createQuery( "delete from CourseMeeting" ).executeUpdate();
-		s.createQuery( "delete from Course" ).executeUpdate();
-*/
 		s.delete( yogiExpected );
 		s.delete( shermanExpected );
 		s.delete( yogiEnrolmentExpected );
@@ -255,6 +252,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToEntityMapNoProjectionMultiAndNullList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			@Override
@@ -263,7 +261,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 						.createAlias( "s.preferredCourse", "p", CriteriaSpecification.LEFT_JOIN )
 						.createAlias( "s.addresses", "a", CriteriaSpecification.LEFT_JOIN )
 								.setResultTransformer( CriteriaSpecification.ALIAS_TO_ENTITY_MAP )
-						.addOrder( Order.asc( "s.studentNumber") );
+						.addOrder( Order.asc( "s.studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -298,12 +296,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertFalse( yogiAddress1.getAddressType().equals( yogiAddress2.getAddressType() ) );
 				assertEquals( shermanExpected, shermanMap.get( "s" ) );
 				assertEquals( shermanExpected.getPreferredCourse(), shermanMap.get( "p" ) );
-				assertNull( shermanMap.get( "a") );
+				assertNull( shermanMap.get( "a" ) );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToEntityMapNoProjectionNullAndNonNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			@Override
@@ -345,6 +344,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testEntityWithNonLazyOneToManyUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -361,19 +361,20 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 			public void check(Object results) {
 				assertTrue( results instanceof Course );
 				assertEquals( courseExpected, results );
-				assertTrue( Hibernate.isInitialized( ( ( Course ) courseExpected ).getCourseMeetings() ) );
-				assertEquals( courseExpected.getCourseMeetings(), ( ( Course ) courseExpected ).getCourseMeetings() );
+				assertTrue( Hibernate.isInitialized( ((Course) courseExpected).getCourseMeetings() ) );
+				assertEquals( courseExpected.getCourseMeetings(), ((Course) courseExpected).getCourseMeetings() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testEntityWithNonLazyManyToOneList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( CourseMeeting.class )
-						.addOrder( Order.asc( "id.day") );
+						.addOrder( Order.asc( "id.day" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -387,15 +388,16 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( 2, resultList.size() );
 				assertEquals( courseMeetingExpected1, resultList.get( 0 ) );
 				assertEquals( courseMeetingExpected2, resultList.get( 1 ) );
-				assertTrue( Hibernate.isInitialized( ( ( CourseMeeting ) resultList.get( 0 ) ).getCourse() ) );
-				assertTrue( Hibernate.isInitialized( ( ( CourseMeeting ) resultList.get( 1 ) ).getCourse() ) );
-				assertEquals( courseExpected, ( ( CourseMeeting ) resultList.get( 0 ) ).getCourse() );
-				assertEquals( courseExpected, ( ( CourseMeeting ) resultList.get( 1 ) ).getCourse() );
+				assertTrue( Hibernate.isInitialized( ((CourseMeeting) resultList.get( 0 )).getCourse() ) );
+				assertTrue( Hibernate.isInitialized( ((CourseMeeting) resultList.get( 1 )).getCourse() ) );
+				assertEquals( courseExpected, ((CourseMeeting) resultList.get( 0 )).getCourse() );
+				assertEquals( courseExpected, ((CourseMeeting) resultList.get( 1 )).getCourse() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testEntityWithLazyAssnUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -414,21 +416,21 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 			public void check(Object results) {
 				assertTrue( results instanceof Student );
 				assertEquals( shermanExpected, results );
-				assertNotNull(  ( ( Student ) results ).getEnrolments() );
-				assertFalse( Hibernate.isInitialized( ( ( Student ) results ).getEnrolments() ) );
-				assertNull( ( ( Student ) results ).getPreferredCourse() );
+				assertNotNull( ((Student) results).getEnrolments() );
+				assertFalse( Hibernate.isInitialized( ((Student) results).getEnrolments() ) );
+				assertNull( ((Student) results).getPreferredCourse() );
 			}
 		};
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
-	// should use RootEntityTransformer by default
+	@Test
 	public void testEntityWithLazyAssnList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class )
-						.addOrder( Order.asc( "studentNumber") );
+						.addOrder( Order.asc( "studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
@@ -442,7 +444,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( 2, resultList.size() );
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertEquals( shermanExpected, resultList.get( 1 ) );
-				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
+				assertNotNull( ((Student) resultList.get( 0 )).getEnrolments() );
 				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getPreferredCourse() );
 				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getEnrolments() );
 				assertNull( ( ( Student ) resultList.get( 1 ) ).getPreferredCourse() );
@@ -455,6 +457,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testEntityWithUnaliasedJoinFetchedLazyOneToManySingleElementList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
@@ -462,7 +465,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.setFetchMode( "enrolments", FetchMode.JOIN )
-						.addOrder( Order.asc( "s.studentNumber") );
+						.addOrder( Order.asc( "s.studentNumber" ) );
 			}
 		};
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
@@ -491,6 +494,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutorUnaliased, criteriaExecutorUnaliased, checker, false);
 	}
 
+	@Test
 	public void testJoinWithFetchJoinListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -522,10 +526,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testJoinWithFetchJoinListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
-				return s.createQuery( "from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber" );
+				return s.createQuery(
+						"from Student s left join fetch s.enrolments left join s.preferredCourse order by s.studentNumber"
+				);
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
@@ -537,8 +544,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 1 ] );
 				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
 				assertEquals( shermanExpected, shermanObjects[ 0 ] );
-				assertNull( shermanObjects[ 1 ] );
-				assertNull( ( ( Student ) shermanObjects[ 0 ] ).getPreferredCourse() );
+				assertNull( shermanObjects[1] );
+				assertNull( ((Student) shermanObjects[0]).getPreferredCourse() );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student )  yogiObjects[ 0 ] ).getEnrolments() ) );
 					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() );
@@ -550,6 +557,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testJoinWithFetchJoinWithOwnerAndPropProjectedList() throws Exception {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -564,8 +572,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( yogiExpected, yogiObjects[ 0 ] );
 				assertEquals( yogiExpected.getName(), yogiObjects[ 1 ] );
 				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
-				assertEquals( shermanExpected, shermanObjects[ 0 ] );
-				assertEquals( shermanExpected.getName(), shermanObjects[ 1 ] );
+				assertEquals( shermanExpected, shermanObjects[0] );
+				assertEquals( shermanExpected.getName(), shermanObjects[1] );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student )  yogiObjects[ 0 ] ).getEnrolments() ) );
 					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() );
@@ -577,6 +585,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlSelectNewMapExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testJoinWithFetchJoinWithPropAndOwnerProjectedList() throws Exception {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -592,7 +601,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( yogiExpected, yogiObjects[ 1 ] );
 				Object[] shermanObjects = ( Object[] ) resultList.get( 1 );
 				assertEquals( shermanExpected.getName(), shermanObjects[ 0 ] );
-				assertEquals( shermanExpected, shermanObjects[ 1 ] );
+				assertEquals( shermanExpected, shermanObjects[1] );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertTrue( Hibernate.isInitialized( ( ( Student )  yogiObjects[ 1 ] ).getEnrolments() ) );
 					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiObjects[ 1 ] ).getEnrolments() );
@@ -604,6 +613,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlSelectNewMapExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testJoinWithFetchJoinWithOwnerAndAliasedJoinedProjectedListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -622,7 +632,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				);
 				Object[] shermanObjects = ( Object[]  ) resultList.get( 1 );
 				assertEquals( shermanExpected, shermanObjects[ 0 ] );
-				assertNull( shermanObjects[ 1 ] );
+				assertNull( shermanObjects[1] );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 1 ] );
 					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiObjects[ 0 ] ).getEnrolments() ) );
@@ -635,10 +645,13 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testJoinWithFetchJoinWithAliasedJoinedAndOwnerProjectedListHql() throws Exception {
 		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
-				return s.createQuery( "select pc, s from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber" );
+				return s.createQuery(
+						"select pc, s from Student s left join fetch s.enrolments left join s.preferredCourse pc order by s.studentNumber"
+				);
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
@@ -649,11 +662,11 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( yogiExpected, yogiObjects[ 1 ] );
 				assertEquals(
 						yogiExpected.getPreferredCourse().getCourseCode(),
-						( ( Course ) yogiObjects[ 0 ] ).getCourseCode()
+						((Course) yogiObjects[0]).getCourseCode()
 				);
 				Object[] shermanObjects = ( Object[]  ) resultList.get( 1 );
-				assertEquals( shermanExpected, shermanObjects[ 1 ] );
-				assertNull( shermanObjects[ 0 ] );
+				assertEquals( shermanExpected, shermanObjects[1] );
+				assertNull( shermanObjects[0] );
 				if ( areDynamicNonLazyAssociationsChecked() ) {
 					assertEquals( yogiExpected.getPreferredCourse(), yogiObjects[ 0 ] );
 					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiObjects[ 1 ] ).getEnrolments() ) );
@@ -666,6 +679,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlSelectNewMapExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testEntityWithAliasedJoinFetchedLazyOneToManySingleElementListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -696,13 +710,14 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, false);
 	}
 
+	@Test
 	public void testEntityWithSelectFetchedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				// should use RootEntityTransformer by default
 				return s.createCriteria( Student.class, "s" )
 						.setFetchMode( "enrolments", FetchMode.SELECT )
-						.addOrder( Order.asc( "s.studentNumber") );
+						.addOrder( Order.asc( "s.studentNumber" ) );
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
@@ -711,8 +726,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( 2, resultList.size() );
 				assertEquals( yogiExpected, resultList.get( 0 ) );
 				assertEquals( shermanExpected, resultList.get( 1 ) );
-				assertNotNull( ( ( Student ) resultList.get( 0 ) ).getEnrolments() );
-				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 0 ) ).getEnrolments() ) );
+				assertNotNull( ((Student) resultList.get( 0 )).getEnrolments() );
+				assertFalse( Hibernate.isInitialized( ((Student) resultList.get( 0 )).getEnrolments() ) );
 				assertNotNull( ( ( Student ) resultList.get( 1 ) ).getEnrolments() );
 				assertFalse( Hibernate.isInitialized( ( ( Student ) resultList.get( 1 ) ).getEnrolments() ) );
 			}
@@ -721,6 +736,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorUnaliased, checker, false);
 	}
 
+	@Test
 	public void testEntityWithJoinFetchedLazyOneToManyMultiAndNullElementList() throws Exception {
 		//unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
@@ -804,6 +820,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorAliased4, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinFetchedLazyManyToOneList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
@@ -871,7 +888,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 				assertEquals( shermanExpected, resultList.get( 1 ) );
 				assertEquals( yogiExpected.getPreferredCourse().getCourseCode(),
 						( ( Student ) resultList.get( 0 ) ).getPreferredCourse().getCourseCode() );
-				assertNull( ( ( Student ) resultList.get( 1 ) ).getPreferredCourse() );
+				assertNull( ((Student) resultList.get( 1 )).getPreferredCourse() );
 			}
 		};
 		runTest( hqlExecutorUnaliased, criteriaExecutorUnaliased, checker, false );
@@ -881,6 +898,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorAliased4, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinFetchedLazyManyToOneUsingProjectionList() throws Exception {
 		// unaliased
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
@@ -900,7 +918,9 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		};
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
-				return s.createQuery( "select s.name, s from Enrolment e left join e.student s left join fetch s.preferredCourse order by s.studentNumber" );
+				return s.createQuery(
+						"select s.name, s from Enrolment e left join e.student s left join fetch s.preferredCourse order by s.studentNumber"
+				);
 			}
 		};
 		ResultChecker checker = new ResultChecker() {
@@ -928,6 +948,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinedLazyOneToManySingleElementListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -974,6 +995,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorAliased2, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinedLazyOneToManyMultiAndNullListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1021,6 +1043,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorAliased2, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinedLazyManyToOneListCriteria() throws Exception {
 		CriteriaExecutor criteriaExecutorUnaliased = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1062,6 +1085,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( null, criteriaExecutorAliased2, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinedLazyOneToManySingleElementListHql() throws Exception {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -1091,6 +1115,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutorAliased, null, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinedLazyOneToManyMultiAndNullListHql() throws Exception {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -1125,6 +1150,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutorAliased, null, checker, false );
 	}
 
+	@Test
 	public void testEntityWithJoinedLazyManyToOneListHql() throws Exception {
 		HqlExecutor hqlExecutorUnaliased = new HqlExecutor() {
 			protected Query getQuery(Session s) {
@@ -1154,6 +1180,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutorAliased, null, checker, false );
 	}
 
+	@Test
 	public void testAliasToEntityMapOneProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1189,6 +1216,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false);
 	}
 
+	@Test
 	public void testAliasToEntityMapMultiProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1236,6 +1264,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToEntityMapMultiProjectionWithNullAliasList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1280,6 +1309,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToEntityMapMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1311,6 +1341,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testOneNonEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1335,6 +1366,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testOneNonEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1360,6 +1392,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testListElementsProjectionList() throws Exception {
 		/*
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
@@ -1389,6 +1422,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testOneEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1416,6 +1450,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testOneEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			// should use PassThroughTransformer by default
@@ -1444,6 +1479,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiEntityProjectionUnique() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1485,6 +1521,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testMultiEntityProjectionList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1529,6 +1566,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiEntityProjectionAliasedList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1573,6 +1611,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testSingleAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1594,6 +1633,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testMultiAggregatedPropProjectionSingleResult() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1622,8 +1662,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, true );
 	}
 
+	@Test
 	public void testAliasToBeanDtoOneArgList() throws Exception {
-
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1655,8 +1695,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToBeanDtoMultiArgList() throws Exception {
-
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1692,8 +1732,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiProjectionListThenApplyAliasToBean() throws Exception {
-
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1736,8 +1776,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToBeanDtoLiteralArgList() throws Exception {
-
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1778,8 +1818,8 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testAliasToBeanDtoWithNullAliasList() throws Exception {
-
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
 				return s.createCriteria( Enrolment.class, "e" )
@@ -1816,6 +1856,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testOneSelectNewNoAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) throws Exception {
@@ -1848,6 +1889,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testOneSelectNewAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) throws Exception {
@@ -1880,6 +1922,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectNewList() throws Exception{
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) throws Exception {
@@ -1916,6 +1959,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectNewWithLiteralList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) throws Exception {
@@ -1953,6 +1997,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectNewListList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -1986,6 +2031,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -2019,6 +2065,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -2055,6 +2102,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlSelectNewMapExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectAliasToEntityMapUsingAliasesWithFetchJoinList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -2095,6 +2143,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlAliasToEntityMapExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testMultiSelectUsingImplicitJoinWithFetchJoinListHql() throws Exception {
 		HqlExecutor hqlExecutor = new HqlExecutor() {
 			public Query getQuery(Session s) {
@@ -2121,6 +2170,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, true );
 	}
 
+	@Test
 	public void testSelectNewMapUsingAliasesList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -2154,6 +2204,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testSelectNewEntityConstructorList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -2194,6 +2245,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMapKeyList() throws Exception {
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
 			protected Criteria getCriteria(Session s) {
@@ -2218,6 +2270,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, criteriaExecutor, checker, false );
 	}
 
+	@Test
 	public void testMapValueList() throws Exception {
 		/*
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
@@ -2244,6 +2297,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testMapEntryList() throws Exception {
 		/*
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
@@ -2286,6 +2340,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 		runTest( hqlExecutor, null, checker, false );
 	}
 
+	@Test
 	public void testMapElementsList() throws Exception {
 		/*
 		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
@@ -2637,50 +2692,50 @@ public abstract class AbstractQueryCacheResultTransformerTest extends Functional
 	}
 */
 	protected void clearCache() {
-		getSessions().getCache().evictQueryRegions();
+		sessionFactory().getCache().evictQueryRegions();
 	}
 
 	protected void clearStatistics() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	protected void assertEntityFetchCount(int expected) {
-		int actual = ( int ) getSessions().getStatistics().getEntityFetchCount();
+		int actual = ( int ) sessionFactory().getStatistics().getEntityFetchCount();
 		assertEquals( expected, actual );
 	}
 
 	protected void assertCount(int expected) {
-		int actual = ( int ) getSessions().getStatistics().getQueries().length;
+		int actual = ( int ) sessionFactory().getStatistics().getQueries().length;
 		assertEquals( expected, actual );
 	}
 
 	protected void assertHitCount(int expected) {
-		int actual = ( int ) getSessions().getStatistics().getQueryCacheHitCount();
+		int actual = ( int ) sessionFactory().getStatistics().getQueryCacheHitCount();
 		assertEquals( expected, actual );
 	}
 
 	protected void assertMissCount(int expected) {
-		int actual = ( int ) getSessions().getStatistics().getQueryCacheMissCount();
+		int actual = ( int ) sessionFactory().getStatistics().getQueryCacheMissCount();
 		assertEquals( expected, actual );
 	}
 
 	protected void assertPutCount(int expected) {
-		int actual = ( int ) getSessions().getStatistics().getQueryCachePutCount();
+		int actual = ( int ) sessionFactory().getStatistics().getQueryCachePutCount();
 		assertEquals( expected, actual );
 	}
 
 	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( "unexpected insert count", expected, inserts );
 	}
 
 	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( "unexpected update counts", expected, updates );
 	}
 
 	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
+		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
 	}
 }

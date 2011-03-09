@@ -1,8 +1,30 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.nonflushedchanges;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
@@ -14,24 +36,23 @@ import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.tm.ConnectionProviderImpl;
 import org.hibernate.testing.tm.TransactionManagerLookupImpl;
 
+import static org.junit.Assert.assertEquals;
+
 /**
- * {@inheritDoc}
+ *  (adapted this from "ops" tests version)
  *
- * @author Steve Ebersole, Gail Badner (adapted this from "ops" tests version)
+ * @author Gail Badner
+ * @author Steve Ebersole
  */
-public abstract class AbstractOperationTestCase extends FunctionalTestCase {
+public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCase {
 	private Map oldToNewEntityRefs = new HashMap();
 
-	public AbstractOperationTestCase(String name) {
-		super( name );
-	}
-
-	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
 		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
@@ -82,6 +103,7 @@ public abstract class AbstractOperationTestCase extends FunctionalTestCase {
 		assertEquals( count, fetches );
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	protected Session applyNonFlushedChangesToNewSessionCloseOldSession(Session oldSession) {
 		NonFlushedChanges nfc = ( ( SessionImplementor ) oldSession ).getNonFlushedChanges();
 		byte[] bytes = SerializationHelper.serialize( nfc );
@@ -89,26 +111,26 @@ public abstract class AbstractOperationTestCase extends FunctionalTestCase {
 		Session newSession = openSession();
 		( ( SessionImplementor ) newSession ).applyNonFlushedChanges( nfc2 );
 		oldToNewEntityRefs.clear();
-		for ( Iterator it = ( ( SessionImplementor ) oldSession ).getPersistenceContext()
+		for ( Object o : ((SessionImplementor) oldSession).getPersistenceContext()
 				.getEntitiesByKey()
-				.entrySet()
-				.iterator(); it.hasNext(); ) {
-			Map.Entry entry = ( Map.Entry ) it.next();
-			EntityKey entityKey = ( EntityKey ) entry.getKey();
+				.entrySet() ) {
+			Map.Entry entry = (Map.Entry) o;
+			EntityKey entityKey = (EntityKey) entry.getKey();
 			Object oldEntityRef = entry.getValue();
 			oldToNewEntityRefs.put(
-					oldEntityRef, ( ( SessionImplementor ) newSession ).getPersistenceContext().getEntity( entityKey )
+					oldEntityRef,
+					((SessionImplementor) newSession).getPersistenceContext().getEntity( entityKey )
 			);
 		}
-		for ( Iterator it = ( ( StatefulPersistenceContext ) ( ( SessionImplementor ) oldSession ).getPersistenceContext() )
+		for ( Object o : ((StatefulPersistenceContext) ((SessionImplementor) oldSession).getPersistenceContext())
 				.getProxiesByKey()
-				.entrySet()
-				.iterator(); it.hasNext(); ) {
-			Map.Entry entry = ( Map.Entry ) it.next();
-			EntityKey entityKey = ( EntityKey ) entry.getKey();
+				.entrySet() ) {
+			Map.Entry entry = (Map.Entry) o;
+			EntityKey entityKey = (EntityKey) entry.getKey();
 			Object oldProxyRef = entry.getValue();
 			oldToNewEntityRefs.put(
-					oldProxyRef, ( ( SessionImplementor ) newSession ).getPersistenceContext().getProxy( entityKey )
+					oldProxyRef,
+					((SessionImplementor) newSession).getPersistenceContext().getProxy( entityKey )
 			);
 		}
 
@@ -117,14 +139,15 @@ public abstract class AbstractOperationTestCase extends FunctionalTestCase {
 		return newSession;
 	}
 
-	protected void applyNonFlushedChangesToClearedSession(Session s) {
-		NonFlushedChanges nfc = ( ( SessionImplementor ) s ).getNonFlushedChanges();
-		byte[] bytes = SerializationHelper.serialize( nfc );
-		NonFlushedChanges nfc2 = ( NonFlushedChanges ) SerializationHelper.deserialize( bytes );
-		s.clear();
-		( ( SessionImplementor ) s ).applyNonFlushedChanges( nfc2 );
-	}
+//	protected void applyNonFlushedChangesToClearedSession(Session s) {
+//		NonFlushedChanges nfc = ( ( SessionImplementor ) s ).getNonFlushedChanges();
+//		byte[] bytes = SerializationHelper.serialize( nfc );
+//		NonFlushedChanges nfc2 = ( NonFlushedChanges ) SerializationHelper.deserialize( bytes );
+//		s.clear();
+//		( ( SessionImplementor ) s ).applyNonFlushedChanges( nfc2 );
+//	}
 
+	@SuppressWarnings( {"unchecked"})
 	protected Map getOldToNewEntityRefMap() {
 		return Collections.unmodifiableMap( oldToNewEntityRefs );
 	}

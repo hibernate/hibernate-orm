@@ -1,31 +1,51 @@
-//$Id: StatelessSessionTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.stateless;
 import java.util.Date;
-import junit.framework.Test;
+
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 
 /**
  * @author Gavin King
  */
-public class StatelessSessionTest extends FunctionalTestCase {
-	
-	public StatelessSessionTest(String str) {
-		super(str);
-	}
-
+public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "stateless/Document.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( StatelessSessionTest.class );
-	}
-
+	@Test
 	public void testCreateUpdateReadDelete() {
 		StatelessSession ss = getSessions().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
@@ -85,9 +105,9 @@ public class StatelessSessionTest extends FunctionalTestCase {
 		ss.delete(doc);
 		tx.commit();
 		ss.close();
-
 	}
 
+	@Test
 	public void testHqlBulk() {
 		StatelessSession ss = getSessions().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
@@ -119,6 +139,7 @@ public class StatelessSessionTest extends FunctionalTestCase {
 		ss.close();
 	}
 
+	@Test
 	public void testInitId() {
 		StatelessSession ss = getSessions().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
@@ -134,6 +155,7 @@ public class StatelessSessionTest extends FunctionalTestCase {
 		ss.close();
 	}
 
+	@Test
 	public void testRefresh() {
 		StatelessSession ss = getSessions().openStatelessSession();
 		Transaction tx = ss.beginTransaction();

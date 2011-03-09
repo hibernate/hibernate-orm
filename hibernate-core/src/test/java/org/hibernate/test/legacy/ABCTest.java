@@ -1,19 +1,45 @@
-//$Id: ABCTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 import java.util.List;
-import junit.framework.Test;
-import junit.textui.TestRunner;
+
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ABCTest extends LegacyTestCase {
-
-	public ABCTest(String arg0) {
-		super(arg0);
+	public String[] getMappings() {
+		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };
 	}
-	
+
+	@Test
 	public void testFormulaAssociation() throws Throwable {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -44,6 +70,7 @@ public class ABCTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
 		String[] commands = getCfg().generateSchemaCreationScript( getDialect() );
 		int max = commands.length;
@@ -57,6 +84,7 @@ public class ABCTest extends LegacyTestCase {
 		assertTrue("Unable to locate indx_a_name index creation", found);
 	}
 
+	@Test
 	public void testSubclassing() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -131,6 +159,7 @@ public class ABCTest extends LegacyTestCase {
 		s.close();
 	}
 	
+	@Test
 	public void testGetSave() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -144,18 +173,6 @@ public class ABCTest extends LegacyTestCase {
 		s.flush();
 		t.commit();
 		s.close();
-	}
-
-	public String[] getMappings() {
-		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ABCTest.class );
-	}
-
-	public static void main(String[] args) throws Exception {
-		TestRunner.run( suite() );
 	}
 
 }

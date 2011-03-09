@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,26 +20,29 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.queryplan;
 import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.QueryPlanCache;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for HQL query plans
  *
  * @author Gail Badner
  */
-public class GetHqlQueryPlanTest extends FunctionalTestCase {
-	public GetHqlQueryPlanTest(String string) {
-		super( string );
-	}
-
+public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[]{
 			"queryplan/filter-defs.hbm.xml",
@@ -51,6 +54,7 @@ public class GetHqlQueryPlanTest extends FunctionalTestCase {
 		return ( ( SessionImplementor ) s ).getLoadQueryInfluencers().getEnabledFilters();
 	}
 
+	@Test
 	public void testHqlQueryPlan() {
 		Session s = openSession();
 		QueryPlanCache cache = ( ( SessionImplementor ) s ).getFactory().getQueryPlanCache();
@@ -76,6 +80,8 @@ public class GetHqlQueryPlanTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testHqlQueryPlanWithEnabledFilter() {
 		Session s = openSession();
 		QueryPlanCache cache = ( ( SessionImplementor ) s ).getFactory().getQueryPlanCache();
@@ -83,7 +89,7 @@ public class GetHqlQueryPlanTest extends FunctionalTestCase {
 		HQLQueryPlan plan1A = cache.getHQLQueryPlan( "from Person", true, getEnabledFilters( s ) );
 		HQLQueryPlan plan1B = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );
 
-		s.enableFilter( "sex" ).setParameter( "sexCode", new Character( 'F' ) );
+		s.enableFilter( "sex" ).setParameter( "sexCode", Character.valueOf( 'F' ) );
 		HQLQueryPlan plan2A = cache.getHQLQueryPlan( "from Person", true, getEnabledFilters( s ) );
 		HQLQueryPlan plan2B = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );
 
@@ -91,7 +97,7 @@ public class GetHqlQueryPlanTest extends FunctionalTestCase {
 		HQLQueryPlan plan3A = cache.getHQLQueryPlan( "from Person", true, getEnabledFilters( s ) );
 		HQLQueryPlan plan3B = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );
 
-		s.enableFilter( "sex" ).setParameter( "sexCode", new Character( 'M' ) );
+		s.enableFilter( "sex" ).setParameter( "sexCode", Character.valueOf( 'M' ) );
 		HQLQueryPlan plan4A = cache.getHQLQueryPlan( "from Person", true, getEnabledFilters( s ) );
 		HQLQueryPlan plan4B = cache.getHQLQueryPlan( "from Person", false, getEnabledFilters( s ) );
 

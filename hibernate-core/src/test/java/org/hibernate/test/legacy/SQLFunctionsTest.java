@@ -30,7 +30,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import junit.framework.Test;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
@@ -48,15 +51,18 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 public class SQLFunctionsTest extends LegacyTestCase {
+	private static final Logger log = LoggerFactory.getLogger(SQLFunctionsTest.class);
 
-	public SQLFunctionsTest(String name) {
-		super(name);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/AltSimple.hbm.xml",
@@ -65,12 +71,8 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( SQLFunctionsTest.class );
-	}
-
+	@Test
 	public void testDialectSQLFunctions() throws Exception {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
@@ -141,6 +143,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSetProperties() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -180,6 +183,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSetPropertiesMap() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -211,6 +215,8 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 	}
+
+	@Test
 	public void testBroken() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -242,6 +248,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNothinToUpdate() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -265,6 +272,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCachedQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -325,6 +333,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCachedQueryRegion() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -378,6 +387,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -538,6 +548,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testBlobClob() throws Exception {
 		// Sybase does not support ResultSet.getBlob(String)
 		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
@@ -587,37 +598,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		s.flush();
 		s.connection().commit();
 		s.close();
-
-
-		/*InputStream is = getClass().getClassLoader().getResourceAsStream("jdbc20.pdf");
-		s = sessionsopenSession();
-		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
-		System.out.println( is.available() );
-		int size = is.available();
-		b.setBlob( Hibernate.createBlob( is, is.available() ) );
-		s.flush();
-		s.connection().commit();
-		ResultSet rs = s.connection().createStatement().executeQuery("select datalength(blob_) from blobber where id=" + b.getId() );
-		rs.next();
-		assertTrue( size==rs.getInt(1) );
-		rs.close();
-		s.close();
-
-		s = sessionsopenSession();
-		b = (Blobber) s.load( Blobber.class, new Integer( b.getId() ) );
-		File f = new File("C:/foo.pdf");
-		f.createNewFile();
-		FileOutputStream fos = new FileOutputStream(f);
-		Blob blob = b.getBlob();
-		byte[] bytes = blob.getBytes( 1, (int) blob.length() );
-		System.out.println( bytes.length );
-		fos.write(bytes);
-		fos.flush();
-		fos.close();
-		s.close();*/
-
 	}
 
+	@Test
 	public void testSqlFunctionAsAlias() throws Exception {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
@@ -657,6 +640,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		return null;
 	}
 
+	@Test
 	public void testCachedQueryOnInsert() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

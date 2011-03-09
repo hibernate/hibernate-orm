@@ -1,39 +1,61 @@
-//$Id: MutableNaturalIdTest.java 11645 2007-06-06 21:33:31Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.naturalid.mutable;
 import java.lang.reflect.Field;
-import junit.framework.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Gavin King
  */
-public class MutableNaturalIdTest extends FunctionalTestCase {
-
-	public MutableNaturalIdTest(String str) {
-		super(str);
-	}
-
+public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "naturalid/mutable/User.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
 		cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MutableNaturalIdTest.class );
-	}
-
+	@Test
 	public void testReattachmentNaturalIdCheck() throws Throwable {
 		Session s = openSession();
 		s.beginTransaction();
@@ -73,8 +95,9 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNonexistentNaturalIdCache() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -92,9 +115,9 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 0 );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -105,7 +128,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -123,11 +146,11 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -144,10 +167,10 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -165,12 +188,12 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 0 );
-
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 0 );
 	}
 
+	@Test
 	public void testNaturalIdCache() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -179,7 +202,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -194,9 +217,9 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -205,7 +228,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -217,8 +240,8 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull(u);
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 
 		u = ( User ) s.createCriteria( User.class )
 				.add( Restrictions.naturalId()
@@ -228,8 +251,8 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull(u);
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		t.commit();
 		s.close();
@@ -241,6 +264,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNaturalIdDeleteUsingCache() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -249,7 +273,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -264,11 +288,11 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -280,8 +304,8 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s.delete( u );
 
@@ -302,6 +326,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNaturalIdRecreateUsingCache() {
 		testNaturalIdDeleteUsingCache();
 
@@ -312,7 +337,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -325,11 +350,11 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 				.uniqueResult();
 		assertNotNull( u );
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		s.getTransaction().commit();
 		s.close();
 		
@@ -343,8 +368,8 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s.delete( u );
 
@@ -352,6 +377,7 @@ public class MutableNaturalIdTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQuerying() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

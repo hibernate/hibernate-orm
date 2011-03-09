@@ -62,7 +62,7 @@ public class NonReflectiveBinderTest extends BaseUnitTestCase {
 	}
 
 	@After
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		cfg = null;
 	}
 

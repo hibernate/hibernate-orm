@@ -1,248 +1,191 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2009, Red Hat, Inc. and/or it's affiliates, and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
- * This is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2.1 of
- * the License, or (at your option) any later version.
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free
- * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
-import java.util.Collections;
-import java.util.Map;
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.testing.junit.functional.ExecutionEnvironment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+
+import org.junit.After;
+import org.junit.Before;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
 /**
- * AbstractDualNodeTestCase.
- * 
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class DualNodeTestCase extends FunctionalTestCase {
-   
-   private static final Log log = LogFactory.getLog(DualNodeTestCase.class);
-   public static final String NODE_ID_PROP = "hibernate.test.cluster.node.id";
-   public static final String NODE_ID_FIELD = "nodeId";
-   public static final String LOCAL = "local";
-   public static final String REMOTE = "remote";
-   private ExecutionEnvironment secondNodeEnvironment;
-   private Session secondNodeSession;
+public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
+	private static final Log log = LogFactory.getLog( DualNodeTestCase.class );
 
-   public DualNodeTestCase(String string) {
-      super(string);
-   }
-   
-   public String[] getMappings() {
-      return new String[] { "cache/infinispan/functional/Contact.hbm.xml", "cache/infinispan/functional/Customer.hbm.xml" };
-   }
-   
-   @Override
-   public String getCacheConcurrencyStrategy() {
-      return "transactional";
-   }
-   
-   protected Class getCacheRegionFactory() {
-      return ClusterAwareRegionFactory.class;
-   }
+	public static final String NODE_ID_PROP = "hibernate.test.cluster.node.id";
+	public static final String NODE_ID_FIELD = "nodeId";
+	public static final String LOCAL = "local";
+	public static final String REMOTE = "remote";
 
-   @Override
-   public void configure(Configuration cfg) {
-      standardConfigure(cfg);
-      configureFirstNode(cfg);
-   }
+	private SecondNodeEnvironment secondNodeEnvironment;
 
-   @Override
-   protected Map getConnectionProviderInjectionProperties() {
-	   return getFirstNodeConnectionProviderInjectionProperties();
-   }
-
-   @Override
-   protected void prepareTest() throws Exception {
-      log.info("Building second node locally managed execution env");
-      secondNodeEnvironment = new ExecutionEnvironment(new SecondNodeSettings());
-      secondNodeEnvironment.initialize( getSecondNodeConnectionProviderInjectionProperties() );
-      super.prepareTest();
-   }
-   
-   @Override
-   protected void runTest() throws Throwable {
-      try {
-          super.runTest();
-      } finally {
-         if ( secondNodeSession != null && secondNodeSession.isOpen() ) {
-             if ( secondNodeSession.isConnected() ) {
-                secondNodeSession.connection().rollback();
-             }
-             secondNodeSession.close();
-             secondNodeSession = null;
-             fail( "unclosed session" );
-         } else {
-            secondNodeSession = null;
-         }
-         
-      }
-   }
-
-   @Override
-   protected void cleanupTest() throws Exception {
-      try {
-          super.cleanupTest();
-      
-          log.info( "Destroying second node locally managed execution env" );
-          secondNodeEnvironment.complete();
-          secondNodeEnvironment = null;
-      } finally {
-         cleanupTransactionManagement();
-      }
-   }
-   
-   protected void cleanupTransactionManagement() {
-      DualNodeJtaTransactionManagerImpl.cleanupTransactions();
-      DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
-   }
-
-   public ExecutionEnvironment getSecondNodeEnvironment() {
-      return secondNodeEnvironment;
-   }
-
-   protected Class getConnectionProviderClass() {
-      return DualNodeConnectionProviderImpl.class;
-   }
-
-   protected Class getJtaPlatformClass() {
-      return DualNodeJtaPlatformImpl.class;
-   }
-
-   protected Class getTransactionFactoryClass() {
-      return CMTTransactionFactory.class;
-   }
-
-   protected void configureFirstNode(Configuration cfg) {
-      cfg.setProperty(NODE_ID_PROP, LOCAL);
-   }
-
-	protected Map getFirstNodeConnectionProviderInjectionProperties() {
-		return Collections.singletonMap( NODE_ID_FIELD, LOCAL );
+	@Override
+	public String[] getMappings() {
+		return new String[] {
+				"cache/infinispan/functional/Contact.hbm.xml", "cache/infinispan/functional/Customer.hbm.xml"
+		};
 	}
 
-   protected void configureSecondNode(Configuration cfg) {
-      cfg.setProperty(NODE_ID_PROP, REMOTE);
-   }
-
-	protected Map getSecondNodeConnectionProviderInjectionProperties() {
-		return Collections.singletonMap( NODE_ID_FIELD, REMOTE );
+	@Override
+	public String getCacheConcurrencyStrategy() {
+		return "transactional";
 	}
 
-   protected void sleep(long ms) {
-      try {
-          Thread.sleep(ms);
-      }
-      catch (InterruptedException e) {
-          log.warn("Interrupted during sleep", e);
-      }
-  }
+	@Override
+	public void configure(Configuration cfg) {
+		standardConfigure( cfg );
+		cfg.setProperty( NODE_ID_PROP, LOCAL );
+		cfg.setProperty( NODE_ID_FIELD, LOCAL );
+	}
 
-   protected boolean getUseQueryCache() {
-      return true;
-   }
+	@Override
+	protected void cleanupTest() throws Exception {
+		cleanupTransactionManagement();
+	}
 
-   protected void standardConfigure(Configuration cfg) {
-      super.configure(cfg);
+	protected void cleanupTransactionManagement() {
+		DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+		DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
+	}
 
-      cfg.setProperty(Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName());
-      cfg.setProperty( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatformClass().getName());
-      cfg.setProperty(Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName());
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName());
-      cfg.setProperty(Environment.USE_QUERY_CACHE, String.valueOf(getUseQueryCache()));
-   }
+	@Before
+	public void prepare() throws Exception {
+		secondNodeEnvironment = new SecondNodeEnvironment();
+	}
 
-   /**
-    * Settings impl that delegates most calls to the DualNodeTestCase itself, but overrides the
-    * configure method to allow separate cache settings for the second node.
-    */
-   public class SecondNodeSettings implements ExecutionEnvironment.Settings {
-      private final DualNodeTestCase delegate;
+	@After
+	public void unPrepare() {
+		if ( secondNodeEnvironment != null ) {
+			secondNodeEnvironment.shutDown();
+		}
+	}
 
-      public SecondNodeSettings() {
-         this.delegate = DualNodeTestCase.this;
-      }
+	protected SecondNodeEnvironment secondNodeEnvironment() {
+		return secondNodeEnvironment;
+	}
 
-      /**
-       * This is the important one -- we extend the delegate's work by adding second-node specific
-       * settings
-       */
-      public void configure(Configuration arg0) {
-         delegate.standardConfigure(arg0);
-         configureSecondNode(arg0);
-      }
+	protected Class getCacheRegionFactory() {
+		return ClusterAwareRegionFactory.class;
+	}
 
-      /**
-       * Disable creating of schemas; we let the primary session factory do that to our shared
-       * database.
-       */
-      public boolean createSchema() {
-         return false;
-      }
+	protected Class getConnectionProviderClass() {
+		return DualNodeConnectionProviderImpl.class;
+	}
 
-      /**
-       * Disable creating of schemas; we let the primary session factory do that to our shared
-       * database.
-       */
-      public boolean recreateSchemaAfterFailure() {
-         return false;
-      }
+	protected Class getJtaPlatformClass() {
+		return DualNodeJtaPlatformImpl.class;
+	}
 
-      public void afterConfigurationBuilt(Mappings arg0, Dialect arg1) {
-         delegate.afterConfigurationBuilt(arg0, arg1);
-      }
+	protected Class getTransactionFactoryClass() {
+		return CMTTransactionFactory.class;
+	}
 
-      public void afterSessionFactoryBuilt(SessionFactoryImplementor arg0) {
-         delegate.afterSessionFactoryBuilt(arg0);
-      }
+	protected void sleep(long ms) {
+		try {
+			Thread.sleep( ms );
+		}
+		catch (InterruptedException e) {
+			log.warn( "Interrupted during sleep", e );
+		}
+	}
 
-      public boolean appliesTo(Dialect arg0) {
-         return delegate.appliesTo(arg0);
-      }
+	protected boolean getUseQueryCache() {
+		return true;
+	}
 
-      public String getBaseForMappings() {
-         return delegate.getBaseForMappings();
-      }
+	protected void configureSecondNode(Configuration cfg) {
 
-      public String getCacheConcurrencyStrategy() {
-         return delegate.getCacheConcurrencyStrategy();
-      }
+	}
 
-      public String[] getMappings() {
-         return delegate.getMappings();
-      }
+	protected void standardConfigure(Configuration cfg) {
+		super.configure( cfg );
 
-      public boolean overrideCacheStrategy() {
-         return delegate.overrideCacheStrategy();
-      }
-   }
+		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+		cfg.setProperty( JtaPlatformInitiator.JTA_PLATFORM, getJtaPlatformClass().getName() );
+		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
+	}
 
+	public class SecondNodeEnvironment {
+		private Configuration configuration;
+		private ServiceRegistryImpl serviceRegistry;
+		private SessionFactoryImplementor sessionFactory;
+
+		public SecondNodeEnvironment() {
+			configuration = constructConfiguration();
+			standardConfigure( configuration );
+			configuration.setProperty( NODE_ID_PROP, REMOTE );
+			configuration.setProperty( NODE_ID_FIELD, REMOTE );
+			configureSecondNode( configuration );
+			addMappings(configuration);
+			configuration.buildMappings();
+			applyCacheSettings( configuration );
+			afterConfigurationBuilt( configuration );
+			serviceRegistry = buildServiceRegistry( configuration );
+			sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+		}
+
+		public Configuration getConfiguration() {
+			return configuration;
+		}
+
+		public ServiceRegistryImpl getServiceRegistry() {
+			return serviceRegistry;
+		}
+
+		public SessionFactoryImplementor getSessionFactory() {
+			return sessionFactory;
+		}
+
+		public void shutDown() {
+			if ( sessionFactory != null ) {
+				try {
+					sessionFactory.close();
+				}
+				catch (Exception ignore) {
+				}
+			}
+			if ( serviceRegistry != null ) {
+				try {
+					serviceRegistry.destroy();
+				}
+				catch (Exception ignore) {
+				}
+			}
+		}
+	}
 }

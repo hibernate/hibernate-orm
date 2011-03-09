@@ -1,31 +1,52 @@
-//$Id: OrphanTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.orphan;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class OrphanTest extends FunctionalTestCase {
-	
-	public OrphanTest(String str) {
-		super(str);
-	}
-
+public class OrphanTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "orphan/Product.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( OrphanTest.class );
-	}
-	
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteOnDelete() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -57,7 +78,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteAfterPersist() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -86,7 +109,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteAfterPersistAndFlush() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -116,7 +141,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteAfterLock() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -137,7 +164,7 @@ public class OrphanTest extends FunctionalTestCase {
 		
 		session = openSession();
 		t = session.beginTransaction();
-		session.lock(prod, LockMode.READ);
+		session.lock( prod, LockMode.READ );
 		prod.getParts().remove(part);
 		t.commit();
 		session.close();
@@ -150,7 +177,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteOnSaveOrUpdate() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -184,7 +213,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -220,7 +251,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDelete() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -238,8 +271,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 		
-		getSessions().evict(Product.class);
-		getSessions().evict(Part.class);
+		getSessions().getCache().evictEntityRegion( Product.class );
+		getSessions().getCache().evictEntityRegion( Part.class );
+
 		
 		session = openSession();
 		t = session.beginTransaction();
@@ -258,7 +292,9 @@ public class OrphanTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testOrphanDeleteOnMerge() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

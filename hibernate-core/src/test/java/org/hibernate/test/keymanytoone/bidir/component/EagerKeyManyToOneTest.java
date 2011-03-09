@@ -1,5 +1,28 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.keymanytoone.bidir.component;
-import junit.framework.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -7,22 +30,20 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.def.DefaultLoadEventListener;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
-public class EagerKeyManyToOneTest extends FunctionalTestCase {
-
-	public EagerKeyManyToOneTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( EagerKeyManyToOneTest.class );
-	}
-
+@SuppressWarnings( {"unchecked"})
+public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "keymanytoone/bidir/component/EagerMapping.hbm.xml" };
 	}
@@ -38,7 +59,10 @@ public class EagerKeyManyToOneTest extends FunctionalTestCase {
 		cfg.getEventListeners().setLoadEventListeners( expandedListeners );
 	}
 
+	@Test
 	public void testSaveCascadedToKeyManyToOne() {
+		sessionFactory().getStatistics().clear();
+
 		// test cascading a save to an association with a key-many-to-one which refers to a
 		// just saved entity
 		Session s = openSession();
@@ -48,13 +72,16 @@ public class EagerKeyManyToOneTest extends FunctionalTestCase {
 		cust.getOrders().add( order );
 		s.save( cust );
 		s.flush();
-		assertEquals( 2, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.delete( cust );
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
 	public void testLoadingStrategies() {
+		sessionFactory().getStatistics().clear();
+
 		Session s = openSession();
 		s.beginTransaction();
 		Customer cust = new Customer( "Acme, Inc." );
@@ -66,19 +93,6 @@ public class EagerKeyManyToOneTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-
-// Here is an example of HHH-2277
-// essentially we have a bidirectional association where one side of the
-// association is actually part of a composite PK
-//
-// See #testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelfFailureExpected() below...
-//
-// The way these are mapped causes the problem because both sides
-// are defined as eager which leads to the infinite loop; if only
-// one side is marked as eager, then all is ok...
-//		cust = ( Customer ) s.get( Customer.class, cust.getId() );
-//		assertEquals( 1, cust.getOrders().size() );
-//		s.clear();
 
 		cust = ( Customer ) s.createQuery( "from Customer" ).uniqueResult();
 		assertEquals( 1, cust.getOrders().size() );
@@ -101,7 +115,11 @@ public class EagerKeyManyToOneTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-2277")
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf() {
+		sessionFactory().getStatistics().clear();
+
 		// long winded method name to say that this is a test specifically for HHH-2277 ;)
 		// essentially we have a bidirectional association where one side of the
 		// association is actually part of a composite PK.

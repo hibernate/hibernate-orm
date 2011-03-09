@@ -1,32 +1,42 @@
-//$Id: MySQLCustomSQLTest.java 11486 2007-05-08 21:57:24Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.sql.hand.custom.mysql;
-import junit.framework.Test;
-import org.hibernate.dialect.Dialect;
+
 import org.hibernate.dialect.MySQLDialect;
+
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
  * Custom SQL tests for MySQL
  *
  * @author Gavin King
  */
+@RequiresDialect( MySQLDialect.class )
 public class MySQLCustomSQLTest extends CustomStoredProcTestSupport {
-
-	public MySQLCustomSQLTest(String str) {
-		super(str);
-	}
-
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/mysql/Mappings.hbm.xml" };
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MySQLCustomSQLTest.class );
-	}
-
-	public boolean appliesTo(Dialect dialect) {
-		return ( dialect instanceof MySQLDialect );
 	}
 }
 

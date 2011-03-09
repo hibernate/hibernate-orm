@@ -37,18 +37,6 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.TYPE })
 public @interface Skip {
 	/**
-	 * Simple boolean assertion
-	 */
-	public static interface Matcher {
-		/**
-		 * Do we have a match to the underlying condition?
-		 *
-		 * @return True/false ;)
-		 */
-		public boolean isMatch();
-	}
-
-	/**
 	 * The condition which causes a skip
 	 *
 	 * @return The condition
@@ -61,4 +49,23 @@ public @interface Skip {
 	 * @return Descriptive message
 	 */
 	String message();
+
+	/**
+	 * Simple boolean assertion
+	 */
+	public static interface Matcher {
+		/**
+		 * Do we have a match to the underlying condition?
+		 *
+		 * @return True/false ;)
+		 */
+		public boolean isMatch();
+	}
+
+	public static class AlwaysSkip implements Matcher {
+		@Override
+		public boolean isMatch() {
+			return true;
+		}
+	}
 }

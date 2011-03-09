@@ -21,33 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache;
+package org.hibernate.testing;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * @author Gavin King
+ * Annotation used to indicate that a test should be run only when the current dialect supports the
+ * specified feature.
+ *
+ * @author Hardy Ferentschik
  */
-public class Item {
-	private Long id;
-	private String name;
-	private String description;
-	
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public Long getId() {
-		return id;
-	}
-	public void setId(Long id) {
-		this.id = id;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
+@Target({ ElementType.METHOD, ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RequiresDialectFeature {
+	/**
+	 * @return Class which checks the necessary dialect feature
+	 */
+	Class<? extends DialectCheck> value();
+
+	/**
+	 * Comment describing the reason why the feature is required.
+	 *
+	 * @return The comment
+	 */
+	String comment() default "";
+
+	/**
+	 * The key of a JIRA issue which relates this this feature requirement.
+	 *
+	 * @return The jira issue key
+	 */
+	String jiraKey() default "";
 }

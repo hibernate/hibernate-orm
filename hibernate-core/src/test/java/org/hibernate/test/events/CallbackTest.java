@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.events;
 import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -31,23 +32,25 @@ import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.Destructible;
 import org.hibernate.event.Initializable;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+
 
 /**
  * CallbackTest implementation
  *
  * @author Steve Ebersole
  */
-public class CallbackTest extends FunctionalTestCase {
+public class CallbackTest extends BaseCoreFunctionalTestCase {
 	private TestingObserver observer = new TestingObserver();
 	private TestingListener listener = new TestingListener();
 
-	public CallbackTest(String string) {
-		super( string );
-	}
-
 	public String[] getMappings() {
-		return new String[0];
+		return NO_MAPPINGS;
 	}
 
 	public void configure(Configuration cfg) {
@@ -55,14 +58,15 @@ public class CallbackTest extends FunctionalTestCase {
 		cfg.getEventListeners().setDeleteEventListeners( new DeleteEventListener[] { listener } );
 	}
 
+	@Test
 	public void testCallbacks() {
-		assertTrue( "observer not notified of creation", observer.creationCount == 1 );
-		assertTrue( "listener not notified of creation", listener.initCount == 1 );
+		assertEquals( "observer not notified of creation", 1, observer.creationCount );
+		assertEquals( "listener not notified of creation", 1, listener.initCount );
 
 		sfi().close();
 
-		assertTrue( "observer not notified of close", observer.closedCount == 1 );
-		assertTrue( "listener not notified of close", listener.destoryCount == 1 );
+		assertEquals( "observer not notified of close", 1, observer.closedCount );
+		assertEquals( "listener not notified of close", 1, listener.destoryCount );
 	}
 
 	private static class TestingObserver implements SessionFactoryObserver {

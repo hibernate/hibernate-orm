@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,38 +20,37 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.jpa.naturalid;
-import junit.framework.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+
+import org.junit.Test;
+
 import org.hibernate.test.jpa.AbstractJPATest;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
- * {@inheritDoc}
+ * copied from {@link org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest}
  *
  * @author Steve Ebersole
- * (copied from org.hibernate.test.naturalid.immutable.ImmutableNaturalIdTest)
  */
 public class ImmutableNaturalIdTest extends AbstractJPATest {
-	public ImmutableNaturalIdTest(String string) {
-		super( string );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "jpa/naturalid/User.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ImmutableNaturalIdTest.class );
-	}
-
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
@@ -59,6 +58,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Test
 	public void testUpdate() {
 		// prepare some test data...
 		Session session = openSession();
@@ -87,6 +87,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		session.close();
 	}
 
+	@Test
 	public void testNaturalIdCheck() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -106,6 +107,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.close();
 	}
 
+	@Test
 	public void testNaturalIdCache() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -114,7 +116,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -126,9 +128,9 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
 		s = openSession();
 		s.beginTransaction();
@@ -137,7 +139,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -146,15 +148,15 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 		u = ( User ) s.createCriteria( User.class )
 				.add( Restrictions.naturalId().set( "userName", "steve" ) )
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 2 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -165,6 +167,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.close();
 	}
 
+	@Test
 	public void testNaturalIdDeleteUsingCache() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -173,7 +176,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -185,11 +188,11 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -198,8 +201,8 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s.delete( u );
 
@@ -217,6 +220,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.close();
 	}
 
+	@Test
 	public void testNaturalIdRecreateUsingCache() {
 		testNaturalIdDeleteUsingCache();
 
@@ -227,7 +231,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -237,11 +241,11 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.uniqueResult();
 		assertNotNull( u );
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		s.getTransaction().commit();
 		s.close();
 		s = openSession();
@@ -251,8 +255,8 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s.delete( u );
 

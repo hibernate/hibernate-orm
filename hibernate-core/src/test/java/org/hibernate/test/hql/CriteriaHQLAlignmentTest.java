@@ -1,10 +1,31 @@
-//$Id: HQLTest.java 9873 2006-05-04 13:42:48Z max.andersen@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.hql;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
-import junit.framework.Test;
-import org.hibernate.Hibernate;
+
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Projections;
@@ -14,7 +35,20 @@ import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.tree.SelectClause;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.LongType;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Tests cases for ensuring alignment between HQL and Criteria behavior. 
@@ -22,102 +56,109 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Max Rydahl Andersen
  */
 public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
+	private boolean initialVersion2SqlFlagValue;
 
-	public CriteriaHQLAlignmentTest(String x) {
-		super( x );
+	@Before
+	public void setVersion2SqlFlag() {
+		initialVersion2SqlFlagValue = SelectClause.VERSION2_SQL;
 		SelectClause.VERSION2_SQL = true;
 	}
 
+	@After
+	public void resetVersion2SqlFlag() {
+		SelectClause.VERSION2_SQL = initialVersion2SqlFlagValue;
+	}
+
+	@Override
 	public String[] getMappings() {
 			return new String[] {
 					"hql/Animal.hbm.xml",
 			};
 	}
 
+	@Override
 	public boolean createSchema() {
 		return true; // needed for the Criteria return type test
 	}
 
-	public boolean recreateSchemaAfterFailure() {
+	@Override
+	public boolean rebuildSessionFactoryOnError() {
 		return true;
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CriteriaHQLAlignmentTest.class );
-	}
-
+	@Test
 	public void testHQLAggregationReturnType() {
 		// EJB3: COUNT returns Long
 		QueryTranslatorImpl translator = createNewQueryTranslator( "select count(*) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", LongType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		translator = createNewQueryTranslator( "select count(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", LongType.INSTANCE, translator.getReturnTypes()[0] );
 				
 		// MAX, MIN return the type of the state-field to which they are applied. 
 		translator = createNewQueryTranslator( "select max(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		translator = createNewQueryTranslator( "select max(h.id) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", LongType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		// AVG returns Double.
 		translator = createNewQueryTranslator( "select avg(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		translator = createNewQueryTranslator( "select avg(h.id) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		translator = createNewQueryTranslator( "select avg(h.bigIntegerValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
 		
         // SUM returns Long when applied to state-fields of integral types (other than BigInteger);
  	    translator = createNewQueryTranslator( "select sum(h.id) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", LongType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		translator = createNewQueryTranslator( "select sum(h.intValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.LONG, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", LongType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		// SUM returns Double when applied to state-fields of floating point types; 
 		translator = createNewQueryTranslator( "select sum(h.heightInches) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
 
 		translator = createNewQueryTranslator( "select sum(h.floatValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.DOUBLE, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
 		
 	    // SUM returns BigInteger when applied to state-fields of type BigInteger 
 		translator = createNewQueryTranslator( "select sum(h.bigIntegerValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.BIG_INTEGER, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", BigIntegerType.INSTANCE, translator.getReturnTypes()[0] );
 		
 		// SUM and BigDecimal when applied to state-fields of type BigDecimal.
 		translator = createNewQueryTranslator( "select sum(h.bigDecimalValue) from Human h" );
 		assertEquals( "incorrect return type count", 1, translator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.BIG_DECIMAL, translator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", BigDecimalType.INSTANCE, translator.getReturnTypes()[0] );
 
 		// special case to test classicquery special case handling of count(*)
-		QueryTranslator oldQueryTranslator = null;
 		String hql = "select count(*) from Human h";
 		QueryTranslatorFactory classic = new ClassicQueryTranslatorFactory();
-		oldQueryTranslator = classic.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, getSessionFactoryImplementor() );
+		QueryTranslator oldQueryTranslator = classic.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, sessionFactory() );
 		oldQueryTranslator.compile( Collections.EMPTY_MAP, true);
 		assertEquals( "incorrect return type count", 1, oldQueryTranslator.getReturnTypes().length );
-		assertEquals( "incorrect return type", Hibernate.LONG, oldQueryTranslator.getReturnTypes()[0] );
+		assertEquals( "incorrect return type", LongType.INSTANCE, oldQueryTranslator.getReturnTypes()[0] );
 
 	}
-	
-	// HHH-1724 Align Criteria with HQL aggregation return types.
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-1724" )
 	public void testCriteriaAggregationReturnType() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -178,6 +219,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCountReturnValues() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -227,6 +269,7 @@ public class CriteriaHQLAlignmentTest extends QueryTranslatorTestCase {
 				.setProjection( Projections.count( "nickName" ).setDistinct() )
 				.uniqueResult();
 		assertEquals( 2, count.longValue() );
+		t.commit();
 		s.close();
 
 		s = openSession();

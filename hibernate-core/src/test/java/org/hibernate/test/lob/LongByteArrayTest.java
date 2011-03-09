@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,26 +20,29 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.lob;
-import junit.framework.AssertionFailedError;
+
 import org.hibernate.Session;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+
+import junit.framework.AssertionFailedError;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNull;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Tests eager materialization and mutation of long byte arrays.
  *
  * @author Steve Ebersole
  */
-public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCase {
+public abstract class LongByteArrayTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 
-	public LongByteArrayTest(String name) {
-		super( name );
-	}
-
+	@Test
 	public void testBoundedLongByteArrayAccess() {
 		byte[] original = buildRecursively( ARRAY_SIZE, true );
 		byte[] changed = buildRecursively( ARRAY_SIZE, false );
@@ -64,7 +66,7 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
-		assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
+		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals( original, entity.getLongByteArray() );
 		entity.setLongByteArray( changed );
 		s.getTransaction().commit();
@@ -73,7 +75,7 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
-		assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
+		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals( changed, entity.getLongByteArray() );
 		entity.setLongByteArray( null );
 		s.getTransaction().commit();
@@ -91,7 +93,7 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s.beginTransaction();
 		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
 		if ( entity.getLongByteArray() != null ) {
-			assertEquals( empty.length, entity.getLongByteArray().length );
+			Assert.assertEquals( empty.length, entity.getLongByteArray().length );
 			assertEquals( empty, entity.getLongByteArray() );
 		}
 		s.delete( entity );
@@ -99,6 +101,7 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s.close();
 	}
 
+	@Test
 	public void testSaving() {
 		byte[] value = buildRecursively( ARRAY_SIZE, true );
 
@@ -113,7 +116,7 @@ public abstract class LongByteArrayTest extends DatabaseSpecificFunctionalTestCa
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LongByteArrayHolder ) s.get( LongByteArrayHolder.class, entity.getId() );
-		assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
+		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals( value, entity.getLongByteArray() );
 		s.delete( entity );
 		s.getTransaction().commit();

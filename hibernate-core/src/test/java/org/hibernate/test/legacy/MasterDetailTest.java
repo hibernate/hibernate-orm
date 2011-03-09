@@ -1,4 +1,26 @@
-//$Id: MasterDetailTest.java 10981 2006-12-13 00:14:17Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 import java.io.Serializable;
 import java.sql.Connection;
@@ -7,7 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
@@ -22,15 +44,18 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.SkipLog;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 public class MasterDetailTest extends LegacyTestCase {
-
-	public MasterDetailTest(String arg) {
-		super(arg);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/MasterDetail.hbm.xml",
@@ -44,10 +69,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MasterDetailTest.class );
-	}
-
+	@Test
 	public void testOuterJoin() throws Exception {
 		Session s = openSession();
 		Eye e = new Eye();
@@ -75,6 +97,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMeta() throws Exception {
 		PersistentClass clazz = getCfg().getClassMapping( Master.class.getName() );
 		MetaAttribute meta = clazz.getMetaAttribute("foo");
@@ -83,6 +106,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		assertTrue( meta.isMultiValued() );
 	}
 
+	@Test
 	public void testCopy() throws Exception {
 		Category catWA = new Category();
 		catWA.setName("HSQL workaround");
@@ -143,9 +167,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.flush();
 		s.connection().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testNotNullDiscriminator() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -179,10 +203,8 @@ public class MasterDetailTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testSelfManyToOne() throws Exception {
-
-		//if (dialect instanceof HSQLDialect) return;
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Master m = new Master();
@@ -201,8 +223,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testExample() throws Exception {
-
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Master m = new Master();
@@ -244,6 +266,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNonLazyBidirectional() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -280,6 +303,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -294,8 +318,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMasterDetail() throws Exception {
-
 		if (getDialect() instanceof HSQLDialect) return;
 
 		Session s = openSession();
@@ -465,8 +489,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIncomingOutgoing() throws Exception {
-
 		Session s = openSession();
 		Master master1 = new Master();
 		Master master2 = new Master();
@@ -502,8 +526,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascading() throws Exception {
-
 		Session s = openSession();
 		Detail d1 = new Detail();
 		Detail d2 = new Detail();
@@ -532,6 +556,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNamedQuery() throws Exception {
 		Session s = openSession();
 		Query q = s.getNamedQuery("all_details");
@@ -540,6 +565,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateLazyCollections() throws Exception {
 		Session s = openSession();
 		Master m = new Master();
@@ -579,6 +605,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMultiLevelCascade() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -608,8 +635,8 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMixNativeAssigned() throws Exception {
-
 		Session s = openSession();
 		Category c = new Category();
 		c.setName("NAME");
@@ -630,6 +657,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionReplaceOnUpdate() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -673,6 +701,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionReplace2() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -710,6 +739,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionReplace() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -753,6 +783,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCategories() throws Exception {
 		Session s = openSession();
 		Category c = new Category();
@@ -808,9 +839,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.flush();
 		s.connection().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testCollectionRefresh() throws Exception {
 		Session s = openSession();
 		Category c = new Category();
@@ -839,9 +870,28 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	protected boolean isSerializableIsolationEnforced() throws Exception {
+		Connection conn = null;
+		try {
+			conn = sfi().getConnectionProvider().getConnection();
+			return conn.getTransactionIsolation() >= Connection.TRANSACTION_SERIALIZABLE;
+		}
+		finally {
+			if ( conn != null ) {
+				try {
+					sfi().getConnectionProvider().closeConnection( conn );
+				}
+				catch ( Throwable ignore ) {
+					// ignore...
+				}
+			}
+		}
+	}
+
+	@Test
 	public void testCachedCollectionRefresh() throws Exception {
 		if ( isSerializableIsolationEnforced() ) {
-			reportSkip( "SERIALIZABLE isolation", "cached collection refreshing" );
+			SkipLog.reportSkip( "SERIALIZABLE isolation", "cached collection refreshing" );
 			return;
 		}
 		Session s = openSession();
@@ -903,6 +953,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCustomPersister() throws Exception {
 		Session s = openSession();
 		Custom c = new Custom();
@@ -937,6 +988,7 @@ public class MasterDetailTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testInterface() throws Exception {
 		Session s = openSession();
 		Serializable id = s.save( new BasicNameable() );
@@ -951,6 +1003,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNoUpdateManyToOne() throws Exception {
 		Session s = openSession();
 		W w1 = new W();
@@ -974,6 +1027,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQueuedBagAdds() throws Exception {
 		Session s = openSession();
 		Assignable a = new Assignable();
@@ -1026,6 +1080,7 @@ public class MasterDetailTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testPolymorphicCriteria() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

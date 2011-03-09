@@ -24,29 +24,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.resulttransformer;
 import java.util.List;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.transform.ResultTransformer;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Sharath Reddy
- *
  */
-public class ResultTransformerTest extends FunctionalTestCase {
-
-	public ResultTransformerTest(String string) {
-		super(string);
+public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
+	@Override
+	public String[] getMappings() {
+		return new String[] { "resulttransformer/Contract.hbm.xml" };
 	}
-	
-	/**
-	 * HHH-3694 ResultTransformer not used when scroll() is used on a named SQLQuery
-	 */
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-3694" )
 	public void testResultTransformerIsAppliedToScrollableResults() throws Exception
 	{
 		Session s = openSession();
@@ -96,10 +100,6 @@ public class ResultTransformerTest extends FunctionalTestCase {
 		PartnerA obj2 = (PartnerA) obj;
 		assertEquals("Partner A", obj2.getName());
 		s.close();
-	}
-
-	public String[] getMappings() {
-		return new String[] { "resulttransformer/Contract.hbm.xml" };
 	}
 }
 

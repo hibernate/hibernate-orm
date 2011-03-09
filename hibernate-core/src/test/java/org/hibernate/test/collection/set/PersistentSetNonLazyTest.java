@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,36 +20,28 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.collection.set;
-import junit.framework.Test;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
 
 /**
- *
  * @author Gail Badner
  */
 public class PersistentSetNonLazyTest extends PersistentSetTest {
-	public PersistentSetNonLazyTest(String name) {
-		super( name );
-	}
-
 	public String[] getMappings() {
 		return new String[] { "collection/set/MappingsNonLazy.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( PersistentSetNonLazyTest.class );
-	}
-
+	@Test
+	@Override
+	@FailureExpected(
+			jiraKey = "unknown",
+			message = "known to fail with non-lazy collection using query cache"
+	)
 	public void testLoadChildCheckParentContainsChildCache() {
-		reportSkip( "known to fail with non-lazy collection using query cache",
-				"support for non-lazy collections using query cache"
-		);
-	}
-
-	public void testLoadChildCheckParentContainsChildCacheFailureExpected() {
 		 super.testLoadChildCheckParentContainsChildCache();
 	}
 }

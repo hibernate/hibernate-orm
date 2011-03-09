@@ -1,11 +1,32 @@
-// $Id: BulkManipulationTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.hql;
 import static org.hibernate.TestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import junit.framework.AssertionFailedError;
-import junit.framework.Test;
+
 import org.hibernate.QueryException;
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
@@ -14,25 +35,26 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests execution of bulk UPDATE/DELETE statements through the new AST parser.
  *
  * @author Steve Ebersole
  */
-public class BulkManipulationTest extends FunctionalTestCase {
-
-	public BulkManipulationTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BulkManipulationTest.class );
-	}
-
+public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] {
 				"hql/Animal.hbm.xml",
@@ -47,9 +69,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		};
 	}
 
-
-	// Non-exists ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testDeleteNonExistentEntity() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -58,14 +78,14 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			s.createQuery( "delete NonExistentEntity" ).executeUpdate();
 			fail( "no exception thrown" );
 		}
-		catch( QueryException e ) {
-            LOG.debug("Caught expected error type : " + e.getMessage());
+		catch( QueryException ignore ) {
 		}
 
 		t.commit();
 		s.close();
 	}
 
+	@Test
 	public void testUpdateNonExistentEntity() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -75,13 +95,13 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			fail( "no exception thrown" );
 		}
 		catch( QueryException e ) {
-            LOG.debug("Caught expected error type : " + e.getMessage());
 		}
 
 		t.commit();
 		s.close();
 	}
 
+	@Test
 	public void testTempTableGenerationIsolation() throws Throwable{
 		Session s = openSession();
 		s.beginTransaction();
@@ -111,9 +131,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
-
-	// BOOLEAN HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testBooleanHandling() {
 		TestData data = new TestData();
 		data.prepare();
@@ -148,9 +166,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
-
-	// INSERTS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testSimpleInsert() {
 		TestData data = new TestData();
 		data.prepare();
@@ -171,6 +187,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testSimpleNativeSQLInsert() {
 		TestData data = new TestData();
 		data.prepare();
@@ -214,7 +231,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 		data.cleanup();
 	}
-
+	
+	@Test
 	public void testInsertWithManyToOne() {
 		TestData data = new TestData();
 		data.prepare();
@@ -233,6 +251,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testInsertWithMismatchedTypes() {
 		TestData data = new TestData();
 		data.prepare();
@@ -258,6 +277,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testInsertIntoSuperclassPropertiesFails() {
 		TestData data = new TestData();
 		data.prepare();
@@ -286,6 +306,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testInsertAcrossMappedJoinFails() {
 		TestData data = new TestData();
 		data.prepare();
@@ -319,10 +340,14 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		return HqlSqlWalker.supportsIdGenWithBulkInsertion( generator );
 	}
 
+	@Test
 	public void testInsertWithGeneratedId() {
 		// Make sure the env supports bulk inserts with generated ids...
 		if ( !supportsBulkInsertIdGeneration( PettingZoo.class ) ) {
-			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
+			SkipLog.reportSkip(
+					"bulk id generation not supported",
+					"test bulk inserts with generated id and generated timestamp"
+			);
 			return;
 		}
 
@@ -360,10 +385,15 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
+	@Test
 	public void testInsertWithGeneratedVersionAndId() {
 		// Make sure the env supports bulk inserts with generated ids...
 		if ( !supportsBulkInsertIdGeneration( IntegerVersioned.class ) ) {
-			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
+			SkipLog.reportSkip(
+					"bulk id generation not supported",
+					"test bulk inserts with generated id and generated timestamp"
+			);
 			return;
 		}
 
@@ -404,19 +434,19 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsParametersInInsertSelectCheck.class,
+			comment = "dialect does not support parameter in INSERT ... SELECT"
+	)
 	public void testInsertWithGeneratedTimestampVersion() {
 		// Make sure the env supports bulk inserts with generated ids...
 		if ( !supportsBulkInsertIdGeneration( TimestampVersioned.class ) ) {
-			reportSkip( "bulk id generation not supported", "test bulk inserts with generated id and generated timestamp");
-			return;
-		}
-
-		// dialects which do not allow a parameter in the select portion of an INSERT ... SELECT statement
-		// will also be problematic for this test because the timestamp here is vm-based as opposed to
-		// db-based.
-		if ( ! getDialect().supportsParametersInInsertSelect() ) {
-			reportSkip( "dialect does not support parameter in INSERT ... SELECT",
-				"test bulk inserts with generated id and generated timestamp");
+			SkipLog.reportSkip(
+					"bulk id generation not supported",
+					"test bulk inserts with generated id and generated timestamp"
+			);
 			return;
 		}
 
@@ -458,6 +488,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInsertWithSelectListUsingJoins() {
 		// this is just checking parsing and syntax...
 		Session s = openSession();
@@ -469,9 +500,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
-
-	// UPDATES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testIncorrectSyntax() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -486,6 +515,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@SuppressWarnings( {"unchecked"})
+	@Test
 	public void testUpdateWithWhereExistsSubquery() {
 		// multi-table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Session s = openSession();
@@ -543,7 +574,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		count = s.createQuery( updateQryString ).executeUpdate();
 		assertEquals( 1, count );
 		// many-to-many test
-		if ( supportsSubqueryOnMutatingTable() ) {
+		if ( getDialect().supportsSubqueryOnMutatingTable() ) {
 			updateQryString = "update SimpleEntityWithAssociation e " +
 									 "set e.name = 'updated' " +
 									 "where exists (" +
@@ -560,6 +591,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIncrementCounterVersion() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -586,6 +618,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIncrementTimestampVersion() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -619,6 +652,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testUpdateOnComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -656,6 +691,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateOnManyToOne() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -670,6 +706,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateOnImplicitJoinFails() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -693,8 +730,6 @@ public class BulkManipulationTest extends FunctionalTestCase {
 			fail( "update allowed across implicit join" );
 		}
 		catch( QueryException e ) {
-            LOG.debug("TEST (OK) : " + e.getMessage());
-			// expected condition
 		}
 
 		s.createQuery( "delete Human where mother is not null" ).executeUpdate();
@@ -703,6 +738,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testUpdateOnDiscriminatorSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -743,6 +780,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testUpdateOnAnimal() {
 		TestData data = new TestData();
 		data.prepare();
@@ -781,6 +819,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testUpdateOnMammal() {
 		TestData data = new TestData();
 		data.prepare();
@@ -806,6 +845,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testUpdateSetNullUnionSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -841,6 +881,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testUpdateSetNullOnDiscriminatorSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -864,6 +905,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testUpdateSetNullOnJoinedSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -883,9 +925,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
-
-	// DELETES ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testDeleteWithSubquery() {
 		// setup the test data...
 		Session s = openSession();
@@ -923,12 +963,13 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
+	@RequiresDialectFeature(
+			value = DialectChecks.HasSelfReferentialForeignKeyBugCheck.class,
+			comment = "self referential FK bug"
+	)
 	public void testSimpleDeleteOnAnimal() {
-		if ( getDialect().hasSelfReferentialForeignKeyBug() ) {
-			reportSkip( "self referential FK bug", "HQL delete testing" );
-			return;
-		}
-
 		TestData data = new TestData();
 		data.prepare();
 
@@ -945,8 +986,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 				.executeUpdate();
 		assertEquals( "incorrect delete count", 1, count );
 
-		// HHH-873...
-		if ( supportsSubqueryOnMutatingTable() ) {
+		if ( getDialect().supportsSubqueryOnMutatingTable() ) {
 			count = s.createQuery( "delete from User u where u not in (select u from User u)" ).executeUpdate();
 			assertEquals( 0, count );
 		}
@@ -962,6 +1002,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteOnDiscriminatorSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -981,6 +1022,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteOnJoinedSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1003,6 +1045,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteOnMappedJoin() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1018,7 +1061,8 @@ public class BulkManipulationTest extends FunctionalTestCase {
 
 		data.cleanup();
 	}
-
+	
+	@Test
 	public void testDeleteUnionSubclassAbstractRoot() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1038,6 +1082,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteUnionSubclassConcreteSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1057,6 +1102,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteUnionSubclassLeafSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1076,6 +1122,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteWithMetadataWhereFragments() throws Throwable {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1088,6 +1135,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDeleteRestrictedOnManyToOne() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1106,6 +1154,7 @@ public class BulkManipulationTest extends FunctionalTestCase {
 		data.cleanup();
 	}
 
+	@Test
 	public void testDeleteSyntaxWithCompositeId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

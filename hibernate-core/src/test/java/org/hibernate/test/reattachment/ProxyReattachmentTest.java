@@ -1,30 +1,51 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.reattachment;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import junit.framework.Test;
+
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test of proxy reattachment semantics
  *
  * @author Steve Ebersole
  */
-public class ProxyReattachmentTest extends FunctionalTestCase {
-	public ProxyReattachmentTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ProxyReattachmentTest.class );
-	}
-
+public class ProxyReattachmentTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "reattachment/Mappings.hbm.xml" };
 	}
 
+	@Test
 	public void testUpdateAfterEvict() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -50,6 +71,7 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateAfterClear() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -75,6 +97,8 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testIterateWithClearTopOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -107,13 +131,15 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		for (Iterator it=parents.iterator(); it.hasNext(); ) {
-			s.delete(it.next());
+		for ( Object parent : parents ) {
+			s.delete( parent );
 		}
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testIterateWithClearBottomOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -146,13 +172,15 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		for (Iterator it=parents.iterator(); it.hasNext(); ) {
-			s.delete(it.next());
+		for ( Object parent : parents ) {
+			s.delete( parent );
 		}
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testIterateWithEvictTopOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -181,13 +209,15 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		for (Iterator it=parents.iterator(); it.hasNext(); ) {
-			s.delete(it.next());
+		for ( Object parent : parents ) {
+			s.delete( parent );
 		}
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testIterateWithEvictBottomOfLoop() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -215,8 +245,8 @@ public class ProxyReattachmentTest extends FunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		for (Iterator it=parents.iterator(); it.hasNext(); ) {
-			s.delete(it.next());
+		for ( Object parent : parents ) {
+			s.delete( parent );
 		}
 		s.getTransaction().commit();
 		s.close();

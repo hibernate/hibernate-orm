@@ -1,4 +1,26 @@
-// $Id: DynamicFilterTest.java 11398 2007-04-10 14:54:07Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.filter;
 import static org.hibernate.TestLogger.LOG;
 import java.util.ArrayList;
@@ -8,7 +30,10 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import junit.framework.Test;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -24,24 +49,27 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.impl.SessionFactoryImpl;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Implementation of DynamicFilterTest.
  *
- * @author Steve
+ * @author Steve Ebersole
  */
-@SuppressWarnings({ "WhileLoopReplaceableByForEach", "unchecked" })
-public class DynamicFilterTest extends FunctionalTestCase {
+public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
+	private Logger log = LoggerFactory.getLogger( DynamicFilterTest.class );
 
-	public DynamicFilterTest(String testName) {
-		super( testName );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[]{
 			"filter/defs.hbm.xml",
@@ -55,16 +83,13 @@ public class DynamicFilterTest extends FunctionalTestCase {
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "1" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( DynamicFilterTest.class );
-	}
-
+	@Test
 	public void testSqlSyntaxOfFiltersWithUnions() {
 		Session session = openSession();
 		session.enableFilter( "unioned" );
@@ -72,6 +97,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testSecondLevelCachedCollectionsFiltering() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -82,8 +108,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		// Force a collection into the second level cache, with its non-filtered elements
 		Salesperson sp = ( Salesperson ) session.load( Salesperson.class, testData.steveId );
 		Hibernate.initialize( sp.getOrders() );
-		CollectionPersister persister = ( ( SessionFactoryImpl ) getSessions() )
-		        .getCollectionPersister( Salesperson.class.getName() + ".orders" );
+		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
 		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) persister.getCacheAccessStrategy()
 		        .get( new CacheKey( testData.steveId, persister.getKeyType(), persister.getRole(), EntityMode.POJO, sfi() ), ts );
@@ -122,6 +147,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testCombinedClassAndCollectionFiltersEnabled() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -159,6 +185,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testHqlFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// HQL test
@@ -186,7 +213,8 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.close();
 		testData.release();
 	}
-
+	
+	@Test
 	public void testFiltersWithCustomerReadAndWrite() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Custom SQL read/write with filter
@@ -205,6 +233,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testCriteriaQueryFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Criteria-query test
@@ -239,6 +268,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testCriteriaControl() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -263,6 +293,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testCriteriaSubqueryWithFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Criteria-subquery test
@@ -344,6 +375,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testHQLSubqueryWithFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// HQL subquery with filters test
@@ -421,6 +453,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testFilterApplicationOnHqlQueryWithImplicitSubqueryContainingPositionalParameter() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -455,6 +488,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testFilterApplicationOnHqlQueryWithImplicitSubqueryContainingNamedParameter() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -489,6 +523,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testFiltersOnSimpleHqlDelete() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -513,6 +548,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testFiltersOnMultiTableHqlDelete() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -537,7 +573,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		session.close();
 	}
 
-
+	@Test
 	public void testGetFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Get() test
@@ -558,6 +594,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testOneToManyFilters() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// one-to-many loading tests
@@ -579,6 +616,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testInStyleFilterParameter() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// one-to-many loading tests
@@ -599,6 +637,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testManyToManyFilterOnCriteria() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -618,6 +657,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testManyToManyFilterOnLoad() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -627,15 +667,15 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		Product prod = ( Product ) session.get( Product.class, testData.prod1Id );
 
-		long initLoadCount = getSessions().getStatistics().getCollectionLoadCount();
-		long initFetchCount = getSessions().getStatistics().getCollectionFetchCount();
+		long initLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
+		long initFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 		// should already have been initialized...
 		int size = prod.getCategories().size();
 		assertEquals( "Incorrect filtered collection count", 1, size );
 
-		long currLoadCount = getSessions().getStatistics().getCollectionLoadCount();
-		long currFetchCount = getSessions().getStatistics().getCollectionFetchCount();
+		long currLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
+		long currFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 		assertTrue(
 		        "load with join fetch of many-to-many did not trigger join fetch",
@@ -643,13 +683,13 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		);
 
 		// make sure we did not get back a collection of proxies
-		long initEntityLoadCount = getSessions().getStatistics().getEntityLoadCount();
+		long initEntityLoadCount = sessionFactory().getStatistics().getEntityLoadCount();
 		Iterator itr = prod.getCategories().iterator();
 		while ( itr.hasNext() ) {
 			Category cat = ( Category ) itr.next();
 			System.out.println( " ===> " + cat.getName() );
 		}
-		long currEntityLoadCount = getSessions().getStatistics().getEntityLoadCount();
+		long currEntityLoadCount = sessionFactory().getStatistics().getEntityLoadCount();
 
 		assertTrue(
 		        "load with join fetch of many-to-many did not trigger *complete* join fetch",
@@ -660,6 +700,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testManyToManyOnCollectionLoadAfterHQL() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -681,6 +722,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testManyToManyFilterOnQuery() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -700,6 +742,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testManyToManyBase() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -708,15 +751,15 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		Product prod = ( Product ) session.get( Product.class, testData.prod1Id );
 
-		long initLoadCount = getSessions().getStatistics().getCollectionLoadCount();
-		long initFetchCount = getSessions().getStatistics().getCollectionFetchCount();
+		long initLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
+		long initFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 		// should already have been initialized...
 		int size = prod.getCategories().size();
 		assertEquals( "Incorrect non-filtered collection count", 2, size );
 
-		long currLoadCount = getSessions().getStatistics().getCollectionLoadCount();
-		long currFetchCount = getSessions().getStatistics().getCollectionFetchCount();
+		long currLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
+		long currFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 		assertTrue(
 		        "load with join fetch of many-to-many did not trigger join fetch",
@@ -724,13 +767,13 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		);
 
 		// make sure we did not get back a collection of proxies
-		long initEntityLoadCount = getSessions().getStatistics().getEntityLoadCount();
+		long initEntityLoadCount = sessionFactory().getStatistics().getEntityLoadCount();
 		Iterator itr = prod.getCategories().iterator();
 		while ( itr.hasNext() ) {
 			Category cat = ( Category ) itr.next();
 			System.out.println( " ===> " + cat.getName() );
 		}
-		long currEntityLoadCount = getSessions().getStatistics().getEntityLoadCount();
+		long currEntityLoadCount = sessionFactory().getStatistics().getEntityLoadCount();
 
 		assertTrue(
 		        "load with join fetch of many-to-many did not trigger *complete* join fetch",
@@ -741,6 +784,7 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		testData.release();
 	}
 
+	@Test
 	public void testManyToManyBaseThruCriteria() {
 		TestData testData = new TestData();
 		testData.prepare();
@@ -753,15 +797,15 @@ public class DynamicFilterTest extends FunctionalTestCase {
 
 		Product prod = ( Product ) result.get( 0 );
 
-		long initLoadCount = getSessions().getStatistics().getCollectionLoadCount();
-		long initFetchCount = getSessions().getStatistics().getCollectionFetchCount();
+		long initLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
+		long initFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 		// should already have been initialized...
 		int size = prod.getCategories().size();
 		assertEquals( "Incorrect non-filtered collection count", 2, size );
 
-		long currLoadCount = getSessions().getStatistics().getCollectionLoadCount();
-		long currFetchCount = getSessions().getStatistics().getCollectionFetchCount();
+		long currLoadCount = sessionFactory().getStatistics().getCollectionLoadCount();
+		long currFetchCount = sessionFactory().getStatistics().getCollectionFetchCount();
 
 		assertTrue(
 		        "load with join fetch of many-to-many did not trigger join fetch",
@@ -769,13 +813,13 @@ public class DynamicFilterTest extends FunctionalTestCase {
 		);
 
 		// make sure we did not get back a collection of proxies
-		long initEntityLoadCount = getSessions().getStatistics().getEntityLoadCount();
+		long initEntityLoadCount = sessionFactory().getStatistics().getEntityLoadCount();
 		Iterator itr = prod.getCategories().iterator();
 		while ( itr.hasNext() ) {
 			Category cat = ( Category ) itr.next();
 			System.out.println( " ===> " + cat.getName() );
 		}
-		long currEntityLoadCount = getSessions().getStatistics().getEntityLoadCount();
+		long currEntityLoadCount = sessionFactory().getStatistics().getEntityLoadCount();
 
 		assertTrue(
 		        "load with join fetch of many-to-many did not trigger *complete* join fetch",

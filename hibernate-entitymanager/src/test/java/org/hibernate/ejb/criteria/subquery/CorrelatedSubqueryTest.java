@@ -36,7 +36,6 @@ import org.hibernate.ejb.metamodel.LineItem;
 import org.hibernate.ejb.metamodel.LineItem_;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Order_;
-import org.hibernate.testing.junit.SkipForDialect;
 
 /**
  * TODO : javadoc
@@ -84,7 +83,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-	@SkipForDialect(value=SybaseASE15Dialect.class, jiraKey="HHH-3032")
+	@org.hibernate.testing.SkipForDialect(value=SybaseASE15Dialect.class, jiraKey="HHH-3032")
 	public void testCorrelationExplicitSelectionCorrelation() {
 		CriteriaBuilder builder = factory.getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

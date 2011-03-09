@@ -1,30 +1,47 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.component.cascading.collection;
-import java.util.Iterator;
+
 import java.util.Locale;
-import junit.framework.Test;
+
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * {@inheritDoc}
- *
  * @author Steve Ebersole
  */
-public class CascadeToComponentCollectionTest extends FunctionalTestCase {
-
-	public CascadeToComponentCollectionTest(String string) {
-		super( string );
-	}
-
+public class CascadeToComponentCollectionTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "component/cascading/collection/Mappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CascadeToComponentCollectionTest.class );
-	}
-
+	@Test
 	public void testMerging() {
 		// step1, we create a definition with one value
 		Session session = openSession();
@@ -60,14 +77,15 @@ public class CascadeToComponentCollectionTest extends FunctionalTestCase {
 		session.beginTransaction();
 		definition = ( Definition ) session.get( Definition.class, definition.getId() );
 		assertEquals( 2, definition.getValues().size() );
-		Iterator values = definition.getValues().iterator();
-		while ( values.hasNext() ) {
-			assertEquals( 1, ( ( Value ) values.next() ).getLocalizedStrings().getStringsCopy().size() );
+		for ( Object o : definition.getValues() ) {
+			assertEquals( 1, ((Value) o).getLocalizedStrings().getStringsCopy().size() );
 		}
 		session.getTransaction().commit();
 		session.close();
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
+	@Test
 	public void testMergingOriginallyNullComponent() {
 		// step1, we create a definition with one value, but with a null component
 		Session session = openSession();
@@ -103,9 +121,8 @@ public class CascadeToComponentCollectionTest extends FunctionalTestCase {
 		session.beginTransaction();
 		definition = ( Definition ) session.get( Definition.class, definition.getId() );
 		assertEquals( 2, definition.getValues().size() );
-		Iterator values = definition.getValues().iterator();
-		while ( values.hasNext() ) {
-			assertEquals( 1, ( ( Value ) values.next() ).getLocalizedStrings().getStringsCopy().size() );
+		for ( Object o : definition.getValues() ) {
+			assertEquals( 1, ((Value) o).getLocalizedStrings().getStringsCopy().size() );
 		}
 		session.getTransaction().commit();
 		session.close();

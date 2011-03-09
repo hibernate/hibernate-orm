@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.criteria;
 import java.util.ArrayList;
@@ -33,37 +32,38 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.TeradataDialect;
+
+import org.junit.Test;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.hql.StateProvince;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * 
  * HHH-2166 Long "in" lists in queries results in a Java stack overflow
  * exception. to reproduce this issue, you should add
  * "<argLine>-Xss128k</argLine>" to the surefire plugin (test on Fedora 12)
  * 
  * @author Strong Liu
  */
-public class LongInElementsTest extends FunctionalTestCase {
-
+public class LongInElementsTest extends BaseCoreFunctionalTestCase {
 	private static final int ELEMENTS_SIZE = 4000;
 
-	public LongInElementsTest( String string ) {
-		super( string );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "criteria/Animal.hbm.xml" };
 	}
 
-	// HHH-2166
+	@Test
+	@TestForIssue( jiraKey = "HHH-2166" )
+	@RequiresDialect(
+			value = { SQLServerDialect.class, Oracle8iDialect.class, TeradataDialect.class },
+			comment = "this test fails on oracle and ms sql server, for more info, see HHH-1123"
+	)
 	public void testLongInElementsByHQL() {
-		if ( (getDialect() instanceof SQLServerDialect)
-				|| (getDialect() instanceof Oracle8iDialect) 
-				|| (getDialect() instanceof TeradataDialect)){
-			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
-			return;
-		}
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
@@ -87,14 +87,13 @@ public class LongInElementsTest extends FunctionalTestCase {
 
 	}
 
-	// HHH-2166
+	@Test
+	@TestForIssue( jiraKey = "HHH-2166" )
+	@RequiresDialect(
+			value = { SQLServerDialect.class, Oracle8iDialect.class, TeradataDialect.class },
+			comment = "this test fails on oracle and ms sql server, for more info, see HHH-1123"
+	)
 	public void testLongInElementsByCriteria() {
-		if ( (getDialect() instanceof SQLServerDialect)
-				|| (getDialect() instanceof Oracle8iDialect) 
-				|| (getDialect() instanceof TeradataDialect)){
-			skipExpectedFailure( new Exception("this test fails on oracle and ms sql server, for more info, see HHH-1123") );
-			return;
-		}
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 

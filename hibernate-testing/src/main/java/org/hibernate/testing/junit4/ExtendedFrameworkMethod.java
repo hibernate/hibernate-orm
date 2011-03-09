@@ -39,17 +39,23 @@ public class ExtendedFrameworkMethod extends FrameworkMethod {
 	private static final Object[] NO_ARGS = new Object[0];
 
 	private final FrameworkMethod delegatee;
+	private final int runPosition;
+	private final SkipMarker skipMarker;
     private final FailureExpected failureExpectedAnnotation;
 	private final TestClassCallbackMetadata callbackMetadata;
 	private final CustomRunner unitRunner;
 
 	public ExtendedFrameworkMethod(
 			FrameworkMethod delegatee,
+			int runPosition,
+			SkipMarker skipMarker,
 			FailureExpected failureExpectedAnnotation,
 			TestClassCallbackMetadata callbackMetadata,
 			CustomRunner unitRunner) {
 		super( delegatee.getMethod() );
 		this.delegatee = delegatee;
+		this.runPosition = runPosition;
+		this.skipMarker = skipMarker;
 		this.failureExpectedAnnotation = failureExpectedAnnotation;
 		this.callbackMetadata = callbackMetadata;
 		this.unitRunner = unitRunner;
@@ -59,7 +65,19 @@ public class ExtendedFrameworkMethod extends FrameworkMethod {
 		return unitRunner;
 	}
 
-    public boolean isMarkedAsFailureExpected() {
+	public SkipMarker getSkipMarker() {
+		return skipMarker;
+	}
+
+	public boolean isFirstInTestClass() {
+		return runPosition == 1;
+	}
+
+	public boolean isLastInTestClass() {
+		return runPosition >= unitRunner.getNumberOfComputedTestMethods();
+	}
+
+	public boolean isMarkedAsFailureExpected() {
         return failureExpectedAnnotation != null;
     }
 

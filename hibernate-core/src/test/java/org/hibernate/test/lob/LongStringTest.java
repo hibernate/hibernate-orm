@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,24 +20,27 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.lob;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests eager materialization and mutation of long strings.
  *
  * @author Steve Ebersole
  */
-public abstract class LongStringTest extends DatabaseSpecificFunctionalTestCase {
+@SuppressWarnings( {"UnusedDeclaration"})
+public abstract class LongStringTest extends BaseCoreFunctionalTestCase {
 	private static final int LONG_STRING_SIZE = 10000;
 
-	public LongStringTest(String name) {
-		super( name );
-	}
-
+	@Test
 	public void testBoundedLongStringAccess() {
 		String original = buildRecursively( LONG_STRING_SIZE, 'x' );
 		String changed = buildRecursively( LONG_STRING_SIZE, 'y' );

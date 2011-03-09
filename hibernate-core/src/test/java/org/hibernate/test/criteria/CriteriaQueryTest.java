@@ -1,10 +1,32 @@
-//$Id: CriteriaQueryTest.java 10976 2006-12-12 23:22:26Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.criteria;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -26,28 +48,33 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.test.hql.Animal;
-import org.hibernate.test.hql.Reptile;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.Type;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.hql.Animal;
+import org.hibernate.test.hql.Reptile;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
-public class CriteriaQueryTest extends FunctionalTestCase {
-
-	public CriteriaQueryTest(String str) {
-		super(str);
-	}
-
+public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "criteria/Enrolment.hbm.xml","criteria/Foo.hbm.xml", "hql/Animal.hbm.xml" };
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "criteriaquerytest" );
@@ -55,10 +82,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CriteriaQueryTest.class );
-	}
-
+	@Test
 	public void testEscapeCharacter() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -96,6 +120,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testScrollCriteria() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -115,11 +140,10 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 
 		t.commit();
 		session.close();
-
 	}
-
+	
+	@Test
 	public void testSubselect() {
-
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
@@ -197,11 +221,10 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		session.delete(course);
 		t.commit();
 		session.close();
-
 	}
 
+	@Test
 	public void testSubselectWithComponent() {
-
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 
@@ -336,8 +359,8 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 
 	}
 
+	@Test
 	public void testDetachedCriteria() {
-
 		DetachedCriteria dc = DetachedCriteria.forClass(Student.class)
 			.add( Property.forName("name").eq("Gavin King") )
 			.addOrder( Order.asc("studentNumber") )
@@ -373,112 +396,117 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		session.close();
 	}
 
-		public void testProjectionCache() {
-			Session s = openSession();
-			Transaction t = s.beginTransaction();
+	@Test
+	public void testProjectionCache() {
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
 
-			Course course = new Course();
-			course.setCourseCode("HIB");
-			course.setDescription("Hibernate Training");
-			s.save(course);
+		Course course = new Course();
+		course.setCourseCode("HIB");
+		course.setDescription("Hibernate Training");
+		s.save(course);
 
-			Student gavin = new Student();
-			gavin.setName("Gavin King");
-			gavin.setStudentNumber(666);
-			s.save(gavin);
+		Student gavin = new Student();
+		gavin.setName("Gavin King");
+		gavin.setStudentNumber(666);
+		s.save(gavin);
 
-			Student xam = new Student();
-			xam.setName("Max Rydahl Andersen");
-			xam.setStudentNumber(101);
-			s.save(xam);
+		Student xam = new Student();
+		xam.setName("Max Rydahl Andersen");
+		xam.setStudentNumber(101);
+		s.save(xam);
 
-			Enrolment enrolment1 = new Enrolment();
-			enrolment1.setCourse(course);
-			enrolment1.setCourseCode(course.getCourseCode());
-			enrolment1.setSemester((short) 1);
-			enrolment1.setYear((short) 1999);
-			enrolment1.setStudent(xam);
-			enrolment1.setStudentNumber(xam.getStudentNumber());
-			xam.getEnrolments().add(enrolment1);
-			s.save(enrolment1);
+		Enrolment enrolment1 = new Enrolment();
+		enrolment1.setCourse(course);
+		enrolment1.setCourseCode(course.getCourseCode());
+		enrolment1.setSemester((short) 1);
+		enrolment1.setYear((short) 1999);
+		enrolment1.setStudent(xam);
+		enrolment1.setStudentNumber(xam.getStudentNumber());
+		xam.getEnrolments().add(enrolment1);
+		s.save(enrolment1);
 
-			Enrolment enrolment2 = new Enrolment();
-			enrolment2.setCourse(course);
-			enrolment2.setCourseCode(course.getCourseCode());
-			enrolment2.setSemester((short) 3);
-			enrolment2.setYear((short) 1998);
-			enrolment2.setStudent(gavin);
-			enrolment2.setStudentNumber(gavin.getStudentNumber());
-			gavin.getEnrolments().add(enrolment2);
-			s.save(enrolment2);
+		Enrolment enrolment2 = new Enrolment();
+		enrolment2.setCourse(course);
+		enrolment2.setCourseCode(course.getCourseCode());
+		enrolment2.setSemester((short) 3);
+		enrolment2.setYear((short) 1998);
+		enrolment2.setStudent(gavin);
+		enrolment2.setStudentNumber(gavin.getStudentNumber());
+		gavin.getEnrolments().add(enrolment2);
+		s.save(enrolment2);
 
-			List list = s.createCriteria(Enrolment.class)
-				.createAlias("student", "s")
-				.createAlias("course", "c")
-				.add( Restrictions.isNotEmpty("s.enrolments") )
-				.setProjection( Projections.projectionList()
-						.add( Projections.property("s.name") )
-						.add( Projections.property("c.description") )
-				)
-				.setCacheable(true)
-				.list();
+		List list = s.createCriteria(Enrolment.class)
+			.createAlias( "student", "s" )
+			.createAlias( "course", "c" )
+			.add( Restrictions.isNotEmpty( "s.enrolments" ) )
+			.setProjection(
+					Projections.projectionList()
+							.add( Projections.property( "s.name" ) )
+							.add( Projections.property( "c.description" ) )
+			)
+			.setCacheable( true )
+			.list();
 
-			assertEquals( list.size(), 2 );
-			assertEquals( ( (Object[]) list.get(0) ).length, 2 );
-			assertEquals( ( (Object[]) list.get(1) ).length, 2 );
+		assertEquals( list.size(), 2 );
+		assertEquals( ( (Object[]) list.get(0) ).length, 2 );
+		assertEquals( ( (Object[]) list.get(1) ).length, 2 );
 
-			t.commit();
-			s.close();
+		t.commit();
+		s.close();
 
-			s = openSession();
-			t = s.beginTransaction();
+		s = openSession();
+		t = s.beginTransaction();
 
-			s.createCriteria(Enrolment.class)
-				.createAlias("student", "s")
-				.createAlias("course", "c")
-				.add( Restrictions.isNotEmpty("s.enrolments") )
-				.setProjection( Projections.projectionList()
-						.add( Projections.property("s.name") )
-						.add( Projections.property("c.description") )
-				)
-				.setCacheable(true)
-				.list();
+		s.createCriteria(Enrolment.class)
+			.createAlias( "student", "s" )
+			.createAlias( "course", "c" )
+			.add( Restrictions.isNotEmpty( "s.enrolments" ) )
+			.setProjection(
+					Projections.projectionList()
+							.add( Projections.property( "s.name" ) )
+							.add( Projections.property( "c.description" ) )
+			)
+			.setCacheable( true )
+			.list();
 
-			assertEquals( list.size(), 2 );
-			assertEquals( ( (Object[]) list.get(0) ).length, 2 );
-			assertEquals( ( (Object[]) list.get(1) ).length, 2 );
+		assertEquals( list.size(), 2 );
+		assertEquals( ( (Object[]) list.get(0) ).length, 2 );
+		assertEquals( ( (Object[]) list.get(1) ).length, 2 );
 
-			t.commit();
-			s.close();
+		t.commit();
+		s.close();
 
-			s = openSession();
-			t = s.beginTransaction();
+		s = openSession();
+		t = s.beginTransaction();
 
-			s.createCriteria(Enrolment.class)
-				.createAlias("student", "s")
-				.createAlias("course", "c")
-				.add( Restrictions.isNotEmpty("s.enrolments") )
-				.setProjection( Projections.projectionList()
-						.add( Projections.property("s.name") )
-						.add( Projections.property("c.description") )
-				)
-				.setCacheable(true)
-				.list();
+		s.createCriteria(Enrolment.class)
+			.createAlias( "student", "s" )
+			.createAlias( "course", "c" )
+			.add( Restrictions.isNotEmpty( "s.enrolments" ) )
+			.setProjection(
+					Projections.projectionList()
+							.add( Projections.property( "s.name" ) )
+							.add( Projections.property( "c.description" ) )
+			)
+			.setCacheable( true )
+			.list();
 
-			assertEquals( list.size(), 2 );
-			assertEquals( ( (Object[]) list.get(0) ).length, 2 );
-			assertEquals( ( (Object[]) list.get(1) ).length, 2 );
+		assertEquals( list.size(), 2 );
+		assertEquals( ( (Object[]) list.get(0) ).length, 2 );
+		assertEquals( ( (Object[]) list.get(1) ).length, 2 );
 
-			s.delete(enrolment1);
-			s.delete(enrolment2);
-			s.delete(course);
-			s.delete(gavin);
-			s.delete(xam);
+		s.delete(enrolment1);
+		s.delete(enrolment2);
+		s.delete(course);
+		s.delete(gavin);
+		s.delete(xam);
 
-			t.commit();
-			s.close();
+		t.commit();
+		s.close();
 	}
 
+	@Test
 	public void testProjections() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -663,6 +691,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectionsUsingProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -955,6 +984,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDistinctProjectionsOfComponents() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1084,6 +1114,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testGroupByComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1194,6 +1225,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRestrictionOnSubclassCollection() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1210,6 +1242,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testClassProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1223,6 +1256,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testClassProperty2() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -1249,6 +1283,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testProjectedId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1258,6 +1293,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectedEmbeddedCompositeId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1304,6 +1340,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectedCompositeId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1361,6 +1398,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectedCompositeIdWithAlias() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1377,6 +1415,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectedComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1393,6 +1432,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectedListIncludesComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1412,6 +1452,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProjectedListIncludesEmbeddedCompositeId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1461,6 +1502,7 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSubcriteriaJoinTypes() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -1539,7 +1581,8 @@ public class CriteriaQueryTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 	}
-
+	
+	@Test
 	public void testAliasJoinCriterion() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

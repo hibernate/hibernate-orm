@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,31 +20,32 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.manytomanyassociationclass;
 import java.util.HashSet;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
  * Abstract class for tests on many-to-many association using an association class.
  *
  * @author Gail Badner
  */
-public abstract class AbstractManyToManyAssociationClassTest extends FunctionalTestCase {
+public abstract class AbstractManyToManyAssociationClassTest extends BaseCoreFunctionalTestCase {
 	private User user;
 	private Group group;
 	private Membership membership;
 
-	public AbstractManyToManyAssociationClassTest(String string) {
-		super( string );
-	}
-
-	public abstract String[] getMappings();
-
 	public abstract Membership createMembership(String name);
 
+	@Override
 	protected void prepareTest() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -58,8 +59,9 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 		s.close();
 	}
 
+	@Override
 	protected void cleanupTest() {
-		if ( getSessions() != null ) {
+		if ( sessionFactory() != null ) {
 			Session s = openSession();
 			s.beginTransaction();
 			s.createQuery( "delete from " + membership.getClass().getName() );
@@ -81,7 +83,8 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 	public Membership getMembership() {
 		return membership;
 	}
-	
+
+	@Test
 	public void testRemoveAndAddSameElement() {
 		deleteMembership( user, group, membership );
 		addMembership( user, group, membership );
@@ -110,6 +113,7 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 		s.close();
 	}
 
+	@Test
 	public void testRemoveAndAddEqualElement() {
 		deleteMembership( user, group, membership );
 		membership = createMembership( "membership" );
@@ -139,6 +143,7 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 		s.close();
 	}
 
+	@Test
 	public void testRemoveAndAddEqualCollection() {
 		deleteMembership( user, group, membership );
 		membership = createMembership( "membership" );
@@ -170,6 +175,7 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 		s.close();
 	}
 
+	@Test
 	public void testRemoveAndAddSameElementNonKeyModified() {
 		deleteMembership( user, group, membership );
 		addMembership( user, group, membership );
@@ -200,6 +206,7 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 
 	}
 
+	@Test
 	public void testRemoveAndAddEqualElementNonKeyModified() {
 		deleteMembership( user, group, membership );
 		membership = createMembership( "membership" );
@@ -230,6 +237,7 @@ public abstract class AbstractManyToManyAssociationClassTest extends FunctionalT
 		s.close();
 	}
 
+	@Test
 	public void testDeleteDetached() {
 		Session s = openSession();
 		s.beginTransaction();

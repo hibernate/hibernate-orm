@@ -1,11 +1,10 @@
-//$Id: ReadOnlyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,11 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.readonly;
 import java.math.BigDecimal;
-import junit.framework.Test;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -36,7 +34,17 @@ import org.hibernate.UnresolvableObjectException;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests making initialized and uninitialized proxies read-only/modifiable
@@ -44,19 +52,12 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Gail Badner
  */
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
-
-	public ReadOnlyProxyTest(String str) {
-		super(str);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "readonly/DataPoint.hbm.xml", "readonly/TextHolder.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ReadOnlyProxyTest.class );
-	}
-
+	@Test
 	public void testReadOnlyViaSessionDoesNotInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -93,6 +94,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaLazyInitializerDoesNotInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -130,6 +132,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaSessionNoChangeAfterInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -189,6 +192,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaLazyInitializerNoChangeAfterInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -251,6 +255,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaSessionBeforeInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -280,6 +285,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableViaSessionBeforeInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -309,6 +315,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaSessionBeforeInitByModifiableQuery() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -345,6 +352,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaSessionBeforeInitByReadOnlyQuery() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -379,6 +387,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableViaSessionBeforeInitByModifiableQuery() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -411,6 +420,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableViaSessionBeforeInitByReadOnlyQuery() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -443,6 +453,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyViaLazyInitializerBeforeInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -476,6 +487,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableViaLazyInitializerBeforeInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -508,7 +520,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
-
+	@Test
 	public void testReadOnlyViaLazyInitializerAfterInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -542,6 +554,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableViaLazyInitializerAfterInit() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -573,7 +586,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
-	public void testModifyToReadOnlyToModifiableIsUpdatedFailureExpected() {
+	@Test
+	@FailureExpected( jiraKey = "HHH-4642" )
+	public void testModifyToReadOnlyToModifiableIsUpdated() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
 		Session s = openSession();
@@ -617,7 +632,9 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
-	public void testReadOnlyModifiedToModifiableIsUpdatedFailureExpected() {
+	@Test
+	@FailureExpected( jiraKey = "HHH-4642" )
+	public void testReadOnlyModifiedToModifiableIsUpdated() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
 		Session s = openSession();
@@ -661,6 +678,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testReadOnlyChangedEvictedUpdate() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -697,6 +715,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}	
 
+	@Test
 	public void testReadOnlyToModifiableInitWhenModifiedIsUpdated() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -730,6 +749,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyInitToModifiableModifiedIsUpdated() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -766,6 +786,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyModifiedUpdate() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -799,6 +820,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyDelete() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -824,8 +846,8 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyRefresh() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -868,7 +890,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
-
+	@Test
 	public void testReadOnlyRefreshDeleted() {
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
@@ -950,8 +972,8 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testReadOnlyRefreshDetached() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -994,6 +1016,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyProxyMergeDetachedProxyWithChange() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1042,6 +1065,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyProxyInitMergeDetachedProxyWithChange() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1091,8 +1115,8 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyProxyMergeDetachedEntityWithChange() {
-
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
 		Session s = openSession();
@@ -1141,8 +1165,8 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyProxyInitMergeDetachedEntityWithChange() {
-
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
 		Session s = openSession();
@@ -1192,6 +1216,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyEntityMergeDetachedProxyWithChange() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1238,6 +1263,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testSetReadOnlyInTwoTransactionsSameSession() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1281,6 +1307,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testSetReadOnlyBetweenTwoTransactionsSameSession() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1324,6 +1351,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testSetModifiableBetweenTwoTransactionsSameSession() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1373,6 +1401,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testIsReadOnlyAfterSessionClosed() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1404,6 +1433,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testIsReadOnlyAfterSessionClosedViaLazyInitializer() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1437,7 +1467,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
-
+	@Test
 	public void testDetachedIsReadOnlyAfterEvictViaSession() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1469,6 +1499,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testDetachedIsReadOnlyAfterEvictViaLazyInitializer() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1498,6 +1529,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testSetReadOnlyAfterSessionClosed() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1529,6 +1561,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testSetReadOnlyAfterSessionClosedViaLazyInitializer() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1562,6 +1595,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testSetClosedSessionInLazyInitializer() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1596,6 +1630,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testDetachedSetReadOnlyAfterEvictViaSession() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 
@@ -1627,6 +1662,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		}
 	}
 
+	@Test
 	public void testDetachedSetReadOnlyAfterEvictViaLazyInitializer() {
 		DataPoint dpOrig = createDataPoint( CacheMode.IGNORE );
 

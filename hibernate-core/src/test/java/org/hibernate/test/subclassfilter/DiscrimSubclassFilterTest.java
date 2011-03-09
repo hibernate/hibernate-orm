@@ -1,34 +1,51 @@
-// $Id: DiscrimSubclassFilterTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.subclassfilter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * Implementation of DiscrimSubclassFilterTest.
- *
  * @author Steve Ebersole
  */
-public class DiscrimSubclassFilterTest extends FunctionalTestCase {
-
-	public DiscrimSubclassFilterTest(String name) {
-		super( name );
-	}
-
+public class DiscrimSubclassFilterTest extends BaseCoreFunctionalTestCase {
 	public final String[] getMappings() {
 		return new String[] { "subclassfilter/discrim-subclass.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( DiscrimSubclassFilterTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testFiltersWithSubclass() {
 		Session s = openSession();
 		s.enableFilter( "region" ).setParameter( "userRegion", "US" );
@@ -87,6 +104,7 @@ public class DiscrimSubclassFilterTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	private void prepareTestData(Session s) {
 		Employee john = new Employee("John Doe");
 		john.setCompany( "JBoss" );

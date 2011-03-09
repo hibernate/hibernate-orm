@@ -1,7 +1,29 @@
-// $Id: Dom4jTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.entitymode.dom4j.basic;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.hibernate.EntityMode;
@@ -10,19 +32,20 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Example;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.transform.Transformers;
 import org.hibernate.internal.util.xml.XMLHelper;
+import org.hibernate.transform.Transformers;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Gavin King
  */
-public class Dom4jTest extends FunctionalTestCase {
-
-	public Dom4jTest(String str) {
-		super( str );
-	}
+public class Dom4jTest extends BaseCoreFunctionalTestCase {
 
 	public String[] getMappings() {
 		return new String[] {
@@ -36,58 +59,7 @@ public class Dom4jTest extends FunctionalTestCase {
 		cfg.setProperty( Environment.DEFAULT_ENTITY_MODE, EntityMode.DOM4J.toString() );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( Dom4jTest.class );
-	}
-
-// TODO : still need to figure out inheritence support within the DOM4J entity-mode
-//
-//	public void testSubtyping() throws Exception {
-//		Element employer = DocumentFactory.getInstance().createElement( "employer" );
-//		employer.addAttribute( "name", "JBoss" );
-//		Element gavin = employer.addElement( "techie" );
-//		gavin.addAttribute( "name", "Gavin" );
-//		Element ben = employer.addElement( "sales-dude" );
-//		ben.addAttribute( "name", "Ben" );
-//		print( employer );
-//
-//		Session s = openSession();
-//		Transaction t = s.beginTransaction();
-//		s.persist( "Employer", employer );
-//		Long eid = new Long( employer.attributeValue( "id" ) );
-//		t.commit();
-//		s.close();
-//
-//		s = openSession();
-//		t = s.beginTransaction();
-//		employer = (Element) s.get( "Employer", eid );
-//		print( employer );
-//		s.delete( "Employer", employer );
-//		t.commit();
-//		s.close();
-//
-//		Element dept = DocumentFactory.getInstance().createElement( "department" );
-//		dept.addAttribute( "name", "engineering" );
-//		Element steve = dept.addElement( "manager" ).addElement( "techie" );
-//		steve.addAttribute( "name", "Steve" );
-//		print( dept );
-//
-//		s = openSession();
-//		t = s.beginTransaction();
-//		s.persist( "Department", dept );
-//		Long did = new Long( dept.attributeValue( "id" ) );
-//		t.commit();
-//		s.close();
-//
-//		s = openSession();
-//		t = s.beginTransaction();
-//		dept = ( Element ) s.load( "Department", did );
-//		print( dept );
-//		s.delete( "Department", dept );
-//		t.commit();
-//		s.close();
-//	}
-	
+	@Test
 	public void testCompositeId() throws Exception {
 		Element a = DocumentFactory.getInstance().createElement( "a" );
 		a.addAttribute("id", "1");
@@ -122,6 +94,7 @@ public class Dom4jTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDom4j() throws Exception {
 		Element acct = DocumentFactory.getInstance().createElement( "account" );
 		acct.addAttribute( "id", "abc123" );
@@ -302,6 +275,7 @@ public class Dom4jTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapIndexEmision() throws Throwable {
 		Element acct = DocumentFactory.getInstance().createElement( "account" );
 		acct.addAttribute( "id", "abc123" );
@@ -354,4 +328,54 @@ public class Dom4jTest extends FunctionalTestCase {
 	public static void print(Element elt) throws Exception {
 		XMLHelper.dump( elt );
 	}
+
+
+// TODO : still need to figure out inheritence support within the DOM4J entity-mode
+//
+//	public void testSubtyping() throws Exception {
+//		Element employer = DocumentFactory.getInstance().createElement( "employer" );
+//		employer.addAttribute( "name", "JBoss" );
+//		Element gavin = employer.addElement( "techie" );
+//		gavin.addAttribute( "name", "Gavin" );
+//		Element ben = employer.addElement( "sales-dude" );
+//		ben.addAttribute( "name", "Ben" );
+//		print( employer );
+//
+//		Session s = openSession();
+//		Transaction t = s.beginTransaction();
+//		s.persist( "Employer", employer );
+//		Long eid = new Long( employer.attributeValue( "id" ) );
+//		t.commit();
+//		s.close();
+//
+//		s = openSession();
+//		t = s.beginTransaction();
+//		employer = (Element) s.get( "Employer", eid );
+//		print( employer );
+//		s.delete( "Employer", employer );
+//		t.commit();
+//		s.close();
+//
+//		Element dept = DocumentFactory.getInstance().createElement( "department" );
+//		dept.addAttribute( "name", "engineering" );
+//		Element steve = dept.addElement( "manager" ).addElement( "techie" );
+//		steve.addAttribute( "name", "Steve" );
+//		print( dept );
+//
+//		s = openSession();
+//		t = s.beginTransaction();
+//		s.persist( "Department", dept );
+//		Long did = new Long( dept.attributeValue( "id" ) );
+//		t.commit();
+//		s.close();
+//
+//		s = openSession();
+//		t = s.beginTransaction();
+//		dept = ( Element ) s.load( "Department", did );
+//		print( dept );
+//		s.delete( "Department", dept );
+//		t.commit();
+//		s.close();
+//	}
+
 }

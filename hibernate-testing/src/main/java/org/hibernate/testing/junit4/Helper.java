@@ -24,10 +24,11 @@
 package org.hibernate.testing.junit4;
 
 import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.TestClass;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.Skip;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 /**
@@ -69,20 +70,15 @@ public class Helper {
 		return method.getDeclaringClass().getName() + "#" + method.getName();
 	}
 
-	public static FailureExpected locateFailureExpectedAnnotation(FrameworkMethod frameworkMethod) {
-		FailureExpected failureExpected = frameworkMethod.getAnnotation( FailureExpected.class );
-		if ( failureExpected == null ) {
-			failureExpected = frameworkMethod.getMethod().getDeclaringClass().getAnnotation( FailureExpected.class );
+	public static <T extends Annotation> T locateAnnotation(
+			Class<T> annotationClass,
+			FrameworkMethod frameworkMethod,
+			TestClass testClass) {
+		T annotation = frameworkMethod.getAnnotation( annotationClass );
+		if ( annotation == null ) {
+			annotation = testClass.getJavaClass().getAnnotation( annotationClass );
 		}
-		return failureExpected;
-	}
-
-	public static Skip locateSkipAnnotation(FrameworkMethod frameworkMethod) {
-		Skip skip = frameworkMethod.getAnnotation( Skip.class );
-		if ( skip == null ) {
-			skip = frameworkMethod.getMethod().getDeclaringClass().getAnnotation( Skip.class );
-		}
-		return skip;
+		return annotation;
 	}
 
 	public static String extractMessage(FailureExpected failureExpected) {
@@ -99,14 +95,6 @@ public class Helper {
 				.append( Helper.extractTestName( frameworkMethod ) )
 				.append( "] due to @FailureExpected - " )
 				.append( extractMessage( failureExpected ) )
-				.toString();
-	}
-
-	public static String extractIgnoreMessage(Skip skip, FrameworkMethod frameworkMethod) {
-		return new StringBuilder( "Not adding test [" )
-				.append( Helper.extractTestName( frameworkMethod ) )
-				.append( "] due to @Skip - " )
-				.append( skip.message() )
 				.toString();
 	}
 

@@ -1,8 +1,31 @@
-//$Id: PropertyRefTest.java 10396 2006-09-01 08:48:02 -0500 (Fri, 01 Sep 2006) steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.propertyref.basic;
+
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -12,35 +35,39 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Gavin King
  */
-public class PropertyRefTest extends FunctionalTestCase {
-	
-	public PropertyRefTest(String name) {
-		super( name );
-	}
-
+public class PropertyRefTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "propertyref/basic/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "1");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( PropertyRefTest.class );
-	}
-
+	@Test
 	public void testNonLazyBagKeyPropertyRef() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -74,6 +101,7 @@ public class PropertyRefTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToManyPropertyRef() {
 		// prepare some test data relating to the Group->Person many-to-many association
 		Session s = openSession();
@@ -113,6 +141,7 @@ public class PropertyRefTest extends FunctionalTestCase {
 		s.close();
 	}
 	
+	@Test
 	public void testOneToOnePropertyRef() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -195,7 +224,7 @@ public class PropertyRefTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	
+	@Test
 	public void testJoinFetchPropertyRef() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -241,6 +270,7 @@ public class PropertyRefTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testForeignKeyCreation() {
 		PersistentClass classMapping = getCfg().getClassMapping("org.hibernate.test.propertyref.basic.Account");
 		

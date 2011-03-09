@@ -1,8 +1,31 @@
-// $Id: SuppliedConnectionTest.java 11332 2007-03-22 17:34:55Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+
 package org.hibernate.test.connections;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import junit.framework.Test;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
@@ -10,9 +33,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.test.common.ConnectionProviderBuilder;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+
+import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
  * Implementation of SuppliedConnectionTest.
@@ -20,31 +43,26 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
  * @author Steve Ebersole
  */
 public class SuppliedConnectionTest extends ConnectionManagementTestCase {
-
 	private ConnectionProvider cp = ConnectionProviderBuilder.buildConnectionProvider();
 	private Connection connectionUnderTest;
 
-	public SuppliedConnectionTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( SuppliedConnectionTest.class );
-	}
-
+	@Override
 	protected Session getSessionUnderTest() throws Throwable {
 		connectionUnderTest = cp.getConnection();
-		return getSessions().openSession( connectionUnderTest );
+		return sessionFactory().openSession( connectionUnderTest );
 	}
 
+	@Override
 	protected void reconnect(Session session) {
 		session.reconnect( connectionUnderTest );
 	}
 
+	@Override
 	protected void done() throws Throwable {
 		cp.closeConnection( connectionUnderTest );
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.ON_CLOSE.toString() );
@@ -70,14 +88,17 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		cfg.setProperty( Environment.USE_SCROLLABLE_RESULTSET, "" + supportsScroll );
 	}
 
+	@Override
 	public boolean createSchema() {
 		return false;
 	}
 
-	public boolean recreateSchemaAfterFailure() {
+	@Override
+	public boolean rebuildSessionFactoryOnError() {
 		return false;
 	}
 
+	@Override
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
 		Connection conn = cp.getConnection();
@@ -95,6 +116,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		}
 	}
 
+	@Override
 	protected void cleanupTest() throws Exception {
 		Connection conn = cp.getConnection();
 		try {

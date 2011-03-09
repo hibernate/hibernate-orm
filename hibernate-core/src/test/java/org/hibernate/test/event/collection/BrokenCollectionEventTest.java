@@ -1,68 +1,62 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution statements
- * applied by the authors.
- * 
- * All third-party contributions are distributed under license by Red Hat
- * Middleware LLC.  This copyrighted material is made available to anyone
- * wishing to use, modify, copy, or redistribute it subject to the terms
- * and conditions of the GNU Lesser General Public License, as published by
- * the Free Software Foundation.  This program is distributed in the hope
- * that it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
- * See the GNU Lesser General Public License for more details.  You should
- * have received a copy of the GNU Lesser General Public License along with
- * this distribution; if not, write to: Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.event.AbstractCollectionEvent;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
 import org.hibernate.test.event.collection.association.unidirectional.ParentWithCollectionOfEntities;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 /**
- *
- * @author Gail Badner
- *
  * These tests are known to fail. When the functionality is corrected, the
  * corresponding method will be moved into AbstractCollectionEventTest.
+ *
+ * @author Gail Badner
  */
-public class BrokenCollectionEventTest extends FunctionalTestCase {
-
-	public BrokenCollectionEventTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BrokenCollectionEventTest.class );
-	}
-
+public class BrokenCollectionEventTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "event/collection/association/unidirectional/onetomany/UnidirectionalOneToManySetMapping.hbm.xml" };
 	}
 
-	public ParentWithCollection createParent(String name) {
-		return new ParentWithCollectionOfEntities( name );
-	}
-
-	public Collection createCollection() {
-		return new HashSet();
-	}
-
+	@Override
 	protected void cleanupTest() {
 		ParentWithCollection dummyParent = createParent( "dummyParent" );
 		dummyParent.setChildren( createCollection() );
@@ -83,8 +77,18 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	public void testUpdateDetachedParentNoChildrenToNullFailureExpected() {
-		CollectionListeners listeners = new CollectionListeners( getSessions() );
+	public ParentWithCollection createParent(String name) {
+		return new ParentWithCollectionOfEntities( name );
+	}
+
+	public Collection createCollection() {
+		return new HashSet();
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testUpdateDetachedParentNoChildrenToNull() {
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( "parent" );
 		listeners.clear();
 		assertEquals( 0, parent.getChildren().size() );
@@ -108,7 +112,7 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 	// When that issue is fixed, this one should also be fixed and moved into AbstractCollectionEventTest.
 	/*
 	public void testUpdateDetachedParentOneChildToNullFailureExpected() {
-		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
 		Child oldChild = ( Child ) parent.getChildren().iterator().next();
 		assertEquals( 1, parent.getChildren().size() );
@@ -134,8 +138,10 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 	}
 	*/
 
-	public void testSaveParentNullChildrenFailureExpected() {
-		CollectionListeners listeners = new CollectionListeners( getSessions() );
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testSaveParentNullChildren() {
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNullChildren( "parent" );
 		assertNull( parent.getChildren() );
 		int index = 0;
@@ -153,8 +159,10 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 		checkNumberOfResults( listeners, 0 );
 	}
 
-	public void testUpdateParentNoChildrenToNullFailureExpected() {
-		CollectionListeners listeners = new CollectionListeners( getSessions() );
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testUpdateParentNoChildrenToNull() {
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( "parent" );
 		listeners.clear();
 		assertEquals( 0, parent.getChildren().size() );
@@ -182,7 +190,7 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 	// When that issue is fixed, this one should also be fixed and moved into AbstractCollectionEventTest.
 	/*
 	public void testUpdateParentOneChildToNullFailureExpected() {
-		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
 		Child oldChild = ( Child ) parent.getChildren().iterator().next();
 		assertEquals( 1, parent.getChildren().size() );
@@ -221,7 +229,7 @@ public class BrokenCollectionEventTest extends FunctionalTestCase {
 	}
 
 	public void testUpdateMergedParentOneChildToNullFailureExpected() {
-		CollectionListeners listeners = new CollectionListeners( getSessions() );
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child" );
 		assertEquals( 1, parent.getChildren().size() );
 		listeners.clear();

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,37 +20,43 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.onetomany;
 import java.util.ArrayList;
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
- * @author Burkhard Graves, Gail Badner
+ *  What is done:
+ *    ___                   ___
+ *   |   |                 |   |
+ *    -> 1                  -> 1
+ *       |   -transform->     / \
+ *       2                   2   3
+ *       |
+ *     	 3
+ *
+ * @author Burkhard Graves
+ * @author Gail Badner
  */
-
-public abstract class AbstractRecursiveBidirectionalOneToManyTest extends FunctionalTestCase {
-
-    /*
-	 *  What is done:
-	 *    ___                   ___
-	 *   |   |                 |   |
-	 *    -> 1                  -> 1
-	 *       |   -transform->     / \
-	 *       2                   2   3
-	 *       |
-	 *     	 3
-	 *
-	 */
-
-	public AbstractRecursiveBidirectionalOneToManyTest(String str) {
-		super(str);
+@SuppressWarnings( {"UnusedDeclaration"})
+public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseCoreFunctionalTestCase {
+	@Override
+	public String[] getMappings() {
+		return new String[] { "onetomany/Node.hbm.xml" };
 	}
 
+	@Override
 	public org.hibernate.classic.Session openSession() {
 		org.hibernate.classic.Session s = super.openSession();
 		s.setCacheMode( getSessionCacheMode() );
@@ -59,10 +65,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 
 	protected abstract CacheMode getSessionCacheMode();
 
-	public String[] getMappings() {
-		return new String[] { "onetomany/Node.hbm.xml" };
-	}	
-
+	@Test
 	public void testOneToManyMoveElement() {
 		init();
 		transformMove();
@@ -70,6 +73,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 		delete();
 	}
 
+	@Test
 	public void testOneToManyMoveElementWithDirtySimpleProperty() {
 		init();
 		transformMoveWithDirtySimpleProperty();
@@ -77,6 +81,7 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 		delete();
 	}
 
+	@Test
 	public void testOneToManyReplaceList() {
 		init();
 		transformReplace();
@@ -85,7 +90,6 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 	}
 
 	void init() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -103,7 +107,6 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 	}
 
 	void transformMove() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -119,7 +122,6 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 	}
 
 	void transformMoveWithDirtySimpleProperty() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -136,7 +138,6 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 	}
 
 	void transformReplace() {
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -153,10 +154,11 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 		s.close();
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	void check(boolean simplePropertyUpdated) {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		Node node3 = (Node) s.get( Node.class, new Integer(3) );
+		Node node3 = (Node) s.get( Node.class, Integer.valueOf(3) );
 
 		// fails with 2nd level cache enabled
 		assertEquals( 1, node3.getParentNode().getId().intValue() );
@@ -178,10 +180,11 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends Functi
 		s.close();
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	void delete() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		Node node1 = ( Node ) s.get(  Node.class, new Integer( 1 ) );
+		Node node1 = ( Node ) s.get(  Node.class, Integer.valueOf( 1 ) );
 		s.delete( node1 );
 		tx.commit();
 		s.close();

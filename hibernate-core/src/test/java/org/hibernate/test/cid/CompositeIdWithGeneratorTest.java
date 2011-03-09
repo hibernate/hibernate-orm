@@ -26,11 +26,21 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the use of composite-id with a generator.  
@@ -41,26 +51,16 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * 
  * @author Jacob Robertson
  */
-public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
-	
-	private DateFormat df;
-	
-	public CompositeIdWithGeneratorTest(String str) {
-		super(str);
-		df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-	}
+@TestForIssue( jiraKey = "HHH-2060" )
+public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
+	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "cid/PurchaseRecord.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite(CompositeIdWithGeneratorTest.class);
-	}
-	
-	/**
-	 * Basic test that id can be generated for composite-id.
-	 */
+	@Test
 	public void testCompositeIdSimple() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -126,9 +126,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertFalse(num1 == num2);
 	}
 
-	/**
-	 * Tests the behavior of properties in detached objects.
-	 */
+	@Test
 	public void testDetachedProperty() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -183,9 +181,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertEquals( df.format(newTimestamp), df.format(find2.getTimestamp()) );
 	}
 
-	/**
-	 * Tests the behavior of the id in detached objects.
-	 */
+	@Test
 	public void testDetachedId() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -260,9 +256,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertEquals( generatedId2, find2.getId() );
 	}
 
-	/**
-	 * Tests the behavior of saveOrUpdate (as opposed to calling "persist").
-	 */
+	@Test
 	public void testSaveOrUpdate() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -299,9 +293,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertEquals( df.format(timestamp2), df.format(record.getTimestamp()) );
 	}
 
-	/**
-	 * Tests the behavior of load.
-	 */
+	@Test
 	public void testLoad() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -331,10 +323,8 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertEquals( id, toLoad.getId() );
 		assertEquals( df.format(timestamp), df.format(toLoad.getTimestamp()) );
 	}
-	
-	/**
-	 * Tests the behavior of evict.
-	 */
+
+	@Test
 	public void testEvict() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -369,9 +359,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertEquals( df.format(timestamp1), df.format(persistent.getTimestamp()) );
 	}
 	
-	/**
-	 * Tests the behavior of merge.
-	 */
+	@Test
 	public void testMerge() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -421,10 +409,8 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		
 		assertEquals( df.format(timestamp2), df.format(persistent.getTimestamp()) );
 	}
-	
-	/**
-	 * Tests the behavior of delete.
-	 */
+
+	@Test
 	public void testDelete() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -461,9 +447,7 @@ public class CompositeIdWithGeneratorTest extends FunctionalTestCase {
 		assertNull(find);
 	}
 	
-	/**
-	 * Simple test to demonstrate the ids can be generated even when using children.
-	 */
+	@Test
 	public void testGeneratedIdsWithChildren() {
 		
 		Session s = openSession();

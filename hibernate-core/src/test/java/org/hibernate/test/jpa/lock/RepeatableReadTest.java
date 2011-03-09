@@ -1,16 +1,48 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.jpa.lock;
+
 import java.math.BigDecimal;
-import junit.framework.Test;
+
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.SQLGrammarException;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.hibernate.test.jpa.Part;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test that the Hibernate Session complies with REPEATABLE_READ isolation
@@ -18,26 +50,12 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Steve Ebersole
  */
+@RequiresDialectFeature( DialectChecks.DoesReadCommittedNotCauseWritersToBlockReadersCheck.class )
 public class RepeatableReadTest extends AbstractJPATest {
-
-	public RepeatableReadTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( RepeatableReadTest.class );
-	}
-
-
-	// versioned entity tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testStaleVersionedInstanceFoundInQueryResult() {
-		if ( getDialect().doesReadCommittedCauseWritersToBlockReaders()) {
-			reportSkip( "lock blocking", "stale versioned instance" );
-			return;
-		}
 		String check = "EJB3 Specification";
-		Session s1 = getSessions().openSession();
+		Session s1 = sessionFactory().openSession();
 		Transaction t1 = s1.beginTransaction();
 		Item item = new Item( check );
 		s1.save(  item );
@@ -48,13 +66,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		long initialVersion = item.getVersion();
 
 		// Now, open a new Session and re-load the item...
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		item = ( Item ) s1.get( Item.class, itemId );
 
 		// now that the item is associated with the persistence-context of that session,
 		// open a new session and modify it "behind the back" of the first session
-		Session s2 = getSessions().openSession();
+		Session s2 = sessionFactory().openSession();
 		Transaction t2 = s2.beginTransaction();
 		Item item2 = ( Item ) s2.get( Item.class, itemId );
 		item2.setName( "EJB3 Persistence Spec" );
@@ -73,23 +91,20 @@ public class RepeatableReadTest extends AbstractJPATest {
 		s1.close();
 
 		// clean up
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		s1.createQuery( "delete Item" ).executeUpdate();
 		t1.commit();
 		s1.close();
 	}
 
+	@Test
 	public void testStaleVersionedInstanceFoundOnLock() {
 		if ( ! readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
 		}
-		if ( getDialect().doesReadCommittedCauseWritersToBlockReaders()) {
-			reportSkip( "lock blocking", "stale versioned instance" );
-			return;
-		}
 		String check = "EJB3 Specification";
-		Session s1 = getSessions().openSession();
+		Session s1 = sessionFactory().openSession();
 		Transaction t1 = s1.beginTransaction();
 		Item item = new Item( check );
 		s1.save(  item );
@@ -100,13 +115,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		long initialVersion = item.getVersion();
 
 		// Now, open a new Session and re-load the item...
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		item = ( Item ) s1.get( Item.class, itemId );
 
 		// now that the item is associated with the persistence-context of that session,
 		// open a new session and modify it "behind the back" of the first session
-		Session s2 = getSessions().openSession();
+		Session s2 = sessionFactory().openSession();
 		Transaction t2 = s2.beginTransaction();
 		Item item2 = ( Item ) s2.get( Item.class, itemId );
 		item2.setName( "EJB3 Persistence Spec" );
@@ -147,23 +162,17 @@ public class RepeatableReadTest extends AbstractJPATest {
 		s1.close();
 
 		// clean up
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		s1.createQuery( "delete Item" ).executeUpdate();
 		t1.commit();
 		s1.close();
 	}
 
-
-	// non-versioned entity tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Test
 	public void testStaleNonVersionedInstanceFoundInQueryResult() {
-		if ( getDialect().doesReadCommittedCauseWritersToBlockReaders()) {
-			reportSkip( "lock blocking", "stale versioned instance" );
-			return;
-		}
 		String check = "Lock Modes";
-		Session s1 = getSessions().openSession();
+		Session s1 = sessionFactory().openSession();
 		Transaction t1 = s1.beginTransaction();
 		Part part = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
 		s1.save( part );
@@ -173,13 +182,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Long partId = part.getId();
 
 		// Now, open a new Session and re-load the part...
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		part = ( Part ) s1.get( Part.class, partId );
 
 		// now that the item is associated with the persistence-context of that session,
 		// open a new session and modify it "behind the back" of the first session
-		Session s2 = getSessions().openSession();
+		Session s2 = sessionFactory().openSession();
 		Transaction t2 = s2.beginTransaction();
 		Part part2 = ( Part ) s2.get( Part.class, partId );
 		part2.setName( "Lock Mode Types" );
@@ -197,7 +206,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		s1.close();
 
 		// clean up
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		s1.delete( part2 );
 		s1.delete( part2.getItem() );
@@ -205,16 +214,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		s1.close();
 	}
 
+	@Test
 	public void testStaleNonVersionedInstanceFoundOnLock() {
 		if ( ! readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
 		}
-		if ( getDialect().doesReadCommittedCauseWritersToBlockReaders()) {
-			reportSkip( "lock blocking", "stale versioned instance" );
-			return;
-		}
 		String check = "Lock Modes";
-		Session s1 = getSessions().openSession();
+		Session s1 = sessionFactory().openSession();
 		Transaction t1 = s1.beginTransaction();
 		Part part = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( 0.0 ) );
 		s1.save( part );
@@ -224,13 +230,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 		Long partId = part.getId();
 
 		// Now, open a new Session and re-load the part...
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		part = ( Part ) s1.get( Part.class, partId );
 
 		// now that the item is associated with the persistence-context of that session,
 		// open a new session and modify it "behind the back" of the first session
-		Session s2 = getSessions().openSession();
+		Session s2 = sessionFactory().openSession();
 		Transaction t2 = s2.beginTransaction();
 		Part part2 = ( Part ) s2.get( Part.class, partId );
 		part2.setName( "Lock Mode Types" );
@@ -262,7 +268,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		s1.close();
 
 		// clean up
-		s1 = getSessions().openSession();
+		s1 = sessionFactory().openSession();
 		t1 = s1.beginTransaction();
 		s1.delete( part );
 		s1.delete( part.getItem() );

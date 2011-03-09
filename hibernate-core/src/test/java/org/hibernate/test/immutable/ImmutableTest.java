@@ -1,11 +1,10 @@
-//$Id: ImmutableTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,11 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.immutable;
 import java.util.Iterator;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -34,31 +32,35 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  */
-public class ImmutableTest extends FunctionalTestCase {
-
-	public ImmutableTest(String str) {
-		super(str);
-	}
-
+public class ImmutableTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}	
 
+	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/ContractVariation.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ImmutableTest.class );
-	}
-
+	@Test
 	public void testChangeImmutableEntityProxyToModifiable() {
 		Contract c = new Contract( null, "gavin", "phone");
 		ContractVariation cv1 = new ContractVariation(1, c);
@@ -119,6 +121,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testChangeImmutableEntityToModifiable() {
 		Contract c = new Contract( null, "gavin", "phone");
 		ContractVariation cv1 = new ContractVariation(1, c);
@@ -179,6 +182,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testPersistImmutable() {
 		Contract c = new Contract( null, "gavin", "phone");
 		ContractVariation cv1 = new ContractVariation(1, c);
@@ -224,6 +228,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testPersistUpdateImmutableInSameTransaction() {
 		Contract c = new Contract( null, "gavin", "phone");
 		ContractVariation cv1 = new ContractVariation(1, c);
@@ -270,6 +275,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testSaveImmutable() {
 		clearCounts();
 
@@ -314,6 +320,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testSaveOrUpdateImmutable() {
 		clearCounts();
 
@@ -358,6 +365,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testRefreshImmutable() {
 		clearCounts();
 
@@ -436,6 +444,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testImmutable() {
 		clearCounts();
 
@@ -499,6 +508,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testPersistAndUpdateImmutable() {
 		clearCounts();
 
@@ -563,6 +573,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testUpdateAndDeleteManagedImmutable() {
 		clearCounts();
 
@@ -605,6 +616,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testGetAndDeleteManagedImmutable() {
 		clearCounts();
 
@@ -647,6 +659,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testDeleteDetachedImmutable() {
 		clearCounts();
 
@@ -677,6 +690,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testDeleteDetachedModifiedImmutable() {
 		clearCounts();
 
@@ -707,6 +721,7 @@ public class ImmutableTest extends FunctionalTestCase {
 	}
 
 
+	@Test
 	public void testImmutableParentEntityWithUpdate() {
 		clearCounts();
 
@@ -764,6 +779,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testImmutableChildEntityWithUpdate() {
 		clearCounts();
 
@@ -818,6 +834,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testImmutableCollectionWithUpdate() {
 		clearCounts();
 
@@ -873,6 +890,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testUnmodifiedImmutableParentEntityWithMerge() {
 		clearCounts();
 
@@ -926,6 +944,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testImmutableParentEntityWithMerge() {
 		clearCounts();
 
@@ -978,9 +997,9 @@ public class ImmutableTest extends FunctionalTestCase {
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 3 );
-
 	}
 
+	@Test
 	public void testImmutableChildEntityWithMerge() {
 		clearCounts();
 
@@ -1036,6 +1055,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testImmutableCollectionWithMerge() {
 		clearCounts();
 
@@ -1091,6 +1111,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );		
 	}
 
+	@Test
 	public void testNewEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate() {
 		clearCounts();
 
@@ -1141,6 +1162,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 
+	@Test
 	public void testNewEntityViaImmutableEntityWithImmutableCollectionUsingMerge() {
 		clearCounts();
 
@@ -1191,6 +1213,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 
+	@Test
 	public void testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingSaveOrUpdate() {
 		clearCounts();
 
@@ -1244,6 +1267,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 
+	@Test
 	public void testUpdatedEntityViaImmutableEntityWithImmutableCollectionUsingMerge() {
 		clearCounts();
 
@@ -1297,6 +1321,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 
+	@Test
 	public void testImmutableEntityAddImmutableToInverseMutableCollection() {
 		clearCounts();
 
@@ -1356,6 +1381,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 	
+	@Test
 	public void testImmutableEntityRemoveImmutableFromInverseMutableCollection() {
 		clearCounts();
 
@@ -1409,6 +1435,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 4 );
 	}
 
+	@Test
 	public void testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDelete() {
 		clearCounts();
 
@@ -1462,6 +1489,7 @@ public class ImmutableTest extends FunctionalTestCase {
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testImmutableEntityRemoveImmutableFromInverseMutableCollectionByDeref() {
 		clearCounts();
 
@@ -1526,21 +1554,21 @@ public class ImmutableTest extends FunctionalTestCase {
 	}
 
 	protected void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( "unexpected insert count", expected, inserts );
 	}
 
 	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( "unexpected update counts", expected, updates );
 	}
 
 	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
+		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
 	}
 }

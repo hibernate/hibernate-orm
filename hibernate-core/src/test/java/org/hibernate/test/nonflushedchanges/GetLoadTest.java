@@ -1,25 +1,59 @@
-//$Id: GetLoadTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.nonflushedchanges;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
 import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
- * @author Gavin King, Gail Badner (adapted this from "ops" tests version)
+ * adapted this from "ops" tests version
+ *
+ * @author Gail Badner
+ * @author Gavin King
  */
 public class GetLoadTest extends AbstractOperationTestCase {
-
-	public GetLoadTest(String str) {
-		super( str );
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testGetLoad() throws Exception {
 		clearCounts();
 
@@ -97,12 +131,13 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		s = openSession();
 		s.createQuery( "delete from Employer" ).executeUpdate();
 		List list = s.createQuery( "from Node" ).list();
-		for ( Iterator it=list.iterator(); it.hasNext(); ) {
-			s.delete( it.next() );
+		for ( Object aList : list ) {
+			s.delete( aList );
 		}
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
 	public void testGetReadOnly() throws Exception {
 		clearCounts();
 
@@ -141,8 +176,8 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		assertTrue( s.isReadOnly( emp ) );
 		assertFalse( Hibernate.isInitialized( node.getChildren() ) );
 		Hibernate.initialize( node.getChildren() );
-		for ( Iterator it=node.getChildren().iterator(); it.hasNext(); ) {
-			assertFalse( s.isReadOnly( it.next() ) );
+		for ( Object o : node.getChildren() ) {
+			assertFalse( s.isReadOnly( o ) );
 		}
 		assertFalse( Hibernate.isInitialized( node.getParent() ) );
 		assertNull( s.get( Node.class, "xyz" ) );
@@ -175,12 +210,13 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		s = openSession();
 		s.createQuery( "delete from Employer" ).executeUpdate();
 		List list = s.createQuery( "from Node" ).list();
-		for ( Iterator it=list.iterator(); it.hasNext(); ) {
-			s.delete( it.next() );
+		for ( Object aList : list ) {
+			s.delete( aList );
 		}
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
 	public void testLoadReadOnly() throws Exception {
 		clearCounts();
 
@@ -213,12 +249,13 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		s = openSession();
 		s.createQuery( "delete from Employer" ).executeUpdate();
 		List list = s.createQuery( "from Node" ).list();
-		for ( Iterator it=list.iterator(); it.hasNext(); ) {
-			s.delete( it.next() );
+		for ( Object aList : list ) {
+			s.delete( aList );
 		}
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
 	public void testGetAfterDelete() throws Exception {
 		clearCounts();
 
@@ -238,14 +275,5 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		assertNull( "get did not return null after delete", emp );
 	}
 
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( GetLoadTest.class );
-	}
 }
 

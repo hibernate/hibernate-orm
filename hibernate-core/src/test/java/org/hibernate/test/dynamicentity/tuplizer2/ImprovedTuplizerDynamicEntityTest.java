@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,22 +20,28 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.dynamicentity.tuplizer2;
+
 import java.util.HashSet;
-import junit.framework.TestSuite;
+
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Demonstrates use of Tuplizers to allow the use of JDK
@@ -48,11 +54,7 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Steve Ebersole
  */
-public class ImprovedTuplizerDynamicEntityTest extends FunctionalTestCase {
-	public ImprovedTuplizerDynamicEntityTest(String x) {
-		super( x );
-	}
-
+public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "dynamicentity/tuplizer2/Customer.hbm.xml" };
 	}
@@ -62,10 +64,8 @@ public class ImprovedTuplizerDynamicEntityTest extends FunctionalTestCase {
 		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( EntityMode.POJO, MyEntityTuplizer.class );
 	}
 
-	public static TestSuite suite() {
-		return new FunctionalTestClassTestSuite( ImprovedTuplizerDynamicEntityTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testIt() {
 		// Test saving these dyna-proxies
 		Session session = openSession();

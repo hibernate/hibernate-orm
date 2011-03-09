@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.hql;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -32,22 +31,27 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Tests HQL and Criteria queries using DB columns having the same name as registerd functions.
+ * Tests HQL and Criteria queries using DB columns having the same name as registered functions.
  *
  * @author Gail Badner
  */
-public class FunctionNameAsColumnTest  extends FunctionalTestCase {
-
-	public FunctionNameAsColumnTest(String name) {
-		super( name );
-	}
-
+public class FunctionNameAsColumnTest  extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"hql/FunctionNamesAsColumns.hbm.xml"
@@ -55,15 +59,12 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "false" );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( FunctionNameAsColumnTest.class );
-	}
-
+	@Test
 	public void testGetOneColumnSameNameAsArgFunctionHQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -85,6 +86,7 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testGetOneColumnSameNameAsArgFunctionCriteria() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -106,6 +108,7 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testGetMultiColumnSameNameAsArgFunctionHQL() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -148,6 +151,7 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testGetMultiColumnSameNameAsArgFunctionCriteria() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -191,11 +195,11 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() throws Exception {
-		SQLFunction function =
-				( ( SessionFactoryImplementor ) getSessions() ).getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
 		}
 
@@ -237,11 +241,11 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
-		SQLFunction function =
-				( ( SessionFactoryImplementor ) getSessions() ).getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
 		}
 
@@ -283,11 +287,11 @@ public class FunctionNameAsColumnTest  extends FunctionalTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testNoArgFcnAndColumnSameNameAsNoArgFunctionHQL() {
-		SQLFunction function =
-				( ( SessionFactoryImplementor ) getSessions() ).getSqlFunctionRegistry().findSQLFunction( "current_date" );
+		SQLFunction function = sessionFactory().getSqlFunctionRegistry().findSQLFunction( "current_date" );
 		if ( function == null || function.hasParenthesesIfNoArguments() ) {
-			reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
+			SkipLog.reportSkip( "current_date reuires ()", "tests noarg function that does not require ()" );
 			return;
 		}
 

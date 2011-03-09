@@ -1,28 +1,41 @@
 /*
- * Copyright (c) 2007, Red Hat Middleware, LLC. All rights reserved.
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, v. 2.1. This program is distributed in the
- * hope that it will be useful, but WITHOUT A WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details. You should have received a
- * copy of the GNU Lesser General Public License, v.2.1 along with this
- * distribution; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * Red Hat Author(s): Steve Ebersole
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.collection.backref.map.compkey;
 
-import junit.framework.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * BackrefCompositeMapKeyTest implementation.  Test access to a composite map-key
@@ -30,19 +43,13 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Steve Ebersole
  */
-public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
-	public BackrefCompositeMapKeyTest(String string) {
-		super( string );
-	}
-
+public class BackrefCompositeMapKeyTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/backref/map/compkey/Mappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BackrefCompositeMapKeyTest.class );
-	}
-
+	@Test
 	public void testOrphanDeleteOnDelete() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -71,6 +78,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDeleteAfterPersist() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -94,6 +102,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDeleteAfterPersistAndFlush() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -120,6 +129,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDeleteAfterLock() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -150,6 +160,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDeleteOnSaveOrUpdate() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -180,6 +191,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDeleteOnSaveOrUpdateAfterSerialization() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -212,6 +224,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDelete() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
@@ -225,8 +238,8 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 
-		getSessions().evict(Product.class);
-		getSessions().evict(Part.class);
+		sessionFactory().getCache().evictEntityRegion(Product.class);
+		sessionFactory().getCache().evictEntityRegion(Part.class);
 
 		session = openSession();
 		t = session.beginTransaction();
@@ -237,8 +250,8 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		t.commit();
 		session.close();
 
-		getSessions().evict(Product.class);
-		getSessions().evict(Part.class);
+		sessionFactory().getCache().evictEntityRegion( Product.class );
+		sessionFactory().getCache().evictEntityRegion(Part.class);
 
 		session = openSession();
 		t = session.beginTransaction();
@@ -251,6 +264,7 @@ public class BackrefCompositeMapKeyTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testOrphanDeleteOnMerge() {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();

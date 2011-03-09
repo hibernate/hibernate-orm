@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,19 +20,24 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.lob;
 import java.sql.Blob;
-import junit.framework.AssertionFailedError;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNotNull;
+import org.junit.Assert;
 
 /**
  * Tests lazy materialization of data mapped by
@@ -42,29 +46,15 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  *
  * @author Steve Ebersole
  */
-public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
-	private static final int BLOB_SIZE = 10000;
-
-	public BlobLocatorTest(String name) {
-		super( name );
-	}
+@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
+	private static final long BLOB_SIZE = 10000L;
 
 	public String[] getMappings() {
 		return new String[] { "lob/LobMappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BlobLocatorTest.class );
-	}
-
-	public boolean appliesTo(Dialect dialect) {
-		if ( ! dialect.supportsExpectedLobUsagePattern() ) {
-			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
-			return false;
-		}
-		return true;
-	}
-
+	@Test
 	public void testBoundedBlobLocatorAccess() throws Throwable {
 		byte[] original = buildRecursively( BLOB_SIZE, true );
 		byte[] changed = buildRecursively( BLOB_SIZE, false );
@@ -81,13 +71,13 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
+		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
 		s.getTransaction().commit();
 		s.close();
 
 		// test mutation via setting the new clob data...
-		if ( supportsLobValueChangePropogation() ) {
+		if ( getDialect().supportsLobValueChangePropogation() ) {
 			s = openSession();
 			s.beginTransaction();
 			entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
@@ -100,7 +90,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 			s.beginTransaction();
 			entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
 			assertNotNull( entity.getBlobLocator() );
-			assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
+			Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 			assertEquals( changed, extractData( entity.getBlobLocator() ) );
 			entity.getBlobLocator().truncate( 1 );
 			entity.getBlobLocator().setBytes( 1, original );
@@ -113,7 +103,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s.beginTransaction();
 		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId(), LockMode.UPGRADE );
 		assertNotNull( entity.getBlobLocator() );
-		assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
+		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
 		entity.setBlobLocator( s.getLobHelper().createBlob( changed ) );
 		s.getTransaction().commit();
@@ -123,7 +113,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
-		assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
+		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( changed, extractData( entity.getBlobLocator() ) );
 		entity.setBlobLocator( s.getLobHelper().createBlob( empty ) );
 		s.getTransaction().commit();
@@ -133,7 +123,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s.beginTransaction();
 		entity = ( LobHolder ) s.get( LobHolder.class, entity.getId() );
 		if ( entity.getBlobLocator() != null) {
-			assertEquals( empty.length, entity.getBlobLocator().length() );
+			Assert.assertEquals( empty.length, entity.getBlobLocator().length() );
 			assertEquals( empty, extractData( entity.getBlobLocator() ) );
 		}
 		s.delete( entity );
@@ -142,11 +132,12 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
+	)
 	public void testUnboundedBlobLocatorAccess() throws Throwable {
-		if ( ! supportsUnboundedLobLocatorMaterialization() ) {
-			return;
-		}
-
 		// Note: unbounded mutation of the underlying lob data is completely
 		// unsupported; most databases would not allow such a construct anyway.
 		// Thus here we are only testing materialization...
@@ -169,7 +160,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
+		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
 
 		s = openSession();
@@ -184,8 +175,8 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 	}
 
 
-	private byte[] buildRecursively(int size, boolean on) {
-		byte[] data = new byte[size];
+	private byte[] buildRecursively(long size, boolean on) {
+		byte[] data = new byte[(int)size];
 		data[0] = mask( on );
 		for ( int i = 0; i < size; i++ ) {
 			data[i] = mask( on );
@@ -198,7 +189,7 @@ public class BlobLocatorTest extends DatabaseSpecificFunctionalTestCase {
 		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
-	public static void assertEquals(byte[] val1, byte[] val2) {
+	private static void assertEquals(byte[] val1, byte[] val2) {
 		if ( !ArrayHelper.isEquals( val1, val2 ) ) {
 			throw new AssertionFailedError( "byte arrays did not match" );
 		}

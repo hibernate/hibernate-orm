@@ -27,15 +27,9 @@ import org.hibernate.test.id.uuid.sqlrep.sqlbinary.UUIDBinaryTest;
 import org.hibernate.type.UUIDCharType;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class UUIDCharTest extends UUIDBinaryTest {
-	public UUIDCharTest(String string) {
-		super( string );
-	}
-
 	@Override
 	public void configure(Configuration cfg) {
 		cfg.registerTypeOverride(

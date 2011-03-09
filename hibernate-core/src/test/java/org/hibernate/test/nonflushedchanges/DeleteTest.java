@@ -1,23 +1,44 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.nonflushedchanges;
-import junit.framework.Test;
+
+
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
 import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
 /**
- * {@inheritDoc}
+ * adapted this from "ops" tests version
  *
- * @author Steve Ebersole, Gail Badner (adapted this from "ops" tests version)
+ * @author Gail Badner
+ * @author Steve Ebersole
  */
 public class DeleteTest extends AbstractOperationTestCase {
-	public DeleteTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( DeleteTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testDeleteVersionedWithCollectionNoUpdate() throws Exception {
 		// test adapted from HHH-1564...
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -37,7 +58,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		loadedParent = ( VersionedEntity ) getOldToNewEntityRefMap().get( loadedParent );
 		s.delete( loadedParent );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 0 );
@@ -45,6 +66,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testNoUpdateOnDelete() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -58,13 +80,15 @@ public class DeleteTest extends AbstractOperationTestCase {
 		s = openSession();
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.delete( node );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 0 );
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testNoUpdateOnDeleteWithCollection() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -82,7 +106,7 @@ public class DeleteTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		parent = ( Node ) getOldToNewEntityRefMap().get( parent );
 		s.delete( parent );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertUpdateCount( 0 );

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -24,43 +24,43 @@
 package org.hibernate.test.pagination;
 import java.math.BigDecimal;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gavin King
  */
-public class PaginationTest extends FunctionalTestCase {
+public class PaginationTest extends BaseCoreFunctionalTestCase {
 	public static final int ROWS = 100;
 
-	public PaginationTest(String str) {
-		super(str);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "pagination/DataPoint.hbm.xml" };
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( PaginationTest.class );
-	}
-
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportLimitCheck.class,
+			comment = "Dialect does not support limit"
+	)
 	public void testLimit() {
-		if ( ! getDialect().supportsLimit() ) {
-			reportSkip( "Dialect does not support limit" );
-			return;
-		}
-
 		prepareTestData();
 
 		Session session = openSession();
@@ -92,12 +92,12 @@ public class PaginationTest extends FunctionalTestCase {
 		cleanupTestData();
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportLimitAndOffsetCheck.class,
+			comment = "Dialect does not support limit+offset"
+	)
 	public void testLimitOffset() {
-		if ( ! getDialect().supportsLimitOffset() ) {
-			reportSkip( "Dialect does not support limit+offset" );
-			return;
-		}
-
 		prepareTestData();
 
 		Session session = openSession();
@@ -170,10 +170,6 @@ public class PaginationTest extends FunctionalTestCase {
 		session.createQuery( "delete DataPoint" ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
-	}
-
-	private void reportSkip(String message) {
-		reportSkip( message, "pagination support" );
 	}
 }
 

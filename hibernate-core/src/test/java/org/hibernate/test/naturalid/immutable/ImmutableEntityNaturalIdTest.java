@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,12 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.naturalid.immutable;
 import java.lang.reflect.Field;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -33,17 +31,28 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.fail;
 
 /**
  * @author Alex Burgel
  */
-public class ImmutableEntityNaturalIdTest extends FunctionalTestCase {
+public class ImmutableEntityNaturalIdTest extends BaseCoreFunctionalTestCase {
+	public String[] getMappings() {
+		return new String[] { "naturalid/immutable/ParentChildWithManyToOne.hbm.xml" };
+	}
 
-    public ImmutableEntityNaturalIdTest(String str) {
-        super(str);
+    public void configure(Configuration cfg) {
+        cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
+        cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
+        cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
     }
 
+	@Test
 	public void testNaturalIdCheck() throws Exception {
         Session s = openSession();
         Transaction t = s.beginTransaction();
@@ -83,6 +92,8 @@ public class ImmutableEntityNaturalIdTest extends FunctionalTestCase {
         s.close();
     }
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
     public void testSaveParentWithDetachedChildren() throws Exception {
         Session s = openSession();
         Transaction t = s.beginTransaction();
@@ -122,20 +133,6 @@ public class ImmutableEntityNaturalIdTest extends FunctionalTestCase {
         s.delete(p);
         t.commit();
         s.close();
-    }
-
-    public void configure(Configuration cfg) {
-        cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-        cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-        cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-    }
-
-    public String[] getMappings() {
-        return new String[] { "naturalid/immutable/ParentChildWithManyToOne.hbm.xml" };
-    }
-
-    public static Test suite() {
-        return new TestSuite( ImmutableEntityNaturalIdTest.class);
     }
 
 }

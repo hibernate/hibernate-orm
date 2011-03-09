@@ -5,7 +5,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
@@ -18,9 +18,16 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
+
+import org.junit.Test;
+
 import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
 import org.hibernate.test.common.jta.AtomikosJtaPlatform;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Implementation of AggressiveReleaseTest.
@@ -28,17 +35,8 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Steve Ebersole
  */
 public class AggressiveReleaseTest extends ConnectionManagementTestCase {
-
-	public AggressiveReleaseTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( AggressiveReleaseTest.class );
-	}
-
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
 		cfg.getProperties().put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
@@ -49,7 +47,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Override
-    protected Session getSessionUnderTest() throws Throwable {
+	protected Session getSessionUnderTest() throws Throwable {
 		return openSession();
 	}
 
@@ -58,17 +56,18 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	}
 
 	@Override
-    protected void prepare() throws Throwable {
-		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+	protected void prepare() throws Throwable {
+		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
 	}
 
 	@Override
-    protected void done() throws Throwable {
-		sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+	protected void done() throws Throwable {
+		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
 	}
 
 	// Some additional tests specifically for the aggressive-release functionality...
 
+	@Test
 	public void testSerializationOnAfterStatementAggressiveRelease() throws Throwable {
 		prepare();
 		try {
@@ -92,6 +91,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		}
 	}
 
+	@Test
 	public void testSerializationFailsOnAfterStatementAggressiveReleaseWithOpenResources() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -102,8 +102,8 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		// this should cause the CM to obtain a connection, and then release it
 		s.flush();
 
-		// both scroll() and iterate() cause the batcher to hold on
-		// to resources, which should make aggresive-release not release
+		// both scroll() and iterate() cause batching to hold on
+		// to resources, which should make aggressive-release not release
 		// the connection (and thus cause serialization to fail)
 		ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
 
@@ -119,7 +119,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		// if data is not read before closing the ResultSet
 		sr.next();
 
-		// Closing the ScrollableResults does currently force the batcher to
+		// Closing the ScrollableResults does currently force batching to
 		// aggressively release the connection
 		sr.close();
 		SerializationHelper.serialize( s );
@@ -131,6 +131,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		done();
 	}
 
+	@Test
 	public void testQueryIteration() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -162,6 +163,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		done();
 	}
 
+	@Test
 	public void testQueryScrolling() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -193,11 +195,12 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		done();
 	}
 
+	@Test
 	public void testSuppliedConnection() throws Throwable {
 		prepare();
 
-		Connection originalConnection = sfi().getServiceRegistry().getService( ConnectionProvider.class ).getConnection();
-		Session session = getSessions().openSession( originalConnection );
+		Connection originalConnection = sessionFactory().getServiceRegistry().getService( ConnectionProvider.class ).getConnection();
+		Session session = sessionFactory().openSession( originalConnection );
 
 		Silly silly = new Silly( "silly" );
 		session.save( silly );
@@ -213,9 +216,10 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		release( session );
 		done();
 
-		sfi().getServiceRegistry().getService( ConnectionProvider.class ).closeConnection( originalConnection );
+		sessionFactory().getServiceRegistry().getService( ConnectionProvider.class ).closeConnection( originalConnection );
 	}
 
+	@Test
 	public void testBorrowedConnections() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -245,6 +249,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		done();
 	}
 
+	@Test
 	public void testConnectionMaintanenceDuringFlush() throws Throwable {
 		prepare();
 		Session s = getSessionUnderTest();
@@ -265,9 +270,9 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 			silly.setName( "new-" + silly.getName() );
 			silly.getOther().setName( "new-" + silly.getOther().getName() );
 		}
-		long initialCount = getSessions().getStatistics().getConnectCount();
+		long initialCount = sessionFactory().getStatistics().getConnectCount();
 		s.flush();
-		assertEquals( "connection not maintained through flush", initialCount + 1, getSessions().getStatistics().getConnectCount() );
+		assertEquals( "connection not maintained through flush", initialCount + 1, sessionFactory().getStatistics().getConnectCount() );
 
 		s.createQuery( "delete from Silly" ).executeUpdate();
 		s.createQuery( "delete from Other" ).executeUpdate();

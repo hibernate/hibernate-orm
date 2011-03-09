@@ -1,4 +1,26 @@
-//$Id: FooBarTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
 
 import static org.hibernate.TestLogger.LOG;
@@ -19,8 +41,7 @@ import java.util.SortedSet;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import junit.framework.Test;
-import junit.textui.TestRunner;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -57,16 +78,23 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.test.common.ConnectionProviderBuilder;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.test.common.ConnectionProviderBuilder;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class FooBarTest extends LegacyTestCase {
 
-	public FooBarTest(String arg) {
-		super(arg);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/FooBar.hbm.xml",
@@ -90,14 +118,7 @@ public class FooBarTest extends LegacyTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( FooBarTest.class );
-	}
-
-	public static void main(String[] args) throws Exception {
-		TestRunner.run( suite() );
-	}
-
+	@Test
 	public void testSaveOrUpdateCopyAny() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -123,6 +144,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRefreshProxy() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -139,11 +161,12 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsCircularCascadeDeleteCheck.class,
+			comment = "db/dialect does not support circular cascade delete constraints"
+	)
 	public void testOnCascadeDelete() throws Exception {
-		if ( ! supportsCircularCascadeDelete() ) {
-			return;
-		}
-
 		Session s = openSession();
 		s.beginTransaction();
 		Baz baz = new Baz();
@@ -164,6 +187,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRemoveFromIdbag() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -185,6 +209,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLoad() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -214,6 +239,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJoin() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -241,6 +267,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testDereferenceLazyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -287,6 +314,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMoveLazyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -342,6 +370,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCriteriaCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -362,6 +391,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -802,6 +832,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascadeDeleteDetached() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -859,6 +890,7 @@ public class FooBarTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testForeignKeys() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -880,6 +912,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNonlazyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -901,9 +934,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(baz);
 		s.getTransaction().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testReuseDeletedCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -936,10 +969,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(baz2);
 		s.getTransaction().commit();
 		s.close();
-
-
 	}
 
+	@Test
 	public void testPropertyRef() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -972,6 +1004,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQueryCollectionOfValues() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1014,6 +1047,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBatchLoad() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1068,9 +1102,9 @@ public class FooBarTest extends LegacyTestCase {
 		while ( iter.hasNext() ) s.delete( iter.next() );
 		s.getTransaction().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testFetchInitializedCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1100,6 +1134,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLateCollectionAdd() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1121,9 +1156,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(baz);
 		s.getTransaction().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testUpdate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1171,6 +1206,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testListRemove() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1207,6 +1243,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFetchInitializedCollectionDupe() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1239,6 +1276,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSortables() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1287,9 +1325,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(b);
 		s.getTransaction().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testFetchList() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1315,6 +1353,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBagOneToMany() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1335,6 +1374,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQueryLockMode() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -1355,14 +1395,14 @@ public class FooBarTest extends LegacyTestCase {
 		tx.commit();
 
 		tx = s.beginTransaction();
-		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
+		assertTrue( s.getCurrentLockMode( b ) == LockMode.NONE );
 		s.createQuery( "from Foo foo" ).list();
 		assertTrue( s.getCurrentLockMode(b)==LockMode.NONE );
 		q = s.createQuery("from Foo foo");
-		q.setLockMode("foo", LockMode.READ);
+		q.setLockMode( "foo", LockMode.READ );
 		q.list();
-		assertTrue( s.getCurrentLockMode(b)==LockMode.READ);
-		s.evict(baz);
+		assertTrue( s.getCurrentLockMode( b ) == LockMode.READ );
+		s.evict( baz );
 		tx.commit();
 
 		tx = s.beginTransaction();
@@ -1388,6 +1428,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToManyBag() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1414,6 +1455,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIdBag() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1479,6 +1521,7 @@ public class FooBarTest extends LegacyTestCase {
 		return new Integer(0).equals( ( (SessionFactoryImplementor) getSessions() ).getSettings().getMaximumFetchDepth() );
 	}
 
+	@Test
 	public void testForceOuterJoin() throws Exception {
 		if ( isOuterJoinFetchingDisabled() ) {
 			return;
@@ -1514,6 +1557,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmptyCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1536,6 +1580,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOneToOneGenerator() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1583,9 +1628,9 @@ public class FooBarTest extends LegacyTestCase {
 		doDelete( s, "from X x" );
 		s.getTransaction().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testLimit() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -1626,6 +1671,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCustom() throws Exception {
 		GlarchProxy g = new Glarch();
 		Multiplicity m = new Multiplicity();
@@ -1666,6 +1712,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveAddDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1681,6 +1728,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNamedParams() throws Exception {
 		Bar bar = new Bar();
 		Bar bar2 = new Bar();
@@ -1724,13 +1772,6 @@ public class FooBarTest extends LegacyTestCase {
 			//should happen
 		}
 
-
-		if (dialectSupportsEmptyInList("HQL 'x in (:name)'  with EMPTY_LIST.")) {
-				q.setParameterList("nameList", Collections.EMPTY_LIST);
-			list = q.list();
-			assertTrue( list.size()==0 );
-		}
-
 		q = s.createQuery("select bar, b from Bar bar inner join bar.baz baz inner join baz.cascadingBars b where bar.name like 'Bar%'");
 		Object result = q.uniqueResult();
 		assertTrue( result!=null );
@@ -1755,6 +1796,24 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsEmptyInListCheck.class,
+			comment = "Dialect does not support SQL empty in list [x in ()]"
+	)
+	public void testEmptyInListQuery() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		Query q = s.createQuery( "select bar from Bar as bar where bar.name in (:nameList)" );
+		q.setParameterList( "nameList", Collections.EMPTY_LIST );
+		assertEquals( 0, q.list().size() );
+
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
 	public void testParameterCheck() throws HibernateException {
 		Session s = openSession();
 		try {
@@ -1822,6 +1881,8 @@ public class FooBarTest extends LegacyTestCase {
 			s.close();
 		}
 	}
+
+	@Test
 	public void testDyna() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1858,6 +1919,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFindByCriteria() throws Exception {
 		if ( getDialect() instanceof DB2Dialect ) {
 			return;
@@ -1986,6 +2048,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAfterDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1999,6 +2062,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionWhere() throws Exception {
 		Foo foo1 = new Foo();
 		Foo foo2 = new Foo();
@@ -2035,6 +2099,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponentParent() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2058,6 +2123,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionCache() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2082,6 +2148,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	public void ntestAssociationId() throws Exception {
+		// IMPL NOTE : previously not being run due to the name
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Bar bar = new Bar();
@@ -2148,6 +2215,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascadeSave() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2170,6 +2238,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionsInSelect() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2331,6 +2400,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNewFlushing() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2387,6 +2457,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2599,6 +2670,7 @@ public class FooBarTest extends LegacyTestCase {
 		s3.close();
 	}
 
+	@Test
 	public void testSaveFlush() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2616,9 +2688,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(fee);
 		s.getTransaction().commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testCreateUpdate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2658,6 +2730,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2722,6 +2795,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCreate() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2741,6 +2815,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCallback() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2773,6 +2848,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testPolymorphism() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2793,6 +2869,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRemoveContains() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2810,6 +2887,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionOfSelf() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2839,6 +2917,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFind() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2899,6 +2978,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDeleteRecursive() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2915,6 +2995,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testReachability() throws Exception {
 		//first for unkeyed collections
 		Session s = openSession();
@@ -3036,6 +3117,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testPersistentLifecycle() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3063,6 +3145,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIterators() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3102,6 +3185,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testVersioning() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3151,6 +3235,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testVersionedCollections() throws Exception {
 		Session s = openSession();
 		GlarchProxy g = new Glarch();
@@ -3224,85 +3309,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
-	/*public void testVersionedSubcollections() throws Exception {
-		Session s = sessionsopenSession();
-
-		assertTrue( !s.iterate("from Fee fee").hasNext() );
-
-		GlarchProxy g = new Glarch();
-		s.save(g);
-		String gid = (String) s.getIdentifier(g);
-		HashMap map = new HashMap();
-		HashSet subSet  = new HashSet();
-		map.put("xxx", subSet);
-		subSet.add("foo"); subSet.add("bar");
-		g.setStringSets(map);
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( g.getVersion()==1, "versioned collection before" );
-		//System.out.println( g.getStringSets().get("xxx") );
-		assertTrue( ( (Set) g.getStringSets().get("xxx") ).size()==2, "versioned collection before" );
-		( (Set) g.getStringSets().get("xxx") ).add("baz");
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( g.getVersion()==2, "versioned collection after" );
-		//System.out.println( g.getStringSets().get("xxx") );
-		assertTrue( ( (Set) g.getStringSets().get("xxx") ).size()==3, "versioned collection after" );
-		s.delete(g);
-		s.flush();
-		s.connection().commit();
-		s.close();
-
-		//with components! (note: this also tests some stuff testPersistCollections misses)
-		s = sessionsopenSession();
-		g = new Glarch(); //(GlarchProxy) s.create(Glarch.class);
-		List list = new ArrayList();
-		Date[] dates = new Date[] { null, null, new Date(), new Date(0) };
-		list.add(null);
-		list.add( new FooComponent("foo", 69, dates, new FooComponent("bar", 96, null, null, new Fee() ) ) );
-		g.setFooComponents(list);
-		String EIGHT_CHARS = "abcdefgh";
-		s.save(g, EIGHT_CHARS + EIGHT_CHARS + EIGHT_CHARS + EIGHT_CHARS);
-		gid = (String) s.getIdentifier(g);
-		assertTrue( s.iterate("from Fee fee").hasNext() );
-		g.getFooComponents().add( new FooComponent("bar", 96, null, null) );
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( g.getVersion()==2, "versioned collection before" );
-		( (FooComponent) g.getFooComponents().get(1) ).getImportantDates()[0] = new Date(123567890);
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( g.getVersion()==3, "versioned collection after" );
-		( (FooComponent) g.getFooComponents().get(1) ).getSubcomponent().setName("new name");
-		assertTrue( ( (FooComponent) g.getFooComponents().get(1) ).getImportantDates()[0]!=null, "versioned collection after" );
-		s.flush();
-		s.connection().commit();
-		s.close();
-		s = sessionsopenSession();
-		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( ( (FooComponent) g.getFooComponents().get(1) ).getSubcomponent().getName().equals("new name"), "versioned collection after" );
-		assertTrue( g.getVersion()==4, "versioned collection after" );
-		s.delete(g);
-		assertTrue( !s.iterate("from Fee fee").hasNext() );
-		s.flush();
-		s.connection().commit();
-		s.close();
-
-
-	}*/
-
+	@Test
 	public void testRecursiveLoad() throws Exception {
 		//Non polymorphic class (there is an implementation optimization
 		//being tested here)
@@ -3392,6 +3399,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testScrollableIterator() throws Exception {
 		// skip if not one of these named dialects
 		boolean match = getDialect() instanceof DB2Dialect
@@ -3470,6 +3478,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMultiColumnQueries() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3532,6 +3541,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDeleteTransient() throws Exception {
 		Fee fee = new Fee();
 		Fee fee2 = new Fee();
@@ -3558,6 +3568,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDeleteUpdatedTransient() throws Exception {
 		Fee fee = new Fee();
 		Fee fee2 = new Fee();
@@ -3586,6 +3597,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateOrder() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3626,6 +3638,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateFromTransient() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3753,6 +3766,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testArraysOfTimes() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3777,6 +3791,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponents() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -3825,9 +3840,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(foo);
 		txn.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testNoForeignKeyViolations() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3849,6 +3864,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLazyCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3890,6 +3906,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNewSessionLifecycle() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -3939,6 +3956,7 @@ public class FooBarTest extends LegacyTestCase {
 		}
 	}
 
+	@Test
 	public void testOrderBy() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4013,6 +4031,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4042,6 +4061,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSaveDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4057,6 +4077,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testProxyArray() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4097,6 +4118,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCache() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4124,6 +4146,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFindLoad() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4150,6 +4173,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRefresh() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4169,6 +4193,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAutoFlush() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -4200,6 +4225,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testVeto() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4217,6 +4243,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSerializableType() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4237,6 +4264,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAutoFlushCollections() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -4303,6 +4331,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUserProvidedConnection() throws Exception {
 		ConnectionProvider dcp = ConnectionProviderBuilder.buildConnectionProvider();
 		Session s = getSessions().openSession( dcp.getConnection() );
@@ -4319,6 +4348,7 @@ public class FooBarTest extends LegacyTestCase {
 		c.close();
 	}
 
+	@Test
 	public void testCachedCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4344,6 +4374,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComplicatedQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -4364,6 +4395,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLoadAfterDelete() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4389,7 +4421,7 @@ public class FooBarTest extends LegacyTestCase {
 		}
 		assertTrue(err);
 		Fo fo = Fo.newFo();
-		id = new FumTest("").fumKey("abc"); //yuck!!
+		id = new FumTest().fumKey("abc"); //yuck!!
 		s.save(fo, id);
 		s.flush();
 		s.delete(fo);
@@ -4414,6 +4446,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testObjectType() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4435,7 +4468,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
-
+	@Test
 	public void testAny() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4470,6 +4503,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddedCompositeID() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4520,6 +4554,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAutosaveChildren() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4551,6 +4586,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOrphanDelete() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4586,9 +4622,9 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals( 0, s.createQuery( "From Bar bar" ).list().size() );
 		t.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testTransientOrphanDelete() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4633,9 +4669,9 @@ public class FooBarTest extends LegacyTestCase {
 		assertEquals( 0, s.createQuery( "From Foo foo" ).list().size() );
 		t.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testProxiesInCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4683,6 +4719,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testPSCache() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -4711,9 +4748,9 @@ public class FooBarTest extends LegacyTestCase {
 		doDelete( s, "from Foo" );
 		txn.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testForCertain() throws Exception {
 		Glarch g = new Glarch();
 		Glarch g2 = new Glarch();
@@ -4738,9 +4775,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.delete(g2);
 		t.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testBagMultipleElements() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -4785,6 +4822,7 @@ public class FooBarTest extends LegacyTestCase {
  		s.close();
  	}
 
+	@Test
 	public void testWierdSession() throws Exception {
  		Session s = openSession();
  		Transaction t = s.beginTransaction();

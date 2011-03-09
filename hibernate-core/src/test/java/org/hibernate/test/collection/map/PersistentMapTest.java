@@ -1,29 +1,54 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.collection.map;
 import java.util.HashMap;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.collection.PersistentMap;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test various situations using a {@link PersistentMap}.
  *
  * @author Steve Ebersole
  */
-public class PersistentMapTest extends FunctionalTestCase {
-	public PersistentMapTest(String name) {
-		super( name );
-	}
-
+public class PersistentMapTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/map/Mappings.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( PersistentMapTest.class );
-	}
-
+	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testWriteMethodDirtying() {
 		Parent parent = new Parent( "p1" );
@@ -71,6 +96,7 @@ public class PersistentMapTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testPutAgainstUninitializedMap() {
 		// prepare map owner...
 		Session session = openSession();
@@ -98,6 +124,7 @@ public class PersistentMapTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
     public void testRemoveAgainstUninitializedMap() {
         Parent parent = new Parent( "p1" );
         Child child = new Child( "c1" );

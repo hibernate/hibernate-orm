@@ -24,12 +24,10 @@
 package org.hibernate.test.annotations.embedded.one2many;
 import java.util.List;
 import org.hibernate.Session;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.junit.FailureExpected;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class EmbeddableWithOne2ManyTest extends TestCase {

@@ -1,24 +1,65 @@
-//$Id: GetLoadTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.ops;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
  * @author Gavin King
  */
-public class GetLoadTest extends FunctionalTestCase {
-	
-	public GetLoadTest(String str) {
-		super(str);
+public class GetLoadTest extends BaseCoreFunctionalTestCase {
+	@Override
+	public void configure(Configuration cfg) {
+		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+		cfg.setProperty(Environment.STATEMENT_BATCH_SIZE, "0");
 	}
-	
+
+	@Override
+	public String[] getMappings() {
+		return new String[] { "ops/Node.hbm.xml", "ops/Employer.hbm.xml" };
+	}
+
+	@Override
+	public String getCacheConcurrencyStrategy() {
+		return null;
+	}
+
+	@Test
 	public void testGetLoad() {
 		clearCounts();
 		
@@ -80,6 +121,7 @@ public class GetLoadTest extends FunctionalTestCase {
 		assertFetchCount(0);
 	}
 
+	@Test
 	public void testGetAfterDelete() {
 		clearCounts();
 
@@ -101,30 +143,14 @@ public class GetLoadTest extends FunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 	
 	private void assertFetchCount(int count) {
-		int fetches = (int) getSessions().getStatistics().getEntityFetchCount();
+		int fetches = (int) sessionFactory().getStatistics().getEntityFetchCount();
 		assertEquals(count, fetches);
 	}
-		
-	public void configure(Configuration cfg) {
-		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-		cfg.setProperty(Environment.STATEMENT_BATCH_SIZE, "0");		
-	}
-	
-	public String[] getMappings() {
-		return new String[] { "ops/Node.hbm.xml", "ops/Employer.hbm.xml" };
-	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite(GetLoadTest.class);
-	}
-
-	public String getCacheConcurrencyStrategy() {
-		return null;
-	}
 
 }
 

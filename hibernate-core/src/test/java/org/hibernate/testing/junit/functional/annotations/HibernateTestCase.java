@@ -21,8 +21,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
 package org.hibernate.testing.junit.functional.annotations;
 
 import static org.hibernate.TestLogger.LOG;
@@ -40,12 +38,15 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.spi.ServiceRegistry;
+
+import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.FailureExpected;
-import org.hibernate.testing.junit.RequiresDialect;
-import org.hibernate.testing.junit.RequiresDialectFeature;
-import org.hibernate.testing.junit.SkipForDialect;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipLog;
+
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
@@ -120,7 +121,7 @@ public abstract class HibernateTestCase extends TestCase {
 				builder.append( " (" )
 						.append( failureExpected.jiraKey() )
 						.append( ")" );
-                LOG.warn(builder.toString(), t);
+				SkipLog.reportSkip( builder.toString() );
 			}
 			else {
 				throw t;
@@ -204,9 +205,9 @@ public abstract class HibernateTestCase extends TestCase {
 		// then check against a dialect feature
 		RequiresDialectFeature requiresDialectFeatureAnn = locateAnnotation( RequiresDialectFeature.class, runMethod );
 		if ( requiresDialectFeatureAnn != null ) {
-			Class<? extends DialectChecks> checkClass = requiresDialectFeatureAnn.value();
-			DialectChecks check = checkClass.newInstance();
-			boolean skip = !check.include( dialect );
+			Class<? extends DialectCheck> checkClass = requiresDialectFeatureAnn.value();
+			DialectCheck check = checkClass.newInstance();
+			boolean skip = !check.isMatch( dialect );
 			if ( skip ) {
 				return buildSkip( dialect, requiresDialectFeatureAnn.comment(), requiresDialectFeatureAnn.jiraKey() );
 			}
@@ -330,7 +331,7 @@ public abstract class HibernateTestCase extends TestCase {
 		builder.append( testDescription );
 		builder.append( " : " );
 		builder.append( reason );
-        LOG.warn(builder.toString());
+		SkipLog.reportSkip( builder.toString() );
 	}
 
 	public class RollbackWork implements Work {

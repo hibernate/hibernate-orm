@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,97 +21,59 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache;
+package org.hibernate.test.cache.ehcache;
 
 import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cache.EhCacheProvider;
+import org.hibernate.cache.ReadWriteCache;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.tm.ConnectionProviderImpl;
-import org.hibernate.testing.tm.TransactionManagerLookupImpl;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * Common requirement testing for each {@link org.hibernate.cache.CacheProvider} impl.
- *
- * @author Steve Ebersole
+ * @author Emmanuel Bernard
  */
-public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
-
-	// note that a lot of the functionality here is intended to be used
-	// in creating specific tests for each CacheProvider that would extend
-	// from a base test case (this) for common requirement testing...
-
-	public BaseCacheProviderTestCase(String x) {
-		super( x );
-	}
-
+public class EhCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String getBaseForMappings() {
-		return "org/hibernate/testing/";
-	}
-
-	public String[] getMappings() {
-		return new String[] { "cache/Item.hbm.xml" };
+		return "org/hibernate/test/cache/ehcache";
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public String[] getMappings() {
+		return new String[] { "Item.hbm.xml" };
+	}
+
+	@Override
+	public String getCacheConcurrencyStrategy() {
+		return "read-write";
+	}
+
+	@Override
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_STRUCTURED_CACHE, "true" );
-		cfg.setProperty( Environment.CACHE_PROVIDER, getCacheProvider().getName() );
-
-		if ( getConfigResourceKey() != null ) {
-			cfg.setProperty( getConfigResourceKey(), getConfigResourceLocation() );
-		}
-
-		if ( useTransactionManager() ) {
-			cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
-			cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
-		}
-		else {
-			cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
-		}
+		cfg.setProperty( Environment.CACHE_PROVIDER, EhCacheProvider.class.getName() );
+		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
+		cfg.setProperty( Environment.TRANSACTION_STRATEGY, JdbcTransactionFactory.class.getName() );
 	}
 
-	/**
-	 * The cache provider to be tested.
-	 *
-	 * @return The cache provider.
-	 */
-	protected abstract Class getCacheProvider();
-
-	/**
-	 * For provider-specific configuration, the name of the property key the
-	 * provider expects.
-	 *
-	 * @return The provider-specific config key.
-	 */
-	protected abstract String getConfigResourceKey();
-
-	/**
-	 * For provider-specific configuration, the resource location of that
-	 * config resource.
-	 *
-	 * @return The config resource location.
-	 */
-	protected abstract String getConfigResourceLocation();
-
-	/**
-	 * Should we use a transaction manager for transaction management.
-	 *
-	 * @return True if we should use a RM; false otherwise.
-	 */
-	protected abstract boolean useTransactionManager();
-
-
+	@Test
 	public void testQueryCacheInvalidation() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -162,15 +124,18 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmptySecondLevelCacheEntry() throws Exception {
-		getSessions().evictEntity( Item.class.getName() );
-		Statistics stats = getSessions().getStatistics();
+		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
+		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( Item.class.getName() );
         Map cacheEntries = statistics.getEntries();
 		assertEquals( 0, cacheEntries.size() );
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing", "UnnecessaryUnboxing", "UnusedAssignment"})
+	@Test
 	public void testStaleWritesLeaveCacheConsistent() {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -184,7 +149,7 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 		Long initialVersion = item.getVersion();
 
 		// manually revert the version property
-		item.setVersion( new Long( item.getVersion().longValue() - 1 ) );
+		item.setVersion( Long.valueOf( item.getVersion().longValue() - 1 ) );
 
 		try {
 			s = openSession();
@@ -222,7 +187,7 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 		Long cachedVersionValue;
 		if ( entry instanceof ReadWriteCache.Lock ) {
 			//FIXME don't know what to test here
-			cachedVersionValue = new Long( ( (ReadWriteCache.Lock) entry).getUnlockTimestamp() );
+			cachedVersionValue = Long.valueOf( ((ReadWriteCache.Lock) entry).getUnlockTimestamp() );
 		}
 		else {
 			cachedVersionValue = ( Long ) ( (Map) entry ).get( "_version" );
@@ -239,4 +204,5 @@ public abstract class BaseCacheProviderTestCase extends FunctionalTestCase {
 		s.close();
 
 	}
+
 }

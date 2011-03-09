@@ -1,38 +1,55 @@
-// $Id: SybaseTimestampVersioningTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.version.sybase;
-import junit.framework.Test;
-import org.hibernate.Hibernate;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+import org.hibernate.type.BinaryType;
+
+import org.junit.Test;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Implementation of VersionTest.
  *
  * @author Steve Ebersole
  */
-public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTestCase {
-
-	public SybaseTimestampVersioningTest(String x) {
-		super( x );
-	}
-
+@RequiresDialect( SybaseDialect.class )
+public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "version/sybase/User.hbm.xml" };
 	}
 
-	public boolean appliesTo(Dialect dialect) {
-		return dialect instanceof SybaseDialect;
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( SybaseTimestampVersioningTest.class );
-	}
-
+	@Test
 	public void testLocking() throws Throwable {
 		// First, create the needed row...
 		Session s = openSession();
@@ -116,6 +133,8 @@ public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testCollectionVersion() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -137,7 +156,11 @@ public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTes
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", Hibernate.BINARY.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse(
+				"owner version not incremented", BinaryType.INSTANCE.isEqual(
+				steveTimestamp, steve.getTimestamp()
+		)
+		);
 
 		steveTimestamp = steve.getTimestamp();
 
@@ -148,7 +171,11 @@ public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTes
 		t.commit();
 		s.close();
 
-		assertFalse( "owner version not incremented", Hibernate.BINARY.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertFalse(
+				"owner version not incremented", BinaryType.INSTANCE.isEqual(
+				steveTimestamp, steve.getTimestamp()
+		)
+		);
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -159,6 +186,8 @@ public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTes
 	}
 
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testCollectionNoVersion() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -179,7 +208,11 @@ public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTes
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", Hibernate.BINARY.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue(
+				"owner version was incremented", BinaryType.INSTANCE.isEqual(
+				steveTimestamp, steve.getTimestamp()
+		)
+		);
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -188,7 +221,11 @@ public class SybaseTimestampVersioningTest extends DatabaseSpecificFunctionalTes
 		t.commit();
 		s.close();
 
-		assertTrue( "owner version was incremented", Hibernate.BINARY.isEqual( steveTimestamp, steve.getTimestamp() ) );
+		assertTrue(
+				"owner version was incremented", BinaryType.INSTANCE.isEqual(
+				steveTimestamp, steve.getTimestamp()
+		)
+		);
 
 		s = openSession();
 		t = s.beginTransaction();

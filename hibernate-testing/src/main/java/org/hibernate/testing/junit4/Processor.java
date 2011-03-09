@@ -28,6 +28,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipLog;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +43,6 @@ import org.slf4j.LoggerFactory;
 public class Processor implements MethodRule {
 	private static final Logger log = LoggerFactory.getLogger( Processor.class );
 
-    private int runPosition = 0;
-
 	public Statement apply(final Statement statement, final FrameworkMethod frameworkMethod, final Object target) {
         log.trace( "Preparing to start test {}", Helper.extractTestName( frameworkMethod ) );
 		if ( ! ExtendedFrameworkMethod.class.isInstance( frameworkMethod ) ) {
@@ -54,16 +54,22 @@ public class Processor implements MethodRule {
 
         final ExtendedFrameworkMethod extendedFrameworkMethod = (ExtendedFrameworkMethod) frameworkMethod;
 
-        runPosition++;
-        final boolean isFirst = runPosition == 1;
-        final boolean isLast = runPosition > extendedFrameworkMethod.getUnitRunner().getNumberOfComputedTestMethods();
+		final SkipMarker skipMarker = extendedFrameworkMethod.getSkipMarker();
+		if ( skipMarker != null ) {
+			SkipLog.reportSkip( skipMarker );
+			return new Statement() {
+				@Override
+				public void evaluate() throws Throwable {
+				}
+			};
+		}
 
         final FailureExpected failureExpected = extendedFrameworkMethod.getFailureExpectedAnnotation();
 
 		return new Statement() {
 			@Override
 			public void evaluate() throws Throwable {
-				if ( isFirst ) {
+				if ( extendedFrameworkMethod.isFirstInTestClass() ) {
                     extendedFrameworkMethod.getCallbackMetadata().performBeforeClassCallbacks( target );
 				}
 				try {
@@ -96,7 +102,7 @@ public class Processor implements MethodRule {
                     }
 				}
 				finally {
-					if ( isLast ) {
+					if ( extendedFrameworkMethod.isLastInTestClass() ) {
                         extendedFrameworkMethod.getCallbackMetadata().performAfterClassCallbacks( target );
 					}
 				}

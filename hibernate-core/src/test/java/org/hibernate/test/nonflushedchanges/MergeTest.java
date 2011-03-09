@@ -4,30 +4,28 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.criterion.Projections;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
 import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
+import static org.junit.Assert.*;
 
 /**
- * @author Gavin King, Gail Badner (adapted this from "ops" tests version)
+ * adapted this from "ops" tests version
+ *
+ * @author Gail Badner
+ * @author Gavin King
  */
 public class MergeTest extends AbstractOperationTestCase {
-
-	public MergeTest(String str) {
-		super( str );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MergeTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeStaleVersionFails() throws Exception {
-
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -43,7 +41,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		entity2.setName( "entity-name" );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
-		// now try to reattch it
+		// now try to reattach it
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		try {
@@ -61,6 +59,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		}
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -89,6 +89,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiForeignKeyOneToOne() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -118,6 +120,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testNoExtraUpdatesOnMerge() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -154,6 +158,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeWithCollection() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -194,6 +200,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeVersioned() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -233,6 +241,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeVersionedWithCollection() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -278,6 +288,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnPersistentMergeVersionedWithCollection() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -299,7 +311,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		persistentParent = ( VersionedEntity ) getOldToNewEntityRefMap().get( persistentParent );
 		// load children
-		VersionedEntity persistentChild = ( VersionedEntity ) persistentParent.getChildren().iterator().next();
+		persistentParent.getChildren().iterator().next();
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		persistentParent = ( VersionedEntity ) getOldToNewEntityRefMap().get( persistentParent );
 		VersionedEntity mergedParent = ( VersionedEntity ) s.merge( persistentParent ); // <-- This merge leads to failure
@@ -333,6 +345,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		// cleanup();
 	}
 
+	@Test
 	public void testPersistThenMergeInSameTxnWithVersion() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -356,6 +369,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
 	public void testPersistThenMergeInSameTxnWithTimestamp() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -379,6 +393,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeDeepTree() throws Exception {
 
 		clearCounts();
@@ -439,8 +455,9 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeDeepTreeWithGeneratedId() throws Exception {
-
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -476,7 +493,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertUpdateCount( 1 );
 		clearCounts();
 
-		getSessions().evict( NumberedNode.class );
+		getSessions().getCache().evictEntityRegion( NumberedNode.class );
 
 		NumberedNode child2 = new NumberedNode( "child2" );
 		NumberedNode grandchild3 = new NumberedNode( "grandchild3" );
@@ -503,8 +520,9 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeTree() throws Exception {
-
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -539,8 +557,9 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeTreeWithGeneratedId() throws Exception {
-
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -575,6 +594,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testMergeManaged() throws Exception {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -616,10 +637,10 @@ public class MergeTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		assertEquals(
+				Long.valueOf( 2 ),
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-				new Long( 2 )
+						.uniqueResult()
 		);
 
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
@@ -627,6 +648,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMergeManagedUninitializedCollection() throws Exception {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -664,16 +687,18 @@ public class MergeTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		assertEquals(
+				Long.valueOf( 2 ),
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-				new Long( 2 )
+						.uniqueResult()
 		);
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMergeManagedInitializedCollection() throws Exception {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -712,16 +737,18 @@ public class MergeTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		assertEquals(
+				Long.valueOf( 2 ),
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-				new Long( 2 )
+						.uniqueResult()
 		);
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testRecursiveMergeTransient() throws Exception {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -744,6 +771,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing", "UnusedAssignment"})
 	public void testDeleteAndMerge() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -758,7 +787,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.delete( otherJboss );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
-		jboss.setVers( new Integer( 1 ) );
+		jboss.setVers( Integer.valueOf( 1 ) );
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		s.merge( jboss );
@@ -768,6 +797,8 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testMergeManyToManyWithCollectionDeference() throws Exception {
 		// setup base data...
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -813,6 +844,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	private void cleanup() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -829,9 +861,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.createQuery( "delete from Competitor" ).executeUpdate();
 		s.createQuery( "delete from Competition" ).executeUpdate();
 
-		Iterator itr = s.createQuery( "from Employer" ).list().iterator();
-		while ( itr.hasNext() ) {
-			final Employer employer = ( Employer ) itr.next();
+		for ( Employer employer : (List<Employer>)s.createQuery( "from Employer" ).list() ) {
 			s.delete( employer );
 		}
 

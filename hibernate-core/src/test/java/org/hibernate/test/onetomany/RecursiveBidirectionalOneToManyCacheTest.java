@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,43 +20,17 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.onetomany;
-import junit.framework.Test;
+
 import org.hibernate.CacheMode;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
 /**
- * @author Burkhard Graves, Gail Badner
+ * @author Burkhard Graves
+ * @author Gail Badner
  */
-
 public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
-
-    /*
-	 *  What is done:
-	 *    ___                   ___
-	 *   |   |                 |   |
-	 *    -> 1                  -> 1
-	 *       |   -transform->     / \
-	 *       2                   2   3
-	 *       |
-	 *     	 3
-	 *
-	 * Commenting out
-	 * @Cache(usage=CacheConcurrencyStrategy.READ_WRITE)
-	 * in Node.java makes the assertion true (in check() below).
-	 */
-
-	public RecursiveBidirectionalOneToManyCacheTest(String str) {
-		super(str);
-	}
-
 	protected CacheMode getSessionCacheMode() {
 			return CacheMode.NORMAL;
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( RecursiveBidirectionalOneToManyCacheTest.class );
 	}
 }

@@ -1,39 +1,62 @@
-//$Id: InterfaceProxyTest.java 15736 2008-12-27 00:49:42Z gbadner $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.interfaceproxy;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 
 /**
  * @author Gavin King
  */
-public class InterfaceProxyTest extends FunctionalTestCase {
-	
-	public InterfaceProxyTest(String str) {
-		super(str);
-	}
-
+public class InterfaceProxyTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "interfaceproxy/Item.hbm.xml" };
 	}
 
+	@Override
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( InterfaceProxyTest.class );
-	}
-	
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsExpectedLobUsagePattern.class,
+			comment = "database/driver does not support expected LOB usage pattern"
+	)
 	public void testInterfaceProxies() {
-		
-		if ( ! getDialect().supportsExpectedLobUsagePattern() ) {
-			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
-			return;
-		}
-		
 		Session s = openSession( new DocumentInterceptor() );
 		Transaction t = s.beginTransaction();
 		Document d = new DocumentImpl();

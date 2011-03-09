@@ -23,26 +23,27 @@
  */
 package org.hibernate.test.connections;
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.SQLException;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertFalse;
 
 /**
  * Test originally developed to verify and fix HHH-5550
  *
  * @author Steve Ebersole
  */
-public class HibernateCreateBlobFailedCase extends FunctionalTestCase {
-	public HibernateCreateBlobFailedCase(String string) {
-		super( string );
-	}
-
+public class HibernateCreateBlobFailedCase extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "connections/Silly.hbm.xml" };
@@ -54,6 +55,7 @@ public class HibernateCreateBlobFailedCase extends FunctionalTestCase {
 		cfg.setProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread" );
 	}
 
+	@Test
 	public void testLobCreation() throws SQLException {
 		Session session = sfi().getCurrentSession();
 		session.beginTransaction();

@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,38 +23,37 @@
  */
 package org.hibernate.test.stateless.fetching;
 
-import static org.hibernate.TestLogger.LOG;
 import java.util.Date;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.DefaultNamingStrategy;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.hibernate.TestLogger.LOG;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class StatelessSessionFetchingTest extends FunctionalTestCase {
-
-	public StatelessSessionFetchingTest(String name) {
-		super( name );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( StatelessSessionFetchingTest.class );
-	}
-
+public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "stateless/fetching/Mappings.hbm.xml" };
 	}
 
-	// trying a new thing here in tests with this naming strategy to help alleviate table name clashes
+	@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setNamingStrategy( new TestingNamingStrategy() );
+	}
 
 	private class TestingNamingStrategy extends DefaultNamingStrategy {
 		private final String prefix = determineUniquePrefix();
@@ -97,12 +98,7 @@ public class StatelessSessionFetchingTest extends FunctionalTestCase {
 		}
 	}
 
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setNamingStrategy( new TestingNamingStrategy() );
-	}
-
+	@Test
 	public void testDynamicFetch() {
 		Session s = openSession();
 		s.beginTransaction();

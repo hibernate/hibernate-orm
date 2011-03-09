@@ -1,10 +1,36 @@
-//$Id: EJBQLTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.hql;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
-import junit.framework.Test;
+
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
+
 import org.hibernate.hql.QueryTranslator;
 import org.hibernate.hql.QueryTranslatorFactory;
 import org.hibernate.hql.antlr.HqlSqlTokenTypes;
@@ -12,22 +38,19 @@ import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.hql.ast.HqlParser;
 import org.hibernate.hql.ast.QueryTranslatorImpl;
 import org.hibernate.hql.ast.util.ASTUtil;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
-import antlr.collections.AST;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public class EJBQLTest extends FunctionalTestCase {
-
-	public EJBQLTest(String x) {
-		super( x );
-	}
-
+public class EJBQLTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[]{
 			"hql/Animal.hbm.xml",
@@ -56,15 +79,12 @@ public class EJBQLTest extends FunctionalTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( EJBQLTest.class );
-	}
-
-
+	@Override
 	public boolean createSchema() {
 		return false;
 	}
 
+	@Test
 	public void testEjb3PositionalParameters() throws Exception {
 		QueryTranslatorImpl qt = compile( "from Animal a where a.bodyWeight = ?1" );
 		AST ast = ( AST ) qt.getSqlAST();
@@ -81,17 +101,13 @@ public class EJBQLTest extends FunctionalTestCase {
 		assertTrue( "ejb3 positional param not recognized as a named param", namedParams.size() > 0 );
 	}
 
-	/**
-	 * SELECT OBJECT(identifier)
-	 */
+	@Test
 	public void testSelectObjectClause() throws Exception {
 		//parse("select object(m) from Model m");
 		assertEjbqlEqualsHql( "select object(m) from Model m", "from Model m" );
 	}
 
-	/**
-	 * IN(collection_valued_path) identifier
-	 */
+	@Test
 	public void testCollectionMemberDeclaration() throws Exception {
 		String hql = "select o from Animal a inner join a.offspring o";
 		String ejbql = "select object(o) from Animal a, in(a.offspring) o";
@@ -100,9 +116,7 @@ public class EJBQLTest extends FunctionalTestCase {
 		assertEjbqlEqualsHql( ejbql, hql );
 	}
 
-	/**
-	 * collection_valued_path IS [NOT] EMPTY
-	 */
+	@Test
 	public void testIsEmpty() throws Exception {
 		//String hql = "from Animal a where not exists (from a.offspring)";
 		String hql = "from Animal a where not exists elements(a.offspring)";
@@ -116,9 +130,7 @@ public class EJBQLTest extends FunctionalTestCase {
 		assertEjbqlEqualsHql( ejbql, hql );
 	}
 
-	/**
-	 * [NOT] MEMBER OF
-	 */
+	@Test
 	public void testMemberOf() throws Exception {
 		String hql = "from Animal a where a.mother in (from a.offspring)";
 		//String hql = "from Animal a where a.mother in elements(a.offspring)";
@@ -135,10 +147,7 @@ public class EJBQLTest extends FunctionalTestCase {
 		assertEjbqlEqualsHql( ejbql, hql );
 	}
 
-	/**
-	 * Various functions.
-	 * Tests just parsing for now which means it doesn't guarantee that the generated SQL is as expected or even valid.
-	 */
+	@Test
 	public void testEJBQLFunctions() throws Exception {
 		String hql = "select object(a) from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||0";
 		parse( hql, false );
@@ -242,14 +251,13 @@ public class EJBQLTest extends FunctionalTestCase {
 		System.out.println( "sql: " + toSql( hql ) );
 	}
 
+	@Test
 	public void testTrueFalse() throws Exception {
 		assertEjbqlEqualsHql( "from Human h where h.pregnant is true", "from Human h where h.pregnant = true" );
 		assertEjbqlEqualsHql( "from Human h where h.pregnant is false", "from Human h where h.pregnant = false" );
 		assertEjbqlEqualsHql( "from Human h where not(h.pregnant is true)", "from Human h where not( h.pregnant=true )" );
 	}
 
-
-	// Private
 
 	private void assertEjbqlEqualsHql(String ejbql, String hql) {
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();

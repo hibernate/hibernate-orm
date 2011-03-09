@@ -4,7 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Transaction;
@@ -13,18 +13,25 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 
 public class SQLLoaderTest extends LegacyTestCase {
-
 	static int nextInt = 1;
 	static long nextLong = 1;
 
-	public SQLLoaderTest(String arg) {
-		super(arg);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/ABC.hbm.xml",
@@ -37,10 +44,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( SQLLoaderTest.class );
-	}
-
+	@Test
 	public void testTS() throws Exception {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -55,7 +59,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
-
+	@Test
 	public void testFindBySQLStar() throws HibernateException, SQLException {
 		Session session = openSession();
 		session.delete("from Assignable");
@@ -84,9 +88,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		session.connection().commit();
 		session.close();
-
 	}
 
+	@Test
 	public void testFindBySQLProperties() throws HibernateException, SQLException {
 			Session session = openSession();
 			session.delete("from Category");
@@ -126,11 +130,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 			session.connection().commit();
 			session.close();
-			
-			
+	}
 
-		}
-
+	@Test
 	public void testFindBySQLAssociatedObjects() throws HibernateException, SQLException {
 		Session s = openSession();
 		s.delete("from Assignable");
@@ -175,10 +177,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	}
 
+	@Test
+	@SkipForDialect( MySQLDialect.class )
 	public void testPropertyResultSQL() throws HibernateException, SQLException {
-		
-		if ( getDialect() instanceof MySQLDialect ) return;
-			
 		Session s = openSession();
 		s.delete("from Assignable");
 		s.delete("from Category");
@@ -209,7 +210,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.close();
 
 	}
-	
+
+	@Test
 	public void testFindBySQLMultipleObject() throws HibernateException, SQLException {
 		Session s = openSession();
 		s.delete("from Assignable");
@@ -257,6 +259,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFindBySQLParameters() throws HibernateException, SQLException {
 		Session s = openSession();
 		s.delete("from Assignable");
@@ -324,12 +327,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
+	@SkipForDialect( { HSQLDialect.class, PostgreSQLDialect.class } )
 	public void testEscapedJDBC() throws HibernateException, SQLException {
-		if ( 
-				getDialect() instanceof HSQLDialect || 
-				getDialect() instanceof PostgreSQLDialect
-		) return;
-
 		Session session = openSession();
 		session.delete("from A");
 		A savedA = new A();
@@ -361,8 +361,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
-	public void testDoubleAliasing() throws HibernateException, SQLException {	
-
+	@Test
+	public void testDoubleAliasing() throws HibernateException, SQLException {
 		Session session = openSession();
 		session.delete("from A");
 		A savedA = new A();
@@ -390,7 +390,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
-	// TODO: compositeid's - how ? (SingleSeveral.hbm.xml test)
+	@Test
 	public void testEmbeddedCompositeProperties() throws HibernateException, SQLException {
 	   Session session = openSession();
 
@@ -438,7 +438,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	}
 
-	public void testReturnPropertyComponentRenameFailureExpected() throws HibernateException, SQLException {
+	@Test
+	@FailureExpected( jiraKey = "unknown" )
+	public void testReturnPropertyComponentRename() throws HibernateException, SQLException {
 		// failure expected because this was a regression introduced previously which needs to get tracked down.
 		Session session = openSession();
 		Componentizable componentizable = setupComponentData(session);
@@ -458,14 +460,15 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 	
+	@Test
 	public void testComponentStar() throws HibernateException, SQLException {
 	    componentTest("select {comp.*} from Componentizable comp");
 	}
 	
+	@Test
 	public void testComponentNoStar() throws HibernateException, SQLException {
 	    componentTest("select comp.id as {comp.id}, comp.nickName as {comp.nickName}, comp.name as {comp.component.name}, comp.subName as {comp.component.subComponent.subName}, comp.subName1 as {comp.component.subComponent.subName1} from Componentizable comp");
 	}
-	
 
 	private void componentTest(String sql) throws SQLException {
         Session session = openSession();
@@ -509,8 +512,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 		return c;
 	}
 
+	@Test
+	@SkipForDialect( MySQLDialect.class )
     public void testFindSimpleBySQL() throws Exception {
-		if ( getDialect() instanceof MySQLDialect ) return;
 		Session session = openSession();
 		Category s = new Category();
 		s.setName(String.valueOf(nextLong++));
@@ -528,6 +532,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		// How do we handle objects with composite id's ? (such as Single)
 	}
 
+	@Test
 	public void testFindBySQLSimpleByDiffSessions() throws Exception {
 		Session session = openSession();
 		Category s = new Category();
@@ -554,6 +559,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testFindBySQLDiscriminatedSameSession() throws Exception {
 		Session session = openSession();
 		session.delete("from A");
@@ -593,6 +599,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testFindBySQLDiscriminatedDiffSession() throws Exception {
 		Session session = openSession();
 		session.delete("from A");
@@ -617,9 +624,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.close();
 	}
 
-
+	@Test
+	@TestForIssue( jiraKey = "HHH-21" )
     public void testCompositeIdId() throws HibernateException, SQLException {
-	    // issue HHH-21
         Session s = openSession();
 
         CompositeIdId id = new CompositeIdId();

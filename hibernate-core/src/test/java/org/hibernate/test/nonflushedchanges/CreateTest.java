@@ -1,29 +1,50 @@
-//$Id: CreateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.nonflushedchanges;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.PersistentObjectException;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
 import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Gavin King, Gail Badner (adapted this from "ops" tests version)
  */
 public class CreateTest extends AbstractOperationTestCase {
-
-	public CreateTest(String str) {
-		super( str );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CreateTest.class );
-	}
-
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testNoUpdatesOnCreateVersionedWithCollection() throws Exception {
 		clearCounts();
 
@@ -38,7 +59,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s.save( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( VersionedEntity ) getOldToNewEntityRefMap().get( root );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( VersionedEntity ) getOldToNewEntityRefMap().get( root );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
@@ -49,16 +70,15 @@ public class CreateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		s.delete( root );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		root = ( VersionedEntity ) getOldToNewEntityRefMap().get( root );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateTree() throws Exception {
-
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -68,7 +88,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		root.addChild( child );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( root );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 2 );
@@ -83,15 +103,16 @@ public class CreateTest extends AbstractOperationTestCase {
 		Node child2 = new Node( "child2" );
 		root.addChild( child2 );
 		System.out.println( "committing" );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateTreeWithGeneratedId() throws Exception {
-
 		clearCounts();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -101,8 +122,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		root.addChild( child );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( root );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 2 );
@@ -111,18 +131,19 @@ public class CreateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		root = ( NumberedNode ) s.get( NumberedNode.class, new Long( root.getId() ) );
+		root = ( NumberedNode ) s.get( NumberedNode.class, Long.valueOf( root.getId() ) );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		NumberedNode child2 = new NumberedNode( "child2" );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		root.addChild( child2 );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
 	}
 
+	@Test
 	public void testCreateException() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -132,14 +153,14 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		dupe = ( Node ) getOldToNewEntityRefMap().get( dupe );
 		s.persist( dupe );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( dupe );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		try {
 			SimpleJtaTransactionManagerImpl.getInstance().commit();
 			assertFalse( true );
@@ -156,7 +177,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = openSession();
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		s.persist( nondupe );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		try {
 			SimpleJtaTransactionManagerImpl.getInstance().commit();
 			assertFalse( true );
@@ -167,6 +188,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().rollback();
 	}
 
+	@Test
 	public void testCreateExceptionWithGeneratedId() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -176,8 +198,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
 		s.persist( dupe );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		dupe = ( NumberedNode ) getOldToNewEntityRefMap().get( dupe );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -208,6 +229,8 @@ public class CreateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().rollback();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testBasic() throws Exception {
 		Session s;
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
@@ -224,7 +247,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		eeColl.add( er );
 		er.setEmployees( erColl );
 		ee.setEmployers( eeColl );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		ee = ( Employee ) getOldToNewEntityRefMap().get( ee );
 		er = ( Employer ) ee.getEmployers().iterator().next();
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
@@ -244,7 +267,7 @@ public class CreateTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		eeFromDb = ( Employee ) getOldToNewEntityRefMap().get( eeFromDb );
 		assertEquals( ee.getId(), eeFromDb.getId() );
-		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
+		applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 }

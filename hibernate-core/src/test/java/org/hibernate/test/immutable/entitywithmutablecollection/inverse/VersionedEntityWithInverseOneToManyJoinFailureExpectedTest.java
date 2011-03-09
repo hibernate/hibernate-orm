@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,83 +20,69 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
-import junit.framework.Test;
-import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
+import org.junit.Test;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 
 /**
  * @author Gail Badner
  */
 public class VersionedEntityWithInverseOneToManyJoinFailureExpectedTest extends AbstractEntityWithOneToManyTest {
-
-	public VersionedEntityWithInverseOneToManyJoinFailureExpectedTest(String str) {
-		super(str);
-	}
-
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( VersionedEntityWithInverseOneToManyJoinFailureExpectedTest.class );
-	}
-
+	@Test
+	@Override
+	@FailureExpected(
+			jiraKey = "HHH-4992",
+			message = "known to fail with inverse collection"
+	)
 	public void testAddExistingOneToManyElementToPersistentEntity() {
-		reportSkip(
-				"known to fail with inverse collection",
-				"AddExistingOneToManyElementToPersistentEntity"
-		);
-	}
-
-	public void testAddExistingOneToManyElementToPersistentEntityFailureExpected() {
 		super.testAddExistingOneToManyElementToPersistentEntity();
 	}
 
+	@Test
+	@Override
+	@FailureExpected(
+			jiraKey = "HHH-4992",
+			message = "known to fail with inverse collection"
+	)
 	public void testCreateWithEmptyOneToManyCollectionUpdateWithExistingElement() {
-		reportSkip(
-				"known to fail with inverse collection",
-				"CreateWithEmptyOneToManyCollectionUpdateWithExistingElement"
-		);
-	}
-
-	public void testCreateWithEmptyOneToManyCollectionUpdateWithExistingElementFailureExpected() {
 		super.testCreateWithEmptyOneToManyCollectionUpdateWithExistingElement();
 	}
 
+	@Test
+	@Override
+	@FailureExpected(
+			jiraKey = "HHH-4992",
+			message = "known to fail with inverse collection"
+	)
 	public void testCreateWithEmptyOneToManyCollectionMergeWithExistingElement() {
-		reportSkip(
-				"known to fail with versioned entity with inverse one-to-many collection",
-				"CreateWithEmptyOneToManyCollectionMergeWithExistingElement"
-		);
-	}
-
-	public void testCreateWithEmptyOneToManyCollectionMergeWithExistingElementFailureExpected() {
 		super.testCreateWithEmptyOneToManyCollectionMergeWithExistingElement();
 	}
 
+	@Test
+	@Override
+	@FailureExpected(
+			jiraKey = "HHH-4992",
+			message = "known to fail with inverse collection"
+	)
 	public void testRemoveOneToManyElementUsingUpdate() {
-		reportSkip(
-				"known to fail with versioned entity with inverse collection",
-				"RemoveOneToManyElementUsingUpdate"
-		);
-	}
-
-	public void testRemoveOneToManyElementUsingUpdateFailureExpected() {
 		super.testRemoveOneToManyElementUsingUpdate();
 	}
 
+	@Test
+	@Override
+	@FailureExpected(
+			jiraKey = "HHH-4992",
+			message = "known to fail with inverse collection"
+	)
 	public void testRemoveOneToManyElementUsingMerge() {
-		reportSkip(
-				"known to fail with versioned entity with inverse collection",
-				"RemoveOneToManyElementUsingMerge"
-		);
-	}
-
-	public void testRemoveOneToManyElementUsingMergeFailureExpected() {
 		super.testRemoveOneToManyElementUsingMerge();
 	}
 }

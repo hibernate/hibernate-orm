@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import junit.framework.Test;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
@@ -15,23 +15,21 @@ import org.hibernate.Transaction;
 import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 
 public class MultiTableTest extends LegacyTestCase {
-
-	public MultiTableTest(String arg0) {
-		super(arg0);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/Multi.hbm.xml", "legacy/MultiExtends.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MultiTableTest.class );
-	}
-
+	@Test
 	public void testCriteria() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -50,6 +48,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFetchOneToMany() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -59,6 +58,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNarrow() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -69,6 +69,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJoins() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -91,6 +92,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSubclassCollection() throws Exception {
 		//if ( getDialect() instanceof HSQLDialect ) return; //TODO: figure out why!?
 		Session s = openSession();
@@ -155,6 +157,7 @@ public class MultiTableTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testCollectionOnly() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -173,6 +176,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQueries() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -198,6 +202,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testConstraints() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -216,6 +221,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMultiTable() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -353,6 +359,7 @@ public class MultiTableTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testMultiTableGeneratedId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -470,6 +477,7 @@ public class MultiTableTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testMultiTableCollections() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -517,6 +525,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMultiTableManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -549,6 +558,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMultiTableNativeId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -561,6 +571,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollection() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -591,6 +602,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOneToOne() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -612,6 +624,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionPointer() throws Exception {
 		Session sess = openSession();
 		sess.beginTransaction();

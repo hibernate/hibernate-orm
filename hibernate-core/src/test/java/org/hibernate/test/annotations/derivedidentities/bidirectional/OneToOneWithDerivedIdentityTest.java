@@ -24,7 +24,7 @@
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
 import org.hibernate.Session;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.junit.FailureExpected;
+import org.hibernate.testing.FailureExpected;
 
 public class OneToOneWithDerivedIdentityTest extends TestCase {
 

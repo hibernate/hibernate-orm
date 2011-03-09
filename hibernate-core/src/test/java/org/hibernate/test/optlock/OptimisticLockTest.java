@@ -22,14 +22,21 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.optlock;
-import junit.framework.Test;
+
+
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.fail;
 
 /**
  * Tests relating to the optimistic-lock mapping option.
@@ -37,41 +44,37 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class OptimisticLockTest extends FunctionalTestCase {
-	
-	public OptimisticLockTest(String str) {
-		super(str);
-	}
-
+@RequiresDialectFeature(
+		value = DialectChecks.DoesRepeatableReadNotCauseReadersToBlockWritersCheck.class,
+		comment = "potential deadlock"
+)
+public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "optlock/Document.hbm.xml" };
 	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( OptimisticLockTest.class );
-	}
 	
+	@Test
 	public void testOptimisticLockDirty() {
 		testUpdateOptimisticLockFailure( "LockDirty" );
 	}
 
+	@Test
 	public void testOptimisticLockAll() {
 		testUpdateOptimisticLockFailure( "LockAll" );
 	}
 
+	@Test
 	public void testOptimisticLockDirtyDelete() {
 		testDeleteOptimisticLockFailure( "LockDirty" );
 	}
 
+	@Test
 	public void testOptimisticLockAllDelete() {
 		testDeleteOptimisticLockFailure( "LockAll" );
 	}
 
 	private void testUpdateOptimisticLockFailure(String entityName) {
-		if ( getDialect().doesRepeatableReadCauseReadersToBlockWriters() ) {
-			reportSkip( "deadlock", "update optimistic locking" );
-			return;
-		}
 		Session mainSession = openSession();
 		mainSession.beginTransaction();
 		Document doc = new Document();
@@ -88,7 +91,7 @@ public class OptimisticLockTest extends FunctionalTestCase {
 		mainSession.beginTransaction();
 		doc = ( Document ) mainSession.get( entityName, doc.getId() );
 
-		Session otherSession = getSessions().openSession();
+		Session otherSession = sessionFactory().openSession();
 		otherSession.beginTransaction();
 		Document otherDoc = ( Document ) otherSession.get( entityName, doc.getId() );
 		otherDoc.setSummary( "A modern classic" );
@@ -132,10 +135,6 @@ public class OptimisticLockTest extends FunctionalTestCase {
 
 	@SuppressWarnings({ "UnnecessaryBoxing" })
 	private void testDeleteOptimisticLockFailure(String entityName) {
-		if ( getDialect().doesRepeatableReadCauseReadersToBlockWriters() ) {
-			reportSkip( "deadlock", "delete optimistic locking" );
-			return;
-		}
 		Session mainSession = openSession();
 		mainSession.beginTransaction();
 		Document doc = new Document();

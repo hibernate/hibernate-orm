@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,8 +24,7 @@
 package org.hibernate.test.manytomany.batchload;
 
 import java.util.List;
-import junit.framework.Assert;
-import junit.framework.Test;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
@@ -38,8 +39,15 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.loader.collection.BatchingCollectionInitializer;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.stat.CollectionStatistics;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+import junit.framework.Assert;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests loading of many-to-many collection which should trigger
@@ -47,21 +55,14 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Steve Ebersole
  */
-public class BatchedManyToManyTest extends FunctionalTestCase {
-	public BatchedManyToManyTest(String string) {
-		super( string );
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( BatchedManyToManyTest.class );
-	}
-
+public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "manytomany/batchload/UserGroupBatchLoad.hbm.xml" };
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.BATCH_STRATEGY, TestingBatchBuilder.class.getName() );
@@ -80,9 +81,10 @@ public class BatchedManyToManyTest extends FunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testProperLoaderSetup() {
 		AbstractCollectionPersister cp = ( AbstractCollectionPersister )
-				sfi().getCollectionPersister( User.class.getName() + ".groups" );
+				sessionFactory().getCollectionPersister( User.class.getName() + ".groups" );
 		assertClassAssignability( BatchingCollectionInitializer.class, cp.getInitializer().getClass() );
 		BatchingCollectionInitializer initializer = ( BatchingCollectionInitializer ) cp.getInitializer();
 		assertEquals( 50, findMaxBatchSize( initializer.getBatchSizes() ) );
@@ -98,13 +100,14 @@ public class BatchedManyToManyTest extends FunctionalTestCase {
 		return max;
 	}
 
+	@Test
 	public void testLoadingNonInverseSide() {
 		prepareTestData();
 
-		sfi().getStatistics().clear();
-		CollectionStatistics userGroupStats = sfi().getStatistics()
+		sessionFactory().getStatistics().clear();
+		CollectionStatistics userGroupStats = sessionFactory().getStatistics()
 				.getCollectionStatistics( User.class.getName() + ".groups" );
-		CollectionStatistics groupUserStats = sfi().getStatistics()
+		CollectionStatistics groupUserStats = sessionFactory().getStatistics()
 				.getCollectionStatistics( Group.class.getName() + ".users" );
 
 		Interceptor testingInterceptor = new EmptyInterceptor() {

@@ -23,8 +23,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
+
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.DialectChecks;
 
 /**
  * @author Emmanuel Bernard

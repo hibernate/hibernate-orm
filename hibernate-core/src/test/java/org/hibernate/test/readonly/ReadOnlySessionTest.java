@@ -1,11 +1,10 @@
-//$Id: ReadOnlyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,13 +20,12 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.readonly;
 import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -36,26 +34,25 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
- *
  * @author Gail Badner
  */
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {
-
-	public ReadOnlySessionTest(String str) {
-		super(str);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "readonly/DataPoint.hbm.xml", "readonly/TextHolder.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ReadOnlySessionTest.class );
-	}
-
+	@Test
 	public void testReadOnlyOnProxies() {
 		Session s = openSession();
 		s.setCacheMode( CacheMode.IGNORE );
@@ -95,8 +92,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlySessionDefaultQueryScroll() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -134,8 +131,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlySessionModifiableQueryScroll() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -173,8 +170,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableSessionReadOnlyQueryScroll() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -212,8 +209,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableSessionDefaultQueryReadOnlySessionScroll() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -252,8 +249,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testQueryReadOnlyScroll() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -328,8 +325,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testQueryModifiableScroll() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -403,8 +400,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlySessionDefaultQueryIterate() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -442,8 +439,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlySessionModifiableQueryIterate() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -481,8 +478,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableSessionReadOnlyQueryIterate() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -520,8 +517,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableSessionDefaultQueryReadOnlySessionIterate() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -560,8 +557,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testQueryReadOnlyIterate() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -636,8 +633,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testQueryModifiableIterate() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -712,8 +709,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyRefresh() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -756,8 +753,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyRefreshDetached() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -803,8 +800,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyProxyRefresh() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -860,8 +857,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	}
 
+	@Test
 	public void testReadOnlyProxyRefreshDetached() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -919,8 +916,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyDelete() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -951,8 +948,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	}
 
+	@Test
 	public void testReadOnlyGetModifyAndDelete() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -980,11 +977,10 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		assertTrue( list.isEmpty() );
 		t.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testReadOnlyModeWithExistingModifiableEntity() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -1034,8 +1030,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testModifiableModeWithExistingReadOnlyEntity() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -1085,6 +1081,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testReadOnlyOnTextType() {
 		final String origText = "some huge text string";
 		final String newText = "some even bigger text string";
@@ -1118,8 +1115,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.close();
 	}
 
+	@Test
 	public void testMergeWithReadOnlyEntity() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();
@@ -1152,8 +1149,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 	}
 
+	@Test
 	public void testMergeWithReadOnlyProxy() {
-
 		Session s = openSession();
 		s.setCacheMode(CacheMode.IGNORE);
 		Transaction t = s.beginTransaction();

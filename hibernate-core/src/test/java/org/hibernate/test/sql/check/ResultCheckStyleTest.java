@@ -1,24 +1,47 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.sql.check;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.fail;
 
 /**
- * todo: describe ResultCheckStyleTest
- *
  * @author Steve Ebersole
  */
-public abstract class ResultCheckStyleTest extends DatabaseSpecificFunctionalTestCase {
-
-	public ResultCheckStyleTest(String name) {
-		super( name );
-	}
-
+@SuppressWarnings( {"UnusedDeclaration"})
+public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	public String getCacheConcurrencyStrategy() {
 		return null;
 	}
 
+	@Test
 	public void testInsertionFailureWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -37,6 +60,7 @@ public abstract class ResultCheckStyleTest extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
 	public void testInsertionFailureWithParamChecking() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -55,11 +79,13 @@ public abstract class ResultCheckStyleTest extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testUpdateFailureWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
-		e.setId( new Long( 1 ) );
+		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
 		s.update( e );
 		try {
@@ -74,11 +100,13 @@ public abstract class ResultCheckStyleTest extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testUpdateFailureWithParamChecking() {
 		Session s = openSession();
 		s.beginTransaction();
 		ParamCheckingEntity e = new ParamCheckingEntity();
-		e.setId( new Long( 1 ) );
+		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
 		s.update( e );
 		try {
@@ -93,11 +121,13 @@ public abstract class ResultCheckStyleTest extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
 		ExceptionCheckingEntity e = new ExceptionCheckingEntity();
-		e.setId( new Long( 1 ) );
+		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
 		s.delete( e );
 		try {
@@ -112,11 +142,13 @@ public abstract class ResultCheckStyleTest extends DatabaseSpecificFunctionalTes
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteWithParamChecking() {
 		Session s = openSession();
 		s.beginTransaction();
 		ParamCheckingEntity e = new ParamCheckingEntity();
-		e.setId( new Long( 1 ) );
+		e.setId( Long.valueOf( 1 ) );
 		e.setName( "dummy" );
 		s.delete( e );
 		try {

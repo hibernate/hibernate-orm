@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import junit.framework.Test;
-import junit.textui.TestRunner;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -36,21 +35,23 @@ import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.DateType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
-public class FumTest extends LegacyTestCase {
+import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
 
-	public FumTest(String arg) {
-		super(arg);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 			"legacy/FooBar.hbm.xml",
@@ -74,14 +75,7 @@ public class FumTest extends LegacyTestCase {
 		};
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( FumTest.class );
-	}
-
-	public static void main(String[] args) throws Exception {
-		TestRunner.run( suite() );
-	}
-	
+	@Test
 	public void testQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -90,6 +84,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCriteriaCollection() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -117,6 +112,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCriteria() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -224,7 +220,8 @@ public class FumTest extends LegacyTestCase {
 			this.fum = fum;
 		}
 	}
-	
+
+	@Test
 	public void testBeanResultTransformer() throws HibernateException, SQLException {
 		Session s = openSession();
 		Transaction transaction = s.beginTransaction();
@@ -271,8 +268,8 @@ public class FumTest extends LegacyTestCase {
 		transaction.commit();
 		s.close();
 	}
-	
-	
+
+	@Test
 	public void testListIdentifiers() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -329,6 +326,7 @@ public class FumTest extends LegacyTestCase {
 		return id;
 	}
 
+	@Test
 	public void testCompositeID() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -375,6 +373,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeIDOneToOne() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -396,6 +395,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeIDQuery() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -492,7 +492,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
-
+	@Test
 	public void testCompositeIDCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -532,7 +532,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
-
+	@Test
 	public void testDeleteOwner() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -577,7 +577,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
-
+	@Test
 	public void testCompositeIDs() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -625,6 +625,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testKeyManyToOne() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -710,6 +711,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeKeyPathExpressions() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -727,6 +729,7 @@ public class FumTest extends LegacyTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUnflushedSessionSerialization() throws Exception {
 		///////////////////////////////////////////////////////////////////////////
 		// Test insertions across serializations

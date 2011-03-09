@@ -1,11 +1,10 @@
-//$Id: ReadOnlyTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,18 +20,24 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.readonly;
 import java.math.BigDecimal;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * 
@@ -40,19 +45,12 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  * @author Gail Badner
  */
 public class ReadOnlyTest extends AbstractReadOnlyTest {
-	
-	public ReadOnlyTest(String str) {
-		super(str);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "readonly/DataPoint.hbm.xml", "readonly/TextHolder.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ReadOnlyTest.class );
-	}
-
+	@Test
 	public void testReadOnlyOnProxies() {
 		clearCounts();
 
@@ -99,8 +97,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		//assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testReadOnlyMode() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -149,6 +147,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		//assertDeleteCount( 100 );
 	}
 
+	@Test
 	public void testReadOnlyModeAutoFlushOnQuery() {
 		clearCounts();
 
@@ -185,6 +184,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 100 );
 	}
 
+	@Test
 	public void testSaveReadOnlyModifyInSaveTransaction() {
 		clearCounts();
 
@@ -233,6 +233,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		clearCounts();
 	}
 
+	@Test
 	public void testReadOnlyRefresh() {
 		clearCounts();
 
@@ -279,6 +280,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		clearCounts();
 	}
 
+	@Test
 	public void testReadOnlyRefreshDetached() {
 		clearCounts();
 
@@ -327,8 +329,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testReadOnlyDelete() {
-
 		clearCounts();
 
 		Session s = openSession();
@@ -364,6 +366,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 	}
 
+	@Test
 	public void testReadOnlyGetModifyAndDelete() {
 		clearCounts();
 
@@ -402,6 +405,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 	}
 
+	@Test
 	public void testReadOnlyModeWithExistingModifiableEntity() {
 		clearCounts();
 
@@ -462,6 +466,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		assertUpdateCount( 0 );				
 	}
 
+	@Test
 	public void testModifiableModeWithExistingReadOnlyEntity() {
 		clearCounts();
 
@@ -527,6 +532,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		assertUpdateCount( 0 );		
 	}
 
+	@Test
 	public void testReadOnlyOnTextType() {
 		final String origText = "some huge text string";
 		final String newText = "some even bigger text string";
@@ -568,6 +574,7 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testMergeWithReadOnlyEntity() {
 		clearCounts();
 
@@ -607,7 +614,6 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 1 );
-
 	}
 }
 

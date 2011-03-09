@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,30 +20,32 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.fetchprofiles.join;
 import java.util.List;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Various tests related to join-style fetch profiles.
  *
  * @author Steve Ebersole
  */
-public class JoinFetchProfileTest extends FunctionalTestCase {
-	private List sections;
-
-	public JoinFetchProfileTest(String string) {
-		super( string );
-	}
-
+public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "fetchprofiles/join/Mappings.hbm.xml" };
 	}
@@ -56,6 +58,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	private static interface TestData {
 		public Long getStudentId();
 		public Long getDepartmentId();
@@ -68,6 +71,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		public void perform(TestData data);
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	private void performWithStandardData(TestCode testCode) {
 		Session session = openSession();
 		session.beginTransaction();
@@ -122,6 +126,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testNormalLoading() {
 		performWithStandardData(
 				new TestCode() {
@@ -143,6 +148,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		);
 	}
 
+	@Test
 	public void testNormalCriteria() {
 		performWithStandardData(
 				new TestCode() {
@@ -164,6 +170,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		);
 	}
 
+	@Test
 	public void testBasicFetchProfileOperation() {
 		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "enrollment.details" ) );
 		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "offering.details" ) );
@@ -183,6 +190,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testLoadManyToOneFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -203,6 +211,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		);
 	}
 
+	@Test
 	public void testCriteriaManyToOneFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -223,6 +232,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		);
 	}
 
+	@Test
 	public void testLoadOneToManyFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -241,6 +251,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		);
 	}
 
+	@Test
 	public void testLoadDeepFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -263,6 +274,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 		);
 	}
 
+	@Test
 	public void testLoadComponentDerefFetchProfile() {
 		performWithStandardData(
 				new TestCode() {
@@ -286,6 +298,7 @@ public class JoinFetchProfileTest extends FunctionalTestCase {
 	 *
 	 * TODO : this is actually not strictly true.  what we should have happen is to subsequently load those fetches
 	 */
+	@Test
 	public void testHQL() {
 		performWithStandardData(
 				new TestCode() {

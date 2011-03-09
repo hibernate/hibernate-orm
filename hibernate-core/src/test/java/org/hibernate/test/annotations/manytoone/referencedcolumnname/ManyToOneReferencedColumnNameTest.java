@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -25,9 +24,10 @@
 package org.hibernate.test.annotations.manytoone.referencedcolumnname;
 import java.math.BigDecimal;
 import org.hibernate.Session;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.junit.DialectChecks;
-import org.hibernate.testing.junit.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard

@@ -3,37 +3,37 @@ package org.hibernate.test.legacy;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.HibernateException;
 import org.hibernate.classic.Session;
 import org.hibernate.id.PostInsertIdentifierGenerator;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.SkipLog;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author MAX
  *
  */
 public class CustomSQLTest extends LegacyTestCase {
-
-	public CustomSQLTest(String name) {
-		super(name);
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] { "legacy/CustomSQL.hbm.xml" };
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( CustomSQLTest.class );
 	}
 
 	private boolean isUsingIdentity() {
 		return PostInsertIdentifierGenerator.class.isAssignableFrom( getDialect().getNativeIdentifierGeneratorClass() );
 	}
 
+	@Test
 	public void testInsert() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
-			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
+			SkipLog.reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
 			return;
 		}
 
@@ -62,10 +62,9 @@ public class CustomSQLTest extends LegacyTestCase {
 
 		s.connection().commit();
 		s.close();
-
-
 	}
 
+	@Test
 	public void testJoinedSubclass() throws HibernateException, SQLException {
 		Medication m = new Medication();
 
@@ -93,9 +92,10 @@ public class CustomSQLTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testCollectionCUD() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
-			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
+			SkipLog.reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
 			return;
 		}
 
@@ -156,9 +156,10 @@ public class CustomSQLTest extends LegacyTestCase {
 
 	}
 
+	@Test
 	public void testCRUD() throws HibernateException, SQLException {
 		if ( isUsingIdentity() ) {
-			reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
+			SkipLog.reportSkip( "hand sql expecting non-identity id gen", "Custom SQL" );
 			return;
 		}
 

@@ -1,26 +1,50 @@
-//$Id: $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.join;
+
 import java.util.List;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
 
-public class OptionalJoinTest extends FunctionalTestCase {
+import org.junit.Test;
 
-	public OptionalJoinTest(String name) {
-		super(name);
-	}
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( OptionalJoinTest.class );
-	}
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+/**
+ * @author Chris Jones and Gail Badner
+ */
+public class OptionalJoinTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "join/Thing.hbm.xml" };
 	}
 
+	@Test
 	public void testUpdateNonNullOptionalJoinToDiffNonNull() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -55,6 +79,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateNonNullOptionalJoinToDiffNonNullDetached() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -95,6 +120,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMergeNonNullOptionalJoinToDiffNonNullDetached() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -135,7 +161,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
-
+	@Test
 	public void testUpdateNonNullOptionalJoinToNull() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -170,6 +196,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateNonNullOptionalJoinToNullDetached() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -210,6 +237,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMergeNonNullOptionalJoinToNullDetached() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -250,6 +278,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateNullOptionalJoinToNonNull() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -283,6 +312,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUpdateNullOptionalJoinToNonNullDetached() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -322,6 +352,7 @@ public class OptionalJoinTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMergeNullOptionalJoinToNonNullDetached() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

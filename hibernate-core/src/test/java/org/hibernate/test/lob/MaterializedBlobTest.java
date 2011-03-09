@@ -1,11 +1,10 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -21,12 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.lob;
-import junit.framework.Test;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * Tests eager materialization and mutation of data mapped by
@@ -34,35 +32,12 @@ import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
  *
  * @author Gail Badner
  */
+@RequiresDialectFeature(
+		value = DialectChecks.SupportsExpectedLobUsagePattern.class,
+		comment = "database/driver does not support expected LOB usage pattern"
+)
 public class MaterializedBlobTest extends LongByteArrayTest {
-
-	public MaterializedBlobTest(String name) {
-		super( name );
-	}
-
 	public String[] getMappings() {
 		return new String[] { "lob/MaterializedBlobMappings.hbm.xml" };
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MaterializedBlobTest.class );
-	}
-
-	@Override
-	public void testBoundedLongByteArrayAccess() {
-		super.testBoundedLongByteArrayAccess();
-	}
-
-	@Override
-	public void testSaving() {
-		super.testSaving();
-	}
-
-	public boolean appliesTo(Dialect dialect) {
-		if ( ! dialect.supportsExpectedLobUsagePattern() ) {
-			reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
-			return false;
-		}
-		return true;
 	}
 }

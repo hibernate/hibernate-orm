@@ -1,30 +1,48 @@
-//$Id: MapIndexFormulaTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.map;
 import java.util.List;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gavin King
  */
-public class MapIndexFormulaTest extends FunctionalTestCase {
-	
-	public MapIndexFormulaTest(String str) {
-		super(str);
-	}
-
+public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "map/UserGroup.hbm.xml" };
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( MapIndexFormulaTest.class );
-	}
-
+	@Test
 	public void testIndexFunctionOnManyToManyMap() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -38,6 +56,8 @@ public class MapIndexFormulaTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked", "UnnecessaryBoxing"})
 	public void testIndexFormulaMap() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -82,14 +102,16 @@ public class MapIndexFormulaTest extends FunctionalTestCase {
 		turin = (User) g.getUsers().get("turin");
 		smap = turin.getSession();
 		assertEquals(smap.size(), 0);
-		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), new Long(1) );
+		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), Long.valueOf(1) );
 		s.delete(g);
 		s.delete(turin);
-		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), new Long(0) );
+		assertEquals( s.createQuery("select count(*) from User").uniqueResult(), Long.valueOf( 0 ) );
 		t.commit();
 		s.close();
 	}
 	
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testSQLQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -110,7 +132,6 @@ public class MapIndexFormulaTest extends FunctionalTestCase {
 		s.createQuery("delete User").executeUpdate();
 		t.commit();
 		s.close();
-		
 	}
 
 }

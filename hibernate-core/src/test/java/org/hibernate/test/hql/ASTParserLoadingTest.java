@@ -1,7 +1,28 @@
-// $Id: ASTParserLoadingTest.java 11373 2007-03-29 19:09:07Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.hql;
 
-import static org.hibernate.TestLogger.LOG;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -13,7 +34,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -39,6 +60,30 @@ import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.stat.QueryStatistics;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.hibernate.transform.Transformers;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.Type;
+
+import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.any.IntegerPropertyValue;
 import org.hibernate.test.any.PropertySet;
 import org.hibernate.test.any.PropertyValue;
@@ -48,13 +93,6 @@ import org.hibernate.test.cid.LineItem;
 import org.hibernate.test.cid.LineItem.Id;
 import org.hibernate.test.cid.Order;
 import org.hibernate.test.cid.Product;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.hibernate.transform.Transformers;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
 
 /**
  * Tests the integration of the new AST parser into the loading of query results using
@@ -66,14 +104,10 @@ import org.hibernate.type.Type;
  *
  * @author Steve
  */
-public class ASTParserLoadingTest extends FunctionalTestCase {
+public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
+	private List<Long> createdAnimalIds = new ArrayList<Long>();
 
-	private List createdAnimalIds = new ArrayList();
-
-	public ASTParserLoadingTest(String name) {
-		super( name );
-	}
-
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"hql/Animal.hbm.xml",
@@ -95,18 +129,15 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	}
 
 	@Override
-    public void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.QUERY_TRANSLATOR, ASTQueryTranslatorFactory.class.getName() );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( ASTParserLoadingTest.class );
-	}
-
-	public void testSubSelectAsArtithmeticOperand() {
+	@Test
+	public void testSubSelectAsArithmeticOperand() {
 		Session s = openSession();
 		s.beginTransaction();
 
@@ -124,6 +155,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJpaTypeOperator() {
 		// just checking syntax here...
 		Session s = openSession();
@@ -154,6 +186,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponentJoins() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -191,6 +224,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJPAQLQualifiedIdentificationVariablesControl() {
 		// just checking syntax here...
 		Session s = openSession();
@@ -208,6 +242,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testJPAQLQualifiedIdentificationVariables() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -251,11 +287,13 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SkipForDialect(
+			value = IngresDialect.class,
+			jiraKey = "HHH-4961",
+			comment = "Ingres does not support this scoping in 9.3"
+	)
 	public void testPaginationWithPolymorphicQuery() {
-		if ( getDialect() instanceof IngresDialect ) {
-			// HHH-4961 Ingres does not support this scoping in 9.3.
-			return;
-		}
 		Session s = openSession();
 		s.beginTransaction();
 		Human h = new Human();
@@ -278,6 +316,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponentNullnessChecks() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -319,6 +358,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInvalidCollectionDereferencesFail() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -365,9 +405,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	/**
-	 * Copied from {@link HQLTest#testConcatenation}
-	 */
+	@Test
 	public void testConcatenation() {
 		// simple syntax checking...
 		Session s = openSession();
@@ -377,9 +415,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	/**
-	 * Copied from {@link HQLTest#testExpressionWithParamInFunction}
-	 */
+	@Test
 	public void testExpressionWithParamInFunction() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -401,7 +437,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		else {
 			s.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" ).setString( "foo", "foo" ).list();
 		}
-		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setLong( "param", 1 ).list();
+		s.createQuery( "from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" ).setLong(
+				"param", 1
+		).list();
 		if ( getDialect() instanceof DB2Dialect ) {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" ).setString( "bar", "xyz" ).list();
 		}
@@ -415,6 +453,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCrazyIdFieldNames() {
 		MoreCrazyIdFieldNameStuffEntity top = new MoreCrazyIdFieldNameStuffEntity( "top" );
 		HeresAnotherCrazyIdFieldName next = new HeresAnotherCrazyIdFieldName( "next" );
@@ -451,8 +490,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-2257" )
 	public void testImplicitJoinsInDifferentClauses() {
-		// HHH-2257 :
 		// both the classic and ast translators output the same syntactically valid sql
 		// for all of these cases; the issue is that shallow (iterate) and
 		// non-shallow (list/scroll) queries return different results because the
@@ -487,6 +527,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRowValueConstructorSyntaxInInList() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -520,9 +561,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 		s.flush();
 		Query query = s.createQuery( "from LineItem l where l.id in (:idList)" );
-		List list = new ArrayList();
-		list.add( new Id("123456789", order.getId().getOrderNumber(), "4321") );
-		list.add( new Id("123456789", order.getId().getOrderNumber(), "1234") );
+		List<Id> list = new ArrayList<Id>();
+		list.add( new Id( "123456789", order.getId().getOrderNumber(), "4321" ) );
+		list.add( new Id( "123456789", order.getId().getOrderNumber(), "1234" ) );
 		query.setParameterList( "idList", list );
 		assertEquals( 2, query.list().size() );
 
@@ -534,6 +575,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 
 	}
+
 	private void checkCounts(String hql, int expected, String testCondition) {
 		Session s = openSession();
 		s.beginTransaction();
@@ -545,8 +587,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-2257" )
 	public void testImplicitSelectEntityAssociationInShallowQuery() {
-		// HHH-2257 :
 		// both the classic and ast translators output the same syntactically valid sql.
 		// the issue is that shallow and non-shallow queries return different
 		// results because the shallow skips the inner join which "weeds out" results
@@ -589,6 +632,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		return count;
 	}
 
+	@Test
 	public void testEntityAndOneToOneReturnedByQuery() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -596,7 +640,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		h.setName( new Name( "Gail", null, "Badner" ) );
 		s.save( h );
 		User u = new User();
-		u.setUserName(  "gbadner" );
+		u.setUserName( "gbadner" );
 		u.setHuman( h );
 		s.save( u );
 		s.getTransaction().commit();
@@ -607,14 +651,15 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Object [] result = ( Object [] ) s.createQuery( "from User u, Human h where u.human = h" ).uniqueResult();
 		assertNotNull( result );
 		assertEquals( u.getUserName(), ( ( User ) result[ 0 ] ).getUserName() );
-		assertEquals( h.getName().getFirst(), ( ( Human ) result[ 1 ] ).getName().getFirst() );
-		assertSame( ( ( User ) result[ 0 ] ).getHuman(), result[ 1 ] );
+		assertEquals( h.getName().getFirst(), ((Human) result[1]).getName().getFirst() );
+		assertSame( ((User) result[0]).getHuman(), result[1] );
 		s.createQuery( "delete User" ).executeUpdate();
 		s.createQuery( "delete Human" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
 	public void testNestedComponentIsNull() {
 		// (1) From MapTest originally...
 		// (2) Was then moved into HQLTest...
@@ -628,6 +673,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		new SyntaxChecker( "from Commento c where c.marelo.commento.mcompr is null" ).checkAll();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-939" )
 	public void testSpecialClassPropertyReference() {
 		// this is a long standing bug in Hibernate when applied to joined-subclasses;
 		//  see HHH-939 for details and history
@@ -638,14 +685,17 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		new SyntaxChecker( "from Animal an where an.class = Dog" ).checkAll();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-2376" )
 	public void testSpecialClassPropertyReferenceFQN() {
-		// tests relating to HHH-2376
 		new SyntaxChecker( "from Zoo zoo where zoo.class = org.hibernate.test.hql.PettingZoo" ).checkAll();
 		new SyntaxChecker( "select a.description from Animal a where a.class = org.hibernate.test.hql.Mammal" ).checkAll();
 		new SyntaxChecker( "from DomesticAnimal an where an.class = org.hibernate.test.hql.Dog" ).checkAll();
 		new SyntaxChecker( "from Animal an where an.class = org.hibernate.test.hql.Dog" ).checkAll();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-1631" )
 	public void testSubclassOrSuperclassPropertyReferenceInJoinedSubclass() {
 		// this is a long standing bug in Hibernate; see HHH-1631 for details and history
 		//
@@ -672,12 +722,12 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		new SyntaxChecker( "select da.father from DomesticAnimal da join da.owner as o where o.nickName = 'Gavin'" ).checkAll();
 	}
 
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportLimitAndOffsetCheck.class,
+			comment = "dialect does not support offset and limit combo"
+	)
 	public void testSimpleSelectWithLimitAndOffset() throws Exception {
-		if ( ! ( getDialect().supportsLimit() && getDialect().supportsLimitOffset() ) ) {
-			reportSkip( "dialect does not support offset and limit combo", "limit and offset combination" );
-			return;
-		}
-
 		// just checking correctness of param binding code...
 		Session session = openSession();
 		session.createQuery( "from Animal" )
@@ -687,10 +737,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testJPAPositionalParameterList() {
 		Session s = openSession();
 		s.beginTransaction();
-		ArrayList params = new ArrayList();
+		ArrayList<String> params = new ArrayList<String>();
 		params.add( "Doe" );
 		params.add( "Public" );
 		s.createQuery( "from Human where name.last in (?1)" )
@@ -705,6 +756,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponentQueries() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -713,14 +765,14 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertEquals( 1, types.length );
 		assertTrue( types[0] instanceof ComponentType );
 
-		// Test the ability to perform comparisions between component values
+		// Test the ability to perform comparisons between component values
 		s.createQuery( "from Human h where h.name = h.name" ).list();
 		s.createQuery( "from Human h where h.name = :name" ).setParameter( "name", new Name() ).list();
 		s.createQuery( "from Human where name = :name" ).setParameter( "name", new Name() ).list();
 		s.createQuery( "from Human h where :name = h.name" ).setParameter( "name", new Name() ).list();
 		s.createQuery( "from Human h where :name <> h.name" ).setParameter( "name", new Name() ).list();
 
-		// Test the ability to perform comparisions between a component and an explicit row-value
+		// Test the ability to perform comparisons between a component and an explicit row-value
 		s.createQuery( "from Human h where h.name = ('John', 'X', 'Doe')" ).list();
 		s.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name" ).list();
 		s.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name" ).list();
@@ -732,13 +784,14 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-1774" )
+	@SkipForDialect(
+			value = IngresDialect.class,
+			comment = "Subselects are not supported within select target lists in Ingres",
+			jiraKey = "HHH-4970"
+	)
 	public void testComponentParameterBinding() {
-		if ( getDialect() instanceof IngresDialect ) {
-			// HHH-4970 Subselects are not supported within select target lists
-			// in Ingres
-			return;
-		}
-		// HHH-1774 : parameters are bound incorrectly with component parameters...
 		Session s = openSession();
 		s.beginTransaction();
 
@@ -760,17 +813,19 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@SuppressWarnings( {"unchecked"})
+	@Test
 	public void testAnyMappingReference() {
 		Session s = openSession();
 		s.beginTransaction();
 
 		PropertyValue redValue = new StringPropertyValue( "red" );
-		PropertyValue lonliestNumberValue = new IntegerPropertyValue( 1 );
+		PropertyValue loneliestNumberValue = new IntegerPropertyValue( 1 );
 
 		Long id;
 		PropertySet ps = new PropertySet( "my properties" );
 		ps.setSomeSpecificProperty( redValue );
-		ps.getGeneralProperties().put( "the lonliest number", lonliestNumberValue );
+		ps.getGeneralProperties().put( "the loneliest number", loneliestNumberValue );
 		ps.getGeneralProperties().put( "i like", new StringPropertyValue( "pina coladas" ) );
 		ps.getGeneralProperties().put( "i also like", new StringPropertyValue( "getting caught in the rain" ) );
 		s.save( ps );
@@ -795,6 +850,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJdkEnumStyleEnumConstant() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -805,12 +861,15 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	public void testParameterTypeMismatchFailureExpected() {
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@FailureExpected( jiraKey = "unknown" )
+	public void testParameterTypeMismatch() {
 		Session s = openSession();
 		s.beginTransaction();
 
 		Query query = s.createQuery( "from Animal a where a.description = :nonstring" )
-				.setParameter( "nonstring", new Integer(1) );
+				.setParameter( "nonstring", Integer.valueOf( 1 ) );
 		try {
 			query.list();
 			fail( "query execution should have failed" );
@@ -823,6 +882,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMultipleBagFetchesFail() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -837,6 +897,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-1248" )
 	public void testCollectionJoinsInSubselect() {
 		// HHH-1248 : initially FromElementFactory treated any explicit join
 		// as an implied join so that theta-style joins would always be used.
@@ -881,6 +943,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionFetchWithDistinctionAndLimit() {
 		// create some test data...
 		Session s = openSession();
@@ -928,6 +991,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFetchInSubqueryFails() {
 		Session s = openSession();
 		try {
@@ -940,6 +1004,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-1464" )
 	public void testQueryMetadataRetrievalWithFetching() {
 		// HHH-1464 : there was a problem due to the fact they we polled
 		// the shallow version of the query plan to get the metadata.
@@ -950,9 +1016,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-429" )
+	@SuppressWarnings( {"unchecked"})
 	public void testSuperclassPropertyReferenceAfterCollectionIndexedAccess() {
 		// note: simply performing syntax checking in the db
-		// test for HHH-429
 		Session s = openSession();
 		s.beginTransaction();
 		Mammal tiger = new Mammal();
@@ -987,6 +1055,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJoinFetchCollectionOfValues() {
 		// note: simply performing syntax checking in the db
 		Session s = openSession();
@@ -996,6 +1065,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIntegerLiterals() {
 		// note: simply performing syntax checking in the db
 		Session s = openSession();
@@ -1007,12 +1077,11 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.createQuery( "from Foo where long = " + (Long.MIN_VALUE + 1) + "L" ).list();
 		s.createQuery( "from Foo where long = " + Long.MAX_VALUE + "L" ).list();
 		s.createQuery( "from Foo where integer = " + (Long.MIN_VALUE + 1) ).list();
-// currently fails due to HHH-1387
-//		s.createQuery( "from Foo where long = " + Long.MIN_VALUE ).list();
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
 	public void testDecimalLiterals() {
 		// note: simply performing syntax checking in the db
 		Session s = openSession();
@@ -1031,6 +1100,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNakedPropertyRef() {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
@@ -1042,6 +1112,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNakedComponentPropertyRef() {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
@@ -1054,6 +1125,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNakedImplicitJoins() {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
@@ -1063,6 +1135,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNakedEntityAssociationReference() {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
@@ -1072,6 +1145,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNakedMapIndex() throws Exception {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
@@ -1081,6 +1155,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInvalidFetchSemantics() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1103,6 +1178,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testArithmetic() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1130,6 +1207,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNestedCollectionFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1140,12 +1218,14 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SkipForDialect(
+			value = IngresDialect.class,
+			jiraKey = "HHH-4973",
+			comment = "Ingres 9.3 does not support sub-selects in the select list"
+	)
+	@SuppressWarnings( {"unchecked"})
 	public void testSelectClauseSubselect() {
-		if ( getDialect() instanceof IngresDialect ) {
-			// HHH-4973 Ingres 9.3 does not support sub-selects in the select
-			// list.
-			return;
-		}
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Zoo zoo = new Zoo();
@@ -1160,18 +1240,19 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		zoo.getMammals().put("Platypus", plat);
 		zoo.getAnimals().put("plat123", plat);
 		s.persist( plat );
-		s.persist(zoo);
+		s.persist( zoo );
 
 		s.createQuery("select (select max(z.id) from a.zoo z) from Animal a").list();
 		s.createQuery("select (select max(z.id) from a.zoo z where z.name=:name) from Animal a")
 			.setParameter("name", "Melbourne Zoo").list();
 
-		s.delete(plat);
+		s.delete( plat );
 		s.delete(zoo);
 		t.commit();
 		s.close();
 	}
 
+	@Test
 	public void testInitProxy() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1184,13 +1265,15 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		plat = (Mammal) s.load(Mammal.class, plat.getId() );
 		assertFalse( Hibernate.isInitialized(plat) );
 		Object plat2 = s.createQuery("from Animal a").uniqueResult();
-		assertSame(plat, plat2);
-		assertTrue( Hibernate.isInitialized(plat) );
-		s.delete(plat);
+		assertSame( plat, plat2 );
+		assertTrue( Hibernate.isInitialized( plat ) );
+		s.delete( plat );
 		t.commit();
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testSelectClauseImplicitJoin() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1201,9 +1284,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Mammal plat = new Mammal();
 		plat.setBodyWeight( 11f );
 		plat.setDescription( "Platypus" );
-		plat.setZoo(zoo);
-		plat.setSerialNumber("plat123");
-		zoo.getMammals().put("Platypus", plat);
+		plat.setZoo( zoo );
+		plat.setSerialNumber( "plat123" );
+		zoo.getMammals().put( "Platypus", plat );
 		zoo.getAnimals().put("plat123", plat);
 		s.persist( plat );
 		s.persist(zoo);
@@ -1223,6 +1306,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testSelectClauseImplicitJoinWithIterate() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1256,6 +1341,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testComponentOrderBy() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1281,52 +1367,53 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		t.commit();
 		s.close();
 	}
-
+	
+	@Test
 	public void testOrderedWithCustomColumnReadAndWrite() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
-		first.setNegatedNumber(1);
-		s.save(first);
+		first.setNegatedNumber( 1 );
+		s.save( first );
 		SimpleEntityWithAssociation second = new SimpleEntityWithAssociation();
 		second.setNegatedNumber(2);
-		s.save(second);
+		s.save( second );
 		s.flush();
 
 		// Check order via SQL. Numbers are negated in the DB, so second comes first.
 		List listViaSql = s.createSQLQuery("select id from simple_1 order by negated_num").list();
-		assertEquals(2, listViaSql.size());
-		assertEquals(second.getId().longValue(), ((Number)listViaSql.get(0)).longValue());
-		assertEquals(first.getId().longValue(), ((Number)listViaSql.get(1)).longValue());
+		assertEquals( 2, listViaSql.size() );
+		assertEquals( second.getId().longValue(), ((Number) listViaSql.get( 0 )).longValue() );
+		assertEquals( first.getId().longValue(), ((Number) listViaSql.get( 1 )).longValue() );
 
 		// Check order via HQL. Now first comes first b/c the read negates the DB negation.
 		List listViaHql = s.createQuery("from SimpleEntityWithAssociation order by negatedNumber").list();
-		assertEquals(2, listViaHql.size());
+		assertEquals( 2, listViaHql.size() );
 		assertEquals(first.getId(), ((SimpleEntityWithAssociation)listViaHql.get(0)).getId());
 		assertEquals(second.getId(), ((SimpleEntityWithAssociation)listViaHql.get(1)).getId());
 
-		s.delete(first);
-		s.delete(second);
+		s.delete( first );
+		s.delete( second );
 		t.commit();
 		s.close();
-
 	}
-
+	
+	@Test
 	public void testHavingWithCustomColumnReadAndWrite() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		SimpleEntityWithAssociation first = new SimpleEntityWithAssociation();
 		first.setNegatedNumber(5);
-		first.setName("simple");
+		first.setName( "simple" );
 		s.save(first);
 		SimpleEntityWithAssociation second = new SimpleEntityWithAssociation();
-		second.setNegatedNumber(10);
+		second.setNegatedNumber( 10 );
 		second.setName("simple");
 		s.save(second);
 		SimpleEntityWithAssociation third = new SimpleEntityWithAssociation();
-		third.setNegatedNumber(20);
-		third.setName("complex");
-		s.save(third);
+		third.setNegatedNumber( 20 );
+		third.setName( "complex" );
+		s.save( third );
 		s.flush();
 
 		// Check order via HQL. Now first comes first b/c the read negates the DB negation.
@@ -1342,6 +1429,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 	}
 
+	@Test
 	public void testLoadSnapshotWithCustomColumnReadAndWrite() {
 		// Exercises entity snapshot load when select-before-update is true.
 		Session s = openSession();
@@ -1349,9 +1437,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		final double SIZE_IN_KB = 1536d;
 		final double SIZE_IN_MB = SIZE_IN_KB / 1024d;
 		Image image = new Image();
-		image.setName("picture.gif");
-		image.setSizeKb(SIZE_IN_KB);
-		s.persist(image);
+		image.setName( "picture.gif" );
+		image.setSizeKb( SIZE_IN_KB );
+		s.persist( image );
 		s.flush();
 
 		Double sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
@@ -1363,8 +1451,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		t = s.beginTransaction();
 		final double NEW_SIZE_IN_KB = 2048d;
 		final double NEW_SIZE_IN_MB = NEW_SIZE_IN_KB / 1024d;
-		image.setSizeKb(NEW_SIZE_IN_KB);
-		s.update(image);
+		image.setSizeKb( NEW_SIZE_IN_KB );
+		s.update( image );
 		s.flush();
 
 		sizeViaSql = (Double)s.createSQLQuery("select size_mb from image").uniqueResult();
@@ -1373,10 +1461,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.delete(image);
 		t.commit();
 		s.close();
-
 	}
-
-
+		
 	private Human genSimpleHuman(String fName, String lName) {
 		Human h = new Human();
 		h.setName( new Name( fName, 'X', lName ) );
@@ -1384,6 +1470,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		return h;
 	}
 
+	@Test
 	public void testCastInSelect() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1397,7 +1484,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 		bodyWeight = s.createQuery("select cast(bodyWeight as big_decimal) from Animal").uniqueResult();
 		assertTrue( BigDecimal.class.isInstance( bodyWeight ) );
-		assertEquals( a.getBodyWeight(), ( (BigDecimal) bodyWeight ).floatValue() );
+		assertEquals( a.getBodyWeight(), ( (BigDecimal) bodyWeight ).floatValue(), .01 );
 
 		Object literal = s.createQuery("select cast(10000000 as big_integer) from Animal").uniqueResult();
 		assertTrue( BigInteger.class.isInstance( literal ) );
@@ -1407,9 +1494,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
-	/**
-	 * Test the numeric expression rules specified in section 4.8.6 of the JPA 2 specification
-	 */
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testNumericExpressionReturnTypes() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1516,6 +1602,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAliases() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1524,16 +1611,17 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		a.setDescription("an animal");
 		s.persist(a);
 		String[] aliases1 = s.createQuery("select a.bodyWeight as abw, a.description from Animal a").getReturnAliases();
-		assertEquals(aliases1[0], "abw");
+		assertEquals( aliases1[0], "abw" );
 		assertEquals(aliases1[1], "1");
 		String[] aliases2 = s.createQuery("select count(*), avg(a.bodyWeight) as avg from Animal a").getReturnAliases();
-		assertEquals(aliases2[0], "0");
+		assertEquals( aliases2[0], "0" );
 		assertEquals(aliases2[1], "avg");
 		s.delete(a);
 		t.commit();
 		s.close();
 	}
 
+	@Test
 	public void testParameterMixing() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1546,6 +1634,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOrdinalParameters() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1561,12 +1650,14 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testIndexParams() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		s.createQuery("from Zoo zoo where zoo.mammals[:name] = :id")
-			.setParameter("name", "Walrus")
-			.setParameter("id", new Long(123))
+		s.createQuery( "from Zoo zoo where zoo.mammals[:name] = :id" )
+			.setParameter( "name", "Walrus" )
+			.setParameter( "id", Long.valueOf( 123 ) )
 			.list();
 		s.createQuery("from Zoo zoo where zoo.mammals[:name].bodyWeight > :w")
 			.setParameter("name", "Walrus")
@@ -1591,6 +1682,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testAggregation() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1641,12 +1734,13 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSelectClauseCase() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Human h = new Human();
 		h.setBodyWeight( (float) 74.0 );
-		h.setHeightInches(120.5);
+		h.setHeightInches( 120.5 );
 		h.setDescription("Me");
 		h.setName( new Name("Gavin", 'A', "King") );
 		h.setNickName("Oney");
@@ -1660,11 +1754,13 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SkipForDialect(
+			value = IngresDialect.class,
+			jiraKey = "HHH-4976",
+			comment = "Ingres 9.3 does not support sub-selects in the select list"
+	)
 	public void testImplicitPolymorphism() {
-		if(getDialect() instanceof IngresDialect){
-			//HHH-4976 Ingres 9.3 does not support sub-selects in the select list.
-			return;
-		}
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
@@ -1690,6 +1786,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCoalesce() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -1699,17 +1796,19 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testStr() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 		Animal an = new Animal();
 		an.setBodyWeight(123.45f);
-		session.persist(an);
+		session.persist( an );
 		String str = (String) session.createQuery("select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'").uniqueResult();
 		if ( getDialect() instanceof DB2Dialect ) {
 			assertTrue( str.startsWith("1.234") );
 		}
-		else if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {
+		else //noinspection deprecation
+			if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {
 			// str(val) on sybase assumes a default of 10 characters with no decimal point or decimal values
 			// str(val) on sybase result is right-justified
 			assertEquals( str.length(), 10 );
@@ -1721,6 +1820,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		else {
 			assertTrue( str.startsWith("123.4") );
 		}
+
+		//noinspection deprecation
 		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof Sybase11Dialect ) && ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SybaseAnywhereDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
 			// In TransactSQL (the variant spoken by Sybase and SQLServer), the str() function
 			// is explicitly intended for numeric values only...
@@ -1729,7 +1830,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 			System.out.println(dateStr1 + '=' + dateStr2);
 			if ( ! ( getDialect() instanceof Oracle8iDialect ) ) { //Oracle renders the name of the month :(
 				String[] dp1 = StringHelper.split("-", dateStr1);
-				String[] dp2 = StringHelper.split("-", dateStr2);
+				String[] dp2 = StringHelper.split( "-", dateStr2 );
 				for (int i=0; i<3; i++) {
 					if ( dp1[i].startsWith( "0" ) ) {
 						dp1[i] = dp1[i].substring( 1 );
@@ -1743,10 +1844,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@SkipForDialect( value = { MySQLDialect.class, DB2Dialect.class } )
 	public void testCast() {
-		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof DB2Dialect ) ) {
-			return;
-		}
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 		session.createQuery("from Human h where h.nickName like 'G%'").list();
@@ -1756,6 +1856,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testExtract() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -1769,12 +1870,13 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@SkipForDialect(
+			value = IngresDialect.class,
+			jiraKey = "HHH-4976",
+			comment = "Ingres 9.3 does not support sub-selects in the select list"
+	)
 	public void testOneToManyFilter() throws Throwable {
-		if ( getDialect() instanceof IngresDialect ) {
-			// HHH-4977 Ingres 9.3 does not support sub-selects in the select
-			// list.
-			return;
-		}
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 
@@ -1812,6 +1914,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testManyToManyFilter() throws Throwable {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
@@ -1843,18 +1947,20 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testFilterWithCustomColumnReadAndWrite() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 
 		Human human = new Human();
 		human.setName( new Name( "Steve", 'L', "Ebersole" ) );
-		human.setHeightInches(73d);
+		human.setHeightInches( 73d );
 		session.save( human );
 
 		Human friend = new Human();
 		friend.setName( new Name( "John", 'Q', "Doe" ) );
-		friend.setHeightInches(50d);
+		friend.setHeightInches( 50d );
 		session.save( friend );
 
 		human.setFriends( new ArrayList() );
@@ -1866,26 +1972,35 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 
 		assertEquals( session.createFilter( human.getFriends(), "" ).list().size(), 1 );
 		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches < ?" ).setDouble( 0, 51d ).list().size(), 1 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches > ?" ).setDouble( 0, 51d ).list().size(), 0 );
-		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(), 1 );
+		assertEquals(
+				session.createFilter( human.getFriends(), "where this.heightInches > ?" )
+						.setDouble( 0, 51d )
+						.list()
+						.size(), 0
+		);
+		assertEquals(
+				session.createFilter( human.getFriends(), "where this.heightInches between 49 and 51" ).list().size(), 1
+		);
 		assertEquals( session.createFilter( human.getFriends(), "where this.heightInches not between 49 and 51" ).list().size(), 0 );
 
-		session.delete(human);
-		session.delete(friend);
+		session.delete( human );
+		session.delete( friend );
 
 		txn.commit();
 		session.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testSelectExpressions() {
 		createTestBaseData();
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 		Human h = new Human();
-		h.setName( new Name("Gavin", 'A', "King") );
+		h.setName( new Name( "Gavin", 'A', "King" ) );
 		h.setNickName("Oney");
-		h.setBodyWeight(1.0f);
-		session.persist(h);
+		h.setBodyWeight( 1.0f );
+		session.persist( h );
 		List results = session.createQuery("select 'found', lower(h.name.first) from Human h where lower(h.name.first) = 'gavin'").list();
 		results = session.createQuery("select 'found', lower(h.name.first) from Human h where concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) = 'Gavin A King'").list();
 		results = session.createQuery("select 'found', lower(h.name.first) from Human h where h.name.first||' '||h.name.initial||' '||h.name.last = 'Gavin A King'").list();
@@ -1938,8 +2053,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
 
-		for ( int i = 0; i < createdAnimalIds.size(); i++ ) {
-			Animal animal = ( Animal ) session.load( Animal.class, ( Long ) createdAnimalIds.get( i ) );
+		for ( Long createdAnimalId : createdAnimalIds ) {
+			Animal animal = (Animal) session.load( Animal.class, createdAnimalId );
 			session.delete( animal );
 		}
 
@@ -1947,20 +2062,21 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testImplicitJoin() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 		Animal a = new Animal();
 		a.setBodyWeight(0.5f);
-		a.setBodyWeight(1.5f);
+		a.setBodyWeight( 1.5f );
 		Animal b = new Animal();
 		Animal mother = new Animal();
 		mother.setBodyWeight(10.0f);
-		mother.addOffspring(a);
-		mother.addOffspring(b);
-		session.persist(a);
-		session.persist(b);
-		session.persist(mother);
+		mother.addOffspring( a );
+		mother.addOffspring( b );
+		session.persist( a );
+		session.persist( b );
+		session.persist( mother );
 		List list = session.createQuery("from Animal a where a.mother.bodyWeight < 2.0 or a.mother.bodyWeight > 9.0").list();
 		assertEquals( list.size(), 2 );
 		list = session.createQuery("from Animal a where a.mother.bodyWeight > 2.0 and a.mother.bodyWeight > 9.0").list();
@@ -1972,59 +2088,44 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testFromOnly() throws Exception {
-
 		createTestBaseData();
-
 		Session session = openSession();
-
 		List results = session.createQuery( "from Animal" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
-
 		session.close();
-
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testSimpleSelect() throws Exception {
-
 		createTestBaseData();
-
 		Session session = openSession();
-
 		List results = session.createQuery( "select a from Animal as a" ).list();
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
-
 		session.close();
-
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testEntityPropertySelect() throws Exception {
-
 		createTestBaseData();
-
 		Session session = openSession();
-
 		List results = session.createQuery( "select a.mother from Animal as a" ).list();
-//		assertEquals("Incorrect result size", 2, results.size());
 		assertTrue( "Incorrect result return type", results.get( 0 ) instanceof Animal );
-
 		session.close();
-
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testWhere() throws Exception {
-
 		createTestBaseData();
 
 		Session session = openSession();
-		List results = null;
-
-		results = session.createQuery( "from Animal an where an.bodyWeight > 10" ).list();
+		List results = session.createQuery( "from Animal an where an.bodyWeight > 10" ).list();
 		assertEquals( "Incorrect result size", 1, results.size() );
 
 		results = session.createQuery( "from Animal an where not an.bodyWeight > 10" ).list();
@@ -2047,8 +2148,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testEntityFetching() throws Exception {
-
 		createTestBaseData();
 
 		Session session = openSession();
@@ -2070,8 +2171,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testCollectionFetching() throws Exception {
-
 		createTestBaseData();
 
 		Session session = openSession();
@@ -2092,6 +2193,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		destroyTestBaseData();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testJoinFetchedCollectionOfJoinedSubclass() throws Exception {
 		Mammal mammal = new Mammal();
 		mammal.setDescription( "A Zebra" );
@@ -2122,6 +2225,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testJoinedCollectionOfJoinedSubclass() throws Exception {
 		Mammal mammal = new Mammal();
 		mammal.setDescription( "A Zebra" );
@@ -2152,6 +2257,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"unchecked"})
 	public void testJoinedCollectionOfJoinedSubclassProjection() throws Exception {
 		Mammal mammal = new Mammal();
 		mammal.setDescription( "A Zebra" );
@@ -2182,31 +2289,27 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testProjectionQueries() throws Exception {
-
 		createTestBaseData();
-
 		Session session = openSession();
-
 		List results = session.createQuery( "select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id" ).list();
 		// mysql returns nulls in this group by
 		assertEquals( "Incorrect result size", 2, results.size() );
 		assertTrue( "Incorrect return type", results.get( 0 ) instanceof Object[] );
 		assertEquals( "Incorrect return dimensions", 2, ( ( Object[] ) results.get( 0 ) ).length );
-
 		session.close();
-
 		destroyTestBaseData();
-
 	}
 
+	@Test
 	public void testStandardFunctions() throws Exception {
 		Session session = openSession();
 		Transaction t = session.beginTransaction();
 		Product p = new Product();
-		p.setDescription("a product");
-		p.setPrice( new BigDecimal(1.0) );
-		p.setProductId("abc123");
+		p.setDescription( "a product" );
+		p.setPrice( new BigDecimal( 1.0 ) );
+		p.setProductId( "abc123" );
 		session.persist(p);
 		Object[] result = (Object[]) session
 			.createQuery("select current_time(), current_date(), current_timestamp() from Product")
@@ -2220,11 +2323,10 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.delete(p);
 		t.commit();
 		session.close();
-
 	}
 
+	@Test
 	public void testDynamicInstantiationQueries() throws Exception {
-
 		createTestBaseData();
 
 		Session session = openSession();
@@ -2253,9 +2355,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertTrue( "Incorrect return type", obj instanceof List );
 		assertEquals( "Incorrect return type", ( (List) obj ).size(), 2 );
 
-		iter = ( ( org.hibernate.classic.Session ) session ).createQuery(
-				"select new list(an.description, an.bodyWeight) from Animal an"
-		).iterate();
+		iter = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an" ).iterate();
 		assertTrue( "Incorrect result size", iter.hasNext() );
 		obj = iter.next();
 		assertTrue( "Incorrect return type", obj instanceof List );
@@ -2313,8 +2413,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		destroyTestBaseData();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testCachedJoinedAndJoinFetchedManyToOne() throws Exception {
-
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
 		Animal mother = new Animal();
@@ -2358,8 +2459,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnusedDeclaration"})
 	public void testCachedJoinedAndJoinFetchedOneToMany() throws Exception {
-
 		Animal a = new Animal();
 		a.setDescription( "an animal" );
 		Animal mother = new Animal();
@@ -2403,6 +2505,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIllegalMixedTransformerQueries() {
 		Session session = openSession();
 
@@ -2433,8 +2536,9 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	private Query getSelectNewQuery(Session session) {
 		return session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" );
 	}
-	public void testResultTransformerScalarQueries() throws Exception {
 
+	@Test
+	public void testResultTransformerScalarQueries() throws Exception {
 		createTestBaseData();
 
 		String query = "select an.description as description, an.bodyWeight as bodyWeight from Animal an order by bodyWeight desc";
@@ -2467,7 +2571,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	     .setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll();
 		assertTrue( "Incorrect result size", sr.next() );
 		assertTrue( "Incorrect return type", sr.get(0) instanceof Animal );
-		assertFalse(session.contains(sr.get(0)));
+		assertFalse( session.contains( sr.get( 0 ) ) );
 		sr.close();
 
 		session.close();
@@ -2481,16 +2585,16 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertTrue( "Incorrect return type", results.get(0) instanceof Animal );
 		firstAnimal = (Animal) results.get(0);
 		secondAnimal = (Animal) results.get(1);
-		assertEquals("Mammal #1", firstAnimal.getDescription());
-		assertEquals("Mammal #2", secondAnimal.getDescription());
+		assertEquals( "Mammal #1", firstAnimal.getDescription() );
+		assertEquals( "Mammal #2", secondAnimal.getDescription() );
 
 		session.close();
 
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testResultTransformerEntityQueries() throws Exception {
-
 		createTestBaseData();
 
 		String query = "select an as an from Animal an order by bodyWeight desc";
@@ -2506,10 +2610,10 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		Animal firstAnimal = (Animal) map.get("an");
 		map = ((Map) results.get(1));
 		Animal secondAnimal = (Animal) map.get("an");
-		assertEquals("Mammal #1", firstAnimal.getDescription());
+		assertEquals( "Mammal #1", firstAnimal.getDescription() );
 		assertEquals("Mammal #2", secondAnimal.getDescription());
 		assertTrue(session.contains(firstAnimal));
-		assertSame(firstAnimal, session.get(Animal.class,firstAnimal.getId()));
+		assertSame( firstAnimal, session.get( Animal.class, firstAnimal.getId() ) );
 		session.close();
 
 		session = openSession();
@@ -2519,7 +2623,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		assertTrue( "Incorrect result size", iter.hasNext() );
 		map = (Map) iter.next();
 		firstAnimal = (Animal) map.get("an");
-		assertEquals("Mammal #1", firstAnimal.getDescription());
+		assertEquals( "Mammal #1", firstAnimal.getDescription() );
 		assertTrue( "Incorrect result size", iter.hasNext() );
 
 		session.close();
@@ -2530,7 +2634,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 	     .setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll();
 		assertTrue( "Incorrect result size", sr.next() );
 		assertTrue( "Incorrect return type", sr.get(0) instanceof Map );
-		assertFalse(session.contains(sr.get(0)));
+		assertFalse( session.contains( sr.get( 0 ) ) );
 		sr.close();
 
 		session.close();
@@ -2538,6 +2642,7 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		destroyTestBaseData();
 	}
 
+	@Test
 	public void testEJBQLFunctions() throws Exception {
 		Session session = openSession();
 
@@ -2608,7 +2713,8 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		 */
 		if(getDialect() instanceof PostgreSQLDialect || getDialect() instanceof HSQLDialect){
 			hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
-		}else{
+		}
+		else{
 			hql = "from Animal a where bit_length(a.bodyWeight) = 24";
 		}
 
@@ -2641,13 +2747,18 @@ public class ASTParserLoadingTest extends FunctionalTestCase {
 		session.close();
 	}
 
-	public void testSubselectBetween() {
-		if ( supportsSubselectOnLeftSideIn() ) {
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportSubqueryAsLeftHandSideInPredicate.class,
+			comment = "Database does not support using subquery as singular value expression"
+	)
+	public void testSubqueryAsSingularValueExpression() {
 			assertResultSize( "from Animal x where (select max(a.bodyWeight) from Animal a) in (1,2,3)", 0 );
 			assertResultSize( "from Animal x where (select max(a.bodyWeight) from Animal a) between 0 and 100", 0 );
 			assertResultSize( "from Animal x where (select max(a.description) from Animal a) like 'big%'", 0 );
 			assertResultSize( "from Animal x where (select max(a.bodyWeight) from Animal a) is not null", 0 );
-		}
+	}
+
+	public void testExistsSubquery() {
 		assertResultSize( "from Animal x where exists (select max(a.bodyWeight) from Animal a)", 0 );
 	}
 

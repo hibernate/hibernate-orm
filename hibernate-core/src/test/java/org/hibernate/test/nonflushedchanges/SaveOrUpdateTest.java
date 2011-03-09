@@ -1,6 +1,28 @@
-//$Id: SaveOrUpdateTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.nonflushedchanges;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -9,18 +31,36 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
 import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
- * @author Gavin King, Gail Badner (adapted this from "ops" tests version)
+ * adapted this from "ops" tests version
+ *
+ * @author Gail Badner
+ * @author Gavin King
  */
 public class SaveOrUpdateTest extends AbstractOperationTestCase {
-
-	public SaveOrUpdateTest(String str) {
-		super( str );
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
+	public String[] getMappings() {
+		return new String[] { "nonflushedchanges/Node.hbm.xml" };
+	}
+
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testSaveOrUpdateDeepTree() throws Exception {
 		clearCounts();
 
@@ -83,6 +123,8 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testSaveOrUpdateDeepTreeWithGeneratedId() throws Exception {
 		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
 		clearCounts();
@@ -145,6 +187,8 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testSaveOrUpdateTree() throws Exception {
 		clearCounts();
 
@@ -185,6 +229,8 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testSaveOrUpdateTreeWithGeneratedId() throws Exception {
 		clearCounts();
 
@@ -225,6 +271,8 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateManaged() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -260,17 +308,18 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		assertEquals(
+				Long.valueOf( 2 ),
 				s.createCriteria( NumberedNode.class )
 						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-				new Long( 2 )
+						.uniqueResult()
 		);
 		s.delete( root );
 		s.delete( child );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
-
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateGot() throws Exception {
 		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
 
@@ -298,7 +347,7 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
-		root = ( NumberedNode ) s.get( NumberedNode.class, new Long( root.getId() ) );
+		root = ( NumberedNode ) s.get( NumberedNode.class, Long.valueOf( root.getId() ) );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		Hibernate.initialize( root.getChildren() );
@@ -336,6 +385,8 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateGotWithMutableProp() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -391,16 +442,18 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		s = openSession();
 		assertEquals(
+				Long.valueOf( 2 ),
 				s.createCriteria( Node.class )
 						.setProjection( Projections.rowCount() )
-						.uniqueResult(),
-				new Long( 2 )
+						.uniqueResult()
 		);
 		s.delete( root );
 		s.delete( child );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment"})
 	public void testEvictThenSaveOrUpdate() throws Exception {
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();
@@ -488,20 +541,6 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 		s.delete( s.get( Node.class, "2:child" ) );
 		s.delete( s.get( Node.class, "1:parent" ) );
 		SimpleJtaTransactionManagerImpl.getInstance().commit();
-	}
-
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
-	}
-
-	public String[] getMappings() {
-		return new String[] { "nonflushedchanges/Node.hbm.xml" };
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( SaveOrUpdateTest.class );
 	}
 
 }

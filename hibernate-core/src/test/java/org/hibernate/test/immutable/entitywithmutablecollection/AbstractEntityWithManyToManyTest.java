@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
 import java.util.Iterator;
@@ -32,43 +31,49 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.impl.SessionFactoryImpl;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCase {
+public abstract class AbstractEntityWithManyToManyTest extends BaseCoreFunctionalTestCase {
 	private boolean isPlanContractsInverse;
 	private boolean isPlanContractsBidirectional;
 	private boolean isPlanVersioned;
 	private boolean isContractVersioned;
 
-	public AbstractEntityWithManyToManyTest(String str) {
-		super(str);
-	}
-
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
-	public abstract String[] getMappings();
-
+	@Override
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
-		isPlanContractsInverse = ( ( SessionFactoryImpl ) getSessions() ).getCollectionPersister( Plan.class.getName() + ".contracts" ).isInverse();
+		isPlanContractsInverse = sessionFactory().getCollectionPersister( Plan.class.getName() + ".contracts" ).isInverse();
 		try {
-			 ( ( SessionFactoryImpl ) getSessions() ).getCollectionPersister( Contract.class.getName() + ".plans" );
+			sessionFactory().getCollectionPersister( Contract.class.getName() + ".plans" );
 			isPlanContractsBidirectional = true;
 		}
 		catch ( MappingException ex) {
 			isPlanContractsBidirectional = false;	
 		}
-		isPlanVersioned = ( ( SessionFactoryImpl ) getSessions() ).getEntityPersister( Plan.class.getName() ).isVersioned();
-		isContractVersioned = ( ( SessionFactoryImpl ) getSessions() ).getEntityPersister( Contract.class.getName() ).isVersioned();
+		isPlanVersioned = sessionFactory().getEntityPersister( Plan.class.getName() ).isVersioned();
+		isContractVersioned = sessionFactory().getEntityPersister( Contract.class.getName() ).isVersioned();
 	}
 
+	@Test
 	public void testUpdateProperty() {
 		clearCounts();
 
@@ -117,6 +122,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateWithNonEmptyManyToManyCollectionOfNew() {
 		clearCounts();
 
@@ -152,6 +158,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateWithNonEmptyManyToManyCollectionOfExisting() {
 		clearCounts();
 
@@ -198,6 +205,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testAddNewManyToManyElementToPersistentEntity() {
 		clearCounts();
 
@@ -244,6 +252,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testAddExistingManyToManyElementToPersistentEntity() {
 		clearCounts();
 
@@ -295,6 +304,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateWithEmptyManyToManyCollectionUpdateWithExistingElement() {
 		clearCounts();
 
@@ -343,6 +353,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateWithNonEmptyManyToManyCollectionUpdateWithNewElement() {
 		clearCounts();
 
@@ -401,6 +412,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testCreateWithEmptyManyToManyCollectionMergeWithExistingElement() {
 		clearCounts();
 
@@ -449,6 +461,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testCreateWithNonEmptyManyToManyCollectionMergeWithNewElement() {
 		clearCounts();
 
@@ -504,6 +517,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testRemoveManyToManyElementUsingUpdate() {
 		clearCounts();
 
@@ -563,6 +577,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testRemoveManyToManyElementUsingUpdateBothSides() {
 		clearCounts();
 
@@ -615,6 +630,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testRemoveManyToManyElementUsingMerge() {
 		clearCounts();
 
@@ -674,6 +690,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testRemoveManyToManyElementUsingMergeBothSides() {
 		clearCounts();
 
@@ -727,6 +744,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 2 );
 	}
 
+	@Test
 	public void testDeleteManyToManyElement() {
 		clearCounts();
 
@@ -772,6 +790,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testRemoveManyToManyElementByDelete() {
 		clearCounts();
 
@@ -820,6 +839,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 1 );
 	}
 
+	@Test
 	public void testManyToManyCollectionOptimisticLockingWithMerge() {
 		clearCounts();
 
@@ -876,6 +896,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testManyToManyCollectionOptimisticLockingWithUpdate() {
 		clearCounts();
 
@@ -929,6 +950,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		s.close();
 	}
 
+	@Test
 	public void testMoveManyToManyElementToNewEntityCollection() {
 		clearCounts();
 
@@ -999,6 +1021,7 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 		assertDeleteCount( 3 );
 	}
 
+	@Test
 	public void testMoveManyToManyElementToExistingEntityCollection() {
 		clearCounts();
 
@@ -1081,21 +1104,21 @@ public abstract class AbstractEntityWithManyToManyTest extends FunctionalTestCas
 	}
 
 	protected void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( "unexpected insert count", expected, inserts );
 	}
 
 	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( "unexpected update counts", expected, updates );
 	}
 
 	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
+		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
 	}
 }

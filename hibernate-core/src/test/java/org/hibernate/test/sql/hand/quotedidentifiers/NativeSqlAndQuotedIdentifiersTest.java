@@ -25,25 +25,29 @@ package org.hibernate.test.sql.hand.quotedidentifiers;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectCheck;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * Test of various situations with native-sql queries and quoted identifiers
  *
  * @author Steve Ebersole
  */
-public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctionalTestCase {
-	public NativeSqlAndQuotedIdentifiersTest(String string) {
-		super( string );
-	}
-
+@RequiresDialectFeature( value = NativeSqlAndQuotedIdentifiersTest.LocalDialectCheck.class )
+public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "sql/hand/quotedidentifiers/Mappings.hbm.xml" };
 	}
 
-	@Override
-	public boolean appliesTo(Dialect dialect) {
-		return '\"' == dialect.openQuote();
+	public static class LocalDialectCheck implements DialectCheck {
+		@Override
+		public boolean isMatch(Dialect dialect) {
+			return '\"' == dialect.openQuote();
+		}
 	}
 
 	@Override
@@ -66,6 +70,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctiona
 		session.close();
 	}
 
+	@Test
 	public void testCompleteScalarDiscovery() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -74,6 +79,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctiona
 		session.close();
 	}
 
+	@Test
 	public void testPartialScalarDiscovery() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -84,6 +90,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctiona
 		session.close();
 	}
 
+	@Test
 	public void testBasicEntityMapping() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -94,6 +101,7 @@ public class NativeSqlAndQuotedIdentifiersTest extends DatabaseSpecificFunctiona
 		session.close();
 	}
 
+	@Test
 	public void testExpandedEntityMapping() {
 		Session session = openSession();
 		session.beginTransaction();

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
 import java.util.Iterator;
@@ -33,27 +32,31 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.SessionFactoryImpl;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase {
+@SuppressWarnings( {"UnusedDeclaration"})
+public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctionalTestCase {
 	private boolean isContractPartiesInverse;
 	private boolean isContractPartiesBidirectional;
 	private boolean isContractVariationsBidirectional;
 	private boolean isContractVersioned;
-
-	public AbstractEntityWithOneToManyTest(String str) {
-		super(str);
-	}
-
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
-
-	public abstract String[] getMappings();
 
 	protected boolean checkUpdateCountsAfterAddingExistingElement() {
 		return true;
@@ -84,6 +87,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		isContractVersioned = ( ( SessionFactoryImpl ) getSessions() ).getEntityPersister( Contract.class.getName() ).isVersioned();
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testUpdateProperty() {
 		clearCounts();
 
@@ -122,8 +127,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			assertSame( c, party.getContract() );
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -131,6 +136,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionOfNew() {
 		clearCounts();
 
@@ -156,8 +163,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			assertSame( c, party.getContract() );
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -165,6 +172,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionOfExisting() {
 		clearCounts();
 
@@ -210,8 +219,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			}
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -219,6 +228,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testAddNewOneToManyElementToPersistentEntity() {
 		clearCounts();
 
@@ -255,8 +266,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			assertSame( c, party.getContract() );
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -264,6 +275,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testAddExistingOneToManyElementToPersistentEntity() {
 		clearCounts();
 
@@ -314,15 +327,17 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			}
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
 		assertUpdateCount( 0 );
 		assertDeleteCount( 2 );
 	}
-	
+
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithEmptyOneToManyCollectionUpdateWithExistingElement() {
 		clearCounts();
 
@@ -370,8 +385,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			}
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -379,6 +394,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionUpdateWithNewElement() {
 		clearCounts();
 
@@ -412,8 +429,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		t = s.beginTransaction();
 		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 		assertEquals( 2, c.getParties().size() );
-		for ( Iterator it=c.getParties().iterator(); it.hasNext(); ) {
-			Party aParty = ( Party ) it.next();
+		for ( Object o : c.getParties() ) {
+			Party aParty = (Party) o;
 			if ( aParty.getId() == party.getId() ) {
 				assertEquals( "party", aParty.getName() );
 			}
@@ -428,8 +445,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			}
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -437,6 +454,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 3 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testCreateWithEmptyOneToManyCollectionMergeWithExistingElement() {
 		clearCounts();
 
@@ -484,8 +503,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			}
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -493,6 +512,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionMergeWithNewElement() {
 		clearCounts();
 
@@ -526,12 +547,12 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		t = s.beginTransaction();
 		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 		assertEquals( 2, c.getParties().size() );
-		for ( Iterator it=c.getParties().iterator(); it.hasNext(); ) {
-			Party aParty = ( Party ) it.next();
+		for ( Object o : c.getParties() ) {
+			Party aParty = (Party) o;
 			if ( aParty.getId() == party.getId() ) {
 				assertEquals( "party", aParty.getName() );
 			}
-			else if ( ! aParty.getName().equals( newParty.getName() ) ) {
+			else if ( !aParty.getName().equals( newParty.getName() ) ) {
 				fail( "unknown party:" + aParty.getName() );
 			}
 			if ( isContractPartiesBidirectional ) {
@@ -539,8 +560,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			}
 		}
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -548,6 +569,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 3 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMoveOneToManyElementToNewEntityCollection() {
 		clearCounts();
 
@@ -585,8 +608,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( new Long( c.getId() ) )).uniqueResult();
-		c2 = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( new Long( c2.getId() ) )).uniqueResult();
+		c = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( Long.valueOf( c.getId() ) )).uniqueResult();
+		c2 = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( Long.valueOf( c2.getId() ) )).uniqueResult();
 		if ( isContractPartiesInverse ) {
 			assertEquals( 1, c.getParties().size() );
 			party = ( Party ) c.getParties().iterator().next();
@@ -616,6 +639,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 3 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMoveOneToManyElementToExistingEntityCollection() {
 		clearCounts();
 
@@ -635,7 +660,7 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( new Long( c.getId() ) )).uniqueResult();
+		c = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( Long.valueOf( c.getId() ) )).uniqueResult();
 		assertEquals( 1, c.getParties().size() );
 		Party party = ( Party ) c.getParties().iterator().next();
 		assertEquals( "party", party.getName() );
@@ -643,7 +668,7 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			assertSame( c, party.getContract() );
 		}
 		c.removeParty( party );
-		c2 = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( new Long( c2.getId() ) )).uniqueResult();
+		c2 = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( Long.valueOf( c2.getId() ) )).uniqueResult();
 		c2.addParty( party );
 		t.commit();
 		s.close();
@@ -654,8 +679,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 
 		s = openSession();
 		t = s.beginTransaction();
-		c = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( new Long( c.getId() ) )).uniqueResult();
-		c2 = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( new Long( c2.getId() ) )).uniqueResult();
+		c = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( Long.valueOf( c.getId() ) )).uniqueResult();
+		c2 = (Contract) s.createCriteria( Contract.class ).add( Restrictions.idEq( Long.valueOf( c2.getId() ) )).uniqueResult();
 		if ( isContractPartiesInverse ) {
 			assertEquals( 1, c.getParties().size() );
 			party = ( Party ) c.getParties().iterator().next();
@@ -676,8 +701,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		}
 		s.delete(c);
 		s.delete( c2 );
-		assertEquals( new Long( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Contract.class ).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria( Party.class ).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -685,6 +710,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 3 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testRemoveOneToManyElementUsingUpdate() {
 		clearCounts();
 
@@ -739,8 +766,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			s.delete( party );
 		}
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -748,6 +775,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testRemoveOneToManyElementUsingMerge() {
 		clearCounts();
 
@@ -802,8 +831,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 			s.delete( party );
 		}
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -811,6 +840,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 2 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteOneToManyElement() {
 		clearCounts();
 
@@ -847,8 +878,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		party = ( Party ) s.createCriteria( Party.class ).uniqueResult();
 		assertNull( party );
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -856,6 +887,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 1 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testRemoveOneToManyElementByDelete() {
 		clearCounts();
 
@@ -895,8 +928,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		c = ( Contract ) s.createCriteria( Contract.class ).uniqueResult();
 		assertEquals( 0, c.getParties().size() );
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -904,6 +937,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 1 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testRemoveOneToManyOrphanUsingUpdate() {
 		clearCounts();
 
@@ -945,8 +980,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		cv = ( ContractVariation ) s.createCriteria( ContractVariation.class ).uniqueResult();
 		assertNull( cv );
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -954,6 +989,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 1 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testRemoveOneToManyOrphanUsingMerge() {
 		Contract c = new Contract( null, "gail", "phone");
 		ContractVariation cv = new ContractVariation( 1, c );
@@ -993,8 +1030,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		cv = ( ContractVariation ) s.createCriteria( ContractVariation.class ).uniqueResult();
 		assertNull( cv );
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -1002,6 +1039,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 1 );
 	}
 
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteOneToManyOrphan() {
 		clearCounts();
 
@@ -1039,8 +1078,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		cv = ( ContractVariation ) s.createCriteria( ContractVariation.class ).uniqueResult();
 		assertNull( cv );
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(ContractVariation.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -1048,6 +1087,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 1 );
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@Test
 	public void testOneToManyCollectionOptimisticLockingWithMerge() {
 		clearCounts();
 
@@ -1095,8 +1136,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		t = s.beginTransaction();
 		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 		s.delete(c);
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 
@@ -1104,6 +1145,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		assertDeleteCount( 3 );
 	}
 
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	@Test
 	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
 		clearCounts();
 
@@ -1151,8 +1194,8 @@ public abstract class AbstractEntityWithOneToManyTest extends FunctionalTestCase
 		c = (Contract) s.createCriteria(Contract.class).uniqueResult();
 		s.createQuery( "delete from Party" ).executeUpdate();
 		s.delete( c );
-		assertEquals( new Long( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
-		assertEquals( new Long( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Contract.class).setProjection( Projections.rowCount() ).uniqueResult() );
+		assertEquals( Long.valueOf( 0 ), s.createCriteria(Party.class).setProjection( Projections.rowCount() ).uniqueResult() );
 		t.commit();
 		s.close();
 	}

@@ -1,36 +1,54 @@
-//$Id: InstrumentCacheTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2006-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.lazycache;
-import junit.framework.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.testing.junit.functional.DatabaseSpecificFunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.Skip;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class InstrumentCacheTest extends DatabaseSpecificFunctionalTestCase {
-
-	public InstrumentCacheTest(String str) {
-		super(str);
-	}
-
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( InstrumentCacheTest.class );
-	}
-
-	private boolean isRunnable() {
-		// skip this test if document is not instrumented/enhanced
-		return FieldInterceptionHelper.isInstrumented( new Document() );
-	}
-
-	public boolean appliesTo(Dialect dialect) {
-		return isRunnable();
+@Skip( condition = InstrumentCacheTest.SkipMatcher.class, message = "Test domain classes not instrumented" )
+public class InstrumentCacheTest extends BaseCoreFunctionalTestCase {
+	public static class SkipMatcher implements Skip.Matcher {
+		@Override
+		public boolean isMatch() {
+			return ! FieldInterceptionHelper.isInstrumented( Document.class );
+		}
 	}
 
 	public String[] getMappings() {
@@ -45,11 +63,8 @@ public class InstrumentCacheTest extends DatabaseSpecificFunctionalTestCase {
 		return false;
 	}
 
+	@Test
 	public void testInitFromCache() {
-		if ( !isRunnable() ) {
-			reportSkip( "classes not instrumented", "instrumentation tests" );
-			return;
-		}
 		Session s;
 		Transaction tx;
 
@@ -89,11 +104,8 @@ public class InstrumentCacheTest extends DatabaseSpecificFunctionalTestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInitFromCache2() {
-		if ( !isRunnable() ) {
-			reportSkip( "classes not instrumented", "instrumentation tests" );
-			return;
-		}
 		Session s;
 		Transaction tx;
 

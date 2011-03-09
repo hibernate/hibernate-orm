@@ -2,38 +2,37 @@
 package org.hibernate.test.onetoone.nopojo;
 import java.util.HashMap;
 import java.util.Map;
-import junit.framework.Test;
+
 import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.EntityStatistics;
-import org.hibernate.testing.junit.functional.FunctionalTestCase;
-import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Gavin King
  */
-public class DynamicMapOneToOneTest extends FunctionalTestCase {
-
-	public DynamicMapOneToOneTest(String str) {
-		super(str);
-	}
-
+public class DynamicMapOneToOneTest extends BaseCoreFunctionalTestCase {
+	@Override
 	public String[] getMappings() {
 		return new String[] { "onetoone/nopojo/Person.hbm.xml" };
 	}
 
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.DEFAULT_ENTITY_MODE, EntityMode.MAP.toString() );
 	}
 
-	public static Test suite() {
-		return new FunctionalTestClassTestSuite( DynamicMapOneToOneTest.class );
-	}
-
+	@Test
 	public void testOneToOneOnSubclass() {
 		Map person = new HashMap();
 		person.put( "name", "Steve" );

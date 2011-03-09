@@ -46,6 +46,8 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -94,6 +96,12 @@ public class SchemaUpdate {
 		formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
+	private static ServiceRegistryImpl createServiceRegistry(Properties properties) {
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+		return new ServiceRegistryImpl( properties );
+	}
+
 	public static void main(String[] args) {
 		try {
 			Configuration cfg = new Configuration();
@@ -136,7 +144,13 @@ public class SchemaUpdate {
 				cfg.setProperties( props );
 			}
 
-			new SchemaUpdate( cfg ).execute( script, doUpdate );
+			ServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			try {
+				new SchemaUpdate( serviceRegistry.getService( JdbcServices.class ), cfg ).execute( script, doUpdate );
+			}
+			finally {
+				serviceRegistry.destroy();
+			}
 		}
 		catch ( Exception e ) {
             LOG.unableToRunSchemaUpdate(e);

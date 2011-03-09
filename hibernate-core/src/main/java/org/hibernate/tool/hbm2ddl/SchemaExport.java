@@ -55,6 +55,8 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -427,6 +429,12 @@ public class SchemaExport {
 
 	}
 
+	private static ServiceRegistryImpl createServiceRegistry(Properties properties) {
+		Environment.verifyProperties( properties );
+		ConfigurationHelper.resolvePlaceHolders( properties );
+		return new ServiceRegistryImpl( properties );
+	}
+
 	public static void main(String[] args) {
 		try {
 			Configuration cfg = new Configuration();
@@ -506,15 +514,21 @@ public class SchemaExport {
 			if (importFile != null) {
 				cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, importFile );
 			}
-			SchemaExport se = new SchemaExport( cfg )
-					.setHaltOnError( halt )
-					.setOutputFile( outFile )
-					.setDelimiter( delim );
-			if ( format ) {
-				se.setFormat( true );
-			}
-			se.execute( script, export, drop, create );
 
+			ServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			try {
+				SchemaExport se = new SchemaExport( serviceRegistry.getService( JdbcServices.class ), cfg )
+						.setHaltOnError( halt )
+						.setOutputFile( outFile )
+						.setDelimiter( delim );
+				if ( format ) {
+					se.setFormat( true );
+				}
+				se.execute( script, export, drop, create );
+			}
+			finally {
+				serviceRegistry.destroy();
+			}
 		}
 		catch ( Exception e ) {
             LOG.unableToCreateSchema(e);

@@ -5,6 +5,31 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 3.6.2 (2011.03.09)
+-------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11206
+
+** Bug
+    * [HHH-5590] - Don't log and rethrow exceptions in AbstractFlushingEventListener
+    * [HHH-5842] - Types.Binary column type should be registered as "binary($l) for HSQLDialect (Fred Toussi)
+    * [HHH-5890] - Parent POM: License comment in points to 404
+    * [HHH-5892] - changelog.txt shows 3.6.1-Final release date in 2010; should be 2011
+    * [HHH-5893] - Tests fail for dialects that return null for empty LOBs
+    * [HHH-5907] - derby does not support materialize a LOB locator outside the transaction in which it was created
+    * [HHH-5952] - BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING binder does not unwrap value before binding
+
+** Deprecation
+    * [HHH-5968] - Deprecate nullSafeGet()/nullSafeSet() methods with no SessionImplementor argument from UserType and AbstractSingleColumnStandardBasicType
+
+** Improvement
+    * [HHH-5906] - Expose AbstractEntityPersister.getPropertyUniqueness() as public for OGM to use
+    * [HHH-5977] - Add tests for @JoinColumn using secondary table
+    * [HHH-5993] - Expose SessionFactoryObserver to Hibernate EntityManager configuration
+
+** New Feature
+    * [HHH-5916] - Add support for a programmatic way to define a default EntityPersister and CollectionPersister class implementation
+
+
 Changes in version 3.6.1 (2011.02.02)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11170

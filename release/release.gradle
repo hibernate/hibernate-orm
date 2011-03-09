@@ -145,8 +145,7 @@ releaseCopySpec = copySpec {
         )
     }
 
-    ['hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan',
-            'hibernate-oscache', 'hibernate-swarmcache'].each { feature ->
+    [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->
         final String shortName = feature.substring( 'hibernate-'.length() );
         into('lib/optional/' + shortName) {
             from (

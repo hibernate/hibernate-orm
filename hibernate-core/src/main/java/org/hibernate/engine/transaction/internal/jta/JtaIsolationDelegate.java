@@ -29,17 +29,15 @@ import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.jboss.logging.Logger;
 
 /**
  * An isolation delegate for JTA environments.
@@ -47,7 +45,8 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
  * @author Steve Ebersole
  */
 public class JtaIsolationDelegate implements IsolationDelegate {
-	private static final Logger log = LoggerFactory.getLogger( JtaIsolationDelegate.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JtaIsolationDelegate.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;
 
@@ -83,9 +82,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		try {
 			// First we suspend any current JTA transaction
 			Transaction surroundingTransaction = transactionManager.suspend();
-			if ( log.isDebugEnabled() ) {
-				log.debug( "surrounding JTA transaction suspended [" + surroundingTransaction + "]" );
-			}
+            LOG.debugf("Surrounding JTA transaction suspended [%s]", surroundingTransaction);
 
 			boolean hadProblems = false;
 			try {
@@ -104,9 +101,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			finally {
 				try {
 					transactionManager.resume( surroundingTransaction );
-					if ( log.isDebugEnabled() ) {
-						log.debug( "surrounding JTA transaction resumed [" + surroundingTransaction + "]" );
-					}
+                    LOG.debugf("Surrounding JTA transaction resumed [%s]", surroundingTransaction);
 				}
 				catch( Throwable t ) {
 					// if the actually work had an error use that, otherwise error based on t
@@ -137,7 +132,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 					transactionManager.rollback();
 				}
 				catch ( Exception ignore ) {
-					log.info( "Unable to rollback isolated transaction on error [" + e + "] : [" + ignore + "]" );
+                    LOG.unableToRollbackIsolatedTransaction(e, ignore);
 				}
 			}
 		}
@@ -173,7 +168,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 					connectionProvider().closeConnection( connection );
 				}
 				catch ( Throwable ignore ) {
-					log.info( "Unable to release isolated connection [" + ignore + "]" );
+                    LOG.unableToReleaseIsolatedConnection(ignore);
 				}
 			}
 		}
@@ -189,9 +184,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 		try {
 			// First we suspend any current JTA transaction
 			Transaction surroundingTransaction = transactionManager.suspend();
-			if ( log.isDebugEnabled() ) {
-				log.debug( "surrounding JTA transaction suspended [" + surroundingTransaction + "]" );
-			}
+            LOG.debugf("Surrounding JTA transaction suspended [%s]", surroundingTransaction);
 
 			boolean hadProblems = false;
 			try {
@@ -210,9 +203,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			finally {
 				try {
 					transactionManager.resume( surroundingTransaction );
-					if ( log.isDebugEnabled() ) {
-						log.debug( "surrounding JTA transaction resumed [" + surroundingTransaction + "]" );
-					}
+                    LOG.debugf("Surrounding JTA transaction resumed [%s]", surroundingTransaction);
 				}
 				catch( Throwable t ) {
 					// if the actually work had an error use that, otherwise error based on t
@@ -244,7 +235,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 					transactionManager.rollback();
 				}
 				catch ( Exception ignore ) {
-					log.info( "Unable to rollback isolated transaction on error [" + e + "] : [" + ignore + "]" );
+                    LOG.unableToRollbackIsolatedTransaction(e, ignore);
 				}
 			}
 		}
@@ -281,7 +272,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 					connectionProvider().closeConnection( connection );
 				}
 				catch ( Throwable ignore ) {
-					log.info( "Unable to release isolated connection [" + ignore + "]" );
+                    LOG.unableToReleaseIsolatedConnection(ignore);
 				}
 			}
 		}

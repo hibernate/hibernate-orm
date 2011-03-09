@@ -23,21 +23,19 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.DatabaseMetaData;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.Map;
-
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.ContextualLobCreator;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * Builds {@link LobCreator} instances based on the capabilities of the environment.
@@ -45,8 +43,10 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class LobCreatorBuilder {
-	private static final Logger log = LoggerFactory.getLogger( LobCreatorBuilder.class );
-	private boolean useContextualLobCreation;
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, LobCreatorBuilder.class.getName());
+
+    private boolean useContextualLobCreation;
 
 	/**
 	 * The public factory method for obtaining the appropriate (according to given JDBC {@link java.sql.Connection}.
@@ -76,11 +76,11 @@ public class LobCreatorBuilder {
 		boolean isNonContextualLobCreationRequired =
 				ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, configValues );
 		if ( isNonContextualLobCreationRequired ) {
-			log.info( "Disabling contextual LOB creation as " + Environment.NON_CONTEXTUAL_LOB_CREATION + " is true" );
+            LOG.disablingContextualLOBCreation(Environment.NON_CONTEXTUAL_LOB_CREATION);
 			return false;
 		}
 		if ( jdbcConnection == null ) {
-			log.info( "Disabling contextual LOB creation as connection was null" );
+            LOG.disablingContextualLOBCreationSinceConnectionNull();
 			return false;
 		}
 
@@ -89,10 +89,7 @@ public class LobCreatorBuilder {
 				DatabaseMetaData meta = jdbcConnection.getMetaData();
 				// if the jdbc driver version is less than 4, it shouldn't have createClob
 				if ( meta.getJDBCMajorVersion() < 4 ) {
-					log.info(
-							"Disabling contextual LOB creation as JDBC driver reported JDBC version [" +
-									meta.getJDBCMajorVersion() + "] less than 4"
-					);
+                    LOG.disablingContextualLOBCreationSinceOldJdbcVersion(meta.getJDBCMajorVersion());
 					return false;
 				}
 			}
@@ -113,12 +110,12 @@ public class LobCreatorBuilder {
 						freeMethod.invoke( clob, NO_ARGS );
 					}
 					catch ( Throwable ignore ) {
-						log.trace( "Unable to free CLOB created to test createClob() implementation : " + ignore );
+                        LOG.tracef("Unable to free CLOB created to test createClob() implementation : %s", ignore);
 					}
 					return true;
 				}
 				catch ( Throwable t ) {
-					log.info( "Disabling contextual LOB creation as createClob() method threw error : " + t );
+                    LOG.disablingContextualLOBCreationSinceCreateClobFailed(t);
 				}
 			}
 		}

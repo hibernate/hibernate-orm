@@ -23,13 +23,12 @@
  */
 package org.hibernate.service.jta.platform.internal;
 
-import org.hibernate.service.jta.platform.spi.JtaPlatformException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.lang.reflect.Method;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import java.lang.reflect.Method;
+import org.hibernate.HibernateLogger;
+import org.hibernate.service.jta.platform.spi.JtaPlatformException;
+import org.jboss.logging.Logger;
 
 /**
  * JTA platform implementation for WebSphere (versions 4, 5.0 and 5.1)
@@ -38,7 +37,8 @@ import java.lang.reflect.Method;
  * @author Steve Ebersole
  */
 public class WebSphereJtaPlatform extends AbstractJtaPlatform {
-	private static final Logger log = LoggerFactory.getLogger( WebSphereJtaPlatform.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, WebSphereJtaPlatform.class.getName());
 
 	public static final String VERSION_5_UT_NAME = "java:comp/UserTransaction";
 	public static final String VERSION_4_UT_NAME = "jta/usertransaction";
@@ -55,18 +55,18 @@ public class WebSphereJtaPlatform extends AbstractJtaPlatform {
 			try {
 				clazz = Class.forName( "com.ibm.ws.Transaction.TransactionManagerFactory" );
 				version = 5;
-				log.debug( "WebSphere 5.1" );
+                LOG.debug("WebSphere 5.1");
 			}
 			catch ( Exception e ) {
 				try {
 					clazz = Class.forName( "com.ibm.ejs.jts.jta.TransactionManagerFactory" );
 					version = 5;
-					log.debug( "WebSphere 5.0" );
+                    LOG.debug("WebSphere 5.0");
 				}
 				catch ( Exception e2 ) {
 					clazz = Class.forName( "com.ibm.ejs.jts.jta.JTSXA" );
 					version = 4;
-					log.debug( "WebSphere 4" );
+                    LOG.debug("WebSphere 4");
 				}
 			}
 

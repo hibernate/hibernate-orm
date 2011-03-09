@@ -7,8 +7,6 @@ include 'hibernate-proxool'
 
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
-include 'hibernate-oscache'
-include 'hibernate-swarmcache'
 
 include 'release'
 

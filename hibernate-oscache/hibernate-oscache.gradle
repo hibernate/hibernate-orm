@@ -1,6 +1,0 @@
-apply plugin: 'java'
-
-dependencies {
-    compile ( project( ':hibernate-core' ) )
-    compile( [group: 'opensymphony', name: 'oscache', version: '2.1'] )
-}

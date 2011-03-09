@@ -1,6 +1,0 @@
-apply plugin: 'java'
-
-dependencies {
-    compile( project( ':hibernate-core' ) )
-    compile( [group: 'swarmcache', name: 'swarmcache', version: '1.0RC2'] )
-}

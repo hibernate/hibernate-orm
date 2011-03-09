@@ -2229,7 +2229,7 @@ public final class SessionImpl
 		}
 
 		private LobCreator lobCreator() {
-			return session.getFactory().getSettings().getJdbcSupport().getLobCreator( session );
+			return session.getFactory().getJdbcServices().getLobCreator( session );
 		}
 
 		/**

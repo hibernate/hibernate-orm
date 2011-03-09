@@ -34,8 +34,11 @@ import java.util.Set;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -74,9 +77,11 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 	private SqlStatementLogger sqlStatementLogger;
 	private SqlExceptionHelper sqlExceptionHelper;
 	private ExtractedDatabaseMetaData extractedMetaDataSupport;
+	private LobCreatorBuilder lobCreatorBuilder;
 
 	public void configure(Map configValues) {
 		Dialect dialect = null;
+		LobCreatorBuilder lobCreatorBuilder = null;
 
 		boolean metaSupportsScrollable = false;
 		boolean metaSupportsGetGeneratedKeys = false;
@@ -134,6 +139,7 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 					if ( schemaNameResolver != null ) {
 						schemaName = schemaNameResolver.resolveSchemaName( conn );
 					}
+					lobCreatorBuilder = new LobCreatorBuilder( configValues, conn );
 				}
 				catch ( SQLException sqle ) {
                     LOG.unableToObtainConnectionMetadata(sqle.getMessage());
@@ -159,6 +165,12 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );
 
 		this.dialect = dialect;
+		this.lobCreatorBuilder = (
+				lobCreatorBuilder == null ?
+						new LobCreatorBuilder( configValues, null ) :
+						lobCreatorBuilder
+		);
+
 		this.sqlStatementLogger =  new SqlStatementLogger( showSQL, formatSQL );
 		this.sqlExceptionHelper = new SqlExceptionHelper( dialect.buildSQLExceptionConverter() );
 		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl(
@@ -327,5 +339,19 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return extractedMetaDataSupport;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
+		return lobCreatorBuilder.buildLobCreator( lobCreationContext );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public ResultSetWrapper getResultSetWrapper() {
+		return ResultSetWrapperImpl.INSTANCE;
 	}
 }

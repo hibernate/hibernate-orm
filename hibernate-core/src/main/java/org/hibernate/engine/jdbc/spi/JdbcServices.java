@@ -23,7 +23,13 @@
  */
 package org.hibernate.engine.jdbc.spi;
 import java.sql.Connection;
+import java.sql.ResultSet;
+
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.ColumnNameCache;
+import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.ResultSetWrapperProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Service;
 
@@ -71,4 +77,19 @@ public interface JdbcServices extends Service {
 	 * @return
 	 */
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport();
+
+	/**
+	 * Create an instance of a {@link LobCreator} appropriate for the current environment, mainly meant to account for
+	 * variance between JDBC 4 (<= JDK 1.6) and JDBC3 (>= JDK 1.5).
+	 *
+	 * @param lobCreationContext The context in which the LOB is being created
+	 * @return The LOB creator.
+	 */
+	public LobCreator getLobCreator(LobCreationContext lobCreationContext);
+
+	/**
+	 * Obtain service for wrapping a {@link ResultSet} in a "column name cache" wrapper.
+	 * @return The ResultSet wrapper.
+	 */
+	public ResultSetWrapper getResultSetWrapper();
 }

@@ -429,8 +429,7 @@ public final class Hibernate {
 
 	public static LobCreator getLobCreator(SessionImplementor session) {
 		return session.getFactory()
-				.getSettings()
-				.getJdbcSupport()
+				.getJdbcServices()
 				.getLobCreator( ( LobCreationContext ) session );
 	}
 

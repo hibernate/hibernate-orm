@@ -2000,8 +2000,8 @@ public abstract class Loader {
 			try {
                 LOG.debugf("Wrapping result set [%s]", rs);
 				return session.getFactory()
-						.getSettings()
-						.getJdbcSupport().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
+						.getJdbcServices()
+						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
 			}
 			catch(SQLException e) {
                 LOG.unableToWrapResultSet(e);

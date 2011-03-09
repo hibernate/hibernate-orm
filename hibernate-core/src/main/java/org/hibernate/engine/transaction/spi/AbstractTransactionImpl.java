@@ -23,14 +23,13 @@
  */
 package org.hibernate.engine.transaction.spi;
 
-import org.hibernate.HibernateException;
-import org.hibernate.TransactionException;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
+import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
+import org.hibernate.TransactionException;
+import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.jboss.logging.Logger;
 
 /**
  * Abstract support for creating {@link TransactionImplementor transaction} implementations
@@ -38,7 +37,9 @@ import javax.transaction.Synchronization;
  * @author Steve Ebersole
  */
 public abstract class AbstractTransactionImpl implements TransactionImplementor {
-	private static final Logger log = LoggerFactory.getLogger( AbstractTransactionImpl.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       AbstractTransactionImpl.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;
 
@@ -147,7 +148,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			throw new TransactionException( "reuse of Transaction instances not supported" );
 		}
 
-		log.debug( "begin" );
+        LOG.debug("begin");
 
 		doBegin();
 
@@ -162,7 +163,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-		log.debug( "committing" );
+        LOG.debug("committing");
 
 		beforeTransactionCommit();
 
@@ -192,7 +193,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			throw new TransactionException( "Transaction not successfully started" );
 		}
 
-		log.debug( "rolling back" );
+        LOG.debug("rolling back");
 
 		beforeTransactionRollBack();
 

@@ -23,7 +23,13 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.sql.Connection;
+import java.sql.SQLException;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
@@ -38,14 +44,7 @@ import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.sql.Connection;
-import java.sql.SQLException;
+import org.jboss.logging.Logger;
 
 /**
  * Standard Hibernate implementation of {@link JdbcCoordinator}
@@ -55,7 +54,8 @@ import java.sql.SQLException;
  * @author Steve Ebersole
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
-	private static final Logger log = LoggerFactory.getLogger( JdbcCoordinatorImpl.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JdbcCoordinatorImpl.class.getName());
 
 	private transient TransactionCoordinatorImpl transactionCoordinator;
 
@@ -129,7 +129,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		if ( currentBatch != null ) {
-			log.warn( "Closing un-released batch" );
+            LOG.closingUnreleasedBatch();
 			currentBatch.release();
 		}
 		return logicalConnection.close();
@@ -200,7 +200,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				}
 			}
 			catch (SQLException e) {
-				log.debug( "Error closing connection proxy", e );
+                LOG.debug("Error closing connection proxy", e);
 			}
 		}
 	}
@@ -223,7 +223,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				}
 			}
 			catch (SQLException e) {
-				log.debug( "Error closing connection proxy", e );
+                LOG.debug("Error closing connection proxy", e);
 			}
 		}
 	}

@@ -23,20 +23,17 @@
  */
 package org.hibernate.engine.transaction.internal.jdbc;
 
-
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.jboss.logging.Logger;
 
 /**
  * The isolation delegate for JDBC {@link Connection} based transactions
@@ -44,7 +41,8 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
  * @author Steve Ebersole
  */
 public class JdbcIsolationDelegate implements IsolationDelegate {
-	private static final Logger log = LoggerFactory.getLogger( JdbcIsolationDelegate.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JdbcIsolationDelegate.class.getName());
 
 	private final TransactionCoordinator transactionCoordinator;
 
@@ -87,7 +85,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 				catch ( Exception ignore ) {
-					log.info( "unable to rollback connection on exception [" + ignore + "]" );
+                    LOG.unableToRollbackConnection(ignore);
 				}
 
 				if ( e instanceof HibernateException ) {
@@ -106,14 +104,14 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 						connection.setAutoCommit( true );
 					}
 					catch ( Exception ignore ) {
-						log.trace( "was unable to reset connection back to auto-commit" );
+                        LOG.trace("was unable to reset connection back to auto-commit");
 					}
 				}
 				try {
 					connectionProvider().closeConnection( connection );
 				}
 				catch ( Exception ignore ) {
-					log.info( "Unable to release isolated connection [" + ignore + "]" );
+                    LOG.unableToReleaseIsolatedConnection(ignore);
 				}
 			}
 		}
@@ -151,7 +149,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 				catch ( Exception ignore ) {
-					log.info( "unable to rollback connection on exception [" + ignore + "]" );
+                    LOG.unableToRollbackConnection(ignore);
 				}
 
 				if ( e instanceof HibernateException ) {
@@ -170,14 +168,14 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 						connection.setAutoCommit( true );
 					}
 					catch ( Exception ignore ) {
-						log.trace( "was unable to reset connection back to auto-commit" );
+                        LOG.trace("was unable to reset connection back to auto-commit");
 					}
 				}
 				try {
 					connectionProvider().closeConnection( connection );
 				}
 				catch ( Exception ignore ) {
-					log.info( "Unable to release isolated connection [" + ignore + "]" );
+                    LOG.unableToReleaseIsolatedConnection(ignore);
 				}
 			}
 		}

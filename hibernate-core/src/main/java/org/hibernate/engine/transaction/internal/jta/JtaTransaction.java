@@ -23,20 +23,19 @@
  */
 package org.hibernate.engine.transaction.internal.jta;
 
+import javax.transaction.Status;
+import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.spi.AbstractTransactionImpl;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.LocalStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import org.jboss.logging.Logger;
 
 /**
  * Implements a transaction strategy based on transaction management through a JTA {@link UserTransaction}.
@@ -46,7 +45,8 @@ import javax.transaction.UserTransaction;
  * @author Les Hazlewood
  */
 public class JtaTransaction extends AbstractTransactionImpl {
-	private static final Logger log = LoggerFactory.getLogger( JtaTransaction.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JtaTransaction.class.getName());
 
 	private UserTransaction userTransaction;
 
@@ -64,7 +64,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 
 	@Override
 	protected void doBegin() {
-		log.debug( "begin" );
+        LOG.debug("begin");
 
 		userTransaction = jtaPlatform().retrieveUserTransaction();
 		if ( userTransaction == null ) {
@@ -75,7 +75,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 			if ( userTransaction.getStatus() == Status.STATUS_NO_TRANSACTION ) {
 				userTransaction.begin();
 				isInitiator = true;
-				log.debug( "Began a new JTA transaction" );
+                LOG.debug("Began a new JTA transaction");
 			}
 		}
 		catch ( Exception e ) {
@@ -108,7 +108,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 				}
 			}
 			else {
-				log.debug( "Unable to apply requested transaction timeout; no UserTransaction.  Will try later" );
+                LOG.debug("Unable to apply requested transaction timeout; no UserTransaction.  Will try later");
 			}
 		}
 	}
@@ -146,7 +146,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 		try {
 			if ( isInitiator ) {
 				userTransaction.commit();
-				log.debug( "Committed JTA UserTransaction" );
+                LOG.debug("Committed JTA UserTransaction");
 			}
 		}
 		catch ( Exception e ) {
@@ -167,7 +167,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 		// this method is a noop if there is a Synchronization!
 		if ( isDriver ) {
 			if ( !isInitiator ) {
-				log.warn( "You should set hibernate.transaction.manager_lookup_class if cache is enabled" );
+                LOG.setManagerLookupClass();
 			}
 			try {
 				transactionCoordinator().afterTransaction( this, userTransaction.getStatus() );
@@ -190,7 +190,7 @@ public class JtaTransaction extends AbstractTransactionImpl {
 				// failed commits automatically rollback the transaction per JTA spec
 				if ( getLocalStatus() != LocalStatus.FAILED_COMMIT  ) {
 					userTransaction.rollback();
-					log.debug( "Rolled back JTA UserTransaction" );
+                    LOG.debug("Rolled back JTA UserTransaction");
 				}
 			}
 			else {
@@ -204,13 +204,13 @@ public class JtaTransaction extends AbstractTransactionImpl {
 
 	@Override
 	public void markRollbackOnly() {
-		log.trace( "Marking transaction for rollback only" );
+        LOG.trace("Marking transaction for rollback only");
 		try {
 			userTransaction.setRollbackOnly();
-			log.debug( "set JTA UserTransaction to rollback only" );
+            LOG.debug("set JTA UserTransaction to rollback only");
 		}
 		catch (SystemException e) {
-			log.debug( "Unable to mark transaction for rollback only", e );
+            LOG.debug("Unable to mark transaction for rollback only", e);
 		}
 	}
 

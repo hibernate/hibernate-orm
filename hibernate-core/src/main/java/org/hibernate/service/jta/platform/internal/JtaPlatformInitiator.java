@@ -24,6 +24,7 @@
 package org.hibernate.service.jta.platform.internal;
 import java.util.Map;
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -32,8 +33,7 @@ import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.transaction.TransactionManagerLookup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * Standard initiator for the standard {@link org.hibernate.service.jta.platform.spi.JtaPlatform}
@@ -44,7 +44,7 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 	public static final JtaPlatformInitiator INSTANCE = new JtaPlatformInitiator();
 	public static final String JTA_PLATFORM = "hibernate.jta.platform";
 
-	private static final Logger log = LoggerFactory.getLogger( JtaPlatformInitiator.class );
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JtaPlatformInitiator.class.getName());
 
 	@Override
 	public Class<JtaPlatform> getServiceInitiated() {
@@ -72,7 +72,7 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 			final String platformImplName = platform.toString();
 			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 			try {
-				jtaPlatformImplClass = (Class<JtaPlatform>) classLoaderService.classForName( platformImplName );
+				jtaPlatformImplClass = classLoaderService.classForName( platformImplName );
 			}
 			catch ( Exception e ) {
 				throw new HibernateException( "Unable to locate specified JtaPlatform class [" + platformImplName + "]", e );
@@ -92,14 +92,12 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 		if ( platform == null ) {
 			final String transactionManagerLookupImplName = (String) configVales.get( Environment.TRANSACTION_MANAGER_STRATEGY );
 			if ( transactionManagerLookupImplName != null ) {
-				log.warn(
-						"Using deprecated " + TransactionManagerLookup.class.getName() + " strategy [" +
-								Environment.TRANSACTION_MANAGER_STRATEGY +
-								"], use newer " + JtaPlatform.class.getName() +
-								" strategy instead [" + JTA_PLATFORM + "]"
-				);
+                LOG.deprecatedTransactionManagerStrategy(TransactionManagerLookup.class.getName(),
+                                                         Environment.TRANSACTION_MANAGER_STRATEGY,
+                                                         JtaPlatform.class.getName(),
+                                                         JTA_PLATFORM);
 				platform = mapLegacyClasses( transactionManagerLookupImplName, configVales, registry );
-				log.debug( "Mapped {} -> {}", transactionManagerLookupImplName, platform );
+                LOG.debugf("Mapped %s -> %s", transactionManagerLookupImplName, platform);
 			}
 		}
 		return platform;
@@ -113,11 +111,7 @@ public class JtaPlatformInitiator implements ServiceInitiator<JtaPlatform> {
 			return null;
 		}
 
-		log.info(
-				"Encountered legacy TransactionManagerLookup specified; convert to newer " +
-						JtaPlatform.class.getName() + " contract specified via " +
-						JTA_PLATFORM + "setting"
-		);
+        LOG.legacyTransactionManagerStrategy(JtaPlatform.class.getName(), JTA_PLATFORM);
 
 		if ( "org.hibernate.transaction.BESTransactionManagerLookup".equals( transactionManagerLookupImplName ) ) {
 			return new BorlandEnterpriseServerJtaPlatform();

@@ -24,11 +24,8 @@
 package org.hibernate.engine.transaction.internal;
 
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.HibernateException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
@@ -37,6 +34,7 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
+import org.jboss.logging.Logger;
 
 /**
  * Standard instantiator for the standard {@link TransactionFactory} service.
@@ -44,7 +42,9 @@ import org.hibernate.service.spi.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class TransactionFactoryInitiator implements ServiceInitiator<TransactionFactory> {
-	private static final Logger log = LoggerFactory.getLogger( TransactionFactoryInitiator.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
+                                                                       TransactionFactoryInitiator.class.getName());
 
 	public static final TransactionFactoryInitiator INSTANCE = new TransactionFactoryInitiator();
 
@@ -61,12 +61,12 @@ public class TransactionFactoryInitiator implements ServiceInitiator<Transaction
 		}
 
 		if ( strategy == null ) {
-			log.info( "Using default transaction strategy (direct JDBC transactions)" );
+            LOG.usingDefaultTransactionStrategy();
 			return new JdbcTransactionFactory();
 		}
 
 		final String strategyClassName = mapLegacyNames( strategy.toString() );
-		log.info( "Transaction strategy: " + strategyClassName );
+        LOG.transactionStrategy(strategyClassName);
 
 		ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 		try {

@@ -128,55 +128,63 @@ subprojects { subProject ->
             deployerJars "org.apache.maven.wagon:wagon-http:1.0-beta-6"
         }
 
-        generatedLoggingSrcMainDir = dir( buildDirName + "/generated-src/logging/main" )
-        generatedLoggingSrcTestDir = dir( buildDirName + "/generated-src/logging/test" )
+        aptDumpDir = file( buildDirName + "/temp/apt" )
 
-        sourceSets{
-            main {
-                java {
-                    srcDir( generatedLoggingSrcMainDir.dir )
-                }
-                compileClasspath += configurations.provided
-            }
-            test {
-                java {
-                    srcDir( generatedLoggingSrcTestDir.dir )
-                }
-            }
+        sourceSets.main {
+            compileClasspath += configurations.provided
         }
 
+        sourceSets.all {
+            originalJavaSrcDirs = java.srcDirs
+            generatedLoggingSrcDir = file( "${buildDir}/generated-src/logging/${name}" )
+            java.srcDir generatedLoggingSrcDir
+        }
 
-        task generateMainLoggingClasses(type: Compile, dependsOn: generatedLoggingSrcMainDir) {
+        task generateMainLoggingClasses(type: Compile) {
 		    classpath = compileJava.classpath + configurations.jbossLoggingTool
-		    source = compileJava.source
-		    destinationDir = generatedLoggingSrcMainDir.dir
+		    source = sourceSets.main.originalJavaSrcDirs
+            destinationDir = aptDumpDir
 		    options.define(
                     compilerArgs: [
                             "-nowarn",
                             "-proc:only",
                             "-processor", "org.jboss.logging.LoggingToolsProcessor",
-                            "-s", "$generatedLoggingSrcMainDir.dir.absolutePath"
+                            "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath"
                     ]
-            )
+            );
+            outputs.dir sourceSets.main.generatedLoggingSrcDir;
+            doFirst {
+                sourceSets.main.generatedLoggingSrcDir.mkdirs()
+            }
         }
+
+        // for the time being eat the annoying output from running the annotation processors
+        generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
 
 		compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none"])
 
 
-        task generateTestLoggingClasses(type: Compile, dependsOn: generatedLoggingSrcTestDir) {
+        task generateTestLoggingClasses(type: Compile) {
 		    classpath = compileTestJava.classpath + configurations.jbossLoggingTool
-		    source = compileTestJava.source
-		    destinationDir = generatedLoggingSrcTestDir.dir
+            source = sourceSets.test.originalJavaSrcDirs
+            destinationDir = aptDumpDir
 		    options.define(
                     compilerArgs: [
                             "-nowarn",
                             "-proc:only",
                             "-processor", "org.jboss.logging.LoggingToolsProcessor",
-                            "-s", "$generatedLoggingSrcTestDir.dir.absolutePath"
+                            "-s", "$sourceSets.test.generatedLoggingSrcDir.absolutePath"
                     ]
-            )
+            );
+            outputs.dir sourceSets.test.generatedLoggingSrcDir;
+            doFirst {
+                sourceSets.test.generatedLoggingSrcDir.mkdirs()
+            }
         }
+
+        // for the time being eat the annoying output from running the annotation processors
+        generateTestLoggingClasses.logging.captureStandardError(LogLevel.INFO)
 
 		compileTestJava.dependsOn generateTestLoggingClasses
         compileTestJava.options.define(compilerArgs: ["-proc:none"])

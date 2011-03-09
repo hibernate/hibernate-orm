@@ -1260,7 +1260,7 @@ public interface HibernateLogger extends BasicLogger {
     void unableToCloseInitialContext( String string );
 
     @LogMessage( level = ERROR )
-    @Message( value = "Error closing imput files: %s", id = 286 )
+    @Message( value = "Error closing input files: %s", id = 286 )
     void unableToCloseInputFiles( String name,
                                   @Cause IOException e );
 
@@ -1814,4 +1814,44 @@ public interface HibernateLogger extends BasicLogger {
                                                        String valueOf,
                                                        String name2,
                                                        String valueOf2 );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Closing un-released batch", id = 420 )
+    void closingUnreleasedBatch();
+
+    @LogMessage( level = INFO )
+    @Message( value = "Disabling contextual LOB creation as %s is true", id = 421 )
+    void disablingContextualLOBCreation( String nonContextualLobCreation );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Disabling contextual LOB creation as connection was null", id = 422 )
+    void disablingContextualLOBCreationSinceConnectionNull();
+
+    @LogMessage( level = INFO )
+    @Message( value = "Disabling contextual LOB creation as JDBC driver reported JDBC version [%s] less than 4", id = 423 )
+    void disablingContextualLOBCreationSinceOldJdbcVersion( int jdbcMajorVersion );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Disabling contextual LOB creation as createClob() method threw error : %s", id = 424 )
+    void disablingContextualLOBCreationSinceCreateClobFailed( Throwable t );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Could not close session; swallowing exception as transaction completed", id = 425 )
+    void unableToCloseSessionButSwallowingError( HibernateException e );
+
+    @LogMessage( level = WARN )
+    @Message( value = "You should set hibernate.transaction.manager_lookup_class if cache is enabled", id = 426 )
+    void setManagerLookupClass();
+
+    @LogMessage( level = WARN )
+    @Message( value = "Using deprecated %s strategy [%s], use newer %s strategy instead [%s]", id = 427 )
+    void deprecatedTransactionManagerStrategy( String name,
+                                               String transactionManagerStrategy,
+                                               String name2,
+                                               String jtaPlatform );
+
+    @LogMessage( level = INFO )
+    @Message( value = "Encountered legacy TransactionManagerLookup specified; convert to newer %s contract specified via %s setting", id = 428 )
+    void legacyTransactionManagerStrategy( String name,
+                                           String jtaPlatform );
 }

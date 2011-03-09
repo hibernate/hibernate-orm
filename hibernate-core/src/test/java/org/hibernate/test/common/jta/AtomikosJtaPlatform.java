@@ -23,34 +23,28 @@
  */
 package org.hibernate.test.common.jta;
 
-import com.atomikos.icatch.jta.UserTransactionImp;
-import com.atomikos.icatch.jta.UserTransactionManager;
-import com.atomikos.jdbc.nonxa.AtomikosNonXADataSourceBean;
-
-import org.hibernate.service.internal.ServiceProxy;
+import javax.sql.DataSource;
+import javax.transaction.TransactionManager;
+import javax.transaction.UserTransaction;
+import org.hibernate.HibernateLogger;
 import org.hibernate.service.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.service.jta.platform.internal.JtaSynchronizationStrategy;
 import org.hibernate.service.jta.platform.internal.TransactionManagerBasedSynchronizationStrategy;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.jta.platform.spi.JtaPlatformException;
-import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.test.common.ConnectionProviderBuilder;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import org.jboss.logging.Logger;
+import com.atomikos.icatch.jta.UserTransactionImp;
+import com.atomikos.icatch.jta.UserTransactionManager;
+import com.atomikos.jdbc.nonxa.AtomikosNonXADataSourceBean;
 
 /**
  * @author Steve Ebersole
  */
 public class AtomikosJtaPlatform extends AbstractJtaPlatform implements Startable, Stoppable {
-	private static final Logger log = LoggerFactory.getLogger( AtomikosJtaPlatform.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AtomikosJtaPlatform.class.getName());
 
 	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
 
@@ -113,7 +107,7 @@ public class AtomikosJtaPlatform extends AbstractJtaPlatform implements Startabl
 				dataSourceBean.close();
 			}
 			catch (Exception e) {
-				log.debug( "Error closing DataSourceBean", e );
+                LOG.debug("Error closing DataSourceBean", e);
 			}
 		}
 
@@ -122,7 +116,7 @@ public class AtomikosJtaPlatform extends AbstractJtaPlatform implements Startabl
 				transactionManager.close();
 			}
 			catch (Exception e) {
-				log.debug( "Error closing UserTransactionManager", e );
+                LOG.debug("Error closing UserTransactionManager", e);
 			}
 		}
 	}

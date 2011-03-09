@@ -320,10 +320,6 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			session.getActionQueue().prepareActions();
 			session.getActionQueue().executeActions();
 		}
-		catch (HibernateException he) {
-			log.error("Could not synchronize database state with session", he);
-			throw he;
-		}
 		finally {
 			session.getJDBCContext().getConnectionManager().flushEnding();
 		}

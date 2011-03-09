@@ -129,11 +129,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		final boolean success = JtaStatusHelper.isCommitted( status );
 
-		// todo : handle stats as observer?
-		// as is this messes up unit tests which do not build a sf
-//		if ( sessionFactory().getStatistics().isStatisticsEnabled() ) {
-//			sessionFactory().getStatisticsImplementor().endTransaction( success );
-//		}
+		transactionContext.getTransactionEnvironment().getStatisticsImplementor().endTransaction( success );
 
 		getJdbcCoordinator().afterTransaction();
 

@@ -26,6 +26,7 @@ package org.hibernate.engine.transaction.spi;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
+import org.hibernate.stat.StatisticsImplementor;
 
 /**
  * Provides access to transactional services.
@@ -60,4 +61,11 @@ public interface TransactionEnvironment {
 	 * @return The transaction factory
 	 */
 	public TransactionFactory getTransactionFactory();
+
+	/**
+	 * Get access to the statistics collector
+	 *
+	 * @return The statistics collector
+	 */
+	public StatisticsImplementor getStatisticsImplementor();
 }

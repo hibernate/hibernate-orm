@@ -30,12 +30,15 @@ import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.stat.ConcurrentStatisticsImpl;
+import org.hibernate.stat.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class TransactionEnvironmentImpl implements TransactionEnvironment {
 	private final ServiceRegistry serviceRegistry;
+	private final ConcurrentStatisticsImpl statistics = new ConcurrentStatisticsImpl();
 
 	public TransactionEnvironmentImpl(ServiceRegistry serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
@@ -59,5 +62,10 @@ public class TransactionEnvironmentImpl implements TransactionEnvironment {
 	@Override
 	public TransactionFactory getTransactionFactory() {
 		return serviceRegistry.getService( TransactionFactory.class );
+	}
+
+	@Override
+	public StatisticsImplementor getStatisticsImplementor() {
+		return statistics;
 	}
 }

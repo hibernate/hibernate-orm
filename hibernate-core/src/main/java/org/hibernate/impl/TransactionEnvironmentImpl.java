@@ -23,13 +23,13 @@
  */
 package org.hibernate.impl;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.stat.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -63,5 +63,10 @@ public class TransactionEnvironmentImpl implements TransactionEnvironment {
 	@Override
 	public TransactionFactory getTransactionFactory() {
 		return serviceRegistry().getService( TransactionFactory.class );
+	}
+
+	@Override
+	public StatisticsImplementor getStatisticsImplementor() {
+		return sessionFactory.getStatisticsImplementor();
 	}
 }

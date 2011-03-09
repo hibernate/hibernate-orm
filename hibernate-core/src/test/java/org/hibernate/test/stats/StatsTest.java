@@ -83,7 +83,7 @@ public class StatsTest extends FunctionalTestCase {
 		Collection coll = getCfg().getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.JOIN);
 		coll.setLazy(false);
-		SessionFactory sf = getCfg().buildSessionFactory( getServiceRegistry() );
+		SessionFactory sf = getCfg().buildSessionFactory( getServiceRegistry( getCfg().getProperties()) );
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
@@ -105,7 +105,7 @@ public class StatsTest extends FunctionalTestCase {
 		coll = getCfg().getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.SELECT);
 		coll.setLazy(false);
-		sf = getCfg().buildSessionFactory( getServiceRegistry() );
+		sf = getCfg().buildSessionFactory( getServiceRegistry( getCfg().getProperties() ) );
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);

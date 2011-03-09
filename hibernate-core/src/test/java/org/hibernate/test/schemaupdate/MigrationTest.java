@@ -27,7 +27,7 @@ public class MigrationTest extends UnitTestCase {
 		v1cfg.addResource( resource1 );
 		new SchemaExport( v1cfg ).execute( false, true, true, false );
 
-		SchemaUpdate v1schemaUpdate = new SchemaUpdate( getJdbcServices(), v1cfg );
+		SchemaUpdate v1schemaUpdate = new SchemaUpdate( getJdbcServices( v1cfg.getProperties() ), v1cfg );
 		v1schemaUpdate.execute( true, true );
 
 		assertEquals( 0, v1schemaUpdate.getExceptions().size() );
@@ -35,11 +35,11 @@ public class MigrationTest extends UnitTestCase {
 		Configuration v2cfg = new Configuration();
 		v2cfg.addResource( resource2 );
 
-		SchemaUpdate v2schemaUpdate = new SchemaUpdate( getJdbcServices(), v2cfg );
+		SchemaUpdate v2schemaUpdate = new SchemaUpdate( getJdbcServices( v2cfg.getProperties() ), v2cfg );
 		v2schemaUpdate.execute( true, true );
 		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
 		
-		new SchemaExport( getJdbcServices(), v2cfg ).drop( false, true );
+		new SchemaExport( getJdbcServices( v2cfg.getProperties() ), v2cfg ).drop( false, true );
 
 	}
 

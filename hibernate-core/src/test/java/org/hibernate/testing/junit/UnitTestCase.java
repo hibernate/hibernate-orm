@@ -26,11 +26,14 @@ package org.hibernate.testing.junit;
 import static org.hibernate.TestLogger.LOG;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.hibernate.AssertionFailure;
 import org.hibernate.TestLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -48,6 +51,7 @@ import org.jboss.logging.Logger;
 public abstract class UnitTestCase extends junit.framework.TestCase {
 
 	private ServiceRegistry serviceRegistry;
+	private Properties serviceRegistryProperties;
 
 	public UnitTestCase(String string) {
 		super( string );
@@ -93,19 +97,19 @@ public abstract class UnitTestCase extends junit.framework.TestCase {
 		}
 	}
 
-	protected ServiceRegistry getServiceRegistry() {
+	protected ServiceRegistry getServiceRegistry(Properties properties) {
 		if ( serviceRegistry == null ) {
-			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
+			serviceRegistryProperties = properties;
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( properties );
+		}
+		else if ( ! properties.equals( serviceRegistryProperties ) ) {
+			throw new AssertionFailure( "ServiceRegistry was already build using different properties." );
 		}
 		return serviceRegistry;
  	}
 
-	protected JdbcServices getJdbcServices() {
-		return getServiceRegistry().getService( JdbcServices.class );
-	}
-
-	protected ConnectionProvider getConnectionProvider() {
-		return getJdbcServices().getConnectionProvider();
+	protected JdbcServices getJdbcServices(Properties properties) {
+		return getServiceRegistry( properties ).getService( JdbcServices.class );
 	}
 
 	private static class FailureExpectedTestPassedException extends Exception {

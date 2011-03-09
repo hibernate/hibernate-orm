@@ -575,7 +575,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
-	public void testMergeManaged() throws Exception {
+	public void testMergeManagedFailureExpected() throws Exception {
 
 		SimpleJtaTransactionManagerImpl.getInstance().begin();
 		Session s = openSession();

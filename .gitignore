@@ -3,16 +3,13 @@
 
 # Gradle work directory
 .gradle
-buildSrc/.gradle
 
 # Build output directies
-/target
-*/target
-/build
-*/build
+target
+build
 
 # IntelliJ specific files/directories
-/out
+out
 .idea
 *.ipr
 *.iws

@@ -1044,8 +1044,7 @@ public class JoinWalker {
 			return "";
 		}
 		else {
-			StringBuffer buf = new StringBuffer( associations.size() * 100 )
-				.append(", ");
+			StringBuffer buf = new StringBuffer( associations.size() * 100 );
 			int entityAliasCount=0;
 			int collectionAliasCount=0;
 			for ( int i=0; i<associations.size(); i++ ) {
@@ -1068,15 +1067,11 @@ public class JoinWalker {
 				        collectionSuffix,
 						join.getJoinType()==JoinFragment.LEFT_OUTER_JOIN
 				);
-				buf.append(selectFragment);
+				if (selectFragment.trim().length() > 0) {
+					buf.append(", ").append(selectFragment);
+				}
 				if ( joinable.consumesEntityAlias() ) entityAliasCount++;
 				if ( joinable.consumesCollectionAlias() && join.getJoinType()==JoinFragment.LEFT_OUTER_JOIN ) collectionAliasCount++;
-				if (
-					i<associations.size()-1 &&
-					selectFragment.trim().length()>0
-				) {
-					buf.append(", ");
-				}
 			}
 			return buf.toString();
 		}

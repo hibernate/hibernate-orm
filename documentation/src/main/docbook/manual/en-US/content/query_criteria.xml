@@ -250,7 +250,26 @@ while ( iter.hasNext() ) {
         </para>
     
     </section>
-     
+
+    <section>
+        <title>Components</title>
+
+        <para>
+               To add a restriction against a property of an embedded component, the component property
+               name should be prepended to the property name when creating the <literal>Restriction</literal>.
+               The criteria object should be created on the owning entity, and cannot be created on the component 
+               itself.  For example, suppose the <literal>Cat</literal> has a component property <literal>fullName</literal>
+               with sub-properties <literal>firstName</literal> and <literal>lastName</literal>:
+	</para>
+
+	<programlisting><![CDATA[
+		List cats = session.createCriteria(Cat.class)
+			.add(Restrictions.eq("fullName.lastName", "Cattington"))
+			.list();]]>
+	</programlisting>
+	
+    </section>
+
     <section id="querycriteria-examples">
         <title>Example queries</title>
 

@@ -3,17 +3,13 @@
 
 # Gradle work directory
 .gradle
-buildSrc/.gradle
 
 # Build output directies
-/target
-*/target
-documentation/*/target
-/build
-*/build
+target
+build
 
 # IntelliJ specific files/directories
-/out
+out
 .idea
 *.ipr
 *.iws
@@ -25,6 +21,7 @@ atlassian-ide-plugin.xml
 .project
 .settings
 .metadata
+bin
 
 # NetBeans specific files/directories
 .nbattrs

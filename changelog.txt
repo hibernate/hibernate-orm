@@ -5,6 +5,139 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.0.0.Alpha1 (2011.03.09)
+------------------------------------------------------------------------------------------------------------------------
+http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11161
+
+** Sub-task
+    * [HHH-5662] - Import the initial work
+    * [HHH-5765] - Wire in JdbcServices
+    * [HHH-5949] - Migrate, complete and integrate TransactionFactory as a service
+
+** Bug
+    * [HHH-3873] - DB2Dialect.getLimitString raise DB2 error message when called with limit=0
+    * [HHH-4646] - Inconsistent behavior with Audited and MappedSuperclass annotations
+    * [HHH-5126] - JPA Query with InExpression and Collection_valued_input_parameter Complains About Bad Syntax
+    * [HHH-5136] - map-key-column is broken
+    * [HHH-5163] - ClassCastException when Hibernate tries to cache results using ResultTransformer
+    * [HHH-5168] - DB2Dialect generates CROSS JOINs which aren't supported
+    * [HHH-5177] - auditing a child of a mapped superclass forces auditing on siblings
+    * [HHH-5280] - Exception on unidirectional collection whose elements are owned by several collection: "java.lang.IllegalArgumentException: object is not an instance of declaring class"
+    * [HHH-5306] - Dialect resolution: Cannot set a custom dialect resolver programatically or using hibernate.cfg.xml
+    * [HHH-5359] - Derived entity usecase fails when the association is bidirectional
+    * [HHH-5590] - Don't log and rethrow exceptions in AbstractFlushingEventListener
+    * [HHH-5599] - NPE occurs when using Infinispan as L2 Cache
+    * [HHH-5669] - Fix gradle build issues with Infinispan 2LC
+    * [HHH-5686] - Collections should be loaded by default using "lazy collection fetch" instead of "extra lazy collection" fetch
+    * [HHH-5693] - Re-enable entitymanager tests
+    * [HHH-5704] - New getSubString() handling in ClobProxy is incompatible with MySQL JDBC PS.setClob(int, Clob) for empty CLOB
+    * [HHH-5706] - Incorrect accounting for 1-based LOB offsets
+    * [HHH-5709] - JPA Metamodel: EntityType.getName != @Entity.name
+    * [HHH-5710] - incorrect test logic of org.hibernate.test.readonly.ReadOnlyCriteriaQueryTest
+    * [HHH-5717] - LockOptions not being set correctly
+    * [HHH-5725] - SqlServerDialect should support SQL 2000 which does not support the row_number function
+    * [HHH-5727] - Collection member declaration not handling optional AS in HQL.
+    * [HHH-5729] - Only one check constraint is generated when @Min and @Max annotation is used on a single field
+    * [HHH-5736] - Problem with "not" function of CriteriaBuilder
+    * [HHH-5750] - Envers unset session on proxy
+    * [HHH-5756] - Envers creates new revisions when only collection changed for entity
+    * [HHH-5766] - New services are not wired into standalone SchemaExport, SchemaUpdate, and SchemaValidator
+    * [HHH-5782] - Remove HibernateException and SQLException from ConnectionManager method signatures
+    * [HHH-5783] - Transaction timeout should be applied by ConnectionManager, not LogicalConnection
+    * [HHH-5791] - NullPointerException merging a transient entity with non-nullable properties that are null if insert is delayed and check_nullability is false
+    * [HHH-5793] - Query and timestamp caches to use cluster cache loader to avoid behaving like sync repl caches
+    * [HHH-5800] - Implement missing element-collection related xml in JPAOverridenAnnotationReader
+    * [HHH-5807] - Weird characters in license headers lead to compilation errors with UTF-8 character set
+    * [HHH-5817] - Passing char[] or byte[] to equal function of CriteriaBuilder throws java.lang.ClassCastException (Vyacheslav Dimitrov)
+    * [HHH-5821] - JPA EntityType's (or ManagedType's) getSingularAttributes() returns the version attribute with isVersion set to false.
+    * [HHH-5826] - org.hibernate.util.SerializationHelper#resolveClass never tries loader3
+    * [HHH-5838] - Proxool connection pool should only close pools it opened
+    * [HHH-5839] - non-utf8 characters in AuditReaderImpl
+    * [HHH-5842] - Types.Binary column type should be registered as "binary($l) for HSQLDialect (Fred Toussi)
+    * [HHH-5853] - Problem loading cachable collections defined with a property-ref key with a versioned owner
+    * [HHH-5883] - @Lob annotated field throws MappingException
+    * [HHH-5888] - CLONE: Problem using BLOB and CLOB fields in Oracle
+    * [HHH-5889] - CLONE: Using materialized blobs with PostgreSQL causes error
+    * [HHH-5890] - Parent POM: License comment in points to 404
+    * [HHH-5893] - Tests fail for dialects that return null for empty LOBs
+    * [HHH-5900] - Revert change to add upload repositiory authentication handling in build script
+    * [HHH-5907] - derby does not support materialize a LOB locator outside the transaction in  which it was created
+    * [HHH-5922] - Type overrides do not affect functions registered with the dialect
+    * [HHH-5961] - Contextual LOB creator is used when the JDBC driver does not support JDBC4 Connection.createBlob()
+    * [HHH-5982] - Flush checker logic bugs
+    * [HHH-5983] - Entiy actions contain non-transient references to session and entity  causing inconsistencies after serialization
+    * [HHH-5987] - Remove org.hibernate.ejb.CurrentEntityManagerImpl
+    * [HHH-5994] - Inserts may be delayed because TransactionCoordinatorImpl.isTransactionInProgress() returns false for non-JTA transactions
+    * [HHH-5995] - Compile error because Statement is undefined in SqlExceptionHelper
+
+** Remove Feature
+    * [HHH-5981] - Clarify Session.disconnect() and Session.reconnect() behavior
+
+** Improvement
+    * [HHH-3965] - Expose the ability to use varchar(max) or nvarchar(max)
+    * [HHH-4539] - Make UPPER and LOWER work on MS SQL Server text and ntext columns
+    * [HHH-5325] - Minor issues in test suite and suggestions for improvements (fixes HSQDB 2.0 failures)
+    * [HHH-5588] - Improve support for entityNames - determine the entityName for a retrieved object vía envers
+    * [HHH-5655] - In Gradle build, better account for non-standard local maven repo cache locations
+    * [HHH-5658] - Better .gitignore
+    * [HHH-5701] - Add .metadata/* to .gitignore
+    * [HHH-5724] - Improve the error message on Bean Validation exception by showing the constraint violation data
+    * [HHH-5726] - SqlServer2005Dialect should support variable limit
+    * [HHH-5761] - Update source repository links in Envers documentation
+    * [HHH-5794] - Add support for additional orm.xml elements for Map handling and element collections
+    * [HHH-5823] - Poor multithread performance in UpdateTimestampsCache class
+    * [HHH-5824] - Poor multithread performance in SessionFactoryImpl.getQueryCache method
+    * [HHH-5843] - Avoid useless branches during HQL parsing when trace logging is disabled
+    * [HHH-5859] - Upgrade to Infinispan 4.2.1.CR1
+    * [HHH-5904] - Deploy just testing artifacts from hibernate-core, not all tests
+    * [HHH-5906] - Expose AbstractEntityPersister.getPropertyUniqueness() as public for OGM to use
+    * [HHH-5943] - Make ServiceRegistry mutable
+    * [HHH-5977] - Add tests for @JoinColumn using secondary table
+    * [HHH-5986] - Refactor org.hibernate.util package for spi/internal split
+    * [HHH-5993] - Expose SessionFactoryObserver to Hibernate EntityManager configuration
+
+** New Feature
+    * [HHH-2655] - SQLServer2005Dialect (ROW_NUMBER for Paging)
+    * [HHH-5371] - Add support for REVEND_TSTMP which will enable SQL table partitioning by time
+    * [HHH-5611] - Add management capability via JMX
+    * [HHH-5687] - Extract SQL keywords from DatabaseMetaData
+    * [HHH-5879] - Expose state from AbstractEntityPersister / Type / SessionFactoryImplementor  for OGM usage
+    * [HHH-5898] - Improve authentication for Gradle uploads
+    * [HHH-5916] - Add support for a programmatic way to define a default EntityPersister and CollectionPersister class implementation
+    * [HHH-5957] - Provide a way for dialects to override a SqlTypeDescriptor
+
+** Task
+    * [HHH-5615] - Switch to JBoss logging
+    * [HHH-5616] - Switch to Gradle for builds
+    * [HHH-5617] - Migrate to Git for source control
+    * [HHH-5618] - Support legacy ConnectionProvider names
+    * [HHH-5619] - Support legacy TransactionFactory names
+    * [HHH-5623] - Baseline on JDK 1.6
+    * [HHH-5632] - Import initial services work
+    * [HHH-5634] - Clean up stuff no longer needed
+    * [HHH-5638] - Import JDBC batching service
+    * [HHH-5639] - Import ConnectionProvider service
+    * [HHH-5640] - Import DialectFactory and DialectResolver services
+    * [HHH-5641] - Import JtaPlatform services
+    * [HHH-5647] - Develop release process using Gradle
+    * [HHH-5651] - Wire in new services in org.hibernate.service
+    * [HHH-5656] - Import ServicesRegistry bootstrap code and service tests
+    * [HHH-5714] - Upgrade metamodel generator dependency in entitymanager to 1.1.0.Final
+    * [HHH-5768] - upgrade H2 version to 1.2.145 (was 1.2.140)
+    * [HHH-5778] - Wire in new batch code
+    * [HHH-5781] - Refactor code in org.hibernate.jdbc to spi/internal and remove obsolete code
+    * [HHH-5788] - Move settings required by JdbcServices into JdbcSupport
+    * [HHH-5880] - Gradle has to deploy testing artifacts
+    * [HHH-5897] - Upgrade to Gradle 0.9.2
+    * [HHH-5903] - Rename ServicesRegistry to ServiceRegistry
+    * [HHH-5928] - Clean up compilation warnings
+    * [HHH-5941] - Remove deprecated set(), nullSafeSet(), get(), nullSafeGet() methods and add SessionImplementer argument to UserType.nullSafeGet()/nullSafeSet()
+    * [HHH-5985] - Remove TransactionHelper in preference of IsolationDelegate
+    * [HHH-5990] - Remove non-maintained second level cache integrations
+    * [HHH-5991] - Revist passing of ServiceRegistry to Configuration to build a SessionFactory
+    * [HHH-6000] - split annotation processor execution out into separate tasks
+
+
 Changes in version 3.6.0.CR2 (2010.09.29)
 -------------------------------------------
 http://opensource.atlassian.com/projects/hibernate/browse/HHH/fixforversion/11131

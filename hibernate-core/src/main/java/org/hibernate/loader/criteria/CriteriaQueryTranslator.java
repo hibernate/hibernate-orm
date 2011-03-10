@@ -269,7 +269,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				componentPath = "";
 			}
 			else if ( type.isComponentType() ) {
-				componentPath += '.';
+				if (!tokens.hasMoreTokens()) {
+					throw new QueryException("Criteria objects cannot be created directly on components.  Create a criteria on owning entity and use a dotted property to access component property: "+path);
+				} else {
+					componentPath += '.';
+				}
 			}
 			else {
 				throw new QueryException( "not an association: " + componentPath );

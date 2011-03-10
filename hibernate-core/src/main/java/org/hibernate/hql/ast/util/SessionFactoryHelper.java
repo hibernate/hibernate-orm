@@ -231,7 +231,7 @@ public class SessionFactoryHelper {
 	 * @param role The collection role for which to retrieve the property mapping.
 	 * @return The property mapping.
 	 */
-	private PropertyMapping getCollectionPropertyMapping(String role) {
+	public PropertyMapping getCollectionPropertyMapping(String role) {
 		return ( PropertyMapping ) collectionPropertyMappingByRole.get( role );
 	}
 

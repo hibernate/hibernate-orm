@@ -544,6 +544,11 @@
                 <artifactId>h2</artifactId>
                 <version>1.2.145</version>
             </dependency>
+            <dependency>
+                <groupId>org.jboss.byteman</groupId>
+                <artifactId>byteman</artifactId>
+                <version>${bytemanVersion}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1044,5 +1049,6 @@
     <properties>
         <slf4jVersion>1.6.1</slf4jVersion>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <bytemanVersion>1.5.1</bytemanVersion>
     </properties>
 </project>

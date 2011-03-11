@@ -67,6 +67,11 @@
             <artifactId>hibernate-validator</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jboss.byteman</groupId>
+            <artifactId>byteman</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -109,6 +114,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <forkMode>once</forkMode>
+                    <argLine>-Dorg.jboss.byteman.verbose=true -javaagent:${settings.localRepository}/org/jboss/byteman/byteman/${bytemanVersion}/byteman-${bytemanVersion}.jar=script:${project.build.testOutputDirectory}/bytemanrules.txt</argLine>
                     <systemProperties>
                         <property>
                             <name>hibernate.test.validatefailureexpected</name>

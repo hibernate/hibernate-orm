@@ -24,7 +24,6 @@
 package org.hibernate.cfg;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -114,6 +113,16 @@ public class SettingsFactory implements Serializable {
 				Connection conn = connections.getConnection();
 				try {
 					DatabaseMetaData meta = conn.getMetaData();
+
+					dialect = DialectFactory.buildDialect( props, conn );
+					jdbcSupport = JdbcSupportLoader.loadJdbcSupport( conn );
+
+					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
+					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
+					metaReportsDDLCausesTxnCommit = meta.dataDefinitionCausesTransactionCommit();
+					metaReportsDDLInTxnSupported = !meta.dataDefinitionIgnoredInTransactions();
+					metaSupportsGetGeneratedKeys = meta.supportsGetGeneratedKeys();
+					
 					log.info( "Database ->\n" +
 							"       name : " + meta.getDatabaseProductName() + '\n' +
 							"    version : " +  meta.getDatabaseProductVersion() + '\n' +
@@ -126,15 +135,6 @@ public class SettingsFactory implements Serializable {
 							"      major : " + meta.getDriverMajorVersion() + '\n' +
 							"      minor : " + meta.getDriverMinorVersion()
 					);
-
-					dialect = DialectFactory.buildDialect( props, conn );
-					jdbcSupport = JdbcSupportLoader.loadJdbcSupport( conn );
-
-					metaSupportsScrollable = meta.supportsResultSetType( ResultSet.TYPE_SCROLL_INSENSITIVE );
-					metaSupportsBatchUpdates = meta.supportsBatchUpdates();
-					metaReportsDDLCausesTxnCommit = meta.dataDefinitionCausesTransactionCommit();
-					metaReportsDDLInTxnSupported = !meta.dataDefinitionIgnoredInTransactions();
-					metaSupportsGetGeneratedKeys = meta.supportsGetGeneratedKeys();
 				}
 				catch ( SQLException sqle ) {
 					log.warn( "Could not obtain connection metadata", sqle );

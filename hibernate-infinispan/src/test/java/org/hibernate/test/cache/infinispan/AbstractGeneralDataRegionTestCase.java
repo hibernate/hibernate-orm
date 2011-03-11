@@ -23,16 +23,25 @@
  */
 package org.hibernate.test.cache.infinispan;
 
-import static org.hibernate.TestLogger.LOG;
 import java.util.Set;
+
+import org.infinispan.transaction.tm.BatchModeTransactionManager;
+
 import org.hibernate.cache.GeneralDataRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
+import org.junit.Test;
+
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
+
+import static org.hibernate.TestLogger.LOG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Base class for tests of QueryResultsRegion and TimestampsRegion.
@@ -41,162 +50,175 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
  * @since 3.5
  */
 public abstract class AbstractGeneralDataRegionTestCase extends AbstractRegionImplTestCase {
-   protected static final String KEY = "Key";
+	protected static final String KEY = "Key";
 
-   protected static final String VALUE1 = "value1";
-   protected static final String VALUE2 = "value2";
+	protected static final String VALUE1 = "value1";
+	protected static final String VALUE2 = "value2";
 
-   public AbstractGeneralDataRegionTestCase(String name) {
-      super(name);
-   }
+	protected Configuration createConfiguration() {
+		return CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, false, true );
+	}
 
-   @Override
-   protected void putInRegion(Region region, Object key, Object value) {
-      ((GeneralDataRegion) region).put(key, value);
-   }
+	@Override
+	protected void putInRegion(Region region, Object key, Object value) {
+		((GeneralDataRegion) region).put( key, value );
+	}
 
-   @Override
-   protected void removeFromRegion(Region region, Object key) {
-      ((GeneralDataRegion) region).evict(key);
-   }
+	@Override
+	protected void removeFromRegion(Region region, Object key) {
+		((GeneralDataRegion) region).evict( key );
+	}
 
-   /**
-    * Test method for {@link QueryResultsRegion#evict(java.lang.Object)}.
-    *
-    * FIXME add testing of the "immediately without regard for transaction isolation" bit in the
-    * CollectionRegionAccessStrategy API.
-    */
-   public void testEvict() throws Exception {
-      evictOrRemoveTest();
-   }
+	@Test
+	public void testEvict() throws Exception {
+		evictOrRemoveTest();
+	}
 
-   private void evictOrRemoveTest() throws Exception {
-      Configuration cfg = createConfiguration();
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  getServiceRegistry( cfg.getProperties() ), cfg, getCacheTestSupport()
-	  );
-      CacheAdapter localCache = getInfinispanCache(regionFactory);
-      boolean invalidation = localCache.isClusteredInvalidation();
+	private void evictOrRemoveTest() throws Exception {
+		Configuration cfg = createConfiguration();
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				new ServiceRegistryImpl( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		CacheAdapter localCache = getInfinispanCache( regionFactory );
+		boolean invalidation = localCache.isClusteredInvalidation();
 
-      // Sleep a bit to avoid concurrent FLUSH problem
-      avoidConcurrentFlush();
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-      GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(regionFactory,
-               getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
+		GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+				regionFactory,
+				getStandardRegionName( REGION_PREFIX ), cfg.getProperties(), null
+		);
 
-      cfg = createConfiguration();
-      regionFactory = CacheTestUtil.startRegionFactory(
-			  getServiceRegistry( cfg.getProperties() ), cfg, getCacheTestSupport()
-	  );
+		cfg = createConfiguration();
+		regionFactory = CacheTestUtil.startRegionFactory(
+				new ServiceRegistryImpl( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
 
-      GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory,
-               getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
+		GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
+				regionFactory,
+				getStandardRegionName( REGION_PREFIX ),
+				cfg.getProperties(),
+				null
+		);
 
-      assertNull("local is clean", localRegion.get(KEY));
-      assertNull("remote is clean", remoteRegion.get(KEY));
+		assertNull( "local is clean", localRegion.get( KEY ) );
+		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-      localRegion.put(KEY, VALUE1);
-      assertEquals(VALUE1, localRegion.get(KEY));
+		localRegion.put( KEY, VALUE1 );
+		assertEquals( VALUE1, localRegion.get( KEY ) );
 
-      // allow async propagation
-      sleep(250);
-      Object expected = invalidation ? null : VALUE1;
-      assertEquals(expected, remoteRegion.get(KEY));
+		// allow async propagation
+		sleep( 250 );
+		Object expected = invalidation ? null : VALUE1;
+		assertEquals( expected, remoteRegion.get( KEY ) );
 
-      localRegion.evict(KEY);
+		localRegion.evict( KEY );
 
-      // allow async propagation
-      sleep(250);
-      assertEquals(null, localRegion.get(KEY));
-      assertEquals(null, remoteRegion.get(KEY));
-   }
+		// allow async propagation
+		sleep( 250 );
+		assertEquals( null, localRegion.get( KEY ) );
+		assertEquals( null, remoteRegion.get( KEY ) );
+	}
 
-   protected abstract String getStandardRegionName(String regionPrefix);
+	protected abstract String getStandardRegionName(String regionPrefix);
 
-   /**
-    * Test method for {@link QueryResultsRegion#evictAll()}.
-    *
-    * FIXME add testing of the "immediately without regard for transaction isolation" bit in the
-    * CollectionRegionAccessStrategy API.
-    */
-   public void testEvictAll() throws Exception {
-      evictOrRemoveAllTest("entity");
-   }
+	/**
+	 * Test method for {@link QueryResultsRegion#evictAll()}.
+	 * <p/>
+	 * FIXME add testing of the "immediately without regard for transaction isolation" bit in the
+	 * CollectionRegionAccessStrategy API.
+	 */
+	public void testEvictAll() throws Exception {
+		evictOrRemoveAllTest( "entity" );
+	}
 
-   private void evictOrRemoveAllTest(String configName) throws Exception {
-      Configuration cfg = createConfiguration();
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  getServiceRegistry( cfg.getProperties() ), cfg, getCacheTestSupport()
-	  );
-      CacheAdapter localCache = getInfinispanCache(regionFactory);
+	private void evictOrRemoveAllTest(String configName) throws Exception {
+		Configuration cfg = createConfiguration();
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				new ServiceRegistryImpl( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		CacheAdapter localCache = getInfinispanCache( regionFactory );
 
-      // Sleep a bit to avoid concurrent FLUSH problem
-      avoidConcurrentFlush();
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-      GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(regionFactory,
-               getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
+		GeneralDataRegion localRegion = (GeneralDataRegion) createRegion(
+				regionFactory,
+				getStandardRegionName( REGION_PREFIX ),
+				cfg.getProperties(),
+				null
+		);
 
-      cfg = createConfiguration();
-      regionFactory = CacheTestUtil.startRegionFactory(
-			  getServiceRegistry( cfg.getProperties() ), cfg, getCacheTestSupport()
-	  );
-      CacheAdapter remoteCache = getInfinispanCache(regionFactory);
+		cfg = createConfiguration();
+		regionFactory = CacheTestUtil.startRegionFactory(
+				new ServiceRegistryImpl( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		CacheAdapter remoteCache = getInfinispanCache( regionFactory );
 
-      // Sleep a bit to avoid concurrent FLUSH problem
-      avoidConcurrentFlush();
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-      GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(regionFactory,
-               getStandardRegionName(REGION_PREFIX), cfg.getProperties(), null);
+		GeneralDataRegion remoteRegion = (GeneralDataRegion) createRegion(
+				regionFactory,
+				getStandardRegionName( REGION_PREFIX ),
+				cfg.getProperties(),
+				null
+		);
 
-      Set keys = localCache.keySet();
-      assertEquals("No valid children in " + keys, 0, getValidKeyCount(keys));
+		Set keys = localCache.keySet();
+		assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
 
-      keys = remoteCache.keySet();
-      assertEquals("No valid children in " + keys, 0, getValidKeyCount(keys));
+		keys = remoteCache.keySet();
+		assertEquals( "No valid children in " + keys, 0, getValidKeyCount( keys ) );
 
-      assertNull("local is clean", localRegion.get(KEY));
-      assertNull("remote is clean", remoteRegion.get(KEY));
+		assertNull( "local is clean", localRegion.get( KEY ) );
+		assertNull( "remote is clean", remoteRegion.get( KEY ) );
 
-      localRegion.put(KEY, VALUE1);
-      assertEquals(VALUE1, localRegion.get(KEY));
+		localRegion.put( KEY, VALUE1 );
+		assertEquals( VALUE1, localRegion.get( KEY ) );
 
-      // Allow async propagation
-      sleep(250);
+		// Allow async propagation
+		sleep( 250 );
 
-      remoteRegion.put(KEY, VALUE1);
-      assertEquals(VALUE1, remoteRegion.get(KEY));
+		remoteRegion.put( KEY, VALUE1 );
+		assertEquals( VALUE1, remoteRegion.get( KEY ) );
 
-      // Allow async propagation
-      sleep(250);
+		// Allow async propagation
+		sleep( 250 );
 
-      localRegion.evictAll();
+		localRegion.evictAll();
 
-      // allow async propagation
-      sleep(250);
-      // This should re-establish the region root node in the optimistic case
-      assertNull(localRegion.get(KEY));
-      assertEquals("No valid children in " + keys, 0, getValidKeyCount(localCache.keySet()));
+		// allow async propagation
+		sleep( 250 );
+		// This should re-establish the region root node in the optimistic case
+		assertNull( localRegion.get( KEY ) );
+		assertEquals( "No valid children in " + keys, 0, getValidKeyCount( localCache.keySet() ) );
 
-      // Re-establishing the region root on the local node doesn't
-      // propagate it to other nodes. Do a get on the remote node to re-establish
-      // This only adds a node in the case of optimistic locking
-      assertEquals(null, remoteRegion.get(KEY));
-      assertEquals("No valid children in " + keys, 0, getValidKeyCount(remoteCache.keySet()));
+		// Re-establishing the region root on the local node doesn't
+		// propagate it to other nodes. Do a get on the remote node to re-establish
+		// This only adds a node in the case of optimistic locking
+		assertEquals( null, remoteRegion.get( KEY ) );
+		assertEquals( "No valid children in " + keys, 0, getValidKeyCount( remoteCache.keySet() ) );
 
-      assertEquals("local is clean", null, localRegion.get(KEY));
-      assertEquals("remote is clean", null, remoteRegion.get(KEY));
-   }
+		assertEquals( "local is clean", null, localRegion.get( KEY ) );
+		assertEquals( "remote is clean", null, remoteRegion.get( KEY ) );
+	}
 
-   protected Configuration createConfiguration() {
-      Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, false, true);
-      return cfg;
-   }
-
-   protected void rollback() {
-      try {
-         BatchModeTransactionManager.getInstance().rollback();
-      } catch (Exception e) {
-         LOG.error(e.getMessage(), e);
-      }
-   }
+	protected void rollback() {
+		try {
+			BatchModeTransactionManager.getInstance().rollback();
+		}
+		catch (Exception e) {
+			LOG.error( e.getMessage(), e );
+		}
+	}
 }

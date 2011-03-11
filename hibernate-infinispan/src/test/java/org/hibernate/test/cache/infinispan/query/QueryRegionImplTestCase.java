@@ -23,11 +23,16 @@
  */
 package org.hibernate.test.cache.infinispan.query;
 
-import static org.hibernate.TestLogger.LOG;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import junit.framework.AssertionFailedError;
+
+import org.infinispan.notifications.Listener;
+import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
+import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
+import org.infinispan.transaction.tm.BatchModeTransactionManager;
+import org.infinispan.util.concurrent.IsolationLevel;
+
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.Region;
@@ -36,13 +41,17 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
+import junit.framework.AssertionFailedError;
+
 import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
-import org.infinispan.notifications.Listener;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
-import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
-import org.infinispan.transaction.tm.BatchModeTransactionManager;
-import org.infinispan.util.concurrent.IsolationLevel;
+
+import static org.hibernate.TestLogger.LOG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests of QueryResultRegionImpl.
@@ -52,251 +61,273 @@ import org.infinispan.util.concurrent.IsolationLevel;
  */
 public class QueryRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
 
-    // protected static final String REGION_NAME = "test/" + StandardQueryCache.class.getName();
+	@Override
+	protected Region createRegion(
+			InfinispanRegionFactory regionFactory,
+			String regionName,
+			Properties properties,
+			CacheDataDescription cdd) {
+		return regionFactory.buildQueryResultsRegion( regionName, properties );
+	}
 
-    /**
-     * Create a new EntityRegionImplTestCase.
-     *
-     * @param name
-     */
-    public QueryRegionImplTestCase( String name ) {
-        super(name);
-    }
+	@Override
+	protected String getStandardRegionName(String regionPrefix) {
+		return regionPrefix + "/" + StandardQueryCache.class.getName();
+	}
 
-    @Override
-    protected Region createRegion( InfinispanRegionFactory regionFactory,
-                                   String regionName,
-                                   Properties properties,
-                                   CacheDataDescription cdd ) {
-        return regionFactory.buildQueryResultsRegion(regionName, properties);
-    }
+	@Override
+	protected CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory) {
+		return CacheAdapterImpl.newInstance( regionFactory.getCacheManager().getCache( "local-query" ) );
+	}
 
-    @Override
-    protected String getStandardRegionName( String regionPrefix ) {
-        return regionPrefix + "/" + StandardQueryCache.class.getName();
-    }
+	@Override
+	protected Configuration createConfiguration() {
+		return CacheTestUtil.buildCustomQueryCacheConfiguration( "test", "replicated-query" );
+	}
 
-    @Override
-    protected CacheAdapter getInfinispanCache( InfinispanRegionFactory regionFactory ) {
-        return CacheAdapterImpl.newInstance(regionFactory.getCacheManager().getCache("local-query"));
-    }
+	private void putDoesNotBlockGetTest() throws Exception {
+		Configuration cfg = createConfiguration();
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				new ServiceRegistryImpl( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
 
-    @Override
-    protected Configuration createConfiguration() {
-        return CacheTestUtil.buildCustomQueryCacheConfiguration("test", "replicated-query");
-    }
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-    public void testPutDoesNotBlockGet() throws Exception {
-        putDoesNotBlockGetTest();
-    }
+		final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(
+				getStandardRegionName( REGION_PREFIX ),
+				cfg.getProperties()
+		);
 
-    private void putDoesNotBlockGetTest() throws Exception {
-        Configuration cfg = createConfiguration();
-        InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(getServiceRegistry(cfg.getProperties()), cfg, getCacheTestSupport());
+		region.put( KEY, VALUE1 );
+		assertEquals( VALUE1, region.get( KEY ) );
 
-        // Sleep a bit to avoid concurrent FLUSH problem
-        avoidConcurrentFlush();
+		final CountDownLatch readerLatch = new CountDownLatch( 1 );
+		final CountDownLatch writerLatch = new CountDownLatch( 1 );
+		final CountDownLatch completionLatch = new CountDownLatch( 1 );
+		final ExceptionHolder holder = new ExceptionHolder();
 
-        final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX),
-                                                                                cfg.getProperties());
+		Thread reader = new Thread() {
+			@Override
+			public void run() {
+				try {
+					BatchModeTransactionManager.getInstance().begin();
+					LOG.debug( "Transaction began, get value for key" );
+					assertTrue( VALUE2.equals( region.get( KEY ) ) == false );
+					BatchModeTransactionManager.getInstance().commit();
+				}
+				catch (AssertionFailedError e) {
+					holder.a1 = e;
+					rollback();
+				}
+				catch (Exception e) {
+					holder.e1 = e;
+					rollback();
+				}
+				finally {
+					readerLatch.countDown();
+				}
+			}
+		};
 
-        region.put(KEY, VALUE1);
-        assertEquals(VALUE1, region.get(KEY));
+		Thread writer = new Thread() {
+			@Override
+			public void run() {
+				try {
+					BatchModeTransactionManager.getInstance().begin();
+					LOG.debug( "Put value2" );
+					region.put( KEY, VALUE2 );
+					LOG.debug( "Put finished for value2, await writer latch" );
+					writerLatch.await();
+					LOG.debug( "Writer latch finished" );
+					BatchModeTransactionManager.getInstance().commit();
+					LOG.debug( "Transaction committed" );
+				}
+				catch (Exception e) {
+					holder.e2 = e;
+					rollback();
+				}
+				finally {
+					completionLatch.countDown();
+				}
+			}
+		};
 
-        final CountDownLatch readerLatch = new CountDownLatch(1);
-        final CountDownLatch writerLatch = new CountDownLatch(1);
-        final CountDownLatch completionLatch = new CountDownLatch(1);
-        final ExceptionHolder holder = new ExceptionHolder();
+		reader.setDaemon( true );
+		writer.setDaemon( true );
 
-        Thread reader = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    BatchModeTransactionManager.getInstance().begin();
-                    LOG.debug("Transaction began, get value for key");
-                    assertTrue(VALUE2.equals(region.get(KEY)) == false);
-                    BatchModeTransactionManager.getInstance().commit();
-                } catch (AssertionFailedError e) {
-                    holder.a1 = e;
-                    rollback();
-                } catch (Exception e) {
-                    holder.e1 = e;
-                    rollback();
-                } finally {
-                    readerLatch.countDown();
-                }
-            }
-        };
+		writer.start();
+		assertFalse( "Writer is blocking", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
 
-        Thread writer = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    BatchModeTransactionManager.getInstance().begin();
-                    LOG.debug("Put value2");
-                    region.put(KEY, VALUE2);
-                    LOG.debug("Put finished for value2, await writer latch");
-                    writerLatch.await();
-                    LOG.debug("Writer latch finished");
-                    BatchModeTransactionManager.getInstance().commit();
-                    LOG.debug("Transaction committed");
-                } catch (Exception e) {
-                    holder.e2 = e;
-                    rollback();
-                } finally {
-                    completionLatch.countDown();
-                }
-            }
-        };
+		// Start the reader
+		reader.start();
+		assertTrue( "Reader finished promptly", readerLatch.await( 1000000000, TimeUnit.MILLISECONDS ) );
 
-        reader.setDaemon(true);
-        writer.setDaemon(true);
+		writerLatch.countDown();
+		assertTrue( "Reader finished promptly", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
 
-        writer.start();
-        assertFalse("Writer is blocking", completionLatch.await(100, TimeUnit.MILLISECONDS));
+		assertEquals( VALUE2, region.get( KEY ) );
 
-        // Start the reader
-        reader.start();
-        assertTrue("Reader finished promptly", readerLatch.await(1000000000, TimeUnit.MILLISECONDS));
+		if ( holder.a1 != null ) {
+			throw holder.a1;
+		}
+		else if ( holder.a2 != null ) {
+			throw holder.a2;
+		}
 
-        writerLatch.countDown();
-        assertTrue("Reader finished promptly", completionLatch.await(100, TimeUnit.MILLISECONDS));
+		assertEquals( "writer saw no exceptions", null, holder.e1 );
+		assertEquals( "reader saw no exceptions", null, holder.e2 );
+	}
 
-        assertEquals(VALUE2, region.get(KEY));
+	public void testGetDoesNotBlockPut() throws Exception {
+		getDoesNotBlockPutTest();
+	}
 
-        if (holder.a1 != null) throw holder.a1;
-        else if (holder.a2 != null) throw holder.a2;
+	private void getDoesNotBlockPutTest() throws Exception {
+		Configuration cfg = createConfiguration();
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				new ServiceRegistryImpl( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
 
-        assertEquals("writer saw no exceptions", null, holder.e1);
-        assertEquals("reader saw no exceptions", null, holder.e2);
-    }
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-    public void testGetDoesNotBlockPut() throws Exception {
-        getDoesNotBlockPutTest();
-    }
+		final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(
+				getStandardRegionName( REGION_PREFIX ),
+				cfg.getProperties()
+		);
 
-    private void getDoesNotBlockPutTest() throws Exception {
-        Configuration cfg = createConfiguration();
-        InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(getServiceRegistry(cfg.getProperties()), cfg, getCacheTestSupport());
+		region.put( KEY, VALUE1 );
+		assertEquals( VALUE1, region.get( KEY ) );
 
-        // Sleep a bit to avoid concurrent FLUSH problem
-        avoidConcurrentFlush();
+		// final Fqn rootFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);
+		final CacheAdapter jbc = getInfinispanCache( regionFactory );
 
-        final QueryResultsRegion region = regionFactory.buildQueryResultsRegion(getStandardRegionName(REGION_PREFIX),
-                                                                                cfg.getProperties());
+		final CountDownLatch blockerLatch = new CountDownLatch( 1 );
+		final CountDownLatch writerLatch = new CountDownLatch( 1 );
+		final CountDownLatch completionLatch = new CountDownLatch( 1 );
+		final ExceptionHolder holder = new ExceptionHolder();
 
-        region.put(KEY, VALUE1);
-        assertEquals(VALUE1, region.get(KEY));
+		Thread blocker = new Thread() {
 
-        // final Fqn rootFqn = getRegionFqn(getStandardRegionName(REGION_PREFIX), REGION_PREFIX);
-        final CacheAdapter jbc = getInfinispanCache(regionFactory);
+			@Override
+			public void run() {
+				// Fqn toBlock = new Fqn(rootFqn, KEY);
+				GetBlocker blocker = new GetBlocker( blockerLatch, KEY );
+				try {
+					jbc.addListener( blocker );
 
-        final CountDownLatch blockerLatch = new CountDownLatch(1);
-        final CountDownLatch writerLatch = new CountDownLatch(1);
-        final CountDownLatch completionLatch = new CountDownLatch(1);
-        final ExceptionHolder holder = new ExceptionHolder();
+					BatchModeTransactionManager.getInstance().begin();
+					region.get( KEY );
+					BatchModeTransactionManager.getInstance().commit();
+				}
+				catch (Exception e) {
+					holder.e1 = e;
+					rollback();
+				}
+				finally {
+					jbc.removeListener( blocker );
+				}
+			}
+		};
 
-        Thread blocker = new Thread() {
+		Thread writer = new Thread() {
 
-            @Override
-            public void run() {
-                // Fqn toBlock = new Fqn(rootFqn, KEY);
-                GetBlocker blocker = new GetBlocker(blockerLatch, KEY);
-                try {
-                    jbc.addListener(blocker);
+			@Override
+			public void run() {
+				try {
+					writerLatch.await();
 
-                    BatchModeTransactionManager.getInstance().begin();
-                    region.get(KEY);
-                    BatchModeTransactionManager.getInstance().commit();
-                } catch (Exception e) {
-                    holder.e1 = e;
-                    rollback();
-                } finally {
-                    jbc.removeListener(blocker);
-                }
-            }
-        };
+					BatchModeTransactionManager.getInstance().begin();
+					region.put( KEY, VALUE2 );
+					BatchModeTransactionManager.getInstance().commit();
+				}
+				catch (Exception e) {
+					holder.e2 = e;
+					rollback();
+				}
+				finally {
+					completionLatch.countDown();
+				}
+			}
+		};
 
-        Thread writer = new Thread() {
+		blocker.setDaemon( true );
+		writer.setDaemon( true );
 
-            @Override
-            public void run() {
-                try {
-                    writerLatch.await();
+		boolean unblocked = false;
+		try {
+			blocker.start();
+			writer.start();
 
-                    BatchModeTransactionManager.getInstance().begin();
-                    region.put(KEY, VALUE2);
-                    BatchModeTransactionManager.getInstance().commit();
-                } catch (Exception e) {
-                    holder.e2 = e;
-                    rollback();
-                } finally {
-                    completionLatch.countDown();
-                }
-            }
-        };
+			assertFalse( "Blocker is blocking", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
+			// Start the writer
+			writerLatch.countDown();
+			assertTrue( "Writer finished promptly", completionLatch.await( 100, TimeUnit.MILLISECONDS ) );
 
-        blocker.setDaemon(true);
-        writer.setDaemon(true);
+			blockerLatch.countDown();
+			unblocked = true;
 
-        boolean unblocked = false;
-        try {
-            blocker.start();
-            writer.start();
+			if ( IsolationLevel.REPEATABLE_READ.equals( jbc.getConfiguration().getIsolationLevel() ) ) {
+				assertEquals( VALUE1, region.get( KEY ) );
+			}
+			else {
+				assertEquals( VALUE2, region.get( KEY ) );
+			}
 
-            assertFalse("Blocker is blocking", completionLatch.await(100, TimeUnit.MILLISECONDS));
-            // Start the writer
-            writerLatch.countDown();
-            assertTrue("Writer finished promptly", completionLatch.await(100, TimeUnit.MILLISECONDS));
+			if ( holder.a1 != null ) {
+				throw holder.a1;
+			}
+			else if ( holder.a2 != null ) {
+				throw holder.a2;
+			}
 
-            blockerLatch.countDown();
-            unblocked = true;
+			assertEquals( "blocker saw no exceptions", null, holder.e1 );
+			assertEquals( "writer saw no exceptions", null, holder.e2 );
+		}
+		finally {
+			if ( !unblocked ) {
+				blockerLatch.countDown();
+			}
+		}
+	}
 
-            if (IsolationLevel.REPEATABLE_READ.equals(jbc.getConfiguration().getIsolationLevel())) {
-                assertEquals(VALUE1, region.get(KEY));
-            } else {
-                assertEquals(VALUE2, region.get(KEY));
-            }
+	@Listener
+	public class GetBlocker {
 
-            if (holder.a1 != null) throw holder.a1;
-            else if (holder.a2 != null) throw holder.a2;
+		private CountDownLatch latch;
+		// private Fqn fqn;
+		private Object key;
 
-            assertEquals("blocker saw no exceptions", null, holder.e1);
-            assertEquals("writer saw no exceptions", null, holder.e2);
-        } finally {
-            if (!unblocked) blockerLatch.countDown();
-        }
-    }
+		GetBlocker(
+				CountDownLatch latch,
+				Object key
+		) {
+			this.latch = latch;
+			this.key = key;
+		}
 
-    @Listener
-    public class GetBlocker {
+		@CacheEntryVisited
+		public void nodeVisisted(CacheEntryVisitedEvent event) {
+			if ( event.isPre() && event.getKey().equals( key ) ) {
+				try {
+					latch.await();
+				}
+				catch (InterruptedException e) {
+					LOG.error( "Interrupted waiting for latch", e );
+				}
+			}
+		}
+	}
 
-        private CountDownLatch latch;
-        // private Fqn fqn;
-        private Object key;
-
-        GetBlocker( CountDownLatch latch,
-                    Object key ) {
-            this.latch = latch;
-            this.key = key;
-        }
-
-        @CacheEntryVisited
-        public void nodeVisisted( CacheEntryVisitedEvent event ) {
-            if (event.isPre() && event.getKey().equals(key)) {
-                try {
-                    latch.await();
-                } catch (InterruptedException e) {
-                    LOG.error("Interrupted waiting for latch", e);
-                }
-            }
-        }
-    }
-
-    private class ExceptionHolder {
-        Exception e1;
-        Exception e2;
-        AssertionFailedError a1;
-        AssertionFailedError a2;
-    }
+	private class ExceptionHolder {
+		Exception e1;
+		Exception e2;
+		AssertionFailedError a1;
+		AssertionFailedError a2;
+	}
 }

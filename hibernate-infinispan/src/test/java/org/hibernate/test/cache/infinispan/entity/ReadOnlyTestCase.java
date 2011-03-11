@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests READ_ONLY access when pessimistic locking and invalidation are used.
@@ -33,28 +34,14 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
  * @since 3.5
  */
 public class ReadOnlyTestCase extends AbstractReadOnlyAccessTestCase {
+	@Override
+	protected String getConfigurationName() {
+		return "entity";
+	}
 
-   /**
-    * Create a new PessimisticTransactionalAccessTestCase.
-    * 
-    * @param name
-    */
-   public ReadOnlyTestCase(String name) {
-      super(name);
-   }
-
-   public static Test suite() throws Exception {
-      TestSuite suite = CacheTestUtil.createFailureExpectedSuite(ReadOnlyTestCase.class);
-      return getTestSetup(suite, "entity");
-   }
-
-   // Known failures
-
-   // Overrides
-
-   @Override
-   public void testCacheConfiguration() {
-      assertTrue("Using Invalidation", isUsingInvalidation());
-   }
-
+	@Test
+	@Override
+	public void testCacheConfiguration() {
+		assertTrue("Using Invalidation", isUsingInvalidation());
+	}
 }

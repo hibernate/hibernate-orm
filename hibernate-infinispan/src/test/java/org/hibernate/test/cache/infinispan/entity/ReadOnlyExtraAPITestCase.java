@@ -21,74 +21,59 @@
  */
 package org.hibernate.test.cache.infinispan.entity;
 import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.EntityRegionAccessStrategy;
+
+import static org.junit.Assert.fail;
 
 /**
- * Tests for the "extra API" in EntityRegionAccessStrategy; 
- * <p>
- * By "extra API" we mean those methods that are superfluous to the 
+ * Tests for the "extra API" in EntityRegionAccessStrategy;
+ * <p/>
+ * By "extra API" we mean those methods that are superfluous to the
  * function of the Infinispan integration, where the impl is a no-op or a static
  * false return value, UnsupportedOperationException, etc.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class ReadOnlyExtraAPITestCase extends TransactionalExtraAPITestCase {
-   private static EntityRegionAccessStrategy localAccessStrategy;
-   
-   public ReadOnlyExtraAPITestCase(String name) {
-      super(name);
-   }
+	@Override
+	protected AccessType getAccessType() {
+		return AccessType.READ_ONLY;
+	}
 
-   @Override
-   protected AccessType getAccessType() {
-       return AccessType.READ_ONLY;
-   }
-   
-   @Override
-   protected EntityRegionAccessStrategy getEntityAccessStrategy() {
-       return localAccessStrategy;
-   }
-   
-   @Override
-   protected void setEntityRegionAccessStrategy(EntityRegionAccessStrategy strategy) {
-       localAccessStrategy = strategy;
-   }
-   
-   /**
-    * Test method for {@link TransactionalAccess#lockItem(java.lang.Object, java.lang.Object)}.
-    */
-   @Override
-   public void testLockItem() {
-       try {
-           getEntityAccessStrategy().lockItem(KEY, new Integer(1));
-           fail("Call to lockItem did not throw exception");
-       }
-       catch (UnsupportedOperationException expected) {}
-   }
+	@Override
+	public void testLockItem() {
+		try {
+			getEntityAccessStrategy().lockItem( KEY, Integer.valueOf( 1 ) );
+			fail( "Call to lockItem did not throw exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+	}
 
-   /**
-    * Test method for {@link TransactionalAccess#lockRegion()}.
-    */
-   @Override
-   public void testLockRegion() {
-       try {
-           getEntityAccessStrategy().lockRegion();
-           fail("Call to lockRegion did not throw exception");
-       }
-       catch (UnsupportedOperationException expected) {}
-   }
+	@Override
+	public void testLockRegion() {
+		try {
+			getEntityAccessStrategy().lockRegion();
+			fail( "Call to lockRegion did not throw exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+	}
 
-   /**
-    * Test method for {@link TransactionalAccess#afterUpdate(java.lang.Object, java.lang.Object, java.lang.Object, java.lang.Object, org.hibernate.cache.access.SoftLock)}.
-    */
-   @Override
-   public void testAfterUpdate() {
-       try {
-           getEntityAccessStrategy().afterUpdate(KEY, VALUE2, new Integer(1), new Integer(2), new MockSoftLock());
-           fail("Call to afterUpdate did not throw exception");
-       }
-       catch (UnsupportedOperationException expected) {}
-   }
+	@Override
+	public void testAfterUpdate() {
+		try {
+			getEntityAccessStrategy().afterUpdate(
+					KEY,
+					VALUE2,
+					Integer.valueOf( 1 ),
+					Integer.valueOf( 2 ),
+					new MockSoftLock()
+			);
+			fail( "Call to afterUpdate did not throw exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+	}
 
 }

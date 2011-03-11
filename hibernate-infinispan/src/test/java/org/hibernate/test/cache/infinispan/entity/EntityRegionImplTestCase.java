@@ -32,7 +32,11 @@ import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Tests of EntityRegionImpl.
@@ -41,10 +45,6 @@ import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCas
  * @since 3.5
  */
 public class EntityRegionImplTestCase extends AbstractEntityCollectionRegionTestCase {
-
-   public EntityRegionImplTestCase(String name) {
-      super(name);
-   }
 
    @Override
    protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {

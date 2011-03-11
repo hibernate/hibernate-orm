@@ -20,95 +20,96 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.collection;
-import org.hibernate.cache.CollectionRegion;
+
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
+import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import static org.junit.Assert.assertNull;
 
 /**
  * TransactionalExtraAPITestCase.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase {
 
-   public static final String REGION_NAME = "test/com.foo.test";
-   public static final String KEY = "KEY";
-   public static final String VALUE1 = "VALUE1";
-   public static final String VALUE2 = "VALUE2";
-   
-   private static CollectionRegionAccessStrategy localAccessStrategy;
-   
-   public TransactionalExtraAPITestCase(String name) {
-      super(name);
-   }
+	public static final String REGION_NAME = "test/com.foo.test";
+	public static final String KEY = "KEY";
+	public static final String VALUE1 = "VALUE1";
+	public static final String VALUE2 = "VALUE2";
 
-   protected void setUp() throws Exception {
-       super.setUp();
-       
-       if (getCollectionAccessStrategy() == null) {
-           Configuration cfg = createConfiguration();
-           InfinispanRegionFactory rf  = CacheTestUtil.startRegionFactory(
-				   getServiceRegistry( cfg.getProperties() ), cfg, getCacheTestSupport()
-		   );
-           
-           // Sleep a bit to avoid concurrent FLUSH problem
-           avoidConcurrentFlush();
-           
-           CollectionRegion localCollectionRegion = rf.buildCollectionRegion(REGION_NAME, cfg.getProperties(), null);
-           setCollectionAccessStrategy(localCollectionRegion.buildAccessStrategy(getAccessType()));
-       }
-   }
+	private NodeEnvironment environment;
+	private static CollectionRegionAccessStrategy accessStrategy;
 
-   protected void tearDown() throws Exception {
-       
-       super.tearDown();
-   }
-   
-   protected Configuration createConfiguration() {
-       Configuration cfg = CacheTestUtil.buildConfiguration(REGION_PREFIX, InfinispanRegionFactory.class, true, false);
-       cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName());
-       return cfg;
-   }
-   
-   protected String getCacheConfigName() {
-       return "entity";
-   }
-   
-   protected AccessType getAccessType() {
-       return AccessType.TRANSACTIONAL;
-   }
-   
-   protected CollectionRegionAccessStrategy getCollectionAccessStrategy() {
-       return localAccessStrategy;
-   }
-   
-   protected void setCollectionAccessStrategy(CollectionRegionAccessStrategy strategy) {
-       localAccessStrategy = strategy;
-   }
+	@Before
+	public final void prepareLocalAccessStrategy() throws Exception {
+		environment = new NodeEnvironment( createConfiguration() );
 
-   public void testLockItem() {
-       assertNull(getCollectionAccessStrategy().lockItem(KEY, new Integer(1)));
-   }
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
 
-   public void testLockRegion() {
-       assertNull(getCollectionAccessStrategy().lockRegion());
-   }
+		accessStrategy = environment.getCollectionRegion( REGION_NAME, null ).buildAccessStrategy( getAccessType() );
+	}
 
-   public void testUnlockItem() {
-       getCollectionAccessStrategy().unlockItem(KEY, new MockSoftLock());
-   }
+	protected Configuration createConfiguration() {
+		Configuration cfg = CacheTestUtil.buildConfiguration(
+				REGION_PREFIX, InfinispanRegionFactory.class, true, false
+		);
+		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName() );
+		return cfg;
+	}
 
-   public void testUnlockRegion() {
-       getCollectionAccessStrategy().unlockItem(KEY, new MockSoftLock());
-   }
-   
-   public static class MockSoftLock implements SoftLock {
-       
-   }
+	protected String getCacheConfigName() {
+		return "entity";
+	}
+
+	protected AccessType getAccessType() {
+		return AccessType.TRANSACTIONAL;
+	}
+
+	@After
+	public final void releaseLocalAccessStrategy() throws Exception {
+		if ( environment != null ) {
+			environment.release();
+		}
+	}
+
+	protected CollectionRegionAccessStrategy getCollectionAccessStrategy() {
+		return accessStrategy;
+	}
+
+	@Test
+	public void testLockItem() {
+		assertNull( getCollectionAccessStrategy().lockItem( KEY, new Integer( 1 ) ) );
+	}
+
+	@Test
+	public void testLockRegion() {
+		assertNull( getCollectionAccessStrategy().lockRegion() );
+	}
+
+	@Test
+	public void testUnlockItem() {
+		getCollectionAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+	}
+
+	@Test
+	public void testUnlockRegion() {
+		getCollectionAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+	}
+
+	public static class MockSoftLock implements SoftLock {
+	}
 }

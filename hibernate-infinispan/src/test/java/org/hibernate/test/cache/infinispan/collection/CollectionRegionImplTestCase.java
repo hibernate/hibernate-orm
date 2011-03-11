@@ -33,7 +33,11 @@ import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.infinispan.util.CacheAdapter;
 import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+
 import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCase;
+
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Tests of CollectionRegionImpl.
@@ -41,11 +45,6 @@ import org.hibernate.test.cache.infinispan.AbstractEntityCollectionRegionTestCas
  * @author Galder Zamarreño
  */
 public class CollectionRegionImplTestCase extends AbstractEntityCollectionRegionTestCase {
-
-   public CollectionRegionImplTestCase(String name) {
-      super(name);
-   }
-
    @Override
    protected void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties) {
       CollectionRegion region = regionFactory.buildCollectionRegion("test", properties, null);

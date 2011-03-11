@@ -43,7 +43,15 @@ import org.hibernate.impl.SessionImpl;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.SimpleAuxiliaryDatabaseObject;
 import org.hibernate.service.spi.ServiceRegistry;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * I went back to 3.3 source and grabbed the code/logic as it existed back then and crafted this
@@ -62,8 +70,6 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 
 	@Before
 	protected void setUp() throws Exception {
-		super.setUp();
-
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
 		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
@@ -108,7 +114,6 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 		if ( serviceRegistry != null ) {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
-		super.tearDown();
 	}
 
 	@Test

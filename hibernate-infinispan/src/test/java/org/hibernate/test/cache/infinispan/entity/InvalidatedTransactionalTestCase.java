@@ -20,9 +20,10 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.entity;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * InvalidatedTransactionalTestCase.
@@ -31,20 +32,15 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
  * @since 3.5
  */
 public class InvalidatedTransactionalTestCase extends AbstractTransactionalAccessTestCase {
+	@Test
+	@Override
+	public void testCacheConfiguration() {
+		assertTrue("Using Invalidation", isUsingInvalidation());
+		assertTrue("Synchronous mode", isSynchronous());
+	}
 
-   public InvalidatedTransactionalTestCase(String name) {
-      super(name);
-   }
-
-   @Override
-   public void testCacheConfiguration() {
-      assertTrue("Using Invalidation", isUsingInvalidation());
-      assertTrue("Synchronous mode", isSynchronous());
-   }
-
-   public static Test suite() throws Exception {
-      TestSuite suite = CacheTestUtil.createFailureExpectedSuite(InvalidatedTransactionalTestCase.class);
-      return getTestSetup(suite, "entity");
-  }
-
+	@Override
+	protected String getConfigurationName() {
+		return "entity";
+	}
 }

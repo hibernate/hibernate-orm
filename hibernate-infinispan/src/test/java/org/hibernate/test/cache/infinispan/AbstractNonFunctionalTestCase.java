@@ -23,13 +23,19 @@
  */
 package org.hibernate.test.cache.infinispan;
 
-import static org.hibernate.TestLogger.LOG;
 import java.util.Set;
+
+import org.infinispan.Cache;
+
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.util.CacheHelper;
+
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
-import org.hibernate.testing.junit.UnitTestCase;
-import org.infinispan.Cache;
+
+import static org.hibernate.TestLogger.LOG;
 
 /**
  * Base class for all non-functional tests of Infinispan integration.
@@ -37,29 +43,32 @@ import org.infinispan.Cache;
  * @author Galder Zamarreño
  * @since 3.5
  */
-public abstract class AbstractNonFunctionalTestCase extends UnitTestCase {
-
+public abstract class AbstractNonFunctionalTestCase extends org.hibernate.testing.junit4.BaseUnitTestCase {
     public static final String REGION_PREFIX = "test";
 
-    private CacheTestSupport testSupport;
+	private static final String PREFER_IPV4STACK = "java.net.preferIPv4Stack";
+	private String preferIPv4Stack;
 
-    public AbstractNonFunctionalTestCase(String name) {
-        super(name);
-        testSupport = new CacheTestSupport();
-    }
+    private CacheTestSupport testSupport = new CacheTestSupport();
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+	@Before
+    public void prepareCacheSupport() throws Exception {
+		preferIPv4Stack = System.getProperty( PREFER_IPV4STACK );
+		System.setProperty( PREFER_IPV4STACK, "true" );
 
         testSupport.setUp();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-
+    @After
+    public void releaseCachSupport() throws Exception {
         testSupport.tearDown();
+
+		if ( preferIPv4Stack == null ) {
+			System.clearProperty( PREFER_IPV4STACK );
+		}
+		else {
+			System.setProperty( PREFER_IPV4STACK, preferIPv4Stack );
+		}
     }
 
     protected void registerCache(Cache cache) {

@@ -22,8 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.entity;
-import org.hibernate.cache.access.AccessType;
+
 import org.infinispan.transaction.tm.BatchModeTransactionManager;
+
+import org.hibernate.cache.access.AccessType;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Base class for tests of TRANSACTIONAL access.
@@ -32,25 +40,18 @@ import org.infinispan.transaction.tm.BatchModeTransactionManager;
  * @since 3.5
  */
 public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegionAccessStrategyTestCase {
-
-    /**
-     * Create a new AbstractTransactionalAccessTestCase.
-     * 
-     */
-    public AbstractReadOnlyAccessTestCase(String name) {
-        super(name);
-    }
-
     @Override
     protected AccessType getAccessType() {
         return AccessType.READ_ONLY;
     }   
 
+	@Test
     @Override
     public void testPutFromLoad() throws Exception {
         putFromLoadTest(false);
     }
 
+	@Test
     @Override
     public void testPutFromLoadMinimal() throws Exception {
         putFromLoadTest(true);
@@ -77,6 +78,7 @@ public abstract class AbstractReadOnlyAccessTestCase extends AbstractEntityRegio
         assertEquals(expected, remoteAccessStrategy.get(KEY, System.currentTimeMillis()));
     }
 
+	@Test
     @Override
     public void testUpdate() throws Exception {
        

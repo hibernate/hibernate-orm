@@ -29,10 +29,15 @@ import org.hibernate.cache.TransactionalDataRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Base class for tests of EntityRegion and CollectionRegion implementations.
@@ -41,16 +46,6 @@ import org.hibernate.testing.ServiceRegistryBuilder;
  * @since 3.5
  */
 public abstract class AbstractEntityCollectionRegionTestCase extends AbstractRegionImplTestCase {
-
-   /**
-    * Create a new EntityCollectionRegionTestCaseBase.
-    * 
-    * @param name
-    */
-   public AbstractEntityCollectionRegionTestCase(String name) {
-      super(name);
-   }
-
    /**
     * Creates a Region backed by an PESSIMISTIC locking JBoss Cache, and then ensures that it
     * handles calls to buildAccessStrategy as expected when all the various {@link AccessType}s are

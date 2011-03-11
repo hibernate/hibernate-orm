@@ -20,9 +20,8 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.collection;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests READ_ONLY access when invalidation is used.
@@ -31,19 +30,13 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
  * @since 3.5
  */
 public class ReadOnlyTestCase extends AbstractReadOnlyAccessTestCase {
+	@Override
+	public void testCacheConfiguration() {
+		assertTrue( "Using Invalidation", isUsingInvalidation() );
+	}
 
-   public ReadOnlyTestCase(String name) {
-      super(name);
-   }
-
-   public static Test suite() throws Exception {
-      TestSuite suite = CacheTestUtil.createFailureExpectedSuite(ReadOnlyTestCase.class);
-      return getTestSetup(suite, "entity");
-  }
-
-  @Override
-  public void testCacheConfiguration() {
-      assertTrue("Using Invalidation", isUsingInvalidation());
-  }
-
+	@Override
+	protected String getConfigurationName() {
+		return "entity";  // todo : should this be "collection"?  the original code used "entity"...
+	}
 }

@@ -24,20 +24,17 @@
 package org.hibernate.test.cache.infinispan.collection;
 import org.hibernate.cache.access.AccessType;
 
+import org.junit.Test;
+
 /**
  * Base class for tests of TRANSACTIONAL access.
  * 
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public abstract class AbstractReadOnlyAccessTestCase extends AbstractCollectionRegionAccessStrategyTestCase {
-
-    public AbstractReadOnlyAccessTestCase(String name) {
-        super(name);
-    }
-
+	@Test
     @Override
     protected AccessType getAccessType() {
         return AccessType.READ_ONLY;
     }
-
 }

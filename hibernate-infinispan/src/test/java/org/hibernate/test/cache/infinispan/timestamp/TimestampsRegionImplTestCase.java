@@ -22,22 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.timestamp;
+
 import java.util.Properties;
-import org.hibernate.cache.CacheDataDescription;
-import org.hibernate.cache.Region;
-import org.hibernate.cache.UpdateTimestampsCache;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
-import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
-import org.hibernate.cache.infinispan.util.CacheAdapter;
-import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
-import org.hibernate.cache.infinispan.util.FlagAdapter;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
-import org.hibernate.test.cache.infinispan.functional.classloader.Account;
-import org.hibernate.test.cache.infinispan.functional.classloader.AccountHolder;
-import org.hibernate.test.cache.infinispan.functional.classloader.SelectedClassnameClassLoader;
-import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
 import org.infinispan.AdvancedCache;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated;
@@ -51,6 +38,24 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited;
 import org.infinispan.notifications.cachelistener.event.Event;
 
+import org.hibernate.cache.CacheDataDescription;
+import org.hibernate.cache.Region;
+import org.hibernate.cache.UpdateTimestampsCache;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.impl.ClassLoaderAwareCache;
+import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
+import org.hibernate.cache.infinispan.util.CacheAdapter;
+import org.hibernate.cache.infinispan.util.CacheAdapterImpl;
+import org.hibernate.cache.infinispan.util.FlagAdapter;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
+import org.hibernate.test.cache.infinispan.AbstractGeneralDataRegionTestCase;
+import org.hibernate.test.cache.infinispan.functional.classloader.Account;
+import org.hibernate.test.cache.infinispan.functional.classloader.AccountHolder;
+import org.hibernate.test.cache.infinispan.functional.classloader.SelectedClassnameClassLoader;
+import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
 /**
  * Tests of TimestampsRegionImpl.
  * 
@@ -58,10 +63,6 @@ import org.infinispan.notifications.cachelistener.event.Event;
  * @since 3.5
  */
 public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestCase {
-
-   public TimestampsRegionImplTestCase(String name) {
-      super(name);
-   }
 
     @Override
    protected String getStandardRegionName(String regionPrefix) {
@@ -81,14 +82,18 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
    public void testClearTimestampsRegionInIsolated() throws Exception {
       Configuration cfg = createConfiguration();
       InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  getServiceRegistry(cfg.getProperties()), cfg, getCacheTestSupport()
+			  new ServiceRegistryImpl( cfg.getProperties() ),
+			  cfg,
+			  getCacheTestSupport()
 	  );
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
 
       Configuration cfg2 = createConfiguration();
       InfinispanRegionFactory regionFactory2 = CacheTestUtil.startRegionFactory(
-			  getServiceRegistry(cfg2.getProperties()), cfg2, getCacheTestSupport()
+			  new ServiceRegistryImpl( cfg.getProperties() ),
+			  cfg2,
+			  getCacheTestSupport()
 	  );
       // Sleep a bit to avoid concurrent FLUSH problem
       avoidConcurrentFlush();
@@ -118,8 +123,7 @@ public class TimestampsRegionImplTestCase extends AbstractGeneralDataRegionTestC
 
    @Override
    protected Configuration createConfiguration() {
-      Configuration cfg = CacheTestUtil.buildConfiguration("test", MockInfinispanRegionFactory.class, false, true);
-      return cfg;
+      return CacheTestUtil.buildConfiguration("test", MockInfinispanRegionFactory.class, false, true);
    }
 
    public static class MockInfinispanRegionFactory extends InfinispanRegionFactory {

@@ -26,8 +26,18 @@ import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.test.cache.infinispan.AbstractNonFunctionalTestCase;
+import org.hibernate.test.cache.infinispan.NodeEnvironment;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests for the "extra API" in EntityRegionAccessStrategy;.
@@ -40,91 +50,98 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
  * @since 3.5
  */
 public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase {
+	public static final String REGION_NAME = "test/com.foo.test";
+	public static final String KEY = "KEY";
+	public static final String VALUE1 = "VALUE1";
+	public static final String VALUE2 = "VALUE2";
 
-   public TransactionalExtraAPITestCase(String name) {
-      super(name);
-   }
-   
-   public static final String REGION_NAME = "test/com.foo.test";
-   public static final String KEY = "KEY";
-   public static final String VALUE1 = "VALUE1";
-   public static final String VALUE2 = "VALUE2";
-   
-   private static EntityRegionAccessStrategy localAccessStrategy;
-   
-   private static boolean optimistic;
-   
-   protected void setUp() throws Exception {
-       super.setUp();
-       
-       if (getEntityAccessStrategy() == null) {
-           Configuration cfg = createConfiguration();
-           InfinispanRegionFactory rf  = CacheTestUtil.startRegionFactory(
-				   getServiceRegistry( cfg.getProperties() ), cfg, getCacheTestSupport()
-		   );
-           
-           // Sleep a bit to avoid concurrent FLUSH problem
-           avoidConcurrentFlush();
-           
-           EntityRegion localEntityRegion = rf.buildEntityRegion(REGION_NAME, cfg.getProperties(), null);
-           setEntityRegionAccessStrategy(localEntityRegion.buildAccessStrategy(getAccessType()));
-       }
+	private NodeEnvironment environment;
+	private EntityRegionAccessStrategy accessStrategy;
+
+	@Before
+	public final void prepareLocalAccessStrategy() throws Exception {
+		environment = new NodeEnvironment( createConfiguration() );
+
+		// Sleep a bit to avoid concurrent FLUSH problem
+		avoidConcurrentFlush();
+
+		accessStrategy = environment.getEntityRegion( REGION_NAME, null ).buildAccessStrategy( getAccessType() );
    }
 
-   protected void tearDown() throws Exception {
-       
-       super.tearDown();
-   }
-   
-   protected Configuration createConfiguration() {
-       Configuration cfg = CacheTestUtil.buildConfiguration(REGION_PREFIX, InfinispanRegionFactory.class, true, false);
-       cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName());
-       return cfg;
-   }
-   
-   protected String getCacheConfigName() {
-       return "entity";
-   }
-   
-   protected AccessType getAccessType() {
-       return AccessType.TRANSACTIONAL;
-   }
-   
-   protected EntityRegionAccessStrategy getEntityAccessStrategy() {
-       return localAccessStrategy;
-   }
-   
-   protected void setEntityRegionAccessStrategy(EntityRegionAccessStrategy strategy) {
-       localAccessStrategy = strategy;
-   }
+	protected Configuration createConfiguration() {
+		Configuration cfg = CacheTestUtil.buildConfiguration(REGION_PREFIX, InfinispanRegionFactory.class, true, false);
+		cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, getCacheConfigName());
+		return cfg;
+	}
 
-   public void testLockItem() {
-       assertNull(getEntityAccessStrategy().lockItem(KEY, new Integer(1)));
-   }
+	@After
+	public final void releaseLocalAccessStrategy() throws Exception {
+		if ( environment != null ) {
+			environment.release();
+		}
+	}
 
-   public void testLockRegion() {
-       assertNull(getEntityAccessStrategy().lockRegion());
-   }
+	protected final EntityRegionAccessStrategy getEntityAccessStrategy() {
+		return accessStrategy;
+	}
 
-   public void testUnlockItem() {
-       getEntityAccessStrategy().unlockItem(KEY, new MockSoftLock());
-   }
+	protected String getCacheConfigName() {
+		return "entity";
+	}
 
-   public void testUnlockRegion() {
-       getEntityAccessStrategy().unlockItem(KEY, new MockSoftLock());
-   }
+	protected AccessType getAccessType() {
+		return AccessType.TRANSACTIONAL;
+	}
 
-   public void testAfterInsert() {
-       assertFalse("afterInsert always returns false", getEntityAccessStrategy().afterInsert(KEY, VALUE1, new Integer(1)));
-   }
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	public void testLockItem() {
+		assertNull( getEntityAccessStrategy().lockItem( KEY, Integer.valueOf( 1 ) ) );
+	}
 
-   public void testAfterUpdate() {
-       assertFalse("afterInsert always returns false", getEntityAccessStrategy().afterUpdate(KEY, VALUE2, new Integer(1), new Integer(2), new MockSoftLock()));
-   }
-   
-   public static class MockSoftLock implements SoftLock {
-       
-   }
+	@Test
+	public void testLockRegion() {
+		assertNull( getEntityAccessStrategy().lockRegion() );
+	}
 
+	@Test
+	public void testUnlockItem() {
+		getEntityAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+	}
 
+	@Test
+	public void testUnlockRegion() {
+		getEntityAccessStrategy().unlockItem( KEY, new MockSoftLock() );
+	}
+
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	public void testAfterInsert() {
+		assertFalse(
+				"afterInsert always returns false",
+				getEntityAccessStrategy().afterInsert(
+						KEY,
+						VALUE1,
+						Integer.valueOf( 1 )
+				)
+		);
+	}
+
+	@Test
+	@SuppressWarnings( {"UnnecessaryBoxing"})
+	public void testAfterUpdate() {
+		assertFalse(
+				"afterInsert always returns false",
+				getEntityAccessStrategy().afterUpdate(
+						KEY,
+						VALUE2,
+						Integer.valueOf( 1 ),
+						Integer.valueOf( 2 ),
+						new MockSoftLock()
+				)
+		);
+	}
+
+	public static class MockSoftLock implements SoftLock {
+	}
 }

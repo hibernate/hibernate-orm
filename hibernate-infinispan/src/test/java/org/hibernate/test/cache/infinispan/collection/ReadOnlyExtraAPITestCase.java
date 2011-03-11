@@ -21,59 +21,42 @@
  */
 package org.hibernate.test.cache.infinispan.collection;
 import org.hibernate.cache.access.AccessType;
-import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 
+import org.junit.Test;
+
+import static org.junit.Assert.fail;
 /**
  * ReadOnlyExtraAPITestCase.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class ReadOnlyExtraAPITestCase extends TransactionalExtraAPITestCase {
+	@Override
+	protected AccessType getAccessType() {
+		return AccessType.READ_ONLY;
+	}
 
-   public ReadOnlyExtraAPITestCase(String name) {
-      super(name);
-   }
+	@Test
+	@Override
+	public void testLockItem() {
+		try {
+			getCollectionAccessStrategy().lockItem( KEY, new Integer( 1 ) );
+			fail( "Call to lockItem did not throw exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+	}
 
-   private static CollectionRegionAccessStrategy localAccessStrategy;
-   
-   @Override
-   protected AccessType getAccessType() {
-       return AccessType.READ_ONLY;
-   }
-   
-   @Override
-   protected CollectionRegionAccessStrategy getCollectionAccessStrategy() {
-       return localAccessStrategy;
-   }
-   
-   @Override
-   protected void setCollectionAccessStrategy(CollectionRegionAccessStrategy strategy) {
-       localAccessStrategy = strategy;
-   }
-   
-   /**
-    * Test method for {@link TransactionalAccess#lockItem(java.lang.Object, java.lang.Object)}.
-    */
-   @Override
-   public void testLockItem() {
-       try {
-           getCollectionAccessStrategy().lockItem(KEY, new Integer(1));
-           fail("Call to lockItem did not throw exception");
-       }
-       catch (UnsupportedOperationException expected) {}
-   }
-
-   /**
-    * Test method for {@link TransactionalAccess#lockRegion()}.
-    */
-   @Override
-   public void testLockRegion() {
-       try {
-           getCollectionAccessStrategy().lockRegion();
-           fail("Call to lockRegion did not throw exception");
-       }
-       catch (UnsupportedOperationException expected) {}
-   }
+	@Test
+	@Override
+	public void testLockRegion() {
+		try {
+			getCollectionAccessStrategy().lockRegion();
+			fail( "Call to lockRegion did not throw exception" );
+		}
+		catch (UnsupportedOperationException expected) {
+		}
+	}
 
 }

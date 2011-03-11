@@ -30,18 +30,8 @@ import org.hibernate.cache.access.AccessType;
  * @author <a href="brian.stansberry@jboss.com">Brian Stansberry</a>
  */
 public abstract class AbstractTransactionalAccessTestCase extends AbstractCollectionRegionAccessStrategyTestCase {
-
-    /**
-     * Create a new AbstractTransactionalAccessTestCase.
-     * 
-     */
-    public AbstractTransactionalAccessTestCase(String name) {
-        super(name);
-    }
-
     @Override
     protected AccessType getAccessType() {
         return AccessType.TRANSACTIONAL;
     }
-
 }

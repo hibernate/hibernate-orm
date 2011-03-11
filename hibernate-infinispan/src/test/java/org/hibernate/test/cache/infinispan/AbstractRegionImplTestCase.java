@@ -38,10 +38,6 @@ import org.hibernate.internal.util.compare.ComparableComparator;
  */
 public abstract class AbstractRegionImplTestCase extends AbstractNonFunctionalTestCase {
 
-   public AbstractRegionImplTestCase(String name) {
-      super(name);
-   }
-
    protected abstract CacheAdapter getInfinispanCache(InfinispanRegionFactory regionFactory);
 
    protected abstract Region createRegion(InfinispanRegionFactory regionFactory, String regionName, Properties properties, CacheDataDescription cdd);

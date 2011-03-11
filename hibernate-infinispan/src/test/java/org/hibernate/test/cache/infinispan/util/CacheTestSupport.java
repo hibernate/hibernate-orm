@@ -22,12 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.util;
-import static org.hibernate.TestLogger.LOG;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.hibernate.cache.RegionFactory;
+
 import org.infinispan.Cache;
+
+import org.hibernate.cache.RegionFactory;
+
+import static org.hibernate.TestLogger.LOG;
 
 /**
  * Support class for tracking and cleaning up objects used in tests.
@@ -52,11 +56,11 @@ public class CacheTestSupport {
     }
 
     public void unregisterCache(Cache cache) {
-        caches.remove(cache);
+        caches.remove( cache );
     }
 
     public void unregisterFactory(RegionFactory factory) {
-        factories.remove(factory);
+        factories.remove( factory );
     }
 
     public void setUp() throws Exception {
@@ -83,7 +87,7 @@ public class CacheTestSupport {
     public void avoidConcurrentFlush() {
        // JG 2.6.1 has a problem where calling flush more than once too quickly
        // can result in several second delays
-       sleep(100);
+       sleep( 100 );
     }
 
     private void sleep(long ms) {

@@ -1,11 +1,11 @@
 package org.hibernate.ejb.test.util;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class GetIdentifierTest extends TestCase {
+public class GetIdentifierTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testSimpleId() {
 		EntityManager em = factory.createEntityManager();

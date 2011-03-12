@@ -23,47 +23,30 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
+
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
+
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
+
 import org.hibernate.cfg.annotations.reflection.JPAOverridenAnnotationReader;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
-import org.hibernate.testing.junit.functional.annotations.HibernateTestCase;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test superclass to provide utility methods for testing the mapping of JPA
  * XML to JPA annotations.  The configuration is built within each test, and no
  * database is used.  Thus, no schema generation or cleanup will be performed.
  */
-abstract class Ejb3XmlTestCase extends HibernateTestCase {
+abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	protected JPAOverridenAnnotationReader reader;
-
-	@Override
-	protected void buildConfiguration() throws Exception {
-		//Do nothing
-	}
-
-	@Override
-	protected void runSchemaGeneration() {
-		//Do nothing
-	}
-
-	@Override
-	protected void runSchemaDrop() {
-		//Do nothing
-	}
-
-	@Override
-	protected void handleUnclosedResources() {
-		//Do nothing
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[0];
-	}
 
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
 		assertTrue(

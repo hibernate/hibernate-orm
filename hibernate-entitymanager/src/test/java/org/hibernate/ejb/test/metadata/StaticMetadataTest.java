@@ -28,12 +28,13 @@ import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
-public class StaticMetadataTest extends TestCase {
+public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testInjections() throws Exception {
 		// Address (embeddable)

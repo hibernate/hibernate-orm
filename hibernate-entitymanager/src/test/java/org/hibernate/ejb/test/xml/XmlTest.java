@@ -1,12 +1,13 @@
 //$Id$
 package org.hibernate.ejb.test.xml;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class XmlTest extends TestCase {
+public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	public void testXmlMappingCorrectness() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.close();

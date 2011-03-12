@@ -34,7 +34,6 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -49,7 +48,7 @@ public class BasicForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNormalBoundary() {
-		EntityPersister persister = sfi().getEntityPersister( Entity.class.getName() );
+		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertTrue(
 				"sequence style generator was not used",
 				SequenceStyleGenerator.class.isInstance( persister.getIdentifierGenerator() )

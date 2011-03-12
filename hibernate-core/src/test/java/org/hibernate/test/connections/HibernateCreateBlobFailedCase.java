@@ -57,7 +57,7 @@ public class HibernateCreateBlobFailedCase extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testLobCreation() throws SQLException {
-		Session session = sfi().getCurrentSession();
+		Session session = sessionFactory().getCurrentSession();
 		session.beginTransaction();
 		Blob blob = Hibernate.getLobCreator( session ).createBlob( new byte[] {} );
 		blob.free();

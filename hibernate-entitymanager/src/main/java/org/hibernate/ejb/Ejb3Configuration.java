@@ -94,6 +94,7 @@ import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.jboss.logging.Logger;
@@ -871,6 +872,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		return buildEntityManagerFactory();
 	}
 
+	public EntityManagerFactory createEntityManagerFactory(Map config, ServiceRegistryImpl serviceRegistry) {
+		return null;  // todo : implement method body
+	}
+
 	/**
 	 * Process configuration and build an EntityManagerFactory <b>when</b> the configuration is ready
 	 * @deprecated
@@ -882,6 +887,10 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory() {
+		return buildEntityManagerFactory( new ServiceRegistryImpl( cfg.getProperties() ) );
+	}
+
+	public EntityManagerFactory buildEntityManagerFactory(ServiceRegistry serviceRegistry) {
 		Thread thread = null;
 		ClassLoader contextClassLoader = null;
 		if (overridenClassLoader != null) {
@@ -897,7 +906,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					discardOnClose,
 					getSessionInterceptorClass( cfg.getProperties() ),
 					cfg,
-					connectionProviderInjectionData
+					connectionProviderInjectionData,
+					serviceRegistry
 			);
 		}
 		catch (HibernateException e) {

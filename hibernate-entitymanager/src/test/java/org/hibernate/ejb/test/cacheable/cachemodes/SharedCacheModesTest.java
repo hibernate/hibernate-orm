@@ -31,7 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.HibernateQuery;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.impl.AbstractQueryImpl;
 
 /**
@@ -39,7 +39,7 @@ import org.hibernate.impl.AbstractQueryImpl;
  *
  * @author Steve Ebersole
  */
-public class SharedCacheModesTest extends TestCase {
+public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { SimpleEntity.class };

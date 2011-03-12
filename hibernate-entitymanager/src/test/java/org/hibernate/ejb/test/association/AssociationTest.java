@@ -1,12 +1,12 @@
 //$Id$
 package org.hibernate.ejb.test.association;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class AssociationTest extends TestCase {
+public class AssociationTest extends BaseEntityManagerFunctionalTestCase {
 	public void testBidirOneToOne() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

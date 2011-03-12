@@ -49,7 +49,7 @@ public class CustomSQLTest extends LegacyTestCase {
 		s.connection().commit();
 		s.close();
 
-		getSessions().evict(Role.class);
+		sessionFactory().evict(Role.class);
 		s = openSession();
 
 		Role p2 = (Role) s.get(Role.class, new Long(p.getId()));
@@ -178,7 +178,7 @@ public class CustomSQLTest extends LegacyTestCase {
 		s.connection().commit();
 		s.close();
 
-		getSessions().evict(Person.class);
+		sessionFactory().evict(Person.class);
 		s = openSession();
 
 		Person p2 = (Person) s.get(Person.class, p.getId());

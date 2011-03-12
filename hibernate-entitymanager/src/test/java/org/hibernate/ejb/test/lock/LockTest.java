@@ -17,12 +17,12 @@ import javax.persistence.QueryTimeoutException;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.ejb.AvailableSettings;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class LockTest extends TestCase {
+public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testFindWithTimeoutHint() {
 		EntityManager em = getOrCreateEntityManager();

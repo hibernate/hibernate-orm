@@ -21,8 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.xml.ejb3;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.AttributeOverride;
@@ -46,8 +46,14 @@ import javax.persistence.OrderColumn;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
+import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
+	@Test
 	public void testNoChildren() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm1.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -69,6 +75,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( void.class, relAnno.targetEntity() );
 	}
 
+	@Test
 	public void testOrderBy() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm2.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -80,6 +87,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testOrderColumnNoAttributes() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm3.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -93,6 +101,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertTrue( orderColumnAnno.updatable() );
 	}
 
+	@Test
 	public void testOrderColumnAllAttributes() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm4.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -106,6 +115,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertFalse( orderColumnAnno.updatable() );
 	}
 
+	@Test
 	public void testMapKeyNoAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm5.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -119,6 +129,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "", reader.getAnnotation( MapKey.class ).name() );
 	}
 
+	@Test
 	public void testMapKeyAllAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm6.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -132,6 +143,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "field2", reader.getAnnotation( MapKey.class ).name() );
 	}
 
+	@Test
 	public void testMapKeyClass() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm7.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -148,6 +160,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testMapKeyTemporal() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm8.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -165,6 +178,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testMapKeyEnumerated() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm9.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -186,6 +200,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 	 * When there's a single map key attribute override, we still wrap it with
 	 * an AttributeOverrides annotation.
 	 */
+	@Test
 	public void testSingleMapKeyAttributeOverride() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm10.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -206,6 +221,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "col1", overrides[0].column().name() );
 	}
 
+	@Test
 	public void testMultipleMapKeyAttributeOverrides() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm11.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -246,6 +262,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( 1, overrides[1].column().scale() );
 	}
 
+	@Test
 	public void testMapKeyColumnNoAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm12.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -269,6 +286,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( 0, keyColAnno.scale() );
 	}
 
+	@Test
 	public void testMapKeyColumnAllAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm13.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -296,6 +314,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 	 * When there's a single map key join column, we still wrap it with a
 	 * MapKeyJoinColumns annotation.
 	 */
+	@Test
 	public void testSingleMapKeyJoinColumn() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm14.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -313,6 +332,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "col1", joinColumns[0].name() );
 	}
 
+	@Test
 	public void testMultipleMapKeyJoinColumns() throws Exception {
 		reader = getReader( Entity3.class, "field1", "many-to-many.orm15.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -345,6 +365,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "table1", joinColumns[1].table() );
 	}
 
+	@Test
 	public void testJoinTableNoChildren() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm16.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -360,6 +381,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( 0, joinTableAnno.uniqueConstraints().length );
 	}
 
+	@Test
 	public void testJoinTableAllChildren() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm17.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -424,6 +446,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );
 	}
 
+	@Test
 	public void testCascadeAll() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm18.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -432,6 +455,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
 	}
 
+	@Test
 	public void testCascadeSomeWithDefaultPersist() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm19.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -448,6 +472,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 	 * is specified in addition to a default cascade-persist or individual
 	 * cascade settings.
 	 */
+	@Test
 	public void testCascadeAllPlusMore() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm20.xml" );
 		assertAnnotationPresent( ManyToMany.class );
@@ -461,6 +486,7 @@ public class Ejb3XmlManyToManyTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.DETACH, relAnno.cascade()[5] );
 	}
 
+	@Test
 	public void testAllAttributes() throws Exception {
 		reader = getReader( Entity2.class, "field1", "many-to-many.orm21.xml" );
 		assertAnnotationPresent( ManyToMany.class );

@@ -114,7 +114,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		StatelessSession ss = sfi().openStatelessSession();
+		StatelessSession ss = sessionFactory().openStatelessSession();
 		ss.beginTransaction();
 		Task taskRef = ( Task ) ss.createQuery( "from Task t join fetch t.resource join fetch t.user" ).uniqueResult();
 		assertTrue( taskRef != null );

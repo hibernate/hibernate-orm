@@ -2,13 +2,13 @@
 package org.hibernate.ejb.test.emops.cascade;
 import javax.persistence.EntityManager;
 import org.hibernate.Session;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
 /**
  * @author Emmanuel Bernard
  */
-public class CascadePersistTest extends TestCase {
+public class CascadePersistTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testLazyCollectionsStayLazyOnPersist() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

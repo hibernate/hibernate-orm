@@ -65,9 +65,9 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		Transaction t1 = null;
 		Transaction t2 = null;
 		try {
-			s1 = getSessions().openSession();
+			s1 = sessionFactory().openSession();
 			t1 = s1.beginTransaction();
-			s2 = getSessions().openSession();
+			s2 = sessionFactory().openSession();
 			t2 = s2.beginTransaction();
 
 			User user1 = ( User ) s1.get( User.class, steve.getId() );

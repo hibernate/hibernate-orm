@@ -1,10 +1,10 @@
 package org.hibernate.ejb.test.mapping;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class QuotingTest extends TestCase {
+public class QuotingTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testQuote() {
 		// the configuration was failing

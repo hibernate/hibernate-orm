@@ -44,14 +44,14 @@ import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.ShelfLife;
 import org.hibernate.ejb.metamodel.Spouse;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class QueryBuilderTest extends TestCase {
+public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {

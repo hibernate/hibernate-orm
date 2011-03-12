@@ -53,7 +53,7 @@ public class DynamicMapOneToOneTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
-		EntityStatistics addressStats = getSessions().getStatistics().getEntityStatistics( "Address" );
+		EntityStatistics addressStats = sessionFactory().getStatistics().getEntityStatistics( "Address" );
 
 		person = ( Map ) s.createQuery( "from Person p join fetch p.address" ).uniqueResult();
 		assertNotNull( "could not locate person", person );

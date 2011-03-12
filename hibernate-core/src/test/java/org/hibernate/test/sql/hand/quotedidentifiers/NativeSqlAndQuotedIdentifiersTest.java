@@ -52,8 +52,8 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 
 	@Override
 	protected void prepareTest() throws Exception {
-		if(sfi()==null)return;
-		Session session = sfi().openSession();
+		if( sessionFactory()==null)return;
+		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		session.save( new Person( "me" ) );
 		session.getTransaction().commit();
@@ -62,8 +62,8 @@ public class NativeSqlAndQuotedIdentifiersTest extends BaseCoreFunctionalTestCas
 
 	@Override
 	protected void cleanupTest() throws Exception {
-		if(sfi()==null)return;
-		Session session = sfi().openSession();
+		if( sessionFactory()==null)return;
+		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		session.createQuery( "delete Person" ).executeUpdate();
 		session.getTransaction().commit();

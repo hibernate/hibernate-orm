@@ -27,13 +27,13 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Gavin King
  * @author Hardy Ferentschik
  */
-public class MergeTest extends TestCase {
+public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testMergeTree() {
 		clearCounts();

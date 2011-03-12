@@ -29,7 +29,7 @@ import org.hibernate.LockMode;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.QueryImpl;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.impl.SessionImpl;
 
 /**
@@ -37,7 +37,7 @@ import org.hibernate.impl.SessionImpl;
  *
  * @author Steve Ebersole
  */
-public class QueryLockingTest extends TestCase {
+public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -271,8 +271,8 @@ public class OrphanTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		session.close();
 		
-		getSessions().getCache().evictEntityRegion( Product.class );
-		getSessions().getCache().evictEntityRegion( Part.class );
+		sessionFactory().getCache().evictEntityRegion( Product.class );
+		sessionFactory().getCache().evictEntityRegion( Part.class );
 
 		
 		session = openSession();

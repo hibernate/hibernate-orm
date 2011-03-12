@@ -111,7 +111,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );
 		assertTrue( "No cache for collection", persister.hasCache() );
 		CollectionCacheEntry cachedData = ( CollectionCacheEntry ) persister.getCacheAccessStrategy()
-		        .get( new CacheKey( testData.steveId, persister.getKeyType(), persister.getRole(), EntityMode.POJO, sfi() ), ts );
+		        .get( new CacheKey( testData.steveId, persister.getKeyType(), persister.getRole(), EntityMode.POJO, sessionFactory() ), ts );
 		assertNotNull( "collection was not in cache", cachedData );
 
 		session.close();
@@ -125,7 +125,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "Filtered-collection not bypassing 2L-cache", 1, sp.getOrders().size() );
 
 		CollectionCacheEntry cachedData2 = ( CollectionCacheEntry ) persister.getCacheAccessStrategy()
-		        .get( new CacheKey( testData.steveId, persister.getKeyType(), persister.getRole(), EntityMode.POJO, sfi() ), ts );
+		        .get( new CacheKey( testData.steveId, persister.getKeyType(), persister.getRole(), EntityMode.POJO, sessionFactory() ), ts );
 		assertNotNull( "collection no longer in cache!", cachedData2 );
 		assertSame( "Different cache values!", cachedData, cachedData2 );
 

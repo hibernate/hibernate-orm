@@ -9,13 +9,13 @@ import javax.persistence.RollbackException;
 import javax.persistence.TransactionRequiredException;
 import org.hibernate.Session;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
 /**
  * @author Emmanuel Bernard
  */
-public class FlushAndTransactionTest extends TestCase {
+public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase {
 	public void testAlwaysTransactionalOperations() throws Exception {
 		Book book = new Book();
 		book.name = "Le petit prince";

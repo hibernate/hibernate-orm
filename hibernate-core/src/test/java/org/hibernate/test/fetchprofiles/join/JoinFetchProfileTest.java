@@ -89,7 +89,7 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
-		sfi().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		testCode.perform(
 				new TestData() {
@@ -134,13 +134,13 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						Session session = openSession();
 						session.beginTransaction();
 						CourseOffering section = ( CourseOffering ) session.get( CourseOffering.class, data.getSectionId() );
-						assertEquals( 1, sfi().getStatistics().getEntityLoadCount() );
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 						assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 						assertFalse( Hibernate.isInitialized( section.getCourse().getCode().getDepartment() ) );
 						assertTrue( Hibernate.isInitialized( section.getCourse() ) );
-						assertEquals( 1, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}
@@ -156,13 +156,13 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						Session session = openSession();
 						session.beginTransaction();
 						CourseOffering section = ( CourseOffering ) session.createCriteria( CourseOffering.class ).uniqueResult();
-						assertEquals( 1, sfi().getStatistics().getEntityLoadCount() );
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertFalse( Hibernate.isInitialized( section.getCourse() ) );
 						assertFalse( Hibernate.isInitialized( section.getEnrollments() ) );
 						assertFalse( Hibernate.isInitialized( section.getCourse().getCode().getDepartment() ) );
 						assertTrue( Hibernate.isInitialized( section.getCourse() ) );
-						assertEquals( 1, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 1, sessionFactory().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}
@@ -172,9 +172,9 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBasicFetchProfileOperation() {
-		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "enrollment.details" ) );
-		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "offering.details" ) );
-		assertTrue( "fetch profile not parsed properly", sfi().containsFetchProfileDefinition( "course.details" ) );
+		assertTrue( "fetch profile not parsed properly", sessionFactory().containsFetchProfileDefinition( "enrollment.details" ) );
+		assertTrue( "fetch profile not parsed properly", sessionFactory().containsFetchProfileDefinition( "offering.details" ) );
+		assertTrue( "fetch profile not parsed properly", sessionFactory().containsFetchProfileDefinition( "course.details" ) );
 		Session s = openSession();
 		SessionImplementor si = ( SessionImplementor ) s;
 		s.enableFetchProfile( "enrollment.details" );
@@ -199,11 +199,11 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						session.beginTransaction();
 						session.enableFetchProfile( "enrollment.details" );
 						Enrollment enrollment = ( Enrollment ) session.get( Enrollment.class, data.getEnrollmentId() );
-						assertEquals( 3, sfi().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertTrue( Hibernate.isInitialized( enrollment.getOffering() ) );
 						assertTrue( Hibernate.isInitialized( enrollment.getStudent() ) );
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}
@@ -220,11 +220,11 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						session.beginTransaction();
 						session.enableFetchProfile( "enrollment.details" );
 						Enrollment enrollment = ( Enrollment ) session.createCriteria( Enrollment.class ).uniqueResult();
-						assertEquals( 3, sfi().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // enrollment + (section + student)
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertTrue( Hibernate.isInitialized( enrollment.getOffering() ) );
 						assertTrue( Hibernate.isInitialized( enrollment.getStudent() ) );
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}
@@ -241,8 +241,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						session.beginTransaction();
 						session.enableFetchProfile( "offering.details" );
 						CourseOffering section = ( CourseOffering ) session.get( CourseOffering.class, data.getSectionId() );
-						assertEquals( 3, sfi().getStatistics().getEntityLoadCount() ); // section + (enrollments + course)
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 3, sessionFactory().getStatistics().getEntityLoadCount() ); // section + (enrollments + course)
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertTrue( Hibernate.isInitialized( section.getEnrollments() ) );
 						session.getTransaction().commit();
 						session.close();
@@ -264,8 +264,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						session.enableFetchProfile( "offering.details" );
 						session.enableFetchProfile( "enrollment.details" );
 						CourseOffering section = ( CourseOffering ) session.get( CourseOffering.class, data.getSectionId() );
-						assertEquals( 4, sfi().getStatistics().getEntityLoadCount() ); // section + (course + enrollments + (student))
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 4, sessionFactory().getStatistics().getEntityLoadCount() ); // section + (course + enrollments + (student))
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertTrue( Hibernate.isInitialized( section.getEnrollments() ) );
 						session.getTransaction().commit();
 						session.close();
@@ -283,8 +283,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						session.beginTransaction();
 						session.enableFetchProfile( "course.details" );
 						Course course = ( Course ) session.get( Course.class, data.getCourseId() );
-						assertEquals( 2, sfi().getStatistics().getEntityLoadCount() ); // course + department
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 2, sessionFactory().getStatistics().getEntityLoadCount() ); // course + department
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						assertTrue( Hibernate.isInitialized( course.getCode().getDepartment() ) );
 						session.getTransaction().commit();
 						session.close();
@@ -310,8 +310,8 @@ public class JoinFetchProfileTest extends BaseCoreFunctionalTestCase {
 						List sections = session.createQuery( "from CourseOffering" ).list();
 						int sectionCount = sections.size();
 						assertEquals( "unexpected CourseOffering count", 1, sectionCount );
-						assertEquals( 1, sfi().getStatistics().getEntityLoadCount() );
-						assertEquals( 0, sfi().getStatistics().getEntityFetchCount() );
+						assertEquals( 1, sessionFactory().getStatistics().getEntityLoadCount() );
+						assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
 						session.getTransaction().commit();
 						session.close();
 					}

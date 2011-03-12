@@ -56,7 +56,7 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
 	public void testCriteria() {
 		TestData testData=new TestData();
 		testData.createData();
-		StatelessSession s = getSessions().openStatelessSession();
+		StatelessSession s = sessionFactory().openStatelessSession();
 		assertEquals( 1, s.createCriteria( Contact.class ).list().size() );
 		s.close();
 		testData.cleanData();
@@ -66,7 +66,7 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
 	public void testCriteriaWithSelectFetchMode() {
 		TestData testData=new TestData();
 		testData.createData();
-		StatelessSession s = getSessions().openStatelessSession();
+		StatelessSession s = sessionFactory().openStatelessSession();
 		assertEquals( 1, s.createCriteria( Contact.class ).setFetchMode( "org", FetchMode.SELECT )
 				.list().size() );
 		s.close();
@@ -77,7 +77,7 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
 	public void testHQL() {
 		TestData testData=new TestData();
 		testData.createData();
-		StatelessSession s = getSessions().openStatelessSession();
+		StatelessSession s = sessionFactory().openStatelessSession();
 		assertEquals( 1, s.createQuery( "from Contact c join fetch c.org join fetch c.org.country" )
 				.list().size() );
 		s.close();

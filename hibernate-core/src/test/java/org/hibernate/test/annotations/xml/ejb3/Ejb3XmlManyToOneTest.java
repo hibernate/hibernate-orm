@@ -21,8 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.xml.ejb3;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
@@ -35,8 +35,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 import javax.persistence.UniqueConstraint;
 
-public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
+import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
+	@Test
 	public void testNoJoins() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm1.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -57,6 +63,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	 * When there's a single join column, we still wrap it with a JoinColumns
 	 * annotation.
 	 */
+	@Test
 	public void testSingleJoinColumn() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm2.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -71,6 +78,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertEquals( "table1", joinColumns[0].table() );
 	}
 
+	@Test
 	public void testMultipleJoinColumns() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm3.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -98,6 +106,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertTrue( joinColumns[1].unique() );
 	}
 
+	@Test
 	public void testJoinTableNoChildren() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm4.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -113,6 +122,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertEquals( 0, joinTableAnno.uniqueConstraints().length );
 	}
 
+	@Test
 	public void testJoinTableAllChildren() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm5.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -177,6 +187,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );
 	}
 
+	@Test
 	public void testAllAttributes() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm6.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -198,6 +209,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testCascadeAll() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm7.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -206,6 +218,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
 	}
 
+	@Test
 	public void testCascadeSomeWithDefaultPersist() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm8.xml" );
 		assertAnnotationPresent( ManyToOne.class );
@@ -222,6 +235,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	 * is specified in addition to a default cascade-persist or individual
 	 * cascade settings.
 	 */
+	@Test
 	public void testCascadeAllPlusMore() throws Exception {
 		reader = getReader( Entity1.class, "field1", "many-to-one.orm9.xml" );
 		assertAnnotationPresent( ManyToOne.class );

@@ -57,7 +57,7 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 
 	public void afterSessionFactoryBuilt() {
 		super.afterSessionFactoryBuilt();
-		Session session = sfi().openSession();
+		Session session = sessionFactory().openSession();
 		session.doWork(
 				new Work() {
 					@Override

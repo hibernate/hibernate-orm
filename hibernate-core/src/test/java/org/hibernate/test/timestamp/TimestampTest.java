@@ -50,7 +50,7 @@ public class TimestampTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testUpdateFalse() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -61,8 +61,8 @@ public class TimestampTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 		
-		assertEquals( 1, getSessions().getStatistics().getEntityInsertCount() );
-		assertEquals( 0, getSessions().getStatistics().getEntityUpdateCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityInsertCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getEntityUpdateCount() );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -72,7 +72,7 @@ public class TimestampTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 		
-		assertEquals( 1, getSessions().getStatistics().getEntityDeleteCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityDeleteCount() );
 	}
 
 	@Test

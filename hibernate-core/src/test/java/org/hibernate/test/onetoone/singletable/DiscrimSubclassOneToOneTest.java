@@ -73,8 +73,8 @@ public class DiscrimSubclassOneToOneTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		
-		EntityStatistics addressStats = getSessions().getStatistics().getEntityStatistics( Address.class.getName() );
-		EntityStatistics mailingAddressStats = getSessions().getStatistics().getEntityStatistics("MailingAddress");
+		EntityStatistics addressStats = sessionFactory().getStatistics().getEntityStatistics( Address.class.getName() );
+		EntityStatistics mailingAddressStats = sessionFactory().getStatistics().getEntityStatistics("MailingAddress");
 
 		p = (Person) s.createQuery("from Person p join fetch p.address left join fetch p.mailingAddress").uniqueResult();
 		assertNotNull(p.address); assertNull(p.mailingAddress);

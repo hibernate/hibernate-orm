@@ -38,13 +38,13 @@ import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
  * @author Emmanuel Bernard
  */
-public class MetadataTest extends TestCase {
+public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testBaseOfService() throws Exception {
 		EntityManagerFactory emf = factory;

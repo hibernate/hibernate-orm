@@ -47,7 +47,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCreateUpdateReadDelete() {
-		StatelessSession ss = getSessions().openStatelessSession();
+		StatelessSession ss = sessionFactory().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
 		Document doc = new Document("blah blah blah", "Blahs");
 		ss.insert(doc);
@@ -109,7 +109,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testHqlBulk() {
-		StatelessSession ss = getSessions().openStatelessSession();
+		StatelessSession ss = sessionFactory().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
 		Document doc = new Document("blah blah blah", "Blahs");
 		ss.insert(doc);
@@ -141,7 +141,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testInitId() {
-		StatelessSession ss = getSessions().openStatelessSession();
+		StatelessSession ss = sessionFactory().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
 		Paper paper = new Paper();
 		paper.setColor( "White" );
@@ -157,7 +157,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testRefresh() {
-		StatelessSession ss = getSessions().openStatelessSession();
+		StatelessSession ss = sessionFactory().openStatelessSession();
 		Transaction tx = ss.beginTransaction();
 		Paper paper = new Paper();
 		paper.setColor( "whtie" );
@@ -165,7 +165,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		ss.close();
 
-		ss = getSessions().openStatelessSession();
+		ss = sessionFactory().openStatelessSession();
 		tx = ss.beginTransaction();
 		Paper p2 = ( Paper ) ss.get( Paper.class, paper.getId() );
 		p2.setColor( "White" );
@@ -173,7 +173,7 @@ public class StatelessSessionTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		ss.close();
 
-		ss = getSessions().openStatelessSession();
+		ss = sessionFactory().openStatelessSession();
 		tx = ss.beginTransaction();
 		assertEquals( "whtie", paper.getColor() );
 		ss.refresh( paper );

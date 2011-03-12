@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.AssociationOverride;
@@ -51,8 +52,14 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
-public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
+import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
+	@Test
 	public void testNoChildren() throws Exception {
 		reader = getReader( Entity2.class, "field1", "element-collection.orm1.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -80,6 +87,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( void.class, relAnno.targetClass() );
 	}
 
+	@Test
 	public void testOrderBy() throws Exception {
 		reader = getReader( Entity2.class, "field1", "element-collection.orm2.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -91,6 +99,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testOrderColumnNoAttributes() throws Exception {
 		reader = getReader( Entity2.class, "field1", "element-collection.orm3.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -104,6 +113,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertTrue( orderColumnAnno.updatable() );
 	}
 
+	@Test
 	public void testOrderColumnAllAttributes() throws Exception {
 		reader = getReader( Entity2.class, "field1", "element-collection.orm4.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -117,6 +127,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertFalse( orderColumnAnno.updatable() );
 	}
 
+	@Test
 	public void testMapKeyNoAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm5.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -130,6 +141,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "", reader.getAnnotation( MapKey.class ).name() );
 	}
 
+	@Test
 	public void testMapKeyAllAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm6.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -143,6 +155,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "field2", reader.getAnnotation( MapKey.class ).name() );
 	}
 
+	@Test
 	public void testMapKeyClass() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm7.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -159,6 +172,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testMapKeyTemporal() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm8.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -176,6 +190,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testMapKeyEnumerated() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm9.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -197,6 +212,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * When there's a single map key attribute override, we still wrap it with
 	 * an AttributeOverrides annotation.
 	 */
+	@Test
 	public void testSingleMapKeyAttributeOverride() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm10.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -217,6 +233,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "col1", overrides[0].column().name() );
 	}
 
+	@Test
 	public void testMultipleMapKeyAttributeOverrides() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm11.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -257,6 +274,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( 1, overrides[1].column().scale() );
 	}
 
+	@Test
 	public void testMapKeyColumnNoAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm12.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -280,6 +298,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( 0, keyColAnno.scale() );
 	}
 
+	@Test
 	public void testMapKeyColumnAllAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm13.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -307,6 +326,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * When there's a single map key join column, we still wrap it with a
 	 * MapKeyJoinColumns annotation.
 	 */
+	@Test
 	public void testSingleMapKeyJoinColumn() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm14.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -324,6 +344,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "col1", joinColumns[0].name() );
 	}
 
+	@Test
 	public void testMultipleMapKeyJoinColumns() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm15.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -356,6 +377,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "table1", joinColumns[1].table() );
 	}
 
+	@Test
 	public void testColumnNoAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm16.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -373,6 +395,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( 0, column.scale() );
 	}
 
+	@Test
 	public void testColumnAllAttributes() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm17.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -390,6 +413,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( 1, column.scale() );
 	}
 
+	@Test
 	public void testTemporal() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm18.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -403,6 +427,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testEnumerated() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm19.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -416,6 +441,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		);
 	}
 
+	@Test
 	public void testLob() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm20.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -428,6 +454,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * When there's a single attribute override, we still wrap it with an
 	 * AttributeOverrides annotation.
 	 */
+	@Test
 	public void testSingleAttributeOverride() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm21.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -441,6 +468,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "col1", overrides[0].column().name() );
 	}
 
+	@Test
 	public void testMultipleAttributeOverrides() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm22.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -478,6 +506,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * Tests that map-key-attribute-override and attribute-override elements
 	 * both end up in the AttributeOverrides annotation.
 	 */
+	@Test
 	public void testMixedAttributeOverrides() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm23.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -497,6 +526,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 	 * When there's a single association override, we still wrap it with an
 	 * AssociationOverrides annotation.
 	 */
+	@Test
 	public void testSingleAssociationOverride() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm24.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -510,6 +540,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "", overrides[0].joinTable().name() );
 	}
 
+	@Test
 	public void testMultipleAssociationOverridesJoinColumns() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm25.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -603,6 +634,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertTrue( joinColumns[1].unique() );
 	}
 
+	@Test
 	public void testCollectionTableNoChildren() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm26.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -615,6 +647,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( 0, tableAnno.uniqueConstraints().length );
 	}
 
+	@Test
 	public void testCollectionTableAllChildren() throws Exception {
 		reader = getReader( Entity3.class, "field1", "element-collection.orm27.xml" );
 		assertAnnotationPresent( ElementCollection.class );
@@ -656,6 +689,7 @@ public class Ejb3XmlElementCollectionTest extends Ejb3XmlTestCase {
 		assertEquals( "col5", uniqueConstraints[1].columnNames()[1] );
 	}
 
+	@Test
 	public void testAllAttributes() throws Exception {
 		reader = getReader( Entity2.class, "field1", "element-collection.orm28.xml" );
 		assertAnnotationPresent( ElementCollection.class );

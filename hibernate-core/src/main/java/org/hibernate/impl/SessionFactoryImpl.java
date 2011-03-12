@@ -907,7 +907,7 @@ public final class SessionFactoryImpl
 	 * <li>remove the JNDI binding
 	 * </ol>
 	 *
-	 * Note: Be aware that the sessionfactory instance still can
+	 * Note: Be aware that the sessionFactory instance still can
 	 * be a "heavy" object memory wise after close() has been called.  Thus
 	 * it is important to not keep referencing the instance to let the garbage
 	 * collector release the memory.

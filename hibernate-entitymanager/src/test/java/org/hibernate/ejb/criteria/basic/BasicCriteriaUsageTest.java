@@ -26,14 +26,15 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class BasicCriteriaUsageTest extends TestCase {
+public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase {
 
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Wall.class };

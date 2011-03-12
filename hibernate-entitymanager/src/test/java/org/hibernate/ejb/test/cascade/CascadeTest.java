@@ -2,13 +2,13 @@
 package org.hibernate.ejb.test.cascade;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 
 /**
  * @author Max Rydahl Andersen
  */
-public class CascadeTest extends TestCase {
+public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testCascade() throws Exception {
 		

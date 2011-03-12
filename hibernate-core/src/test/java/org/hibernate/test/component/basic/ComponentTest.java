@@ -45,7 +45,6 @@ import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -160,14 +159,14 @@ public class ComponentTest extends BaseCoreFunctionalTestCase {
 		User u = new User( "steve", "hibernater", new Person( "Steve Ebersole", new Date(), "Main St") );
 		s.persist( u );
 		s.flush();
-		long intialUpdateCount = sfi().getStatistics().getEntityUpdateCount();
+		long intialUpdateCount = sessionFactory().getStatistics().getEntityUpdateCount();
 		u.getPerson().setAddress( "Austin" );
 		s.flush();
-		assertEquals( intialUpdateCount + 1, sfi().getStatistics().getEntityUpdateCount() );
-		intialUpdateCount = sfi().getStatistics().getEntityUpdateCount();
+		assertEquals( intialUpdateCount + 1, sessionFactory().getStatistics().getEntityUpdateCount() );
+		intialUpdateCount = sessionFactory().getStatistics().getEntityUpdateCount();
 		u.getPerson().setAddress( "Cedar Park" );
 		s.flush();
-		assertEquals( intialUpdateCount + 1, sfi().getStatistics().getEntityUpdateCount() );
+		assertEquals( intialUpdateCount + 1, sessionFactory().getStatistics().getEntityUpdateCount() );
 		s.delete( u );
 		s.getTransaction().commit();
 		s.close();

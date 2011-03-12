@@ -60,7 +60,7 @@ public class OnDeleteTest extends BaseCoreFunctionalTestCase {
 			comment = "db/dialect does not support circular cascade delete constraints"
 	)
 	public void testJoinedSubclass() {
-		Statistics statistics = getSessions().getStatistics();
+		Statistics statistics = sessionFactory().getStatistics();
 		statistics.clear();
 		
 		Session s = openSession();

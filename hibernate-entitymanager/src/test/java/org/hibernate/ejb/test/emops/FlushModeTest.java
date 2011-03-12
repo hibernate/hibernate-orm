@@ -26,12 +26,12 @@ package org.hibernate.ejb.test.emops;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class FlushModeTest extends TestCase {
+public class FlushModeTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testCreateEMFlushMode() throws Exception {
 		Map<String, String> properties = new HashMap<String, String>();

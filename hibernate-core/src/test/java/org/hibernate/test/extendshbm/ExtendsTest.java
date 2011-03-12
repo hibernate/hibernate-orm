@@ -120,7 +120,7 @@ public class ExtendsTest extends BaseUnitTestCase {
 
 			cfg.buildSessionFactory( serviceRegistry );
 
-			fail( "Should not be able to build sessionfactory without a Person" );
+			fail( "Should not be able to build sessionFactory without a Person" );
 		}
 		catch ( HibernateException e ) {
 

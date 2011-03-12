@@ -103,7 +103,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 		super.prepareTest();
 		Connection conn = cp.getConnection();
 		try {
-			new SchemaExport( getCfg(), conn ).create( false, true );
+			new SchemaExport( configuration(), conn ).create( false, true );
 		}
 		finally {
 			if ( conn != null ) {
@@ -120,7 +120,7 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	protected void cleanupTest() throws Exception {
 		Connection conn = cp.getConnection();
 		try {
-			new SchemaExport( getCfg(), conn ).drop( false, true );
+			new SchemaExport( configuration(), conn ).drop( false, true );
 		}
 		finally {
 			if ( conn != null ) {

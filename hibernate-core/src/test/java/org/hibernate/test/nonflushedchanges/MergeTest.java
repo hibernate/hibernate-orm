@@ -1,7 +1,6 @@
 //$Id: MergeTest.java 11037 2007-01-09 16:04:16Z steve.ebersole@jboss.com $
 package org.hibernate.test.nonflushedchanges;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -493,7 +492,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertUpdateCount( 1 );
 		clearCounts();
 
-		getSessions().getCache().evictEntityRegion( NumberedNode.class );
+		sessionFactory().getCache().evictEntityRegion( NumberedNode.class );
 
 		NumberedNode child2 = new NumberedNode( "child2" );
 		NumberedNode grandchild3 = new NumberedNode( "grandchild3" );

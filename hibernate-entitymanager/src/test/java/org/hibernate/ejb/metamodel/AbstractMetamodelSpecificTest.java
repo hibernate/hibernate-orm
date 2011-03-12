@@ -22,14 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMetamodelSpecificTest extends TestCase {
+public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {

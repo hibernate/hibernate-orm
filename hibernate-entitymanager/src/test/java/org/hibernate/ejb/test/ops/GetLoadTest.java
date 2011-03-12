@@ -30,13 +30,13 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Gavin King
  * @author Hardy Ferentschik
  */
-public class GetLoadTest extends TestCase {
+public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testGetLoad() {
 		clearCounts();

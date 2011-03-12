@@ -10,13 +10,13 @@ import javax.persistence.TemporalType;
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Wallet;
 
 /**
  * @author Emmanuel Bernard
  */
-public class QueryTest extends TestCase {
+public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testPagedQuery() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

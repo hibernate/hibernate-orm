@@ -7,12 +7,12 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.HibernateEntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class FetchTest extends TestCase {
+public class FetchTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testCascadeAndFetchCollection() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

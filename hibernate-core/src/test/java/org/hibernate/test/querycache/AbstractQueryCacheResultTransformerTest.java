@@ -2219,7 +2219,7 @@ public abstract class AbstractQueryCacheResultTransformerTest extends BaseCoreFu
 			}
 			private Constructor getConstructor() {
 				Type studentNametype =
-						( ( SessionFactoryImpl ) getSessions() )
+						( ( SessionFactoryImpl ) sessionFactory() )
 								.getEntityPersister( Student.class.getName() )
 								.getPropertyType( "name" );
 				return ReflectHelper.getConstructor( Student.class, new Type[] {Hibernate.LONG, studentNametype} );

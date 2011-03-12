@@ -4,12 +4,13 @@ import static org.hibernate.testing.TestLogger.LOG;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class RemoveTest extends TestCase {
+public class RemoveTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testRemove() {
 		Race race = new Race();

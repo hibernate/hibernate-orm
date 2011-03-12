@@ -23,6 +23,14 @@
  */
 package org.hibernate.testing.junit4;
 
+import java.sql.Blob;
+import java.sql.Clob;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
@@ -39,25 +47,17 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.service.internal.ServiceRegistryImpl;
+
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.junit.After;
-import org.junit.Before;
+import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.fail;
 
 /**
@@ -68,8 +68,6 @@ import static org.junit.Assert.fail;
 public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 	public static final Dialect DIALECT = Dialect.getDialect();
-
-	private static final Logger log = LoggerFactory.getLogger( BaseCoreFunctionalTestCase.class );
 
 	private static Configuration configuration;
 	private static ServiceRegistryImpl serviceRegistry;
@@ -85,36 +83,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return configuration;
 	}
 
-	@Deprecated
-	protected Configuration getCfg() {
-		// todo : remove.  this is legacy.  convert usages to configuration()
-		return configuration();
-	}
-
 	protected ServiceRegistryImpl serviceRegistry() {
 		return serviceRegistry;
 	}
 
-	@Deprecated
-	protected SessionFactoryImplementor getSessionFactory() {
-		// todo : remove.  this is legacy.  convert usages to sessionFactory()
-		return sessionFactory();
-	}
-
 	protected SessionFactoryImplementor sessionFactory() {
 		return sessionFactory;
-	}
-
-	@Deprecated
-	protected SessionFactory getSessions() {
-		// todo : remove.  this is legacy.  convert usages to sessionFactory()
-		return sessionFactory();
-	}
-
-	@Deprecated
-	protected SessionFactoryImplementor sfi() {
-		// todo : remove.  this is legacy.  convert usages to sessionFactory()
-		return sessionFactory();
 	}
 
 	protected org.hibernate.classic.Session openSession() throws HibernateException {
@@ -132,7 +106,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@BeforeClassOnce
 	private void buildSessionFactory() {
-		log.trace( "Building session factory" );
+		LOG.trace( "Building session factory" );
 		configuration = buildConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
 		sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
@@ -170,6 +144,24 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 						getBaseForMappings() + mapping,
 						getClass().getClassLoader()
 				);
+			}
+		}
+		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		if ( annotatedClasses != null ) {
+			for ( Class<?> annotatedClass : annotatedClasses ) {
+				configuration.addAnnotatedClass( annotatedClass );
+			}
+		}
+		String[] annotatedPackages = getAnnotatedPackages();
+		if ( annotatedPackages != null ) {
+			for ( String annotatedPackage : annotatedPackages ) {
+				configuration.addPackage( annotatedPackage );
+			}
+		}
+		String[] xmlFiles = getXmlFiles();
+		if ( xmlFiles != null ) {
+			for ( String xmlFile : xmlFiles ) {
+				configuration.addResource( xmlFile );
 			}
 		}
 	}
@@ -274,7 +266,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( sessionFactory == null ) {
 			return;
 		}
-		log.trace( "Releasing session factory" );
+		LOG.trace( "Releasing session factory" );
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
@@ -283,7 +275,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@OnFailure
 	@OnExpectedFailure
 	public void onFailure() {
-		log.trace( "Processing failure-expected ignore" );
+		LOG.trace( "Processing failure-expected ignore" );
 		if ( ! rebuildSessionFactoryOnError() ) {
 			return;
 		}
@@ -324,7 +316,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			}
 			session.close();
 			session = null;
-			log.debug( "unclosed session" );
+			LOG.debug( "unclosed session" );
 		}
 		else {
 			session = null;

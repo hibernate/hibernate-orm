@@ -45,7 +45,7 @@ import org.hibernate.stat.Statistics;
 /**
  * @author Gavin King
  */
-public class EntityManagerTest extends TestCase {
+public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {

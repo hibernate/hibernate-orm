@@ -57,14 +57,14 @@ public class ABCTest extends LegacyTestCase {
 		d = (D) s.get(D.class, did);
 		assertTrue(d.getReverse().getId().equals(did));
 		s.clear();
-		getSessions().evict(D.class);
-		getSessions().evict(A.class);
+		sessionFactory().evict(D.class);
+		sessionFactory().evict(A.class);
 		d = (D) s.get(D.class, did);
 		assertTrue(d.inverse.getId().equals(did));
 		assertTrue(d.inverse.getName().equals("a"));
 		s.clear();
-		getSessions().evict(D.class);
-		getSessions().evict(A.class);
+		sessionFactory().evict(D.class);
+		sessionFactory().evict(A.class);
 		assertTrue( s.createQuery( "from D d join d.reverse r join d.inverse i where i = r" ).list().size()==1 );
 		t.commit();
 		s.close();
@@ -72,7 +72,7 @@ public class ABCTest extends LegacyTestCase {
 
 	@Test
 	public void testHigherLevelIndexDefinition() throws Throwable {
-		String[] commands = getCfg().generateSchemaCreationScript( getDialect() );
+		String[] commands = configuration().generateSchemaCreationScript( getDialect() );
 		int max = commands.length;
 		boolean found = false;
 		for (int indx = 0; indx < max; indx++) {
@@ -105,7 +105,7 @@ public class ABCTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 
-		getSessions().evict(A.class);
+		sessionFactory().evict(A.class);
 		
 		s = openSession();
 		t = s.beginTransaction();
@@ -120,7 +120,7 @@ public class ABCTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 		
-		getSessions().evict(A.class);
+		sessionFactory().evict(A.class);
 
 		s = openSession();
 		t = s.beginTransaction();

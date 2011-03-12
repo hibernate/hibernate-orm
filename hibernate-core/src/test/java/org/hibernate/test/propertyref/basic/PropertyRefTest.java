@@ -241,18 +241,18 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.clear();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		p = (Person) s.get( Person.class, p.getId() ); //get address reference by outer join
 		
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNotNull( p.getAddress() );
-        assertEquals( getSessions().getStatistics().getPrepareStatementCount(), 1 );
-        assertEquals( getSessions().getStatistics().getEntityFetchCount(), 0 );
+        assertEquals( sessionFactory().getStatistics().getPrepareStatementCount(), 1 );
+        assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
 
 		s.clear();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		p = (Person) s.createCriteria(Person.class)
 			.setFetchMode("address", FetchMode.SELECT)
@@ -260,8 +260,8 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 		
 		assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 		assertNotNull( p.getAddress() );
-        assertEquals( getSessions().getStatistics().getPrepareStatementCount(), 2 );
-        assertEquals( getSessions().getStatistics().getEntityFetchCount(), 0 );
+        assertEquals( sessionFactory().getStatistics().getPrepareStatementCount(), 2 );
+        assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
 
 		s.createQuery("delete from Address").executeUpdate();
 		s.createQuery("delete from Person").executeUpdate();
@@ -272,7 +272,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testForeignKeyCreation() {
-		PersistentClass classMapping = getCfg().getClassMapping("org.hibernate.test.propertyref.basic.Account");
+		PersistentClass classMapping = configuration().getClassMapping("org.hibernate.test.propertyref.basic.Account");
 		
 		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeyIterator();
 		boolean found = false;

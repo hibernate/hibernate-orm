@@ -99,7 +99,7 @@ public class MasterDetailTest extends LegacyTestCase {
 
 	@Test
 	public void testMeta() throws Exception {
-		PersistentClass clazz = getCfg().getClassMapping( Master.class.getName() );
+		PersistentClass clazz = configuration().getClassMapping( Master.class.getName() );
 		MetaAttribute meta = clazz.getMetaAttribute("foo");
 		assertTrue( "foo".equals( meta.getValue() ) );
 		meta = clazz.getProperty("name").getMetaAttribute("bar");
@@ -873,13 +873,13 @@ public class MasterDetailTest extends LegacyTestCase {
 	protected boolean isSerializableIsolationEnforced() throws Exception {
 		Connection conn = null;
 		try {
-			conn = sfi().getConnectionProvider().getConnection();
+			conn = sessionFactory().getConnectionProvider().getConnection();
 			return conn.getTransactionIsolation() >= Connection.TRANSACTION_SERIALIZABLE;
 		}
 		finally {
 			if ( conn != null ) {
 				try {
-					sfi().getConnectionProvider().closeConnection( conn );
+					sessionFactory().getConnectionProvider().closeConnection( conn );
 				}
 				catch ( Throwable ignore ) {
 					// ignore...
@@ -1041,7 +1041,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.connection().commit();
 		s.close();
 
-		getSessions().evictCollection("org.hibernate.test.legacy.Assignable.categories");
+		sessionFactory().evictCollection("org.hibernate.test.legacy.Assignable.categories");
 
 		s = openSession();
 		a = (Assignable) s.get(Assignable.class, "foo");
@@ -1054,7 +1054,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.connection().commit();
 		s.close();
 
-		getSessions().evictCollection("org.hibernate.test.legacy.Assignable.categories");
+		sessionFactory().evictCollection("org.hibernate.test.legacy.Assignable.categories");
 
 		s = openSession();
 		a = (Assignable) s.get(Assignable.class, "foo");
@@ -1068,7 +1068,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.connection().commit();
 		s.close();
 
-		getSessions().evictCollection("org.hibernate.test.legacy.Assignable.categories");
+		sessionFactory().evictCollection("org.hibernate.test.legacy.Assignable.categories");
 
 		s = openSession();
 		a = (Assignable) s.get(Assignable.class, "foo");

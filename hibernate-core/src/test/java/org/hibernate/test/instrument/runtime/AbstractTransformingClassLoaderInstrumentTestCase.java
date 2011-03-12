@@ -24,6 +24,7 @@
 package org.hibernate.test.instrument.runtime;
 import java.lang.reflect.InvocationTargetException;
 
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.hibernate.HibernateException;
@@ -32,34 +33,44 @@ import org.hibernate.bytecode.InstrumentedClassLoader;
 import org.hibernate.bytecode.util.BasicClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
 import org.hibernate.testing.junit4.BaseClassLoaderIsolatedTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit4.ClassLoadingIsolater;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends BaseClassLoaderIsolatedTestCase {
+public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends BaseUnitTestCase {
 
-	protected ClassLoader buildIsolatedClassLoader(ClassLoader parent) {
-		BytecodeProvider provider = buildBytecodeProvider();
-		return new InstrumentedClassLoader(
-				parent,
-				provider.getTransformer(
-						new BasicClassFilter( new String[] { "org.hibernate.test.instrument" }, null ),
-						new FieldFilter() {
-							public boolean shouldInstrumentField(String className, String fieldName) {
-								return className.startsWith( "org.hibernate.test.instrument.domain" );
-							}
-							public boolean shouldTransformFieldAccess(String transformingClassName, String fieldOwnerClassName, String fieldName) {
-								return fieldOwnerClassName.startsWith( "org.hibernate.test.instrument.domain" )
-										&& transformingClassName.equals( fieldOwnerClassName );
-							}
-						}
-				)
-		);
+	@Rule
+	public ClassLoadingIsolater isolater = new ClassLoadingIsolater(
+			new ClassLoadingIsolater.IsolatedClassLoaderProvider() {
+				final BytecodeProvider provider = buildBytecodeProvider();
 
-	}
+				@Override
+				public ClassLoader buildIsolatedClassLoader() {
+					return new InstrumentedClassLoader(
+							Thread.currentThread().getContextClassLoader(),
+							provider.getTransformer(
+									new BasicClassFilter( new String[] { "org.hibernate.test.instrument" }, null ),
+									new FieldFilter() {
+										public boolean shouldInstrumentField(String className, String fieldName) {
+											return className.startsWith( "org.hibernate.test.instrument.domain" );
+										}
+										public boolean shouldTransformFieldAccess(String transformingClassName, String fieldOwnerClassName, String fieldName) {
+											return fieldOwnerClassName.startsWith( "org.hibernate.test.instrument.domain" )
+													&& transformingClassName.equals( fieldOwnerClassName );
+										}
+									}
+							)
+					);
+				}
 
-	protected void releaseIsolatedClassLoader(ClassLoader isolatedLoader) {
-	}
+				@Override
+				public void releaseIsolatedClassLoader(ClassLoader isolatedClassLoader) {
+					// nothing to do
+				}
+			}
+	);
 
 	protected abstract BytecodeProvider buildBytecodeProvider();
 

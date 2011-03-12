@@ -9,12 +9,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class DetachAndContainsTest extends TestCase {
+public class DetachAndContainsTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testDetach() {
 		EntityManager em = getOrCreateEntityManager();

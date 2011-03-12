@@ -180,7 +180,7 @@ public class EhCacheTest extends BaseCoreFunctionalTestCase {
 		}
 
 		// check the version value in the cache...
-		SecondLevelCacheStatistics slcs = sfi().getStatistics()
+		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
 				.getSecondLevelCacheStatistics( VersionedItem.class.getName() );
 
 		Object entry = slcs.getEntries().get( item.getId() );

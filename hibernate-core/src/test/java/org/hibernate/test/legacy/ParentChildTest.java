@@ -1194,7 +1194,7 @@ public class ParentChildTest extends LegacyTestCase {
 		}
 
 		// Next, lets create that entity "under the covers"
-		Session anotherSession = getSessions().openSession();
+		Session anotherSession = sessionFactory().openSession();
 		anotherSession.beginTransaction();
 		Simple myNewSimple = new Simple();
 		myNewSimple.setName("My under the radar Simple entity");

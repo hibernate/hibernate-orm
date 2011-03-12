@@ -23,6 +23,7 @@
  */
 
 package org.hibernate.test.annotations.xml.ejb3;
+
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
@@ -37,8 +38,14 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
 import javax.persistence.UniqueConstraint;
 
-public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
+import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
+	@Test
 	public void testNoChildren() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm1.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -63,6 +70,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 	 * When there's a single primary key join column, we still wrap it with
 	 * a PrimaryKeyJoinColumns annotation.
 	 */
+	@Test
 	public void testSinglePrimaryKeyJoinColumn() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm2.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -80,6 +88,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertEquals( "int", joinColumns[0].columnDefinition() );
 	}
 
+	@Test
 	public void testMultiplePrimaryKeyJoinColumn() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm3.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -104,6 +113,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 	 * When there's a single join column, we still wrap it with a JoinColumns
 	 * annotation.
 	 */
+	@Test
 	public void testSingleJoinColumn() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm4.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -120,6 +130,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertEquals( "table1", joinColumns[0].table() );
 	}
 
+	@Test
 	public void testMultipleJoinColumns() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm5.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -149,6 +160,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertTrue( joinColumns[1].unique() );
 	}
 
+	@Test
 	public void testJoinTableNoChildren() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm6.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -166,6 +178,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertEquals( 0, joinTableAnno.uniqueConstraints().length );
 	}
 
+	@Test
 	public void testJoinTableAllChildren() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm7.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -232,6 +245,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertEquals( "col7", uniqueConstraints[1].columnNames()[1] );
 	}
 
+	@Test
 	public void testCascadeAll() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm8.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -240,6 +254,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.ALL, relAnno.cascade()[0] );
 	}
 
+	@Test
 	public void testCascadeSomeWithDefaultPersist() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm9.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -256,6 +271,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 	 * is specified in addition to a default cascade-persist or individual
 	 * cascade settings.
 	 */
+	@Test
 	public void testCascadeAllPlusMore() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm10.xml" );
 		assertAnnotationPresent( OneToOne.class );
@@ -269,6 +285,7 @@ public class Ejb3XmlOneToOneTest extends Ejb3XmlTestCase {
 		assertEquals( CascadeType.DETACH, relAnno.cascade()[5] );
 	}
 
+	@Test
 	public void testAllAttributes() throws Exception {
 		reader = getReader( Entity1.class, "field1", "one-to-one.orm11.xml" );
 		assertAnnotationPresent( OneToOne.class );

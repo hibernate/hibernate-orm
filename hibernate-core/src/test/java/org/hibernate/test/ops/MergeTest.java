@@ -505,7 +505,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertUpdateCount(1);
 		clearCounts();
 
-		getSessions().getCache().evictEntityRegion( NumberedNode.class );
+		sessionFactory().getCache().evictEntityRegion( NumberedNode.class );
 
 		NumberedNode child2 = new NumberedNode("child2");
 		NumberedNode grandchild3 = new NumberedNode("grandchild3");

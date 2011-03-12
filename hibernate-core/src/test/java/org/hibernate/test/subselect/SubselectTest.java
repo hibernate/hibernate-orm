@@ -68,7 +68,7 @@ public class SubselectTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( being.getSpecies() );
 		}
 		s.clear();
-		getSessions().getCache().evictEntityRegion( Being.class );
+		sessionFactory().getCache().evictEntityRegion( Being.class );
 		Being gav = (Being) s.get(Being.class, gavin.getId());
 		assertEquals( gav.getLocation(), gavin.getAddress() );
 		assertEquals( gav.getSpecies(), "human" );

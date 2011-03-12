@@ -733,7 +733,7 @@ public class FumTest extends LegacyTestCase {
 	public void testUnflushedSessionSerialization() throws Exception {
 		///////////////////////////////////////////////////////////////////////////
 		// Test insertions across serializations
-		Session s = getSessions().openSession();
+		Session s = sessionFactory().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
@@ -766,7 +766,7 @@ public class FumTest extends LegacyTestCase {
 
 		///////////////////////////////////////////////////////////////////////////
 		// Test updates across serializations
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
@@ -789,7 +789,7 @@ public class FumTest extends LegacyTestCase {
 
 		///////////////////////////////////////////////////////////////////////////
 		// Test deletions across serializations
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
@@ -812,7 +812,7 @@ public class FumTest extends LegacyTestCase {
 
 		///////////////////////////////////////////////////////////////////////////
 		// Test collection actions across serializations
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
@@ -842,7 +842,7 @@ public class FumTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 		fum = (Fum) s.load( Fum.class, fum.getId() );
@@ -861,7 +861,7 @@ public class FumTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		s.setFlushMode(FlushMode.MANUAL);
 		fum = (Fum) s.load( Fum.class, fum.getId() );
 		assertTrue("the Fum.friends is not empty", fum.getFriends() == null || fum.getFriends().size() == 0);

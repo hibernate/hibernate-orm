@@ -3,12 +3,13 @@ import java.math.BigDecimal;
 import javax.persistence.EntityManager;
 import javax.persistence.RollbackException;
 import javax.validation.ConstraintViolationException;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BeanValidationTest extends TestCase {
+public class BeanValidationTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testBeanValidationIntegrationOnFlush() {
 		CupHolder ch = new CupHolder();

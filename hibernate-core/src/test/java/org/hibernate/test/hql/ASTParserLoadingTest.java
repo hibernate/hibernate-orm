@@ -2394,7 +2394,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		sr.close();
 
 		// caching...
-		QueryStatistics stats = getSessions().getStatistics().getQueryStatistics( "select new Animal(an.description, an.bodyWeight) from Animal an" );
+		QueryStatistics stats = sessionFactory().getStatistics().getQueryStatistics( "select new Animal(an.description, an.bodyWeight) from Animal an" );
 		results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" )
 				.setCacheable( true )
 				.list();
@@ -2440,20 +2440,20 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		getSessions().getCache().evictQueryRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictQueryRegions();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		t = s.beginTransaction();
 		List list = s.createQuery( "from Animal a left join fetch a.mother" ).setCacheable( true ).list();
-		assertEquals( 0, getSessions().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a from Animal a left join fetch a.mother" ).setCacheable( true ).list();
-		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a, m from Animal a left join a.mother m" ).setCacheable( true ).list();
-		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 2, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
 		s.createQuery( "delete from Animal" ).executeUpdate();
 		t.commit();
 		s.close();
@@ -2477,8 +2477,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		a.addOffspring( offspring2 );
 		offspring2.setMother( a );
 
-		getSessions().getCache().evictQueryRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictQueryRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2492,14 +2492,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		List list = s.createQuery( "from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
-		assertEquals( 0, getSessions().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a from Animal a left join fetch a.offspring" ).setCacheable( true ).list();
-		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		list = s.createQuery( "select a, o from Animal a left join a.offspring o" ).setCacheable( true ).list();
-		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
-		assertEquals( 2, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getQueryCachePutCount() );
 		s.createQuery( "delete from Animal" ).executeUpdate();
 		t.commit();
 		s.close();

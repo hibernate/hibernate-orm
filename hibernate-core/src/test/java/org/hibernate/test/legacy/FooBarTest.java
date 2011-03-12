@@ -291,7 +291,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
+		sessionFactory().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
 
 		s = openSession();
 		s.beginTransaction();
@@ -340,7 +340,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
+		sessionFactory().evictCollection("org.hibernate.test.legacy.Baz.fooSet");
 
 		s = openSession();
 		s.beginTransaction();
@@ -1518,7 +1518,7 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	private boolean isOuterJoinFetchingDisabled() {
-		return new Integer(0).equals( ( (SessionFactoryImplementor) getSessions() ).getSettings().getMaximumFetchDepth() );
+		return new Integer(0).equals( ( (SessionFactoryImplementor) sessionFactory() ).getSettings().getMaximumFetchDepth() );
 	}
 
 	@Test
@@ -1542,7 +1542,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().evict(Foo.class);
+		sessionFactory().evict(Foo.class);
 
 		s = openSession();
 		s.beginTransaction();
@@ -3202,7 +3202,7 @@ public class FooBarTest extends LegacyTestCase {
 		txn.commit();
 		s.close();
 
-		getSessions().evict(Glarch.class);
+		sessionFactory().evict(Glarch.class);
 
 		s = openSession();
 		txn = s.beginTransaction();
@@ -3221,7 +3221,7 @@ public class FooBarTest extends LegacyTestCase {
 		txn.commit();
 		s.close();
 
-		getSessions().evict(Glarch.class);
+		sessionFactory().evict(Glarch.class);
 
 		s = openSession();
 		txn = s.beginTransaction();
@@ -4337,7 +4337,7 @@ public class FooBarTest extends LegacyTestCase {
 	@Test
 	public void testUserProvidedConnection() throws Exception {
 		ConnectionProvider dcp = ConnectionProviderBuilder.buildConnectionProvider();
-		Session s = getSessions().openSession( dcp.getConnection() );
+		Session s = sessionFactory().openSession( dcp.getConnection() );
 		Transaction tx = s.beginTransaction();
 		s.createQuery( "from Fo" ).list();
 		tx.commit();

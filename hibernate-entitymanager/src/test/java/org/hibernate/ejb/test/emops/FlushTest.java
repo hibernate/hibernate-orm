@@ -7,12 +7,13 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class FlushTest extends TestCase {
+public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 	private static Set<String> names= new HashSet<String>();
 	static {
 		names.add("Toonses");

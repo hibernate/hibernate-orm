@@ -38,6 +38,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
@@ -46,6 +47,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.
@@ -55,7 +57,7 @@ import org.hibernate.service.internal.ServiceRegistryImpl;
  * @author Steve Ebersole
  */
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
-	private final transient ServiceRegistryImpl serviceRegistry;
+	private final transient ServiceRegistry serviceRegistry;
 	private final SessionFactory sessionFactory;
 	private final PersistenceUnitTransactionType transactionType;
 	private final boolean discardOnClose;
@@ -72,16 +74,11 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	public EntityManagerFactoryImpl(
 			PersistenceUnitTransactionType transactionType,
 			boolean discardOnClose,
-			Class<?> sessionInterceptorClass,
-			Configuration cfg,
-			Map connectionProviderInjectionData) {
-		// FIXME: Get rid of this temporary way of creating the service registry for EM
-		Map serviceRegistryProperties = new HashMap(
-				cfg.getProperties().size() + connectionProviderInjectionData.size()
-		);
-		serviceRegistryProperties.putAll( cfg.getProperties() );
-		serviceRegistryProperties.putAll( connectionProviderInjectionData );
-		this.serviceRegistry = new ServiceRegistryImpl( serviceRegistryProperties );
+			Class sessionInterceptorClass,
+			AnnotationConfiguration cfg,
+			Map connectionProviderInjectionData,
+			ServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
@@ -134,7 +131,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	public void close() {
 		sessionFactory.close();
-		serviceRegistry.destroy();
 	}
 
 	public Map<String, Object> getProperties() {

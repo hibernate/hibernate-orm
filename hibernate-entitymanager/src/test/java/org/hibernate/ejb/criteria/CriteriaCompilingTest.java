@@ -42,7 +42,7 @@ import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.ShelfLife;
 import org.hibernate.ejb.metamodel.Spouse;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.callbacks.RemoteControl;
 import org.hibernate.ejb.test.callbacks.Television;
 import org.hibernate.ejb.test.callbacks.VideoSystem;
@@ -54,7 +54,7 @@ import org.hibernate.ejb.test.inheritance.Strawberry;
  *
  * @author Steve Ebersole
  */
-public class CriteriaCompilingTest extends TestCase {
+public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Customer.class,

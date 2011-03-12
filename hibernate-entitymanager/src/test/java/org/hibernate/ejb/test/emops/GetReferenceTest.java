@@ -1,13 +1,13 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 
 /**
  * @author Emmanuel Bernard
  */
-public class GetReferenceTest extends TestCase {
+public class GetReferenceTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testWrongIdType() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

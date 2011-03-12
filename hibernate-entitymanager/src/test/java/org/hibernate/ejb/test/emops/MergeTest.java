@@ -3,12 +3,12 @@ package org.hibernate.ejb.test.emops;
 import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class MergeTest extends TestCase {
+public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	public void testMergeWithIndexColumn() {
 		Race race = new Race();
 		race.competitors.add( new Competitor( "Name" ) );

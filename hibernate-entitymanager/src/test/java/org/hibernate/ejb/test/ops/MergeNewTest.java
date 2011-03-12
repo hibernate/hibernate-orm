@@ -1,12 +1,13 @@
 //$Id$
 package org.hibernate.ejb.test.ops;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class MergeNewTest extends TestCase {
+public class MergeNewTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testMergeNew() throws Exception {
 		Workload load = new Workload();

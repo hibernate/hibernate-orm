@@ -1,12 +1,12 @@
 //$Id$
 package org.hibernate.ejb.test.xml;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class XmlAttributeOverrideTest extends TestCase {
+public class XmlAttributeOverrideTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testAttributeOverriding() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

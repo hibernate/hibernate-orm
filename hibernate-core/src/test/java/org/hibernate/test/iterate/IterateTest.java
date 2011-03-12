@@ -57,7 +57,7 @@ public class IterateTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testIterate() throws Exception {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Item i1 = new Item("foo");
@@ -86,12 +86,12 @@ public class IterateTest extends BaseCoreFunctionalTestCase {
 		s.delete(i2);
 		t.commit();
 		s.close();
-		assertEquals( getSessions().getStatistics().getEntityFetchCount(), 2 );
+		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 2 );
 	}
 
 	@Test
 	public void testScroll() throws Exception {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Item i1 = new Item("foo");
@@ -117,7 +117,7 @@ public class IterateTest extends BaseCoreFunctionalTestCase {
 		s.delete(i2);
 		t.commit();
 		s.close();
-		assertEquals( getSessions().getStatistics().getEntityFetchCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getEntityFetchCount(), 0 );
 	}
 }
 

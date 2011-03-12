@@ -68,21 +68,21 @@ public class InstrumentCacheTest extends BaseCoreFunctionalTestCase {
 		Session s;
 		Transaction tx;
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		s.persist( new Document("HiA", "Hibernate book", "Hibernate is....") );
 		tx.commit();
 		s.close();
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		s.createQuery("from Document fetch all properties").uniqueResult();
 		tx.commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		Document d = (Document) s.createCriteria(Document.class).uniqueResult();
 		assertFalse( Hibernate.isPropertyInitialized(d, "text") );
@@ -93,9 +93,9 @@ public class InstrumentCacheTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		assertEquals( 2, getSessions().getStatistics().getPrepareStatementCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getPrepareStatementCount() );
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		d = (Document) s.get(Document.class, d.getId());
 		assertFalse( Hibernate.isPropertyInitialized(d, "text") );
@@ -109,21 +109,21 @@ public class InstrumentCacheTest extends BaseCoreFunctionalTestCase {
 		Session s;
 		Transaction tx;
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		s.persist( new Document("HiA", "Hibernate book", "Hibernate is....") );
 		tx.commit();
 		s.close();
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		s.createQuery("from Document fetch all properties").uniqueResult();
 		tx.commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		Document d = (Document) s.createCriteria(Document.class).uniqueResult();
 		assertFalse( Hibernate.isPropertyInitialized(d, "text") );
@@ -134,9 +134,9 @@ public class InstrumentCacheTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		assertEquals( 1, getSessions().getStatistics().getPrepareStatementCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getPrepareStatementCount() );
 
-		s = getSessions().openSession();
+		s = sessionFactory().openSession();
 		tx = s.beginTransaction();
 		d = (Document) s.get(Document.class, d.getId());
 		assertTrue( Hibernate.isPropertyInitialized(d, "text") );

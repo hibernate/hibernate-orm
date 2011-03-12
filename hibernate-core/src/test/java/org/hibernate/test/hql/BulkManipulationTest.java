@@ -342,7 +342,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	protected boolean supportsBulkInsertIdGeneration(Class entityClass) {
-		EntityPersister persister = sfi().getEntityPersister( entityClass.getName() );
+		EntityPersister persister = sessionFactory().getEntityPersister( entityClass.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		return HqlSqlWalker.supportsIdGenWithBulkInsertion( generator );
 	}

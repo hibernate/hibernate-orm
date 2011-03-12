@@ -6,14 +6,14 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.FailureExpected;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class CallbacksTest extends TestCase {
+public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testCallbackMethod() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

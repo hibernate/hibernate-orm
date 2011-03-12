@@ -7,14 +7,14 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.exception.ConstraintViolationException;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-public class ExceptionTest extends TestCase {
+public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testOptimisticLockingException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

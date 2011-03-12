@@ -133,7 +133,7 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 	}
 
 	private SqlTypeDescriptor getResolvedSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		return ( ( SessionFactoryImplementor ) getSessions() )
+		return ( ( SessionFactoryImplementor ) sessionFactory() )
 				.getTypeResolver()
 				.resolveSqlTypeDescriptor( sqlTypeDescriptor );
 	}
@@ -197,7 +197,7 @@ public class TypeOverrideTest extends BaseCoreFunctionalTestCase {
 		else {
 			assertSame(
 					VarcharTypeDescriptor.INSTANCE,
-					( ( SessionFactoryImplementor ) getSessions() )
+					( ( SessionFactoryImplementor ) sessionFactory() )
 							.getTypeResolver()
 							.resolveSqlTypeDescriptor( VarcharTypeDescriptor.INSTANCE )
 			);

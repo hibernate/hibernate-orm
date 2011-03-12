@@ -27,13 +27,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  *
  * @author alan.oleary
  */
-public class ComponentCriteriaTest extends TestCase {
+public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Client.class };
 	}

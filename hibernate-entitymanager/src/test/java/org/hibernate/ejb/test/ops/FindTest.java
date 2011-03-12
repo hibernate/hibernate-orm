@@ -1,12 +1,12 @@
 //$Id$
 package org.hibernate.ejb.test.ops;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class FindTest extends TestCase {
+public class FindTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testSubclassWrongId() throws Exception {
 		Mammal mammal = new Mammal();

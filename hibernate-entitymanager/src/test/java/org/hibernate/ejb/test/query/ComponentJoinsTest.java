@@ -24,14 +24,14 @@
 package org.hibernate.ejb.test.query;
 import javax.persistence.EntityManager;
 import org.hibernate.ejb.criteria.components.Client;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * Tests related to specifying joins on components (embedded values).
  *
  * @author Steve Ebersole
  */
-public class ComponentJoinsTest extends TestCase {
+public class ComponentJoinsTest extends BaseEntityManagerFunctionalTestCase {
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Client.class };
 	}

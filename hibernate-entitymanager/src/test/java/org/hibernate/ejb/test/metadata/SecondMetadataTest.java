@@ -1,11 +1,12 @@
 package org.hibernate.ejb.test.metadata;
 import javax.persistence.EntityManagerFactory;
-import org.hibernate.ejb.test.TestCase;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class SecondMetadataTest extends TestCase {
+public class SecondMetadataTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testBaseOfService() throws Exception {
 		EntityManagerFactory emf = factory;

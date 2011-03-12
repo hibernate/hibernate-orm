@@ -146,7 +146,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 
-		sfi().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		// create an Organization...
 		Organization jboss = new Organization( "JBoss" );
@@ -154,11 +154,11 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		// now query on Employment, this should not cause an auto-flush
 		s.createSQLQuery( getEmploymentSQL() ).list();
-		assertEquals( 0, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( 0, sessionFactory().getStatistics().getEntityInsertCount() );
 
 		// now try to query on Employment but this time add Organization as a synchronized query space...
 		s.createSQLQuery( getEmploymentSQL() ).addSynchronizedEntityClass( Organization.class ).list();
-		assertEquals( 1, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getEntityInsertCount() );
 
 		// clean up
 		s.delete( jboss );

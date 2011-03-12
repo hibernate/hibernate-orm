@@ -47,21 +47,21 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 	}
 
 	protected void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( "unexpected insert count", expected, inserts );
 	}
 
 	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( "unexpected update counts", expected, updates );
 	}
 
 	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
+		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
 	}
 }

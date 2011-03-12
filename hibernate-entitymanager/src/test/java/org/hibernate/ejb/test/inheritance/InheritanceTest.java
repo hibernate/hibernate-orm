@@ -1,12 +1,12 @@
 //$Id$
 package org.hibernate.ejb.test.inheritance;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class InheritanceTest extends TestCase {
+public class InheritanceTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testFind() throws Exception {
 		EntityManager firstSession = getOrCreateEntityManager( );

@@ -3,12 +3,12 @@ package org.hibernate.ejb.test.callbacks;
 import java.util.Iterator;
 import java.util.List;
 import javax.persistence.EntityManager;
-import org.hibernate.ejb.test.TestCase;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class CallbackAndDirtyTest extends TestCase {
+public class CallbackAndDirtyTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testDirtyButNotDirty() throws Exception {
 		EntityManager manager = getOrCreateEntityManager();

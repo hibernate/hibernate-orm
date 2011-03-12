@@ -111,7 +111,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -123,9 +123,9 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
 		s = openSession();
 		s.beginTransaction();
@@ -134,7 +134,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -143,15 +143,15 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 		u = ( User ) s.createCriteria( User.class )
 				.add( Restrictions.naturalId().set( "userName", "steve" ) )
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 2 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -171,7 +171,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -183,11 +183,11 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -196,8 +196,8 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s.delete( u );
 
@@ -226,7 +226,7 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 
 		s = openSession();
 		s.beginTransaction();
@@ -236,11 +236,11 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 				.uniqueResult();
 		assertNotNull( u );
 
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 1 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCachePutCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCachePutCount(), 1 );
 
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 		s.getTransaction().commit();
 		s = openSession();
 		s.beginTransaction();
@@ -249,8 +249,8 @@ public class ImmutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 				.setCacheable( true )
 				.uniqueResult();
 		assertNotNull( u );
-		assertEquals( getSessions().getStatistics().getQueryExecutionCount(), 0 );
-		assertEquals( getSessions().getStatistics().getQueryCacheHitCount(), 1 );
+		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 0 );
+		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 
 		s.delete( u );
 

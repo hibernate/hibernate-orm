@@ -159,7 +159,7 @@ public class MultiRepresentationTest extends BaseCoreFunctionalTestCase {
 		private Long stockId;
 
 		private void create() {
-			Session session = getSessions().openSession();
+			Session session = sessionFactory().openSession();
 			session.beginTransaction();
 			Stock stock = new Stock();
 			stock.setTradeSymbol( "JBOSS" );
@@ -180,7 +180,7 @@ public class MultiRepresentationTest extends BaseCoreFunctionalTestCase {
 		}
 
 		private void destroy() {
-			Session session = getSessions().openSession();
+			Session session = sessionFactory().openSession();
 			session.beginTransaction();
 			Iterator stocks = session.createQuery( "from Stock" ).list().iterator();
 			while ( stocks.hasNext() ) {

@@ -52,15 +52,15 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 		assertEquals( id, myEntity1.getId() );
 
 		// next test persist() which should cause a delayed insert...
-		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
+		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		MyEntity myEntity2 = new MyEntity( "test-persist");
 		s.persist( myEntity2 );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
 		assertNull( myEntity2.getId() );
 
 		// an explicit flush should cause execution of the delayed insertion
 		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 1, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 1, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.close();
 
 		s = openSession();
@@ -74,15 +74,15 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testPersistOutsideTransactionCascadedToNonInverseCollection() {
-		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
+		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
 		MyEntity myEntity = new MyEntity( "test-persist");
 		myEntity.getNonInverseChildren().add( new MyChild( "test-child-persist-non-inverse" ) );
 		s.persist( myEntity );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
 		assertNull( myEntity.getId() );
 		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.close();
 
 		s = openSession();
@@ -96,17 +96,17 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked"})
 	public void testPersistOutsideTransactionCascadedToInverseCollection() {
-		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
+		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
 		MyEntity myEntity2 = new MyEntity( "test-persist-2");
 		MyChild child = new MyChild( "test-child-persist-inverse" );
 		myEntity2.getInverseChildren().add( child );
 		child.setInverseParent( myEntity2 );
 		s.persist( myEntity2 );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
 		assertNull( myEntity2.getId() );
 		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.close();
 
 		s = openSession();
@@ -119,15 +119,15 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testPersistOutsideTransactionCascadedToManyToOne() {
-		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
+		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
 		MyEntity myEntity = new MyEntity( "test-persist");
 		myEntity.setSibling( new MySibling( "test-persist-sibling-out" ) );
 		s.persist( myEntity );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
 		assertNull( myEntity.getId() );
 		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.close();
 
 		s = openSession();
@@ -140,16 +140,16 @@ public class IdentityGeneratedKeysTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testPersistOutsideTransactionCascadedFromManyToOne() {
-		long initialInsertCount = sfi().getStatistics().getEntityInsertCount();
+		long initialInsertCount = sessionFactory().getStatistics().getEntityInsertCount();
 		Session s = openSession();
 		MyEntity myEntity2 = new MyEntity( "test-persist-2");
 		MySibling sibling = new MySibling( "test-persist-sibling-in" );
 		sibling.setEntity( myEntity2 );
 		s.persist( sibling );
-		assertEquals( "persist on identity column not delayed", initialInsertCount, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "persist on identity column not delayed", initialInsertCount, sessionFactory().getStatistics().getEntityInsertCount() );
 		assertNull( myEntity2.getId() );
 		s.flush();
-		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( "delayed persist insert not executed on flush", initialInsertCount + 2, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.close();
 
 		s = openSession();

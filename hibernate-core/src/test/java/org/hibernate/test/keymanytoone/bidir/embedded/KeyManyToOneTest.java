@@ -60,7 +60,7 @@ public class KeyManyToOneTest extends BaseCoreFunctionalTestCase {
 		cust.getOrders().add( order );
 		s.save( cust );
 		s.flush();
-		assertEquals( 2, sfi().getStatistics().getEntityInsertCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getEntityInsertCount() );
 		s.delete( cust );
 		s.getTransaction().commit();
 		s.close();

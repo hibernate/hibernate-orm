@@ -63,7 +63,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testCollectionFetchVsLoad() throws Exception {
-		Statistics stats = getSessions().getStatistics();
+		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
 		Session s = openSession();
@@ -151,7 +151,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testQueryStatGathering() {
-		Statistics stats = getSessions().getStatistics();
+		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 
 		Session s = openSession();

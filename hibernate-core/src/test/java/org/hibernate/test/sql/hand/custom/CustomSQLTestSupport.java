@@ -78,9 +78,9 @@ public abstract class CustomSQLTestSupport extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-		getSessions().getCache().evictEntityRegion( Organization.class );
-		getSessions().getCache().evictEntityRegion( Person.class );
-		getSessions().getCache().evictEntityRegion( Employment.class );
+		sessionFactory().getCache().evictEntityRegion( Organization.class );
+		sessionFactory().getCache().evictEntityRegion( Person.class );
+		sessionFactory().getCache().evictEntityRegion( Employment.class );
 
 		s = openSession();
 		t = s.beginTransaction();

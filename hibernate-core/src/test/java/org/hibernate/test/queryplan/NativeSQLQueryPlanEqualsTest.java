@@ -47,7 +47,7 @@ public class NativeSQLQueryPlanEqualsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testNativeSQLQuerySpecEquals() {
-		QueryPlanCache cache = new QueryPlanCache( sfi() );
+		QueryPlanCache cache = new QueryPlanCache( sessionFactory() );
 		NativeSQLQuerySpecification firstSpec = createSpec();
 
 		NativeSQLQuerySpecification secondSpec = createSpec();
@@ -63,7 +63,7 @@ public class NativeSQLQueryPlanEqualsTest extends BaseCoreFunctionalTestCase {
 		String blah = "blah";
 		String select = "select blah from blah";
 		NativeSQLQueryReturn[] queryReturns = new NativeSQLQueryScalarReturn[] {
-				new NativeSQLQueryScalarReturn( blah, sfi().getTypeResolver().basic( "int" ) )
+				new NativeSQLQueryScalarReturn( blah, sessionFactory().getTypeResolver().basic( "int" ) )
 		};
 		return new NativeSQLQuerySpecification( select, queryReturns, null );
 	}

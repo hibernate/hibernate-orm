@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.immutable.entitywithmutablecollection;
-import java.util.Iterator;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
@@ -68,23 +67,23 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
-		isContractPartiesInverse = ( ( SessionFactoryImpl ) getSessions() ).getCollectionPersister( Contract.class.getName() + ".parties" ).isInverse();
+		isContractPartiesInverse = ( ( SessionFactoryImpl ) sessionFactory() ).getCollectionPersister( Contract.class.getName() + ".parties" ).isInverse();
 		try {
-			 ( ( SessionFactoryImpl ) getSessions() ).getEntityPersister( Party.class.getName() ).getPropertyType( "contract" );
+			 ( ( SessionFactoryImpl ) sessionFactory() ).getEntityPersister( Party.class.getName() ).getPropertyType( "contract" );
 			isContractPartiesBidirectional = true;
 		}
 		catch ( QueryException ex) {
 			isContractPartiesBidirectional = false;
 		}
 		try {
-			 ( ( SessionFactoryImpl ) getSessions() ).getEntityPersister( ContractVariation.class.getName() ).getPropertyType( "contract" );
+			 ( ( SessionFactoryImpl ) sessionFactory() ).getEntityPersister( ContractVariation.class.getName() ).getPropertyType( "contract" );
 			isContractVariationsBidirectional = true;
 		}
 		catch ( QueryException ex) {
 			isContractVariationsBidirectional = false;
 		}
 
-		isContractVersioned = ( ( SessionFactoryImpl ) getSessions() ).getEntityPersister( Contract.class.getName() ).isVersioned();
+		isContractVersioned = ( ( SessionFactoryImpl ) sessionFactory() ).getEntityPersister( Contract.class.getName() ).isVersioned();
 	}
 
 	@Test
@@ -1201,21 +1200,21 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	protected void clearCounts() {
-		getSessions().getStatistics().clear();
+		sessionFactory().getStatistics().clear();
 	}
 
 	protected void assertInsertCount(int expected) {
-		int inserts = ( int ) getSessions().getStatistics().getEntityInsertCount();
+		int inserts = ( int ) sessionFactory().getStatistics().getEntityInsertCount();
 		assertEquals( "unexpected insert count", expected, inserts );
 	}
 
 	protected void assertUpdateCount(int expected) {
-		int updates = ( int ) getSessions().getStatistics().getEntityUpdateCount();
+		int updates = ( int ) sessionFactory().getStatistics().getEntityUpdateCount();
 		assertEquals( "unexpected update counts", expected, updates );
 	}
 
 	protected void assertDeleteCount(int expected) {
-		int deletes = ( int ) getSessions().getStatistics().getEntityDeleteCount();
+		int deletes = ( int ) sessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( "unexpected delete counts", expected, deletes );
 	}
 }

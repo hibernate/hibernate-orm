@@ -9,6 +9,7 @@ import java.util.Date;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import org.hibernate.ejb.HibernateEntityManager;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
@@ -18,7 +19,7 @@ import org.hibernate.ejb.test.Wallet;
 /**
  * @author Emmanuel Bernard
  */
-public class EntityManagerSerializationTest extends org.hibernate.ejb.test.TestCase {
+public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalTestCase {
 
 	public void testSerialization() throws Exception {
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();

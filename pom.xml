@@ -7,7 +7,7 @@
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-parent</artifactId>
         <version>3.6.3-SNAPSHOT</version>
-        <relativePath>parent/pom.xml</relativePath>
+        <relativePath>hibernate-parent/pom.xml</relativePath>
     </parent>
 
     <groupId>org.hibernate</groupId>
@@ -23,19 +23,19 @@
     </properties>
 
     <modules>
-        <module>parent</module>
-        <module>core</module>
-        <module>testing</module>
-        <module>testsuite</module>
-        <module>cache-ehcache</module>
-        <module>cache-jbosscache</module>
-        <module>cache-oscache</module>
-        <module>cache-swarmcache</module>
-        <module>connection-c3p0</module>
-        <module>connection-proxool</module>
-        <module>envers</module>
-        <module>jdbc3-testing</module>
-        <module>cache-infinispan</module>
+        <module>hibernate-parent</module>
+        <module>hibernate-core</module>
+        <module>hibernate-testing</module>
+        <module>hibernate-testsuite</module>
+        <module>hibernate-ehcache</module>
+        <module>hibernate-jbosscache</module>
+        <module>hibernate-oscache</module>
+        <module>hibernate-swarmcache</module>
+        <module>hibernate-c3p0</module>
+        <module>hibernate-proxool</module>
+        <module>hibernate-envers</module>
+        <module>hibernate-jdbc3-testing</module>
+        <module>hibernate-infinispan</module>
 <!--
     Need to scope bytecode providers first...
         <module>bytecode-cglib</module>
@@ -81,8 +81,8 @@
                 </property>
             </activation>
             <modules>
-                <module>entitymanager</module>
-                <module>jdbc4-testing</module>
+                <module>hibernate-entitymanager</module>
+                <module>hibernate-jdbc4-testing</module>
             </modules>
         </profile>            
         <profile>
@@ -94,8 +94,8 @@
                 </property>
             </activation>
             <modules>
-                <module>documentation</module>
-                <module>distribution</module>
+                <module>hibernate-documentation</module>
+                <module>hibernate-distribution</module>
             </modules>
         </profile>
     </profiles>

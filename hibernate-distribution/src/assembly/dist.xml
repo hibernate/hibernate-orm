@@ -63,7 +63,7 @@
             <fileMode>0644</fileMode>
         </file>
         <file>
-            <source>../testing/target/hibernate-testing-${project.version}.jar</source>
+            <source>../hibernate-testing/target/hibernate-testing-${project.version}.jar</source>
             <destName>hibernate-testing.jar</destName>
             <fileMode>0644</fileMode>
         </file>
@@ -188,8 +188,41 @@
             reference manual documentation
         -->
         <fileSet>
-            <directory>../documentation/manual/target/docbook/publish/</directory>
+            <directory>../hibernate-documentation/manual/target/docbook/publish/</directory>
             <outputDirectory>documentation/manual</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+        </fileSet>
+        <!--
+            Build the 'documentation/devguide' directory containing the built
+            developer guide documentation
+        -->
+        <fileSet>
+            <directory>../hibernate-documentation/devguide/target/docbook/publish/</directory>
+            <outputDirectory>documentation/devguide</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+        </fileSet>
+        <!--
+            Build the 'documentation/quickstart' directory containing the built
+            quick start documentation
+        -->
+        <fileSet>
+            <directory>../hibernate-documentation/quickstart/target/docbook/publish/</directory>
+            <outputDirectory>documentation/quickstart</outputDirectory>
+            <includes>
+                <include>**/**</include>
+            </includes>
+        </fileSet>
+        <!--
+            Build the 'documentation/envers' directory containing the built
+            envers documentation
+        -->
+        <fileSet>
+            <directory>../hibernate-documentation/envers/target/docbook/publish/</directory>
+            <outputDirectory>documentation/envers</outputDirectory>
             <includes>
                 <include>**/**</include>
             </includes>
@@ -199,7 +232,7 @@
             reference manual documentation
         -->
         <fileSet>
-            <directory>../documentation/jbosscache2/target/docbook/publish/</directory>
+            <directory>../hibernate-documentation/jbosscache2/target/docbook/publish/</directory>
             <outputDirectory>documentation/jbosscache-guide</outputDirectory>
             <includes>
                 <include>**/**</include>

@@ -43,7 +43,8 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.AbstractReturningWork;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -147,7 +148,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
-		final ReturningWork<IntegralDataTypeHolder> work = new ReturningWork<IntegralDataTypeHolder>() {
+		final WorkExecutorVisitable<IntegralDataTypeHolder> work = new AbstractReturningWork<IntegralDataTypeHolder>() {
 			@Override
 			public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
 				IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );

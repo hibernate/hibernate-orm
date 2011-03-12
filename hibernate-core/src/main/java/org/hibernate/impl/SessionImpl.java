@@ -125,7 +125,10 @@ import org.hibernate.event.SaveOrUpdateEventListener;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -1975,8 +1978,29 @@ public final class SessionImpl
 		persistenceContext.setReadOnly(entity, readOnly);
 	}
 
-	public void doWork(Work work) throws HibernateException {
-		transactionCoordinator.getJdbcCoordinator().coordinateWork( work );
+	public void doWork(final Work work) throws HibernateException {
+		WorkExecutorVisitable<Void> realWork = new WorkExecutorVisitable<Void>() {
+			@Override
+			public Void accept(WorkExecutor<Void> workExecutor, Connection connection) throws SQLException {
+				workExecutor.executeWork( work, connection );
+				return null;
+			}
+		};
+		doWork( realWork );
+	}
+
+	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
+		WorkExecutorVisitable<T> realWork = new WorkExecutorVisitable<T>() {
+			@Override
+			public T accept(WorkExecutor<T> workExecutor, Connection connection) throws SQLException {
+				return workExecutor.executeReturningWork( work, connection );
+			}
+		};
+		return doWork( realWork );
+	}
+
+	private <T> T doWork(WorkExecutorVisitable<T> work) throws HibernateException {
+		return transactionCoordinator.getJdbcCoordinator().coordinateWork( work );
 	}
 
 	public void afterScrollOperation() {

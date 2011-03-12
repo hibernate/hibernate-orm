@@ -26,9 +26,7 @@ package org.hibernate.engine.jdbc.spi;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 
 import java.io.Serializable;
 import java.sql.Connection;
@@ -88,9 +86,7 @@ public interface JdbcCoordinator extends Serializable {
 
 	public void afterTransaction();
 
-	public void coordinateWork(Work work);
-
-	public <T> T coordinateWork(ReturningWork<T> work);
+	public <T> T coordinateWork(WorkExecutorVisitable<T> work);
 
 	public void executeBatch();
 

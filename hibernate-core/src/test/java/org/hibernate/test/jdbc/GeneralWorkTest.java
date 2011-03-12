@@ -21,6 +21,7 @@ import java.sql.Statement;
 import junit.framework.Test;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.junit.functional.FunctionalTestCase;
 import org.hibernate.testing.junit.functional.FunctionalTestClassTestSuite;
@@ -104,6 +105,52 @@ public class GeneralWorkTest extends FunctionalTestCase {
 		catch ( JDBCException expected ) {
 			// expected outcome
 		}
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	public void testGeneralReturningUsage() throws Throwable {
+		Session session = openSession();
+		session.beginTransaction();
+		Person p = new Person( "Abe", "Lincoln" );
+		session.save( p );
+		session.getTransaction().commit();
+
+		session = openSession();
+		session.beginTransaction();
+		long count = session.doReturningWork(
+				new ReturningWork<Long>() {
+					public Long execute(Connection connection) throws SQLException {
+						// in this current form, users must handle try/catches themselves for proper resource release
+						Statement statement = null;
+						long personCount = 0;
+						try {
+							statement = connection.createStatement();
+							ResultSet resultSet = null;
+							try {
+								resultSet = statement.executeQuery( "select count(*) from T_JDBC_PERSON" );
+								resultSet.next();
+								personCount = resultSet.getLong( 1 );
+								assertEquals( 1L, personCount );
+							}
+							finally {
+								releaseQuietly( resultSet );
+							}
+						}
+						finally {
+							releaseQuietly( statement );
+						}
+						return personCount;
+					}
+				}
+		);
+		session.getTransaction().commit();
+		session.close();
+		assertEquals( 1L, count );
+
+		session = openSession();
+		session.beginTransaction();
+		session.delete( p );
 		session.getTransaction().commit();
 		session.close();
 	}

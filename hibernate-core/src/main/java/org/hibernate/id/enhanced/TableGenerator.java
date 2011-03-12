@@ -50,7 +50,7 @@ import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -465,7 +465,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					@Override
 					public IntegralDataTypeHolder getNextValue() {
 						return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
-								new ReturningWork<IntegralDataTypeHolder>() {
+								new AbstractReturningWork<IntegralDataTypeHolder>() {
 									@Override
 									public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
 										IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( identifierType.getReturnedClass() );

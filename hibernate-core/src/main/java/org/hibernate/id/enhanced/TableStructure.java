@@ -39,7 +39,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.jboss.logging.Logger;
 
 /**
@@ -115,7 +115,7 @@ public class TableStructure implements DatabaseStructure {
 			@Override
 			public IntegralDataTypeHolder getNextValue() {
 				return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
-						new ReturningWork<IntegralDataTypeHolder>() {
+						new AbstractReturningWork<IntegralDataTypeHolder>() {
 							@Override
 							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
 								final SqlStatementLogger statementLogger = session

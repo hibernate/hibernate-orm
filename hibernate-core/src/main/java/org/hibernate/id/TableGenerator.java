@@ -40,7 +40,7 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jdbc.ReturningWork;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -144,7 +144,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();
 		return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
-				new ReturningWork<IntegralDataTypeHolder>() {
+				new AbstractReturningWork<IntegralDataTypeHolder>() {
 					@Override
 					public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
 						IntegralDataTypeHolder value = buildHolder();

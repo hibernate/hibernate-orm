@@ -25,6 +25,8 @@
 package org.hibernate;
 import java.io.Serializable;
 import java.sql.Connection;
+
+import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.stat.SessionStatistics;
 
@@ -916,6 +918,17 @@ public interface Session extends Serializable {
 	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
 	 */
 	public void doWork(Work work) throws HibernateException;
+
+	/**
+	 * Controller for allowing users to perform JDBC related work using the Connection
+	 * managed by this Session, returning the result from calling <code>work.execute()</code>
+	 * ({@link ReturningWork<T>.execute(Connection)}/
+	 *
+	 * @param work The work to be performed.
+	 * @return the result from calling <code>work.execute()</code>.
+	 * @throws HibernateException Generally indicates wrapped {@link java.sql.SQLException}
+	 */
+	public <T> T doReturningWork(ReturningWork<T> work) throws HibernateException;
 
 	/**
 	 * Disconnect the session from its underlying JDBC connection.  This is intended for use in cases where the

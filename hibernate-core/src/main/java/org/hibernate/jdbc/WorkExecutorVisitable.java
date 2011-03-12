@@ -21,26 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.transaction.spi;
+package org.hibernate.jdbc;
 
-import org.hibernate.HibernateException;
-import org.hibernate.jdbc.WorkExecutorVisitable;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * Contract for performing work in a manner that isolates it from any current transaction.
+ * This interface provides a way to execute unrelated "work" objects using
+ * polymorphism.
  *
- * @author Steve Ebersole
+ * Instances of this interface can accept a {@link WorkExecutor} visitor
+ * for executing a discrete piece of work, and return an implementation-defined
+ * result.
+ *
+ * @author Gail Badner
  */
-public interface IsolationDelegate {
+public interface WorkExecutorVisitable<T> {
 	/**
-	 * Perform the given work in isolation from current transaction.
+	 * Accepts a {@link WorkExecutor} visitor for executing a discrete
+	 * piece of work, and returns an implementation-defined result..
 	 *
-	 * @param work The work to be performed.
-	 * @param transacted Should the work itself be done in a (isolated) transaction?
+	 * @param executor The visitor that executes the work.
+	 * @param connection The connection on which to perform the work.
 	 *
-	 * @return The work result
+	 * @return an implementation-defined result
 	 *
-	 * @throws HibernateException Indicates a problem performing the work.
+	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
+	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.
 	 */
-	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException;
+	public T accept(WorkExecutor<T> executor, Connection connection) throws SQLException;
 }

@@ -42,8 +42,9 @@ import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.jdbc.WorkExecutor;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -184,32 +185,11 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 	}
 
-	public void coordinateWork(Work work) {
-		Connection connection = getLogicalConnection().getDistinctConnectionProxy();
-		try {
-			work.execute( connection );
-			getLogicalConnection().afterStatementExecution();
-		}
-		catch ( SQLException e ) {
-			throw sqlExceptionHelper().convert( e, "error executing work" );
-		}
-		finally {
-			try {
-				if ( ! connection.isClosed() ) {
-					connection.close();
-				}
-			}
-			catch (SQLException e) {
-                LOG.debug("Error closing connection proxy", e);
-			}
-		}
-	}
-
 	@Override
-	public <T> T coordinateWork(ReturningWork<T> work) {
+	public <T> T coordinateWork(WorkExecutorVisitable<T> work) {
 		Connection connection = getLogicalConnection().getDistinctConnectionProxy();
 		try {
-			T result = work.execute( connection );
+			T result = work.accept( new WorkExecutor<T>(), connection );
 			getLogicalConnection().afterStatementExecution();
 			return result;
 		}

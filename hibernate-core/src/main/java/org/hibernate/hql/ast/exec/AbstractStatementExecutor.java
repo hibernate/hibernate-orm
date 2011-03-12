@@ -40,7 +40,7 @@ import org.hibernate.event.EventSource;
 import org.hibernate.hql.ast.HqlSqlWalker;
 import org.hibernate.hql.ast.SqlGenerator;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.AbstractWork;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
@@ -137,7 +137,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 			        " from " + persister.getTemporaryIdTableName();
 	}
 
-	private static class TemporaryTableCreationWork implements Work {
+	private static class TemporaryTableCreationWork extends AbstractWork {
 		private final Queryable persister;
 
 		private TemporaryTableCreationWork(Queryable persister) {
@@ -209,7 +209,7 @@ public abstract class AbstractStatementExecutor implements StatementExecutor {
 		}
 	};
 
-	private static class TemporaryTableDropWork implements Work {
+	private static class TemporaryTableDropWork extends AbstractWork {
 		private final Queryable persister;
 		private final SessionImplementor session;
 

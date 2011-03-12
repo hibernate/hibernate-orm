@@ -30,8 +30,8 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.jdbc.ReturningWork;
-import org.hibernate.jdbc.Work;
+import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.jboss.logging.Logger;
 
@@ -59,7 +59,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 	}
 
 	@Override
-	public void delegateWork(Work work, boolean transacted) throws HibernateException {
+	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException {
 		boolean wasAutoCommit = false;
 		try {
 			// todo : should we use a connection proxy here?
@@ -72,69 +72,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 
-				work.execute( connection );
-
-				if ( transacted ) {
-					connection.commit();
-				}
-			}
-			catch ( Exception e ) {
-				try {
-					if ( transacted && !connection.isClosed() ) {
-						connection.rollback();
-					}
-				}
-				catch ( Exception ignore ) {
-                    LOG.unableToRollbackConnection(ignore);
-				}
-
-				if ( e instanceof HibernateException ) {
-					throw (HibernateException) e;
-				}
-				else if ( e instanceof SQLException ) {
-					throw sqlExceptionHelper().convert( (SQLException) e, "error performing isolated work" );
-				}
-				else {
-					throw new HibernateException( "error performing isolated work", e );
-				}
-			}
-			finally {
-				if ( transacted && wasAutoCommit ) {
-					try {
-						connection.setAutoCommit( true );
-					}
-					catch ( Exception ignore ) {
-                        LOG.trace("was unable to reset connection back to auto-commit");
-					}
-				}
-				try {
-					connectionProvider().closeConnection( connection );
-				}
-				catch ( Exception ignore ) {
-                    LOG.unableToReleaseIsolatedConnection(ignore);
-				}
-			}
-		}
-		catch ( SQLException sqle ) {
-			throw sqlExceptionHelper().convert( sqle, "unable to obtain isolated JDBC connection" );
-		}
-	}
-
-	@Override
-	public <T> T delegateWork(ReturningWork<T> work, boolean transacted) throws HibernateException {
-		boolean wasAutoCommit = false;
-		try {
-			// todo : should we use a connection proxy here?
-			Connection connection = connectionProvider().getConnection();
-			try {
-				if ( transacted ) {
-					if ( connection.getAutoCommit() ) {
-						wasAutoCommit = true;
-						connection.setAutoCommit( false );
-					}
-				}
-
-				T result = work.execute( connection );
+				T result = work.accept( new WorkExecutor<T>(), connection );
 
 				if ( transacted ) {
 					connection.commit();

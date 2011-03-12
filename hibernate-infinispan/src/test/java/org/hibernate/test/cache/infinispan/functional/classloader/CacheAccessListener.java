@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.util.HashSet;
 import java.util.Set;
 import org.hibernate.cache.infinispan.util.CacheHelper;

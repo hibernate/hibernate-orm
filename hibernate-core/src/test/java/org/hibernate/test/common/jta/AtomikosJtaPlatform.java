@@ -33,7 +33,7 @@ import org.hibernate.service.jta.platform.internal.TransactionManagerBasedSynchr
 import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.test.common.ConnectionProviderBuilder;
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.jboss.logging.Logger;
 import com.atomikos.icatch.jta.UserTransactionImp;
 import com.atomikos.icatch.jta.UserTransactionManager;

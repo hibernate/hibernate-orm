@@ -1,5 +1,5 @@
 package org.hibernate.test.typeparameters;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

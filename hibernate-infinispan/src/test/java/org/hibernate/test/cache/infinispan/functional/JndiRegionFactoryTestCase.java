@@ -52,6 +52,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.stat.Statistics;
 
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -115,6 +117,7 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 		cfg.setProperty( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
 	}
 
+	@Test
 	public void testRedeployment() throws Exception {
 		addEntityCheckCache( sessionFactory() );
 		sessionFactory().close();

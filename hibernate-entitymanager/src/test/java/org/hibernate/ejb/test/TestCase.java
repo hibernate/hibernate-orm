@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;

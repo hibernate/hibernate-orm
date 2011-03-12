@@ -69,7 +69,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	private SequenceHiLoGenerator generator;
 
 	@Before
-	protected void setUp() throws Exception {
+	public void setUp() throws Exception {
 		Properties properties = new Properties();
 		properties.setProperty( SequenceGenerator.SEQUENCE, TEST_SEQUENCE );
 		properties.setProperty( SequenceHiLoGenerator.MAX_LO, "0" ); // JPA allocationSize of 1
@@ -107,7 +107,7 @@ public class SequenceHiLoGeneratorNoIncrementTest extends BaseUnitTestCase {
 	}
 
 	@After
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}

@@ -1,7 +1,7 @@
 // $Id$
 package org.hibernate.test.annotations.fkcircularity;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import junit.framework.TestCase;

@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
-import static org.hibernate.TestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -201,7 +200,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		s.createSQLQuery( "insert into Pickup (id, vin, owner) select id, vin, owner from Car" ).executeUpdate();
 
 		l = s.createQuery("from Vehicle").list();
-		assertEquals(l.size(),5);
+		assertEquals( l.size(), 5 );
 
 		t.commit();
 		t = s.beginTransaction();
@@ -212,13 +211,21 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		assertEquals(l.size(),4);
 
 		Car c = (Car) s.createQuery( "from Car where owner = 'Kirsten'" ).uniqueResult();
-		c.setOwner("NotKirsten");
-		assertEquals(0,s.getNamedQuery( "native-delete-car" ).setString( 0, "Kirsten" ).executeUpdate());
-		assertEquals(1,s.getNamedQuery( "native-delete-car" ).setString( 0, "NotKirsten" ).executeUpdate());
+		c.setOwner( "NotKirsten" );
+		assertEquals( 0, s.getNamedQuery( "native-delete-car" ).setString( 0, "Kirsten" ).executeUpdate() );
+		assertEquals( 1, s.getNamedQuery( "native-delete-car" ).setString( 0, "NotKirsten" ).executeUpdate() );
 
 
-		assertEquals(0,s.createSQLQuery( "delete from SUV where owner = :owner" ).setString( "owner", "NotThere" ).executeUpdate());
-		assertEquals(1,s.createSQLQuery( "delete from SUV where owner = :owner" ).setString( "owner", "Joe" ).executeUpdate());
+		assertEquals(
+				0, s.createSQLQuery( "delete from SUV where owner = :owner" )
+				.setString( "owner", "NotThere" )
+				.executeUpdate()
+		);
+		assertEquals(
+				1, s.createSQLQuery( "delete from SUV where owner = :owner" )
+				.setString( "owner", "Joe" )
+				.executeUpdate()
+		);
 		s.createSQLQuery( "delete from Pickup" ).executeUpdate();
 
 		l = s.createQuery("from Vehicle").list();

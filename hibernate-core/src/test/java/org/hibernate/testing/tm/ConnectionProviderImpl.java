@@ -29,7 +29,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownUnwrapTypeException;
-import org.hibernate.test.common.ConnectionProviderBuilder;
+
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
  * A {@link ConnectionProvider} implementation adding JTA-style transactionality

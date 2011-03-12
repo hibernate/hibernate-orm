@@ -24,11 +24,15 @@
 package org.hibernate.test.cache.infinispan.functional.cluster;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
+
 import org.hibernate.HibernateException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.service.spi.UnknownUnwrapTypeException;
-import org.hibernate.test.common.ConnectionProviderBuilder;
+
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
  * A {@link ConnectionProvider} implementation adding JTA-style transactionality around the returned
@@ -36,7 +40,7 @@ import org.hibernate.test.common.ConnectionProviderBuilder;
  * 
  * @author Brian Stansberry
  */
-public class DualNodeConnectionProviderImpl implements ConnectionProvider {
+public class DualNodeConnectionProviderImpl implements ConnectionProvider, Configurable {
    private static ConnectionProvider actualConnectionProvider = ConnectionProviderBuilder.buildConnectionProvider();
    private String nodeId;
    private boolean isTransactional;
@@ -104,4 +108,9 @@ public class DualNodeConnectionProviderImpl implements ConnectionProvider {
    public boolean supportsAggressiveRelease() {
       return true;
    }
+
+	@Override
+	public void configure(Map configurationValues) {
+		nodeId = (String) configurationValues.get( "nodeId" );
+	}
 }

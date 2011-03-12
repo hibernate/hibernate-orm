@@ -26,7 +26,7 @@
 
 package org.hibernate.test.annotations.fetchprofile;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.io.InputStream;
 import junit.framework.TestCase;
 import org.hibernate.MappingException;

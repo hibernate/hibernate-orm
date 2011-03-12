@@ -1,6 +1,6 @@
 //$Id$
 package org.hibernate.ejb.test;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;

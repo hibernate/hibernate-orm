@@ -20,13 +20,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.cache.infinispan.entity;
-import org.hibernate.cache.EntityRegion;
+
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.internal.ServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
@@ -61,6 +60,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	@Before
 	public final void prepareLocalAccessStrategy() throws Exception {
 		environment = new NodeEnvironment( createConfiguration() );
+		environment.prepare();
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();

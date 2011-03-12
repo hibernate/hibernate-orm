@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan.functional;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -56,6 +57,9 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testEntityCache() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
 		Item item = new Item( "chris", "Chris's Item" );
 		beginTx();
 		try {
@@ -78,7 +82,6 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 		try {
 			Session s = openSession();
 			Item found = (Item) s.load( Item.class, item.getId() );
-			Statistics stats = s.getSessionFactory().getStatistics();
 			log.info( stats.toString() );
 			assertEquals( item.getDescription(), found.getDescription() );
 			assertEquals( 0, stats.getSecondLevelCacheMissCount() );
@@ -96,6 +99,9 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testCollectionCache() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
 		Item item = new Item( "chris", "Chris's Item" );
 		Item another = new Item( "another", "Owned Item" );
 		item.addItem( another );
@@ -133,7 +139,6 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 		beginTx();
 		try {
 			Session s = openSession();
-			Statistics stats = s.getSessionFactory().getStatistics();
 			SecondLevelCacheStatistics cStats = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );
 			Item loadedWithCachedCollection = (Item) s.load( Item.class, item.getId() );
 			stats.logSummary();
@@ -154,6 +159,9 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testStaleWritesLeaveCacheConsistent() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
 		VersionedItem item = null;
 		Transaction txn = null;
 		Session s = null;
@@ -203,8 +211,7 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 		}
 
 		// check the version value in the cache...
-		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
-				.getSecondLevelCacheStatistics( VersionedItem.class.getName() );
+		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( VersionedItem.class.getName() );
 
 		Object entry = slcs.getEntries().get( item.getId() );
 		Long cachedVersionValue;
@@ -231,6 +238,16 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testQueryCacheInvalidation() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
+		SecondLevelCacheStatistics slcs = stats.getSecondLevelCacheStatistics( Item.class.getName() );
+		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
+
+		assertEquals( 0, slcs.getPutCount() );
+		assertEquals( 0, slcs.getElementCountInMemory() );
+		assertEquals( 0, slcs.getEntries().size() );
+
 		Session s = null;
 		Transaction t = null;
 		Item i = null;
@@ -253,13 +270,10 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 			commitOrRollbackTx();
 		}
 
-		SecondLevelCacheStatistics slcs = s.getSessionFactory()
-				.getStatistics()
-				.getSecondLevelCacheStatistics( Item.class.getName() );
 
-		assertEquals( slcs.getPutCount(), 1 );
-		assertEquals( slcs.getElementCountInMemory(), 1 );
-		assertEquals( slcs.getEntries().size(), 1 );
+		assertEquals( 1, slcs.getPutCount() );
+		assertEquals( 1, slcs.getElementCountInMemory() );
+		assertEquals( 1, slcs.getEntries().size() );
 
 		beginTx();
 		try {
@@ -305,6 +319,9 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testQueryCache() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
 		Session s;
 		Item item = new Item( "chris", "Chris's Item" );
 
@@ -344,7 +361,6 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 		beginTx();
 		try {
 			s = openSession();
-			Statistics stats = s.getSessionFactory().getStatistics();
 			s.createQuery( "from Item" ).setCacheable( true ).list();
 			assertEquals( 1, stats.getQueryCacheHitCount() );
 			s.createQuery( "delete from Item" ).executeUpdate();
@@ -360,6 +376,9 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testQueryCacheHitInSameTransaction() throws Exception {
+		Statistics stats = sessionFactory().getStatistics();
+		stats.clear();
+
 		Session s = null;
 		Item item = new Item( "galder", "Galder's Item" );
 
@@ -386,7 +405,6 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 		beginTx();
 		try {
 			s = openSession();
-			Statistics stats = s.getSessionFactory().getStatistics();
 			s.createQuery( "from Item" ).setCacheable( true ).list();
 			s.createQuery( "from Item" ).setCacheable( true ).list();
 			assertEquals( 1, stats.getQueryCacheHitCount() );

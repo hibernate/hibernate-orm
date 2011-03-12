@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.filter;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -164,7 +164,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 
 		session.clear();
 
-		session.disableFilter("regionlist");
+		session.disableFilter( "regionlist" );
 		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[]{"LA", "APAC", "APAC"} );
 		// Second test retreival through hql with the collection as non-eager with different region list
 		salespersons = session.createQuery( "select s from Salesperson as s" ).list();
@@ -190,7 +190,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// HQL test
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        LOG.info("Starting HQL filter tests");
+        LOG.info( "Starting HQL filter tests" );
 		TestData testData = new TestData();
 		testData.prepare();
 
@@ -200,13 +200,13 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		session.enableFilter( "effectiveDate" )
 		        .setParameter( "asOfDate", testData.lastMonth.getTime() );
 
-        LOG.info("HQL against Salesperson...");
+        LOG.info( "HQL against Salesperson..." );
 		List results = session.createQuery( "select s from Salesperson as s left join fetch s.orders" ).list();
 		assertTrue( "Incorrect filtered HQL result count [" + results.size() + "]", results.size() == 1 );
 		Salesperson result = ( Salesperson ) results.get( 0 );
 		assertTrue( "Incorrect collectionfilter count", result.getOrders().size() == 1 );
 
-        LOG.info("HQL against Product...");
+        LOG.info( "HQL against Product..." );
 		results = session.createQuery( "from Product as p where p.stockNumber = ?" ).setInteger( 0, 124 ).list();
 		assertTrue( results.size() == 1 );
 
@@ -225,7 +225,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 
 		Session session = openSession();
 		session.enableFilter( "heavyProducts" ).setParameter("weightKilograms", 4d);
-        LOG.info("HQL against Product...");
+        LOG.info( "HQL against Product..." );
 		List results = session.createQuery( "from Product").list();
 		assertEquals( 1, results.size() );
 
@@ -280,7 +280,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 		session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
-		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
+		session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] {"APAC"} );
 
 		List result = session.createCriteria( Order.class )
 				.add( Subqueries.in( "steve", subquery ) )
@@ -389,43 +389,47 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 
         LOG.info("query against Department with a subquery on Salesperson in the APAC reqion...");
 
-		List departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)").setString(0, "steve").list();
+		List departments = session.createQuery(
+				"select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)"
+		).setString( 0, "steve" ).list();
 
 		assertEquals("Incorrect department count", 1, departments.size());
 
         LOG.info("query against Department with a subquery on Salesperson in the FooBar reqion...");
 
-		session.enableFilter("region").setParameter("region", "Foobar");
+		session.enableFilter("region").setParameter( "region", "Foobar" );
 		departments = session.createQuery("select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?)").setString(0, "steve").list();
 
-		assertEquals("Incorrect department count", 0, departments.size());
+		assertEquals( "Incorrect department count", 0, departments.size() );
 
         LOG.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region for a given buyer");
-		session.enableFilter("region").setParameter("region", "APAC");
+		session.enableFilter("region").setParameter( "region", "APAC" );
 
 		List orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product and li.quantity >= ? and p.name = ?) and o.buyer = ?")
 				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
 
-		assertEquals("Incorrect orders count", 1, orders.size());
+		assertEquals( "Incorrect orders count", 1, orders.size() );
 
         LOG.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of last month");
 
 		session.enableFilter("region").setParameter("region", "APAC");
-		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
+		session.enableFilter("effectiveDate").setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = ?")
 				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
 
-		assertEquals("Incorrect orders count", 1, orders.size());
+		assertEquals( "Incorrect orders count", 1, orders.size() );
 
 
-        LOG.info("query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of 4 months ago");
+        LOG.info(
+				"query against Order with a subquery for line items with a subquery line items where the product name is Acme Hair Gel and the quantity is greater than 1 in a given region and the product is effective as of 4 months ago"
+		);
 
 		session.enableFilter("region").setParameter("region", "APAC");
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.fourMonthsAgo.getTime());
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = ?")
-				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString(2, "gavin").list();
+				.setLong( 0, 1L ).setString( 1, "Acme Hair Gel" ).setString( 2, "gavin" ).list();
 
 		assertEquals("Incorrect orders count", 0, orders.size());
 
@@ -445,7 +449,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		session.enableFilter("effectiveDate").setParameter("asOfDate", testData.lastMonth.getTime());
 
 		orders = session.createQuery("select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ? and li.product in (select p.id from Product p where p.name = ?)) and o.buyer = :buyer")
-				.setLong(0, 1L).setString(1, "Acme Hair Gel").setString("buyer", "gavin").list();
+				.setLong( 0, 1L ).setString( 1, "Acme Hair Gel" ).setString( "buyer", "gavin" ).list();
 
 		assertEquals("Incorrect orders count", 1, orders.size());
 

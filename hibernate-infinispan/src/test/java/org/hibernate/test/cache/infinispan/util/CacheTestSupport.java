@@ -31,7 +31,7 @@ import org.infinispan.Cache;
 
 import org.hibernate.cache.RegionFactory;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 
 /**
  * Support class for tracking and cleaning up objects used in tests.

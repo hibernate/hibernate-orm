@@ -1,6 +1,6 @@
 //$Id$
 package org.hibernate.ejb.test.emops;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;

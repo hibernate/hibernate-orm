@@ -34,11 +34,13 @@ import org.hibernate.cache.StandardQueryCache;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -70,29 +72,28 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	private Cache remoteQueryCache;
 	private CacheAccessListener remoteQueryListener;
 
-	private static ClassLoader originalClassLoader;
+	private static ClassLoader originalTCCL;
 
 	@BeforeClass
 	public static void prepareClassLoader() {
-		originalClassLoader = Thread.currentThread().getContextClassLoader();
-		ClassLoader parent = originalClassLoader == null
-				? IsolatedClassLoaderTest.class.getClassLoader()
-				: originalClassLoader;
-		ClassLoader selectedTCCL = new SelectedClassnameClassLoader(
-				new String[] {
-						org.hibernate.test.cache.infinispan.functional.classloader.Account.class.getName(),
-						org.hibernate.test.cache.infinispan.functional.classloader.AccountHolder.class.getName()
-				},
+		originalTCCL = Thread.currentThread().getContextClassLoader();
+		final String packageName = IsolatedClassLoaderTest.class.getPackage().getName();
+		final String[] isolatedClassNames = new String[] { packageName + "Account", packageName + "AccountHolder" };
+		final SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(
+				isolatedClassNames,
 				null,
 				null,
-				parent
+				originalTCCL
 		);
-		Thread.currentThread().setContextClassLoader( selectedTCCL );
+		Thread.currentThread().setContextClassLoader( visible );
 	}
 
 	@AfterClass
 	public static void resetClassLoader() {
-		Thread.currentThread().setContextClassLoader( originalClassLoader );
+		ClusterAwareRegionFactory.clearCacheManagers();
+		DualNodeJtaTransactionManagerImpl.cleanupTransactions();
+		DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
+		Thread.currentThread().setContextClassLoader( originalTCCL );
 	}
 
 	@Override

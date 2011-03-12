@@ -26,7 +26,7 @@ package org.hibernate.test.jpa.cascade;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;

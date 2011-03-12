@@ -27,7 +27,7 @@ dependencies {
          type = 'jar'
       }
    }
-   testCompile(project(':hibernate-core').sourceSets.test.classes)
+   testCompile( project(':hibernate-testing') )
    testCompile([group: 'org.jboss', name: 'jboss-common-core', version: '2.2.14.GA'])
    testCompile([group: 'org.jboss.naming', name: 'jnp-client', version: jnpVersion])
    testCompile([group: 'org.jboss.naming', name: 'jnpserver', version: jnpVersion])

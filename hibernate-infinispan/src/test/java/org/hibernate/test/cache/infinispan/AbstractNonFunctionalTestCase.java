@@ -35,7 +35,7 @@ import org.junit.Before;
 
 import org.hibernate.test.cache.infinispan.util.CacheTestSupport;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 
 /**
  * Base class for all non-functional tests of Infinispan integration.

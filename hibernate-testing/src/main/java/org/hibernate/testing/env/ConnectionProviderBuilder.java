@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,8 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.common;
+package org.hibernate.testing.env;
+
 import java.util.Properties;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -30,7 +32,7 @@ import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionPr
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
 /**
- * TODO : javadoc
+ * Defines the JDBC connection information (currently H2) used by Hibernate for unit (not functional!) tests
  *
  * @author Steve Ebersole
  */

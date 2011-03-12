@@ -24,7 +24,6 @@
 package org.hibernate.test.util;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit.UnitTestCase;
 
 import org.junit.Test;
 

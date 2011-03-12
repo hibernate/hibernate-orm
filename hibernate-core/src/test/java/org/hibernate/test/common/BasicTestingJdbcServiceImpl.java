@@ -23,12 +23,10 @@
  */
 package org.hibernate.test.common;
 
-import java.sql.ResultSet;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
@@ -40,6 +38,8 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
+
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 
 /**

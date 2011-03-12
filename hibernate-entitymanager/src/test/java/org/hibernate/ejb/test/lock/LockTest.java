@@ -1,6 +1,6 @@
 //$Id$
 package org.hibernate.ejb.test.lock;
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

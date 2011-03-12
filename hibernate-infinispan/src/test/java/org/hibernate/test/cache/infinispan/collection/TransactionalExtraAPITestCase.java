@@ -56,6 +56,7 @@ public class TransactionalExtraAPITestCase extends AbstractNonFunctionalTestCase
 	@Before
 	public final void prepareLocalAccessStrategy() throws Exception {
 		environment = new NodeEnvironment( createConfiguration() );
+		environment.prepare();
 
 		// Sleep a bit to avoid concurrent FLUSH problem
 		avoidConcurrentFlush();

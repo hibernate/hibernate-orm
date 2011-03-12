@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.legacy;
 
-import static org.hibernate.TestLogger.LOG;
+import static org.hibernate.testing.TestLogger.LOG;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Time;
@@ -83,7 +83,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.test.common.ConnectionProviderBuilder;
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -232,9 +232,9 @@ public class FooBarTest extends LegacyTestCase {
 		Qux q2 = (Qux) s.load( Qux.class, q.getKey() );
 		assertTrue( "loaded same object", q==q2 );
 		assertTrue( "loaded same object", b==b2 );
-		assertTrue( Math.round( b.getFormula() ) == b.getInt()/2 );
+		assertTrue( Math.round( b.getFormula() ) == b.getInt() / 2 );
 		s.delete(q2);
-		s.delete(b2);
+		s.delete( b2 );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -245,12 +245,12 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Foo foo = new Foo();
 		foo.setJoinedProp("foo");
-		s.save(foo);
+		s.save( foo );
 		s.flush();
 		foo.setJoinedProp("bar");
 		s.flush();
 		String fid = foo.getKey();
-		s.delete(foo);
+		s.delete( foo );
 		s.getTransaction().commit();
 		s.close();
 
@@ -375,9 +375,9 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Baz bb = (Baz) s.createCriteria(Baz.class).uniqueResult();
-		assertTrue(bb==null);
+		assertTrue( bb == null );
 		Baz baz = new Baz();
-		s.save(baz);
+		s.save( baz );
 		s.getTransaction().commit();
 		s.close();
 
@@ -385,8 +385,8 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Baz b = (Baz) s.createCriteria(Baz.class).uniqueResult();
 		assertTrue( Hibernate.isInitialized( b.getTopGlarchez() ) );
-		assertTrue( b.getTopGlarchez().size()==0 );
-		s.delete(b);
+		assertTrue( b.getTopGlarchez().size() == 0 );
+		s.delete( b );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -839,8 +839,8 @@ public class FooBarTest extends LegacyTestCase {
 		Baz baz = new Baz();
 		List list = new ArrayList();
 		list.add( new Fee() );
-		baz.setFees(list);
-		s.save(baz);
+		baz.setFees( list );
+		s.save( baz );
 		s.getTransaction().commit();
 		s.close();
 
@@ -854,7 +854,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		s.delete(baz);
+		s.delete( baz );
 		s.flush();
 		assertFalse( s.createQuery( "from Fee" ).iterate().hasNext() );
 		s.getTransaction().commit();
@@ -867,7 +867,7 @@ public class FooBarTest extends LegacyTestCase {
 		list.add( new Fee() );
 		list.add( new Fee() );
 		baz.setFees(list);
-		s.save(baz);
+		s.save( baz );
 		s.getTransaction().commit();
 		s.close();
 
@@ -878,7 +878,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		assertTrue( baz.getFees().size()==2 );
+		assertTrue( baz.getFees().size() == 2 );
 
 		s = openSession();
 		s.beginTransaction();
@@ -917,7 +917,7 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Baz baz = new Baz();
-		s.save(baz);
+		s.save( baz );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1112,12 +1112,12 @@ public class FooBarTest extends LegacyTestCase {
 		Collection fooBag = new ArrayList();
 		fooBag.add( new Foo() );
 		fooBag.add( new Foo() );
-		baz.setFooBag(fooBag);
+		baz.setFooBag( fooBag );
 		s.save(baz);
 		s.flush();
 		fooBag = baz.getFooBag();
 		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
-		assertTrue( fooBag==baz.getFooBag() );
+		assertTrue( fooBag == baz.getFooBag() );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1125,10 +1125,10 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
 		Object bag = baz.getFooBag();
-		assertFalse( Hibernate.isInitialized(bag) );
+		assertFalse( Hibernate.isInitialized( bag ) );
 		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
 		assertTrue( bag==baz.getFooBag() );
-		assertTrue( baz.getFooBag().size()==2 );
+		assertTrue( baz.getFooBag().size() == 2 );
 		s.delete(baz);
 		s.getTransaction().commit();
 		s.close();
@@ -1141,18 +1141,18 @@ public class FooBarTest extends LegacyTestCase {
 		Baz baz = new Baz();
 		List l = new ArrayList();
 		baz.setStringList(l);
-		l.add("foo");
+		l.add( "foo" );
 		Serializable id = s.save(baz);
 		l.add("bar");
 		s.flush();
-		l.add("baz");
+		l.add( "baz" );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		baz = (Baz) s.load(Baz.class, id);
-		assertTrue( baz.getStringList().size()==3 && baz.getStringList().contains("bar") );
+		assertTrue( baz.getStringList().size() == 3 && baz.getStringList().contains( "bar" ) );
 		s.delete(baz);
 		s.getTransaction().commit();
 		s.close();
@@ -1163,7 +1163,7 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Foo foo = new Foo();
-		s.save(foo);
+		s.save( foo );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1173,24 +1173,24 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		FooProxy foo2 = (FooProxy) s.load( Foo.class, foo.getKey() );
 		foo2.setString("dirty");
-		foo2.setBoolean( new Boolean(false) );
-		foo2.setBytes( new byte[] { 1,2,3} );
-		foo2.setDate(null);
-		foo2.setShort( new Short("69") );
+		foo2.setBoolean( new Boolean( false ) );
+		foo2.setBytes( new byte[] {1, 2, 3} );
+		foo2.setDate( null );
+		foo2.setShort( new Short( "69" ) );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		foo2.setString("dirty again");
+		foo2.setString( "dirty again" );
 		s.update(foo2);
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		foo2.setString("dirty again 2");
-		s.update(foo2);
+		foo2.setString( "dirty again 2" );
+		s.update( foo2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1200,7 +1200,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.load( foo3, foo.getKey() );
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "update", foo2.equalsFoo(foo3) );
-		s.delete(foo3);
+		s.delete( foo3 );
 		doDelete( s, "from Glarch" );
 		s.getTransaction().commit();
 		s.close();
@@ -1252,13 +1252,13 @@ public class FooBarTest extends LegacyTestCase {
 		fooBag.add( new Foo() );
 		fooBag.add( new Foo() );
 		baz.setFooBag(fooBag);
-		s.save(baz);
+		s.save( baz );
 		s.flush();
 		fooBag = baz.getFooBag();
 		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
-		assertTrue( Hibernate.isInitialized(fooBag) );
-		assertTrue( fooBag==baz.getFooBag() );
-		assertTrue( baz.getFooBag().size()==2 );
+		assertTrue( Hibernate.isInitialized( fooBag ) );
+		assertTrue( fooBag == baz.getFooBag() );
+		assertTrue( baz.getFooBag().size() == 2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1268,7 +1268,7 @@ public class FooBarTest extends LegacyTestCase {
 		Object bag = baz.getFooBag();
 		assertFalse( Hibernate.isInitialized(bag) );
 		s.createQuery( "from Baz baz left join fetch baz.fooBag" ).list();
-		assertTrue( Hibernate.isInitialized(bag) );
+		assertTrue( Hibernate.isInitialized( bag ) );
 		assertTrue( bag==baz.getFooBag() );
 		assertTrue( baz.getFooBag().size()==2 );
 		s.delete(baz);
@@ -1569,9 +1569,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Baz baz = (Baz) s.load(Baz.class, id);
 		Set foos = baz.getFooSet();
-		assertTrue( foos.size()==0 );
+		assertTrue( foos.size() == 0 );
 		Foo foo = new Foo();
-		foos.add(foo);
+		foos.add( foo );
 		s.save(foo);
 		s.flush();
 		s.delete(foo);
@@ -1688,7 +1688,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		//g = (Glarch) s.createQuery( "from Glarch g where g.multiple.count=12" ).list().get(0);
-		s.createQuery( "from Glarch g where g.multiple.count=12" ).list().get(0);
+		s.createQuery( "from Glarch g where g.multiple.count=12" ).list().get( 0 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -1704,9 +1704,9 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		g = (GlarchProxy) s.load(Glarch.class, gid);
-		assertTrue( g.getMultiple()!=null );
+		assertTrue( g.getMultiple() != null );
 		assertEquals( g.getMultiple().count, 12 );
-		assertSame(g.getMultiple().glarch, g);
+		assertSame( g.getMultiple().glarch, g );
 		s.delete(g);
 		s.getTransaction().commit();
 		s.close();
@@ -1718,8 +1718,8 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Baz baz = new Baz();
 		Set bars = new HashSet();
-		baz.setCascadingBars(bars);
-		s.save(baz);
+		baz.setCascadingBars( bars );
+		s.save( baz );
 		s.flush();
 		baz.getCascadingBars().add( new Bar() );
 		s.delete(baz);
@@ -1734,16 +1734,16 @@ public class FooBarTest extends LegacyTestCase {
 		Bar bar2 = new Bar();
 		bar.setName("Bar");
 		bar2.setName("Bar Two");
-		bar.setX(10);
-		bar2.setX(1000);Baz baz = new Baz();
+		bar.setX( 10 );
+		bar2.setX( 1000 );Baz baz = new Baz();
 		baz.setCascadingBars( new HashSet() );
 		baz.getCascadingBars().add(bar);
 		bar.setBaz(baz);
 
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
-		s.save(baz);
-		s.save(bar2);
+		s.save( baz );
+		s.save( bar2 );
 
 		List list = s.createQuery(
 				"from Bar bar left join bar.baz baz left join baz.cascadingBars b where bar.name like 'Bar %'"
@@ -1757,11 +1757,11 @@ public class FooBarTest extends LegacyTestCase {
 
 		q = s.createQuery("select bar, b from Bar bar left join bar.baz baz left join baz.cascadingBars b where ( bar.name in (:nameList) or bar.name in (:nameList) ) and bar.string = :stringVal");
 		HashSet nameList = new HashSet();
-		nameList.add("bar");
-		nameList.add("Bar");
-		nameList.add("Bar Two");
-		q.setParameterList("nameList", nameList);
-		q.setParameter("stringVal", "a string");
+		nameList.add( "bar" );
+		nameList.add( "Bar" );
+		nameList.add( "Bar Two" );
+		q.setParameterList( "nameList", nameList );
+		q.setParameter( "stringVal", "a string" );
 		list = q.list();
 		if ( !(getDialect() instanceof SAPDBDialect) ) assertTrue( list.size()==2 );
 
@@ -1774,19 +1774,19 @@ public class FooBarTest extends LegacyTestCase {
 
 		q = s.createQuery("select bar, b from Bar bar inner join bar.baz baz inner join baz.cascadingBars b where bar.name like 'Bar%'");
 		Object result = q.uniqueResult();
-		assertTrue( result!=null );
+		assertTrue( result != null );
 		q = s.createQuery("select bar, b from Bar bar left join bar.baz baz left join baz.cascadingBars b where bar.name like :name and b.name like :name");
-		q.setString("name", "Bar%");
+		q.setString( "name", "Bar%" );
 		list = q.list();
 		assertTrue( list.size()==1 );
 
 
 		// This test added for issue HB-297 - there is an named parameter in the Order By clause
 		q = s.createQuery("select bar from Bar bar order by ((bar.x - :valueX)*(bar.x - :valueX))");
-		q.setInteger("valueX", bar.getX()+1);
+		q.setInteger( "valueX", bar.getX() + 1 );
 		list = q.list();
-		assertTrue( ((Bar)list.get(0)).getX() == bar.getX());
-		q.setInteger("valueX", bar2.getX()+1);
+		assertTrue( ((Bar) list.get( 0 )).getX() == bar.getX() );
+		q.setInteger( "valueX", bar2.getX() + 1 );
 		list = q.list();
 		assertTrue( ((Bar)list.get(0)).getX() == bar2.getX());
 
@@ -1928,7 +1928,7 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
 		Foo f = new Foo();
-		s.save(f);
+		s.save( f );
 		s.flush();
 
 		List list = s.createCriteria(Foo.class)
@@ -1940,7 +1940,7 @@ public class FooBarTest extends LegacyTestCase {
 			.setFetchMode("baz", FetchMode.SELECT)
 			.setFetchMode("abstracts", FetchMode.JOIN)
 			.list();
-		assertTrue( list.size()==1 && list.get(0)==f );
+		assertTrue( list.size() == 1 && list.get( 0 ) == f );
 
 		list = s.createCriteria(Foo.class).add(
 				Restrictions.disjunction()
@@ -1950,7 +1950,7 @@ public class FooBarTest extends LegacyTestCase {
 			)
 			.add( Restrictions.isNotNull("boolean") )
 			.list();
-		assertTrue( list.size()==1 && list.get(0)==f );
+		assertTrue( list.size() == 1 && list.get( 0 ) == f );
 
 		Foo example = new Foo();
 		example.setString("a STRing");
@@ -1963,7 +1963,10 @@ public class FooBarTest extends LegacyTestCase {
 				.excludeProperty("yesno")
 			)
 			.list();
-		assertTrue( "Example API without like did not work correctly, size was " + list.size(), list.size()==1 && list.get(0)==f );
+		assertTrue(
+				"Example API without like did not work correctly, size was " + list.size(),
+				list.size() == 1 && list.get( 0 ) == f
+		);
 		example.setString("rin");
 
 		list = s.createCriteria(Foo.class).add(
@@ -2001,11 +2004,11 @@ public class FooBarTest extends LegacyTestCase {
 			.addOrder( Order.asc("date") )
 			.addOrder( Order.desc("string") )
 			.list();
-		assertTrue( list.size()==0 );
+		assertTrue( list.size() == 0 );
 		list = s.createCriteria(Foo.class)
 			.setFetchMode( "component.importantDates", FetchMode.JOIN )
 			.list();
-		assertTrue( list.size()==3 );
+		assertTrue( list.size() == 3 );
 
 		list = s.createCriteria(Foo.class)
 			.setFetchMode( "component.importantDates", FetchMode.JOIN )
@@ -2038,9 +2041,9 @@ public class FooBarTest extends LegacyTestCase {
 		s.save( new Bar() );
 		list = s.createCriteria(Bar.class)
 			.list();
-		assertTrue( list.size()==1 );
+		assertTrue( list.size() == 1 );
 		assertTrue( s.createCriteria(Foo.class).list().size()==3 );
-		s.delete( list.get(0) );
+		s.delete( list.get( 0 ) );
 
 		s.delete( f.getFoo() );
 		s.delete(f);
@@ -2073,28 +2076,28 @@ public class FooBarTest extends LegacyTestCase {
 
 		Session s = openSession();
 		s.beginTransaction();
-		s.save(foo1);
+		s.save( foo1 );
 		s.save(foo2);
-		baz.setFooArray(arr);
-		s.save(baz);
+		baz.setFooArray( arr );
+		s.save( baz );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
-		assertTrue( baz.getFooArray().length==1 );
+		assertTrue( baz.getFooArray().length == 1 );
 		assertTrue( s.createQuery( "from Baz baz join baz.fooArray foo" ).list().size()==1 );
 		assertTrue( s.createQuery( "from Foo foo" ).list().size()==2 );
-		assertTrue( s.createFilter( baz.getFooArray(), "" ).list().size()==1 );
+		assertTrue( s.createFilter( baz.getFooArray(), "" ).list().size() == 1 );
 		//assertTrue( s.delete("from java.lang.Object o")==9 );
 		doDelete( s, "from Foo foo" );
 		String bazid = baz.getCode();
-		s.delete(baz);
+		s.delete( baz );
 		int rows=s.connection().createStatement().executeUpdate(
 			"delete from FOO_ARRAY where id_='" + bazid + "' and i>=8"
 		);
-		assertTrue(rows==1);
+		assertTrue( rows == 1 );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -2223,7 +2226,7 @@ public class FooBarTest extends LegacyTestCase {
 		List list = new ArrayList();
 		list.add( new Fee() );
 		list.add( new Fee() );
-		baz.setFees(list);
+		baz.setFees( list );
 		s.save(baz);
 		t.commit();
 		s.close();
@@ -2231,7 +2234,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		t = s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
-		assertTrue( baz.getFees().size()==2 );
+		assertTrue( baz.getFees().size() == 2 );
 		s.delete(baz);
 		assertTrue( !s.createQuery( "from Fee fee" ).iterate().hasNext() );
 		t.commit();
@@ -2416,12 +2419,12 @@ public class FooBarTest extends LegacyTestCase {
 		while ( iter.hasNext() ) {
 			if ( iter.next().equals("a new value") ) found = true;
 		}
-		assertTrue(found);
-		baz.setStringArray(null);
+		assertTrue( found );
+		baz.setStringArray( null );
 		s.createQuery( "from Baz baz" ).iterate(); //no flush
 		iter = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate();
 		assertTrue( !iter.hasNext() );
-		baz.getStringList().add("1E1");
+		baz.getStringList().add( "1E1" );
 		iter = s.createQuery( "from Foo foo" ).iterate();//no flush
 		assertTrue( !iter.hasNext() );
 		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
@@ -2429,8 +2432,8 @@ public class FooBarTest extends LegacyTestCase {
 		while ( iter.hasNext() ) {
 			if ( iter.next().equals("1E1") ) found = true;
 		}
-		assertTrue(found);
-		baz.getStringList().remove("1E1");
+		assertTrue( found );
+		baz.getStringList().remove( "1E1" );
 		iter = s.createQuery( "select elements(baz.stringArray) from Baz baz" ).iterate(); //no flush
 		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		found = false;
@@ -2441,9 +2444,9 @@ public class FooBarTest extends LegacyTestCase {
 
 		List newList = new ArrayList();
 		newList.add("value");
-		baz.setStringList(newList);
+		baz.setStringList( newList );
 		iter = s.createQuery( "from Foo foo" ).iterate();//no flush
-		baz.setStringList(null);
+		baz.setStringList( null );
 		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		assertTrue( !iter.hasNext() );
 
@@ -2452,7 +2455,7 @@ public class FooBarTest extends LegacyTestCase {
 		iter = s.createQuery( "select elements(baz.stringList) from Baz baz" ).iterate();
 		assertTrue( iter.hasNext() );
 
-		s.delete(baz);
+		s.delete( baz );
 		txn.commit();
 		s.close();
 	}
@@ -2809,7 +2812,7 @@ public class FooBarTest extends LegacyTestCase {
 		Foo foo2 = new Foo();
 		s.load( foo2, foo.getKey() );
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
-		assertTrue( "create", foo.equalsFoo(foo2) );
+		assertTrue( "create", foo.equalsFoo( foo2 ) );
 		s.delete(foo2);
 		s.getTransaction().commit();
 		s.close();
@@ -2821,27 +2824,27 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Qux q = new Qux("0");
 		s.save(q);
-		q.setChild( new Qux("1") );
+		q.setChild( new Qux( "1" ) );
 		s.save( q.getChild() );
 		Qux q2 = new Qux("2");
 		q2.setChild( q.getChild() );
 		Qux q3 = new Qux("3");
 		q.getChild().setChild(q3);
-		s.save(q3);
+		s.save( q3 );
 		Qux q4 = new Qux("4");
-		q4.setChild(q3);
+		q4.setChild( q3 );
 		s.save(q4);
-		s.save(q2);
+		s.save( q2 );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		List l = s.createQuery( "from Qux" ).list();
-		assertTrue( "", l.size()==5);
-		s.delete( l.get(0) );
-		s.delete( l.get(1) );
-		s.delete( l.get(2) );
+		assertTrue( "", l.size() == 5 );
+		s.delete( l.get( 0 ) );
+		s.delete( l.get( 1 ) );
+		s.delete( l.get( 2 ) );
 		s.delete( l.get(3) );
 		s.delete( l.get(4) );
 		s.getTransaction().commit();
@@ -2875,13 +2878,13 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Baz baz = new Baz();
 		baz.setDefaults();
-		s.save(baz);
+		s.save( baz );
 		s.flush();
 		assertTrue( s.contains(baz) );
-		s.evict(baz);
+		s.evict( baz );
 		assertFalse( s.contains(baz) );
 		Baz baz2 = (Baz) s.load( Baz.class, baz.getCode() );
-		assertFalse(baz==baz2);
+		assertFalse( baz == baz2 );
 		s.delete(baz2);
 		s.getTransaction().commit();
 		s.close();
@@ -2894,20 +2897,20 @@ public class FooBarTest extends LegacyTestCase {
 		Bar bar = new Bar();
 		s.save(bar);
 		bar.setAbstracts( new HashSet() );
-		bar.getAbstracts().add(bar);
+		bar.getAbstracts().add( bar );
 		Bar bar2 = new Bar();
-		bar.getAbstracts().add(bar2);
+		bar.getAbstracts().add( bar2 );
 		bar.setFoo(bar);
-		s.save(bar2);
+		s.save( bar2 );
 		s.getTransaction().commit();
 		s.close();
 
-		bar.setAbstracts(null);
+		bar.setAbstracts( null );
 
 		s = openSession();
 		s.beginTransaction();
 		s.load( bar, bar.getKey() );
-		assertTrue( "collection contains self", bar.getAbstracts().size()==2 && bar.getAbstracts().contains(bar) );
+		assertTrue( "collection contains self", bar.getAbstracts().size() == 2 && bar.getAbstracts().contains( bar ) );
 		assertTrue( "association to self", bar.getFoo()==bar );
 		Iterator iter = bar.getAbstracts().iterator();
 		while ( iter.hasNext() ) {
@@ -2984,13 +2987,13 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		Foo x = new Foo();
 		Foo y = new Foo();
-		x.setFoo(y);
-		y.setFoo(x);
-		s.save(x);
-		s.save(y);
+		x.setFoo( y );
+		y.setFoo( x );
+		s.save( x );
+		s.save( y );
 		s.flush();
-		s.delete(y);
-		s.delete(x);
+		s.delete( y );
+		s.delete( x );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -3786,7 +3789,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
-		s.delete(baz);
+		s.delete( baz );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -3798,11 +3801,11 @@ public class FooBarTest extends LegacyTestCase {
 		Foo foo = new Foo();
 		foo.setComponent( new FooComponent("foo", 69, null, new FooComponent("bar", 96, null, null) ) );
 		s.save(foo);
-		foo.getComponent().setName("IFA");
+		foo.getComponent().setName( "IFA" );
 		txn.commit();
 		s.close();
 
-		foo.setComponent(null);
+		foo.setComponent( null );
 
 		s = openSession();
 		txn = s.beginTransaction();
@@ -3812,7 +3815,7 @@ public class FooBarTest extends LegacyTestCase {
 			foo.getComponent().getName().equals("IFA") &&
 			foo.getComponent().getSubcomponent().getName().equals("bar")
 		);
-		assertTrue( "cascade save via component", foo.getComponent().getGlarch()!=null);
+		assertTrue( "cascade save via component", foo.getComponent().getGlarch() != null );
 		foo.getComponent().getSubcomponent().setName("baz");
 		txn.commit();
 		s.close();
@@ -3834,10 +3837,10 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		txn = s.beginTransaction();
 		foo = new Foo();
-		s.save(foo);
+		s.save( foo );
 		foo.setCustom( new String[] { "one", "two" } );
 		assertTrue( s.createQuery( "from Foo foo where foo.custom.s1 = 'one'" ).list().get(0)==foo );
-		s.delete(foo);
+		s.delete( foo );
 		txn.commit();
 		s.close();
 	}
@@ -4037,10 +4040,10 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		One one = new One();
 		s.save(one);
-		one.setValue("yada");
+		one.setValue( "yada" );
 		Many many = new Many();
-		many.setOne(one);
-		s.save(many);
+		many.setOne( one );
+		s.save( many );
 		s.getTransaction().commit();
 		s.close();
 
@@ -4159,7 +4162,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		foo = (FooProxy) s.createQuery( "from Foo foo" ).list().get(0);
 		FooProxy foo2 = (FooProxy) s.load( Foo.class, foo.getKey() );
-		assertTrue("find returns same object as load", foo==foo2);
+		assertTrue( "find returns same object as load", foo == foo2 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -4167,7 +4170,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		foo2 = (FooProxy) s.load( Foo.class, foo.getKey() );
 		foo = (FooProxy) s.createQuery( "from Foo foo" ).list().get(0);
-		assertTrue("find returns same object as load", foo==foo2);
+		assertTrue( "find returns same object as load", foo == foo2 );
 		doDelete( s, "from Foo foo" );
 		s.getTransaction().commit();
 		s.close();
@@ -4180,9 +4183,9 @@ public class FooBarTest extends LegacyTestCase {
 		Foo foo = new Foo();
 		s.save(foo);
 		s.flush();
-		s.connection().createStatement().executeUpdate("update "+getDialect().openQuote()+"foos"+getDialect().closeQuote()+" set long_ = -3");
+		s.connection().createStatement().executeUpdate( "update " + getDialect().openQuote() + "foos" + getDialect().closeQuote() + " set long_ = -3" );
 		s.refresh(foo);
-		assertTrue( foo.getLong().longValue()==-3l );
+		assertTrue( foo.getLong().longValue() == -3l );
 		assertTrue( s.getCurrentLockMode(foo)==LockMode.READ );
 		s.refresh(foo, LockMode.UPGRADE);
 		if ( getDialect().supportsOuterJoinForUpdate() ) {
@@ -4235,10 +4238,10 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		s.beginTransaction();
-		s.update(v, id);
-		s.update(v, id);
-		s.delete(v);
-		s.delete(v);
+		s.update( v, id );
+		s.update( v, id );
+		s.delete( v );
+		s.delete( v );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -4248,8 +4251,8 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Vetoer v = new Vetoer();
-		v.setStrings( new String[] { "foo", "bar", "baz" } );
-		s.save(v); Serializable id = s.save(v);
+		v.setStrings( new String[] {"foo", "bar", "baz"} );
+		s.save( v ); Serializable id = s.save(v);
 		v.getStrings()[1] = "osama";
 		s.getTransaction().commit();
 		s.close();
@@ -4257,8 +4260,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		v = (Vetoer) s.load(Vetoer.class, id);
-		assertTrue( "serializable type", v.getStrings()[1].equals("osama") );
-		s.delete(v); s.delete(v);
+		assertTrue( "serializable type", v.getStrings()[1].equals( "osama" ) );
+		s.delete(v); s.delete( v );
 		s.flush();
 		s.getTransaction().commit();
 		s.close();
@@ -4339,12 +4342,12 @@ public class FooBarTest extends LegacyTestCase {
 		s.createQuery( "from Fo" ).list();
 		tx.commit();
 		Connection c = s.disconnect();
-		assertTrue( c!=null );
-		s.reconnect(c);
+		assertTrue( c != null );
+		s.reconnect( c );
 		tx = s.beginTransaction();
 		s.createQuery( "from Fo" ).list();
 		tx.commit();
-		assertTrue( s.close()==c );
+		assertTrue( s.close() == c );
 		c.close();
 	}
 
@@ -4368,8 +4371,8 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		baz = (Baz) s.load( Baz.class, baz.getCode() );
-		assertTrue( ( (FooComponent) baz.getTopComponents().get(0) ).getCount()==99 );
-		s.delete(baz);
+		assertTrue( ((FooComponent) baz.getTopComponents().get( 0 )).getCount() == 99 );
+		s.delete( baz );
 		s.getTransaction().commit();
 		s.close();
 	}
@@ -4380,17 +4383,17 @@ public class FooBarTest extends LegacyTestCase {
 		Transaction txn = s.beginTransaction();
 		Foo foo = new Foo();
 		Serializable id = s.save(foo);
-		assertTrue(id!=null);
+		assertTrue( id != null );
 		Qux q = new Qux("q");
 		foo.getDependent().setQux(q);
-		s.save(q);
-		q.getFoo().setString("foo2");
+		s.save( q );
+		q.getFoo().setString( "foo2" );
 		//s.flush();
 		//s.connection().commit();
 		assertTrue(
 				s.createQuery( "from Foo foo where foo.dependent.qux.foo.string = 'foo2'" ).iterate().hasNext()
 		);
-		s.delete(foo);
+		s.delete( foo );
 		txn.commit();
 		s.close();
 	}
@@ -4452,8 +4455,8 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		GlarchProxy g = new Glarch();
 		Foo foo = new Foo();
-		g.setAny(foo);
-		Serializable gid = s.save(g);
+		g.setAny( foo );
+		Serializable gid = s.save( g );
 		s.save(foo);
 		s.getTransaction().commit();
 		s.close();
@@ -4463,7 +4466,7 @@ public class FooBarTest extends LegacyTestCase {
 		g = (GlarchProxy) s.load(Glarch.class, gid);
 		assertTrue( g.getAny()!=null && g.getAny() instanceof FooProxy );
 		s.delete( g.getAny() );
-		s.delete(g);
+		s.delete( g );
 		s.getTransaction().commit();
 		s.close();
 	}

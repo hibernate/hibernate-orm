@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache.infinispan;
+
 import java.util.Properties;
+
 import org.hibernate.cache.CacheDataDescription;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.TransactionalDataRegion;
@@ -30,6 +32,8 @@ import org.hibernate.cache.access.AccessType;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
+
+import org.junit.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
@@ -41,80 +45,79 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Base class for tests of EntityRegion and CollectionRegion implementations.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class AbstractEntityCollectionRegionTestCase extends AbstractRegionImplTestCase {
-   /**
-    * Creates a Region backed by an PESSIMISTIC locking JBoss Cache, and then ensures that it
-    * handles calls to buildAccessStrategy as expected when all the various {@link AccessType}s are
-    * passed as arguments.
-    */
-   public void testSupportedAccessTypes() throws Exception {
-      supportedAccessTypeTest();
-   }
+	@Test
+	public void testSupportedAccessTypes() throws Exception {
+		supportedAccessTypeTest();
+	}
 
-   private void supportedAccessTypeTest() throws Exception {
-      Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
-      String entityCfg = "entity";
-      cfg.setProperty(InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, entityCfg);
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
-			  cfg,
-			  getCacheTestSupport()
-	  );
-      supportedAccessTypeTest(regionFactory, cfg.getProperties());
-   }
+	private void supportedAccessTypeTest() throws Exception {
+		Configuration cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
+		String entityCfg = "entity";
+		cfg.setProperty( InfinispanRegionFactory.ENTITY_CACHE_RESOURCE_PROP, entityCfg );
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		supportedAccessTypeTest( regionFactory, cfg.getProperties() );
+	}
 
-   /**
-    * Creates a Region using the given factory, and then ensure that it handles calls to
-    * buildAccessStrategy as expected when all the various {@link AccessType}s are passed as
-    * arguments.
-    */
-   protected abstract void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties);
+	/**
+	 * Creates a Region using the given factory, and then ensure that it handles calls to
+	 * buildAccessStrategy as expected when all the various {@link AccessType}s are passed as
+	 * arguments.
+	 */
+	protected abstract void supportedAccessTypeTest(RegionFactory regionFactory, Properties properties);
 
-   /**
-    * Test that the Region properly implements {@link TransactionalDataRegion#isTransactionAware()}.
-    * 
-    * @throws Exception
-    */
-   public void testIsTransactionAware() throws Exception {
-      Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
-			  cfg,
-			  getCacheTestSupport()
-	  );
-      TransactionalDataRegion region = (TransactionalDataRegion) createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
-      assertTrue("Region is transaction-aware", region.isTransactionAware());
-      CacheTestUtil.stopRegionFactory(regionFactory, getCacheTestSupport());
-      cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
-      // Make it non-transactional
-      cfg.getProperties().remove( JtaPlatformInitiator.JTA_PLATFORM );
-      regionFactory = CacheTestUtil.startRegionFactory(
-			  ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
-			  cfg,
-			  getCacheTestSupport()
-	  );
-      region = (TransactionalDataRegion) createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
-      assertFalse("Region is not transaction-aware", region.isTransactionAware());
-      CacheTestUtil.stopRegionFactory(regionFactory, getCacheTestSupport());
-   }
+	@Test
+	public void testIsTransactionAware() throws Exception {
+		Configuration cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		TransactionalDataRegion region = (TransactionalDataRegion) createRegion(
+				regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription()
+		);
+		assertTrue( "Region is transaction-aware", region.isTransactionAware() );
+		CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
+		cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
+		// Make it non-transactional
+		cfg.getProperties().remove( JtaPlatformInitiator.JTA_PLATFORM );
+		regionFactory = CacheTestUtil.startRegionFactory(
+				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		region = (TransactionalDataRegion) createRegion(
+				regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription()
+		);
+		assertFalse( "Region is not transaction-aware", region.isTransactionAware() );
+		CacheTestUtil.stopRegionFactory( regionFactory, getCacheTestSupport() );
+	}
 
-   public void testGetCacheDataDescription() throws Exception {
-      Configuration cfg = CacheTestUtil.buildConfiguration("test", InfinispanRegionFactory.class, true, false);
-      InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
-			  ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
-			  cfg,
-			  getCacheTestSupport()
-	  );
-      TransactionalDataRegion region = (TransactionalDataRegion) createRegion(regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription());
-      CacheDataDescription cdd = region.getCacheDataDescription();
-      assertNotNull(cdd);
-      CacheDataDescription expected = getCacheDataDescription();
-      assertEquals(expected.isMutable(), cdd.isMutable());
-      assertEquals(expected.isVersioned(), cdd.isVersioned());
-      assertEquals(expected.getVersionComparator(), cdd.getVersionComparator());
-   }
+	@Test
+	public void testGetCacheDataDescription() throws Exception {
+		Configuration cfg = CacheTestUtil.buildConfiguration( "test", InfinispanRegionFactory.class, true, false );
+		InfinispanRegionFactory regionFactory = CacheTestUtil.startRegionFactory(
+				ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() ),
+				cfg,
+				getCacheTestSupport()
+		);
+		TransactionalDataRegion region = (TransactionalDataRegion) createRegion(
+				regionFactory, "test/test", cfg.getProperties(), getCacheDataDescription()
+		);
+		CacheDataDescription cdd = region.getCacheDataDescription();
+		assertNotNull( cdd );
+		CacheDataDescription expected = getCacheDataDescription();
+		assertEquals( expected.isMutable(), cdd.isMutable() );
+		assertEquals( expected.isVersioned(), cdd.isVersioned() );
+		assertEquals( expected.getVersionComparator(), cdd.getVersionComparator() );
+	}
 }

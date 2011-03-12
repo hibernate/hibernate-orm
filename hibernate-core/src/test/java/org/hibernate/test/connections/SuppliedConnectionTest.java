@@ -35,7 +35,7 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
-import org.hibernate.test.common.ConnectionProviderBuilder;
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
  * Implementation of SuppliedConnectionTest.

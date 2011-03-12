@@ -37,8 +37,8 @@ import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionPr
 import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.common.ConnectionProviderBuilder;
 
 /**
  * @author Steve Ebersole

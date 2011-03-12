@@ -22,19 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.connections.internal;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import junit.framework.TestCase;
-import org.hibernate.cfg.Environment;
+
 import org.logicalcobwebs.proxool.ProxoolFacade;
+
+import org.hibernate.cfg.Environment;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test to verify connection pools are closed, and that only the managed one is closed.
+ *
  * @author Sanne Grinovero
  */
-public class ProxoolConnectionProviderTest extends TestCase {
-	
+public class ProxoolConnectionProviderTest extends BaseUnitTestCase {
+	@Test
 	public void testPoolsClosed() {
 		assertDefinedPools(); // zero-length-vararg used as parameter
 		
@@ -61,10 +71,6 @@ public class ProxoolConnectionProviderTest extends TestCase {
 		}
 	}
 
-	/**
-	 * @param pool name
-	 * @return his configuration - see src/tests/resources for matches
-	 */
 	private Properties getPoolConfigurarion(String poolName) {
 		Properties cfg = new Properties();
 		cfg.setProperty( Environment.PROXOOL_POOL_ALIAS, poolName );

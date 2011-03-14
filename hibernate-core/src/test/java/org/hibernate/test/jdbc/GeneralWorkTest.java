@@ -36,6 +36,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
@@ -117,6 +118,7 @@ public class GeneralWorkTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
+	@Test
 	public void testGeneralReturningUsage() throws Throwable {
 		Session session = openSession();
 		session.beginTransaction();

@@ -16,6 +16,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyJoinColumn;
+import javax.persistence.MapKeyJoinColumns;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.TemporalType;
 import org.hibernate.annotations.CollectionOfElements;
@@ -57,7 +58,7 @@ public class Atmosphere {
 
 	@CollectionOfElements //TODO migrate to @ElementCollection ;  @MapKeyManyToMany ??
 	@Column(name="composition_rate")
-	@MapKeyJoinColumn(name="gas_id" )
+	@MapKeyJoinColumns( { @MapKeyJoinColumn(name="gas_id" ) } ) //use @MapKeyJoinColumns explicitly for tests
 	@JoinTable(name = "Composition", joinColumns = @JoinColumn(name = "atmosphere_id"))
 	public Map<Gas, Double> composition = new HashMap<Gas, Double>();
 

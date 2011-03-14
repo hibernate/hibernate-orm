@@ -1,6 +1,30 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.onetoone;
+
 import java.util.Iterator;
+
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -9,21 +33,25 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.Ticket;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
-public class OneToOneTest extends TestCase {
-
-	public OneToOneTest(String x) {
-		super( x );
-	}
-
+public class OneToOneTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testEagerFetching() throws Exception {
 		Session s;
 		Transaction tx;
@@ -52,6 +80,7 @@ public class OneToOneTest extends TestCase {
 
 	}
 
+	@Test
 	public void testDefaultOneToOne() throws Exception {
 		//test a default one to one and a mappedBy in the other side
 		Session s;
@@ -81,6 +110,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOneToOneWithExplicitFk() throws Exception {
 		Client c = new Client();
 		Address a = new Address();
@@ -106,6 +136,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOneToOneWithExplicitSecondaryTableFk() throws Exception {
 		Client c = new Client();
 		Address a = new Address();
@@ -131,6 +162,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUnidirectionalTrueOneToOne() throws Exception {
 		Body b = new Body();
 		Heart h = new Heart();
@@ -154,9 +186,9 @@ public class OneToOneTest extends TestCase {
 		assertEquals( h.getId(), b.getHeart().getId() );
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testCompositePk() throws Exception {
 		Session s;
 		Transaction tx;
@@ -189,6 +221,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBidirectionalTrueOneToOne() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -221,6 +254,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBidirectionalFkOneToOne() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -253,6 +287,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testForeignGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -271,11 +306,10 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 
-	/**
-	 * HHH-4606
-	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-4606" )
 	public void testJoinColumnConfiguredInXml() {
-		PersistentClass pc = cfg.getClassMapping( Son.class.getName() );
+		PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
 		Iterator iter = pc.getJoinIterator();
 		Table table = ( ( Join ) iter.next() ).getTable();
 		Iterator columnIter = table.getColumnIterator();
@@ -295,13 +329,10 @@ public class OneToOneTest extends TestCase {
 		);
 	}
 
-	/**
-	 * HHH-5109 @OneToOne - too many joins
-	 * This test uses an interceptor to verify that correct number of joins
-	 * are generated. 
-	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-5109" )
 	public void testPkOneToOneSelectStatementDoesNotGenerateExtraJoin() {
-		
+		// This test uses an interceptor to verify that correct number of joins are generated.
 		Session s = openSession(new JoinCounter(1));
 		Transaction tx = s.beginTransaction();
 		Owner owner = new Owner();
@@ -328,11 +359,7 @@ public class OneToOneTest extends TestCase {
 		s.close();
 	}
 	
-	
-	
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				PartyAffiliate.class,
@@ -354,6 +381,7 @@ public class OneToOneTest extends TestCase {
 		};
 	}
 
+	@Override
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/onetoone/orm.xml" };
 	}
@@ -380,7 +408,7 @@ class JoinCounter extends EmptyInterceptor {
 		int numberOfJoins = 0;
 		if (sql.startsWith("select") & !sql.contains("nextval")) {
 			 numberOfJoins = count(sql, "join");
-			 TestCase.assertEquals(expectedNumberOfJoins, numberOfJoins);
+			 assertEquals( expectedNumberOfJoins, numberOfJoins );
 		}
 						
 		return sql;

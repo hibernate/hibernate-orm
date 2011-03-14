@@ -22,15 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.cid.keymanytoone;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class EagerKeyManyToOneTest extends TestCase {
+public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public static final String CARD_ID = "cardId";
 	public static final String KEY_ID = "keyId";
 
@@ -39,6 +46,8 @@ public class EagerKeyManyToOneTest extends TestCase {
 		return new Class[] { Card.class, CardField.class, Key.class, PrimaryKey.class };
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-4147" )
 	public void testLoadEntityWithEagerFetchingToKeyManyToOneReferenceBackToSelf() {
 		// based on the core testsuite test of same name in org.hibernate.test.keymanytoone.bidir.component.EagerKeyManyToOneTest
 		// meant to test against regression relating to http://opensource.atlassian.com/projects/hibernate/browse/HHH-2277

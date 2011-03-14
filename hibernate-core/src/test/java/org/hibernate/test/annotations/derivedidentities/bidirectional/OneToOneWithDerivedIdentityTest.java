@@ -22,12 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-public class OneToOneWithDerivedIdentityTest extends TestCase {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
+public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
+	@Test
 	@FailureExpected(jiraKey = "HHH-5695")
 	public void testInsertFooAndBarWithDerivedId() {
 		Session s = openSession();

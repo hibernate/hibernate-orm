@@ -23,8 +23,9 @@
  */
 package org.hibernate.test.annotations.entity;
 
+import java.io.Serializable;
 
-public class PhoneNumber {
+public class PhoneNumber implements Serializable {
 	
 	private String number;
 	

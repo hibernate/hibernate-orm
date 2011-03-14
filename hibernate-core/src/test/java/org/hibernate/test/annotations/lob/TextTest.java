@@ -23,15 +23,21 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import junit.framework.AssertionFailedError;
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
+import org.junit.Assert;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests eager materialization and mutation of long strings.
@@ -39,7 +45,7 @@ import org.hibernate.test.annotations.TestCase;
  * @author Steve Ebersole
  */
 @RequiresDialect({SybaseASE15Dialect.class,SQLServerDialect.class,SybaseDialect.class,Sybase11Dialect.class})
-public class TextTest extends TestCase {
+public class TextTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -48,6 +54,7 @@ public class TextTest extends TestCase {
 
 	private static final int LONG_STRING_SIZE = 10000;
 
+	@Test
 	public void testBoundedLongStringAccess() {
 		String original = buildRecursively(LONG_STRING_SIZE, 'x');
 		String changed = buildRecursively(LONG_STRING_SIZE, 'y');
@@ -76,14 +83,14 @@ public class TextTest extends TestCase {
 		s.beginTransaction();
 		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
 				.getId());
-		assertEquals(LONG_STRING_SIZE, entity.getLongString().length());
-		assertEquals(original, entity.getLongString());
-		assertNotNull(entity.getName());
-		assertEquals(LONG_STRING_SIZE, entity.getName().length);
-		assertEquals(original.toCharArray(), entity.getName());
-		assertNotNull(entity.getWhatEver());
-		assertEquals(LONG_STRING_SIZE, entity.getWhatEver().length);
-		assertEquals(original.toCharArray(), unwrapNonPrimitive(entity.getWhatEver()));
+		Assert.assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
+		Assert.assertEquals( original, entity.getLongString() );
+		Assert.assertNotNull( entity.getName() );
+		Assert.assertEquals( LONG_STRING_SIZE, entity.getName().length );
+		assertEquals( original.toCharArray(), entity.getName() );
+		Assert.assertNotNull( entity.getWhatEver() );
+		Assert.assertEquals( LONG_STRING_SIZE, entity.getWhatEver().length );
+		assertEquals( original.toCharArray(), unwrapNonPrimitive( entity.getWhatEver() ) );
 		entity.setLongString(changed);
 		entity.setName(changed.toCharArray());
 		entity.setWhatEver(wrapPrimitive(changed.toCharArray()));
@@ -94,14 +101,14 @@ public class TextTest extends TestCase {
 		s.beginTransaction();
 		entity = (LongStringHolder) s.get(LongStringHolder.class, entity
 				.getId());
-		assertEquals(LONG_STRING_SIZE, entity.getLongString().length());
-		assertEquals(changed, entity.getLongString());
-		assertNotNull(entity.getName());
-		assertEquals(LONG_STRING_SIZE, entity.getName().length);
-		assertEquals(changed.toCharArray(), entity.getName());
-		assertNotNull(entity.getWhatEver());
-		assertEquals(LONG_STRING_SIZE, entity.getWhatEver().length);
-		assertEquals(changed.toCharArray(), unwrapNonPrimitive(entity.getWhatEver()));
+		Assert.assertEquals( LONG_STRING_SIZE, entity.getLongString().length() );
+		Assert.assertEquals( changed, entity.getLongString() );
+		Assert.assertNotNull( entity.getName() );
+		Assert.assertEquals( LONG_STRING_SIZE, entity.getName().length );
+		assertEquals( changed.toCharArray(), entity.getName() );
+		Assert.assertNotNull( entity.getWhatEver() );
+		Assert.assertEquals( LONG_STRING_SIZE, entity.getWhatEver().length );
+		assertEquals( changed.toCharArray(), unwrapNonPrimitive( entity.getWhatEver() ) );
 		entity.setLongString(null);
 		entity.setName(null);
 		entity.setWhatEver(null);

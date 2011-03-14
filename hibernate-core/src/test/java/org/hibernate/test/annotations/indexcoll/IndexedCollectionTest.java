@@ -37,22 +37,31 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 
+import org.junit.Test;
+
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test index collections
  *
  * @author Emmanuel Bernard
  */
-public class IndexedCollectionTest extends TestCase {
-
+public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testJPA2DefaultMapColumns() throws Exception {
 		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDef", "_KEY" );
 		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesPerKeyDef", "_KEY" );
 		isNotDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDefLeg", "_KEY" );
 	}
 
+	@Test
 	public void testJPA2DefaultIndexColumns() throws Exception {
 		isDefaultKeyColumnPresent( Drawer.class.getName(), "dresses", "_ORDER" );
 	}
@@ -63,7 +72,7 @@ public class IndexedCollectionTest extends TestCase {
 	}
 
 	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
-		final Collection collection = getCfg().getCollectionMapping( collectionOwner + "." + propertyName );
+		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
@@ -78,6 +87,7 @@ public class IndexedCollectionTest extends TestCase {
 				isDefaultColumnPresent(collectionOwner, propertyName, suffix) );
 	}
 
+	@Test
 	public void testFkList() throws Exception {
 		Wardrobe w = new Wardrobe();
 		Drawer d1 = new Drawer();
@@ -122,6 +132,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJoinedTableList() throws Exception {
 		Wardrobe w = new Wardrobe();
 		w.setDrawers( new ArrayList<Drawer>() );
@@ -171,6 +182,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKey() throws Exception {
 		Session s;
 		Transaction tx;
@@ -225,6 +237,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDefaultMapKey() throws Exception {
 		Session s;
 		Transaction tx;
@@ -270,6 +283,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyToEntity() throws Exception {
 		Session s;
 		Transaction tx;
@@ -315,6 +329,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@RequiresDialect(HSQLDialect.class)
 	public void testComponentSubPropertyMapKey() throws Exception {
 		Session s;
@@ -359,6 +374,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyOnManyToMany() throws Exception {
 		Session s;
 		s = openSession();
@@ -387,6 +403,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyOnManyToManyOnId() throws Exception {
 		Session s;
 		s = openSession();
@@ -415,6 +432,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyAndIdClass() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -437,6 +455,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRealMap() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -466,6 +485,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTemporalKeyMap() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -485,6 +505,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEnumKeyType() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -502,6 +523,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyEntityEntity() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -529,6 +551,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEntityKeyElementTarget() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -550,6 +573,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSortedMap() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -574,6 +598,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyLoad() throws Exception {
 		Session s;
 		Transaction tx;
@@ -613,11 +638,7 @@ public class IndexedCollectionTest extends TestCase {
 		s.close();
 	}
 
-
-	public IndexedCollectionTest(String x) {
-		super( x );
-	}
-
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Wardrobe.class,

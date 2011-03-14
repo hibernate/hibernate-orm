@@ -65,6 +65,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return dialect;
 	}
 
+	protected
 	@BeforeClassOnce
 	private void buildSessionFactory() throws Exception {
 		LOG.trace( "Building session factory" );

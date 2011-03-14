@@ -57,6 +57,11 @@ public class SaveOrUpdateTest extends BaseCoreFunctionalTestCase {
 		return new String[] {"ops/Node.hbm.xml"};
 	}
 
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
 	@Test
 	public void testSaveOrUpdateDeepTree() {
 		clearCounts();

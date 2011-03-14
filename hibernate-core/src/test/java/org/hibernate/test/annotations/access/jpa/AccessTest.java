@@ -1,4 +1,3 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,19 +22,30 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.access.jpa;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.access.Closet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class AccessTest extends TestCase {
-
+public class AccessTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testDefaultConfigurationModeIsInherited() throws Exception {
 		User john = new User();
 		john.setFirstname( "John" );
@@ -62,6 +72,7 @@ public class AccessTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSuperclassOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setColor( "Black" );
@@ -81,6 +92,7 @@ public class AccessTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSuperclassNonOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.setGod( "Buddha" );
@@ -97,6 +109,7 @@ public class AccessTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testPropertyOverriding() throws Exception {
 		Furniture fur = new Furniture();
 		fur.weight = 3;
@@ -114,6 +127,7 @@ public class AccessTest extends TestCase {
 
 	}
 
+	@Test
 	public void testNonOverridenSubclass() throws Exception {
 		Chair chair = new Chair();
 		chair.setPillow( "Blue" );
@@ -128,9 +142,9 @@ public class AccessTest extends TestCase {
 		s.delete( chair );
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testOverridenSubclass() throws Exception {
 		BigBed bed = new BigBed();
 		bed.size = 5;
@@ -147,9 +161,9 @@ public class AccessTest extends TestCase {
 		s.delete( bed );
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testFieldsOverriding() throws Exception {
 		Gardenshed gs = new Gardenshed();
 		gs.floors = 4;
@@ -165,9 +179,9 @@ public class AccessTest extends TestCase {
 		s.delete( gs );
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testEmbeddableUsesAccessStrategyOfContainingClass() throws Exception {
 		Circle circle = new Circle();
 		Color color = new Color( 5, 10, 15 );
@@ -191,6 +205,7 @@ public class AccessTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddableExplicitAccessStrategy() throws Exception {
 		Square square = new Square();
 		Position pos = new Position( 10, 15 );
@@ -214,6 +229,7 @@ public class AccessTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Bed.class,

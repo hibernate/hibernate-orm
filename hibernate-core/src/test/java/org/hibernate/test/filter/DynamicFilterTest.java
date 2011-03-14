@@ -83,6 +83,11 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
+	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "1" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );

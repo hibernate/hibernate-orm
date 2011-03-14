@@ -22,19 +22,27 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.e1.b2;
+
 import java.math.BigDecimal;
 import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * A test.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
-public class IdClassGeneratedValueManyToOneTest extends TestCase {
-
+public class IdClassGeneratedValueManyToOneTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testComplexIdClass() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -80,46 +88,8 @@ public class IdClassGeneratedValueManyToOneTest extends TestCase {
 
 		assertTrue( true );
 	}
-	
-	/*
-	public void testCustomer()
-	{
-	   Session s = openSession();
-       Transaction tx = s.beginTransaction();
-       for(int i=0; i < 2; i++)
-       {
-          Customer c1 = new Customer(
-                "foo"+i, "bar"+i, "contact"+i, "100", new BigDecimal( 1000+i ), new BigDecimal( 1000+i ), new BigDecimal( 1000+i )
-          );
-          s.persist( c1 );
-          s.flush();
-          s.clear();
-          
-          Item boat = new Item();
-          boat.setId( Integer.toString(i) );
-          boat.setName( "cruiser" );
-          boat.setPrice( new BigDecimal( 500 ) );
-          boat.setDescription( "a boat" );
-          boat.setCategory( 42 );
 
-          s.persist( boat );
-          s.flush();
-          s.clear();
-
-          c1.addInventory( boat, 10, new BigDecimal( 5000 ) );
-          s.merge( c1 );
-          
-          s.flush();
-          s.clear();
-       }
-       
-       tx.rollback();
-       s.close();
-
-       assertTrue( true );
-	   
-	}*/
-
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Customer.class,

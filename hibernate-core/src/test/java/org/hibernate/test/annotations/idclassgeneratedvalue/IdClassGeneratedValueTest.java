@@ -23,17 +23,24 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.idclassgeneratedvalue;
+
 import java.util.List;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * A test.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
-public class IdClassGeneratedValueTest extends TestCase {
-
+public class IdClassGeneratedValueTest extends BaseCoreFunctionalTestCase {
+	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testBaseLine() {
 		Session s = openSession();
@@ -57,6 +64,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testSingleGeneratedValue() {
 		Session s = openSession();
@@ -81,6 +89,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testMultipleGeneratedValue() {
 		Session s = openSession();
@@ -106,6 +115,7 @@ public class IdClassGeneratedValueTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Simple.class,

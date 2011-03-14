@@ -22,18 +22,25 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
  */
-public class DerivedIdentityWithBidirectionalAssociationTest extends TestCase {
-
+public class DerivedIdentityWithBidirectionalAssociationTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testBidirectionalAssociation() throws Exception {
-		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", getCfg() ) );
-		assertTrue( !SchemaUtil.isColumnPresent( "Dependent", "empPK", getCfg() ) );
+		assertTrue( SchemaUtil.isColumnPresent( "Dependent", "emp_empId", configuration() ) );
+		assertTrue( !SchemaUtil.isColumnPresent( "Dependent", "empPK", configuration() ) );
 		Employee e = new Employee();
 		e.empId = 1;
 		e.empName = "Emmanuel";

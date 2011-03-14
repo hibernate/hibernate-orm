@@ -1,4 +1,3 @@
-// $Id: FetchProfileTest.java 19528 2010-05-17 14:28:55Z epbernard $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -24,18 +23,25 @@
  *
  */
 package org.hibernate.test.annotations.fetchprofile;
+
 import java.util.Date;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public class MoreFetchProfileTest extends TestCase {
-
+public class MoreFetchProfileTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testFetchWithTwoOverrides() throws Exception {
 		Session s = openSession();
 		s.enableFetchProfile( "customer-with-orders-and-country" );

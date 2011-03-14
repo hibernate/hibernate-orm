@@ -1,4 +1,3 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -26,13 +25,14 @@ package org.hibernate.test.annotations.id.sequences;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 
+import org.junit.Test;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.id.sequences.entities.Ball;
 import org.hibernate.test.annotations.id.sequences.entities.BreakDance;
 import org.hibernate.test.annotations.id.sequences.entities.Computer;
@@ -51,12 +51,16 @@ import org.hibernate.test.annotations.id.sequences.entities.SoundSystem;
 import org.hibernate.test.annotations.id.sequences.entities.Store;
 import org.hibernate.test.annotations.id.sequences.entities.Tree;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
 @RequiresDialectFeature(DialectChecks.SupportsSequences.class)
-public class IdTest extends TestCase {
+public class IdTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testGenericGenerator() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -82,12 +86,9 @@ public class IdTest extends TestCase {
 
 	}
 
-	/*
-	 * Ensures that GenericGenerator annotations wrapped inside a
-	 * GenericGenerators holder are bound correctly
-	 */
-
+	@Test
 	public void testGenericGenerators() throws Exception {
+		// Ensures that GenericGenerator annotations wrapped inside a GenericGenerators holder are bound correctly
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Monkey monkey = new Monkey();
@@ -98,6 +99,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTableGenerator() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -126,6 +128,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSequenceGenerator() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -142,6 +145,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testClassLevelGenerator() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -158,6 +162,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMethodLevelGenerator() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -174,6 +179,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDefaultSequence() throws Exception {
 		Session s;
 		Transaction tx;
@@ -194,6 +200,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testParameterizedAuto() throws Exception {
 		Session s;
 		Transaction tx;
@@ -214,6 +221,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIdInEmbeddableSuperclass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -231,6 +239,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testIdClass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -284,12 +293,14 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testColumnDefinition() {
-		Column idCol = ( Column ) getCfg().getClassMapping( Ball.class.getName() )
+		Column idCol = ( Column ) configuration().getClassMapping( Ball.class.getName() )
 				.getIdentifierProperty().getValue().getColumnIterator().next();
 		assertEquals( "ball_id", idCol.getName() );
 	}
 
+	@Test
 	public void testLowAllocationSize() throws Exception {
 		Session s;
 		Transaction tx;
@@ -309,9 +320,7 @@ public class IdTest extends TestCase {
 		s.close();
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Ball.class, Shoe.class, Store.class,
@@ -322,9 +331,7 @@ public class IdTest extends TestCase {
 		};
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedPackages()
-	 */
+	@Override
 	protected String[] getAnnotatedPackages() {
 		return new String[] {
 				"org.hibernate.test.annotations",
@@ -336,10 +343,4 @@ public class IdTest extends TestCase {
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/orm.xml" };
 	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-	}
-
 }

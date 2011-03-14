@@ -22,11 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
-import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
 
-public class CompositeDerivedIdentityTest extends TestCase
-{
+import org.hibernate.Session;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+
+public class CompositeDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
@@ -36,6 +41,7 @@ public class CompositeDerivedIdentityTest extends TestCase
 		};
 	}
 
+	@Test
 	public void testCreateProject() {
 		Product product = new Product();
 		product.setName("Product 1");

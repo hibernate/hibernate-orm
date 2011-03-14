@@ -1,14 +1,24 @@
 //$Id$
 package org.hibernate.test.annotations.id.sequences;
-import static org.hibernate.testing.TestLogger.LOG;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import org.hibernate.cfg.AnnotationConfiguration;
+
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.annotations.id.sequences.entities.Bunny;
 import org.hibernate.test.annotations.id.sequences.entities.PointyTooth;
 import org.hibernate.test.annotations.id.sequences.entities.TwinkleToes;
+
+import static org.hibernate.testing.TestLogger.LOG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for JIRA issue ANN-748.
@@ -16,22 +26,17 @@ import org.hibernate.test.annotations.id.sequences.entities.TwinkleToes;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class JoinColumnOverrideTest extends TestCase {
-
-	public JoinColumnOverrideTest(String x) {
-		super(x);
-	}
-
+public class JoinColumnOverrideTest extends BaseUnitTestCase {
+	@Test
+	@TestForIssue( jiraKey = "ANN-748" )
 	public void testBlownPrecision() throws Exception {
-
 		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
+			Configuration config = new Configuration();
 			config.addAnnotatedClass(Bunny.class);
 			config.addAnnotatedClass(PointyTooth.class);
 			config.addAnnotatedClass(TwinkleToes.class);
-			config.buildSessionFactory(  getServiceRegistry() );
-			String[] schema = config
-					.generateSchemaCreationScript(new SQLServerDialect());
+			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
+			String[] schema = config.generateSchemaCreationScript( new SQLServerDialect() );
 			for (String s : schema) {
                 LOG.debug(s);
 			}
@@ -42,19 +47,12 @@ public class JoinColumnOverrideTest extends TestCase {
 			String expectedSqlTwinkleToes = "create table TwinkleToes (id numeric(128,0) not null, " +
 			"bunny_id numeric(128,0) null, primary key (id))";
 			assertEquals("Wrong SQL", expectedSqlTwinkleToes, schema[2]);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			StringWriter writer = new StringWriter();
 			e.printStackTrace(new PrintWriter(writer));
             LOG.debug(writer.toString());
 			fail(e.getMessage());
 		}
-	}
-
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
-	@Override
-    protected Class[] getAnnotatedClasses() {
-		return new Class[] {};
 	}
 }

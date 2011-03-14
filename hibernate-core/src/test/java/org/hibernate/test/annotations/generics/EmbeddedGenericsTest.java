@@ -1,66 +1,83 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.generics;
+
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
 
-public class EmbeddedGenericsTest extends TestCase {
+import org.junit.Test;
 
-	Session session;
-	Classes.Edition<String> edition;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-	public void setUp() throws Exception {
-		super.setUp();
-		session = openSession();
-		session.getTransaction().begin();
-		edition = new Classes.Edition<String>();
-		edition.name = "Second";
-	}
+import static org.junit.Assert.assertEquals;
 
+public class EmbeddedGenericsTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testWorksWithGenericEmbedded() {
+		Session session = openSession();
+		session.beginTransaction();
+		Classes.Edition<String> edition = new Classes.Edition<String>();
+		edition.name = "Second";
 		Classes.Book b = new Classes.Book();
 		b.edition = edition;
-		persist( b );
-		
-		Classes.Book retrieved = (Classes.Book)find( Classes.Book.class, b.id );
+		session.persist( b );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		Classes.Book retrieved = (Classes.Book) session.get( Classes.Book.class, b.id );
 		assertEquals( "Second", retrieved.edition.name );
-		
-		clean( Classes.Book.class, b.id );
+		session.delete( retrieved );
+		session.getTransaction().commit();
 		session.close();
 	}
 
 	public void testWorksWithGenericCollectionOfElements() {
+		Session session = openSession();
+		session.beginTransaction();
+		Classes.Edition<String> edition = new Classes.Edition<String>();
+		edition.name = "Second";
 		Classes.PopularBook b = new Classes.PopularBook();
 		b.editions.add( edition );
-		persist( b );
+		session.persist( b );
+		session.getTransaction().commit();
+		session.close();
 
-		Classes.PopularBook retrieved = (Classes.PopularBook)find( Classes.PopularBook.class, b.id );
+		session = openSession();
+		session.beginTransaction();
+		Classes.PopularBook retrieved = (Classes.PopularBook) session.get( Classes.PopularBook.class, b.id );
 		assertEquals( "Second", retrieved.editions.iterator().next().name );
-
-		clean( Classes.PopularBook.class, b.id );
+		session.delete( retrieved );
+		session.getTransaction().commit();
 		session.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Classes.Book.class,
 				Classes.PopularBook.class
 		};
 	}
-
-	private void persist(Object data) {
-		session.persist( data );
-		session.getTransaction().commit();
-		session.clear();
-	}
-	
-	private Object find(Class clazz, Long id) {
-		return session.get( clazz, id );
-	}
-
-	private void clean(Class<?> clazz, Long id) {
-		Transaction tx = session.beginTransaction();
-		session.delete( find( clazz, id ) );
-		tx.commit();
-	}
-
 }

@@ -1,14 +1,47 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.immutable;
-import static org.hibernate.testing.TestLogger.LOG;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.cfg.Configuration;
+
+import org.junit.Test;
+
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.hibernate.testing.TestLogger.LOG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for <code>Immutable</code> annotation.
@@ -16,12 +49,8 @@ import org.hibernate.test.annotations.TestCase;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class ImmutableTest extends TestCase {
-
-	public ImmutableTest(String x) {
-		super(x);
-	}
-
+public class ImmutableTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testImmutableEntity() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -50,22 +79,9 @@ public class ImmutableTest extends TestCase {
 		assertEquals("Name should not have changed", "Germany", germany.getName());
 		tx.commit();
 		s.close();
-
-//		// try deletion
-//		s = openSession();
-//		tx = s.beginTransaction();
-//		s.delete(germany);
-//		tx.commit();
-//		s.close();
-//
-//		s = openSession();
-//		tx = s.beginTransaction();
-//		germany = (Country) s.get(Country.class, country.getId());
-//		assertNotNull(germany);
-//		assertEquals("Name should not have changed", "Germany", germany.getName());
-//		s.close();
 	}
 
+	@Test
 	public void testImmutableCollection() {
 		Country country = new Country();
 		country.setName("Germany");
@@ -101,7 +117,8 @@ public class ImmutableTest extends TestCase {
 		try {
 			tx.commit();
 			fail();
-		} catch (HibernateException e) {
+		}
+		catch (HibernateException e) {
 			assertTrue(e.getMessage().contains("changed an immutable collection instance"));
             LOG.debug("success");
 		}
@@ -133,20 +150,19 @@ public class ImmutableTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMiscplacedImmutableAnnotation() {
 		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
+			Configuration config = new Configuration();
 			config.addAnnotatedClass(Foobar.class);
-			config.buildSessionFactory( getServiceRegistry() );
+			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
 			fail();
-		} catch (AnnotationException ae) {
+		}
+		catch (AnnotationException ae) {
             LOG.debug("succes");
 		}
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
 	@Override
     protected Class[] getAnnotatedClasses() {
 		return new Class[] { Country.class, State.class};

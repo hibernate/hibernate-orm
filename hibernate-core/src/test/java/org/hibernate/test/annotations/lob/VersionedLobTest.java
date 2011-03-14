@@ -26,35 +26,41 @@ package org.hibernate.test.annotations.lob;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
+import org.junit.Test;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Gail Badner
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
 public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCompiledCode> {
-	public VersionedLobTest(String x) {
-		super( x );
-	}
-
+	@Override
 	protected Class<VersionedBook> getBookClass() {
 		return VersionedBook.class;
 	}
 
+	@Override
 	protected Integer getId(VersionedBook book) {
 		return book.getId();
 	}
 
+	@Override
 	protected Class<VersionedCompiledCode> getCompiledCodeClass() {
 		return VersionedCompiledCode.class;
 	}
 
+	@Override
 	protected Integer getId(VersionedCompiledCode compiledCode) {
 		return compiledCode.getId();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				VersionedBook.class,
@@ -62,6 +68,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		};
 	}
 
+	@Test
 	public void testVersionUnchangedPrimitiveCharArray() throws Exception {
 		VersionedBook book = createBook();
 		Editor editor = new Editor();
@@ -87,6 +94,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 
 	}
 
+	@Test
 	public void testVersionUnchangedCharArray() throws Exception {
 		Session s;
 		Transaction tx;
@@ -112,6 +120,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		s.close();
 	}
 
+	@Test
 	public void testVersionUnchangedString() throws Exception {
 		Session s;
 		Transaction tx;
@@ -137,6 +146,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		s.close();
 	}
 
+	@Test
 	@FailureExpected( jiraKey = "HHH-5811")
 	public void testVersionUnchangedByteArray() throws Exception {
 		Session s;
@@ -163,6 +173,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 		s.close();
 	}
 
+	@Test
 	public void testVersionUnchangedPrimitiveByteArray() throws Exception {
 		Session s;
 		Transaction tx;

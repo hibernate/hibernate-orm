@@ -1,21 +1,48 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.inheritance.Carrot;
 import org.hibernate.test.annotations.inheritance.Tomato;
 import org.hibernate.test.annotations.inheritance.Vegetable;
 import org.hibernate.test.annotations.inheritance.VegetablePk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Emmanuel Bernard
  */
-public class JoinedSubclassTest extends TestCase {
-
-	public JoinedSubclassTest(String x) {
-		super( x );
-	}
-
+public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testDefaultValues() {
 		Session s;
 		Transaction tx;
@@ -39,6 +66,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDeclaredValues() {
 		Session s;
 		Transaction tx;
@@ -66,6 +94,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositePk() throws Exception {
 		Session s;
 		Transaction tx;
@@ -91,6 +120,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Boat.class,

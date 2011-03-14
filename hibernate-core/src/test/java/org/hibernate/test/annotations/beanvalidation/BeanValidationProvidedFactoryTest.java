@@ -21,23 +21,31 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.beanvalidation;
-import java.math.BigDecimal;
-import java.util.Locale;
+
 import javax.validation.ConstraintViolationException;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import java.math.BigDecimal;
+import java.util.Locale;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BeanValidationProvidedFactoryTest extends TestCase {
+public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -56,6 +64,7 @@ public class BeanValidationProvidedFactoryTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				CupHolder.class

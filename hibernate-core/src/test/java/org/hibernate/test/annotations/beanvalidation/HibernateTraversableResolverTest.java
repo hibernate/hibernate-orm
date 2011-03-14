@@ -21,20 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.beanvalidation;
-import java.math.BigDecimal;
+
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import java.math.BigDecimal;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class HibernateTraversableResolverTest extends TestCase {
+public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testNonLazyAssocFieldWithConstraintsFailureExpected() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -54,6 +62,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbedded() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -82,6 +91,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testToOneAssocNotValidated() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -106,6 +116,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionAssocNotValidated() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -135,6 +146,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddedCollection() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -162,6 +174,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAssocInEmbeddedNotValidated() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -201,6 +214,7 @@ public class HibernateTraversableResolverTest extends TestCase {
 		cfg.setProperty( "hibernate.validator.autoregister_listeners", "false" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Button.class,

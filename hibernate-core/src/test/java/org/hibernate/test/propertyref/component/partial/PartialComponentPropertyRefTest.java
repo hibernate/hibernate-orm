@@ -44,6 +44,11 @@ public class PartialComponentPropertyRefTest extends BaseCoreFunctionalTestCase 
 		return new String[] { "propertyref/component/partial/Mapping.hbm.xml" };
 	}
 
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
 	@Test
 	public void testComponentPropertyRef() {
 		Session s = openSession();

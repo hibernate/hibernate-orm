@@ -1,23 +1,54 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.embedded;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.test.annotations.embedded.Leg.Frequency;
 import org.hibernate.test.util.SchemaUtil;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Emmanuel Bernard
  */
-public class EmbeddedTest extends TestCase {
-
+public class EmbeddedTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testSimple() throws Exception {
 		Session s;
 		Transaction tx;
@@ -56,6 +87,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeId() throws Exception {
 		Session s;
 		Transaction tx;
@@ -82,6 +114,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneInsideComponent() throws Exception {
 		Session s;
 		Transaction tx;
@@ -120,6 +153,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddedSuperclass() {
 		Session s;
 		Transaction tx;
@@ -156,6 +190,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDottedProperty() {
 		Session s;
 		Transaction tx;
@@ -231,21 +266,22 @@ public class EmbeddedTest extends TestCase {
 		assertEquals( Frequency.MONTHLY, deal.getSwap().getFloatLeg().getPaymentFrequency() );
 		assertEquals( Frequency.MONTHLY, deal.getLongSwap().getFixedLeg().getPaymentFrequency() );
 		assertEquals( Frequency.MONTHLY, deal.getLongSwap().getFloatLeg().getPaymentFrequency() );
-		assertEquals( 5.6, deal.getShortSwap().getFixedLeg().getRate() );
-		assertEquals( 7.6, deal.getSwap().getFixedLeg().getRate() );
-		assertEquals( 7.6, deal.getLongSwap().getFixedLeg().getRate() );
+		assertEquals( 5.6, deal.getShortSwap().getFixedLeg().getRate(), 0.01 );
+		assertEquals( 7.6, deal.getSwap().getFixedLeg().getRate(), 0.01 );
+		assertEquals( 7.6, deal.getLongSwap().getFixedLeg().getRate(), 0.01 );
 		assertEquals( RateIndex.LIBOR, deal.getShortSwap().getFloatLeg().getRateIndex() );
 		assertEquals( RateIndex.TIBOR, deal.getSwap().getFloatLeg().getRateIndex() );
 		assertEquals( RateIndex.TIBOR, deal.getLongSwap().getFloatLeg().getRateIndex() );
-		assertEquals( 1.1, deal.getShortSwap().getFloatLeg().getRateSpread() );
-		assertEquals( 0.8, deal.getSwap().getFloatLeg().getRateSpread() );
-		assertEquals( 0.8, deal.getLongSwap().getFloatLeg().getRateSpread() );
+		assertEquals( 1.1, deal.getShortSwap().getFloatLeg().getRateSpread(), 0.01 );
+		assertEquals( 0.8, deal.getSwap().getFloatLeg().getRateSpread(), 0.01 );
+		assertEquals( 0.8, deal.getLongSwap().getFloatLeg().getRateSpread(), 0.01 );
 		s.delete( deal );
 		tx.commit();
 		s.close();
 	}
 
-	public void testEmbeddedInSecdondaryTable() throws Exception {
+	@Test
+	public void testEmbeddedInSecondaryTable() throws Exception {
 		Session s;
 		s = openSession();
 		s.getTransaction().begin();
@@ -270,6 +306,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testParent() throws Exception {
 		Session s;
 		s = openSession();
@@ -295,6 +332,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddedAndMultipleManyToOne() throws Exception {
 		Session s;
 		s = openSession();
@@ -332,6 +370,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddedAndOneToMany() throws Exception {
 		Session s;
 		s = openSession();
@@ -366,11 +405,12 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDefaultCollectionTable() throws Exception {
 		//are the tables correct?
-		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", getCfg() ) );
-		assertTrue( SchemaUtil.isTablePresent("PersonEmbed_legacyVacationHomes", getCfg() ) );
-		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", getCfg() ) );
+		assertTrue( SchemaUtil.isTablePresent("WealthyPerson_vacationHomes", configuration() ) );
+		assertTrue( SchemaUtil.isTablePresent("PersonEmbed_legacyVacationHomes", configuration() ) );
+		assertTrue( SchemaUtil.isTablePresent("WelPers_VacHomes", configuration() ) );
 
 		//just to make sure, use the mapping
 		Session s;
@@ -416,6 +456,7 @@ public class EmbeddedTest extends TestCase {
 	}
 
 	// make sure we support collection of embeddable objects inside embeddable objects
+	@Test
 	public void testEmbeddableInsideEmbeddable() throws Exception {
 		Session s;
 		Transaction tx;
@@ -477,10 +518,7 @@ public class EmbeddedTest extends TestCase {
 		s.close();
 	}
 
-	public EmbeddedTest(String x) {
-		super( x );
-	}
-
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Person.class,

@@ -64,6 +64,11 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-5426" )
 	public void testInvalidationFromBulkHQL() {

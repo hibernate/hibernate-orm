@@ -1,27 +1,56 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.inheritance;
+
 import java.util.List;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.inheritance.singletable.Funk;
 import org.hibernate.test.annotations.inheritance.singletable.Music;
 import org.hibernate.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.test.annotations.inheritance.singletable.Rock;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Emmanuel Bernard
  */
-public class SubclassTest extends TestCase {
-
-	public SubclassTest(String x) {
-		super( x );
-	}
-
+public class SubclassTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testPolymorphism() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -51,6 +80,7 @@ public class SubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void test2ndLevelSubClass() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -72,6 +102,7 @@ public class SubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEmbeddedSuperclass() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -99,6 +130,7 @@ public class SubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFormula() throws Exception {
 		Session s;
 		Transaction tx;
@@ -134,21 +166,7 @@ public class SubclassTest extends TestCase {
 		s.close();
 	}
 
-	private void checkClassType(Fruit fruitToTest, Fruit f, Apple a) {
-		if ( fruitToTest.getId().equals( f.getId() ) ) {
-			assertFalse( fruitToTest instanceof Apple );
-		}
-		else if ( fruitToTest.getId().equals( a.getId() ) ) {
-			assertTrue( fruitToTest instanceof Apple );
-		}
-		else {
-			fail( "Result does not contains the previously inserted elements" );
-		}
-	}
-
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				A320b.class, //subclasses should be properly reordered

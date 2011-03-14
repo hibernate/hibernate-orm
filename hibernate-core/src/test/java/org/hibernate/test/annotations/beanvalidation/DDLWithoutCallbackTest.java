@@ -21,24 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.beanvalidation;
-import java.math.BigDecimal;
+
 import javax.validation.ConstraintViolationException;
+import java.math.BigDecimal;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 
 /**
  * @author Vladimir Klyushnikov
  * @author Hardy Ferentschik
  */
-public class DDLWithoutCallbackTest extends TestCase {
+public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
+	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
@@ -46,6 +54,7 @@ public class DDLWithoutCallbackTest extends TestCase {
 		assertDatabaseConstraintViolationThrown( ch );
 	}
 
+	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testMinAndMaxChecksGetApplied() {
 		MinMax minMax = new MinMax( 1 );
@@ -63,6 +72,7 @@ public class DDLWithoutCallbackTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsColumnCheck.class)
 	public void testRangeChecksGetApplied() {
 		Range range = new Range( 1 );
@@ -80,8 +90,9 @@ public class DDLWithoutCallbackTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDDLEnabled() {
-		PersistentClass classMapping = getCfg().getClassMapping( Address.class.getName() );
+		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
 		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
 	}
@@ -92,6 +103,7 @@ public class DDLWithoutCallbackTest extends TestCase {
 		cfg.setProperty( "javax.persistence.validation.mode", "ddl" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Address.class,

@@ -24,20 +24,23 @@
   * 51 Franklin Street, Fifth Floor
   * Boston, MA  02110-1301  USA
   */
-
 package org.hibernate.test.annotations.subselect;
-import org.hibernate.Hibernate;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.type.StringType;
 
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Sharath Reddy
  */
-public class SubselectTest extends TestCase {
-
+public class SubselectTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testSubselectWithSynchronize() {
 
 		Session s = openSession();
@@ -65,10 +68,10 @@ public class SubselectTest extends TestCase {
 		
 		//Because we use 'synchronize' annotation, this query should trigger session flush
 		Query query = s.createQuery("from HighestBid b where b.name = :name");
-		query.setParameter("name", "widget", Hibernate.STRING);
+		query.setParameter( "name", "widget", StringType.INSTANCE );
 		HighestBid highestBid = (HighestBid) query.list().iterator().next();
 		
-		assertEquals(200.0, highestBid.getAmount());
+		Assert.assertEquals( 200.0, highestBid.getAmount(), 0.01 );
 		tx.rollback();		
 		s.close();	
 		

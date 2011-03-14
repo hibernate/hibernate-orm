@@ -24,37 +24,38 @@
 package org.hibernate.test.annotations.lob;
 
 import java.util.Arrays;
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.test.annotations.TestCase;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.Session;
 import org.hibernate.type.MaterializedBlobType;
 import org.hibernate.type.Type;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
-public class MaterializedBlobTest extends TestCase {
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-	}
-
+public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { MaterializedBlobEntity.class };
 	}
 
+	@Test
 	public void testTypeSelection() {
-		int index = sfi().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
-		Type  type = sfi().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
+		int index = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
+		Type  type = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
 		assertEquals( MaterializedBlobType.INSTANCE, type );
 	}
 
+	@Test
 	public void testSaving() {
 		byte[] testData = "test data".getBytes();
 

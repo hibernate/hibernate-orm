@@ -29,18 +29,20 @@ package org.hibernate.test.annotations.manytoonewithformula;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.HSQLDialect;
+
+import org.junit.Test;
+
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Sharath Reddy
  */
-public class ManyToOneWithFormulaTest extends TestCase {
-
-	public ManyToOneWithFormulaTest(String x) {
-		super( x );
-	}
-
+public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testManyToOneFromNonPk() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -61,7 +63,7 @@ public class ManyToOneWithFormulaTest extends TestCase {
 		s.close();
 	}
 
-
+	@Test
 	public void testManyToOneFromPk() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -84,6 +86,7 @@ public class ManyToOneWithFormulaTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@SkipForDialect(value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497")
 	public void testManyToOneToPkWithOnlyFormula() throws Exception {
 		Session s = openSession();
@@ -109,8 +112,8 @@ public class ManyToOneWithFormulaTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testReferencedColumnNameBelongsToEmbeddedIdOfReferencedEntity() throws Exception {
- 
 		Session session = openSession();
 		Transaction tx = session.beginTransaction();
 		
@@ -148,14 +151,10 @@ public class ManyToOneWithFormulaTest extends TestCase {
 		session.close();
 	}
 	
-	
-	/**
-	 * This method also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
-	 */
+	@Test
 	@SkipForDialect(value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497")
-	public void testManyToOneFromNonPkToNonPk() throws Exception
-    {
-		
+	public void testManyToOneFromNonPkToNonPk() throws Exception {
+		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		
@@ -187,10 +186,7 @@ public class ManyToOneWithFormulaTest extends TestCase {
 		s.close();
     }    
 
-	
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected java.lang.Class<?>[] getAnnotatedClasses() {
 		return new java.lang.Class[] {
 				Menu.class,

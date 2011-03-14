@@ -45,6 +45,11 @@ public class CompleteComponentPropertyRefTest extends BaseCoreFunctionalTestCase
 		return new String[] { "propertyref/component/complete/Mapping.hbm.xml" };
 	}
 
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
 	@Test
 	public void testComponentPropertyRef() {
 		Session s = openSession();

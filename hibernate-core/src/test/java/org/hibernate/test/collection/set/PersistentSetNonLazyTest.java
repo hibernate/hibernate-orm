@@ -35,6 +35,11 @@ public class PersistentSetNonLazyTest extends PersistentSetTest {
 		return new String[] { "collection/set/MappingsNonLazy.hbm.xml" };
 	}
 
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
 	@Test
 	@Override
 	@FailureExpected(

@@ -22,21 +22,27 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.mappedsuperclass.intermediate;
+
 import java.math.BigDecimal;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class IntermediateMappedSuperclassTest extends TestCase {
+public class IntermediateMappedSuperclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { AccountBase.class, Account.class, SavingsAccountBase.class, SavingsAccount.class };
 	}
 
+	@Test
 	public void testGetOnIntermediateMappedSuperclass() {
 		final BigDecimal withdrawalLimit = new BigDecimal( 1000.00 ).setScale( 2 );
 		Session session = openSession();

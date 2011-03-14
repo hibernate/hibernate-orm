@@ -1,4 +1,3 @@
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,22 +22,30 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.inheritance.joined;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class JoinedSubclassTest extends TestCase {
-
-	public JoinedSubclassTest(String x) {
-		super( x );
-	}
-
+public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testDefault() throws Exception {
 		Session s;
 		Transaction tx;
@@ -66,6 +73,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneOnAbstract() throws Exception {
 		Folder f = new Folder();
 		f.setName( "data" );
@@ -88,7 +96,6 @@ public class JoinedSubclassTest extends TestCase {
 		s.delete( remove.getAppliesOn() );
 		tx.commit();
 		s.close();
-
 	}
 
 	private void checkClassType(File fruitToTest, File f, Folder a) {
@@ -103,9 +110,9 @@ public class JoinedSubclassTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testJoinedAbstractClass() throws Exception {
 		Session s;
-		Transaction tx;
 		s = openSession();
 		s.getTransaction().begin();
 		Sweater sw = new Sweater();
@@ -124,6 +131,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInheritance() throws Exception {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();
@@ -146,9 +154,10 @@ public class JoinedSubclassTest extends TestCase {
 		session.close();
 	}
 	
-	//HHH-4250 : @ManyToOne - @OneToMany doesn't work with @Inheritance(strategy= InheritanceType.JOINED)
+	@Test
+	@TestForIssue( jiraKey = "HHH-4250" )
 	public void testManyToOneWithJoinTable() {
-
+		//HHH-4250 : @ManyToOne - @OneToMany doesn't work with @Inheritance(strategy= InheritanceType.JOINED)
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 				
@@ -172,7 +181,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.clear();
 		
 		c1 = (Client) s.load(Client.class, c1.getId());
-		assertEquals(5000.0, c1.getAccount().getBalance());
+		assertEquals( 5000.0, c1.getAccount().getBalance(), 0.01 );
 		
 		s.flush();
 		s.clear();
@@ -188,11 +197,10 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 
-	/**
-     *   HHH-4240 - SecondaryTables not recognized when using JOINED inheritance
-	 */	
+	@Test
+	@TestForIssue( jiraKey = "HHH-4240" )
 	public void testSecondaryTables() {
-		
+		// HHH-4240 - SecondaryTables not recognized when using JOINED inheritance
 		Session s = openSession();
 		s.getTransaction().begin();
 		
@@ -219,41 +227,7 @@ public class JoinedSubclassTest extends TestCase {
 		s.close();
 	}
 	
-	
-//	public void testManyToOneAndJoin() throws Exception {
-//		Session session = openSession();
-//		Transaction transaction = session.beginTransaction();
-//		Parent parent = new Parent();
-//		session.persist( parent );
-//		PropertyAsset property = new PropertyAsset();
-//		property.setParent( parent );
-//		property.setPrice( 230000d );
-//		FinancialAsset financial = new FinancialAsset();
-//		financial.setParent( parent );
-//		financial.setPrice( 230000d );
-//		session.persist( financial );
-//		session.persist( property );
-//		session.flush();
-//		session.clear();
-//		parent = (Parent) session.get( Parent.class, parent.getId() );
-//		assertNotNull( parent );
-//		assertEquals( 1, parent.getFinancialAssets().size() );
-//		assertEquals( 1, parent.getPropertyAssets().size() );
-//		assertEquals( property.getId(), parent.getPropertyAssets().iterator().next() );
-//		transaction.rollback();
-//		session.close();
-//	}
-
 	@Override
-	protected String[] getXmlFiles() {
-		return new String[] {
-				//"org/hibernate/test/annotations/inheritance/joined/Asset.hbm.xml"
-		};
-	}
-
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				File.class,

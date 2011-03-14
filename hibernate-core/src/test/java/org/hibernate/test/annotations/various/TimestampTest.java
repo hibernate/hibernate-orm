@@ -21,43 +21,51 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.test.annotations.various;
+
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.TimestampType;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for the @Timestamp annotation.
  *
  * @author Hardy Ferentschik
  */
-public class TimestampTest extends TestCase {
-
+public class TimestampTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testTimestampSourceIsVM() throws Exception {
 		assertTimestampSource( VMTimestamped.class, TimestampType.class );
 	}
 
+	@Test
 	public void testTimestampSourceIsDB() throws Exception {
 		assertTimestampSource( DBTimestamped.class, DbTimestampType.class );
 	}
 
 	private void assertTimestampSource(Class<?> clazz, Class<?> expectedTypeClass) throws Exception {
 		buildConfiguration();
-		ClassMetadata meta = sessions.getClassMetadata( clazz );
+		ClassMetadata meta = sessionFactory().getClassMetadata( clazz );
 		assertTrue( "Entity is annotated with @Timestamp and should hence be versioned", meta.isVersioned() );
 
-		PersistentClass persistentClass = cfg.getClassMapping( clazz.getName() );
+		PersistentClass persistentClass = configuration().getClassMapping( clazz.getName() );
 		assertNotNull( persistentClass );
 		Property versionProperty = persistentClass.getVersion();
 		assertNotNull( versionProperty );
 		assertEquals( "Wrong timestamp type", expectedTypeClass, versionProperty.getType().getClass() );
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				VMTimestamped.class, DBTimestamped.class

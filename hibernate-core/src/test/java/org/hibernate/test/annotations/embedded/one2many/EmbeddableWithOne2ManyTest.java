@@ -22,21 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.embedded.one2many;
+
 import java.util.List;
+
 import org.hibernate.Session;
+
+import org.junit.Test;
+
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableWithOne2ManyTest extends TestCase {
+public class EmbeddableWithOne2ManyTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 //		return new Class[] { Alias.class, Person.class };
 		return new Class[] {  };
 	}
 
+	@Test
 	@FailureExpected( jiraKey = "HHH-4883")
 	public void testJoinAcrossEmbedded() {
 		// NOTE : this may or may not work now with HHH-4883 fixed,
@@ -49,6 +57,7 @@ public class EmbeddableWithOne2ManyTest extends TestCase {
 		session.close();
 	}
 
+	@Test
 	@FailureExpected( jiraKey = "HHH-4599")
 	public void testBasicOps() {
 		Session session = openSession();

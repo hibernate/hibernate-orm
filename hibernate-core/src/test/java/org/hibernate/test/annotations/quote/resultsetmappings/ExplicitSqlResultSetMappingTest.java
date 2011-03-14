@@ -22,17 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.quote.resultsetmappings;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class ExplicitSqlResultSetMappingTest extends TestCase {
+public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase {
 	private String queryString = null;
 
 	@Override
@@ -49,7 +51,7 @@ public class ExplicitSqlResultSetMappingTest extends TestCase {
 		char open = getDialect().openQuote();
 		char close = getDialect().closeQuote();
 		queryString="select t."+open+"NAME"+close+" as "+open+"QuotEd_nAMe"+close+" from "+open+"MY_ENTITY_TABLE"+close+" t";
-		Session s = sfi().openSession();
+		Session s = sessionFactory().openSession();
 		s.beginTransaction();
 		s.save( new MyEntity( "mine" ) );
 		s.getTransaction().commit();
@@ -57,13 +59,14 @@ public class ExplicitSqlResultSetMappingTest extends TestCase {
 	}
 
 	private void cleanupTestData() {
-		Session s = sfi().openSession();
+		Session s = sessionFactory().openSession();
 		s.beginTransaction();
 		s.createQuery( "delete MyEntity" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 	}
 
+	@Test
 	public void testCompleteScalarAutoDiscovery() {
 		prepareTestData();
 
@@ -77,6 +80,7 @@ public class ExplicitSqlResultSetMappingTest extends TestCase {
 		cleanupTestData();
 	}
 
+	@Test
 	public void testPartialScalarAutoDiscovery() {
 		prepareTestData();
 

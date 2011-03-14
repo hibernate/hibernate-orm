@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.test.annotations.manytomany;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -33,11 +34,6 @@ import org.hibernate.cfg.Environment;
  */
 @SuppressWarnings("unchecked")
 public class ManyToManyMaxFetchDepth0Test extends ManyToManyTest {
-
-	public ManyToManyMaxFetchDepth0Test(String x) {
-		super( x );
-	}
-
 	@Override
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "0" );

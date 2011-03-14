@@ -21,22 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.xml.ejb3;
+
 import java.util.Date;
 import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.persister.collection.BasicCollectionPersister;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
-public class Ejb3XmlTest extends TestCase {
+public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
+	@Test
 	@SkipForDialect(value = { PostgreSQLDialect.class },
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testEjb3Xml() throws Exception {
@@ -68,6 +76,7 @@ public class Ejb3XmlTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testXMLEntityHandled() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -80,6 +89,7 @@ public class Ejb3XmlTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testXmlDefaultOverriding() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -93,6 +103,7 @@ public class Ejb3XmlTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@SuppressWarnings("unchecked")
 	public void testMapXMLSupport() throws Exception {
 		Session s = openSession();
@@ -120,6 +131,7 @@ public class Ejb3XmlTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				CarModel.class,

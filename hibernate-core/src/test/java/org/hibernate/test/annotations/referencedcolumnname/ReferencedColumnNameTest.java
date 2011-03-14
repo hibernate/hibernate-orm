@@ -1,15 +1,46 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.referencedcolumnname;
+
 import java.math.BigDecimal;
 import java.util.Iterator;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ReferencedColumnNameTest extends TestCase {
+public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testManyToOne() throws Exception {
 		Session s;
 		Transaction tx;
@@ -35,6 +66,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOneToMany() throws Exception {
 		Session s;
 		Transaction tx;
@@ -67,6 +99,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUnidirectionalOneToMany() throws Exception {
 		Session s;
 		Transaction tx;
@@ -96,6 +129,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToMany() throws Exception {
 		Session s;
 		Transaction tx;
@@ -142,6 +176,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneReferenceManyToOne() throws Exception {
 		Item item = new Item();
 		item.setId( 1 );
@@ -172,10 +207,7 @@ public class ReferencedColumnNameTest extends TestCase {
 		s.close();
 	}
 
-	public ReferencedColumnNameTest(String x) {
-		super( x );
-	}
-
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				House.class,

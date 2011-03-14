@@ -1,6 +1,30 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.naturalid;
+
 import java.util.List;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -8,7 +32,13 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test case for NaturalId annotation
@@ -17,10 +47,10 @@ import org.hibernate.test.annotations.TestCase;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class NaturalIdTest extends TestCase {
-
+public class NaturalIdTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testMappingProperties() {
-		ClassMetadata metaData = getSessions().getClassMetadata(
+		ClassMetadata metaData = sessionFactory().getClassMetadata(
 				Citizen.class
 		);
 		assertTrue(
@@ -31,6 +61,7 @@ public class NaturalIdTest extends TestCase {
 		assertTrue( "Wrong number of elements", propertiesIndex.length == 2 );
 	}
 
+	@Test
 	public void testNaturalIdCached() {
 		saveSomeCitizens();
 
@@ -46,7 +77,7 @@ public class NaturalIdTest extends TestCase {
 		);
 		criteria.setCacheable( true );
 
-		Statistics stats = getSessions().getStatistics();
+		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 		assertEquals(
@@ -82,8 +113,8 @@ public class NaturalIdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNaturalIdUncached() {
-
 		saveSomeCitizens();
 
 		Session s = openSession();
@@ -98,7 +129,7 @@ public class NaturalIdTest extends TestCase {
 		);
 		criteria.setCacheable( false );
 
-		Statistics stats = getSessions().getStatistics();
+		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 		assertEquals(
@@ -130,6 +161,7 @@ public class NaturalIdTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Citizen.class, State.class,
@@ -165,6 +197,7 @@ public class NaturalIdTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
 	}

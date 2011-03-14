@@ -21,19 +21,22 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.hibernate.test.annotations.idclass;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * A IdClassTestCase.
- *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
- * @version $Revision: 1.1 $
  */
-public class IdClassCompositePKTest extends TestCase {
-
+public class IdClassCompositePKTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testEntityMappningPropertiesAreNotIgnored() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -49,9 +52,8 @@ public class IdClassCompositePKTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				DomainAdmin.class
-		};
+		return new Class[] { DomainAdmin.class };
 	}
 }

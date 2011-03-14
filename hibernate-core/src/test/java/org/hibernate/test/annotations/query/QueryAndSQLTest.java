@@ -23,10 +23,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.query;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+
 import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -35,11 +37,13 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.stat.Statistics;
 
+import org.junit.Test;
+
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.A320;
 import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
-import org.hibernate.test.annotations.TestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -52,11 +56,8 @@ import static org.junit.Assert.fail;
  *
  * @author Emmanuel Bernard
  */
-public class QueryAndSQLTest extends TestCase {
-	public QueryAndSQLTest(String x) {
-		super( x );
-	}
-
+public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testPackageQueries() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -68,6 +69,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testClassQueries() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -92,7 +94,7 @@ public class QueryAndSQLTest extends TestCase {
 		q = s.getNamedQuery( "night.moreRecentThan" );
 		q.setDate( "date", inAMonth );
 		assertEquals( 0, q.list().size() );
-		Statistics stats = getSessions().getStatistics();
+		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		stats.clear();
 		q = s.getNamedQuery( "night.duration" );
@@ -107,6 +109,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSQLQuery() {
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();
@@ -150,7 +153,7 @@ public class QueryAndSQLTest extends TestCase {
 	 *    We are verifying that this does not cause any issues.eg. Double processing of the 
 	 *    MappedSuperClass
 	 */
-	
+	@Test
 	public void testImportQueryFromMappedSuperclass() {
 		Session s = openSession();
 		try {
@@ -162,6 +165,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 	
+	@Test
 	public void testSQLQueryWithManyToOne() {
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();
@@ -184,7 +188,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 		s = openSession();
 		tx = s.beginTransaction();
-		Statistics stats = getSessions().getStatistics();
+		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
 		Query q = s.getNamedQuery( "night&areaCached" );
 		List result = q.list();
@@ -198,6 +202,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testImplicitNativeQuery() throws Exception {
 		Session s;
 		Transaction tx;
@@ -221,6 +226,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNativeQueryAndCompositePKAndComponents() throws Exception {
 		Session s;
 		Transaction tx;
@@ -262,6 +268,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDiscriminator() throws Exception {
 		Session s;
 		Transaction tx;
@@ -288,25 +295,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
-//	public void testScalarQuery() throws Exception {
-//        Session s = openSession();
-//		Transaction tx;
-//		tx = s.beginTransaction();
-//		Mark bad = new Mark();
-//		bad.value = 5;
-//		Mark good = new Mark();
-//		good.value = 15;
-//		s.persist(bad);
-//		s.persist(good);
-//		tx.commit();
-//		s.clear();
-//		tx = s.beginTransaction();
-//		List result = s.getNamedQuery("average").list();
-//		assertEquals( 1, result.size() );
-//		tx.commit();
-//		s.close();
-//
-//	}
+	@Test
 	@SkipForDialect(value = {PostgreSQLDialect.class}, comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testCache() throws Exception {
 		Session s;
@@ -318,15 +307,15 @@ public class QueryAndSQLTest extends TestCase {
 		s.persist( plane );
 		tx.commit();
 		s.close();
-		getSessions().getStatistics().clear();
-		getSessions().getStatistics().setStatisticsEnabled( true );
+		sessionFactory().getStatistics().clear();
+		sessionFactory().getStatistics().setStatisticsEnabled( true );
 		s = openSession();
 		tx = s.beginTransaction();
 		Query query = s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() );
 		plane = ( Plane ) query.uniqueResult();
-		assertEquals( 1, getSessions().getStatistics().getQueryCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCachePutCount() );
 		plane = ( Plane ) s.getNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
-		assertEquals( 1, getSessions().getStatistics().getQueryCacheHitCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		tx.commit();
 		s.close();
 
@@ -337,6 +326,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEntitySQLOverriding() {
 		Session s;
 		Transaction tx;
@@ -365,6 +355,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCollectionSQLOverriding() {
 		Session s;
 		Transaction tx;
@@ -402,6 +393,7 @@ public class QueryAndSQLTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Darkness.class,
@@ -420,6 +412,7 @@ public class QueryAndSQLTest extends TestCase {
 		};
 	}
 
+	@Override
 	protected String[] getAnnotatedPackages() {
 		return new String[] {
 				"org.hibernate.test.annotations.query"
@@ -433,6 +426,7 @@ public class QueryAndSQLTest extends TestCase {
 		};
 	}
 
+	@Override
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
 	}

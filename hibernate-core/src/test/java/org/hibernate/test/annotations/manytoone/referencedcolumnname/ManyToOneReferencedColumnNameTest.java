@@ -22,17 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.manytoone.referencedcolumnname;
+
 import java.math.BigDecimal;
+
 import org.hibernate.Session;
+
+import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ManyToOneReferencedColumnNameTest extends TestCase {
+public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
+	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 	public void testReoverableExceptionInFkOrdering() throws Exception {
 		//SF should not blow up
@@ -58,6 +63,7 @@ public class ManyToOneReferencedColumnNameTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Item.class,

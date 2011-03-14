@@ -22,21 +22,27 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.embedded.many2one;
+
 import java.util.List;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class EmbeddableWithMany2OneTest extends TestCase {
+public class EmbeddableWithMany2OneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Person.class, Country.class };
 	}
 
+	@Test
 	public void testJoinAcrossEmbedded() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -48,6 +54,7 @@ public class EmbeddableWithMany2OneTest extends TestCase {
 		session.close();
 	}
 
+	@Test
 	public void testBasicOps() {
 		Session session = openSession();
 		session.beginTransaction();

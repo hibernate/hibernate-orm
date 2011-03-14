@@ -1,43 +1,49 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.idmanytoone;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard
  */
-public class IdManyToOneTest extends TestCase {
+public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testFkCreationOrdering() throws Exception {
 		//no real test case, the sessionFactory building is tested
 		Session s = openSession();
 		s.close();
 	}
 
-	public void getBiDirOneToManyInId() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		CardKey key = new CardKey();
-		s.persist( key );
-		Project project = new Project();
-		s.persist( project );
-		Card card = new Card();
-		card.getPrimaryKey().setProject( project );
-		s.persist( card );
-		CardField field = new CardField();
-		field.getPrimaryKey().setKey( key );
-		field.getPrimaryKey().setCard( card );
-		s.persist( field );
-		card.setMainCardField( field );
-		s.flush();
-		s.clear();
-		card = (Card) s.createQuery( "from Card c").list().get(0);
-		assertEquals( 1, card.getFields().size() );
-		assertEquals( card.getMainCardField(), card.getFields().iterator().next() );
-		tx.rollback();
-		s.close();
-	}
-
+	@Test
 	public void testIdClassManyToOne() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -59,6 +65,7 @@ public class IdManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Store.class,

@@ -1,32 +1,65 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class EntityTest extends TestCase {
-	private DateFormat df;
-	
-	public EntityTest(String x) {
-		super( x );
-		df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
-	}
+public class EntityTest extends BaseCoreFunctionalTestCase {
+	private DateFormat df = SimpleDateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG);
 
+	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		assertEquals( "Flight", getCfg().getClassMapping( Flight.class.getName() ).getTable().getName() );
+		assertEquals( "Flight", configuration().getClassMapping( Flight.class.getName() ).getTable().getName() );
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -53,6 +86,7 @@ public class EntityTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testColumn() throws Exception {
 		//put an object in DB
 		Session s = openSession();
@@ -119,6 +153,7 @@ public class EntityTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testColumnUnique() throws Exception {
 		Session s;
 		Transaction tx;
@@ -152,6 +187,7 @@ public class EntityTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testUniqueConstraint() throws Exception {
 		int id = 5;
 		Session s;
@@ -199,6 +235,7 @@ public class EntityTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testVersion() throws Exception {
 //		put an object in DB
 		Session s = openSession();
@@ -246,9 +283,9 @@ public class EntityTest extends TestCase {
 			if ( tx != null ) tx.rollback();
 			s.close();
 		}
-
 	}
 
+	@Test
 	public void testFieldAccess() throws Exception {
 		Session s;
 		Transaction tx;
@@ -275,8 +312,9 @@ public class EntityTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testEntityName() throws Exception {
-		assertEquals( "Corporation", getCfg().getClassMapping( Company.class.getName() ).getTable().getName() );
+		assertEquals( "Corporation", configuration().getClassMapping( Company.class.getName() ).getTable().getName() );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Company comp = new Company();
@@ -295,6 +333,7 @@ public class EntityTest extends TestCase {
 
 	}
 
+	@Test
 	public void testNonGetter() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -318,6 +357,7 @@ public class EntityTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTemporalType() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -351,6 +391,7 @@ public class EntityTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testBasic() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -372,15 +413,34 @@ public class EntityTest extends TestCase {
 		}
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Flight.class,
 				Company.class,
 				Sky.class
 		};
+	}
+
+	// tests are leaving data around, so drop/recreate schema for now.  this is wha the old tests did
+
+	@Override
+	protected boolean createSchema() {
+		return false;
+	}
+
+	@Before
+	public void runCreateSchema() {
+		schemaExport().create( false, true );
+	}
+
+	private SchemaExport schemaExport() {
+		return new SchemaExport( serviceRegistry().getService( JdbcServices.class ), configuration() );
+	}
+
+	@After
+	public void runDropSchema() {
+		schemaExport().drop( false, true );
 	}
 
 }

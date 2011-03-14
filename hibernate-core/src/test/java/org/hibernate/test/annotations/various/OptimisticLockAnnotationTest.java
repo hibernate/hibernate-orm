@@ -21,19 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.test.annotations.various;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test for the @OptimisticLock annotation.
  *
  * @author Emmanuel Bernard
  */
-public class OptimisticLockAnnotationTest extends TestCase {
-
+public class OptimisticLockAnnotationTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testOptimisticLockExcludeOnNameProperty() throws Exception {
 		Conductor c = new Conductor();
 		c.setName( "Bob" );
@@ -58,6 +62,7 @@ public class OptimisticLockAnnotationTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Conductor.class

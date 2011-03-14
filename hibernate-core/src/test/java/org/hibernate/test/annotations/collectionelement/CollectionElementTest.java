@@ -1,29 +1,60 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.collectionelement;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
 import org.hibernate.Filter;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Country;
-import org.hibernate.test.annotations.TestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class CollectionElementTest extends TestCase {
-	
+public class CollectionElementTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testSimpleElement() throws Exception {
 		assertEquals(
 				"BoyFavoriteNumbers",
-				getCfg().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
 						.getCollectionTable().getName()
 		);
 		Session s = openSession();
@@ -72,6 +103,7 @@ public class CollectionElementTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeElement() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -97,6 +129,7 @@ public class CollectionElementTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testAttributedJoin() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -124,13 +157,13 @@ public class CollectionElementTest extends TestCase {
 		s.delete( s.get( Country.class, country.getId() ) );
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
 	public void testLazyCollectionofElements() throws Exception {
 		assertEquals(
 				"BoyFavoriteNumbers",
-				getCfg().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
+				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
 						.getCollectionTable().getName()
 		);
 		Session s = openSession();
@@ -170,6 +203,7 @@ public class CollectionElementTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFetchEagerAndFilter() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -199,6 +233,7 @@ public class CollectionElementTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMapKeyType() throws Exception {
 		Matrix m = new Matrix();
 		m.getMvalues().put( 1, 1.1f );
@@ -208,11 +243,12 @@ public class CollectionElementTest extends TestCase {
 		s.flush();
 		s.clear();
 		m = (Matrix) s.get( Matrix.class, m.getId() );
-		assertEquals( 1.1f, m.getMvalues().get( 1 ) );
+		assertEquals( 1.1f, m.getMvalues().get( 1 ), 0.01f );
 		tx.rollback();
 		s.close();
 	}
 
+	@Test
 	public void testDefaultValueColumnForBasic() throws Exception {
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
@@ -220,6 +256,7 @@ public class CollectionElementTest extends TestCase {
 		isDefaultValueCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
 	}
 
+	@Test
 	public void testDefaultFKNameForElementCollection() throws Exception {
 		isCollectionColumnPresent( Boy.class.getName(), "hatedNames", "Boy_id" );
 	}
@@ -233,7 +270,7 @@ public class CollectionElementTest extends TestCase {
 	}
 
 	private void isCollectionColumnPresent(String collectionOwner, String propertyName, String columnName) {
-		final Collection collection = getCfg().getCollectionMapping( collectionOwner + "." + propertyName );
+		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
 		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
 		boolean hasDefault = false;
 		while ( columnIterator.hasNext() ) {
@@ -243,6 +280,7 @@ public class CollectionElementTest extends TestCase {
 		assertTrue( "Could not find " + columnName, hasDefault );
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Boy.class,

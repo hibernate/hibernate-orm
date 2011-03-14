@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.id.generationmappings;
-import org.hibernate.cfg.AnnotationConfiguration;
+
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.id.IdentifierGenerator;
@@ -30,7 +30,14 @@ import org.hibernate.id.enhanced.OptimizerFactory;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test mapping the {@link javax.persistence.GenerationType GenerationTypes} to the corresponding
@@ -38,7 +45,7 @@ import org.hibernate.test.annotations.TestCase;
  *
  * @author Steve Ebersole
  */
-public class NewGeneratorMappingsTest extends TestCase {
+public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
@@ -52,25 +59,17 @@ public class NewGeneratorMappingsTest extends TestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "" );
 	}
 
 	@Override
-	protected boolean recreateSchema() {
+	protected boolean createSchema() {
 		return false;
 	}
 
-	@Override
-	protected void runSchemaGeneration() {
-	}
-
-	@Override
-	protected void runSchemaDrop() {
-	}
-
+	@Test
 	public void testMinimalSequenceEntity() {
-		final EntityPersister persister = sfi().getEntityPersister( MinimalSequenceEntity.class.getName() );
+		final EntityPersister persister = sessionFactory().getEntityPersister( MinimalSequenceEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -82,8 +81,9 @@ public class NewGeneratorMappingsTest extends TestCase {
 		assertFalse( OptimizerFactory.NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
 	}
 
+	@Test
 	public void testCompleteSequenceEntity() {
-		final EntityPersister persister = sfi().getEntityPersister( CompleteSequenceEntity.class.getName() );
+		final EntityPersister persister = sessionFactory().getEntityPersister( CompleteSequenceEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -93,8 +93,9 @@ public class NewGeneratorMappingsTest extends TestCase {
 		assertFalse( OptimizerFactory.NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
 	}
 
+	@Test
 	public void testAutoEntity() {
-		final EntityPersister persister = sfi().getEntityPersister( AutoEntity.class.getName() );
+		final EntityPersister persister = sessionFactory().getEntityPersister( AutoEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
@@ -103,8 +104,9 @@ public class NewGeneratorMappingsTest extends TestCase {
 		assertEquals( SequenceStyleGenerator.DEFAULT_INCREMENT_SIZE, seqGenerator.getDatabaseStructure().getIncrementSize() );
 	}
 
+	@Test
 	public void testMinimalTableEntity() {
-		final EntityPersister persister = sfi().getEntityPersister( MinimalTableEntity.class.getName() );
+		final EntityPersister persister = sessionFactory().getEntityPersister( MinimalTableEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
 		assertTrue( TableGenerator.class.isInstance( generator ) );
 		TableGenerator tabGenerator = (TableGenerator) generator;

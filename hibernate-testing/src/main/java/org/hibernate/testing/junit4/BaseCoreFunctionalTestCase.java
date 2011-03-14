@@ -23,8 +23,11 @@
  */
 package org.hibernate.testing.junit4;
 
+import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +37,6 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.cache.HashtableCacheProvider;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -42,6 +44,7 @@ import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -50,6 +53,7 @@ import org.hibernate.service.internal.ServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.runner.RunWith;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -126,6 +130,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected Configuration constructConfiguration() {
 		Configuration configuration = new Configuration()
 				.setProperty( Environment.CACHE_PROVIDER, HashtableCacheProvider.class.getName() );
+		configuration.setProperty( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		}
@@ -161,7 +166,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		String[] xmlFiles = getXmlFiles();
 		if ( xmlFiles != null ) {
 			for ( String xmlFile : xmlFiles ) {
-				configuration.addResource( xmlFile );
+				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
+				configuration.addInputStream( is );
 			}
 		}
 	}
@@ -227,7 +233,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected String getCacheConcurrencyStrategy() {
-		return "nonstrict-read-write";
+//		return "nonstrict-read-write";
+		return null;
 	}
 
 	protected void afterConfigurationBuilt(Configuration configuration) {
@@ -312,7 +319,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 		if ( session != null && session.isOpen() ) {
 			if ( session.isConnected() ) {
-				session.connection().rollback();
+				session.doWork( new RollbackWork() );
 			}
 			session.close();
 			session = null;
@@ -323,6 +330,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 
 		assertAllDataRemoved();
+	}
+
+	public class RollbackWork implements Work {
+		public void execute(Connection connection) throws SQLException {
+			connection.rollback();
+		}
 	}
 
 	protected void cleanupTest() throws Exception {

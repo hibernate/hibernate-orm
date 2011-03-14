@@ -21,21 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.test.annotations.beanvalidation;
-import java.math.BigDecimal;
+
 import javax.validation.ConstraintViolationException;
+import java.math.BigDecimal;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BeanValidationDisabledTest extends TestCase {
+public class BeanValidationDisabledTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testListeners() {
 		CupHolder ch = new CupHolder();
 		ch.setRadius( new BigDecimal( "12" ) );
@@ -52,8 +60,9 @@ public class BeanValidationDisabledTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDDLDisabled() {
-		PersistentClass classMapping = getCfg().getClassMapping( Address.class.getName() );
+		PersistentClass classMapping = configuration().getClassMapping( Address.class.getName() );
 		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
 		assertTrue( "DDL constraints are applied", countryColumn.isNullable() );
 	}
@@ -64,6 +73,7 @@ public class BeanValidationDisabledTest extends TestCase {
 		cfg.setProperty( "javax.persistence.validation.mode", "none" );
 	}
 
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
 				Address.class,

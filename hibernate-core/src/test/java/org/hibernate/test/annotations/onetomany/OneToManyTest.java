@@ -40,13 +40,24 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 
+import org.junit.Test;
+
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.Ticket;
 import org.hibernate.test.annotations.TicketComparator;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test various case of a one to many relationship.
@@ -55,12 +66,8 @@ import org.hibernate.test.annotations.TicketComparator;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-public class OneToManyTest extends TestCase {
-
-	public OneToManyTest(String x) {
-		super( x );
-	}
-
+public class OneToManyTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testColumnDefinitionPropagation() throws Exception {
 		Session s;
 		s = openSession();
@@ -80,6 +87,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testListWithBagSemanticAndOrderBy() throws Exception {
 		Session s;
 		Transaction tx;
@@ -122,6 +130,7 @@ public class OneToManyTest extends TestCase {
 
 	}
 
+	@Test
 	public void testUnidirectionalDefault() throws Exception {
 		Session s;
 		Transaction tx;
@@ -170,6 +179,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testUnidirectionalExplicit() throws Exception {
 		Session s;
 		Transaction tx;
@@ -221,6 +231,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFetching() throws Exception {
 		Session s;
 		Transaction tx;
@@ -272,6 +283,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascadeDeleteOrphan() throws Exception {
 		Session s;
 		Transaction tx;
@@ -307,6 +319,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascadeDelete() throws Exception {
 		Session s;
 		Transaction tx;
@@ -334,6 +347,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSimpleOneToManySet() throws Exception {
 		Session s;
 		Transaction tx;
@@ -367,6 +381,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSimpleOneToManyCollection() throws Exception {
 		Session s;
 		Transaction tx;
@@ -395,6 +410,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testJoinColumns() throws Exception {
 		Parent parent = new Parent();
 		ParentPk pk = new ParentPk();
@@ -429,6 +445,7 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	@FailureExpected(jiraKey = "HHH-3577")
 	public void testOrderByOnSuperclassProperty() {
 		OrganisationUser user = new OrganisationUser();
@@ -451,11 +468,10 @@ public class OneToManyTest extends TestCase {
 		s.close();
 	}
 
-	/**
-	 * HHH-4605
-	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-4605" )
 	public void testJoinColumnConfiguredInXml() {
-		PersistentClass pc = cfg.getClassMapping( Model.class.getName() );
+		PersistentClass pc = configuration().getClassMapping( Model.class.getName() );
 		Table table = pc.getRootTable();
 		Iterator iter = table.getColumnIterator();
 		boolean joinColumnFound = false;
@@ -468,9 +484,7 @@ public class OneToManyTest extends TestCase {
 		assertTrue( "The mapping defines a joing column which could not be found in the metadata.", joinColumnFound );
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Troop.class,
@@ -495,6 +509,7 @@ public class OneToManyTest extends TestCase {
 		};
 	}
 
+	@Override
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/onetomany/orm.xml" };
 	}

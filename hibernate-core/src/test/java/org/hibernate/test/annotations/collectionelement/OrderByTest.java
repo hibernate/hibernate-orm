@@ -1,17 +1,41 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.collectionelement;
+
 import java.util.HashSet;
 import java.util.Iterator;
-import junit.framework.Assert;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
 
-public class OrderByTest extends TestCase {
+import org.junit.Test;
+import junit.framework.Assert;
 
-	/**
-	 * Test @OrderBy on the Widgets.name field.
-	 *
-	 */
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+public class OrderByTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testOrderByName() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -50,6 +74,7 @@ public class OrderByTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testOrderByWithDottedNotation() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -101,6 +126,7 @@ public class OrderByTest extends TestCase {
 
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 			Products.class,

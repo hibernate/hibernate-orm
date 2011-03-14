@@ -43,6 +43,11 @@ public class UserCollectionTypeTest extends BaseCoreFunctionalTestCase {
 		return new String[] { "usercollection/basic/UserPermissions.hbm.xml" };
 	}
 
+	@Override
+	protected String getCacheConcurrencyStrategy() {
+		return "nonstrict-read-write";
+	}
+
 	@Test
 	public void testBasicOperation() {
 		Session s = openSession();

@@ -22,17 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.instrument.runtime;
-import java.lang.reflect.InvocationTargetException;
 
-import org.junit.Rule;
-import org.junit.Test;
+import java.lang.reflect.InvocationTargetException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.BytecodeProvider;
 import org.hibernate.bytecode.InstrumentedClassLoader;
 import org.hibernate.bytecode.util.BasicClassFilter;
 import org.hibernate.bytecode.util.FieldFilter;
-import org.hibernate.testing.junit4.BaseClassLoaderIsolatedTestCase;
+
+import org.junit.Rule;
+import org.junit.Test;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;
 

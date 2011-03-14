@@ -21,35 +21,39 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.test.annotations.inheritance.discriminatoroptions;
+
+import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for the @DiscriminatorOptions annotations.
  *
  * @author Hardy Ferentschik
  */
-public class DiscriminatorOptionsTest extends TestCase {
-
+public class DiscriminatorOptionsTest extends BaseUnitTestCase {
+	@Test
 	public void testNonDefaultOptions() throws Exception {
-		buildConfiguration();
-
-		PersistentClass persistentClass = cfg.getClassMapping( BaseClass.class.getName() );
+		Configuration configuration = new Configuration();
+		configuration.addAnnotatedClass( BaseClass.class );
+		configuration.addAnnotatedClass( SubClass.class );
+		configuration.buildMappings();
+		PersistentClass persistentClass = configuration.getClassMapping( BaseClass.class.getName() );
 		assertNotNull( persistentClass );
 		assertTrue( persistentClass instanceof RootClass );
 
 		RootClass root = ( RootClass ) persistentClass;
 		assertTrue( "Discriminator should be forced", root.isForceDiscriminator() );
 		assertFalse( "Discriminator should not be insertable", root.isDiscriminatorInsertable() );
-	}
-
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				BaseClass.class, SubClass.class
-		};
 	}
 }

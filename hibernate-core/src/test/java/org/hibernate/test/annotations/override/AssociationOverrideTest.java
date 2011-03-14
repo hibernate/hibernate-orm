@@ -1,19 +1,26 @@
-//$Id$
 package org.hibernate.test.annotations.override;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.util.SchemaUtil;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class AssociationOverrideTest extends TestCase {
-
+public class AssociationOverrideTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testOverriding() throws Exception {
 		Location paris = new Location();
 		paris.setName( "Paris" );
@@ -40,16 +47,17 @@ public class AssociationOverrideTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testDottedNotation() throws Exception {
-		assertTrue( SchemaUtil.isTablePresent( "Employee", getCfg() ) );
+		assertTrue( SchemaUtil.isTablePresent( "Employee", configuration() ) );
 		assertTrue( "Overridden @JoinColumn fails",
-				SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", getCfg() ) );
+				SchemaUtil.isColumnPresent( "Employee", "fld_address_fk", configuration() ) );
 
-		assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", getCfg() ) );
+		assertTrue( "Overridden @JoinTable name fails", SchemaUtil.isTablePresent( "tbl_empl_sites", configuration() ) );
 		assertTrue( "Overridden @JoinTable with default @JoinColumn fails",
-				SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", getCfg() ) );
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "employee_id", configuration() ) );
 		assertTrue( "Overridden @JoinTable.inverseJoinColumn fails",
-				SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", getCfg() ) );
+				SchemaUtil.isColumnPresent( "tbl_empl_sites", "to_website_fk", configuration() ) );
 
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -89,6 +97,7 @@ public class AssociationOverrideTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Employee.class,

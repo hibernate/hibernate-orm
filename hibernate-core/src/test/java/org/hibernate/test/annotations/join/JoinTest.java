@@ -1,23 +1,55 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.join;
+
 import java.util.ArrayList;
 import java.util.Date;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.criterion.Expression;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.mapping.Join;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class JoinTest extends TestCase {
-
+public class JoinTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testDefaultValue() throws Exception {
-		Join join = (Join) getCfg().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
+		Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "ExtendedLife", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "LIFE_ID" );
@@ -40,8 +72,9 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositePK() throws Exception {
-		Join join = (Join) getCfg().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
+		Join join = (Join) configuration().getClassMapping( Dog.class.getName() ).getJoinClosureIterator().next();
 		assertEquals( "DogThoroughbred", join.getTable().getName() );
 		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
 		owner.setName( "OWNER_NAME" );
@@ -68,6 +101,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testExplicitValue() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -88,6 +122,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -105,7 +140,7 @@ public class JoinTest extends TestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Criteria crit = s.createCriteria( Life.class );
-		crit.createCriteria( "owner" ).add( Expression.eq( "name", "kitty" ) );
+		crit.createCriteria( "owner" ).add( Restrictions.eq( "name", "kitty" ) );
 		life = (Life) crit.uniqueResult();
 		assertEquals( "Long long description", life.fullDescription );
 		s.delete( life.owner );
@@ -114,6 +149,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 	
+	@Test
 	public void testReferenceColumnWithBacktics() throws Exception {
 		Session s=openSession();
 		s.beginTransaction();
@@ -127,6 +163,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 	
+	@Test
 	public void testUniqueConstaintOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
@@ -149,6 +186,7 @@ public class JoinTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testFetchModeOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
@@ -166,6 +204,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCustomSQL() throws Exception {
 		Cat cat = new Cat();
 		String storyPart2 = "My long story";
@@ -184,6 +223,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMappedSuperclassAndSecondaryTable() throws Exception {
 		Session s = openSession( );
 		s.getTransaction().begin();
@@ -201,9 +241,7 @@ public class JoinTest extends TestCase {
 		s.close();
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Life.class,

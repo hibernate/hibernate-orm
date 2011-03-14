@@ -1,26 +1,53 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.cid;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * test some composite id functionalities
  *
  * @author Emmanuel Bernard
  */
-public class CompositeIdTest extends TestCase {
-	public CompositeIdTest(String x) {
-		super( x );
-	}
-
+public class CompositeIdTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testOneToOneInCompositePk() throws Exception {
 		Session s;
 		Transaction tx;
@@ -50,6 +77,7 @@ public class CompositeIdTest extends TestCase {
 	 * This feature is not supported by the EJB3
 	 * this is an hibernate extension
 	 */
+	@Test
 	public void testManyToOneInCompositePk() throws Exception {
 		Session s;
 		Transaction tx;
@@ -92,6 +120,7 @@ public class CompositeIdTest extends TestCase {
 	 * This feature is not supported by the EJB3
 	 * this is an hibernate extension
 	 */
+	@Test
 	public void testManyToOneInCompositePkAndSubclass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -131,6 +160,7 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneInCompositeId() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -162,6 +192,7 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneInCompositeIdClass() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -187,6 +218,7 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSecondaryTableWithCompositeId() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -220,6 +252,7 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testSecondaryTableWithIdClass() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -250,6 +283,7 @@ public class CompositeIdTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testQueryInAndComposite() {
 
 		Session s = openSession(  );
@@ -271,6 +305,8 @@ public class CompositeIdTest extends TestCase {
 		transaction.rollback();
 		s.close();
 	}
+
+	@Test
     public void testQueryInAndCompositeWithHQL() {
         Session s = openSession(  );
         Transaction transaction = s.beginTransaction();
@@ -287,7 +323,6 @@ public class CompositeIdTest extends TestCase {
         transaction.rollback();
         s.close();
     }
-
 
 	private void createData(Session s){
         SomeEntity someEntity = new SomeEntity();
@@ -325,6 +360,8 @@ public class CompositeIdTest extends TestCase {
         someEntity.setProp( "cc3" );
         s.persist( someEntity );
 	}
+
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Parent.class,

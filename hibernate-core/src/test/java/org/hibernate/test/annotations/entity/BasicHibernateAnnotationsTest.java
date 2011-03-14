@@ -1,4 +1,3 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,30 +22,43 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.entity;
+
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.cfg.Configuration;
+
+import org.junit.Test;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class BasicHibernateAnnotationsTest extends TestCase {
-
+public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testEntity() throws Exception {
-		if( !getDialect().supportsExpectedLobUsagePattern() ){
-			return;
-		}
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		Session s;
@@ -82,10 +94,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testVersioning() throws Exception {
-		if( !getDialect().supportsExpectedLobUsagePattern() ){
-			return;
-		}
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		forest.setLength( 33 );
@@ -126,13 +137,11 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.delete( s.get( Forest.class, forest.getId() ) );
 		tx.commit();
 		s.close();
-
 	}
 
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testPolymorphism() throws Exception {
-		if( !getDialect().supportsExpectedLobUsagePattern() ){
-			return;
-		}
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
 		forest.setLength( 33 );
@@ -154,10 +163,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testType() throws Exception {
-		if( !getDialect().supportsExpectedLobUsagePattern() ){
-			return;
-		}
 		Forest f = new Forest();
 		f.setName( "Broceliande" );
 		String description = "C'est une enorme foret enchantee ou vivais Merlin et toute la clique";
@@ -188,8 +196,8 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	 * component 'LastName'. This is to verify that processing the 
 	 * typedef defined in the component TWICE does not create any 
 	 * issues.  
-	 * 
 	 */
+	@Test
 	public void testImportTypeDefinitions() throws Exception {
 		LastName lastName = new LastName();
 		lastName.setName("reddy");
@@ -227,6 +235,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testNonLazy() throws Exception {
 		Session s;
 		Transaction tx;
@@ -250,6 +259,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCache() throws Exception {
 		Session s;
 		Transaction tx;
@@ -260,25 +270,25 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.persist( zc );
 		tx.commit();
 		s.close();
-		getSessions().getStatistics().clear();
-		getSessions().getStatistics().setStatisticsEnabled( true );
-		getSessions().evict( ZipCode.class );
+		sessionFactory().getStatistics().clear();
+		sessionFactory().getStatistics().setStatisticsEnabled( true );
+		sessionFactory().evict( ZipCode.class );
 		s = openSession();
 		tx = s.beginTransaction();
 		s.get( ZipCode.class, zc.code );
-		assertEquals( 1, getSessions().getStatistics().getSecondLevelCachePutCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getSecondLevelCachePutCount() );
 		tx.commit();
 		s.close();
 
 		s = openSession();
 		tx = s.beginTransaction();
 		s.get( ZipCode.class, zc.code );
-		assertEquals( 1, getSessions().getStatistics().getSecondLevelCacheHitCount() );
+		assertEquals( 1, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 		tx.commit();
 		s.close();
 	}
-	 
-	
+
+	@Test
 	public void testFilterOnCollection() {
 		
 		Session s = openSession();
@@ -311,6 +321,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		
 	} 
 
+	@Test
 	public void testCascadedDeleteOfChildEntitiesBug2() {
 		// Relationship is one SoccerTeam to many Players.
 		// Create a SoccerTeam (parent) and three Players (child).
@@ -360,6 +371,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascadedDeleteOfChildOneToOne() {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
@@ -409,6 +421,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFilter() throws Exception {
 		Session s;
 		Transaction tx;
@@ -444,6 +457,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	 * Tests the functionality of inheriting @Filter and @FilterDef annotations
 	 * defined on a parent MappedSuperclass(s)
 	 */
+	@Test
 	public void testInheritFiltersFromMappedSuperclass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -487,10 +501,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 	
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testParameterizedType() throws Exception {
-		if( !getDialect().supportsExpectedLobUsagePattern() ){
-			return;
-		}
 		Session s;
 		Transaction tx;
 		s = openSession();
@@ -510,10 +523,9 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
+	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 	public void testSerialized() throws Exception {
-		if( !getDialect().supportsExpectedLobUsagePattern() ){
-			return;
-		}
 		Forest forest = new Forest();
 		forest.setName( "Shire" );
 		Country country = new Country();
@@ -557,6 +569,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeType() throws Exception {
 		Session s;
 		Transaction tx;
@@ -583,6 +596,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFormula() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -603,9 +617,8 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		s.close();
 	}
 		
-	
+	@Test
 	public void testTypeDefNameAndDefaultForTypeAttributes() {
-		
 		ContactDetails contactDetails = new ContactDetails();
 		contactDetails.setLocalPhoneNumber(new PhoneNumber("999999"));
 		contactDetails.setOverseasPhoneNumber(
@@ -630,12 +643,12 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	
 	}
 	
+	@Test
 	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
-		
 		try {
-			AnnotationConfiguration config = new AnnotationConfiguration();
+			Configuration config = new Configuration();
 			config.addAnnotatedClass(LocalContactDetails.class);
-			config.buildSessionFactory( getServiceRegistry() );
+			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
 			fail("Did not throw expected exception");
 		}
 		catch( AnnotationException ex ) {
@@ -643,7 +656,6 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType", 
 					ex.getMessage());
 		}	
-		
 	}
 
 	
@@ -657,6 +669,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 	 * 
 	 * @throws Exception
 	 */
+	@Test
 	public void testSetSimpleValueTypeNameInSecondPass() throws Exception {
 		Peugot derived = new Peugot();
 		derived.setName("sharath");
@@ -678,12 +691,8 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		tx.commit();
 		s.close();
 	}
-	
 
-	public BasicHibernateAnnotationsTest(String x) {
-		super( x );
-	}
-
+	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[]{
 				Forest.class,
@@ -705,6 +714,7 @@ public class BasicHibernateAnnotationsTest extends TestCase {
 		};
 	}
 
+	@Override
 	protected String[] getAnnotatedPackages() {
 		return new String[]{
 				"org.hibernate.test.annotations.entity"

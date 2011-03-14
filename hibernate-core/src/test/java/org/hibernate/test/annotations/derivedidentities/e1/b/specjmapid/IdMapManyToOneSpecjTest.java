@@ -22,26 +22,31 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.derivedidentities.e1.b.specjmapid;
+
 import java.math.BigDecimal;
 import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 /**
  * A test.
  *
  * @author <a href="mailto:stale.pedersen@jboss.org">Stale W. Pedersen</a>
  */
-public class IdMapManyToOneSpecjTest extends TestCase {
+public class IdMapManyToOneSpecjTest extends BaseCoreFunctionalTestCase {
 
 	public IdMapManyToOneSpecjTest() {
 		System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
 	}
 
+	@Test
 	public void testComplexIdClass() {
-
-
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 
@@ -130,6 +135,7 @@ public class IdMapManyToOneSpecjTest extends TestCase {
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Customer.class,

@@ -22,14 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.target;
+
 import org.hibernate.Session;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard
  */
-public class TargetTest extends TestCase {
-
+public class TargetTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testTargetOnEmbedded() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -48,6 +54,7 @@ public class TargetTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTargetOnMapKey() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -71,6 +78,7 @@ public class TargetTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTargetOnMapKeyManyToMany() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -89,15 +97,13 @@ public class TargetTest extends TestCase {
 		s.flush();
 		s.clear();
 		b = (Brand) s.get(Brand.class, b.getId() );
-		assertEquals( 12d, b.getSizePerLuggage().keySet().iterator().next().getWidth() );
+		assertEquals( 12d, b.getSizePerLuggage().keySet().iterator().next().getWidth(), 0.01 );
 		s.getTransaction().rollback();
 		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				LuggageImpl.class,
-				Brand.class
-		};
+		return new Class[] { LuggageImpl.class, Brand.class };
 	}
 }

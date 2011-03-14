@@ -22,18 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.lob;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractLobTest<B extends AbstractBook, C extends AbstractCompiledCode> extends TestCase {
-
-	public AbstractLobTest(String name) {
-		super( name );
-	}
+public abstract class AbstractLobTest<B extends AbstractBook, C extends AbstractCompiledCode>
+		extends BaseCoreFunctionalTestCase {
 
 	protected abstract Class<B> getBookClass();
 
@@ -61,6 +66,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 
 	protected abstract Integer getId(C compiledCode);
 
+	@Test
 	public void testSerializableToBlob() throws Exception {
 		B book = createBook();
 		Editor editor = new Editor();
@@ -91,6 +97,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 
 	}
 
+	@Test
 	public void testClob() throws Exception {
 		Session s;
 		Transaction tx;
@@ -116,6 +123,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		s.close();
 	}
 
+	@Test
 	public void testBlob() throws Exception {
 		Session s;
 		Transaction tx;
@@ -144,6 +152,7 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		s.close();
 	}
 
+	@Test
 	public void testBinary() throws Exception {
 		Session s;
 		Transaction tx;

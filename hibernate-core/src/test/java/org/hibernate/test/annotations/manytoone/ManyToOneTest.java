@@ -1,29 +1,57 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.annotations.manytoone;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Company;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Flight;
 import org.hibernate.test.annotations.Passport;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.test.annotations.Ticket;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ManyToOneTest extends TestCase {
-
-	public ManyToOneTest(String x) {
-		super( x );
-	}
-
+public class ManyToOneTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testEager() throws Exception {
 		Session s;
 		Transaction tx;
@@ -46,9 +74,9 @@ public class ManyToOneTest extends TestCase {
 		assertNotNull( car );
 		assertNotNull( car.getBodyColor() );
 		assertEquals( "Yellow", car.getBodyColor().getName() );
-
 	}
 
+	@Test
 	public void testDefaultMetadata() throws Exception {
 		Session s;
 		Transaction tx;
@@ -73,6 +101,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCreate() throws Exception {
 		Session s;
 		Transaction tx;
@@ -99,6 +128,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCascade() throws Exception {
 		Session s;
 		Transaction tx;
@@ -120,7 +150,7 @@ public class ManyToOneTest extends TestCase {
 		tx = s.beginTransaction();
 		discount = (Discount) s.get( Discount.class, discount.getId() );
 		assertNotNull( discount );
-		assertEquals( 20.12, discount.getDiscount() );
+		assertEquals( 20.12, discount.getDiscount(), 0.01 );
 		assertNotNull( discount.getOwner() );
 		customer = new Customer();
 		customer.setName( "Clooney" );
@@ -148,6 +178,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFetch() throws Exception {
 		Session s;
 		Transaction tx;
@@ -186,6 +217,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testCompositeFK() throws Exception {
 		Session s;
 		Transaction tx;
@@ -217,6 +249,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testImplicitCompositeFk() throws Exception {
 		Session s;
 		Transaction tx;
@@ -247,6 +280,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneNonPk() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -267,6 +301,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testManyToOneNonPkSecondaryTable() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -287,6 +322,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testTwoManyToOneNonPk() throws Exception {
 		//2 many to one non pk pointing to the same referencedColumnName should not fail
 		Session s = openSession();
@@ -310,6 +346,7 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testFormulaOnOtherSide() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -334,11 +371,10 @@ public class ManyToOneTest extends TestCase {
 		s.close();
 	}
 
-	/**
-	 * @see org.hibernate.test.annotations.TestCase#getAnnotatedClasses()
-	 */
-	protected java.lang.Class[] getAnnotatedClasses() {
-		return new java.lang.Class[]{
+
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[]{
 				Deal.class,
 				org.hibernate.test.annotations.manytoone.Customer.class,
 				Car.class,

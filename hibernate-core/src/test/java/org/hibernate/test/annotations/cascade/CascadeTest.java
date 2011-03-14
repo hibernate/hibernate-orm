@@ -29,15 +29,24 @@ import java.util.ArrayList;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
-import org.hibernate.test.annotations.TestCase;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * Check some of the individual cascade styles
  *
+ * @todo do something for refresh
+ *
  * @author Emmanuel Bernard
  */
-//FIXME do somthing for refresh
-public class CascadeTest extends TestCase {
+public class CascadeTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testPersist() {
 		Session s;
 		Transaction tx;
@@ -58,6 +67,7 @@ public class CascadeTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testMerge() {
 		Session s;
 		Transaction tx;
@@ -95,6 +105,7 @@ public class CascadeTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testRemove() {
 		Session s;
 		Transaction tx;
@@ -126,6 +137,7 @@ public class CascadeTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testDetach() {
 		Session s;
 		Transaction tx;
@@ -160,10 +172,7 @@ public class CascadeTest extends TestCase {
 		s.close();
 	}
 
-	public CascadeTest(String x) {
-		super( x );
-	}
-
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Mouth.class,

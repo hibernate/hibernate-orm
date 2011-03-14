@@ -22,16 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.various.readwriteexpression;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Emmanuel Bernard
  */
-public class ColumnTransformerTest extends TestCase {
-
+public class ColumnTransformerTest extends BaseCoreFunctionalTestCase {
+	@Test
 	public void testCustomColumnReadAndWrite() throws Exception{
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

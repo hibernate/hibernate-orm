@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.packaging;
-import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Properties;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
+import java.io.File;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Properties;
+
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.test.Distributor;
@@ -56,8 +57,16 @@ import org.hibernate.ejb.test.pack.various.Airplane;
 import org.hibernate.ejb.test.pack.various.Seat;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventListeners;
-import org.hibernate.stat.Statistics;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.stat.Statistics;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * In this test we verify that  it is possible to bootstrap Hibernate/JPA from
@@ -70,6 +79,7 @@ import org.hibernate.internal.util.ConfigHelper;
  */
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
+	@Test
 	public void testDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -104,6 +114,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testDefaultParForPersistence_1_0() throws Exception {
 		File testPackage = buildDefaultPar_1_0();
 		addPackageToClasspath( testPackage );
@@ -137,6 +148,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testListenersDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -176,6 +188,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );
@@ -197,6 +210,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testExcludeHbmPar() throws Exception {
 		File testPackage = buildExcludeHbmPar();
 		addPackageToClasspath( testPackage );
@@ -233,6 +247,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testCfgXmlPar() throws Exception {
 		File testPackage = buildCfgXmlPar();
 		addPackageToClasspath( testPackage );
@@ -258,6 +273,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testSpacePar() throws Exception {
 		File testPackage = buildSpacePar();
 		addPackageToClasspath( testPackage );
@@ -276,7 +292,8 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
-	public void testOverridenPar() throws Exception {
+	@Test
+	public void testOverriddenPar() throws Exception {
 		File testPackage = buildOverridenPar();
 		addPackageToClasspath( testPackage );
 
@@ -299,6 +316,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testListeners() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
@@ -316,6 +334,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testExtendedEntityManager() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
@@ -365,6 +384,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testConfiguration() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
@@ -417,6 +437,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testExternalJar() throws Exception {
 		File externalJar = buildExternalJar();
 		File testPackage = buildExplicitPar();
@@ -441,6 +462,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf.close();
 	}
 
+	@Test
 	public void testORMFileOnMainAndExplicitJars() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );

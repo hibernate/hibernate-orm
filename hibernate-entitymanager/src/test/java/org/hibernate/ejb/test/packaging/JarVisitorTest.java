@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.packaging;
+
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Set;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
+
 import org.hibernate.ejb.packaging.ClassFilter;
 import org.hibernate.ejb.packaging.Entry;
 import org.hibernate.ejb.packaging.ExplodedJarVisitor;
@@ -45,13 +46,22 @@ import org.hibernate.ejb.packaging.PackageFilter;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.ejb.test.pack.explodedpar.Carpet;
 
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
 public class JarVisitorTest extends PackagingTestCase {
-
+	@Test
 	public void testHttp() throws Exception {
 		URL url = JarVisitorFactory.getJarURLFromURLEntry(
 				new URL(
@@ -73,6 +83,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		assertEquals( 0, visitor.getMatchingEntries()[2].size() );
 	}
 
+	@Test
 	public void testInputStreamZippedJar() throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
@@ -94,6 +105,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		}
 	}
 
+	@Test
 	public void testNestedJarProtocol() throws Exception {
 		File defaultPar = buildDefaultPar();
 		File nestedEar = buildNestedEar( defaultPar );
@@ -138,6 +150,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		}
 	}
 
+	@Test
 	public void testJarProtocol() throws Exception {
 		File war = buildWar();
 		addPackageToClasspath( war );
@@ -160,6 +173,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		}
 	}
 
+	@Test
 	public void testZippedJar() throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
@@ -181,6 +195,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		}
 	}
 
+	@Test
 	public void testExplodedJar() throws Exception {
 		File explodedPar = buildExplodedPar();
 		addPackageToClasspath( explodedPar );
@@ -206,9 +221,8 @@ public class JarVisitorTest extends PackagingTestCase {
 		}
 	}
 
-	/**
-	 * EJB-230
-	 */
+	@Test
+	@TestForIssue( jiraKey = "EJB-230" )
 	public void testDuplicateFilterExplodedJarExpected() throws Exception {
 //		File explodedPar = buildExplodedPar();
 //		addPackageToClasspath( explodedPar );

@@ -22,11 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cache;
+
 import java.util.Map;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.test.annotations.TestCase;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests for handling of data just inserted during a transaction being read from the database
@@ -35,7 +43,7 @@ import org.hibernate.test.annotations.TestCase;
  *
  * @author Steve Ebersole
  */
-public class InsertedDataTest extends TestCase {
+public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { CacheableItem.class };
@@ -48,9 +56,10 @@ public class InsertedDataTest extends TestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
+	@Test
 	public void testInsert() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -59,7 +68,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -69,9 +78,10 @@ public class InsertedDataTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInsertWithRollback() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -81,13 +91,14 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 	}
 
+	@Test
 	public void testInsertThenUpdate() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -98,7 +109,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -108,9 +119,10 @@ public class InsertedDataTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInsertThenUpdateThenRollback() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -121,7 +133,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 
 		s = openSession();
@@ -131,9 +143,10 @@ public class InsertedDataTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInsertWithRefresh() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -144,7 +157,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -154,9 +167,10 @@ public class InsertedDataTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInsertWithRefreshThenRollback() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -167,7 +181,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 
 		s = openSession();
@@ -179,9 +193,10 @@ public class InsertedDataTest extends TestCase {
 		assertNull( "it should be null", item );
 	}
 
+	@Test
 	public void testInsertWithClear() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -192,7 +207,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().commit();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 1, cacheMap.size() );
 
 		s = openSession();
@@ -202,9 +217,10 @@ public class InsertedDataTest extends TestCase {
 		s.close();
 	}
 
+	@Test
 	public void testInsertWithClearThenRollback() {
-		getSessions().getCache().evictEntityRegions();
-		getSessions().getStatistics().clear();
+		sessionFactory().getCache().evictEntityRegions();
+		sessionFactory().getStatistics().clear();
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -216,7 +232,7 @@ public class InsertedDataTest extends TestCase {
 		s.getTransaction().rollback();
 		s.close();
 
-		Map cacheMap = getSessions().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
+		Map cacheMap = sessionFactory().getStatistics().getSecondLevelCacheStatistics( "item" ).getEntries();
 		assertEquals( 0, cacheMap.size() );
 
 		s = openSession();

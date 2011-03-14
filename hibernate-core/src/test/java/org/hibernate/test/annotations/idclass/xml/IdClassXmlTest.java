@@ -1,4 +1,3 @@
-// $Id$
 /*
  * JBoss, Home of Professional Open Source
  * Copyright 2005, JBoss Inc., and individual contributors as indicated
@@ -22,8 +21,10 @@
  */
 package org.hibernate.test.annotations.idclass.xml;
 
+import org.junit.Test;
+
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * A test for HHH-4282
@@ -31,9 +32,9 @@ import org.hibernate.test.annotations.TestCase;
  * @author Hardy Ferentschik
  */
 @FailureExpected( jiraKey = "HHH-4282" )
-public class IdClassXmlTest extends TestCase {
-
-	public void testEntityMappningPropertiesAreNotIgnored() {
+public class IdClassXmlTest extends BaseCoreFunctionalTestCase {
+	@Test
+	public void testEntityMappingPropertiesAreNotIgnored() {
 		throw new RuntimeException();
 //		Session s = openSession();
 //		Transaction tx = s.beginTransaction();
@@ -50,12 +51,14 @@ public class IdClassXmlTest extends TestCase {
 //		s.close();
 	}
 
+	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				HabitatSpeciesLink.class
 		};
 	}
 
+	@Override
 	protected String[] getXmlFiles() {
 		return new String[] {
 				"org/hibernate/test/annotations/idclass/xml/HabitatSpeciesLink.xml"

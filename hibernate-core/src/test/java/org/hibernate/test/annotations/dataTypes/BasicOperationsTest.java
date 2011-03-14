@@ -22,26 +22,33 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.dataTypes;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
-import org.hibernate.test.annotations.TestCase;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
-public class BasicOperationsTest extends TestCase {
+public class BasicOperationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { SomeEntity.class, SomeOtherEntity.class };
 	}
 
+	@Test
 	public void testCreateAndDelete() {
 		Date now = new Date();
 
@@ -84,23 +91,5 @@ public class BasicOperationsTest extends TestCase {
 		s.delete( someOtherEntity );
 		s.getTransaction().commit();
 		s.close();
-	}
-
-	private Byte[] generateByteArray() {
-		final byte[] bytes = "I'll be back".getBytes();
-		final Byte[] wrappedBytes = new Byte[ bytes.length ];
-		for ( int i = 0, max = bytes.length; i < max; i++ ) {
-			wrappedBytes[i] = Byte.valueOf( bytes[i] );
-		}
-		return wrappedBytes;
-	}
-
-	private Character[] generateCharacterArray() {
-		final char[] chars = "I'll be back".toCharArray();
-		final Character[] wrappedChars = new Character[ chars.length ];
-		for ( int i = 0, max = chars.length; i < max; i++ ) {
-			wrappedChars[i] = Character.valueOf( chars[i] );
-		}
-		return wrappedChars;
 	}
 }

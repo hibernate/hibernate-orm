@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.annotations.lob;
 
-import junit.framework.AssertionFailedError;
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.Sybase11Dialect;
@@ -31,8 +30,12 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
+import org.junit.Assert;
+import org.junit.Test;
+import junit.framework.AssertionFailedError;
+
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.annotations.TestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * Tests eager materialization and mutation of data mapped by
@@ -40,11 +43,11 @@ import org.hibernate.test.annotations.TestCase;
  *
  * @author Gail Badner
  */
-@RequiresDialect( { SybaseASE15Dialect.class, SQLServerDialect.class,
-		SybaseDialect.class, Sybase11Dialect.class })
-public class ImageTest extends TestCase {
+@RequiresDialect( { SybaseASE15Dialect.class, SQLServerDialect.class, SybaseDialect.class, Sybase11Dialect.class })
+public class ImageTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 
+	@Test
 	public void testBoundedLongByteArrayAccess() {
 		byte[] original = buildRecursively(ARRAY_SIZE, true);
 		byte[] changed = buildRecursively(ARRAY_SIZE, false);
@@ -59,9 +62,9 @@ public class ImageTest extends TestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		assertNull(entity.getLongByteArray());
-		assertNull(entity.getDog());
-		assertNull(entity.getPicByteArray());
+		Assert.assertNull( entity.getLongByteArray() );
+		Assert.assertNull( entity.getDog() );
+		Assert.assertNull( entity.getPicByteArray() );
 		entity.setLongByteArray(original);
 		Dog dog = new Dog();
 		dog.setName("rabbit");
@@ -73,12 +76,12 @@ public class ImageTest extends TestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		assertEquals(ARRAY_SIZE, entity.getLongByteArray().length);
+		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals(original, entity.getLongByteArray());
-		assertEquals(ARRAY_SIZE, entity.getPicByteArray().length);
+		Assert.assertEquals( ARRAY_SIZE, entity.getPicByteArray().length );
 		assertEquals(original, unwrapNonPrimitive(entity.getPicByteArray()));
-		assertNotNull(entity.getDog());
-		assertEquals(dog.getName(), entity.getDog().getName());
+		Assert.assertNotNull( entity.getDog() );
+		Assert.assertEquals( dog.getName(), entity.getDog().getName() );
 		entity.setLongByteArray(changed);
 		entity.setPicByteArray(wrapPrimitive(changed));
 		dog.setName("papa");
@@ -89,12 +92,12 @@ public class ImageTest extends TestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		assertEquals(ARRAY_SIZE, entity.getLongByteArray().length);
+		Assert.assertEquals( ARRAY_SIZE, entity.getLongByteArray().length );
 		assertEquals(changed, entity.getLongByteArray());
-		assertEquals(ARRAY_SIZE, entity.getPicByteArray().length);
+		Assert.assertEquals( ARRAY_SIZE, entity.getPicByteArray().length );
 		assertEquals(changed, unwrapNonPrimitive(entity.getPicByteArray()));
-		assertNotNull(entity.getDog());
-		assertEquals(dog.getName(), entity.getDog().getName());
+		Assert.assertNotNull( entity.getDog() );
+		Assert.assertEquals( dog.getName(), entity.getDog().getName() );
 		entity.setLongByteArray(null);
 		entity.setPicByteArray(null);
 		entity.setDog(null);
@@ -104,9 +107,9 @@ public class ImageTest extends TestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = (ImageHolder) s.get(ImageHolder.class, entity.getId());
-		assertNull(entity.getLongByteArray());
-		assertNull(entity.getDog());
-		assertNull(entity.getPicByteArray());
+		Assert.assertNull( entity.getLongByteArray() );
+		Assert.assertNull( entity.getDog() );
+		Assert.assertNull( entity.getPicByteArray() );
 		s.delete(entity);
 		s.getTransaction().commit();
 		s.close();
@@ -116,7 +119,7 @@ public class ImageTest extends TestCase {
 		int length = bytes.length;
 		Byte[] result = new Byte[length];
 		for (int index = 0; index < length; index++) {
-			result[index] = Byte.valueOf(bytes[index]);
+			result[index] = Byte.valueOf( bytes[index] );
 		}
 		return result;
 	}
@@ -148,10 +151,6 @@ public class ImageTest extends TestCase {
 		if (!ArrayHelper.isEquals( val1, val2 )) {
 			throw new AssertionFailedError("byte arrays did not match");
 		}
-	}
-
-	public ImageTest(String name) {
-		super(name);
 	}
 
 	@Override

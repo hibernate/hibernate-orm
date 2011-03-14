@@ -1,4 +1,3 @@
-// $Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,28 +22,36 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.packaging;
-import java.io.File;
-import java.lang.annotation.Annotation;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Persistence;
+import java.io.File;
+import java.lang.annotation.Annotation;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.packaging.NamedInputStream;
 import org.hibernate.ejb.packaging.NativeScanner;
 import org.hibernate.ejb.packaging.Scanner;
 import org.hibernate.ejb.test.pack.defaultpar.ApplicationServer;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 public class ScannerTest extends PackagingTestCase {
+	@Test
 	public void testNativeScanner() throws Exception {
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
@@ -74,6 +81,7 @@ public class ScannerTest extends PackagingTestCase {
 		}
 	}
 
+	@Test
 	public void testCustomScanner() throws Exception {
 		File defaultPar = buildDefaultPar();
 		File explicitPar = buildExplicitPar();

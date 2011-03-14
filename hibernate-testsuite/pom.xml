@@ -43,6 +43,7 @@
     <properties>
         <!-- Skip artifact deployment -->
         <maven.deploy.skip>true</maven.deploy.skip>
+        <surefire.jvm.parameter></surefire.jvm.parameter>
     </properties>
 
     <dependencies>
@@ -138,7 +139,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <forkMode>once</forkMode>
-                    <argLine>-Dorg.jboss.byteman.verbose=true -javaagent:${settings.localRepository}/org/jboss/byteman/byteman/${bytemanVersion}/byteman-${bytemanVersion}.jar=script:${project.build.testOutputDirectory}/bytemanrules.txt</argLine>
+                    <argLine>${surefire.jvm.parameter}</argLine>
                     <systemProperties>
                         <property>
                             <name>hibernate.test.validatefailureexpected</name>
@@ -170,6 +171,15 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile>
+            <id>byteman</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <surefire.jvm.parameter>-Dorg.jboss.byteman.verbose=true -javaagent:${settings.localRepository}/org/jboss/byteman/byteman/${bytemanVersion}/byteman-${bytemanVersion}.jar=script:${project.build.testOutputDirectory}/bytemanrules.txt</surefire.jvm.parameter>
+            </properties>
         </profile>
     </profiles>
 

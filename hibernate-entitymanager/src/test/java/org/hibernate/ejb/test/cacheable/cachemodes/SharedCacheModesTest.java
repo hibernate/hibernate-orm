@@ -22,10 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.cacheable.cachemodes;
+
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.ejb.AvailableSettings;
@@ -34,9 +36,11 @@ import org.hibernate.ejb.HibernateQuery;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.impl.AbstractQueryImpl;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
@@ -45,8 +49,7 @@ public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[] { SimpleEntity.class };
 	}
 
-	// this is all i can do for now testing-wise since I did not implement @Cacheable first ;)
-
+	@Test
 	public void testEntityManagerCacheModes() {
 
 		EntityManager em;
@@ -82,6 +85,7 @@ public class SharedCacheModesTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( CacheMode.REFRESH, session.getCacheMode() );
 	}
 
+	@Test
 	public void testQueryCacheModes() {
 		EntityManager em = getOrCreateEntityManager();
 		Query jpaQuery = em.createQuery( "from SimpleEntity" );

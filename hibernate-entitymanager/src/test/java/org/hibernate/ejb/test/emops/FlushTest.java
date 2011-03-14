@@ -1,5 +1,28 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.emops;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -10,19 +33,37 @@ import javax.persistence.Query;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+
 /**
  * @author Emmanuel Bernard
  */
 public class FlushTest extends BaseEntityManagerFunctionalTestCase {
-	private static Set<String> names= new HashSet<String>();
-	static {
+	private static Set<String> names = namesSet();
+	private static Set<String> namesSet() {
+		HashSet<String> names = new HashSet<String>();
 		names.add("Toonses");
 		names.add("Sox");
 		names.add("Winnie");
 		names.add("Junior");
+		return names;
 	}
 
-	//Test for EJBTHREE-722
+	@Override
+	public Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Pet.class,
+				Dog.class,
+				Cat.class,
+				Decorate.class
+		};
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "EJBTHREE-722" )
 	public void testFlushOnDetached() throws Exception {
 		EntityManager manager = getOrCreateEntityManager( );
 
@@ -55,22 +96,21 @@ public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 		manager.flush();
 		manager.clear();
 		for (Object o : l) {
-			assertTrue( names.contains( ( (Pet) o).getName() ) );
+			Assert.assertTrue( names.contains( ((Pet) o).getName() ) );
 		}
 
 		Collection<Decorate> founds = getDecorate(manager);
 		manager.flush();
 		manager.clear();
 		for (Decorate value : founds) {
-			assertTrue( names.contains( value.getPet().getName() ) );
+			Assert.assertTrue( names.contains( value.getPet().getName() ) );
 		}
 		manager.getTransaction().rollback();
 		
 		manager.close();
-		
 	}
 
-	public Dog createDog(String name, double weight, int bones, EntityManager manager) {
+	private Dog createDog(String name, double weight, int bones, EntityManager manager) {
 		Dog dog = new Dog();
 		dog.setName(name);
 		dog.setWeight(weight);
@@ -79,7 +119,7 @@ public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 		return dog;
 	}
 
-	public Cat createCat(String name, double weight, int lives, EntityManager manager) {
+	private Cat createCat(String name, double weight, int lives, EntityManager manager) {
 		Cat cat = new Cat();
 		cat.setName(name);
 		cat.setWeight(weight);
@@ -88,13 +128,13 @@ public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 		return cat;
 	}
 
-	public List findByWeight(double weight, EntityManager manager) {
+	private List findByWeight(double weight, EntityManager manager) {
 		return manager.createQuery(
 				"select p from Pet p where p.weight < :weight").setParameter(
 				"weight", weight).getResultList();
 	}
 
-	public Decorate createDecorate(String name, Pet pet, EntityManager manager) {
+	private Decorate createDecorate(String name, Pet pet, EntityManager manager) {
 		Decorate dec = new Decorate();
 		dec.setName(name);
 		dec.setPet(pet);
@@ -102,7 +142,7 @@ public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 		return dec;
 	}
 
-	public Collection<Decorate> getDecorate(EntityManager manager) {
+	private Collection<Decorate> getDecorate(EntityManager manager) {
 		Collection<Decorate> founds = new ArrayList<Decorate>();
 		Query query = manager.createQuery("SELECT o FROM Decorate o");
 		List list = query.getResultList();
@@ -116,12 +156,4 @@ public class FlushTest extends BaseEntityManagerFunctionalTestCase {
 		return founds;
 	}
 
-	public Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Pet.class,
-				Dog.class,
-				Cat.class,
-				Decorate.class
-		};
-	}
 }

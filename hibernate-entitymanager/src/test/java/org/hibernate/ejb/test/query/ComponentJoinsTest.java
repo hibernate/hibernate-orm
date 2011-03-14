@@ -22,9 +22,13 @@
  * Boston, MA  02110-1301  USA\
  */
 package org.hibernate.ejb.test.query;
+
 import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.criteria.components.Client;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
 
 /**
  * Tests related to specifying joins on components (embedded values).
@@ -32,10 +36,12 @@ import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
  * @author Steve Ebersole
  */
 public class ComponentJoinsTest extends BaseEntityManagerFunctionalTestCase {
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Client.class };
 	}
 
+	@Test
 	public void testComponentJoins() {
 		// Just checking proper query construction and syntax checking via database query parser...
 		EntityManager em = getOrCreateEntityManager();

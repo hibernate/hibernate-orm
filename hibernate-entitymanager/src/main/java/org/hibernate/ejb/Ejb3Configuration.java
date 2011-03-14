@@ -23,6 +23,19 @@
  */
 package org.hibernate.ejb;
 
+import javax.naming.BinaryRefAddr;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.Referenceable;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.PersistenceException;
+import javax.persistence.spi.PersistenceUnitInfo;
+import javax.persistence.spi.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -45,26 +58,17 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import javax.naming.BinaryRefAddr;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.Referenceable;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
-import javax.sql.DataSource;
+
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -95,11 +99,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
 import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.jdbc.connections.internal.ConnectionProviderInitiator;
+import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
 /**
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
@@ -127,7 +128,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";
 
 	private static EntityNotFoundDelegate ejb3EntityNotFoundDelegate = new Ejb3EntityNotFoundDelegate();
-	private static Configuration DEFAULT_CONFIGURATION = new AnnotationConfiguration();
+	private static Configuration DEFAULT_CONFIGURATION = new Configuration();
 
 	private static class Ejb3EntityNotFoundDelegate implements EntityNotFoundDelegate, Serializable {
 		public void handleEntityNotFound(String entityName, Serializable id) {
@@ -142,8 +143,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	private String persistenceUnitName;
 	private String cfgXmlResource;
 
-	private AnnotationConfiguration cfg;
-	private final Map connectionProviderInjectionData;
+	private Configuration cfg;
 	//made transient and not restored in deserialization on purpose, should no longer be called after restoration
 	private transient EventListenerConfigurator listenerConfigurator;
 	private PersistenceUnitTransactionType transactionType;
@@ -154,8 +154,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 
 	public Ejb3Configuration() {
-		connectionProviderInjectionData = new HashMap();
-		cfg = new AnnotationConfiguration();
+		cfg = new Configuration();
 		cfg.setEntityNotFoundDelegate( ejb3EntityNotFoundDelegate );
 		listenerConfigurator = new EventListenerConfigurator( this );
 	}
@@ -168,10 +167,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	@SuppressWarnings({ "JavaDoc", "unchecked" })
 	public void setDataSource(DataSource ds) {
 		if ( ds != null ) {
-			Map cpInjection = new HashMap();
-			cpInjection.put( "dataSource", ds );
-			connectionProviderInjectionData.put( ConnectionProviderInitiator.INJECTION_DATA, cpInjection );
-			this.setProperty( Environment.CONNECTION_PROVIDER, InjectedDataSourceConnectionProvider.class.getName() );
+			cfg.getProperties().put( Environment.DATASOURCE, ds );
+			this.setProperty( Environment.CONNECTION_PROVIDER, DatasourceConnectionProviderImpl.class.getName() );
 		}
 	}
 
@@ -283,7 +280,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	/**
 	 * Build the configuration from an entity manager name and given the
 	 * appropriate extra properties. Those properties override the one get through
-	 * the peristence.xml file.
+	 * the persistence.xml file.
 	 * If the persistence unit name is not found or does not match the Persistence Provider, null is returned
 	 *
 	 * This method is used in a non managed environment
@@ -505,7 +502,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 * @param info The persistence unit info passed in by the container (usually from processing a persistence.xml).
 	 * @param integration The map of integration properties from the container to configure the provider.
 	 *
-	 * @return The configured EJB3Configurartion object
+	 * @return this
 	 *
 	 * @see HibernatePersistence#createContainerEntityManagerFactory
 	 */
@@ -859,21 +856,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	// This is used directly by JBoss so don't remove until further notice.  bill@jboss.org
 	@Deprecated
     public EntityManagerFactory createEntityManagerFactory(Map workingVars) {
-		Properties props = new Properties();
-		if ( workingVars != null ) {
-			props.putAll( workingVars );
-			//remove huge non String elements for a clean props
-			props.remove( AvailableSettings.CLASS_NAMES );
-			props.remove( AvailableSettings.PACKAGE_NAMES );
-			props.remove( AvailableSettings.HBXML_FILES );
-			props.remove( AvailableSettings.LOADED_CLASSES );
-		}
-		configure( props, workingVars );
+		configure( workingVars );
 		return buildEntityManagerFactory();
-	}
-
-	public EntityManagerFactory createEntityManagerFactory(Map config, ServiceRegistryImpl serviceRegistry) {
-		return null;  // todo : implement method body
 	}
 
 	/**
@@ -906,7 +890,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					discardOnClose,
 					getSessionInterceptorClass( cfg.getProperties() ),
 					cfg,
-					connectionProviderInjectionData,
 					serviceRegistry
 			);
 		}
@@ -970,6 +953,20 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				Ejb3ConfigurationObjectFactory.class.getName(),
 				null
 		);
+	}
+
+	@SuppressWarnings( {"unchecked"})
+	public Ejb3Configuration configure(Map configValues) {
+		Properties props = new Properties();
+		if ( configValues != null ) {
+			props.putAll( configValues );
+			//remove huge non String elements for a clean props
+			props.remove( AvailableSettings.CLASS_NAMES );
+			props.remove( AvailableSettings.PACKAGE_NAMES );
+			props.remove( AvailableSettings.HBXML_FILES );
+			props.remove( AvailableSettings.LOADED_CLASSES );
+		}
+		return configure( props, configValues );
 	}
 
 	/**
@@ -1139,13 +1136,13 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			}
 		}
 		if ( workingVars.containsKey( AvailableSettings.XML_FILE_NAMES ) ) {
-			Collection<String> xmlFiles = (Collection<String>) workingVars.get(
-					AvailableSettings.XML_FILE_NAMES
-			);
+			Collection<String> xmlFiles = (Collection<String>) workingVars.get( AvailableSettings.XML_FILE_NAMES );
 			for ( String xmlFile : xmlFiles ) {
 				Boolean useMetaInf = null;
 				try {
-					if ( xmlFile.endsWith( META_INF_ORM_XML ) ) useMetaInf = true;
+					if ( xmlFile.endsWith( META_INF_ORM_XML ) ) {
+						useMetaInf = true;
+					}
 					cfg.addResource( xmlFile );
 				}
 				catch( MappingNotFoundException e ) {
@@ -1162,8 +1159,12 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 					throw new PersistenceException( getExceptionHeader()
 								+ "Error while reading JPA XML file: " + xmlFile, me);
 				}
-                if (Boolean.TRUE.equals(useMetaInf)) LOG.exceptionHeaderFound(getExceptionHeader(), META_INF_ORM_XML);
-                else if (Boolean.FALSE.equals(useMetaInf)) LOG.exceptionHeaderNotFound(getExceptionHeader(), META_INF_ORM_XML);
+                if (Boolean.TRUE.equals(useMetaInf)) {
+					LOG.exceptionHeaderFound(getExceptionHeader(), META_INF_ORM_XML);
+				}
+                else if (Boolean.FALSE.equals(useMetaInf)) {
+					LOG.exceptionHeaderNotFound(getExceptionHeader(), META_INF_ORM_XML);
+				}
 			}
 		}
 		if ( workingVars.containsKey( AvailableSettings.HBXML_FILES ) ) {
@@ -1562,7 +1563,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	 * tool.
 	 * DO NOT update configuration through it.
 	 */
-	public AnnotationConfiguration getHibernateConfiguration() {
+	public Configuration getHibernateConfiguration() {
 		//TODO make it really read only (maybe through proxying)
 		return cfg;
 	}

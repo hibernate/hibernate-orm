@@ -1,20 +1,30 @@
-//$Id$
 package org.hibernate.ejb.test.callbacks;
+
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.persistence.EntityManager;
+
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
 import org.hibernate.ejb.test.Kitten;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
 import org.hibernate.testing.FailureExpected;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
 public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testCallbackMethod() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Cat c = new Cat();
@@ -37,6 +47,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testEntityListener() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Cat c = new Cat();
@@ -63,7 +74,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-
+	@Test
 	public void testPostPersist() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Cat c = new Cat();
@@ -103,6 +114,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testPrePersistOnCascade() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -118,6 +130,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testCallBackListenersHierarchy() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -133,6 +146,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( tv.isLast );
 	}
 
+	@Test
 	public void testException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -154,6 +168,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testIdNullSetByPrePersist() throws Exception {
 		Plant plant = new Plant();
 		plant.setName( "Origuna plantula gigantic" );
@@ -165,6 +180,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 	
+	@Test
 	@FailureExpected(message = "collection change does not trigger an event", jiraKey = "EJB-288")
 	public void testPostUpdateCollection() throws Exception {
 		// create a cat
@@ -220,6 +236,7 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Cat.class,

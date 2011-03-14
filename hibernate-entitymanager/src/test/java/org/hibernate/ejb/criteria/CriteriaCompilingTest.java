@@ -22,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
+
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+
 import org.hibernate.ejb.metamodel.Address;
 import org.hibernate.ejb.metamodel.Alias;
 import org.hibernate.ejb.metamodel.Country;
@@ -49,12 +51,14 @@ import org.hibernate.ejb.test.callbacks.VideoSystem;
 import org.hibernate.ejb.test.inheritance.Fruit;
 import org.hibernate.ejb.test.inheritance.Strawberry;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Customer.class,
@@ -79,6 +83,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		};
 	}
 
+	@Test
 	public void testJustSimpleRootCriteria() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -98,6 +103,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testSimpleJoinCriteria() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -113,6 +119,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testSimpleFetchCriteria() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -128,6 +135,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testSerialization() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -145,6 +153,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	private <T> T serializeDeserialize(T object) {
 		T serializedObject = null;
 		try {
@@ -161,7 +170,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 			byteIn.close();
 		}
 		catch (Exception e) {
-			fail("Unable to serialize / deserialize the object: " + e.getMessage() );
+			Assert.fail( "Unable to serialize / deserialize the object: " + e.getMessage() );
 		}
 		return serializedObject;
 	}

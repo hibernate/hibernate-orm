@@ -1,4 +1,3 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -23,16 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.emops;
+
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
  * @author Emmanuel Bernard
  */
 public class FlushModeTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testCreateEMFlushMode() throws Exception {
 		Map<String, String> properties = new HashMap<String, String>();
 		properties.put( "org.hibernate.flushMode", "manual" );
@@ -45,11 +48,12 @@ public class FlushModeTest extends BaseEntityManagerFunctionalTestCase {
 
 		em.clear();
 
-		assertNull( em.find( Dress.class, dress.name ) );
+		Assert.assertNull( em.find( Dress.class, dress.name ) );
 
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Race.class,

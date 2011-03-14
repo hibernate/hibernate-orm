@@ -1,21 +1,52 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.criteria.tuple;
-import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
+import java.util.List;
+
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer;
 import org.hibernate.ejb.metamodel.Customer_;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Emmanuel Bernard
  */
 public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
+	@Test
 	public void testArray() {
-		EntityManager em = factory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		Customer c1 = new Customer();
 		c1.setId( "c1" );
@@ -25,7 +56,7 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 
-		em = factory.createEntityManager();
+		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		final CriteriaBuilder cb = em.getCriteriaBuilder();
 		CriteriaQuery<Object[]> q = cb.createQuery(Object[].class);
@@ -38,16 +69,16 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 
-		em = factory.createEntityManager();
+		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete Customer" ).executeUpdate();
 		em.getTransaction().commit();
 		em.close();
 	}
 
-
+	@Test
 	public void testTuple() {
-		EntityManager em = factory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 
 		em.getTransaction().begin();
 		Customer c1 = new Customer();
@@ -58,7 +89,7 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 
-		em = factory.createEntityManager();
+		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		final CriteriaBuilder builder = em.getCriteriaBuilder();
 		CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
@@ -82,7 +113,7 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 
-		em = factory.createEntityManager();
+		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete Customer" ).executeUpdate();
 		em.getTransaction().commit();

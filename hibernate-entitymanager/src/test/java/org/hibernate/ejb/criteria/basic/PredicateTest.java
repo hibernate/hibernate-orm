@@ -22,14 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.basic;
-import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.util.List;
+
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Order;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test the various predicates.
@@ -38,25 +46,25 @@ import org.hibernate.ejb.metamodel.Order;
  * @author Hardy Ferentschik
  */
 public class PredicateTest extends AbstractMetamodelSpecificTest {
-
-	private EntityManager em;
 	private CriteriaBuilder builder;
 
-	public void setUp() throws Exception {
-		super.setUp();
-		builder = factory.getCriteriaBuilder();
-		em = getOrCreateEntityManager();
-		createTestOrders();
-		em.getTransaction().begin();
-	}
+	@Before
+	public void prepareTestData() {
+		builder = entityManagerFactory().getCriteriaBuilder();
 
-	public void tearDown() throws Exception {
+		EntityManager em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		em.persist( new Order( "order-1", 1.0d ) );
+		em.persist( new Order( "order-2", 10.0d ) );
+		em.persist( new Order( "order-3", new char[]{'r','u'} ) );
 		em.getTransaction().commit();
 		em.close();
-		super.tearDown();
 	}
 
+	@Test
 	public void testEmptyConjunction() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		// yes this is a retarded case, but explicitly allowed in the JPA spec
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
@@ -66,9 +74,14 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 3 );
+		em.getTransaction().commit();
+		em.close();
 	}
 
+	@Test
 	public void testEmptyDisjunction() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		// yes this is a retarded case, but explicitly allowed in the JPA spec
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
@@ -78,12 +91,17 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 3 );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	/**
 	 * Check simple not.
 	 */
+	@Test
 	public void testSimpleNot() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
@@ -92,12 +110,17 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 2 );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	/**
 	 * Check complicated not.
 	 */
+	@Test
 	public void testComplicatedNotOr() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
@@ -110,12 +133,17 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		assertTrue( orders.size() == 1 );
 		Order order = orders.get( 0 );
 		assertEquals( "order-3", order.getId() );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	/**
 	 * Check complicated not.
 	 */
+	@Test
 	public void testNotMultipleOr() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
@@ -127,12 +155,17 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 0 );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	/**
 	 * Check complicated not.
 	 */
+	@Test
 	public void testComplicatedNotAnd() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 
@@ -143,20 +176,17 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 3 );
-	}
-
-	private void createTestOrders() {
-		em.getTransaction().begin();
-		em.persist( new Order( "order-1", 1.0d ) );
-		em.persist( new Order( "order-2", 10.0d ) );
-		em.persist( new Order( "order-3", new char[]{'r','u'} ) );
 		em.getTransaction().commit();
+		em.close();
 	}
 
 	/**
 	 * Check predicate for field which has simple char array type (char[]).
 	 */
+	@Test
 	public void testCharArray() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 		
@@ -166,12 +196,17 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 1 );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 	/**
 	 * Check predicate for field which has simple char array type (byte[]).
 	 */
+	@Test
 	public void testByteArray() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
 		Root<Order> orderRoot = orderCriteria.from( Order.class );
 		
@@ -181,6 +216,8 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
 		assertTrue( orders.size() == 0 );
+		em.getTransaction().commit();
+		em.close();
 	}
 
 

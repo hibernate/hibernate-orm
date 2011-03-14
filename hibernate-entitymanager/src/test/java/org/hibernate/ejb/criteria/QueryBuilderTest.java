@@ -22,14 +22,16 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.metamodel.Address;
 import org.hibernate.ejb.metamodel.Alias;
@@ -46,9 +48,11 @@ import org.hibernate.ejb.metamodel.ShelfLife;
 import org.hibernate.ejb.metamodel.Spouse;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
@@ -70,6 +74,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		};
 	}
 
+	@Test
 	public void testEqualityComparisonLiteralConversion() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -108,6 +113,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testEqualityComparisonEntityConversion() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -149,6 +155,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testTypeConversion() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -180,6 +187,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testConstructor() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -204,6 +212,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testDateTimeFunctions() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -21,23 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.ejb.test.ops;
-import java.util.Map;
+
 import javax.persistence.EntityManager;
+import java.util.Map;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author Gavin King
  * @author Hardy Ferentschik
  */
 public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testGetLoad() {
 		clearCounts();
 
@@ -106,27 +113,24 @@ public class GetLoadTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		( ( EntityManagerFactoryImpl ) factory ).getSessionFactory().getStatistics().clear();
+		( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory().getStatistics().clear();
 	}
 
 	private void assertFetchCount(int count) {
-		int fetches = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+		int fetches = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
 				.getStatistics()
 				.getEntityFetchCount();
 		assertEquals( count, fetches );
 	}
 
 	@Override
+	@SuppressWarnings( {"unchecked"})
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 		options.put( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[0];
-	}
-
 	protected String[] getMappings() {
 		return new String[] {
 				"org/hibernate/ejb/test/ops/Node.hbm.xml",

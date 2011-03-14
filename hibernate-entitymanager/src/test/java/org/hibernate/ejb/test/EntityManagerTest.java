@@ -39,10 +39,16 @@ import java.util.Map;
 
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.stat.Statistics;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,7 +62,7 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  */
 public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Item.class,
@@ -65,20 +71,27 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		};
 	}
 
+	@SuppressWarnings( {"unchecked"})
+	protected void addConfigOptions(Map options) {
+		options.put( Environment.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
 	public Map<Class, String> getCachedClasses() {
 		Map<Class, String> result = new HashMap<Class, String>();
 		result.put( Item.class, "read-write" );
 		return result;
 	}
 
+	@Override
 	public Map<String, String> getCachedCollections() {
 		Map<String, String> result = new HashMap<String, String>();
 		result.put( Item.class.getName() + ".distributors", "read-write, RegionName" );
 		return result;
 	}
 
+	@Test
 	public void testEntityManager() {
-
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
 		EntityManager em = getOrCreateEntityManager();
@@ -121,16 +134,16 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 
 		em.close();
-
 	}
 
+	@Test
 	public void testConfiguration() throws Exception {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
 		item.setDistributors( new HashSet<Distributor>() );
 		item.getDistributors().add( res );
-		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -169,6 +182,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		stats.setStatisticsEnabled( false );
 	}
 
+	@Test
 	public void testContains() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -201,6 +215,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testClear() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -216,6 +231,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testFlushMode() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.setFlushMode( FlushModeType.COMMIT );
@@ -225,6 +241,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testPersistNoneGenerator() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -242,6 +259,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testSerializableException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -284,6 +302,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		assertNotNull( e.getCause() );
 	}
 
+	@Test
 	public void testIsOpen() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		assertTrue( em.isOpen() );
@@ -294,7 +313,8 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		assertFalse( em.isOpen() );
 	}
 
-	//EJB-9
+	@Test
+	@TestForIssue( jiraKey = "EJB-9" )
 	public void testGet() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -315,6 +335,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testGetProperties() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Map<String, Object> properties = em.getProperties();
@@ -330,6 +351,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( properties.containsKey( AvailableSettings.FLUSH_MODE ) );
 	}
 
+	@Test
 	public void testSetProperty() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

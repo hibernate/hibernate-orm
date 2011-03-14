@@ -23,22 +23,31 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.ops;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
  * @author Hardy Ferentschik
  */
 public class PersistTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testCreateTree() {
 
 		clearCounts();
@@ -56,7 +65,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		root = ( Node ) em.find( Node.class, "root" );
+		root = em.find( Node.class, "root" );
 		Node child2 = new Node( "child2" );
 		root.addChild( child2 );
 		em.getTransaction().commit();
@@ -66,6 +75,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 		assertUpdateCount( 0 );
 	}
 
+	@Test
 	public void testCreateTreeWithGeneratedId() {
 		clearCounts();
 
@@ -83,7 +93,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		root = ( NumberedNode ) em.find( NumberedNode.class, root.getId() );
+		root = em.find( NumberedNode.class, root.getId() );
 		NumberedNode child2 = new NumberedNode( "child2" );
 		root.addChild( child2 );
 		em.getTransaction().commit();
@@ -93,6 +103,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 		assertUpdateCount( 0 );
 	}
 
+	@Test
 	public void testCreateException() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -130,6 +141,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testCreateExceptionWithGeneratedId() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -167,6 +179,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testBasic() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -185,7 +198,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		er = ( Employer ) em.find( Employer.class, er.getId() );
+		er = em.find( Employer.class, er.getId() );
 		assertNotNull( er );
 		assertNotNull( er.getEmployees() );
 		assertEquals( 1, er.getEmployees().size() );
@@ -196,23 +209,25 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		( ( EntityManagerFactoryImpl ) factory ).getSessionFactory().getStatistics().clear();
+		( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
 				.getStatistics()
 				.getEntityInsertCount();
 		assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+		int updates = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
 				.getStatistics()
 				.getEntityUpdateCount();
 		assertEquals( count, updates );
 	}
 
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 		options.put( Environment.STATEMENT_BATCH_SIZE, "0" );
@@ -223,6 +238,7 @@ public class PersistTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class<?>[] { Node.class };
 	}
 
+	@Override
 	protected String[] getMappings() {
 		return new String[] {
 				"org/hibernate/ejb/test/ops/Node.hbm.xml",

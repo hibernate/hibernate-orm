@@ -1,23 +1,45 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.cascade;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
 
 /**
  * @author Max Rydahl Andersen
  */
 public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testCascade() throws Exception {
 		
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		
-		Teacher teacher = null;
-		
-		teacher = new Teacher();
+		Teacher teacher = new Teacher();
 
 		Student student = new Student();
 
@@ -46,10 +68,9 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 		
 		em.getTransaction().commit(); // here *alot* of flushes occur on an object graph that has *Zero* changes.
 		em.close();
-		
-		
 	}
 
+	@Test
 	public void testNoCascadeAndMerge() throws Exception {
 		Song e1 = new Song();
 		Author e2 = new Author();
@@ -67,7 +88,6 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 
 		e1 = em.find(Song.class, e1.getId());
-		e2 = null;
 
 
 		tx = em.getTransaction();
@@ -76,10 +96,9 @@ public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 		//em.refresh(e1);
 		tx.commit();
 		em.close();
-
 	}
 
-
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Teacher.class,

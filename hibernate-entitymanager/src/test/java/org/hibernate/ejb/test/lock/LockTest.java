@@ -1,6 +1,34 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.lock;
-import static org.hibernate.testing.TestLogger.LOG;
+
+import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.Query;
+import javax.persistence.QueryTimeoutException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,22 +36,25 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.Query;
-import javax.persistence.QueryTimeoutException;
+
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
+import static org.hibernate.testing.TestLogger.LOG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * @author Emmanuel Bernard
  */
 public class LockTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testFindWithTimeoutHint() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -49,6 +80,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testLockRead() throws Exception {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -72,6 +104,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testLockOptimistic() throws Exception {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -95,6 +128,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testLockWrite() throws Exception {
 		Lock lock = new Lock();
 		lock.setName( "second" );
@@ -121,6 +155,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testLockWriteOnUnversioned() throws Exception {
 		UnversionedLock lock = new UnversionedLock();
 		lock.setName( "second" );
@@ -153,6 +188,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testLockPessimisticForceIncrement() throws Exception {
 		Lock lock = new Lock();
 		lock.setName( "force" );
@@ -179,6 +215,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testLockOptimisticForceIncrement() throws Exception {
 		Lock lock = new Lock();
 		lock.setName( "force" );
@@ -205,30 +242,31 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-   public void testLockOptimisticForceIncrementDifferentEm() throws Exception {
-		 Lock lock = new Lock();
-		 lock.setName( "force" );
-		 EntityManager em1 = createIsolatedEntityManager();
-		 em1.getTransaction().begin();
-		 em1.persist( lock );
-		 em1.getTransaction().commit();
-		 em1.close();
+	@Test
+	public void testLockOptimisticForceIncrementDifferentEm() throws Exception {
+		Lock lock = new Lock();
+		lock.setName( "force" );
+		EntityManager em1 = createIsolatedEntityManager();
+		em1.getTransaction().begin();
+		em1.persist( lock );
+		em1.getTransaction().commit();
+		em1.close();
 
-		 EntityManager em2 = createIsolatedEntityManager();
-		 em2.getTransaction().begin();
-		 lock = em2.find( Lock.class, lock.getId(), LockModeType.OPTIMISTIC );
-		 assertEquals( "lock mode should be OPTIMISTIC ", LockModeType.OPTIMISTIC, em2.getLockMode(lock) );
-		 em2.lock( lock, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-		 assertEquals( "lock mode should be OPTIMISTIC_FORCE_INCREMENT ", LockModeType.OPTIMISTIC_FORCE_INCREMENT, em2.getLockMode(lock) );
-		 em2.getTransaction().commit();
-		 em2.getTransaction().begin();
-		 em2.remove( lock );
-		 em2.getTransaction().commit();
-		 em2.close();
+		EntityManager em2 = createIsolatedEntityManager();
+		em2.getTransaction().begin();
+		lock = em2.find( Lock.class, lock.getId(), LockModeType.OPTIMISTIC );
+		assertEquals( "lock mode should be OPTIMISTIC ", LockModeType.OPTIMISTIC, em2.getLockMode(lock) );
+		em2.lock( lock, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
+		assertEquals( "lock mode should be OPTIMISTIC_FORCE_INCREMENT ", LockModeType.OPTIMISTIC_FORCE_INCREMENT, em2.getLockMode(lock) );
+		em2.getTransaction().commit();
+		em2.getTransaction().begin();
+		em2.remove( lock );
+		em2.getTransaction().commit();
+		em2.close();
 	}
 
+	@Test
 	public void testContendedPessimisticLock() throws Exception {
-
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticWriteLock)
@@ -300,8 +338,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testContendedPessimisticReadLockTimeout() throws Exception {
-
 		EntityManager em = getOrCreateEntityManager();
 		final EntityManager em2 = createIsolatedEntityManager();
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability (e.g. supportsPessimisticLockTimeout)
@@ -385,6 +423,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testContendedPessimisticWriteLockTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -470,6 +509,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -555,6 +595,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testQueryTimeout() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -644,6 +685,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testQueryTimeoutEMProps() throws Exception {
 		// TODO:  replace dialect instanceof test with a Dialect.hasCapability
 		if ( ! (getDialect() instanceof Oracle10gDialect)) {
@@ -734,6 +776,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 
+	@Test
 	public void testLockTimeoutEMProps() throws Exception {
 
 		EntityManager em = getOrCreateEntityManager();
@@ -819,7 +862,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Lock.class,

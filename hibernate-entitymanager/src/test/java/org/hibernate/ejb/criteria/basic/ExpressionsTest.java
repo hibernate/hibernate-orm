@@ -22,10 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.basic;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Collections;
-import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -33,12 +30,23 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.Query;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
 import org.hibernate.impl.AbstractQueryImpl;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests that various expressions operate as expected
@@ -48,10 +56,10 @@ import org.hibernate.impl.AbstractQueryImpl;
 public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-		builder = factory.getCriteriaBuilder();
+	@Before
+	public void prepareTestData() {
+		builder = entityManagerFactory().getCriteriaBuilder();
+
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Product product = new Product();
@@ -67,6 +75,16 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@After
+	public void cleanupTestData() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.find( Product.class, "product1" ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
 	public void testEmptyConjunction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -79,6 +97,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testEmptyConjunctionIsTrue() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -91,6 +110,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testEmptyConjunctionIsFalse() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -103,6 +123,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testEmptyDisjunction() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -115,6 +136,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testEmptyDisjunctionIsTrue() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -127,6 +149,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testEmptyDisjunctionIsFalse() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -139,6 +162,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testDiff() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -151,6 +175,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testDiffWithQuotient() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -171,6 +196,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testSumWithQuotient() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -191,6 +217,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testQuotientAndMultiply() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -224,7 +251,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-
+	@Test
 	public void testParameterReuse() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -248,6 +275,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		return hqlQueryImpl.getParameterMetadata().getNamedParameterNames().size();
 	}
 
+	@Test
 	public void testInExplicitTupleList() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -260,6 +288,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testInExplicitTupleListVarargs() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -272,6 +301,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testInExpressionVarargs() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -284,6 +314,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testJoinedElementCollectionValuesInTupleList() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

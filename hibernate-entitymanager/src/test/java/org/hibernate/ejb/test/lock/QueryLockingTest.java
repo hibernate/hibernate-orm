@@ -22,23 +22,30 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.lock;
-import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
+import java.util.Map;
+
 import org.hibernate.LockMode;
-import org.hibernate.cfg.AnnotationConfiguration;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.QueryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.impl.SessionImpl;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
-
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Lockable.class };
@@ -47,9 +54,10 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	protected void addConfigOptions(Map options) {
-		options.put( AnnotationConfiguration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		options.put( Configuration.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 	}
 
+	@Test
 	public void testOverallLockMode() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -75,6 +83,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testPessimisticForcedIncrementOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -99,6 +108,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testPessimisticForcedIncrementSpecific() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -125,6 +135,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testOptimisticForcedIncrementOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -150,6 +161,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testOptimisticForcedIncrementSpecific() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -177,6 +189,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testOptimisticOverall() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -205,6 +218,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testOptimisticSpecific() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

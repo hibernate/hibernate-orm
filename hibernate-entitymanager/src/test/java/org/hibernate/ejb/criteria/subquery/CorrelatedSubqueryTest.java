@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.subquery;
+
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
+
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Customer;
@@ -37,14 +39,17 @@ import org.hibernate.ejb.metamodel.LineItem_;
 import org.hibernate.ejb.metamodel.Order;
 import org.hibernate.ejb.metamodel.Order_;
 
+import org.junit.Test;
+
+import org.hibernate.testing.SkipForDialect;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
+	@Test
 	public void testBasicCorrelation() {
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
@@ -62,8 +67,9 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testRestrictedCorrelation() {
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
@@ -83,9 +89,10 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-	@org.hibernate.testing.SkipForDialect(value=SybaseASE15Dialect.class, jiraKey="HHH-3032")
+	@Test
+	@SkipForDialect(value=SybaseASE15Dialect.class, jiraKey="HHH-3032")
 	public void testCorrelationExplicitSelectionCorrelation() {
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
@@ -106,8 +113,9 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
+	@Test
 	public void testRestrictedCorrelationNoExplicitSelection() {
-		CriteriaBuilder builder = factory.getCriteriaBuilder();
+		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 

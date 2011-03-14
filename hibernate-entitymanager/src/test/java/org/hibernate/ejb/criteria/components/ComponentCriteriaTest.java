@@ -22,23 +22,30 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.components;
-import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import java.util.List;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+
 /**
- *
  * @author alan.oleary
  */
 public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Client.class };
 	}
 
+	@Test
 	public void testEmbeddableInPath() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -54,7 +61,7 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 		Root<Client> root = cq.from(Client.class);
 		cq.where(cb.equal(root.get("name").get("firstName"), client.getName().getFirstName()));
 		List<Client> list = em.createQuery(cq).getResultList();
-		assertEquals(1, list.size());
+		Assert.assertEquals( 1, list.size() );
 		em.getTransaction().commit();
 		em.close();
 
@@ -65,8 +72,9 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-4586" )
 	public void testParameterizedFunctions() {
-		// HHH-4586
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaBuilder cb = em.getCriteriaBuilder();

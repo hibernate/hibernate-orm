@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-import java.util.Set;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
@@ -36,44 +36,58 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
-import org.hibernate.cfg.AnnotationConfiguration;
+import java.util.Set;
+
+import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.SessionFactoryImplementor;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testBaseOfService() throws Exception {
-		EntityManagerFactory emf = factory;
+		EntityManagerFactory emf = entityManagerFactory();
 		assertNotNull( emf.getMetamodel() );
 		final EntityType<Fridge> entityType = emf.getMetamodel().entity( Fridge.class );
 		assertNotNull( entityType );
 	}
 
+	@Test
 	@SuppressWarnings({ "unchecked" })
 	public void testBuildingMetamodelWithParameterizedCollection() {
-		AnnotationConfiguration cfg = new AnnotationConfiguration( );
-		configure( cfg );
+		Configuration cfg = new Configuration( );
+//		configure( cfg );
 		cfg.addAnnotatedClass( WithGenericCollection.class );
 		cfg.buildMappings();
-		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( getServiceRegistry() );
+		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry() );
 		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi );
 	}
 
+	@Test
 	public void testLogicalManyToOne() throws Exception {
-		final EntityType<JoinedManyToOneOwner> entityType = factory.getMetamodel().entity( JoinedManyToOneOwner.class );
+		final EntityType<JoinedManyToOneOwner> entityType = entityManagerFactory().getMetamodel().entity( JoinedManyToOneOwner.class );
 		final SingularAttribute attr = entityType.getDeclaredSingularAttribute( "house" );
 		assertEquals( Attribute.PersistentAttributeType.MANY_TO_ONE, attr.getPersistentAttributeType() );
 		assertEquals( House.class, attr.getBindableJavaType() );
-		final EntityType<House> houseType = factory.getMetamodel().entity( House.class );
+		final EntityType<House> houseType = entityManagerFactory().getMetamodel().entity( House.class );
 		assertEquals( houseType.getBindableJavaType(), attr.getBindableJavaType() );
 	}
 
+	@Test
 	public void testEntity() throws Exception {
-		final EntityType<Fridge> fridgeType = factory.getMetamodel().entity( Fridge.class );
+		final EntityType<Fridge> fridgeType = entityManagerFactory().getMetamodel().entity( Fridge.class );
 		assertEquals( Fridge.class, fridgeType.getBindableJavaType() );
 		assertEquals( Bindable.BindableType.ENTITY_TYPE, fridgeType.getBindableType() );
 		SingularAttribute<Fridge,Integer> wrapped = fridgeType.getDeclaredSingularAttribute( "temperature", Integer.class );
@@ -103,7 +117,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 
 		assertEquals( 3, fridgeType.getDeclaredAttributes().size() );
 
-		final EntityType<House> houseType = factory.getMetamodel().entity( House.class );
+		final EntityType<House> houseType = entityManagerFactory().getMetamodel().entity( House.class );
 		assertEquals( "org.hibernate.ejb.test.metadata.House", houseType.getName() );
 		assertTrue( houseType.hasSingleIdAttribute() );
 		final SingularAttribute<House, House.Key> houseId = houseType.getDeclaredId( House.Key.class );
@@ -111,7 +125,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( houseId.isId() );
 		assertEquals( Attribute.PersistentAttributeType.EMBEDDED, houseId.getPersistentAttributeType() );
 		
-		final EntityType<Person> personType = factory.getMetamodel().entity( Person.class );
+		final EntityType<Person> personType = entityManagerFactory().getMetamodel().entity( Person.class );
 		assertEquals( "Homo", personType.getName() );
 		assertFalse( personType.hasSingleIdAttribute() );
 		final Set<SingularAttribute<? super Person,?>> ids = personType.getIdClassAttributes();
@@ -121,7 +135,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 			assertTrue( localId.isId() );
 		}
 
-		final EntityType<FoodItem> foodType = factory.getMetamodel().entity( FoodItem.class );
+		final EntityType<FoodItem> foodType = entityManagerFactory().getMetamodel().entity( FoodItem.class );
 		assertTrue( foodType.hasVersionAttribute() );
 		final SingularAttribute<? super FoodItem, Long> version = foodType.getVersion( Long.class );
 		assertNotNull( version );
@@ -130,8 +144,9 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testBasic() throws Exception {
-		final EntityType<Fridge> entityType = factory.getMetamodel().entity( Fridge.class );
+		final EntityType<Fridge> entityType = entityManagerFactory().getMetamodel().entity( Fridge.class );
 		final SingularAttribute<? super Fridge,Integer> singularAttribute = entityType.getDeclaredSingularAttribute(
 				"temperature",
 				Integer.class
@@ -165,8 +180,9 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( found );
 	}
 
+	@Test
 	public void testEmbeddable() throws Exception {
-		final EntityType<House> entityType = factory.getMetamodel().entity( House.class );
+		final EntityType<House> entityType = entityManagerFactory().getMetamodel().entity( House.class );
 		final SingularAttribute<? super House,Address> address = entityType.getDeclaredSingularAttribute(
 				"address",
 				Address.class
@@ -181,21 +197,23 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( addressType.getDeclaredSingularAttribute( "address1" ).isOptional() );
 		assertFalse( addressType.getDeclaredSingularAttribute( "address2" ).isOptional() );
 
-		final EmbeddableType<Address> directType = factory.getMetamodel().embeddable( Address.class );
+		final EmbeddableType<Address> directType = entityManagerFactory().getMetamodel().embeddable( Address.class );
 		assertNotNull( directType );
 		assertEquals( Type.PersistenceType.EMBEDDABLE, directType.getPersistenceType() );
 	}
 
+	@Test
 	public void testCollection() throws Exception {
-		final EntityType<Garden> entiytype = factory.getMetamodel().entity( Garden.class );
+		final EntityType<Garden> entiytype = entityManagerFactory().getMetamodel().entity( Garden.class );
 		final Set<PluralAttribute<? super Garden, ?, ?>> attributes = entiytype.getPluralAttributes();
 		assertEquals( 1, attributes.size() );
 		PluralAttribute<? super Garden, ?, ?> flowers = attributes.iterator().next();
 		assertTrue( flowers instanceof ListAttribute );
 	}
 
+	@Test
 	public void testElementCollection() throws Exception {
-		final EntityType<House> entityType = factory.getMetamodel().entity( House.class );
+		final EntityType<House> entityType = entityManagerFactory().getMetamodel().entity( House.class );
 		final SetAttribute<House,Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );
 		assertNotNull( rooms );
 		assertTrue( rooms.isAssociation() );
@@ -222,8 +240,9 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( PluralAttribute.CollectionType.LIST, roomsBySize.getCollectionType() );
 	}
 
+	@Test
 	public void testHierarchy() {
-		final EntityType<Cat> cat = factory.getMetamodel().entity( Cat.class );
+		final EntityType<Cat> cat = entityManagerFactory().getMetamodel().entity( Cat.class );
 		assertNotNull( cat );
 		assertEquals( 7, cat.getAttributes().size() );
 		assertEquals( 1, cat.getDeclaredAttributes().size() );
@@ -287,14 +306,15 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertNull( thing.getSupertype() );
 	}
 
+	@Test
 	public void testBackrefAndGenerics() throws Exception {
-		final EntityType<Parent> parent = factory.getMetamodel().entity( Parent.class );
+		final EntityType<Parent> parent = entityManagerFactory().getMetamodel().entity( Parent.class );
 		assertNotNull( parent );
 		final SetAttribute<? super Parent, ?> children = parent.getSet( "children" );
 		assertNotNull( children );
 		assertEquals( 1, parent.getPluralAttributes().size() );
 		assertEquals( 4, parent.getAttributes().size() );
-		final EntityType<Child> child = factory.getMetamodel().entity( Child.class );
+		final EntityType<Child> child = entityManagerFactory().getMetamodel().entity( Child.class );
 		assertNotNull( child );
 		assertEquals( 2, child.getAttributes().size() );
 		final SingularAttribute<? super Parent, Parent.Relatives> attribute = parent.getSingularAttribute(

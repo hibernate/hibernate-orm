@@ -22,14 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.metamodel;
+
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.SingularAttribute;
+
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class EmbeddedTypeTest extends BaseEntityManagerFunctionalTestCase {
@@ -40,8 +48,9 @@ public class EmbeddedTypeTest extends BaseEntityManagerFunctionalTestCase {
 		};
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-4702" )
 	public void testSingularAttributeAccessByName() {
-		// HHH-4702
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
@@ -55,8 +64,9 @@ public class EmbeddedTypeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-5821" )
 	public void testVersionAttributeMetadata() {
-		// HHH-5821
 		EntityManager em = getOrCreateEntityManager();
 		EntityType<VersionedEntity> metadata = em.getMetamodel().entity( VersionedEntity.class );
 		assertNotNull( metadata.getDeclaredVersion( int.class ) );

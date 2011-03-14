@@ -1,12 +1,16 @@
-//$Id$
 package org.hibernate.ejb.test.association;
+
 import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
 public class AssociationTest extends BaseEntityManagerFunctionalTestCase {
+	@Test
 	public void testBidirOneToOne() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -20,13 +24,16 @@ public class AssociationTest extends BaseEntityManagerFunctionalTestCase {
 			em.persist( i );
 		}
 		em.getTransaction().commit();
-		em.clear();
+		em.close();
+
+		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.remove( em.find(Incident.class, id) );
 		em.getTransaction().commit();
 		em.close();
 	}
 
+	@Test
 	public void testMergeAndBidirOneToOne() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -36,16 +43,23 @@ public class AssociationTest extends BaseEntityManagerFunctionalTestCase {
 		em.persist( kitchen );
 		kitchen.setOven( oven );
 		oven.setKitchen( kitchen );
-		em.flush();
-		em.clear();
-		//oven = em.find(Oven.class, oven.getId() );
-		oven = em.merge( oven );
-		em.flush();
+		em.getTransaction().commit();
+		em.close();
 
-		em.getTransaction().rollback();
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		oven = em.merge( oven );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.remove( em.find( Oven.class, oven.getId() ) );
+		em.getTransaction().commit();
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Incident.class,

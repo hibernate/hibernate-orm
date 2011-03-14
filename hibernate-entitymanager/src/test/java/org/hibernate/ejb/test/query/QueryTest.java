@@ -1,23 +1,53 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.query;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.hibernate.Hibernate;
+import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
-import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Wallet;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 public class QueryTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testPagedQuery() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -37,6 +67,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testAggregationReturnType() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -51,6 +82,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testParameterList() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -99,6 +131,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testParameterListInExistingParens() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -150,39 +183,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-//	public void testDistinct() throws Exception {
-//		Item item = new Item("Mouse", "Micro_oft mouse");
-//		Distributor fnac = new Distributor();
-//		fnac.setName("Fnac");
-//		item.addDistributor(fnac);
-//		Distributor auchan = new Distributor();
-//		auchan.setName("Auchan");
-//		item.addDistributor(auchan);
-//
-//		EntityManager em = getOrCreateEntityManager();
-//		em.getTransaction().begin();
-//		em.persist(fnac);
-//		em.persist(auchan);
-//		em.persist(item);
-//		em.getTransaction().commit();
-//
-//		em.getTransaction().begin();
-//		Query q = em.createQuery("select distinct item from Item item join fetch item.distributors");
-//		List result = q.getResultList();
-//		assertNotNull(result);
-//		assertEquals( 1, result.size() );
-//		item = (Item) result.get(0);
-//		item.getDistributors().clear();
-//		em.flush();
-//		int deleted = em.createQuery("delete from Item").executeUpdate();
-//		assertEquals( 1, deleted );
-//		deleted = em.createQuery("delete from Distributor").executeUpdate();
-//		assertEquals( 2, deleted );
-//		em.getTransaction().commit();
-//
-//		em.close();
-//	}
-
+	@Test
 	public void testEscapeCharacter() throws Exception {
 		final Item item = new Item( "Mouse", "Micro_oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -206,8 +207,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testNativeQueryByEntity() {
-
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
 		EntityManager em = getOrCreateEntityManager();
@@ -227,8 +228,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testNativeQueryByResultSet() {
-
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
 		EntityManager em = getOrCreateEntityManager();
@@ -249,6 +250,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testExplicitPositionalParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -274,6 +276,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testPositionalParameterForms() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -308,6 +311,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testPositionalParameterWithUserError() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -335,6 +339,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testNativeQuestionMarkParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -354,8 +359,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testNativeQueryWithPositionalParameter() {
-
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
 		EntityManager em = getOrCreateEntityManager();
@@ -382,6 +387,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testDistinct() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -410,6 +416,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testIsNull() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -443,8 +450,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testUpdateQuery() {
-
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
 		EntityManager em = getOrCreateEntityManager();
@@ -469,6 +476,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testUnavailableNamedQuery() throws Exception {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
@@ -493,6 +501,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
+	@Test
 	public void testTypedNamedNativeQuery() {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
@@ -513,6 +522,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Item.class,

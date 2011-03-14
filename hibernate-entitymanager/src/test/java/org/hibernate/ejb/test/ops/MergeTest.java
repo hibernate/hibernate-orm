@@ -21,20 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-//$Id$
 package org.hibernate.ejb.test.ops;
+
 import java.util.Map;
 import javax.persistence.EntityManager;
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.EntityManagerFactoryImpl;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
  * @author Gavin King
  * @author Hardy Ferentschik
  */
 public class MergeTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testMergeTree() {
 		clearCounts();
 
@@ -100,24 +103,25 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void clearCounts() {
-		( ( EntityManagerFactoryImpl ) factory ).getSessionFactory().getStatistics().clear();
+		( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory().getStatistics().clear();
 	}
 
 	private void assertInsertCount(int count) {
-		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+		int inserts = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
 				.getStatistics()
 				.getEntityInsertCount();
-		assertEquals( count, inserts );
+		Assert.assertEquals( count, inserts );
 	}
 
 	private void assertUpdateCount(int count) {
-		int updates = ( int ) ( ( EntityManagerFactoryImpl ) factory ).getSessionFactory()
+		int updates = ( int ) ( ( EntityManagerFactoryImpl ) entityManagerFactory() ).getSessionFactory()
 				.getStatistics()
 				.getEntityUpdateCount();
-		assertEquals( count, updates );
+		Assert.assertEquals( count, updates );
 	}
 
 	@Override
+	@SuppressWarnings( {"unchecked"})
 	protected void addConfigOptions(Map options) {
 		options.put( Environment.GENERATE_STATISTICS, "true" );
 		options.put( Environment.STATEMENT_BATCH_SIZE, "0" );

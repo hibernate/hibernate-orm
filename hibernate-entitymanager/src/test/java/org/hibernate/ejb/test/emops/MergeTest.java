@@ -1,14 +1,44 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.emops;
+
+import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 public class MergeTest extends BaseEntityManagerFunctionalTestCase {
+	@Test
 	public void testMergeWithIndexColumn() {
 		Race race = new Race();
 		race.competitors.add( new Competitor( "Name" ) );
@@ -33,6 +63,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testMergeManyToMany() {
 		Competition competition = new Competition();
 		competition.getCompetitors().add( new Competitor( "Name" ) );
@@ -65,6 +96,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testMergeManyToManyWithDeference() {
 		Competition competition = new Competition();
 		competition.getCompetitors().add( new Competitor( "Name" ) );
@@ -98,6 +130,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testRemoveAndMerge() {
 		Race race = new Race();
 		EntityManager em = getOrCreateEntityManager();
@@ -122,6 +155,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testConcurrentMerge() {
 		Race race = new Race();
 		race.name = "Derby";
@@ -154,6 +188,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testMergeUnidirectionalOneToMany() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -173,6 +208,7 @@ public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Race.class,

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.basic;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import javax.persistence.EntityManager;
@@ -33,25 +34,27 @@ import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.Product_;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 
-	@Override
-	public void setUp() throws Exception {
-		super.setUp();
-		builder = factory.getCriteriaBuilder();
+	@Before
+	public void createTestData() {
+		builder = entityManagerFactory().getCriteriaBuilder();
+
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Product product = new Product();
 		product.setId( "product1" );
 		product.setPrice( 1.23d );
 		product.setQuantity( 1000 );
-		product.setPartNumber( Integer.MAX_VALUE + 1 );
+		product.setPartNumber( ( (long) Integer.MAX_VALUE ) + 1 );
 		product.setRating( 1.999f );
 		product.setSomeBigInteger( BigInteger.valueOf( 987654321 ) );
 		product.setSomeBigDecimal( BigDecimal.valueOf( 987654.321 ) );
@@ -60,19 +63,19 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-	@Override
-	public void tearDown() throws Exception {
+	@After
+	public void cleanUpTestData() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete Product" ).executeUpdate();
 		em.getTransaction().commit();
 		em.close();
-		super.tearDown();
 	}
 
 	/**
 	 * Sum of Longs should return a Long
 	 */
+	@Test
 	public void testSumOfLongs() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -88,6 +91,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	/**
 	 * Sum of Integers should return an Integer; note that this is distinctly different than JPAQL
 	 */
+	@Test
 	public void testSumOfIntegers() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -103,6 +107,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	/**
 	 * Sum of Doubles should return a Double
 	 */
+	@Test
 	public void testSumOfDoubles() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -118,6 +123,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	/**
 	 * Sum of Floats should return a Float; note that this is distinctly different than JPAQL
 	 */
+	@Test
 	public void testSumOfFloats() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -133,6 +139,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	/**
 	 * Sum of BigInteger should return a BigInteger
 	 */
+	@Test
 	public void testSumOfBigIntegers() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -148,6 +155,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	/**
 	 * Sum of BigDecimal should return a BigDecimal
 	 */
+	@Test
 	public void testSumOfBigDecimals() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -160,7 +168,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-	public void assertReturnType(Class expectedType, Object value) {
+	private void assertReturnType(Class expectedType, Object value) {
 		if ( value != null && ! expectedType.isInstance( value ) ) {
 			throw new AssertionFailedError(
 					"Result value was not of expected type: expected [" + expectedType.getName()

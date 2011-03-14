@@ -1077,9 +1077,11 @@ public final class SessionFactoryImpl
 		}
 
 		public void evictQueryRegions() {
-			for ( QueryCache queryCache : queryCaches.values() ) {
-				queryCache.clear();
-				// TODO : cleanup entries in queryCaches + allCacheRegions ?
+			if ( queryCaches != null ) {
+				for ( QueryCache queryCache : queryCaches.values() ) {
+					queryCache.clear();
+					// TODO : cleanup entries in queryCaches + allCacheRegions ?
+				}
 			}
 		}
 	}

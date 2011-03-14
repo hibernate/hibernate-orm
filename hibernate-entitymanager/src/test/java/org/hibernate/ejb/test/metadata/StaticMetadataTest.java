@@ -22,20 +22,28 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.test.metadata;
-import java.util.Set;
+
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
+import java.util.Set;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
 public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testInjections() throws Exception {
 		// Address (embeddable)
 		assertNotNull( Address_.address1 );

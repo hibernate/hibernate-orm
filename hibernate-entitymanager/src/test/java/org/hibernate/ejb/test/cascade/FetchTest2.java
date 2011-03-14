@@ -1,12 +1,40 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.cascade;
+
 import javax.persistence.EntityManager;
+
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
+import static org.junit.Assert.fail;
+
 public class FetchTest2 extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testProxyTransientStuff() throws Exception {
-
-		EntityManager em = factory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		Troop2 disney = new Troop2();
@@ -22,7 +50,7 @@ public class FetchTest2 extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 
-		em = factory.createEntityManager();
+		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		Soldier2 soldier = em.find( Soldier2.class, mickey.getId() );
@@ -37,7 +65,7 @@ public class FetchTest2 extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 
-		em = factory.createEntityManager();
+		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		//load troop wo a proxy
@@ -56,6 +84,7 @@ public class FetchTest2 extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Troop2.class,

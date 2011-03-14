@@ -1,21 +1,53 @@
-//$Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.transaction;
-import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TransactionRequiredException;
+import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * @author Emmanuel Bernard
  */
 public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase {
+	@Test
 	public void testAlwaysTransactionalOperations() throws Exception {
 		Book book = new Book();
 		book.name = "Le petit prince";
@@ -43,39 +75,12 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.close();
 	}
 
-//	public void testTransactionalOperationsWhenTransactional() throws Exception {
-//		Book book = new Book();
-//		book.name = "Le petit prince";
-//		EntityManager em = getEntityManager( PersistenceContextType.TRANSACTION );
-//		try {
-//			em.persist( book );
-//			fail("flush has to be inside a Tx");
-//		}
-//		catch (TransactionRequiredException e) {
-//			//success
-//		}
-//		try {
-//			em.refresh( book );
-//			fail("refresh has to be inside a Tx");
-//		}
-//		catch (TransactionRequiredException e) {
-//			//success
-//		}
-//		try {
-//			em.remove( book );
-//			fail("refresh has to be inside a Tx");
-//		}
-//		catch (TransactionRequiredException e) {
-//			//success
-//		}
-//		em.close();
-//	}
-
+	@Test
 	public void testTransactionalOperationsWhenExtended() throws Exception {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled( true );
 
@@ -114,11 +119,12 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		stats.setStatisticsEnabled( false );
 	}
 
+	@Test
 	public void testMergeWhenExtended() throws Exception {
 		Book book = new Book();
 		book.name = "Le petit prince";
 		EntityManager em = getOrCreateEntityManager();
-		Statistics stats = ( ( HibernateEntityManagerFactory ) factory ).getSessionFactory().getStatistics();
+		Statistics stats = ( ( HibernateEntityManagerFactory ) entityManagerFactory() ).getSessionFactory().getStatistics();
 
 		em.getTransaction().begin();
 		em.persist( book );
@@ -157,6 +163,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		stats.setStatisticsEnabled( false );
 	}
 
+	@Test
 	public void testCloseAndTransaction() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -175,6 +182,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		}
 	}
 
+	@Test
 	public void testTransactionCommitDoesNotFlush() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -192,6 +200,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.close();
 	}
 
+	@Test
 	public void testTransactionAndContains() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -211,6 +220,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.close();
 	}
 
+	@Test
 	public void testRollbackOnlyOnPersistenceException() throws Exception {
 		Book book = new Book();
 		book.name = "Stolen keys";
@@ -243,9 +253,9 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		finally {
 			em.close();
 		}
-
 	}
 
+	@Test
 	public void testRollbackExceptionOnOptimisticLockException() throws Exception {
 		Book book = new Book();
 		book.name = "Stolen keys";
@@ -277,6 +287,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 
 	}
 
+	@Test
 	public void testRollbackClearPC() throws Exception {
 		Book book = new Book();
 		book.name = "Stolen keys";
@@ -292,6 +303,7 @@ public class FlushAndTransactionTest extends BaseEntityManagerFunctionalTestCase
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Book.class

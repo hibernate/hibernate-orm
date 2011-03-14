@@ -42,8 +42,9 @@ import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.internal.ServiceRegistryImpl;
 
-import org.hibernate.testing.AfterClassOnce;
-import org.hibernate.testing.BeforeClassOnce;
+import org.junit.After;
+import org.junit.Before;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.TestLogger.LOG;
@@ -55,32 +56,46 @@ import static org.hibernate.testing.TestLogger.LOG;
  * @author Hardy Ferentschik
  */
 public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCase {
+	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in
+	// BaseCoreFunctionalTestCase) because the old HEM test methodology was to create an EMF for each test method.
+
 	private static final Dialect dialect = Dialect.getDialect();
-	private static ServiceRegistryImpl serviceRegistry;
-	private static EntityManagerFactory factory;
+
+	private Ejb3Configuration ejb3Configuration;
+	private ServiceRegistryImpl serviceRegistry;
+	private EntityManagerFactory entityManagerFactory;
+
 	private EntityManager em;
 	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
 
-	public static Dialect getDialect() {
+	protected Dialect getDialect() {
 		return dialect;
 	}
 
-	protected
-	@BeforeClassOnce
-	private void buildSessionFactory() throws Exception {
+	protected EntityManagerFactory entityManagerFactory() {
+		return entityManagerFactory;
+	}
+
+	protected ServiceRegistryImpl serviceRegistry() {
+		return serviceRegistry;
+	}
+
+	@Before
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public void buildSessionFactory() throws Exception {
 		LOG.trace( "Building session factory" );
-		Ejb3Configuration ejb3Configuration = buildConfiguration();
+		ejb3Configuration = buildConfiguration();
+		ejb3Configuration.configure( getConfig() );
+		afterConfigurationBuilt( ejb3Configuration );
 		serviceRegistry = buildServiceRegistry( ejb3Configuration.getHibernateConfiguration() );
-		factory = ejb3Configuration.createEntityManagerFactory( getConfig(), serviceRegistry );
+		applyServices( serviceRegistry );
+		entityManagerFactory = ejb3Configuration.buildEntityManagerFactory( serviceRegistry );
 		afterEntityManagerFactoryBuilt();
 	}
 
 	protected Ejb3Configuration buildConfiguration() {
 		Ejb3Configuration ejb3Cfg = constructConfiguration();
-		configure( ejb3Cfg.getHibernateConfiguration() );
 		addMappings( ejb3Cfg.getHibernateConfiguration() );
-		ejb3Cfg.getHibernateConfiguration().buildMappings();
-		afterConfigurationBuilt( ejb3Cfg.getHibernateConfiguration() );
 		return ejb3Cfg;
 	}
 
@@ -98,7 +113,19 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return ejb3Configuration;
 	}
 
-	protected void configure(Configuration hibernateConfiguration) {
+	protected void addMappings(Configuration configuration) {
+		String[] mappings = getMappings();
+		if ( mappings != null ) {
+			for ( String mapping : mappings ) {
+				configuration.addResource( mapping, getClass().getClassLoader() );
+			}
+		}
+	}
+
+	protected static final String[] NO_MAPPINGS = new String[0];
+
+	protected String[] getMappings() {
+		return NO_MAPPINGS;
 	}
 
 	protected Map getConfig() {
@@ -108,16 +135,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
-			config.put(
-					AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
-					entry.getValue()
-			);
+			config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
-			config.put(
-					AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
-					entry.getValue()
-			);
+			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
 		}
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<String>();
@@ -132,44 +153,25 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	protected void addConfigOptions(Map options) {
 	}
 
-	protected void addMappings(Configuration configuration) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				configuration.addResource(
-						getBaseForMappings() + mapping,
-						getClass().getClassLoader()
-				);
+	private Properties loadProperties() {
+		Properties props = new Properties();
+		InputStream stream = Persistence.class.getResourceAsStream( "/hibernate.properties" );
+		if ( stream != null ) {
+			try {
+				props.load( stream );
+			}
+			catch ( Exception e ) {
+				throw new RuntimeException( "could not load hibernate.properties" );
+			}
+			finally {
+				try {
+					stream.close();
+				}
+				catch ( IOException ignored ) {
+				}
 			}
 		}
-//		Class<?>[] annotatedClasses = getAnnotatedClasses();
-//		if ( annotatedClasses != null ) {
-//			for ( Class<?> annotatedClass : annotatedClasses ) {
-//				configuration.addAnnotatedClass( annotatedClass );
-//			}
-//		}
-//		String[] annotatedPackages = getAnnotatedPackages();
-//		if ( annotatedPackages != null ) {
-//			for ( String annotatedPackage : annotatedPackages ) {
-//				configuration.addPackage( annotatedPackage );
-//			}
-//		}
-//		String[] xmlFiles = getOrmXmlFiles();
-//		if ( xmlFiles != null ) {
-//			for ( String xmlFile : xmlFiles ) {
-//				configuration.addResource( xmlFile );
-//			}
-//		}
-	}
-
-	protected static final String[] NO_MAPPINGS = new String[0];
-
-	protected String[] getMappings() {
-		return NO_MAPPINGS;
-	}
-
-	protected String getBaseForMappings() {
-		return "org/hibernate/test/";
+		return props;
 	}
 
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
@@ -178,15 +180,20 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return NO_CLASSES;
 	}
 
-	protected String[] getAnnotatedPackages() {
-		return NO_MAPPINGS;
+	public Map<Class, String> getCachedClasses() {
+		return new HashMap<Class, String>();
 	}
 
-	protected String[] getOrmXmlFiles() {
-		return NO_MAPPINGS;
+	public Map<String, String> getCachedCollections() {
+		return new HashMap<String, String>();
 	}
 
-	protected void afterConfigurationBuilt(Configuration hibernateConfiguration) {
+	public String[] getEjb3DD() {
+		return new String[] { };
+	}
+
+	@SuppressWarnings( {"UnusedParameters"})
+	protected void afterConfigurationBuilt(Ejb3Configuration ejb3Configuration) {
 	}
 
 	protected ServiceRegistryImpl buildServiceRegistry(Configuration configuration) {
@@ -194,11 +201,10 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		properties.putAll( configuration.getProperties() );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( properties );
-		applyServices( serviceRegistry );
-		return serviceRegistry;
+		return new ServiceRegistryImpl( properties );
 	}
 
+	@SuppressWarnings( {"UnusedParameters"})
 	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
 	}
 
@@ -210,22 +216,29 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 
-	@AfterClassOnce
+	@After
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public void releaseResources() {
-		cleanUnclosed( this.em );
-		for ( EntityManager isolatedEm : isolatedEms ) {
-			cleanUnclosed( isolatedEm );
+		releaseUnclosedEntityManagers();
+
+		if ( entityManagerFactory != null ) {
+			entityManagerFactory.close();
 		}
 
-		if ( factory != null ) {
-			factory.close();
-		}
 		if ( serviceRegistry != null ) {
 			serviceRegistry.destroy();
 		}
 	}
 
-	private void cleanUnclosed(EntityManager em) {
+	private void releaseUnclosedEntityManagers() {
+		releaseUnclosedEntityManager( this.em );
+
+		for ( EntityManager isolatedEm : isolatedEms ) {
+			releaseUnclosedEntityManager( isolatedEm );
+		}
+	}
+
+	private void releaseUnclosedEntityManager(EntityManager em) {
 		if ( em == null ) {
 			return;
 		}
@@ -243,65 +256,29 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	protected EntityManager getOrCreateEntityManager() {
 		if ( em == null || !em.isOpen() ) {
-			em = factory.createEntityManager();
+			em = entityManagerFactory.createEntityManager();
 		}
 		return em;
 	}
 
 	protected EntityManager createIsolatedEntityManager() {
-		EntityManager isolatedEm = factory.createEntityManager();
+		EntityManager isolatedEm = entityManagerFactory.createEntityManager();
 		isolatedEms.add( isolatedEm );
 		return isolatedEm;
 	}
 
 	protected EntityManager createIsolatedEntityManager(Map props) {
-		EntityManager isolatedEm = factory.createEntityManager(props);
+		EntityManager isolatedEm = entityManagerFactory.createEntityManager(props);
 		isolatedEms.add( isolatedEm );
 		return isolatedEm;
 	}
 
-	/**
-	 * always reopen a new EM and clse the existing one
-	 */
 	protected EntityManager createEntityManager(Map properties) {
+		// always reopen a new EM and close the existing one
 		if ( em != null && em.isOpen() ) {
 			em.close();
 		}
-		em = factory.createEntityManager( properties );
+		em = entityManagerFactory.createEntityManager( properties );
 		return em;
-	}
-
-	public String[] getEjb3DD() {
-		return new String[] { };
-	}
-
-	public Map<Class, String> getCachedClasses() {
-		return new HashMap<Class, String>();
-	}
-
-	public Map<String, String> getCachedCollections() {
-		return new HashMap<String, String>();
-	}
-
-	public static Properties loadProperties() {
-		Properties props = new Properties();
-		InputStream stream = Persistence.class.getResourceAsStream( "/hibernate.properties" );
-		if ( stream != null ) {
-			try {
-				props.load( stream );
-			}
-			catch ( Exception e ) {
-				throw new RuntimeException( "could not load hibernate.properties" );
-			}
-			finally {
-				try {
-					stream.close();
-				}
-				catch ( IOException ioe ) {
-				}
-			}
-		}
-		props.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		return props;
 	}
 }

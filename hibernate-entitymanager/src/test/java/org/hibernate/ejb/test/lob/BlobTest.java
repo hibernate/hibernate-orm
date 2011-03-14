@@ -1,4 +1,3 @@
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -34,6 +33,8 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 
@@ -44,7 +45,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
 public class BlobTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testBlobSerialization() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -69,6 +70,7 @@ public class BlobTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { ImageReader.class };
 	}

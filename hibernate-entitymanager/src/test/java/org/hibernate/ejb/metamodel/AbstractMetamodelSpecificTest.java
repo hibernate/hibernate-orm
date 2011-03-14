@@ -25,8 +25,6 @@ package org.hibernate.ejb.metamodel;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFunctionalTestCase {

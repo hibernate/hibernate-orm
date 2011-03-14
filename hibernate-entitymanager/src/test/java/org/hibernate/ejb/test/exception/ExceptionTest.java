@@ -1,24 +1,56 @@
-// $Id$
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.ejb.test.exception;
-import static org.hibernate.testing.TestLogger.LOG;
-import java.util.Map;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
+import java.util.Map;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.exception.ConstraintViolationException;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+
+import static org.hibernate.testing.TestLogger.LOG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
 public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Test
 	public void testOptimisticLockingException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
-		EntityManager em2 = factory.createEntityManager();
+		EntityManager em2 = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		Music music = new Music();
 		music.setName( "Old Country" );
@@ -59,6 +91,7 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testEntityNotFoundException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		Music music = em.getReference( Music.class, -1 );
@@ -74,6 +107,7 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
+	@Test
 	public void testConstraintViolationException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -102,7 +136,8 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	// HHH-4676
+	@Test
+	@TestForIssue( jiraKey = "HHH-4676" )
 	public void testInterceptor() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -119,10 +154,8 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Override
-	public Map getConfig() {
-		Map config = super.getConfig();
-		config.put( Environment.BATCH_VERSIONED_DATA, "false" );
-		return config;
+	protected void addConfigOptions(Map options) {
+		options.put( Environment.BATCH_VERSIONED_DATA, "false" );
 	}
 
 	@Override

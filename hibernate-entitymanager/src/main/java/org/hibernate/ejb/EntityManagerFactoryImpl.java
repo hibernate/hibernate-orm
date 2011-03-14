@@ -21,12 +21,6 @@
  */
 package org.hibernate.ejb;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
 import javax.persistence.Cache;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContextType;
@@ -35,10 +29,16 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+
 import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.metamodel.MetamodelImpl;
@@ -46,7 +46,6 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistry;
 
 /**
@@ -57,7 +56,6 @@ import org.hibernate.service.spi.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
-	private final transient ServiceRegistry serviceRegistry;
 	private final SessionFactory sessionFactory;
 	private final PersistenceUnitTransactionType transactionType;
 	private final boolean discardOnClose;
@@ -66,7 +64,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final Metamodel metamodel;
 	private final HibernatePersistenceUnitUtil util;
 	private final Map<String,Object> properties;
-	private final Map connectionProviderInjectionData;
 
 	private final PersistenceUtilHelper.MetadataCache cache = new PersistenceUtilHelper.MetadataCache();
 
@@ -75,10 +72,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			PersistenceUnitTransactionType transactionType,
 			boolean discardOnClose,
 			Class sessionInterceptorClass,
-			AnnotationConfiguration cfg,
-			Map connectionProviderInjectionData,
+			Configuration cfg,
 			ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
 		this.sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		this.transactionType = transactionType;
 		this.discardOnClose = discardOnClose;
@@ -98,7 +93,6 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		addAll( props, ( (SessionFactoryImplementor) sessionFactory ).getProperties() );
 		addAll( props, cfg.getProperties() );
 		this.properties = Collections.unmodifiableMap( props );
-		this.connectionProviderInjectionData = new HashMap();
 	}
 
 	private static void addAll(HashMap<String, Object> propertyMap, Properties properties) {

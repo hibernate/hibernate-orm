@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.criteria.basic;
+
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
@@ -29,17 +32,21 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase {
-
+	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Wall.class };
 	}
 
+	@Test
 	public void testParameterCollection() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -57,6 +64,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		em.close();
 	}
 
+	@Test
 	public void testTrivialCompilation() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

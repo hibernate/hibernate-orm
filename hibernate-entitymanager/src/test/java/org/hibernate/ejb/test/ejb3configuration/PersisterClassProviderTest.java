@@ -34,6 +34,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.entry.CacheEntryStructure;
+import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
@@ -54,7 +55,7 @@ import org.hibernate.type.VersionType;
 public class PersisterClassProviderTest extends junit.framework.TestCase {
 	public void testPersisterClassProvider() {
 		Ejb3Configuration conf = new Ejb3Configuration();
-		conf.setPersisterClassProvider( new GoofyPersisterClassProvider() );
+		conf.setProperty( AvailableSettings.PERSISTER_CLASS_PROVIDER, GoofyPersisterClassProvider.class.getName() );
 		conf.addAnnotatedClass( Bell.class );
 		try {
 			final EntityManagerFactory entityManagerFactory = conf.buildEntityManagerFactory();

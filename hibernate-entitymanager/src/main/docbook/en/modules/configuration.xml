@@ -701,6 +701,14 @@ EntityManagerFactory programmaticEmf =
             </row>
 
             <row>
+              <entry>hibernate.ejb.session_factory_observer</entry>
+
+              <entry>A optional <classname>SessionFactoryObserver</classname>
+              implementation class name. The class must have a no-arg
+              constructor.</entry>
+            </row>
+
+            <row>
               <entry>hibernate.ejb.event.&lt;eventtype&gt;</entry>
 
               <entry>Event listener list for a given eventtype. The list of

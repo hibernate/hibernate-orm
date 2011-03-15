@@ -252,6 +252,11 @@ public class AvailableSettings {
 	public static final String PERSISTER_CLASS_PROVIDER = "hibernate.ejb.persister_class_provider";
 
 	/**
+	 * SessionFactoryObserver class name, the class must have a no-arg constructor
+	 */
+	public static final String SESSION_FACTORY_OBSERVER = "hibernate.ejb.session_factory_observer";
+
+	/**
 	 * Event configuration should follow the following pattern
 	 * hibernate.ejb.event.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
 	 */

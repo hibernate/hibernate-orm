@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE authorgroup PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<authorgroup lang="en-US">
+	<author>
+		<firstname>Misty</firstname>
+		 <surname>Stanley-Jones</surname>
+		 <affiliation>
+			<orgname>Red Hat</orgname>
+
+		</affiliation>
+		 <email>misty@redhat.com</email>
+
+	</author>
+	 <author>
+		<firstname>Steve</firstname>
+		 <surname>Ebersole</surname>
+		 <affiliation>
+			<orgname>Red Hat</orgname>
+
+		</affiliation>
+		 <email>sebersol@redhat.com</email>
+
+	</author>
+</authorgroup>
+

@@ -1,0 +1,5 @@
+<cache
+    usage="transactional"
+    region="RegionName"
+    include="all"
+/>

@@ -1,0 +1,5 @@
+<property name="name" type="my.customtypes.Name"/>
+    <column name="last" not-null="true" index="bar_idx" length="30"/>
+    <column name="first" not-null="true" index="bar_idx" length="20"/>
+    <column name="initial"/>
+</property>

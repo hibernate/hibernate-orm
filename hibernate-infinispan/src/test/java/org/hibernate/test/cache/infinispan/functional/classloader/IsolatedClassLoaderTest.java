@@ -25,6 +25,7 @@ package org.hibernate.test.cache.infinispan.functional.classloader;
 
 import javax.transaction.TransactionManager;
 
+import org.hibernate.test.cache.infinispan.functional.Item;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -116,6 +117,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	@Override
 	protected void cleanupTest() throws Exception {
 		try {
+         // Clear the local account cache
+         sessionFactory().getCache().evictEntityRegion(Account.class.getName());
 			if ( localQueryCache != null && localQueryListener != null ) {
 				localQueryCache.removeListener( localQueryListener );
 			}

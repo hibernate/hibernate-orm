@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % BOOK_ENTITIES SYSTEM "Hibernate_Development_Guide.ent">
+%BOOK_ENTITIES;
+]>
+<preface id="pref-Hibernate_Development_Guide-Preface" lang="en-US">
+	<title>Preface</title>
+	 <xi:include href="Common_Content/Conventions.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 <xi:include href="Feedback.xml" xmlns:xi="http://www.w3.org/2001/XInclude"><xi:fallback xmlns:xi="http://www.w3.org/2001/XInclude"><xi:include href="Common_Content/Feedback.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+	 </xi:fallback>
+	 </xi:include>
+</preface>
+

@@ -1,0 +1,7 @@
+<property name="foo" type="integer">
+  <column name="foo" check="foo > 10"/>
+</property>
+<class name="Foo" table="foos" check="bar < 100.0">
+  ...
+  <property name="bar" type="float"/>
+</class>

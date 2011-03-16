@@ -1,0 +1,4 @@
+<class name="Customer" table="CurCust">
+  <comment>Current customers only</comment>
+  ...
+</class>

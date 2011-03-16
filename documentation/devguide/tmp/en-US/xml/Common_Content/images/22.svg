@@ -1,0 +1,865 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   version="1.1"
+   width="17"
+   height="16"
+   viewBox="-0.75 -0.258 17 16"
+   id="svg2"
+   xml:space="preserve">
+<defs
+   id="defs4">
+</defs>
+<g
+   id="g6">
+	<defs
+   id="defs8">
+		<circle
+   cx="7.8590002"
+   cy="7.8579998"
+   r="7.4840002"
+   id="XMLID_6_" />
+	</defs>
+	<clipPath
+   id="XMLID_9_">
+		<use
+   id="use12"
+   x="0"
+   y="0"
+   width="17"
+   height="16"
+   xlink:href="#XMLID_6_" />
+	</clipPath>
+	<polygon
+   points="0.375,13.379 2.148,15.344 0.375,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon14"
+   style="fill:#cbd2d8" />
+	<polygon
+   points="0.375,13.379 0.375,13.207 2.301,15.344 2.148,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon16"
+   style="fill:#cbd2d8" />
+	<polygon
+   points="2.301,15.344 2.457,15.344 0.375,13.039 0.375,13.207 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon18"
+   style="fill:#c9d0d5" />
+	<polygon
+   points="0.375,13.039 0.375,12.867 2.609,15.344 2.457,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon20"
+   style="fill:#c6cdd3" />
+	<polygon
+   points="0.375,12.867 0.375,12.695 2.766,15.344 2.609,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon22"
+   style="fill:#c5ccd2" />
+	<polygon
+   points="0.375,12.695 0.375,12.523 2.918,15.344 2.766,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon24"
+   style="fill:#c3c9d0" />
+	<polygon
+   points="0.375,12.523 0.375,12.352 3.07,15.344 2.918,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon26"
+   style="fill:#c1c8ce" />
+	<polygon
+   points="0.375,12.352 0.375,12.184 3.227,15.344 3.07,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon28"
+   style="fill:#bfc5cc" />
+	<polygon
+   points="0.375,12.184 0.375,12.012 3.379,15.344 3.227,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon30"
+   style="fill:#bec4cb" />
+	<polygon
+   points="0.375,12.012 0.375,11.844 3.531,15.344 3.379,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon32"
+   style="fill:#bbc2c9" />
+	<polygon
+   points="0.375,11.844 0.375,11.672 3.688,15.344 3.531,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon34"
+   style="fill:#bac0c8" />
+	<polygon
+   points="0.375,11.672 0.375,11.5 3.844,15.344 3.688,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon36"
+   style="fill:#b7bec6" />
+	<polygon
+   points="0.375,11.5 0.375,11.328 3.996,15.344 3.844,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon38"
+   style="fill:#b6bdc5" />
+	<polygon
+   points="0.375,11.328 0.375,11.16 4.148,15.344 3.996,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon40"
+   style="fill:#b5bbc3" />
+	<polygon
+   points="0.375,11.16 0.375,10.988 4.305,15.344 4.148,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon42"
+   style="fill:#b3bac2" />
+	<polygon
+   points="0.375,10.988 0.375,10.816 4.457,15.344 4.305,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon44"
+   style="fill:#b1b7c0" />
+	<polygon
+   points="4.457,15.344 4.613,15.344 0.375,10.648 0.375,10.816 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon46"
+   style="fill:#b0b6bf" />
+	<polygon
+   points="0.375,10.648 0.375,10.477 4.766,15.344 4.613,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon48"
+   style="fill:#aeb5be" />
+	<polygon
+   points="0.375,10.477 0.375,10.305 4.922,15.344 4.766,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon50"
+   style="fill:#adb3bc" />
+	<polygon
+   points="0.375,10.305 0.375,10.133 5.074,15.344 4.922,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon52"
+   style="fill:#abb2bc" />
+	<polygon
+   points="0.375,10.133 0.375,9.965 5.227,15.344 5.074,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon54"
+   style="fill:#aab0ba" />
+	<polygon
+   points="0.375,9.965 0.375,9.797 5.383,15.344 5.227,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon56"
+   style="fill:#a8aeb8" />
+	<polygon
+   points="0.375,9.797 0.375,9.625 5.535,15.344 5.383,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon58"
+   style="fill:#a6adb7" />
+	<polygon
+   points="0.375,9.625 0.375,9.453 5.691,15.344 5.535,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon60"
+   style="fill:#a6acb6" />
+	<polygon
+   points="5.691,15.344 5.844,15.344 0.375,9.281 0.375,9.453 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon62"
+   style="fill:#a3aab4" />
+	<polygon
+   points="0.375,9.281 0.375,9.109 6,15.344 5.844,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon64"
+   style="fill:#a2a8b3" />
+	<polygon
+   points="0.375,9.109 0.375,8.941 6.152,15.344 6,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon66"
+   style="fill:#a0a7b1" />
+	<polygon
+   points="6.152,15.344 6.305,15.344 0.375,8.77 0.375,8.941 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon68"
+   style="fill:#9fa6b0" />
+	<polygon
+   points="6.305,15.344 6.461,15.344 0.375,8.602 0.375,8.77 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon70"
+   style="fill:#9ea4af" />
+	<polygon
+   points="0.375,8.602 0.375,8.43 6.613,15.344 6.461,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon72"
+   style="fill:#9ca3ae" />
+	<polygon
+   points="0.375,8.43 0.375,8.258 6.77,15.344 6.613,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon74"
+   style="fill:#9ba1ad" />
+	<polygon
+   points="0.375,8.258 0.375,8.086 6.922,15.344 6.77,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon76"
+   style="fill:#9aa0ab" />
+	<polygon
+   points="0.375,8.086 0.375,7.914 7.078,15.344 6.922,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon78"
+   style="fill:#989faa" />
+	<polygon
+   points="0.375,7.914 0.375,7.746 7.23,15.344 7.078,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon80"
+   style="fill:#979eaa" />
+	<polygon
+   points="0.375,7.746 0.375,7.574 7.383,15.344 7.23,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon82"
+   style="fill:#969ca8" />
+	<polygon
+   points="0.375,7.574 0.375,7.406 7.539,15.344 7.383,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon84"
+   style="fill:#949ba7" />
+	<polygon
+   points="0.375,7.406 0.375,7.234 7.691,15.344 7.539,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon86"
+   style="fill:#9399a5" />
+	<polygon
+   points="0.375,7.234 0.375,7.062 7.848,15.344 7.691,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon88"
+   style="fill:#9298a4" />
+	<polygon
+   points="0.375,7.062 0.375,6.891 8,15.344 7.848,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon90"
+   style="fill:#9097a3" />
+	<polygon
+   points="0.375,6.891 0.375,6.723 8.156,15.344 8,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon92"
+   style="fill:#8f95a2" />
+	<polygon
+   points="8.156,15.344 8.309,15.344 0.375,6.551 0.375,6.723 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon94"
+   style="fill:#8e95a1" />
+	<polygon
+   points="0.375,6.551 0.375,6.383 8.461,15.344 8.309,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon96"
+   style="fill:#8d93a0" />
+	<polygon
+   points="0.375,6.383 0.375,6.211 8.617,15.344 8.461,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon98"
+   style="fill:#8b929f" />
+	<polygon
+   points="0.375,6.211 0.375,6.039 8.77,15.344 8.617,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon100"
+   style="fill:#8a919e" />
+	<polygon
+   points="0.375,6.039 0.375,5.867 8.926,15.344 8.77,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon102"
+   style="fill:#898f9d" />
+	<polygon
+   points="0.375,5.867 0.375,5.695 9.078,15.344 8.926,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon104"
+   style="fill:#878e9b" />
+	<polygon
+   points="0.375,5.695 0.375,5.527 9.234,15.344 9.078,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon106"
+   style="fill:#878d9b" />
+	<polygon
+   points="9.234,15.344 9.387,15.344 0.375,5.355 0.375,5.527 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon108"
+   style="fill:#858c9a" />
+	<polygon
+   points="0.375,5.355 0.375,5.188 9.539,15.344 9.387,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon110"
+   style="fill:#848b98" />
+	<polygon
+   points="0.375,5.188 0.375,5.016 9.695,15.344 9.539,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon112"
+   style="fill:#838a97" />
+	<polygon
+   points="0.375,5.016 0.375,4.844 9.848,15.344 9.695,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon114"
+   style="fill:#828997" />
+	<polygon
+   points="0.375,4.844 0.375,4.676 10,15.344 9.848,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon116"
+   style="fill:#818895" />
+	<polygon
+   points="0.375,4.676 0.375,4.504 10.156,15.344 10,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon118"
+   style="fill:#808794" />
+	<polygon
+   points="0.375,4.504 0.375,4.332 10.312,15.344 10.156,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon120"
+   style="fill:#7e8594" />
+	<polygon
+   points="10.312,15.344 10.465,15.344 0.375,4.164 0.375,4.332 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon122"
+   style="fill:#7d8593" />
+	<polygon
+   points="0.375,4.164 0.375,3.992 10.617,15.344 10.465,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon124"
+   style="fill:#7c8392" />
+	<polygon
+   points="10.617,15.344 10.773,15.344 0.375,3.82 0.375,3.992 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon126"
+   style="fill:#7b8290" />
+	<polygon
+   points="0.375,3.82 0.375,3.648 10.926,15.344 10.773,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon128"
+   style="fill:#7a8190" />
+	<polygon
+   points="0.375,3.648 0.375,3.477 11.082,15.344 10.926,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon130"
+   style="fill:#79808f" />
+	<polygon
+   points="0.375,3.477 0.375,3.309 11.234,15.344 11.082,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon132"
+   style="fill:#787f8d" />
+	<polygon
+   points="0.375,3.309 0.375,3.137 11.391,15.344 11.234,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon134"
+   style="fill:#777e8d" />
+	<polygon
+   points="0.375,3.137 0.375,2.969 11.543,15.344 11.391,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon136"
+   style="fill:#767d8c" />
+	<polygon
+   points="0.375,2.969 0.375,2.797 11.695,15.344 11.543,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon138"
+   style="fill:#767c8b" />
+	<polygon
+   points="11.695,15.344 11.852,15.344 0.375,2.625 0.375,2.797 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon140"
+   style="fill:#747b8a" />
+	<polygon
+   points="0.375,2.625 0.375,2.453 12.004,15.344 11.852,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon142"
+   style="fill:#737a89" />
+	<polygon
+   points="0.375,2.453 0.375,2.285 12.156,15.344 12.004,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon144"
+   style="fill:#727989" />
+	<polygon
+   points="0.375,2.285 0.375,2.113 12.312,15.344 12.156,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon146"
+   style="fill:#717888" />
+	<polygon
+   points="12.312,15.344 12.469,15.344 0.375,1.941 0.375,2.113 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon148"
+   style="fill:#707786" />
+	<polygon
+   points="0.375,1.941 0.375,1.773 12.621,15.344 12.469,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon150"
+   style="fill:#6f7686" />
+	<polygon
+   points="0.375,1.773 0.375,1.602 12.773,15.344 12.621,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon152"
+   style="fill:#6d7585" />
+	<polygon
+   points="0.375,1.602 0.375,1.43 12.93,15.344 12.773,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon154"
+   style="fill:#6d7584" />
+	<polygon
+   points="0.375,1.43 0.375,1.262 13.082,15.344 12.93,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon156"
+   style="fill:#6c7383" />
+	<polygon
+   points="0.375,1.262 0.375,1.09 13.238,15.344 13.082,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon158"
+   style="fill:#6b7383" />
+	<polygon
+   points="0.375,1.09 0.375,0.918 13.391,15.344 13.238,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon160"
+   style="fill:#6a7281" />
+	<polygon
+   points="0.375,0.918 0.375,0.75 13.547,15.344 13.391,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon162"
+   style="fill:#697181" />
+	<polygon
+   points="13.547,15.344 0.375,0.75 0.375,0.703 0.438,0.648 13.699,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon164"
+   style="fill:#697080" />
+	<polygon
+   points="13.699,15.344 0.438,0.648 0.523,0.57 13.852,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon166"
+   style="fill:#686f7f" />
+	<polygon
+   points="13.852,15.344 0.523,0.57 0.609,0.492 14.008,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon168"
+   style="fill:#676e7e" />
+	<polygon
+   points="14.008,15.344 0.609,0.492 0.691,0.418 14.16,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon170"
+   style="fill:#656d7d" />
+	<polygon
+   points="14.312,15.344 14.16,15.344 0.691,0.418 0.738,0.375 0.809,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon172"
+   style="fill:#646c7d" />
+	<polygon
+   points="0.809,0.375 0.961,0.375 14.469,15.344 14.312,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon174"
+   style="fill:#646c7c" />
+	<polygon
+   points="0.961,0.375 1.117,0.375 14.625,15.344 14.469,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon176"
+   style="fill:#636b7c" />
+	<polygon
+   points="1.117,0.375 1.27,0.375 14.777,15.344 14.625,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon178"
+   style="fill:#626b7b" />
+	<polygon
+   points="1.27,0.375 1.426,0.375 14.93,15.344 14.777,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon180"
+   style="fill:#616a7a" />
+	<polygon
+   points="14.93,15.344 1.426,0.375 1.578,0.375 15.039,15.289 14.98,15.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon182"
+   style="fill:#606979" />
+	<polygon
+   points="1.578,0.375 1.734,0.375 15.125,15.215 15.039,15.289 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon184"
+   style="fill:#5f6878" />
+	<polygon
+   points="1.734,0.375 1.887,0.375 15.207,15.137 15.125,15.215 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon186"
+   style="fill:#5f6878" />
+	<polygon
+   points="1.887,0.375 15.207,15.137 15.293,15.062 2.039,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon188"
+   style="fill:#5e6777" />
+	<polygon
+   points="15.293,15.062 2.039,0.375 2.195,0.375 15.344,14.945 15.344,15.016 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon190"
+   style="fill:#5d6676" />
+	<polygon
+   points="2.195,0.375 2.348,0.375 15.344,14.777 15.344,14.945 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon192"
+   style="fill:#5c6576" />
+	<polygon
+   points="2.348,0.375 2.5,0.375 15.344,14.605 15.344,14.777 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon194"
+   style="fill:#5b6475" />
+	<polygon
+   points="2.5,0.375 2.656,0.375 15.344,14.434 15.344,14.605 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon196"
+   style="fill:#5b6475" />
+	<polygon
+   points="2.656,0.375 2.812,0.375 15.344,14.266 15.344,14.434 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon198"
+   style="fill:#5a6373" />
+	<polygon
+   points="2.812,0.375 2.965,0.375 15.344,14.094 15.344,14.266 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon200"
+   style="fill:#596273" />
+	<polygon
+   points="2.965,0.375 3.117,0.375 15.344,13.922 15.344,14.094 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon202"
+   style="fill:#586172" />
+	<polygon
+   points="3.117,0.375 3.273,0.375 15.344,13.75 15.344,13.922 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon204"
+   style="fill:#576172" />
+	<polygon
+   points="15.344,13.75 15.344,13.582 3.426,0.375 3.273,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon206"
+   style="fill:#566071" />
+	<polygon
+   points="3.426,0.375 3.582,0.375 15.344,13.41 15.344,13.582 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon208"
+   style="fill:#566070" />
+	<polygon
+   points="3.582,0.375 3.734,0.375 15.344,13.238 15.344,13.41 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon210"
+   style="fill:#555f70" />
+	<polygon
+   points="15.344,13.238 15.344,13.07 3.891,0.375 3.734,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon212"
+   style="fill:#545e6f" />
+	<polygon
+   points="3.891,0.375 4.043,0.375 15.344,12.898 15.344,13.07 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon214"
+   style="fill:#535e6f" />
+	<polygon
+   points="15.344,12.898 15.344,12.727 4.195,0.375 4.043,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon216"
+   style="fill:#535d6e" />
+	<polygon
+   points="4.195,0.375 4.352,0.375 15.344,12.559 15.344,12.727 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon218"
+   style="fill:#525c6d" />
+	<polygon
+   points="4.352,0.375 4.504,0.375 15.344,12.387 15.344,12.559 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon220"
+   style="fill:#515c6d" />
+	<polygon
+   points="4.504,0.375 4.656,0.375 15.344,12.219 15.344,12.387 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon222"
+   style="fill:#505b6c" />
+	<polygon
+   points="4.656,0.375 4.812,0.375 15.344,12.047 15.344,12.219 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon224"
+   style="fill:#505b6c" />
+	<polygon
+   points="4.812,0.375 4.969,0.375 15.344,11.875 15.344,12.047 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon226"
+   style="fill:#505a6b" />
+	<polygon
+   points="4.969,0.375 5.121,0.375 15.344,11.703 15.344,11.875 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon228"
+   style="fill:#4f596a" />
+	<polygon
+   points="5.121,0.375 5.273,0.375 15.344,11.531 15.344,11.703 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon230"
+   style="fill:#4e596a" />
+	<polygon
+   points="5.273,0.375 5.43,0.375 15.344,11.363 15.344,11.531 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon232"
+   style="fill:#4d5869" />
+	<polygon
+   points="5.43,0.375 5.582,0.375 15.344,11.191 15.344,11.363 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon234"
+   style="fill:#4c5869" />
+	<polygon
+   points="5.582,0.375 5.738,0.375 15.344,11.023 15.344,11.191 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon236"
+   style="fill:#4c5768" />
+	<polygon
+   points="5.738,0.375 5.891,0.375 15.344,10.852 15.344,11.023 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon238"
+   style="fill:#4b5768" />
+	<polygon
+   points="5.891,0.375 6.047,0.375 15.344,10.68 15.344,10.852 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon240"
+   style="fill:#4b5667" />
+	<polygon
+   points="6.047,0.375 6.199,0.375 15.344,10.508 15.344,10.68 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon242"
+   style="fill:#4a5567" />
+	<polygon
+   points="6.199,0.375 6.352,0.375 15.344,10.34 15.344,10.508 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon244"
+   style="fill:#495566" />
+	<polygon
+   points="6.352,0.375 6.508,0.375 15.344,10.168 15.344,10.34 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon246"
+   style="fill:#485566" />
+	<polygon
+   points="6.508,0.375 6.66,0.375 15.344,10 15.344,10.168 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon248"
+   style="fill:#485466" />
+	<polygon
+   points="6.66,0.375 6.812,0.375 15.344,9.828 15.344,10 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon250"
+   style="fill:#475365" />
+	<polygon
+   points="6.812,0.375 6.969,0.375 15.344,9.656 15.344,9.828 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon252"
+   style="fill:#475365" />
+	<polygon
+   points="6.969,0.375 7.125,0.375 15.344,9.484 15.344,9.656 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon254"
+   style="fill:#465264" />
+	<polygon
+   points="7.125,0.375 7.277,0.375 15.344,9.312 15.344,9.484 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon256"
+   style="fill:#455264" />
+	<polygon
+   points="7.277,0.375 7.43,0.375 15.344,9.145 15.344,9.312 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon258"
+   style="fill:#445263" />
+	<polygon
+   points="7.43,0.375 7.586,0.375 15.344,8.973 15.344,9.145 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon260"
+   style="fill:#445163" />
+	<polygon
+   points="15.344,8.973 15.344,8.805 7.738,0.375 7.586,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon262"
+   style="fill:#445062" />
+	<polygon
+   points="7.738,0.375 7.895,0.375 15.344,8.633 15.344,8.805 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon264"
+   style="fill:#425062" />
+	<polygon
+   points="7.895,0.375 8.047,0.375 15.344,8.461 15.344,8.633 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon266"
+   style="fill:#425062" />
+	<polygon
+   points="15.344,8.461 15.344,8.289 8.203,0.375 8.047,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon268"
+   style="fill:#424f61" />
+	<polygon
+   points="8.203,0.375 8.355,0.375 15.344,8.121 15.344,8.289 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon270"
+   style="fill:#414f61" />
+	<polygon
+   points="8.355,0.375 8.508,0.375 15.344,7.949 15.344,8.121 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon272"
+   style="fill:#404e60" />
+	<polygon
+   points="8.508,0.375 8.664,0.375 15.344,7.781 15.344,7.949 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon274"
+   style="fill:#3f4e60" />
+	<polygon
+   points="15.344,7.781 15.344,7.609 8.816,0.375 8.664,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon276"
+   style="fill:#3f4d60" />
+	<polygon
+   points="8.816,0.375 8.969,0.375 15.344,7.438 15.344,7.609 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon278"
+   style="fill:#3f4d5f" />
+	<polygon
+   points="8.969,0.375 9.125,0.375 15.344,7.266 15.344,7.438 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon280"
+   style="fill:#3e4d5f" />
+	<polygon
+   points="9.125,0.375 9.281,0.375 15.344,7.094 15.344,7.266 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon282"
+   style="fill:#3e4c5e" />
+	<polygon
+   points="9.281,0.375 9.434,0.375 15.344,6.926 15.344,7.094 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon284"
+   style="fill:#3d4c5e" />
+	<polygon
+   points="9.434,0.375 9.586,0.375 15.344,6.754 15.344,6.926 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon286"
+   style="fill:#3d4c5e" />
+	<polygon
+   points="9.586,0.375 9.742,0.375 15.344,6.586 15.344,6.754 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon288"
+   style="fill:#3c4b5d" />
+	<polygon
+   points="9.742,0.375 9.895,0.375 15.344,6.414 15.344,6.586 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon290"
+   style="fill:#3c4b5d" />
+	<polygon
+   points="9.895,0.375 10.047,0.375 15.344,6.242 15.344,6.414 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon292"
+   style="fill:#3c4b5d" />
+	<polygon
+   points="10.047,0.375 10.203,0.375 15.344,6.07 15.344,6.242 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon294"
+   style="fill:#3b4a5c" />
+	<polygon
+   points="10.203,0.375 10.355,0.375 15.344,5.898 15.344,6.07 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon296"
+   style="fill:#3b4a5c" />
+	<polygon
+   points="10.355,0.375 10.512,0.375 15.344,5.73 15.344,5.898 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon298"
+   style="fill:#3a495c" />
+	<polygon
+   points="15.344,5.73 15.344,5.559 10.664,0.375 10.512,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon300"
+   style="fill:#3a495b" />
+	<polygon
+   points="10.664,0.375 10.82,0.375 15.344,5.391 15.344,5.559 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon302"
+   style="fill:#39495b" />
+	<polygon
+   points="10.82,0.375 10.973,0.375 15.344,5.219 15.344,5.391 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon304"
+   style="fill:#38495b" />
+	<polygon
+   points="10.973,0.375 11.125,0.375 15.344,5.047 15.344,5.219 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon306"
+   style="fill:#38485b" />
+	<polygon
+   points="11.125,0.375 11.281,0.375 15.344,4.875 15.344,5.047 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon308"
+   style="fill:#38485a" />
+	<polygon
+   points="11.281,0.375 11.434,0.375 15.344,4.707 15.344,4.875 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon310"
+   style="fill:#37485a" />
+	<polygon
+   points="11.434,0.375 11.59,0.375 15.344,4.535 15.344,4.707 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon312"
+   style="fill:#38475a" />
+	<polygon
+   points="15.344,4.535 15.344,4.363 11.742,0.375 11.59,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon314"
+   style="fill:#37475a" />
+	<polygon
+   points="11.742,0.375 11.898,0.375 15.344,4.195 15.344,4.363 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon316"
+   style="fill:#374659" />
+	<polygon
+   points="11.898,0.375 12.051,0.375 15.344,4.023 15.344,4.195 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon318"
+   style="fill:#364659" />
+	<polygon
+   points="12.051,0.375 12.203,0.375 15.344,3.852 15.344,4.023 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon320"
+   style="fill:#364659" />
+	<polygon
+   points="12.203,0.375 12.359,0.375 15.344,3.68 15.344,3.852 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon322"
+   style="fill:#364659" />
+	<polygon
+   points="12.359,0.375 12.512,0.375 15.344,3.512 15.344,3.68 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon324"
+   style="fill:#354659" />
+	<polygon
+   points="12.512,0.375 12.668,0.375 15.344,3.344 15.344,3.512 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon326"
+   style="fill:#354659" />
+	<polygon
+   points="12.668,0.375 12.82,0.375 15.344,3.172 15.344,3.344 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon328"
+   style="fill:#354658" />
+	<polygon
+   points="12.82,0.375 12.977,0.375 15.344,3 15.344,3.172 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon330"
+   style="fill:#344558" />
+	<polygon
+   points="12.977,0.375 13.129,0.375 15.344,2.828 15.344,3 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon332"
+   style="fill:#344558" />
+	<polygon
+   points="13.129,0.375 13.281,0.375 15.344,2.656 15.344,2.828 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon334"
+   style="fill:#344558" />
+	<polygon
+   points="13.281,0.375 13.438,0.375 15.344,2.488 15.344,2.656 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon336"
+   style="fill:#344558" />
+	<polygon
+   points="15.344,2.488 13.438,0.375 15.344,0.375 "
+   clip-path="url(#XMLID_9_)"
+   id="polygon338"
+   style="fill:#344558" />
+</g>
+<path
+   d="m 14.969,7.858 c 0,3.92 -3.189,7.109 -7.109,7.109 -3.92,0 -7.11,-3.189 -7.11,-7.109 0,-3.92 3.189,-7.108 7.109,-7.108 3.92,0 7.11,3.188 7.11,7.108 z M 7.859,0 C 3.525,0 0,3.525 0,7.858 c 0,4.334 3.525,7.859 7.859,7.859 4.334,0 7.859,-3.525 7.859,-7.859 C 15.719,3.525 12.193,0 7.859,0 z"
+   id="path340"
+   style="fill:#aeadae" />
+
+
+<path
+   d="m 7.6479958,10.801878 v 0.957 h -5.225 v -1.056 l 0.176,-0.154 c 0.253,-0.23 0.507,-0.462 0.759,-0.6820004 0.263,-0.242 0.55,-0.472 0.814,-0.7050001 1.441,-1.221 2.189,-1.891 2.189,-2.881 0,-0.275 -0.1,-1.31 -1.397,-1.31 -1.122,0 -1.364,0.804 -1.44,1.134 -0.079,0.34 -0.067,0.583 -0.056,0.837 l -1.068,-0.056 c 0,-0.274 0,-0.704 0.154,-1.188 0.352,-1.079 1.244,-1.639 2.454,-1.639 1.716,0 2.42,1.078 2.42,2.178 0,1.145 -0.639,2.014 -2.156,3.2560001 -0.264,0.208 -0.517,0.417 -0.782,0.6260004 -0.109,0.1 -0.67,0.572 -0.803,0.683 h 3.961 z"
+   id="path342"
+   style="fill:#ffffff" /><path
+   d="m 13.386392,10.801878 v 0.957 H 8.1613924 v -1.056 l 0.176,-0.154 c 0.253,-0.23 0.507,-0.462 0.759,-0.6820004 0.263,-0.2419999 0.55,-0.4719999 0.814,-0.7049999 1.4409996,-1.221 2.1889996,-1.891 2.1889996,-2.881 0,-0.275 -0.1,-1.31 -1.397,-1.31 -1.1219996,0 -1.3639996,0.804 -1.4399996,1.134 -0.079,0.34 -0.067,0.583 -0.056,0.837 l -1.068,-0.056 c 0,-0.274 0,-0.704 0.154,-1.188 0.352,-1.079 1.244,-1.639 2.4539996,-1.639 1.716,0 2.42,1.078 2.42,2.178 0,1.145 -0.639,2.014 -2.156,3.256 -0.264,0.2079999 -0.517,0.4169999 -0.782,0.6260003 -0.109,0.1 -0.6699996,0.572 -0.8029996,0.683 h 3.9609996 z"
+   id="path342-8"
+   style="fill:#ffffff" /></svg>

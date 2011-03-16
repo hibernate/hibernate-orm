@@ -433,7 +433,7 @@ public class BasicTransactionalTestCase extends SingleNodeTestCase {
 
 	@Test
 	public void testEmptySecondLevelCacheEntry() throws Exception {
-		sessionFactory().getCache().evictEntityRegion( Item.class.getName() );
+      sessionFactory().getCache().evictCollectionRegion( Item.class.getName() + ".items" );
 		Statistics stats = sessionFactory().getStatistics();
 		stats.clear();
 		SecondLevelCacheStatistics statistics = stats.getSecondLevelCacheStatistics( Item.class.getName() + ".items" );

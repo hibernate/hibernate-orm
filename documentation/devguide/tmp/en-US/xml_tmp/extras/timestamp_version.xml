@@ -1,0 +1,9 @@
+<timestamp
+        column="timestamp_column"
+        name="propertyName"
+        access="field|property|ClassName"
+        unsaved-value="null|undefined"
+        source="vm|db"
+        generated="never|always"
+        node="element-name|@attribute-name|element/@attribute|."
+/>

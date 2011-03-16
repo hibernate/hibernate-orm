@@ -25,6 +25,7 @@ package org.hibernate.test.cache.infinispan.functional.classloader;
 
 import javax.transaction.TransactionManager;
 
+import org.hibernate.test.cache.infinispan.functional.Item;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -60,11 +61,7 @@ import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
  * @since 3.5
  */
 public class IsolatedClassLoaderTest extends DualNodeTestCase {
-	private static final String CACHE_CONFIG = "classloader";
-
 	protected static final long SLEEP_TIME = 300L;
-
-	static int test = 0;
 
 	private Cache localQueryCache;
 	private CacheAccessListener localQueryListener;
@@ -72,20 +69,22 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	private Cache remoteQueryCache;
 	private CacheAccessListener remoteQueryListener;
 
-	private static ClassLoader originalTCCL;
+   private static ClassLoader originalTCCL;
 
 	@BeforeClass
 	public static void prepareClassLoader() {
-		originalTCCL = Thread.currentThread().getContextClassLoader();
-		final String packageName = IsolatedClassLoaderTest.class.getPackage().getName();
-		final String[] isolatedClassNames = new String[] { packageName + "Account", packageName + "AccountHolder" };
-		final SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(
-				isolatedClassNames,
-				null,
-				null,
-				originalTCCL
-		);
-		Thread.currentThread().setContextClassLoader( visible );
+      final String packageName = IsolatedClassLoaderTest.class.getPackage().getName();
+      final String[] classes = new String[] { packageName + ".Account", packageName + ".AccountHolder" };
+      originalTCCL = Thread.currentThread().getContextClassLoader();
+      // Most likely, it will point to system classloader
+      ClassLoader parent = originalTCCL == null ? IsolatedClassLoaderTest.class.getClassLoader() : originalTCCL;
+
+      // First, create a classloader where classes won't be found
+      ClassLoader selectedTCCL = new SelectedClassnameClassLoader(null, null, classes, parent);
+
+      // Now, make the class visible to the test driver
+      SelectedClassnameClassLoader visible = new SelectedClassnameClassLoader(classes, null, null, selectedTCCL);
+      Thread.currentThread().setContextClassLoader(visible);
 	}
 
 	@AfterClass
@@ -118,6 +117,8 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	@Override
 	protected void cleanupTest() throws Exception {
 		try {
+         // Clear the local account cache
+         sessionFactory().getCache().evictEntityRegion(Account.class.getName());
 			if ( localQueryCache != null && localQueryListener != null ) {
 				localQueryCache.removeListener( localQueryListener );
 			}

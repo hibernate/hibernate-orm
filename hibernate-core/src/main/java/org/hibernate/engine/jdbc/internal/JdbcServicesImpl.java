@@ -145,7 +145,9 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
                     LOG.unableToObtainConnectionMetadata(sqle.getMessage());
 				}
 				finally {
-					connectionProvider.closeConnection( conn );
+					if ( conn != null ) {
+						connectionProvider.closeConnection( conn );
+					}
 				}
 			}
 			catch ( SQLException sqle ) {

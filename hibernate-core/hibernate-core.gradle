@@ -99,7 +99,3 @@ task installTesting(type:Upload, dependsOn: [testingJar,testingSourcesJar]) {
 install.dependsOn installTesting
 uploadTesting.dependsOn installTesting
 
-// temporary
-test {
-  ignoreFailures = true
-}

@@ -30,14 +30,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
@@ -46,16 +38,23 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import org.hibernate.testing.env.ConnectionProviderBuilder;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
-import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
-import org.hibernate.test.common.jta.AtomikosJtaPlatform;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Testing transaction handling when the JTA transaction facade is the driver.
@@ -71,8 +70,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		Map configValues = new HashMap();
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
-		configValues.put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
-		configValues.put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
+		TestingJtaBootstrap.prepare( configValues );
 		serviceRegistry = new ServiceRegistryImpl( configValues );
 	}
 

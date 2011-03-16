@@ -22,13 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.jta;
+
 import javax.persistence.EntityManager;
+
+import org.testng.annotations.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.reventity.ExceptionListenerRevEntity;
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
-import org.testng.annotations.Test;
+
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.reventity.ExceptionListener}, but in a JTA environment.
@@ -44,7 +48,7 @@ public class JtaExceptionListener extends AbstractEntityTest {
 
     @Test(expectedExceptions = RuntimeException.class)
     public void testTransactionRollback() throws Exception {
-        SimpleJtaTransactionManagerImpl.getInstance().begin();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 
         // Trying to persist an entity - however the listener should throw an exception, so the entity
 		// shouldn't be persisted
@@ -54,12 +58,12 @@ public class JtaExceptionListener extends AbstractEntityTest {
         StrTestEntity te = new StrTestEntity("x");
         em.persist(te);
 
-        SimpleJtaTransactionManagerImpl.getInstance().commit();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
     }
 
     @Test(dependsOnMethods = "testTransactionRollback")
     public void testDataNotPersisted() throws Exception {
-        SimpleJtaTransactionManagerImpl.getInstance().begin();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 
 		// Checking if the entity became persisted
         newEntityManager();
@@ -67,6 +71,6 @@ public class JtaExceptionListener extends AbstractEntityTest {
         Long count = (Long) em.createQuery("select count(s) from StrTestEntity s where s.str = 'x'").getSingleResult();
 		assert count == 0l;
 
-        SimpleJtaTransactionManagerImpl.getInstance().commit();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
     }
 }

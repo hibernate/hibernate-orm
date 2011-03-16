@@ -28,30 +28,27 @@ import org.hibernate.service.jta.platform.spi.JtaPlatformException;
 
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
-import java.lang.reflect.Method;
 
 /**
  * Return a standalone JTA transaction manager for JBoss Transactions
- * Known to work for org.jboss.jbossts:jbossjta:4.11.0.Final
+ * Known to work for org.jboss.jbossts:jbossjta:4.9.0.GA
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
 public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
-	private static final String PROPERTY_MANAGER_CLASS_NAME = "com.arjuna.ats.jta.common.jtaPropertyManager";
+	private static final String JBOSS_TM_CLASS_NAME = "com.arjuna.ats.jta.TransactionManager";
+	private static final String JBOSS_UT_CLASS_NAME = "com.arjuna.ats.jta.UserTransaction";
 
 	private final JtaSynchronizationStrategy synchronizationStrategy = new TransactionManagerBasedSynchronizationStrategy( this );
 
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			final Class propertyManagerClass = serviceRegistry()
+			final Class jbossTmClass = serviceRegistry()
 					.getService( ClassLoaderService.class )
-					.classForName( PROPERTY_MANAGER_CLASS_NAME );
-			final Method getJTAEnvironmentBeanMethod = propertyManagerClass.getMethod( "getJTAEnvironmentBean" );
-			final Object jtaEnvironmentBean = getJTAEnvironmentBeanMethod.invoke( null );
-			final Method getTransactionManagerMethod = jtaEnvironmentBean.getClass().getMethod( "getTransactionManager" );
-			return ( TransactionManager ) getTransactionManagerMethod.invoke( jtaEnvironmentBean );
+					.classForName( JBOSS_TM_CLASS_NAME );
+			return (TransactionManager) jbossTmClass.getMethod( "transactionManager" ).invoke( null );
 		}
 		catch ( Exception e ) {
 			throw new JtaPlatformException( "Could not obtain JBoss Transactions transaction manager instance", e );
@@ -60,7 +57,15 @@ public class JBossStandAloneJtaPlatform extends AbstractJtaPlatform {
 
 	@Override
 	protected UserTransaction locateUserTransaction() {
-		return null;
+		try {
+			final Class jbossUtClass = serviceRegistry()
+					.getService( ClassLoaderService.class )
+					.classForName( JBOSS_UT_CLASS_NAME );
+			return (UserTransaction) jbossUtClass.getMethod( "userTransaction" ).invoke( null );
+		}
+		catch ( Exception e ) {
+			throw new JtaPlatformException( "Could not obtain JBoss Transactions user transaction instance", e );
+		}
 	}
 
 	@Override

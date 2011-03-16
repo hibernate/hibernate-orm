@@ -23,8 +23,16 @@
  */
 package org.hibernate.testing.junit4;
 
+import javax.transaction.SystemException;
+
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.runner.RunWith;
+
+import org.hibernate.testing.TestLogger;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**
  * The most test adapter.  Applies both the {@link CustomRunner} and {@link Processor} rule.
@@ -35,4 +43,16 @@ import org.junit.runner.RunWith;
 public abstract class BaseUnitTestCase {
 	@Rule
 	public Processor processor = new Processor();
+
+	@After
+	public void releaseTransactions() {
+		if ( JtaStatusHelper.isActive( TestingJtaBootstrap.INSTANCE.getTransactionManager() ) ) {
+			TestLogger.LOG.warn( "Cleaning up unfinished transaction" );
+			try {
+				TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
+			}
+			catch (SystemException ignored) {
+			}
+		}
+	}
 }

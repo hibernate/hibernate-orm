@@ -16,13 +16,10 @@ import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.impl.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 import org.junit.Test;
 
-import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
-import org.hibernate.test.common.jta.AtomikosJtaPlatform;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -38,8 +35,7 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
-		cfg.getProperties().put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
+		TestingJtaBootstrap.prepare( cfg.getProperties() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
@@ -57,12 +53,12 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 
 	@Override
 	protected void prepare() throws Throwable {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 	}
 
 	@Override
 	protected void done() throws Throwable {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	// Some additional tests specifically for the aggressive-release functionality...

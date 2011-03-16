@@ -1,11 +1,15 @@
 package org.hibernate.envers.test.integration.jta;
-import java.util.Arrays;
+
 import javax.persistence.EntityManager;
+import java.util.Arrays;
+
+import org.testng.annotations.Test;
+
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.test.AbstractEntityTest;
 import org.hibernate.envers.test.entities.IntTestEntity;
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
-import org.testng.annotations.Test;
+
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.
@@ -22,7 +26,7 @@ public class JtaTransaction extends AbstractEntityTest {
 
     @Test
     public void initData() throws Exception {
-        SimpleJtaTransactionManagerImpl.getInstance().begin();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 
         newEntityManager();
         EntityManager em = getEntityManager();
@@ -31,18 +35,18 @@ public class JtaTransaction extends AbstractEntityTest {
         em.persist(ite);
         id1 = ite.getId();
 
-        SimpleJtaTransactionManagerImpl.getInstance().commit();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
         //
 
-        SimpleJtaTransactionManagerImpl.getInstance().begin();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 
         newEntityManager();
         em = getEntityManager();
         ite = em.find(IntTestEntity.class, id1);
         ite.setNumber(20);
 
-        SimpleJtaTransactionManagerImpl.getInstance().commit();
+        TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
     }
 
     @Test(dependsOnMethods = "initData")

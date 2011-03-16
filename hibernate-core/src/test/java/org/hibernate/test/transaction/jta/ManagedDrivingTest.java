@@ -40,7 +40,6 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.internal.ServiceRegistryImpl;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.StandardServiceInitiators;
 
@@ -48,13 +47,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.test.common.JournalingTransactionObserver;
 import org.hibernate.test.common.TransactionContextImpl;
 import org.hibernate.test.common.TransactionEnvironmentImpl;
-import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
-import org.hibernate.test.common.jta.AtomikosJtaPlatform;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -73,10 +70,9 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 	@SuppressWarnings( {"unchecked"})
 	public void setUp() throws Exception {
 		Map configValues = new HashMap();
-		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
+		TestingJtaBootstrap.prepare( configValues );
+//		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
-		configValues.put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
-		configValues.put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
 
 		serviceRegistry = new ServiceRegistryImpl( StandardServiceInitiators.LIST, configValues );
 	}

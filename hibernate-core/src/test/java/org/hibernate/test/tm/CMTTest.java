@@ -37,16 +37,13 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 import org.junit.Test;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.common.jta.AtomikosDataSourceConnectionProvider;
-import org.hibernate.test.common.jta.AtomikosJtaPlatform;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -65,8 +62,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.getProperties().put( JtaPlatformInitiator.JTA_PLATFORM, AtomikosJtaPlatform.class.getName() );
-		cfg.getProperties().put( Environment.CONNECTION_PROVIDER, AtomikosDataSourceConnectionProvider.class.getName() );
+		TestingJtaBootstrap.prepare( cfg.getProperties() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		cfg.setProperty( Environment.AUTO_CLOSE_SESSION, "true" );
 		cfg.setProperty( Environment.FLUSH_BEFORE_COMPLETION, "true" );
@@ -87,7 +83,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( sessionFactory().getEntityPersister( "Item" ).getCacheAccessStrategy() );
 		assertEquals( 0, sessionFactory().getStatistics().getEntityLoadCount() );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();
 		foo.put( "name", "Foo" );
@@ -97,46 +93,46 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		bar.put( "name", "Bar" );
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		sessionFactory().evictEntity( "Item" );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
 		foo = ( Map ) s1.get( "Item", "Foo" );
 		//foo.put("description", "a big red foo");
 		//s1.flush();
-		Transaction tx1 = sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+		Transaction tx = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		foo = ( Map ) s2.get( "Item", "Foo" );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
-		tx1.commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx );
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		sessionFactory().evictEntity( "Item" );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s1 = openSession();
 		s1.createCriteria( "Item" ).list();
 		//foo.put("description", "a big red foo");
 		//s1.flush();
-		tx1 = sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+		tx = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s2 = openSession();
 		s2.createCriteria( "Item" ).list();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
-		tx1.commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx );
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s2 = openSession();
 		s2.createCriteria( "Item" ).list();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( 7, sessionFactory().getStatistics().getEntityLoadCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getEntityFetchCount() );
@@ -144,15 +140,15 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheMissCount() );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testConcurrentCachedQueries() throws Exception {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();
 		foo.put( "name", "Foo" );
@@ -162,7 +158,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		bar.put( "name", "Bar" );
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		synchronized ( this ) {
 			wait( 1000 );
@@ -172,23 +168,23 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 		sessionFactory().evictEntity( "Item" );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s4 = openSession();
-		Transaction tx4 = sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+		Transaction tx4 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
 		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r1.size(), 2 );
-		Transaction tx1 = sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+		Transaction tx1 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 2 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -199,14 +195,14 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
-		tx1.commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx1 );
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s3 = openSession();
 		s3.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 4 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -217,11 +213,11 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 2 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx4 );
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r4.size(), 2 );
-		tx4.commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 6 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -232,10 +228,10 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 3 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 1 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
@@ -244,7 +240,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 			comment = "write locks block readers"
 	)
 	public void testConcurrentCachedDirtyQueries() throws Exception {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Map foo = new HashMap();
 		foo.put( "name", "Foo" );
@@ -254,7 +250,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		bar.put( "name", "Bar" );
 		bar.put( "description", "a small bar" );
 		s.persist( "Item", bar );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		synchronized ( this ) {
 			wait( 1000 );
@@ -264,11 +260,11 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 		sessionFactory().evictEntity( "Item" );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s4 = openSession();
-		Transaction tx4 = sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+		Transaction tx4 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s1 = openSession();
 		List r1 = s1.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
@@ -276,14 +272,14 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		foo = ( Map ) r1.get( 0 );
 		foo.put( "description", "a big red foo" );
 		s1.flush();
-		Transaction tx1 = sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().suspend();
+		Transaction tx1 = TestingJtaBootstrap.INSTANCE.getTransactionManager().suspend();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s2 = openSession();
 		List r2 = s2.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r2.size(), 2 );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -294,14 +290,14 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 2 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx1 );
-		tx1.commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx1 );
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s3 = openSession();
 		s3.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -312,11 +308,11 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 0 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 3 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().resume( tx4 );
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().resume( tx4 );
 		List r4 = s4.createCriteria( "Item" ).addOrder( Order.asc( "description" ) )
 				.setCacheable( true ).list();
 		assertEquals( r4.size(), 2 );
-		tx4.commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheHitCount(), 2 );
 		assertEquals( sessionFactory().getStatistics().getSecondLevelCacheMissCount(), 0 );
@@ -327,43 +323,43 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryCacheHitCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getQueryCacheMissCount(), 3 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testCMT() throws Exception {
 		sessionFactory().getStatistics().clear();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
 		assertEquals( sessionFactory().getStatistics().getFlushCount(), 0 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().rollback();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
 		assertFalse( s.isOpen() );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		Map item = new HashMap();
 		item.put( "name", "The Item" );
 		item.put( "description", "The only item we have" );
 		s.persist( "Item", item );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		item = ( Map ) s.createQuery( "from Item" ).uniqueResult();
 		assertNotNull( item );
 		s.delete( item );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
 		assertEquals( sessionFactory().getStatistics().getTransactionCount(), 4 );
@@ -375,19 +371,19 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( sessionFactory().getStatistics().getQueryExecutionCount(), 1 );
 		assertEquals( sessionFactory().getStatistics().getFlushCount(), 2 );
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testCurrentSession() throws Exception {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = sessionFactory().getCurrentSession();
 		Session s2 = sessionFactory().getCurrentSession();
 		assertSame( s, s2 );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertFalse( s.isOpen() );
 
 		// TODO : would be nice to automate-test that the SF internal map actually gets cleaned up
@@ -396,7 +392,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testCurrentSessionWithIterate() throws Exception {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Map item1 = new HashMap();
 		item1.put( "name", "Item - 1" );
@@ -407,11 +403,11 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		item2.put( "name", "Item - 2" );
 		item2.put( "description", "The second item" );
 		s.persist( "Item", item2 );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// First, test iterating the partial iterator; iterate to past
 		// the first, but not the second, item
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		Iterator itr = s.createQuery( "from Item" ).iterate();
 		if ( !itr.hasNext() ) {
@@ -421,10 +417,10 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		if ( !itr.hasNext() ) {
 			fail( "Only one result in iterator" );
 		}
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// Next, iterate the entire result
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		itr = s.createQuery( "from Item" ).iterate();
 		if ( !itr.hasNext() ) {
@@ -433,17 +429,17 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		while ( itr.hasNext() ) {
 			itr.next();
 		}
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testCurrentSessionWithScroll() throws Exception {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = sessionFactory().getCurrentSession();
 		Map item1 = new HashMap();
 		item1.put( "name", "Item - 1" );
@@ -454,51 +450,51 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		item2.put( "name", "Item - 2" );
 		item2.put( "description", "The second item" );
 		s.persist( "Item", item2 );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// First, test partially scrolling the result with out closing
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		ScrollableResults results = s.createQuery( "from Item" ).scroll();
 		results.next();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// Next, test partially scrolling the result with closing
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
 		results.next();
 		results.close();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// Next, scroll the entire result (w/o closing)
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
 		while ( results.next() ) {
 			// do nothing
 		}
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// Next, scroll the entire result (closing)
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		results = s.createQuery( "from Item" ).scroll();
 		while ( results.next() ) {
 			// do nothing
 		}
 		results.close();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = sessionFactory().getCurrentSession();
 		s.createQuery( "delete from Item" ).executeUpdate();
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testAggressiveReleaseWithConnectionRetreival() throws Exception {
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Map item1 = new HashMap();
 		item1.put( "name", "Item - 1" );
@@ -509,20 +505,20 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		item2.put( "name", "Item - 2" );
 		item2.put( "description", "The second item" );
 		s.save( "Item", item2 );
-		sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		try {
-			sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+			TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 			s = sessionFactory().getCurrentSession();
 			s.createQuery( "from Item" ).scroll().next();
 			s.connection();
-			sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+			TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		}
 		finally {
-			sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().begin();
+			TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 			s = openSession();
 			s.createQuery( "delete from Item" ).executeUpdate();
-			sessionFactory().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+			TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		}
 	}
 

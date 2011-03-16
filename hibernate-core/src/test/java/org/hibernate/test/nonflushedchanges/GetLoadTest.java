@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.nonflushedchanges;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.Hibernate;
@@ -32,7 +31,7 @@ import org.hibernate.cfg.Environment;
 
 import org.junit.Test;
 
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,7 +56,7 @@ public class GetLoadTest extends AbstractOperationTestCase {
 	public void testGetLoad() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Employer emp = new Employer();
 		s.persist( emp );
@@ -65,9 +64,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		Node parent = new Node( "bar" );
 		parent.addChild( node );
 		s.persist( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		emp = ( Employer ) s.get( Employer.class, emp.getId() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -82,9 +81,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		assertFalse( Hibernate.isInitialized( node.getChildren() ) );
 		assertFalse( Hibernate.isInitialized( node.getParent() ) );
 		assertNull( s.get( Node.class, "xyz" ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		emp = ( Employer ) s.load( Employer.class, emp.getId() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -96,9 +95,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		node = ( Node ) getOldToNewEntityRefMap().get( node );
 		assertEquals( node.getName(), "foo" );
 		assertFalse( Hibernate.isInitialized( node ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		emp = ( Employer ) s.get( "org.hibernate.test.nonflushedchanges.Employer", emp.getId() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -108,9 +107,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		node = ( Node ) getOldToNewEntityRefMap().get( node );
 		assertTrue( Hibernate.isInitialized( node ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		emp = ( Employer ) s.load( "org.hibernate.test.nonflushedchanges.Employer", emp.getId() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -123,25 +122,25 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		node = ( Node ) getOldToNewEntityRefMap().get( node );
 		assertEquals( node.getName(), "foo" );
 		assertFalse( Hibernate.isInitialized( node ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertFetchCount( 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Employer" ).executeUpdate();
 		List list = s.createQuery( "from Node" ).list();
 		for ( Object aList : list ) {
 			s.delete( aList );
 		}
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testGetReadOnly() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Employer emp = new Employer();
 		s.persist( emp );
@@ -149,9 +148,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		Node parent = new Node( "bar" );
 		parent.addChild( node );
 		s.persist( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
 		s.setDefaultReadOnly( true );
@@ -181,9 +180,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		}
 		assertFalse( Hibernate.isInitialized( node.getParent() ) );
 		assertNull( s.get( Node.class, "xyz" ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
 		emp = ( Employer ) s.get( "org.hibernate.test.nonflushedchanges.Employer", emp.getId() );
@@ -202,25 +201,25 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		node = ( Node ) getOldToNewEntityRefMap().get( node );
 		assertTrue( Hibernate.isInitialized( node ) );
 		assertTrue( s.isReadOnly( node ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertFetchCount( 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Employer" ).executeUpdate();
 		List list = s.createQuery( "from Node" ).list();
 		for ( Object aList : list ) {
 			s.delete( aList );
 		}
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testLoadReadOnly() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Employer emp = new Employer();
 		s.persist( emp );
@@ -228,9 +227,9 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		Node parent = new Node( "bar" );
 		parent.addChild( node );
 		s.persist( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertFalse( s.isDefaultReadOnly() );
 		s.setDefaultReadOnly( true );
@@ -243,34 +242,34 @@ public class GetLoadTest extends AbstractOperationTestCase {
 		emp = ( Employer ) getOldToNewEntityRefMap().get( emp );
 		assertFalse( Hibernate.isInitialized( emp ) );
 		assertTrue( s.isReadOnly( emp ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from Employer" ).executeUpdate();
 		List list = s.createQuery( "from Node" ).list();
 		for ( Object aList : list ) {
 			s.delete( aList );
 		}
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	public void testGetAfterDelete() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Employer emp = new Employer();
 		s.persist( emp );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.delete( emp );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		emp = ( Employer ) s.get( Employee.class, emp.getId() );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertNull( "get did not return null after delete", emp );
 	}

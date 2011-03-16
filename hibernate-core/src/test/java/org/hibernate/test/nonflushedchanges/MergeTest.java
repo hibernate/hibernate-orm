@@ -12,7 +12,8 @@ import org.hibernate.criterion.Projections;
 
 import org.junit.Test;
 
-import org.hibernate.testing.tm.SimpleJtaTransactionManagerImpl;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
+
 import static org.junit.Assert.*;
 
 /**
@@ -27,116 +28,116 @@ public class MergeTest extends AbstractOperationTestCase {
 	public void testMergeStaleVersionFails() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		VersionedEntity entity = new VersionedEntity( "entity", "entity" );
 		s.persist( entity );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// make the detached 'entity' reference stale...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		VersionedEntity entity2 = ( VersionedEntity ) s.get( VersionedEntity.class, entity.getId() );
 		entity2.setName( "entity-name" );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// now try to reattach it
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		try {
 			s.merge( entity );
 			s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 			entity = ( VersionedEntity ) getOldToNewEntityRefMap().get( entity );
-			SimpleJtaTransactionManagerImpl.getInstance().commit();
+			TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 			fail( "was expecting staleness error" );
 		}
 		catch ( StaleObjectStateException expected ) {
 			// expected outcome...
 		}
 		finally {
-			SimpleJtaTransactionManagerImpl.getInstance().rollback();
+			TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
 		}
 	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiPrimayKeyOneToOne() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Person p = new Person( "steve" );
 		new PersonalDetails( "I have big feet", p );
 		s.persist( p );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		p.getDetails().setSomePersonalDetail( p.getDetails().getSomePersonalDetail() + " and big hands too" );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		p = ( Person ) s.merge( p );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		p = ( Person ) getOldToNewEntityRefMap().get( p );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 0 );
 		assertUpdateCount( 1 );
 		assertDeleteCount( 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.delete( p );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testMergeBidiForeignKeyOneToOne() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Person p = new Person( "steve" );
 		Address a = new Address( "123 Main", "Austin", "US", p );
 		s.persist( a );
 		s.persist( p );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		p.getAddress().setStreetAddress( "321 Main" );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		p = ( Person ) s.merge( p );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 0 );
 		assertUpdateCount( 0 ); // no cascade
 		assertDeleteCount( 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.delete( a );
 		s.delete( p );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testNoExtraUpdatesOnMerge() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node node = new Node( "test" );
 		s.persist( node );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		// node is now detached, but we have made no changes.  so attempt to merge it
 		// into this new session; this should cause no updates...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		node = ( Node ) s.merge( node );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 0 );
@@ -145,11 +146,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		// as a control measure, now update the node while it is detached and
 		// make sure we get an update as a result...
 		node.setDescription( "new description" );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		node = ( Node ) s.merge( node );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertUpdateCount( 1 );
 		assertInsertCount( 0 );
 		///////////////////////////////////////////////////////////////////////
@@ -160,24 +161,24 @@ public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeWithCollection() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node parent = new Node( "parent" );
 		Node child = new Node( "child" );
 		parent.getChildren().add( child );
 		child.setParent( parent );
 		s.persist( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		// parent is now detached, but we have made no changes.  so attempt to merge it
 		// into this new session; this should cause no updates...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		parent = ( Node ) s.merge( parent );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 0 );
@@ -187,11 +188,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		// make sure we get an update as a result...
 		( ( Node ) parent.getChildren().iterator().next() ).setDescription( "child's new description" );
 		parent.addChild( new Node( "second child" ) );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		parent = ( Node ) s.merge( parent );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
@@ -202,22 +203,22 @@ public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeVersioned() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		VersionedEntity entity = new VersionedEntity( "entity", "entity" );
 		s.persist( entity );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		// entity is now detached, but we have made no changes.  so attempt to merge it
 		// into this new session; this should cause no updates...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		VersionedEntity mergedEntity = ( VersionedEntity ) s.merge( entity );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		mergedEntity = ( VersionedEntity ) getOldToNewEntityRefMap().get( mergedEntity );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 0 );
@@ -228,11 +229,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		// as a control measure, now update the node while it is detached and
 		// make sure we get an update as a result...
 		entity.setName( "new name" );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		entity = ( VersionedEntity ) s.merge( entity );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertUpdateCount( 1 );
 		assertInsertCount( 0 );
 		///////////////////////////////////////////////////////////////////////
@@ -243,25 +244,25 @@ public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnMergeVersionedWithCollection() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		VersionedEntity parent = new VersionedEntity( "parent", "parent" );
 		VersionedEntity child = new VersionedEntity( "child", "child" );
 		parent.getChildren().add( child );
 		child.setParent( parent );
 		s.persist( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		// parent is now detached, but we have made no changes.  so attempt to merge it
 		// into this new session; this should cause no updates...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		VersionedEntity mergedParent = ( VersionedEntity ) s.merge( parent );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		mergedParent = ( VersionedEntity ) getOldToNewEntityRefMap().get( mergedParent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 0 );
@@ -274,12 +275,12 @@ public class MergeTest extends AbstractOperationTestCase {
 		// make sure we get an update as a result...
 		mergedParent.setName( "new name" );
 		mergedParent.getChildren().add( new VersionedEntity( "child2", "new child" ) );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		parent = ( VersionedEntity ) s.merge( mergedParent );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		parent = ( VersionedEntity ) getOldToNewEntityRefMap().get( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
@@ -290,20 +291,20 @@ public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testNoExtraUpdatesOnPersistentMergeVersionedWithCollection() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		VersionedEntity parent = new VersionedEntity( "parent", "parent" );
 		VersionedEntity child = new VersionedEntity( "child", "child" );
 		parent.getChildren().add( child );
 		child.setParent( parent );
 		s.persist( parent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		// parent is now detached, but we have made no changes. so attempt to merge it
 		// into this new session; this should cause no updates...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		// load parent so that merge will follow entityIsPersistent path
 		VersionedEntity persistentParent = ( VersionedEntity ) s.get( VersionedEntity.class, parent.getId() );
@@ -316,7 +317,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		VersionedEntity mergedParent = ( VersionedEntity ) s.merge( persistentParent ); // <-- This merge leads to failure
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		mergedParent = ( VersionedEntity ) getOldToNewEntityRefMap().get( mergedParent );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertUpdateCount( 0 );
 		assertInsertCount( 0 );
@@ -327,7 +328,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		///////////////////////////////////////////////////////////////////////
 		// as a control measure, now update the node once it is loaded and
 		// make sure we get an update as a result...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		persistentParent = ( VersionedEntity ) s.get( VersionedEntity.class, parent.getId() );
 		persistentParent.setName( "new name" );
@@ -336,7 +337,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		persistentParent = ( VersionedEntity ) getOldToNewEntityRefMap().get( persistentParent );
 		persistentParent = ( VersionedEntity ) s.merge( persistentParent );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 		assertUpdateCount( 1 );
 		assertInsertCount( 1 );
 		///////////////////////////////////////////////////////////////////////
@@ -346,7 +347,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@Test
 	public void testPersistThenMergeInSameTxnWithVersion() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		VersionedEntity entity = new VersionedEntity( "test", "test" );
 		s.persist( entity );
@@ -363,14 +364,14 @@ public class MergeTest extends AbstractOperationTestCase {
 			// expected behavior
 		}
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
 
 	@Test
 	public void testPersistThenMergeInSameTxnWithTimestamp() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		TimestampedEntity entity = new TimestampedEntity( "test", "test" );
 		s.persist( entity );
@@ -387,7 +388,7 @@ public class MergeTest extends AbstractOperationTestCase {
 			// expected behavior
 		}
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
@@ -398,7 +399,7 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node root = new Node( "root" );
 		Node child = new Node( "child" );
@@ -407,7 +408,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		child.addChild( grandchild );
 		s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
@@ -417,11 +418,11 @@ public class MergeTest extends AbstractOperationTestCase {
 		Node grandchild2 = new Node( "grandchild2" );
 		child.addChild( grandchild2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 1 );
@@ -432,17 +433,17 @@ public class MergeTest extends AbstractOperationTestCase {
 		child2.addChild( grandchild3 );
 		root.addChild( child2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.delete( grandchild );
 		s.delete( grandchild2 );
@@ -450,7 +451,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s.delete( child );
 		s.delete( child2 );
 		s.delete( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 	}
 
@@ -459,7 +460,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	public void testMergeDeepTreeWithGeneratedId() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		NumberedNode child = new NumberedNode( "child" );
@@ -469,7 +470,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		root = ( NumberedNode ) s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 3 );
 		assertUpdateCount( 0 );
@@ -481,12 +482,12 @@ public class MergeTest extends AbstractOperationTestCase {
 		NumberedNode grandchild2 = new NumberedNode( "grandchild2" );
 		child.addChild( grandchild2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( NumberedNode ) s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 1 );
@@ -499,23 +500,23 @@ public class MergeTest extends AbstractOperationTestCase {
 		child2.addChild( grandchild3 );
 		root.addChild( child2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( NumberedNode ) s.merge( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		assertUpdateCount( 0 );
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.createQuery( "delete from NumberedNode where name like 'grand%'" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode where name like 'child%'" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode" ).executeUpdate();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 	}
 
@@ -524,7 +525,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	public void testMergeTree() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Node root = new Node( "root" );
 		Node child = new Node( "child" );
@@ -533,7 +534,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( Node ) getOldToNewEntityRefMap().get( root );
 		child = ( Node ) root.getChildren().iterator().next();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		clearCounts();
@@ -545,10 +546,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		root.addChild( secondChild );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.merge( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
@@ -561,7 +562,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	public void testMergeTreeWithGeneratedId() throws Exception {
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		NumberedNode child = new NumberedNode( "child" );
@@ -570,7 +571,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		child = ( NumberedNode ) root.getChildren().iterator().next();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 2 );
 		clearCounts();
@@ -582,10 +583,10 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		root.addChild( secondChild );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.merge( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 2 );
@@ -597,17 +598,17 @@ public class MergeTest extends AbstractOperationTestCase {
 	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testMergeManaged() throws Exception {
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		s.persist( root );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		NumberedNode child = new NumberedNode( "child" );
 		root = ( NumberedNode ) s.merge( root );
@@ -625,7 +626,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		root = ( NumberedNode ) getOldToNewEntityRefMap().get( root );
 		mergedChild = root.getChildren().iterator().next();
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 1 );
 		assertUpdateCount( 0 );
@@ -633,7 +634,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertEquals( root.getChildren().size(), 1 );
 		assertTrue( root.getChildren().contains( mergedChild ) );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertEquals(
 				Long.valueOf( 2 ),
@@ -642,7 +643,7 @@ public class MergeTest extends AbstractOperationTestCase {
 						.uniqueResult()
 		);
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
@@ -651,19 +652,19 @@ public class MergeTest extends AbstractOperationTestCase {
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMergeManagedUninitializedCollection() throws Exception {
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		root.addChild( new NumberedNode( "child" ) );
 		s.persist( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		NumberedNode newRoot = new NumberedNode( "root" );
 		newRoot.setId( root.getId() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( NumberedNode ) s.get( NumberedNode.class, root.getId() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -677,13 +678,13 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertSame( root, s.merge( newRoot ) );
 		assertSame( managedChildren, root.getChildren() );
 		assertFalse( Hibernate.isInitialized( managedChildren ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 0 );
 		assertUpdateCount( 0 );
 		assertDeleteCount( 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertEquals(
 				Long.valueOf( 2 ),
@@ -691,7 +692,7 @@ public class MergeTest extends AbstractOperationTestCase {
 						.setProjection( Projections.rowCount() )
 						.uniqueResult()
 		);
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
@@ -700,19 +701,19 @@ public class MergeTest extends AbstractOperationTestCase {
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMergeManagedInitializedCollection() throws Exception {
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		NumberedNode root = new NumberedNode( "root" );
 		root.addChild( new NumberedNode( "child" ) );
 		s.persist( root );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		clearCounts();
 
 		NumberedNode newRoot = new NumberedNode( "root" );
 		newRoot.setId( root.getId() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		root = ( NumberedNode ) s.get( NumberedNode.class, root.getId() );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
@@ -727,13 +728,13 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertSame( root, s.merge( newRoot ) );
 		assertSame( managedChildren, root.getChildren() );
 		assertTrue( Hibernate.isInitialized( managedChildren ) );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertInsertCount( 0 );
 		assertUpdateCount( 0 );
 		assertDeleteCount( 0 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		assertEquals(
 				Long.valueOf( 2 ),
@@ -741,7 +742,7 @@ public class MergeTest extends AbstractOperationTestCase {
 						.setProjection( Projections.rowCount() )
 						.uniqueResult()
 		);
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
@@ -750,7 +751,7 @@ public class MergeTest extends AbstractOperationTestCase {
 	@SuppressWarnings( {"unchecked"})
 	public void testRecursiveMergeTransient() throws Exception {
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Employer jboss = new Employer();
 		Employee gavin = new Employee();
@@ -765,7 +766,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertEquals( 1, jboss.getEmployees().size() );
 		s.clear();
 		s.merge( jboss.getEmployees().iterator().next() );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
@@ -773,25 +774,25 @@ public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	@SuppressWarnings( {"UnnecessaryBoxing", "UnusedAssignment"})
 	public void testDeleteAndMerge() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Employer jboss = new Employer();
 		s.persist( jboss );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		Employer otherJboss;
 		otherJboss = ( Employer ) s.get( Employer.class, jboss.getId() );
 		s.delete( otherJboss );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		jboss.setVers( Integer.valueOf( 1 ) );
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		s.merge( jboss );
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
@@ -800,18 +801,18 @@ public class MergeTest extends AbstractOperationTestCase {
 	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	public void testMergeManyToManyWithCollectionDeference() throws Exception {
 		// setup base data...
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		Competition competition = new Competition();
 		competition.getCompetitors().add( new Competitor( "Name" ) );
 		competition.getCompetitors().add( new Competitor() );
 		competition.getCompetitors().add( new Competitor() );
 		s.persist( competition );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		// the competition graph is now detached:
 		//   1) create a new List reference to represent the competitors
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		List newComp = new ArrayList();
 		Competitor originalCompetitor = ( Competitor ) competition.getCompetitors().get( 0 );
@@ -825,7 +826,7 @@ public class MergeTest extends AbstractOperationTestCase {
 		s = applyNonFlushedChangesToNewSessionCloseOldSession( s );
 		Competition competition2copy = ( Competition ) getOldToNewEntityRefMap().get( competition2 );
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		assertFalse( competition == competition2 );
 		assertFalse( competition2 == competition2copy );
@@ -833,19 +834,19 @@ public class MergeTest extends AbstractOperationTestCase {
 		assertEquals( 2, competition2.getCompetitors().size() );
 		assertEquals( 2, competition2copy.getCompetitors().size() );
 
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		s = openSession();
 		competition = ( Competition ) s.get( Competition.class, competition.getId() );
 		assertEquals( 2, competition.getCompetitors().size() );
 		s.delete( competition );
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 
 		cleanup();
 	}
 
 	@SuppressWarnings( {"unchecked"})
 	private void cleanup() throws Exception {
-		SimpleJtaTransactionManagerImpl.getInstance().begin();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
 		s.createQuery( "delete from NumberedNode where parent is not null" ).executeUpdate();
 		s.createQuery( "delete from NumberedNode" ).executeUpdate();
@@ -864,7 +865,7 @@ public class MergeTest extends AbstractOperationTestCase {
 			s.delete( employer );
 		}
 
-		SimpleJtaTransactionManagerImpl.getInstance().commit();
+		TestingJtaBootstrap.INSTANCE.getTransactionManager().commit();
 	}
 }
 

@@ -37,9 +37,8 @@ import org.hibernate.engine.StatefulPersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.internal.util.SerializationHelper;
 
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.tm.ConnectionProviderImpl;
-import org.hibernate.testing.tm.TransactionManagerLookupImpl;
 
 import static org.junit.Assert.assertEquals;
 
@@ -54,8 +53,7 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, ConnectionProviderImpl.class.getName() );
-		cfg.setProperty( Environment.TRANSACTION_MANAGER_STRATEGY, TransactionManagerLookupImpl.class.getName() );
+		TestingJtaBootstrap.prepare( cfg.getProperties() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 		cfg.setProperty( Environment.AUTO_CLOSE_SESSION, "true" );
 		cfg.setProperty( Environment.FLUSH_BEFORE_COMPLETION, "true" );

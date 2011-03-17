@@ -34,6 +34,8 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.ast.ASTQueryTranslatorFactory;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
@@ -75,12 +77,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.QUERY_TRANSLATOR, ASTQueryTranslatorFactory.class.getName() );
 	}
 
-	@Override
-	protected void prepareTest() {
-		cleanupData();
-	}
-
-	protected void createData() {
+	private void createData() {
 		stateProvince = new StateProvince();
 		stateProvince.setName( "IL" );
 
@@ -156,7 +153,7 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 		zoosWithSameAddress.add( zoo2 );
 	}
 
-	protected void cleanupData() {
+	private void cleanupData() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		if ( zoo1 != null ) {

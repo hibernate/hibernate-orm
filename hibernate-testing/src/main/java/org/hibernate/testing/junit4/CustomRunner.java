@@ -90,20 +90,12 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		);
 	}
 
+
 	@Override
-	protected Statement methodInvoker(FrameworkMethod method, final Object test) {
+	protected Statement methodBlock(FrameworkMethod method) {
+		final Statement originalMethodBlock = super.methodBlock( method );
 		final ExtendedFrameworkMethod extendedFrameworkMethod = (ExtendedFrameworkMethod) method;
-
-
-		final Statement invoker = super.methodInvoker( method, test );
-
-		return new TestMethodInvoker( invoker, testClassMetadata, extendedFrameworkMethod, test );
-	}
-
-	public static class FailureExpectedTestPassedException extends Exception {
-		public FailureExpectedTestPassedException(FrameworkMethod frameworkMethod) {
-			super( "Test marked as FailureExpected, but did not fail : " + Helper.extractTestName( frameworkMethod ) );
-		}
+		return new FailureExpectedHandler( originalMethodBlock, testClassMetadata, extendedFrameworkMethod, testInstance );
 	}
 
 	private Object testInstance;

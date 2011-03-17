@@ -23,6 +23,7 @@
  */
 package org.hibernate.testing.junit4;
 
+import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import org.hibernate.testing.FailureExpected;
@@ -31,13 +32,13 @@ import org.hibernate.testing.TestLogger;
 /**
 * @author Steve Ebersole
 */
-class TestMethodInvoker extends Statement {
+class FailureExpectedHandler extends Statement {
 	private final TestClassMetadata testClassMetadata;
 	private final ExtendedFrameworkMethod extendedFrameworkMethod;
 	private final Statement realInvoker;
 	private final Object testInstance;
 
-	public TestMethodInvoker(
+	public FailureExpectedHandler(
 			Statement realInvoker,
 			TestClassMetadata testClassMetadata,
 			ExtendedFrameworkMethod extendedFrameworkMethod,
@@ -55,10 +56,10 @@ class TestMethodInvoker extends Statement {
 			realInvoker.evaluate();
 			// reaching here is expected, unless the test is marked as an expected failure
 			if ( failureExpected != null ) {
-				throw new CustomRunner.FailureExpectedTestPassedException( extendedFrameworkMethod );
+				throw new FailureExpectedTestPassedException( extendedFrameworkMethod );
 			}
 		}
-		catch (CustomRunner.FailureExpectedTestPassedException e) {
+		catch (FailureExpectedTestPassedException e) {
 			// just pass this along
 			throw e;
 		}
@@ -79,6 +80,12 @@ class TestMethodInvoker extends Statement {
 				testClassMetadata.performOnFailureCallback( testInstance );
 				throw e;
 			}
+		}
+	}
+
+	public static class FailureExpectedTestPassedException extends Exception {
+		public FailureExpectedTestPassedException(FrameworkMethod frameworkMethod) {
+			super( "Test marked as FailureExpected, but did not fail : " + Helper.extractTestName( frameworkMethod ) );
 		}
 	}
 }

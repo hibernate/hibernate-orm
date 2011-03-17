@@ -61,7 +61,6 @@ import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.fail;
 
 /**
@@ -110,7 +109,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@BeforeClassOnce
 	private void buildSessionFactory() {
-		LOG.trace( "Building session factory" );
 		configuration = buildConfiguration();
 		serviceRegistry = buildServiceRegistry( configuration );
 		sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
@@ -273,7 +271,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( sessionFactory == null ) {
 			return;
 		}
-		LOG.trace( "Releasing session factory" );
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
@@ -282,12 +279,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@OnFailure
 	@OnExpectedFailure
 	public void onFailure() {
-		LOG.trace( "Processing failure-expected ignore" );
-		if ( ! rebuildSessionFactoryOnError() ) {
-			return;
-		}
+//		cleanupSession();
 
-		rebuildSessionFactory();
+		if ( rebuildSessionFactoryOnError() ) {
+			rebuildSessionFactory();
+		}
 	}
 
 	protected void rebuildSessionFactory() {
@@ -307,6 +303,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@Before
 	public final void beforeTest() throws Exception {
+		System.out.println( " IN @Before CALLBACK!" );
 		prepareTest();
 	}
 
@@ -315,21 +312,22 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		System.out.println( " IN @After CALLBACK!" );
 		cleanupTest();
 
+		cleanupSession();
+
+		assertAllDataRemoved();
+	}
+
+	private void cleanupSession() {
 		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {
 			if ( session.isConnected() ) {
 				session.doWork( new RollbackWork() );
 			}
 			session.close();
-			session = null;
-			LOG.debug( "unclosed session" );
 		}
-		else {
-			session = null;
-		}
-
-		assertAllDataRemoved();
+		session = null;
 	}
 
 	public class RollbackWork implements Work {

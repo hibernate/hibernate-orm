@@ -23,13 +23,21 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.ArrayList;
 
 /**
  * Models what ANSI SQL terms a table specification which is a table or a view or an inline view.
  *
  * @author Steve Ebersole
  */
-public interface TableSpecification extends ValueContainer {
+public interface TableSpecification extends ValueContainer, Loggable {
+	/**
+	 * Obtain a reference to the schema to which this table specification belongs.
+	 *
+	 * @return The schema to which this table specification belongs.
+	 */
+	public Schema getSchema();
+
 	/**
 	 * Get the primary key definition for this table spec.
 	 *
@@ -37,14 +45,50 @@ public interface TableSpecification extends ValueContainer {
 	 */
 	public PrimaryKey getPrimaryKey();
 
-	public ForeignKey createForeignKey(TableSpecification targetTable, String name);
+	/**
+	 * Factory method for creating a {@link Column} associated with this container.
+	 *
+	 * @param name The column name
+	 *
+	 * @return The generated column
+	 */
+	public Column createColumn(String name);
+
+	/**
+	 * Factory method for creating a {@link Column} associated with this container.
+	 *
+	 * @param name The column name
+	 *
+	 * @return The generated column
+	 */
+	public Tuple createTuple(String name);
+
+	/**
+	 * Factory method for creating a {@link DerivedValue} associated with this container.
+	 *
+	 * @param fragment The value expression
+	 *
+	 * @return The generated value.
+	 */
+	public DerivedValue createDerivedValue(String fragment);
 
 	public Iterable<ForeignKey> getForeignKeys();
 
-	/**
-	 * Get the physical table names modelled here.  This is especially important in the case of an inline view.
-	 *
-	 * @return The spaces.
-	 */
-	public Iterable<ObjectName> getSpaces();
+	public ForeignKey createForeignKey(TableSpecification targetTable, String name);
+
+	public Iterable<Index> getIndexes();
+
+	public Index getOrCreateIndex(String name);
+
+	public Iterable<UniqueKey> getUniqueKeys();
+
+	public UniqueKey getOrCreateUniqueKey(String name);
+
+	public Iterable<String> getCheckConstraints();
+
+	public void addCheckConstraint(String checkCondition);
+
+	public Iterable<String> getComments();
+
+	public void addComment(String comment);
 }

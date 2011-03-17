@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+
 import org.hibernate.internal.util.StringHelper;
 
 /**

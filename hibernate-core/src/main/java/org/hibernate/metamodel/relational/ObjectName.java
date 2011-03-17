@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-
 /**
  * Models the qualified name of a database object.
  * <p/>
@@ -43,6 +42,14 @@ public class ObjectName {
 
 	public ObjectName(Identifier name) {
 		this( null, null, name );
+	}
+
+	public ObjectName(Schema schema, String name) {
+		this( schema.getName().getSchema(), schema.getName().getCatalog(), Identifier.toIdentifier( name ) );
+	}
+
+	public ObjectName(Schema schema, Identifier name) {
+		this( schema.getName().getSchema(), schema.getName().getCatalog(), name );
 	}
 
 	public ObjectName(String schemaName, String catalogName, String name) {
@@ -96,7 +103,7 @@ public class ObjectName {
 		return name;
 	}
 
-	public String getIdentifier() {
+	public String toText() {
 		return identifier;
 	}
 

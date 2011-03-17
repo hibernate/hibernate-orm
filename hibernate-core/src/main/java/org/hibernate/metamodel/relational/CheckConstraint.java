@@ -21,23 +21,51 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.relational;
 
 /**
- * Models the notion of a component (what JPA calls an Embeddable).
- * <p/>
- * NOTE : Components are not currently really hierarchical.  But that is a feature I want to add.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class Component extends AbstractAttributeContainer implements Hierarchical {
-	public Component(String name, Hierarchical superType) {
-		super( name, superType );
+public class CheckConstraint {
+	private final Table table;
+	private String name;
+	private String condition;
+
+	public CheckConstraint(Table table) {
+		this.table = table;
 	}
 
-	@Override
-	public TypeNature getNature() {
-		return TypeNature.COMPONENT;
+	public CheckConstraint(Table table, String name, String condition) {
+		this.table = table;
+		this.name = name;
+		this.condition = condition;
+	}
+
+	public String getCondition() {
+		return condition;
+	}
+
+	public void setCondition(String condition) {
+		this.condition = condition;
+	}
+
+	/**
+	 * Obtain the table to which this constraint applies.
+	 *
+	 * @return The constrained table.
+	 */
+	public Table getTable() {
+		return table;
+	}
+
+	/**
+	 * Obtain the constraint name.
+	 *
+	 * @return the name.
+	 */
+	public String getName() {
+		return name;
 	}
 }

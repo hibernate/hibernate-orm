@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 20082011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,20 +20,19 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
 
+import org.hibernate.internal.util.xml.XmlDocument;
 
 /**
  * Thrown when a mapping is found to be invalid.
  * Similar to MappingException, but this contains more info about the path and type of mapping (e.g. file, resource or url)
  * 
  * @author Max Rydahl Andersen
- *
+ * @author Steve Ebersole
  */
 public class InvalidMappingException extends MappingException {
-
 	private final String path;
 	private final String type;
 
@@ -42,11 +41,19 @@ public class InvalidMappingException extends MappingException {
 		this.type=type;
 		this.path=path;
 	}
-	
+
 	public InvalidMappingException(String customMessage, String type, String path) {
 		super(customMessage);
 		this.type=type;
 		this.path=path;
+	}
+
+	public InvalidMappingException(String customMessage, XmlDocument xmlDocument, Throwable cause) {
+		this( customMessage, xmlDocument.getOrigin().getType(), xmlDocument.getOrigin().getName(), cause );
+	}
+
+	public InvalidMappingException(String customMessage, XmlDocument xmlDocument) {
+		this( customMessage, xmlDocument.getOrigin().getType(), xmlDocument.getOrigin().getName() );
 	}
 	
 	public InvalidMappingException(String type, String path) {

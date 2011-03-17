@@ -21,23 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.domain;
 
 /**
- * Models the concept of a (intermediate) superclass
+ * Models the notion of a component (what JPA calls an Embeddable).
+ * <p/>
+ * NOTE : Components are not currently really hierarchical.  But that is a feature I want to add.
  *
  * @author Steve Ebersole
  */
-public class Superclass extends AbstractAttributeContainer implements Hierarchical {
-	public Superclass(String name, Hierarchical superType) {
+public class Component extends AbstractAttributeContainer implements Hierarchical {
+	public Component(String name, Hierarchical superType) {
 		super( name, superType );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public TypeNature getNature() {
-		return TypeNature.SUPERCLASS;
+		return TypeNature.COMPONENT;
 	}
 }

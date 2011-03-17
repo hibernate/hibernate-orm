@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,42 +35,56 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class Table extends AbstractTableSpecification implements ValueContainer, Exportable {
-	private final ObjectName name;
-	private final Set<ObjectName> spaces;
+	private final Schema database;
+	private final Identifier tableName;
+	private final String qualifiedName;
 
 	private List<Index> indexes;
 	private List<UniqueKey> uniqueKeys;
+	private List<String> checkConstraints;
+	private Set<String> comments;
 
-	public Table(ObjectName name) {
-		this.name = name;
-		this.spaces = java.util.Collections.singleton( name );
+	public Table(Schema database, String tableName) {
+		this( database, Identifier.toIdentifier( tableName ) );
 	}
 
-	public ObjectName getObjectName() {
-		return name;
+	public Table(Schema database, Identifier tableName) {
+		this.database = database;
+		this.tableName = tableName;
+		ObjectName objectName = new ObjectName( database.getName().getSchema(), database.getName().getCatalog(), tableName );
+		this.qualifiedName = objectName.toText();
+	}
+
+	@Override
+	public Schema getSchema() {
+		return database;
+	}
+
+	public Identifier getTableName() {
+		return tableName;
 	}
 
 	@Override
 	public String getLoggableValueQualifier() {
-		return getObjectName().getIdentifier();
+		return qualifiedName;
 	}
 
 	@Override
 	public String getExportIdentifier() {
-		return getObjectName().getIdentifier();
-	}
-
-	@Override
-	public Iterable<ObjectName> getSpaces() {
-		return spaces;
+		return qualifiedName;
 	}
 
 	@Override
 	public String toLoggableString() {
-		return getObjectName().getIdentifier();
+		return qualifiedName;
 	}
 
-	public Index createIndex(String name) {
+	@Override
+	public Iterable<Index> getIndexes() {
+		return indexes;
+	}
+
+	public Index getOrCreateIndex(String name) {
 		Index index = new Index( this, name );
 		if ( indexes == null ) {
 			indexes = new ArrayList<Index>();
@@ -77,7 +93,12 @@ public class Table extends AbstractTableSpecification implements ValueContainer,
 		return index;
 	}
 
-	public UniqueKey createUniqueKey(String name) {
+	@Override
+	public Iterable<UniqueKey> getUniqueKeys() {
+		return uniqueKeys;
+	}
+
+	public UniqueKey getOrCreateUniqueKey(String name) {
 		UniqueKey uniqueKey = new UniqueKey( this, name );
 		if ( uniqueKeys == null ) {
 			uniqueKeys = new ArrayList<UniqueKey>();
@@ -87,9 +108,33 @@ public class Table extends AbstractTableSpecification implements ValueContainer,
 	}
 
 	@Override
+	public Iterable<String> getCheckConstraints() {
+		return checkConstraints;
+	}
+
+	@Override
+	public void addCheckConstraint(String checkCondition) {
+		if ( checkConstraints == null ) {
+			checkConstraints = new ArrayList<String>();
+		}
+		checkConstraints.add( checkCondition );
+	}
+
+	@Override
+	public Iterable<String> getComments() {
+		return comments;
+	}
+
+	@Override
+	public void addComment(String comment) {
+		if ( comments == null ) {
+			comments = new HashSet<String>();
+		}
+		comments.add( comment );
+	}
+
+	@Override
 	public String toString() {
-		return "Table{" +
-				"name=" + getObjectName().getIdentifier() +
-				'}';
+		return "Table{name=" + qualifiedName + '}';
 	}
 }

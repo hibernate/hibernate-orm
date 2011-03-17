@@ -21,27 +21,48 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.binding;
 
 /**
- * Basic information about a Java type, in regards to its role in particular set of mappings.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public interface Type {
-	/**
-	 * Get the name of the type.
-	 *
-	 * @return The name
-	 */
-	public String getName();
+public class Caching {
+	private String region;
+	private String strategy;
+	private boolean cacheLazyProperties;
 
-	/**
-	 * Return the persistence type.
-	 *
-	 * @return persistence type
-	 */
-	public TypeNature getNature();
+	public Caching() {
+	}
 
+	public Caching(String region, String strategy, boolean cacheLazyProperties) {
+		this.region = region;
+		this.strategy = strategy;
+		this.cacheLazyProperties = cacheLazyProperties;
+	}
+
+	public String getRegion() {
+		return region;
+	}
+
+	public void setRegion(String region) {
+		this.region = region;
+	}
+
+	public String getStrategy() {
+		return strategy;
+	}
+
+	public void setStrategy(String strategy) {
+		this.strategy = strategy;
+	}
+
+	public boolean isCacheLazyProperties() {
+		return cacheLazyProperties;
+	}
+
+	public void setCacheLazyProperties(boolean cacheLazyProperties) {
+		this.cacheLazyProperties = cacheLazyProperties;
+	}
 }

@@ -21,8 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.domain;
 
 /**
  * Models a basic type, a simple value.

@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-
 /**
  * Models a physical column
  *
@@ -32,15 +31,91 @@ package org.hibernate.metamodel.relational;
  */
 public class Column extends AbstractSimpleValue implements SimpleValue {
 	private final String name;
-	private Size size;
+	private boolean nullable;
+	private boolean unique;
 
-	protected Column(ValueContainer table, String name) {
-		super( table );
+	private String defaultValue;
+	private String checkCondition;
+	private String sqlType;
+
+	private String readFragment;
+	private String writeFragment;
+
+	private String comment;
+
+	private Size size = new Size();
+
+	protected Column(TableSpecification table, int position, String name) {
+		super( table, position );
 		this.name = name;
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
+
+	public boolean isUnique() {
+		return unique;
+	}
+
+	public void setUnique(boolean unique) {
+		this.unique = unique;
+	}
+
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
+
+	public String getCheckCondition() {
+		return checkCondition;
+	}
+
+	public void setCheckCondition(String checkCondition) {
+		this.checkCondition = checkCondition;
+	}
+
+	public String getSqlType() {
+		return sqlType;
+	}
+
+	public void setSqlType(String sqlType) {
+		this.sqlType = sqlType;
+	}
+
+	public String getReadFragment() {
+		return readFragment;
+	}
+
+	public void setReadFragment(String readFragment) {
+		this.readFragment = readFragment;
+	}
+
+	public String getWriteFragment() {
+		return writeFragment;
+	}
+
+	public void setWriteFragment(String writeFragment) {
+		this.writeFragment = writeFragment;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 
 	public Size getSize() {
@@ -53,7 +128,7 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 
 	@Override
 	public String toLoggableString() {
-		return getValueContainer().getLoggableValueQualifier() + '.' + getName();
+		return getTable().getLoggableValueQualifier() + '.' + getName();
 	}
 
 	/**
@@ -64,12 +139,30 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 	 * definitions, by standard, are allowed a "multiplier" consisting of 'K' (Kb), 'M' (Mb) or 'G' (Gb).
 	 */
 	public static class Size {
-		private static enum LobMultiplier { K, M, G }
+		private static enum LobMultiplier {
+			NONE( 1 ),
+			K( NONE.factor * 1024 ),
+			M( K.factor * 1024 ),
+			G( M.factor * 1024 );
 
-		private final int precision;
-		private final  int scale;
-		private final long length;
-		private final LobMultiplier lobMultiplier;
+			private long factor;
+
+			private LobMultiplier(long factor) {
+				this.factor = factor;
+			}
+
+			public long getFactor() {
+				return factor;
+			}
+		}
+
+		private int precision = - 1;
+		private int scale = -1;
+		private long length = -1;
+		private LobMultiplier lobMultiplier = LobMultiplier.NONE;
+
+		public Size() {
+		}
 
 		/**
 		 * Complete constructor.
@@ -116,6 +209,22 @@ public class Column extends AbstractSimpleValue implements SimpleValue {
 
 		public LobMultiplier getLobMultiplier() {
 			return lobMultiplier;
+		}
+
+		public void setPrecision(int precision) {
+			this.precision = precision;
+		}
+
+		public void setScale(int scale) {
+			this.scale = scale;
+		}
+
+		public void setLength(long length) {
+			this.length = length;
+		}
+
+		public void setLobMultiplier(LobMultiplier lobMultiplier) {
+			this.lobMultiplier = lobMultiplier;
 		}
 	}
 }

@@ -21,23 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
+package org.hibernate.metamodel.binding;
 
+import org.hibernate.metamodel.relational.ForeignKey;
 
 /**
- * Models the notion of an entity
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public class Entity extends AbstractAttributeContainer {
-	public Entity(String name, Hierarchical superType) {
-		super( name, superType );
-	}
+public class CollectionKey {
+	private final PluralAttributeBinding collection;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypeNature getNature() {
-		return TypeNature.ENTITY;
+	private ForeignKey foreignKey;
+	private boolean inverse;
+	private HibernateTypeDescriptor hibernateTypeDescriptor;
+
+// todo : this would be nice to have but we do not always know it, especially in HBM case.
+//	private SimpleAttributeBinding otherSide;
+
+	public CollectionKey(PluralAttributeBinding collection) {
+		this.collection = collection;
 	}
 }

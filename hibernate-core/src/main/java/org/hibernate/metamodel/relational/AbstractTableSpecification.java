@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
+
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -31,9 +33,34 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractTableSpecification extends AbstractValueContainer implements TableSpecification {
+public abstract class AbstractTableSpecification implements TableSpecification, ValueContainer {
+	private final LinkedHashSet<SimpleValue> values = new LinkedHashSet<SimpleValue>();
 	private PrimaryKey primaryKey = new PrimaryKey( this );
 	private List<ForeignKey> foreignKeys = new ArrayList<ForeignKey>();
+
+	@Override
+	public Iterable<SimpleValue> values() {
+		return values;
+	}
+
+	@Override
+	public Column createColumn(String name) {
+		final Column column = new Column( this, values.size(), name );
+		values.add( column );
+		return column;
+	}
+
+	@Override
+	public DerivedValue createDerivedValue(String fragment) {
+		final DerivedValue value = new DerivedValue( this, values.size(), fragment );
+		values.add( value );
+		return value;
+	}
+
+	@Override
+	public Tuple createTuple(String name) {
+		return new Tuple( this, name );
+	}
 
 	@Override
 	public Iterable<ForeignKey> getForeignKeys() {

@@ -35,8 +35,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class TableManipulationTests extends BaseUnitTestCase {
@@ -45,10 +43,11 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 	@Test
 	public void testTableCreation() {
-		Table table = new Table( new ObjectName( null, null, "my_table" ) );
-		assertNull( table.getObjectName().getSchema() );
-		assertNull( table.getObjectName().getCatalog() );
-		assertEquals( "my_table", table.getObjectName().getName().toString() );
+		Schema schema = new Schema( null, null );
+		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
+		assertNull( table.getSchema().getName().getSchema() );
+		assertNull( table.getSchema().getName().getCatalog() );
+		assertEquals( "my_table", table.getTableName().toString() );
 		assertEquals( "my_table", table.getExportIdentifier() );
 		assertNull( table.getPrimaryKey().getName() );
 		assertFalse( table.values().iterator().hasNext() );
@@ -88,7 +87,8 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicForeignKeyDefinition() {
-		Table book = new Table( new ObjectName( null, null, "BOOK" ) );
+		Schema schema = new Schema( null, null );
+		Table book = schema.createTable( Identifier.toIdentifier( "BOOK" ) );
 
 		Column bookId = book.createColumn( "id" );
 		bookId.setDatatype( INTEGER );
@@ -96,7 +96,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 		book.getPrimaryKey().addColumn( bookId );
 		book.getPrimaryKey().setName( "BOOK_PK" );
 
-		Table page = new Table( new ObjectName( null, null, "PAGE" ) );
+		Table page = schema.createTable( Identifier.toIdentifier( "PAGE" ) );
 
 		Column pageId = page.createColumn( "id" );
 		pageId.setDatatype( INTEGER );

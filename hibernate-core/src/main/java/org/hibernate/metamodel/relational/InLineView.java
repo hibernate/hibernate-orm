@@ -22,8 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-import java.util.HashSet;
-import java.util.Set;
+
+import java.util.Collections;
 
 /**
  * A <tt>data container</tt> defined by a <tt>SELECT</tt> statement.  This translates into an inline view in the
@@ -33,13 +33,18 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class InLineView extends AbstractTableSpecification implements ValueContainer {
+	private final Schema schema;
+	private final String logicalName;
 	private final String select;
-	private final String uniqueValueQualifier;
-	private Set<ObjectName> synchronizedTableSpaces = java.util.Collections.emptySet();
 
-	public InLineView(String select, String uniqueValueQualifier) {
+	public InLineView(Schema schema, String logicalName, String select) {
+		this.schema = schema;
+		this.logicalName = logicalName;
 		this.select = select;
-		this.uniqueValueQualifier = uniqueValueQualifier;
+	}
+
+	public Schema getSchema() {
+		return schema;
 	}
 
 	public String getSelect() {
@@ -48,23 +53,47 @@ public class InLineView extends AbstractTableSpecification implements ValueConta
 
 	@Override
 	public String getLoggableValueQualifier() {
-		return uniqueValueQualifier;
-	}
-
-	public void addSynchronizedTable(String tableName) {
-		addSynchronizedTable( new ObjectName( null, null, tableName ) );
-	}
-
-	public void addSynchronizedTable(ObjectName tableName) {
-		if ( synchronizedTableSpaces.isEmpty() ) {
-			synchronizedTableSpaces = new HashSet<ObjectName>();
-		}
-		synchronizedTableSpaces.add( tableName );
+		return logicalName;
 	}
 
 	@Override
-	public Set<ObjectName> getSpaces() {
-		return synchronizedTableSpaces;
+	public Iterable<Index> getIndexes() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Index getOrCreateIndex(String name) {
+		throw new UnsupportedOperationException( "Cannot create index on inline view" );
+	}
+
+	@Override
+	public Iterable<UniqueKey> getUniqueKeys() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public UniqueKey getOrCreateUniqueKey(String name) {
+		throw new UnsupportedOperationException( "Cannot create unique-key on inline view" );
+	}
+
+	@Override
+	public Iterable<String> getCheckConstraints() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void addCheckConstraint(String checkCondition) {
+		throw new UnsupportedOperationException( "Cannot create check constraint on inline view" );
+	}
+
+	@Override
+	public Iterable<String> getComments() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void addComment(String comment) {
+		throw new UnsupportedOperationException( "Cannot comment on inline view" );
 	}
 
 	@Override

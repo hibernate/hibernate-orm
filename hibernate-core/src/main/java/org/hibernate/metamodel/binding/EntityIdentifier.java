@@ -21,36 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-import javax.persistence.metamodel.PluralAttribute;
+package org.hibernate.metamodel.binding;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Desribes an attribute.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public interface Attribute {
-	/**
-	 * Retrieve the attribute name.
-	 *
-	 * @return The attribute name.
-	 */
-	public String getName();
+public class EntityIdentifier {
+	private static final Logger log = LoggerFactory.getLogger( EntityIdentifier.class );
+
+	private final EntityBinding entityBinding;
+	private AttributeBinding attributeBinding;
+	// todo : generator, mappers, etc
 
 	/**
-	 * Retrieve the declaring container for this attribute (entity/component).
-	 *
-	 * @return The attribute container.
+	 * Create an identifier
+	 * @param entityBinding
 	 */
-	public AttributeContainer getAttributeContainer();
+	public EntityIdentifier(EntityBinding entityBinding) {
+		this.entityBinding = entityBinding;
+	}
 
-	/**
-	 * An attribute can be either:<ul>
-	 * <li>singular - castable to {@link SingularAttribute}</li>
-	 * <li>plural - castable to {@link PluralAttribute}
-	 * </ul>
-	 *
-	 * @return True if attribute is singular; false if plural.
-	 */
-	public boolean isSingular();
+	public AttributeBinding getValueBinding() {
+		return attributeBinding;
+	}
+
+	public void setValueBinding(AttributeBinding attributeBinding) {
+		if ( this.attributeBinding != null ) {
+			// todo : error?  or just log?  for now just log
+			log.warn( "setting entity-identifier value binding where one already existed : {}.", entityBinding.getEntity().getName() );
+		}
+		this.attributeBinding = attributeBinding;
+	}
 }

@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-
 /**
  * Contract for data containers (what the ANSI SQL spec calls "table specifications") to which we can map
  * entity state.  The two flavors here are {@link Table physical table} and {@link InLineView inline view}, but a
@@ -37,7 +36,7 @@ public interface ValueContainer {
 	 *
 	 * @return Iterator over value definitions.
 	 */
-	public Iterable<Value> values();
+	public Iterable<SimpleValue> values();
 
 	/**
 	 * Get a qualifier which can be used to qualify {@link Value values} belonging to this container in
@@ -46,38 +45,4 @@ public interface ValueContainer {
 	 * @return The qualifier
 	 */
 	public String getLoggableValueQualifier();
-
-	/**
-	 * Obtain the string representation of this value usable in log statements.
-	 *
-	 * @return The loggable representation
-	 */
-	public String toLoggableString();
-
-	/**
-	 * Factory method for creating a {@link Column} associated with this container.
-	 *
-	 * @param name The column name
-	 *
-	 * @return The generated column
-	 */
-	public Column createColumn(String name);
-
-	/**
-	 * Factory method for creating a {@link DerivedValue} associated with this container.
-	 *
-	 * @param fragment The value expression
-	 *
-	 * @return The generated value.
-	 */
-	public DerivedValue createDerivedValue(String fragment);
-
-	/**
-	 * Factory method for creating a {@link Tuple} associated with this container.
-	 *
-	 * @param name The (logical) tuple name
-	 *
-	 * @return The generated tuple.
-	 */
-	public Tuple createTuple(String name);
 }

@@ -24,10 +24,11 @@
 package org.hibernate.metamodel.relational;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -53,9 +54,9 @@ public class ObjectNameTests extends BaseUnitTestCase {
 	@Test
 	public void testIdentifierBuilding() {
 		ObjectName on = new ObjectName( "schema", "catalog", "name" );
-		assertEquals( "schema.catalog.name", on.getIdentifier() );
+		assertEquals( "schema.catalog.name", on.toText() );
 		on = new ObjectName( "schema", null, "name" );
-		assertEquals( "schema.name", on.getIdentifier() );
+		assertEquals( "schema.name", on.toText() );
 	}
 }
 

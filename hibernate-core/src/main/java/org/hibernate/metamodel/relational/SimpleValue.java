@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.relational;
 
-
 /**
  * Models a simple, non-compound value.
  *

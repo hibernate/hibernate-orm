@@ -21,31 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.binding;
 
 /**
- * Describes the type of a type :/
- *
  * @author Steve Ebersole
  */
-public enum TypeNature {
-	BASIC( "basic" ),
-	COMPONENT( "component" ),
-	ENTITY( "entity" ),
-	SUPERCLASS( "superclass" );
+public class SimpleEntity {
+	private Long id;
+	private String name;
 
-	private final String name;
+	public SimpleEntity() {
+	}
 
-	private TypeNature(String name) {
+	public SimpleEntity(String name) {
 		this.name = name;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public String toString() {
-		return super.toString() + "[" + getName() + "]";
+	public void setName(String name) {
+		this.name = name;
 	}
 }

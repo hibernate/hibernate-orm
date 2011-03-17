@@ -21,36 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+package org.hibernate.metamodel.binding;
 
 /**
- * Identifies the specific semantic of a plural valued attribute.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public enum PluralAttributeNature {
-	BAG( "bag", Collection.class ),
-	SET( "set", Set.class ),
-	LIST( "list", List.class ),
-	MAP( "map", Map.class );
+public interface KeyValueBinding extends AttributeBinding {
+	public boolean isKeyCasadeDeleteEnabled();
 
-	private final String name;
-	private final Class javaContract;
+	public String getUnsavedValue();
 
-	PluralAttributeNature(String name, Class javaContract) {
-		this.name = name;
-		this.javaContract = javaContract;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public Class getJavaContract() {
-		return javaContract;
-	}
+	public boolean isUpdateable();
 }

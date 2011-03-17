@@ -21,19 +21,35 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.domain;
 
 /**
- * A single valued (non-collection) attribute
+ * Desribes an attribute.
  *
  * @author Steve Ebersole
  */
-public interface SingularAttribute extends Attribute {
+public interface Attribute {
 	/**
-	 * Retrieve the attribute type descriptor.
+	 * Retrieve the attribute name.
 	 *
-	 * @return THe attribute type.
+	 * @return The attribute name.
 	 */
-	public Type getSingularAttributeType();
+	public String getName();
+
+	/**
+	 * Retrieve the declaring container for this attribute (entity/component).
+	 *
+	 * @return The attribute container.
+	 */
+	public AttributeContainer getAttributeContainer();
+
+	/**
+	 * An attribute can be either:<ul>
+	 * <li>singular - castable to {@link SingularAttribute}</li>
+	 * <li>plural - castable to {@link PluralAttribute}
+	 * </ul>
+	 *
+	 * @return True if attribute is singular; false if plural.
+	 */
+	public boolean isSingular();
 }

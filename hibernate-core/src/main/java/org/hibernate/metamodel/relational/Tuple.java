@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.relational;
 
+import java.util.LinkedHashSet;
 
 /**
  * Models a compound value (a tuple or row-value-constructor is SQL terms).  It is both a {@link Value} and
@@ -40,27 +41,47 @@ package org.hibernate.metamodel.relational;
  *
  * @author Steve Ebersole
  */
-public class Tuple extends AbstractValueContainer implements Value {
-	private final ValueContainer valueContainer;
+public class Tuple implements Value, ValueContainer, Loggable {
+	private final TableSpecification table;
 	private final String name;
+	private final LinkedHashSet<SimpleValue> values = new LinkedHashSet<SimpleValue>();
 
-	public Tuple(ValueContainer valueContainer, String name) {
+	public Tuple(TableSpecification table, String name) {
+		this.table = table;
 		this.name = name;
-		this.valueContainer = valueContainer;
 	}
 
 	@Override
-	public ValueContainer getValueContainer() {
-		return valueContainer;
+	public TableSpecification getTable() {
+		return table;
+	}
+
+	@Override
+	public Iterable<SimpleValue> values() {
+		return values;
+	}
+
+	public void addValue(SimpleValue value) {
+		if ( ! value.getTable().equals( getTable() ) ) {
+			throw new IllegalArgumentException( "Tuple can only group values from same table" );
+		}
+		values.add( value );
 	}
 
 	@Override
 	public String getLoggableValueQualifier() {
-		return getValueContainer().getLoggableValueQualifier() + '.' + name;
+		return getTable().getLoggableValueQualifier() + '.' + name + "{tuple}";
 	}
 
 	@Override
 	public String toLoggableString() {
-		return getLoggableValueQualifier() + "{tuple}";
+		return getLoggableValueQualifier();
+	}
+
+	@Override
+	public void validateJdbcTypes(JdbcCodes typeCodes) {
+		for ( Value value : values() ) {
+			value.validateJdbcTypes( typeCodes );
+		}
 	}
 }

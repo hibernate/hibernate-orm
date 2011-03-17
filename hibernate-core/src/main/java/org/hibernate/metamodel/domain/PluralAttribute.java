@@ -21,20 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-
+package org.hibernate.metamodel.domain;
 
 /**
- * Additional contract for things that can occur in an inheritance hierarchy (specifically ones we would
- * need to traverse).
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public interface Hierarchical extends AttributeContainer {
-	/**
-	 * Retrieve the super type.
-	 *
-	 * @return The super type, or null if no super type.
-	 */
-	public Hierarchical getSuperType();
+public interface PluralAttribute extends Attribute {
+	public PluralAttributeNature getNature();
+	public Type getElementType();
+	public void setElementType(Type elementType);
 }

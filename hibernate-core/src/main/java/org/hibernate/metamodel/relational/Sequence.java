@@ -23,29 +23,40 @@
  */
 package org.hibernate.metamodel.relational;
 
-
 /**
  * Models a database {@code SEQUENCE}.
  *
  * @author Steve Ebersole
  */
 public class Sequence implements Exportable {
-	private final ObjectName name;
-	private final int initialValue;
-	private final int incrementSize;
+	private final Schema schema;
+	private final String name;
+	private final String qualifiedName;
+	private int initialValue = 1;
+	private int incrementSize = 1;
 
-	public Sequence(ObjectName name, int initialValue, int incrementSize) {
+	public Sequence(Schema schema, String name) {
+		this.schema = schema;
 		this.name = name;
+		this.qualifiedName = new ObjectName( schema, name ).toText();
+	}
+
+	public Sequence(Schema schema, String name, int initialValue, int incrementSize) {
+		this( schema, name );
 		this.initialValue = initialValue;
 		this.incrementSize = incrementSize;
 	}
 
-	public String getExportIdentifier() {
-		return name.getIdentifier();
+	public Schema getSchema() {
+		return schema;
 	}
 
-	public ObjectName getName() {
+	public String getName() {
 		return name;
+	}
+
+	public String getExportIdentifier() {
+		return qualifiedName;
 	}
 
 	public int getInitialValue() {

@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.metamodel.relational;
-import java.util.ArrayList;
+
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Support for writing {@link Constraint} implementations
@@ -59,7 +60,7 @@ public abstract class AbstractConstraint implements Constraint {
 	}
 
 	public void addColumn(Column column) {
-		if ( column.getValueContainer() != getTable() ) {
+		if ( column.getTable() != getTable() ) {
 			throw new IllegalArgumentException( "Unable to add column to constraint; tables did not match" );
 		}
 		columns.add( column );

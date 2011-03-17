@@ -21,29 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.metamodel.logical;
-import java.util.Set;
+package org.hibernate.metamodel.domain;
 
 /**
- * Basic contract for any container holding attributes.  This allows polymorphic handling of both
- * components and entities in terms of the attributes they hold.
+ * TODO : javadoc
  *
  * @author Steve Ebersole
  */
-public interface AttributeContainer extends Type {
-	/**
-	 * Retrieve the attributes contained in this container.
-	 *
-	 * @return The contained attributes
-	 */
-	public Set<Attribute> getAttributes();
-
-	/**
-	 * Retrieve an attribute by name.
-	 *
-	 * @param name The name of the attribute to retrieve.
-	 *
-	 * @return The attribute matching the given name, or null.
-	 */
-	public Attribute getAttribute(String name);
+public interface IndexedPluralAttribute extends PluralAttribute {
+	public Type getIndexType();
+	public void setIndexType(Type indexType);
 }

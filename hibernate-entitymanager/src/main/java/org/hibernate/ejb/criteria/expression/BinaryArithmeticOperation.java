@@ -28,6 +28,7 @@ import org.hibernate.ejb.criteria.CriteriaBuilderImpl;
 import org.hibernate.ejb.criteria.CriteriaQueryCompiler;
 import org.hibernate.ejb.criteria.ParameterRegistry;
 import org.hibernate.ejb.criteria.Renderable;
+import org.hibernate.ejb.criteria.predicate.ImplicitNumericExpressionTypeDeterminer;
 
 /**
  * Models standard arithmetc operations with two operands.
@@ -88,6 +89,24 @@ public class BinaryArithmeticOperation<N extends Number>
 	private final Operation operator;
 	private final Expression<? extends N> rhs;
 	private final Expression<? extends N> lhs;
+
+	public static Class<? extends Number> determineResultType(
+			Class<? extends Number> argument1Type,
+			Class<? extends Number> argument2Type
+	) {
+		return determineResultType( argument1Type, argument2Type, false );
+	}
+
+	public static Class<? extends Number> determineResultType(
+			Class<? extends Number> argument1Type,
+			Class<? extends Number> argument2Type,
+			boolean isQuotientOperation
+	) {
+		if ( isQuotientOperation ) {
+			return Number.class;
+		}
+		return ImplicitNumericExpressionTypeDeterminer.determineResultType( argument1Type, argument2Type );
+	}
 
 	/**
 	 * Helper for determining the appropriate operation return type based on one of the operands as an expression.

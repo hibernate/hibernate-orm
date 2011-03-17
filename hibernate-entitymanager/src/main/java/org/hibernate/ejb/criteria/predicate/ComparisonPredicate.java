@@ -75,6 +75,7 @@ public class ComparisonPredicate
 		}
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	public <N extends Number> ComparisonPredicate(
 			CriteriaBuilderImpl criteriaBuilder,
 			ComparisonOperator comparisonOperator,
@@ -83,10 +84,14 @@ public class ComparisonPredicate
 		super( criteriaBuilder );
 		this.comparisonOperator = comparisonOperator;
 		this.leftHandSide = leftHandSide;
-		this.rightHandSide = new LiteralExpression<N>( 
-				criteriaBuilder,
-				ValueHandlerFactory.convert( rightHandSide, leftHandSide.getJavaType() )
-		);
+		Class type = leftHandSide.getJavaType();
+		if ( Number.class.equals( type ) ) {
+			this.rightHandSide = new LiteralExpression( criteriaBuilder, rightHandSide );
+		}
+		else {
+			N converted = (N) ValueHandlerFactory.convert( rightHandSide, type );
+			this.rightHandSide = new LiteralExpression<N>( criteriaBuilder, converted );
+		}
 	}
 
 	public ComparisonOperator getComparisonOperator() {

@@ -77,6 +77,7 @@ import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate.ComparisonOperator;
 import org.hibernate.ejb.criteria.predicate.CompoundPredicate;
 import org.hibernate.ejb.criteria.predicate.ExistsPredicate;
+import org.hibernate.ejb.criteria.predicate.ImplicitNumericExpressionTypeDeterminer;
 import org.hibernate.ejb.criteria.predicate.InPredicate;
 import org.hibernate.ejb.criteria.predicate.IsEmptyPredicate;
 import org.hibernate.ejb.criteria.predicate.LikePredicate;
@@ -855,9 +856,7 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 
 	// arithmetic operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <N extends Number> Expression<N> neg(Expression<N> expression) {
 		return new UnaryArithmeticOperation<N>(
 				this,
@@ -866,193 +865,228 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression1, Expression<? extends N> expression2) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
+		if ( expression1 == null || expression2 == null ) {
+			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.ADD,
 				expression1,
 				expression2
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression1, Expression<? extends N> expression2) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
+		if ( expression1 == null || expression2 == null ) {
+			throw new IllegalArgumentException( "arguments to prod() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
 				expression1,
 				expression2
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression1, Expression<? extends N> expression2) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression1 );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, (Expression)expression2 );
+		if ( expression1 == null || expression2 == null ) {
+			throw new IllegalArgumentException( "arguments to diff() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
 				expression1,
 				expression2
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(Expression<? extends N> expression, N n) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
+		if ( expression == null || n == null ) {
+			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.ADD,
 				expression,
 				n
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(Expression<? extends N> expression, N n) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
+		if ( expression == null || n == null ) {
+			throw new IllegalArgumentException( "arguments to prod() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
 				expression,
 				n
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(Expression<? extends N> expression, N n) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
+		if ( expression == null || n == null ) {
+			throw new IllegalArgumentException( "arguments to diff() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), n.getClass() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
 				expression,
 				n
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> sum(N n, Expression<? extends N> expression) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
+		if ( expression == null || n == null ) {
+			throw new IllegalArgumentException( "arguments to sum() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.ADD,
 				n,
 				expression
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> prod(N n, Expression<? extends N> expression) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
-		return new BinaryArithmeticOperation<N>(
+		if ( n == null || expression == null ) {
+			throw new IllegalArgumentException( "arguments to prod() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
+
+		return (BinaryArithmeticOperation<N>) new BinaryArithmeticOperation(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.MULTIPLY,
 				n,
 				expression
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <N extends Number> Expression<N> diff(N n, Expression<? extends N> expression) {
-		Class<N> type = (Class<N>)BinaryArithmeticOperation.determineReturnType( (Class)Number.class, (Expression)expression );
-		type = (Class<N>)BinaryArithmeticOperation.determineReturnType( type, n );
+		if ( n == null || expression == null ) {
+			throw new IllegalArgumentException( "arguments to diff() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( n.getClass(), expression.getJavaType() );
+
 		return new BinaryArithmeticOperation<N>(
 				this,
-				type,
+				resultType,
 				BinaryArithmeticOperation.Operation.SUBTRACT,
 				n,
 				expression
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	public Expression<Number> quot(Expression<? extends Number> expression1, Expression<? extends Number> expression2) {
+		if ( expression1 == null || expression2 == null ) {
+			throw new IllegalArgumentException( "arguments to quot() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression1.getJavaType(), expression2.getJavaType(), true );
+
 		return new BinaryArithmeticOperation<Number>(
 				this,
-				Number.class,
+				resultType,
 				BinaryArithmeticOperation.Operation.DIVIDE,
 				expression1,
 				expression2
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	public Expression<Number> quot(Expression<? extends Number> expression, Number number) {
+		if ( expression == null || number == null ) {
+			throw new IllegalArgumentException( "arguments to quot() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( expression.getJavaType(), number.getClass(), true );
+
 		return new BinaryArithmeticOperation<Number>(
 				this,
-				Number.class,
+				resultType,
 				BinaryArithmeticOperation.Operation.DIVIDE,
 				expression,
 				number
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings( {"unchecked"})
 	public Expression<Number> quot(Number number, Expression<? extends Number> expression) {
+		if ( expression == null || number == null ) {
+			throw new IllegalArgumentException( "arguments to quot() cannot be null" );
+		}
+
+		final Class resultType = BinaryArithmeticOperation.determineResultType( number.getClass(), expression.getJavaType(), true );
+
 		return new BinaryArithmeticOperation<Number>(
 				this,
-				Number.class,
+				resultType,
 				BinaryArithmeticOperation.Operation.DIVIDE,
 				number,
 				expression
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Expression<Integer> mod(Expression<Integer> expression1, Expression<Integer> expression2) {
+		if ( expression1 == null || expression2 == null ) {
+			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
+		}
+
 		return new BinaryArithmeticOperation<Integer>(
 				this,
 				Integer.class,
@@ -1062,10 +1096,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Expression<Integer> mod(Expression<Integer> expression, Integer integer) {
+		if ( expression == null || integer == null ) {
+			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
+		}
+
 		return new BinaryArithmeticOperation<Integer>(
 				this,
 				Integer.class,
@@ -1075,10 +1111,12 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Expression<Integer> mod(Integer integer, Expression<Integer> expression) {
+		if ( integer == null || expression == null ) {
+			throw new IllegalArgumentException( "arguments to mod() cannot be null" );
+		}
+
 		return new BinaryArithmeticOperation<Integer>(
 				this,
 				Integer.class,

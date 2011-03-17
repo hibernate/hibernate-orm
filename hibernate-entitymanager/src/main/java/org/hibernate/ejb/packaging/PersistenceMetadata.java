@@ -33,6 +33,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
  * Simple represenation of persistence.xml
  *
  * Object used by JBoss EJB 3 for persistence.xml parsing
+ * Object used by Hibernate OGM as well, consider this some kind of exposed service at the SPI level
  *
  * @author <a href="mailto:bill@jboss.org">Bill Burke</a>
  */

@@ -32,6 +32,7 @@ import org.xml.sax.InputSource;
 
 /**
  * Resolve JPA xsd files locally
+ * Hibernate OGM uses this class, consider this some kind of exposed service at the SPI level
  *
  * @author Emmanuel Bernard
  */

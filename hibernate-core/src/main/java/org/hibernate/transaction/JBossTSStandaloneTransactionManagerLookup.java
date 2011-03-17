@@ -1,26 +1,22 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
+ * JBoss, Home of Professional Open Source
+ * Copyright 2010-2011 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
  *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
- *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License, v. 2.1.
+ * This program is distributed in the hope that it will be useful, but WITHOUT A
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License,
+ * v.2.1 along with this distribution; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA  02110-1301, USA.
  */
 package org.hibernate.transaction;
 
@@ -33,7 +29,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Return a standalone JTA transaction manager for JBoss Transactions
- * Known to work for org.jboss.jbossts:jbossjta:4.11.0.Final
+ * Known to work for org.jboss.jbossts:jbossjta:4.14.0.Final
  *
  * @author Emmanuel Bernard
  */
@@ -41,15 +37,11 @@ public class JBossTSStandaloneTransactionManagerLookup implements TransactionMan
 
 	public TransactionManager getTransactionManager(Properties props) throws HibernateException {
 		try {
-			//Call jtaPropertyManager.getJTAEnvironmentBean().getTransactionManager();
-
-			//improper camel case name for the class
-			Class<?> propertyManager = Class.forName( "com.arjuna.ats.jta.common.jtaPropertyManager" );
-			final Method getJTAEnvironmentBean = propertyManager.getMethod( "getJTAEnvironmentBean" );
-			//static method
-			final Object jtaEnvironmentBean = getJTAEnvironmentBean.invoke( null );
-			final Method getTransactionManager = jtaEnvironmentBean.getClass().getMethod( "getTransactionManager" );
-			return ( TransactionManager ) getTransactionManager.invoke( jtaEnvironmentBean );
+			//Call com.arjuna.ats.jta.TransactionManager.transactionManager
+			Class<?> jbossTransactionManagerClass = Class.forName( "com.arjuna.ats.jta.TransactionManager" );
+			final Method getTransactionManagerMethod = jbossTransactionManagerClass.getMethod( "transactionManager" );
+			//static method call
+			return (TransactionManager) getTransactionManagerMethod.invoke( null );
 		}
 		catch ( Exception e ) {
 			throw new HibernateException( "Could not obtain JBoss Transactions transaction manager instance", e );

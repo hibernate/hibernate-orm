@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Resolve JPA xsd files locally
+ * Hibernate OGM uses this class, consider this some kind of exposed service at the SPI level
  *
  * @author Emmanuel Bernard
  */

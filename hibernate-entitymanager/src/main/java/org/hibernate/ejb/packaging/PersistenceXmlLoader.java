@@ -160,9 +160,10 @@ public final class PersistenceXmlLoader {
         return deploy(url, overrides, resolver, PersistenceUnitTransactionType.JTA);
     }
 
-    /**
-     * Method used by JBoss EJB3 (4.2 and above) for parsing
-     */
+	/**
+	 * Method used by JBoss EJB3 (4.2 and above) for parsing
+	 * Object used by Hibernate OGM as well, consider this some kind of exposed service at the SPI level
+	 */
     public static List<PersistenceMetadata> deploy(URL url, Map overrides, EntityResolver resolver,
 												   PersistenceUnitTransactionType defaultTransactionType) throws Exception {
 		Document doc = loadURL( url, resolver );

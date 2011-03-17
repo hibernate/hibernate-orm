@@ -27,11 +27,14 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.ejb.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.metamodel.Order;
+import org.hibernate.ejb.metamodel.Order_;
 
 /**
  * Test the various predicates.
@@ -185,5 +188,24 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		assertTrue( orders.size() == 0 );
 	}
 
+	public void testQuotientConversion() {
+		EntityManager em = getOrCreateEntityManager();
+		CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+		Root<Order> orderRoot = orderCriteria.from( Order.class );
+
+		Long longValue = 999999999L;
+		Path<Double> doublePath = orderRoot.get( Order_.totalPrice );
+		Path<Integer> integerPath = orderRoot.get( Order_.customer ).get( Customer_.age );
+
+		orderCriteria.select( orderRoot );
+		Predicate p = builder.ge(
+				builder.quot( integerPath, doublePath ),
+				longValue
+		);
+		orderCriteria.where( p );
+
+		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+		assertTrue( orders.size() == 0 );
+	}
 
 }

@@ -47,10 +47,10 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public class BasicTypeRegistryTest extends BaseUnitTestCase {
-	private final BasicTypeRegistry registry = new BasicTypeRegistry();
-
 	@Test
 	public void testOverriding() {
+		BasicTypeRegistry registry = new BasicTypeRegistry();
+
 		BasicType type = registry.getRegisteredType( "uuid-binary" );
 		assertSame( UUIDBinaryType.INSTANCE, type );
 		type = registry.getRegisteredType( UUID.class.getName() );
@@ -70,6 +70,8 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testExpanding() {
+		BasicTypeRegistry registry = new BasicTypeRegistry();
+
 		BasicType type = registry.getRegisteredType( SomeNoopType.INSTANCE.getName() );
 		assertNull( type );
 
@@ -81,6 +83,8 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testRegisteringUserTypes() {
+		BasicTypeRegistry registry = new BasicTypeRegistry();
+
 		registry.register( new TotallyIrrelevantUserType(), new String[] { "key" } );
 		BasicType type = registry.getRegisteredType( "key" );
 		assertNotNull( type );

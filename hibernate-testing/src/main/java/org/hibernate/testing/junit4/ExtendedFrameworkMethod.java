@@ -23,12 +23,14 @@
  */
 package org.hibernate.testing.junit4;
 
-import org.hibernate.testing.FailureExpected;
-import org.junit.runners.model.FrameworkMethod;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
+
+import org.junit.Ignore;
+import org.junit.runners.model.FrameworkMethod;
+
+import org.hibernate.testing.FailureExpected;
 
 /**
  * Defines an extension to the standard JUnit {@link FrameworkMethod} information about a test method.
@@ -36,60 +38,22 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class ExtendedFrameworkMethod extends FrameworkMethod {
-	private static final Object[] NO_ARGS = new Object[0];
-
 	private final FrameworkMethod delegatee;
-	private final int runPosition;
-	private final SkipMarker skipMarker;
-    private final FailureExpected failureExpectedAnnotation;
-	private final TestClassCallbackMetadata callbackMetadata;
-	private final CustomRunner unitRunner;
+	private final Ignore virtualIgnore;
+	private final FailureExpected failureExpectedAnnotation;
 
-	public ExtendedFrameworkMethod(
-			FrameworkMethod delegatee,
-			int runPosition,
-			SkipMarker skipMarker,
-			FailureExpected failureExpectedAnnotation,
-			TestClassCallbackMetadata callbackMetadata,
-			CustomRunner unitRunner) {
+	public ExtendedFrameworkMethod(FrameworkMethod delegatee, Ignore virtualIgnore, FailureExpected failureExpectedAnnotation) {
 		super( delegatee.getMethod() );
 		this.delegatee = delegatee;
-		this.runPosition = runPosition;
-		this.skipMarker = skipMarker;
+		this.virtualIgnore = virtualIgnore;
 		this.failureExpectedAnnotation = failureExpectedAnnotation;
-		this.callbackMetadata = callbackMetadata;
-		this.unitRunner = unitRunner;
 	}
 
-	public CustomRunner getUnitRunner() {
-		return unitRunner;
+	public FailureExpected getFailureExpectedAnnotation() {
+		return failureExpectedAnnotation;
 	}
 
-	public SkipMarker getSkipMarker() {
-		return skipMarker;
-	}
-
-	public boolean isFirstInTestClass() {
-		return runPosition == 1;
-	}
-
-	public boolean isLastInTestClass() {
-		return runPosition >= unitRunner.getNumberOfComputedTestMethods();
-	}
-
-	public boolean isMarkedAsFailureExpected() {
-        return failureExpectedAnnotation != null;
-    }
-
-    public FailureExpected getFailureExpectedAnnotation() {
-        return failureExpectedAnnotation;
-    }
-
-    public TestClassCallbackMetadata getCallbackMetadata() {
-        return callbackMetadata;
-    }
-
-    @Override
+	@Override
 	public Method getMethod() {
 		return delegatee.getMethod();
 	}
@@ -120,6 +84,7 @@ public class ExtendedFrameworkMethod extends FrameworkMethod {
 	}
 
 	@Override
+	@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
 	public boolean equals(Object obj) {
 		return delegatee.equals( obj );
 	}
@@ -140,7 +105,11 @@ public class ExtendedFrameworkMethod extends FrameworkMethod {
 	}
 
 	@Override
+	@SuppressWarnings( {"unchecked"})
 	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+		if ( Ignore.class.equals( annotationType ) && virtualIgnore != null ) {
+			return (T) virtualIgnore;
+		}
 		return delegatee.getAnnotation( annotationType );
 	}
 }

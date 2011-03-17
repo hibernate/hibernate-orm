@@ -63,7 +63,11 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						Statement st = connection.createStatement();
-						st.execute( "drop table Point");
+						try {
+							st.execute( "drop table Point");
+						}
+						catch (Exception ignored) {
+						}
 						st.execute("create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
 						st.close();
 					}

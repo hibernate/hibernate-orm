@@ -91,7 +91,7 @@ public class Helper {
 	}
 
 	public static String extractIgnoreMessage(FailureExpected failureExpected, FrameworkMethod frameworkMethod) {
-		return new StringBuilder( "Not adding test [" )
+		return new StringBuilder( "Ignoring test [" )
 				.append( Helper.extractTestName( frameworkMethod ) )
 				.append( "] due to @FailureExpected - " )
 				.append( extractMessage( failureExpected ) )

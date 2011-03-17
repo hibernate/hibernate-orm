@@ -35,6 +35,10 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
+import org.junit.Before;
+
+import org.hibernate.testing.AfterClassOnce;
+import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
@@ -45,6 +49,23 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
 public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 	private ConnectionProvider cp = ConnectionProviderBuilder.buildConnectionProvider();
 	private Connection connectionUnderTest;
+
+	@BeforeClassOnce
+	private void prepareConnectionProvider() {
+		cp = ConnectionProviderBuilder.buildConnectionProvider();
+	}
+
+	@AfterClassOnce
+	private void releaseConnectionProvider() {
+		try {
+			if ( cp instanceof Stoppable ) {
+					( ( Stoppable ) cp ).stop();
+			}
+			cp = null;
+		}
+		catch( Throwable ignore ) {
+		}
+	}
 
 	@Override
 	protected Session getSessionUnderTest() throws Throwable {
@@ -130,14 +151,6 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 				catch( Throwable ignore ) {
 				}
 			}
-		}
-		try {
-			if ( cp instanceof Stoppable ) {
-					( ( Stoppable ) cp ).stop();
-			}
-			cp = null;
-		}
-		catch( Throwable ignore ) {
 		}
 		super.cleanupTest();
 	}

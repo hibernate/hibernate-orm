@@ -2060,6 +2060,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		txn.commit();
 		session.close();
+
+		createdAnimalIds.clear();
 	}
 
 	@Test

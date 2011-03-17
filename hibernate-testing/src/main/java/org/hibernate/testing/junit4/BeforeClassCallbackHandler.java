@@ -23,32 +23,23 @@
  */
 package org.hibernate.testing.junit4;
 
-import javax.transaction.SystemException;
-
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-
-import org.junit.After;
-import org.junit.runner.RunWith;
-
-import org.hibernate.testing.TestLogger;
-import org.hibernate.testing.jta.TestingJtaBootstrap;
+import org.junit.runners.model.Statement;
 
 /**
- * The base unit test adapter.
- *
  * @author Steve Ebersole
  */
-@RunWith( CustomRunner.class )
-public abstract class BaseUnitTestCase {
-	@After
-	public void releaseTransactions() {
-		if ( JtaStatusHelper.isActive( TestingJtaBootstrap.INSTANCE.getTransactionManager() ) ) {
-			TestLogger.LOG.warn( "Cleaning up unfinished transaction" );
-			try {
-				TestingJtaBootstrap.INSTANCE.getTransactionManager().rollback();
-			}
-			catch (SystemException ignored) {
-			}
-		}
+public class BeforeClassCallbackHandler extends Statement {
+	private final CustomRunner runner;
+	private final Statement wrappedStatement;
+
+	public BeforeClassCallbackHandler(CustomRunner runner, Statement wrappedStatement) {
+		this.runner = runner;
+		this.wrappedStatement = wrappedStatement;
+	}
+
+	@Override
+	public void evaluate() throws Throwable {
+		runner.getTestClassMetadata().performBeforeClassCallbacks( runner.getTestInstance() );
+		wrappedStatement.evaluate();
 	}
 }

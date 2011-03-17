@@ -72,6 +72,8 @@ public class ReadOnlyCriteriaQueryTest extends AbstractReadOnlyTest {
 
 	@Test
 	public void testModifiableSessionDefaultCriteria() {
+		clearCounts();
+
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 

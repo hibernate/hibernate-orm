@@ -71,7 +71,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				"legacy/AltSimple.hbm.xml",
 				"legacy/Broken.hbm.xml",
 				"legacy/Blobber.hbm.xml",
-				"dialect/cache/TestInterSystemsFunctionsClass.hbm.xml"
+				"dialect/functional/cache/TestInterSystemsFunctionsClass.hbm.xml"
 		};
 	}
 

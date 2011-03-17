@@ -43,6 +43,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.Collection;
@@ -53,7 +54,6 @@ import org.hibernate.service.internal.ServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.runner.RunWith;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -73,9 +73,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 	public static final Dialect DIALECT = Dialect.getDialect();
 
-	private static Configuration configuration;
-	private static ServiceRegistryImpl serviceRegistry;
-	private static SessionFactoryImplementor sessionFactory;
+	private Configuration configuration;
+	private ServiceRegistryImpl serviceRegistry;
+	private SessionFactoryImplementor sessionFactory;
 
 	private org.hibernate.classic.Session session;
 
@@ -317,7 +317,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public final void afterTest() throws Exception {
 		cleanupTest();
 
-		if ( session != null && session.isOpen() ) {
+		if ( session != null && ! ( (SessionImplementor) session ).isClosed() ) {
 			if ( session.isConnected() ) {
 				session.doWork( new RollbackWork() );
 			}

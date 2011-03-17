@@ -32,13 +32,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * Metadata about various types of callback methods on a given test class.
  *
  * @author Steve Ebersole
  */
-public class TestClassCallbackMetadata {
+public class TestClassMetadata {
 	private static final Object[] NO_ARGS = new Object[0];
 
 	private LinkedHashSet<Method> beforeClassOnceMethods;
@@ -46,7 +47,7 @@ public class TestClassCallbackMetadata {
 	private LinkedHashSet<Method> onFailureCallbacks;
 	private LinkedHashSet<Method> onExpectedFailureCallbacks;
 
-	public TestClassCallbackMetadata(Class testClass) {
+	public TestClassMetadata(Class testClass) {
 		processClassHierarchy( testClass );
 	}
 
@@ -73,6 +74,87 @@ public class TestClassCallbackMetadata {
 		}
 	}
 
+	private void addBeforeClassOnceCallback(Method method) {
+		if ( beforeClassOnceMethods == null ) {
+			beforeClassOnceMethods = new LinkedHashSet<Method>();
+		}
+		ensureAccessibility( method );
+		beforeClassOnceMethods.add( method );
+	}
+
+	private void ensureAccessibility(Method method) {
+		if ( !method.isAccessible() ) {
+			try {
+				method.setAccessible( true );
+			}
+			catch (Exception ignored) {
+				// ignore for now
+			}
+		}
+	}
+
+	private void addAfterClassOnceCallback(Method method) {
+		if ( afterClassOnceMethods == null ) {
+			afterClassOnceMethods = new LinkedHashSet<Method>();
+		}
+		ensureAccessibility( method );
+		afterClassOnceMethods.add( method );
+	}
+
+	private void addOnFailureCallback(Method method) {
+		if ( onFailureCallbacks == null ) {
+			onFailureCallbacks = new LinkedHashSet<Method>();
+		}
+		ensureAccessibility( method );
+		onFailureCallbacks.add( method );
+	}
+
+	private void addOnExpectedFailureCallback(Method method) {
+		if ( onExpectedFailureCallbacks == null ) {
+			onExpectedFailureCallbacks = new LinkedHashSet<Method>();
+		}
+		ensureAccessibility( method );
+		onExpectedFailureCallbacks.add( method );
+	}
+
+	public void validate(List<Throwable> errors) {
+		validate( beforeClassOnceMethods, CallbackType.BEFORE_CLASS_ONCE, errors );
+		validate( afterClassOnceMethods,CallbackType.AFTER_CLASS_ONCE, errors );
+		validate( onFailureCallbacks, CallbackType.ON_FAILURE, errors );
+		validate( onExpectedFailureCallbacks, CallbackType.ON_EXPECTED_FAILURE, errors );
+	}
+
+	private void validate(LinkedHashSet<Method> callbackMethods, CallbackType callbackType, List<Throwable> errors) {
+		if ( callbackMethods != null ) {
+			for ( Method method : callbackMethods ) {
+				validateCallbackMethod( method, callbackType, errors );
+			}
+		}
+	}
+
+	private void validateCallbackMethod(Method method, CallbackType type, List<Throwable> errors) {
+		if ( method.getParameterTypes().length > 0 ) {
+			errors.add(
+					new InvalidMethodForAnnotationException(
+							type.buildTypeMarker() + " callback only valid on no-arg methods : "
+									+ Helper.extractMethodName( method )
+					)
+			);
+		}
+		if ( !method.isAccessible() ) {
+			try {
+				method.setAccessible( true );
+			}
+			catch (Exception e) {
+				errors.add(
+						new InvalidMethodForAnnotationException(
+								type.buildTypeMarker() + " attached to inaccessible method and unable to make accessible"
+						)
+				);
+			}
+		}
+	}
+
 	private static enum CallbackType {
 		BEFORE_CLASS_ONCE( BeforeClassOnce.class ),
 		AFTER_CLASS_ONCE( AfterClassOnce.class ),
@@ -92,49 +174,6 @@ public class TestClassCallbackMetadata {
 		public String buildTypeMarker() {
 			return "@" + getAnnotationClass().getSimpleName();
 		}
-	}
-
-	private void addBeforeClassOnceCallback(Method method) {
-		validateCallbackMethod( method, CallbackType.BEFORE_CLASS_ONCE );
-		beforeClassOnceMethods = new LinkedHashSet<Method>();
-		beforeClassOnceMethods.add( method );
-	}
-
-	private void validateCallbackMethod(Method method, CallbackType type) {
-		if ( method.getParameterTypes().length > 0 ) {
-			throw new InvalidMethodForAnnotationException(
-					type.buildTypeMarker() + " callback only valid on no-arg methods : "
-							+ Helper.extractMethodName( method )
-			);
-		}
-		if ( !method.isAccessible() ) {
-			try {
-				method.setAccessible( true );
-			}
-			catch (Exception e) {
-				throw new InvalidMethodForAnnotationException(
-						type.buildTypeMarker() + " attached to inaccessible method and unable to make accessible"
-				);
-			}
-		}
-	}
-
-	private void addAfterClassOnceCallback(Method method) {
-		validateCallbackMethod( method, TestClassCallbackMetadata.CallbackType.AFTER_CLASS_ONCE );
-		afterClassOnceMethods = new LinkedHashSet<Method>();
-		afterClassOnceMethods.add( method );
-	}
-
-	private void addOnFailureCallback(Method method) {
-		validateCallbackMethod( method, TestClassCallbackMetadata.CallbackType.ON_FAILURE );
-		onFailureCallbacks = new LinkedHashSet<Method>();
-		onFailureCallbacks.add( method );
-	}
-
-	private void addOnExpectedFailureCallback(Method method) {
-		validateCallbackMethod( method, TestClassCallbackMetadata.CallbackType.ON_EXPECTED_FAILURE );
-		onExpectedFailureCallbacks = new LinkedHashSet<Method>();
-		onExpectedFailureCallbacks.add( method );
 	}
 
 

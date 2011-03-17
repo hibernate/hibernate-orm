@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import net.sf.cglib.transform.impl.AddPropertyTransformer;
-
 /**
  * An SQL <tt>DELETE</tt> statement
  *

@@ -33,27 +33,26 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.jdbc.Work;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit.functional.FunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
-public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
+public class AutoDiscoveryTest extends FunctionalTestCase {
 	private static final String QUERY_STRING =
 			"select u.name as username, g.name as groupname, m.joindate " +
 					"from t_membership m " +
 					"        inner join t_user u on m.member_id = u.id " +
 					"        inner join t_group g on m.group_id = g.id";
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
+	public AutoDiscoveryTest(String string) {
+		super( string );
+	}
+
+	public Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Group.class, User.class, Membership.class };
 	}
 
-	@Test
 	public void testSqlQueryAutoDiscovery() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();
@@ -70,8 +69,8 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		List result = session.createSQLQuery( QUERY_STRING ).list();
 		Object[] row = (Object[]) result.get( 0 );
-		Assert.assertEquals( "steve", row[0] );
-		Assert.assertEquals( "developer", row[1] );
+		assertEquals( "steve", row[0] );
+		assertEquals( "developer", row[1] );
 		session.delete( m );
 		session.delete( u );
 		session.delete( g );
@@ -79,13 +78,11 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 		session.close();
 	}
 
-	@Test
 	public void testDialectGetColumnAliasExtractor() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();
 		session.doWork(
 				new Work() {
-					@Override
 					public void execute(Connection connection) throws SQLException {
 						PreparedStatement ps = connection.prepareStatement( QUERY_STRING );
 						ResultSet rs = ps.executeQuery();
@@ -93,7 +90,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 							ResultSetMetaData metadata = rs.getMetaData();
 							String column1Alias = getDialect().getColumnAliasExtractor().extractColumnAlias( metadata, 1 );
 							String column2Alias = getDialect().getColumnAliasExtractor().extractColumnAlias( metadata, 2 );
-							Assert.assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
+							assertFalse( "bad dialect.getColumnAliasExtractor impl", column1Alias.equals( column2Alias ) );
 						}
 						finally {
 							rs.close();

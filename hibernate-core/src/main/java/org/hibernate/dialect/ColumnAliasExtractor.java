@@ -49,7 +49,6 @@ public interface ColumnAliasExtractor {
 	 * An extractor which uses {@link ResultSetMetaData#getColumnLabel}
 	 */
 	public static final ColumnAliasExtractor COLUMN_LABEL_EXTRACTOR = new ColumnAliasExtractor() {
-		@Override
 		public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException {
 			return metaData.getColumnLabel( position );
 		}
@@ -59,7 +58,6 @@ public interface ColumnAliasExtractor {
 	 * An extractor which uses {@link ResultSetMetaData#getColumnName}
 	 */
 	public static final ColumnAliasExtractor COLUMN_NAME_EXTRACTOR = new ColumnAliasExtractor() {
-		@Override
 		public String extractColumnAlias(ResultSetMetaData metaData, int position) throws SQLException {
 			return metaData.getColumnName( position );
 		}

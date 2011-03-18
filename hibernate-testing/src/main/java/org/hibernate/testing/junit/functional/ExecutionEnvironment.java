@@ -118,6 +118,10 @@ public class ExecutionEnvironment {
 					ExecutionEnvironment.class.getClassLoader()
 			);
 		}
+		Class[] annotatedClasses = settings.getAnnotatedClasses();
+		for ( Class annotatedClass : annotatedClasses ) {
+			configuration.addAnnotatedClass( annotatedClass );
+		}
 	}
 
 	private void applyCacheSettings(Configuration configuration) {
@@ -173,6 +177,7 @@ public class ExecutionEnvironment {
 
 	public static interface Settings {
 		public String[] getMappings();
+		public Class[] getAnnotatedClasses();
 		public String getBaseForMappings();
 		public boolean createSchema();
 		public boolean recreateSchemaAfterFailure();

@@ -212,10 +212,23 @@ public abstract class FunctionalTestCase extends UnitTestCase implements Executi
 		}
 	}
 
+
 	// ExecutionEnvironment.Settings implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public static final String[] NO_MAPPINGS = new String[0];
+
+	public String[] getMappings() {
+		return NO_MAPPINGS;
+	}
 
 	public String getBaseForMappings() {
 		return "org/hibernate/test/";
+	}
+
+	public static final Class[] NO_CLASSES = new Class[0];
+
+	public Class[] getAnnotatedClasses() {
+		return NO_CLASSES;
 	}
 
 	public boolean createSchema() {

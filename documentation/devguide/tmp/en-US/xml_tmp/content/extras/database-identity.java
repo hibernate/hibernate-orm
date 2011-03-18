@@ -1,1 +1,0 @@
-foo.getId().equals( bar.getId() )

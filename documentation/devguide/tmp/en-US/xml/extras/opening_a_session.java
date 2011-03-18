@@ -1,1 +1,0 @@
-Session session = sessions.openSession();

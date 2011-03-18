@@ -1,3 +1,0 @@
-<property name="balance" type="float">
-    <column name="balance" sql-type="decimal(13,3)"/>
-</property>

@@ -1,5 +1,0 @@
-<many-to-one name="bar" column="barId" not-null="true"/>
-<element column="serialNumber" type="long" not-null="true" unique="true"/>
-
-<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>
-<property name="employeeId" unique-key="OrgEmployee"/>

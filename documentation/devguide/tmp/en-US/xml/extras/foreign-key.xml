@@ -1,1 +1,0 @@
-<many-to-one name="bar" column="barId" foreign-key="FKFooBar"/>

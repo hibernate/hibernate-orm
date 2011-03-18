@@ -29,7 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 
 import org.junit.Test;
 

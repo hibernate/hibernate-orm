@@ -39,7 +39,7 @@ import org.hibernate.engine.CascadeStyle;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.ValueInclusion;
 import org.hibernate.engine.Versioning;
-import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;

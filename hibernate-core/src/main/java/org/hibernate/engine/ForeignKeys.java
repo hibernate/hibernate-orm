@@ -25,7 +25,7 @@ package org.hibernate.engine;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.intercept.LazyPropertyInitializer;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -186,7 +186,7 @@ public final class ForeignKeys {
 	public static boolean isTransient(String entityName, Object entity, Boolean assumed, SessionImplementor session) 
 	throws HibernateException {
 		
-		if (entity==LazyPropertyInitializer.UNFETCHED_PROPERTY) {
+		if (entity== LazyPropertyInitializer.UNFETCHED_PROPERTY) {
 			// an unfetched association can only point to
 			// an entity that already exists in the db
 			return false;

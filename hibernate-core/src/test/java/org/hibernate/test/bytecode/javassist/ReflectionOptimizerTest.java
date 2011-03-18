@@ -23,8 +23,8 @@
  */
 package org.hibernate.test.bytecode.javassist;
 
-import org.hibernate.bytecode.ReflectionOptimizer;
-import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 
 import org.junit.Test;
 

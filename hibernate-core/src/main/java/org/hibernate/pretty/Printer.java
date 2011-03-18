@@ -33,7 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.TypedValue;
-import org.hibernate.intercept.LazyPropertyInitializer;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;

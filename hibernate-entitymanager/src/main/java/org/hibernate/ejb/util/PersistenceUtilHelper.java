@@ -14,8 +14,8 @@ import javax.persistence.PersistenceException;
 import javax.persistence.spi.LoadState;
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.PersistentCollection;
-import org.hibernate.intercept.FieldInterceptionHelper;
-import org.hibernate.intercept.FieldInterceptor;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 

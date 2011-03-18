@@ -29,7 +29,7 @@ import java.io.Serializable;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;

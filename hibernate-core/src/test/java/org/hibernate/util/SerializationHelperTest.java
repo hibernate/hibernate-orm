@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import org.hibernate.LockMode;
-import org.hibernate.bytecode.util.ByteCodeHelper;
+import org.hibernate.bytecode.spi.ByteCodeHelper;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 

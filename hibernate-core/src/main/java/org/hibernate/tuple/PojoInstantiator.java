@@ -30,7 +30,7 @@ import java.lang.reflect.Constructor;
 import org.hibernate.HibernateLogger;
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.bytecode.ReflectionOptimizer;
+import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;

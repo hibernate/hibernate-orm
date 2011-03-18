@@ -26,7 +26,7 @@ import java.text.ParseException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
+import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 import org.hibernate.cfg.Environment;
 
 import org.junit.Test;

@@ -272,7 +272,7 @@ class PropertyContainer {
 		//TODO make those hardcoded tests more portable (through the bytecode provider?)
 		return property.isAnnotationPresent( Transient.class )
 				|| "net.sf.cglib.transform.impl.InterceptFieldCallback".equals( property.getType().getName() )
-				|| "org.hibernate.bytecode.javassist.FieldHandler".equals( property.getType().getName() );
+				|| "org.hibernate.bytecode.internal.javassist.FieldHandler".equals( property.getType().getName() );
 	}
 }
 

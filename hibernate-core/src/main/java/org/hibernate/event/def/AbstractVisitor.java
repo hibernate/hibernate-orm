@@ -23,8 +23,8 @@
  */
 package org.hibernate.event.def;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.event.EventSource;
-import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -87,7 +87,7 @@ public abstract class AbstractVisitor {
 	}
 	
 	boolean includeProperty(Object[] values, int i) {
-		return values[i]!=LazyPropertyInitializer.UNFETCHED_PROPERTY;
+		return values[i]!= LazyPropertyInitializer.UNFETCHED_PROPERTY;
 	}
 
 	/**

@@ -35,7 +35,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.Version;
-import org.hibernate.bytecode.BytecodeProvider;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.jboss.logging.Logger;
@@ -796,10 +796,10 @@ public final class Environment {
 
 	private static BytecodeProvider buildBytecodeProvider(String providerName) {
 		if ( "javassist".equals( providerName ) ) {
-			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
+			return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 		}
 
         LOG.unknownBytecodeProvider( providerName );
-		return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
+		return new org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl();
 	}
 }

@@ -33,7 +33,7 @@ public class InterceptFieldClassFileTransformerTest extends TestCase {
 		Class clazz = cl.loadClass( entities.get( 0 ) );
 		
 		// javassist is our default byte code enhancer. Enhancing will eg add the method getFieldHandler()
-		// see org.hibernate.bytecode.javassist.FieldTransformer
+		// see org.hibernate.bytecode.internal.javassist.FieldTransformer
 		Method method = clazz.getDeclaredMethod( "getFieldHandler" );
 		assertNotNull( method );
 	}

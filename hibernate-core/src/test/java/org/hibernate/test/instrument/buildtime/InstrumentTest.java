@@ -23,7 +23,7 @@
  */
 package org.hibernate.test.instrument.buildtime;
 
-import org.hibernate.intercept.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 
 import org.junit.Test;
 

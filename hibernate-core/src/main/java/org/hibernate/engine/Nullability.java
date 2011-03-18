@@ -25,7 +25,7 @@ package org.hibernate.engine;
 import java.util.Iterator;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
-import org.hibernate.intercept.LazyPropertyInitializer;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -90,7 +90,7 @@ public final class Nullability {
 
 			for ( int i = 0; i < values.length; i++ ) {
 
-				if ( checkability[i] && values[i]!=LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				if ( checkability[i] && values[i]!= LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					final Object value = values[i];
 					if ( !nullability[i] && value == null ) {
 

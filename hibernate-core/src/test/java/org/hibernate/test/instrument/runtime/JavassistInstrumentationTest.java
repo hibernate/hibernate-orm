@@ -23,8 +23,8 @@
  */
 package org.hibernate.test.instrument.runtime;
 
-import org.hibernate.bytecode.BytecodeProvider;
-import org.hibernate.bytecode.javassist.BytecodeProviderImpl;
+import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 
 /**
  * @author Steve Ebersole

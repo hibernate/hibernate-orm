@@ -26,10 +26,10 @@ package org.hibernate.test.nonflushedchanges;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
-import org.hibernate.intercept.FieldInterceptionHelper;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.junit.Test;

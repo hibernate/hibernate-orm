@@ -29,13 +29,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
-import org.hibernate.bytecode.buildtime.Instrumenter;
-import org.hibernate.bytecode.buildtime.Logger;
+
+import org.hibernate.bytecode.buildtime.spi.Instrumenter;
+import org.hibernate.bytecode.buildtime.spi.Logger;
 
 /**
  * Super class for all Hibernate instrumentation tasks.  Provides the basic templating of how instrumentation

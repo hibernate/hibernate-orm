@@ -24,8 +24,10 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.bytecode.util.ClassFilter;
-import org.hibernate.bytecode.util.FieldFilter;
+
+import org.hibernate.bytecode.buildtime.spi.ClassFilter;
+import org.hibernate.bytecode.buildtime.spi.FieldFilter;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.Environment;
 
 /**
@@ -35,7 +37,7 @@ import org.hibernate.cfg.Environment;
  * @author Emmanuel Bernard
  */
 public class InterceptFieldClassFileTransformer implements javax.persistence.spi.ClassTransformer {
-	private org.hibernate.bytecode.ClassTransformer classTransformer;
+	private ClassTransformer classTransformer;
 
 	public InterceptFieldClassFileTransformer(List<String> entities) {
 		final List<String> copyEntities = new ArrayList<String>( entities.size() );

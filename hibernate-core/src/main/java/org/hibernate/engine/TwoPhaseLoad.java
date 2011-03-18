@@ -34,7 +34,7 @@ import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.PostLoadEventListener;
 import org.hibernate.event.PreLoadEvent;
 import org.hibernate.event.PreLoadEventListener;
-import org.hibernate.intercept.LazyPropertyInitializer;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;

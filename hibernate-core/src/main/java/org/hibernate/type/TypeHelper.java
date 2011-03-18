@@ -24,8 +24,9 @@
 package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Map;
+
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.intercept.LazyPropertyInitializer;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.tuple.StandardProperty;
 

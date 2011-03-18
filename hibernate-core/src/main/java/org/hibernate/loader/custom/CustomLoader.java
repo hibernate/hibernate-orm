@@ -621,7 +621,7 @@ public class CustomLoader extends Loader {
 
 		public String getColumnName(int position) throws HibernateException {
 			try {
-				return resultSetMetaData.getColumnName( position );
+				return factory.getDialect().getColumnAliasExtractor().extractColumnAlias( resultSetMetaData, position );
 			}
 			catch( SQLException e ) {
 				throw new HibernateException( "Could not resolve column name [" + position + "]", e );

@@ -35,19 +35,19 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.action.AfterTransactionCompletionProcess;
-import org.hibernate.action.BeforeTransactionCompletionProcess;
-import org.hibernate.action.BulkOperationCleanupAction;
-import org.hibernate.action.CollectionAction;
-import org.hibernate.action.CollectionRecreateAction;
-import org.hibernate.action.CollectionRemoveAction;
-import org.hibernate.action.CollectionUpdateAction;
-import org.hibernate.action.EntityAction;
-import org.hibernate.action.EntityDeleteAction;
-import org.hibernate.action.EntityIdentityInsertAction;
-import org.hibernate.action.EntityInsertAction;
-import org.hibernate.action.EntityUpdateAction;
-import org.hibernate.action.Executable;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.action.internal.CollectionAction;
+import org.hibernate.action.internal.CollectionRecreateAction;
+import org.hibernate.action.internal.EntityAction;
+import org.hibernate.action.internal.EntityInsertAction;
+import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
+import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.EntityDeleteAction;
+import org.hibernate.action.internal.EntityIdentityInsertAction;
+import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -209,7 +209,7 @@ public class ActionQueue {
 	}
 
 	/**
-	 * Execute any registered {@link BeforeTransactionCompletionProcess}
+	 * Execute any registered {@link org.hibernate.action.spi.BeforeTransactionCompletionProcess}
 	 */
 	public void beforeTransactionCompletion() {
 		beforeTransactionProcesses.beforeTransactionCompletion();
@@ -259,7 +259,7 @@ public class ActionQueue {
 	private void executeActions(List list) throws HibernateException {
 		int size = list.size();
 		for ( int i = 0; i < size; i++ ) {
-			execute( ( Executable ) list.get( i ) );
+			execute( (Executable) list.get( i ) );
 		}
 		list.clear();
 		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
@@ -505,7 +505,7 @@ public class ActionQueue {
         LOG.trace("Starting deserialization of [" + queueSize + "] collectionUpdates entries");
 		rtn.collectionUpdates = new ArrayList<Executable>( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
-			CollectionAction action = ( CollectionAction ) ois.readObject();
+			CollectionAction action = (CollectionAction) ois.readObject();
 			action.afterDeserialize( session );
 			rtn.collectionUpdates.add( action );
 		}

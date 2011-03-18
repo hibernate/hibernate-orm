@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.action;
+package org.hibernate.action.internal;
+
 import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheKey;
@@ -59,6 +60,7 @@ public final class EntityDeleteAction extends EntityAction {
 		this.state = state;
 	}
 
+	@Override
 	public void execute() throws HibernateException {
 		Serializable id = getId();
 		EntityPersister persister = getPersister();
@@ -124,8 +126,8 @@ public final class EntityDeleteAction extends EntityAction {
 		boolean veto = false;
 		if (preListeners.length>0) {
 			PreDeleteEvent preEvent = new PreDeleteEvent( getInstance(), getId(), state, getPersister() ,(EventSource) getSession() );
-			for ( int i = 0; i < preListeners.length; i++ ) {
-				veto = preListeners[i].onPreDelete(preEvent) || veto;
+			for ( PreDeleteEventListener preListener : preListeners ) {
+				veto = preListener.onPreDelete( preEvent ) || veto;
 			}
 		}
 		return veto;
@@ -142,8 +144,8 @@ public final class EntityDeleteAction extends EntityAction {
 					getPersister(),
 					(EventSource) getSession() 
 			);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostDelete(postEvent);
+			for ( PostDeleteEventListener postListener : postListeners ) {
+				postListener.onPostDelete( postEvent );
 			}
 		}
 	}
@@ -159,12 +161,13 @@ public final class EntityDeleteAction extends EntityAction {
 					getPersister(),
 					(EventSource) getSession()
 			);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostDelete(postEvent);
+			for ( PostDeleteEventListener postListener : postListeners ) {
+				postListener.onPostDelete( postEvent );
 			}
 		}
 	}
 
+	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
 		if ( getPersister().hasCache() ) {
 			final CacheKey ck = new CacheKey(
@@ -179,6 +182,7 @@ public final class EntityDeleteAction extends EntityAction {
 		postCommitDelete();
 	}
 
+	@Override
 	protected boolean hasPostCommitEventListeners() {
 		return getSession().getListeners().getPostCommitDeleteEventListeners().length > 0;
 	}

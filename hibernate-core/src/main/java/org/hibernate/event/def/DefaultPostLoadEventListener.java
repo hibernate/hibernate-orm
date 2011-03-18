@@ -24,8 +24,8 @@
 package org.hibernate.event.def;
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
-import org.hibernate.action.EntityIncrementVersionProcess;
-import org.hibernate.action.EntityVerifyVersionProcess;
+import org.hibernate.action.internal.EntityIncrementVersionProcess;
+import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.event.PostLoadEvent;

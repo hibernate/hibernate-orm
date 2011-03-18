@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.action.BulkOperationCleanupAction;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;

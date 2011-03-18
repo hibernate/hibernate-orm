@@ -25,7 +25,7 @@ package org.hibernate.event.def;
 import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.action.CollectionRemoveAction;
+import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;

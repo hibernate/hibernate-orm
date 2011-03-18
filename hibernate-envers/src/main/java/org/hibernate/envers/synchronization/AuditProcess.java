@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Queue;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.action.BeforeTransactionCompletionProcess;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.envers.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.synchronization.work.AuditWorkUnit;

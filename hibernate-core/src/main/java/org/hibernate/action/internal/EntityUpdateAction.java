@@ -21,8 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.action;
+package org.hibernate.action.internal;
+
 import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
@@ -75,6 +77,7 @@ public final class EntityUpdateAction extends EntityAction {
 		this.rowId = rowId;
 	}
 
+	@Override
 	public void execute() throws HibernateException {
 		Serializable id = getId();
 		EntityPersister persister = getPersister();
@@ -238,10 +241,12 @@ public final class EntityUpdateAction extends EntityAction {
 		return veto;
 	}
 
+	@Override
 	protected boolean hasPostCommitEventListeners() {
 		return getSession().getListeners().getPostCommitUpdateEventListeners().length>0;
 	}
 
+	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws CacheException {
 		EntityPersister persister = getPersister();
 		if ( persister.hasCache() ) {
@@ -269,10 +274,4 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 }
-
-
-
-
-
-
 

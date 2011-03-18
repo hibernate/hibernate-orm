@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,20 +20,22 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.action;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+package org.hibernate.action.internal;
+
 import java.io.Serializable;
+
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
+import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.internal.util.StringHelper;
 
 /**
  * Any action relating to insert/update/delete of a collection
@@ -52,7 +54,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			final CollectionPersister persister, 
 			final PersistentCollection collection, 
 			final Serializable key, 
-			final SessionImplementor session) throws CacheException {
+			final SessionImplementor session) {
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
@@ -66,6 +68,8 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	/**
 	 * Reconnect to session after deserialization...
+	 *
+	 * @param session The session being deserialized
 	 */
 	public void afterDeserialize(SessionImplementor session) {
 		if ( this.session != null || this.persister != null ) {
@@ -79,6 +83,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 	}
 
+	@Override
 	public final void beforeExecutions() throws CacheException {
 		// we need to obtain the lock before any actions are
 		// executed, since this may be an inverse="true"
@@ -100,16 +105,19 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 	}
 
+	@Override
 	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
 		return null;
 	}
 
 	private AfterTransactionCompletionProcess afterTransactionProcess;
 
+	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return afterTransactionProcess;
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return persister.getCollectionSpaces();
 	}
@@ -148,11 +156,13 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 		}
 	}
 
+	@Override
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) + 
 				MessageHelper.infoString( collectionRole, key );
 	}
 
+	@Override
 	public int compareTo(Object other) {
 		CollectionAction action = ( CollectionAction ) other;
 		//sort first by role name
@@ -178,6 +188,7 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			this.lock = lock;
 		}
 
+		@Override
 		public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 			final CacheKey ck = new CacheKey(
 					key,

@@ -21,14 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.action;
+package org.hibernate.action.internal;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
 import org.hibernate.HibernateException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
+import org.hibernate.action.spi.Executable;
 import org.hibernate.cache.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.access.SoftLock;
@@ -39,7 +44,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 
 /**
- * An {@link org.hibernate.engine.ActionQueue} {@link Executable} for ensuring
+ * An {@link org.hibernate.engine.ActionQueue} {@link org.hibernate.action.spi.Executable} for ensuring
  * shared cache cleanup in relation to performed bulk HQL queries.
  * <p/>
  * NOTE: currently this executes for <tt>INSERT</tt> queries as well as
@@ -160,16 +165,20 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		return false;
 	}
 
+	@Override
 	public Serializable[] getPropertySpaces() {
 		return affectedTableSpaces;
 	}
 
+	@Override
 	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
 		return null;
 	}
 
+	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return new AfterTransactionCompletionProcess() {
+			@Override
 			public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 				Iterator itr = entityCleanups.iterator();
 				while ( itr.hasNext() ) {
@@ -186,10 +195,12 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		};
 	}
 
+	@Override
 	public void beforeExecutions() throws HibernateException {
 		// nothing to do
 	}
 
+	@Override
 	public void execute() throws HibernateException {
 		// nothing to do		
 	}

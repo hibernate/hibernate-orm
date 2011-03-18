@@ -21,35 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.action;
+package org.hibernate.action.internal;
+
+import org.hibernate.OptimisticLockException;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 
 /**
  * Verify/Increment the entity version
  *
  * @author Scott Marlow
  */
-public class EntityIncrementVersionProcess implements BeforeTransactionCompletionProcess {
+public class EntityVerifyVersionProcess implements BeforeTransactionCompletionProcess {
+	@SuppressWarnings( {"FieldCanBeLocal", "UnusedDeclaration"})
 	private final Object object;
 	private final EntityEntry entry;
 
-	public EntityIncrementVersionProcess(Object object, EntityEntry entry) {
+	public EntityVerifyVersionProcess(Object object, EntityEntry entry) {
 		this.object = object;
 		this.entry = entry;
 	}
 
-	/**
-	 * Perform whatever processing is encapsulated here before completion of the transaction.
-	 *
-	 * @param session The session on which the transaction is preparing to complete.
-	 */
+	@Override
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityPersister persister = entry.getPersister();
-		Object nextVersion = persister.forceVersionIncrement(
-				entry.getId(), entry.getVersion(), session
-		);
-		entry.forceLocked( object, nextVersion );
+
+		Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
+		if ( !entry.getVersion().equals( latestVersion ) ) {
+			throw new OptimisticLockException(
+					"Newer version [" + latestVersion +
+							"] of entity [" + MessageHelper.infoString( entry.getEntityName(), entry.getId() ) +
+							"] found in database"
+			);
+		}
 	}
 }

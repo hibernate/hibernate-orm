@@ -33,7 +33,7 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.QueryException;
-import org.hibernate.action.BulkOperationCleanupAction;
+import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;

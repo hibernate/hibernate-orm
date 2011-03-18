@@ -30,7 +30,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
-import org.hibernate.action.EntityDeleteAction;
+import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;

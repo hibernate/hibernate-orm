@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.action;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+package org.hibernate.action.internal;
+
 import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
-import org.hibernate.engine.EntityEntry;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
+import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -55,7 +56,7 @@ public abstract class EntityAction
 	 *
 	 * @param session The session from which this action is coming.
 	 * @param id The id of the entity
-	 * @param instance The entiyt instance
+	 * @param instance The entity instance
 	 * @param persister The entity persister
 	 */
 	protected EntityAction(SessionImplementor session, Serializable id, Object instance, EntityPersister persister) {
@@ -66,10 +67,12 @@ public abstract class EntityAction
 		this.persister = persister;
 	}
 
+	@Override
 	public BeforeTransactionCompletionProcess getBeforeTransactionCompletionProcess() {
 		return null;
 	}
 
+	@Override
 	public AfterTransactionCompletionProcess getAfterTransactionCompletionProcess() {
 		return needsAfterTransactionCompletion()
 				? this
@@ -137,18 +140,22 @@ public abstract class EntityAction
 		return persister;
 	}
 
+	@Override
 	public final Serializable[] getPropertySpaces() {
 		return persister.getPropertySpaces();
 	}
 
+	@Override
 	public void beforeExecutions() {
 		throw new AssertionFailure( "beforeExecutions() called for non-collection action" );
 	}
 
+	@Override
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) + MessageHelper.infoString( entityName, id );
 	}
 
+	@Override
 	public int compareTo(Object other) {
 		EntityAction action = ( EntityAction ) other;
 		//sort first by entity name
@@ -164,6 +171,8 @@ public abstract class EntityAction
 
 	/**
 	 * Reconnect to session after deserialization...
+	 *
+	 * @param session The session being deserialized
 	 */
 	public void afterDeserialize(SessionImplementor session) {
 		if ( this.session != null || this.persister != null ) {

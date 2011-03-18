@@ -28,7 +28,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.OptimisticLockException;
 import org.hibernate.StaleObjectStateException;
-import org.hibernate.action.EntityVerifyVersionProcess;
+import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;

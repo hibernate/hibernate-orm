@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.action;
+package org.hibernate.action.internal;
 
 import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.EntityEntry;
@@ -62,6 +62,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
 	}
 
+	@Override
 	public void execute() throws HibernateException {
 		final EntityPersister persister = getPersister();
 		final SessionImplementor session = getSession();
@@ -111,6 +112,7 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		return getSession().getListeners().getPostCommitInsertEventListeners().length>0;
 	}
 
+	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 		//TODO: reenable if we also fix the above todo
 		/*EntityPersister persister = getEntityPersister();
@@ -134,8 +136,8 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 					getPersister(),
 					(EventSource) getSession()
 			);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostInsert(postEvent);
+			for ( PostInsertEventListener postListener : postListeners ) {
+				postListener.onPostInsert( postEvent );
 			}
 		}
 	}
@@ -151,8 +153,8 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 					getPersister(),
 					(EventSource) getSession()
 			);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostInsert(postEvent);
+			for ( PostInsertEventListener postListener : postListeners ) {
+				postListener.onPostInsert( postEvent );
 			}
 		}
 	}
@@ -163,8 +165,8 @@ public final class EntityIdentityInsertAction extends EntityAction  {
 		boolean veto = false;
 		if (preListeners.length>0) {
 			PreInsertEvent preEvent = new PreInsertEvent( getInstance(), null, state, getPersister(), (EventSource)getSession() );
-			for ( int i = 0; i < preListeners.length; i++ ) {
-				veto = preListeners[i].onPreInsert(preEvent) || veto;
+			for ( PreInsertEventListener preListener : preListeners ) {
+				veto = preListener.onPreInsert( preEvent ) || veto;
 			}
 		}
 		return veto;

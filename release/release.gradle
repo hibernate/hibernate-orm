@@ -14,6 +14,8 @@ javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
 
 def List subProjectsToSkipForJavadoc = ['release'];
 
+def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
+
 task aggregateJavadocs(type: Javadoc) {
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
@@ -23,7 +25,7 @@ task aggregateJavadocs(type: Javadoc) {
         stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
-        bottom = 'Copyright &copy; 2001-2010 <a href="http://redhat.com">Red Hat, Inc.</a>  All Rights Reserved.'
+        bottom = "Copyright &copy; 2001-$copyRightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
         group(

@@ -594,8 +594,6 @@ public final class Environment {
 
         LOG.version(Version.getVersionString());
 
-		RENAMED_PROPERTIES.put( "hibernate.cglib.use_reflection_optimizer", USE_REFLECTION_OPTIMIZER );
-
 		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_NONE), "NONE" );
 		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_READ_UNCOMMITTED), "READ_UNCOMMITTED" );
 		ISOLATION_LEVELS.put( new Integer(Connection.TRANSACTION_READ_COMMITTED), "READ_COMMITTED" );
@@ -800,11 +798,8 @@ public final class Environment {
 		if ( "javassist".equals( providerName ) ) {
 			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 		}
-		else if ( "cglib".equals( providerName ) ) {
-			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
-		}
 
-        LOG.unknownBytecodeProvider(providerName);
+        LOG.unknownBytecodeProvider( providerName );
 		return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
 	}
 }

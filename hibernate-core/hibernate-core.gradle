@@ -11,9 +11,6 @@ dependencies {
     compile( libraries.jpa )
     antlr( libraries.antlr )
     provided( libraries.javassist )
-    provided( libraries.cglib ) {
-        transitive = true
-    }
     provided( libraries.ant )
     provided( libraries.jacc )
     provided( libraries.validation )
@@ -25,9 +22,6 @@ dependencies {
     }
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
-    testRuntime( libraries.cglib ) {
-        transitive = true
-    }
 }
 
 manifest.mainAttributes(

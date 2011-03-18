@@ -25,7 +25,6 @@
 package org.hibernate.intercept;
 import java.util.Set;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.intercept.cglib.CGLIBHelper;
 import org.hibernate.intercept.javassist.JavassistHelper;
 
 /**
@@ -66,11 +65,7 @@ public class FieldInterceptionHelper {
 		}
 		Class[] definedInterfaces = entity.getClass().getInterfaces();
 		for ( int i = 0; i < definedInterfaces.length; i++ ) {
-			if ( "net.sf.cglib.transform.impl.InterceptFieldEnabled".equals( definedInterfaces[i].getName() ) ) {
-				// we have a CGLIB enhanced entity
-				return CGLIBHelper.extractFieldInterceptor( entity );
-			}
-			else if ( "org.hibernate.bytecode.javassist.FieldHandled".equals( definedInterfaces[i].getName() ) ) {
+			if ( "org.hibernate.bytecode.javassist.FieldHandled".equals( definedInterfaces[i].getName() ) ) {
 				// we have a Javassist enhanced entity
 				return JavassistHelper.extractFieldInterceptor( entity );
 			}
@@ -86,11 +81,7 @@ public class FieldInterceptionHelper {
 		if ( entity != null ) {
 			Class[] definedInterfaces = entity.getClass().getInterfaces();
 			for ( int i = 0; i < definedInterfaces.length; i++ ) {
-				if ( "net.sf.cglib.transform.impl.InterceptFieldEnabled".equals( definedInterfaces[i].getName() ) ) {
-					// we have a CGLIB enhanced entity
-					return CGLIBHelper.injectFieldInterceptor( entity, entityName, uninitializedFieldNames, session );
-				}
-				else if ( "org.hibernate.bytecode.javassist.FieldHandled".equals( definedInterfaces[i].getName() ) ) {
+				if ( "org.hibernate.bytecode.javassist.FieldHandled".equals( definedInterfaces[i].getName() ) ) {
 					// we have a Javassist enhanced entity
 					return JavassistHelper.injectFieldInterceptor( entity, entityName, uninitializedFieldNames, session );
 				}

@@ -252,18 +252,15 @@ public class SettingsFactory implements Serializable {
 
 	}
 
-	protected BytecodeProvider buildBytecodeProvider(String providerName) {
-		if ( "javassist".equals( providerName ) ) {
-			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
-		}
-		else if ( "cglib".equals( providerName ) ) {
-			return new org.hibernate.bytecode.cglib.BytecodeProviderImpl();
-		}
-		else {
-            LOG.debugf("Using javassist as bytecode provider by default");
-			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
-		}
-	}
+//	protected BytecodeProvider buildBytecodeProvider(String providerName) {
+//		if ( "javassist".equals( providerName ) ) {
+//			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
+//		}
+//		else {
+//            LOG.debugf("Using javassist as bytecode provider by default");
+//			return new org.hibernate.bytecode.javassist.BytecodeProviderImpl();
+//		}
+//	}
 
 	private static String enabledDisabled(boolean value) {
 		return value ? "enabled" : "disabled";

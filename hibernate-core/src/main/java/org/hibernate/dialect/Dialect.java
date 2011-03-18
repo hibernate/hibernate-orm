@@ -1691,6 +1691,10 @@ public abstract class Dialect {
 		return " cross join ";
 	}
 
+	public ColumnAliasExtractor getColumnAliasExtractor() {
+		return ColumnAliasExtractor.COLUMN_LABEL_EXTRACTOR;
+	}
+
 
 	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -6,7 +6,7 @@
 <hibernate-mapping package="org.hibernate.test.dialect.functional.cache" >
 
     <class name="TestInterSystemsFunctionsClass" table="SQLUser.TestInterSystemsFunctionsClass">
-        <id type="long" column="id_">
+        <id name="id" type="long" column="id_">
             <generator class="assigned"/>
         </id>
         <property name="date" column="date_"/>

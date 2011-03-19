@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
+
+import javax.naming.Referenceable;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.Set;
-import javax.naming.Referenceable;
+
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
@@ -61,7 +62,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @throws HibernateException Indicates a peroblem opening the session; pretty rare here.
 	 */
-	public org.hibernate.classic.Session openSession() throws HibernateException;
+	public Session openSession() throws HibernateException;
 
 	/**
 	 * Open a {@link Session}, utilizing the specified {@link Interceptor}.
@@ -76,7 +77,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @throws HibernateException Indicates a peroblem opening the session; pretty rare here.
 	 */
-	public org.hibernate.classic.Session openSession(Interceptor interceptor) throws HibernateException;
+	public Session openSession(Interceptor interceptor) throws HibernateException;
 
 	/**
 	 * Open a {@link Session}, utilizing the specfied JDBC {@link Connection}.
@@ -91,7 +92,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @return The created session.
 	 */
-	public org.hibernate.classic.Session openSession(Connection connection);
+	public Session openSession(Connection connection);
 
 	/**
 	 * Open a {@link Session}, utilizing the specfied JDBC {@link Connection} and
@@ -108,7 +109,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @return The created session.
 	 */
-	public org.hibernate.classic.Session openSession(Connection connection, Interceptor interceptor);
+	public Session openSession(Connection connection, Interceptor interceptor);
 
 	/**
 	 * Obtains the current session.  The definition of what exactly "current"
@@ -123,7 +124,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	 *
 	 * @throws HibernateException Indicates an issue locating a suitable current session.
 	 */
-	public org.hibernate.classic.Session getCurrentSession() throws HibernateException;
+	public Session getCurrentSession() throws HibernateException;
 
 	/**
 	 * Open a new stateless session.

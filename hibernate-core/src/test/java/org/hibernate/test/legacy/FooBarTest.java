@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.legacy;
 
-import static org.hibernate.testing.TestLogger.LOG;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.Time;
@@ -53,8 +52,8 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
@@ -85,6 +84,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
+import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -136,7 +136,7 @@ public class FooBarTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		Bar bar2 = (Bar) s.saveOrUpdateCopy(bar);
+		Bar bar2 = (Bar) s.merge( bar );
 		s.flush();
 		s.delete(bar2);
 		s.flush();
@@ -783,7 +783,9 @@ public class FooBarTest extends LegacyTestCase {
 		int len = s.createQuery( "from Foo as foo join foo.foo as foo2 where foo2.id >'a' or foo2.id <'a'" ).list().size();
 		assertTrue(len==2);
 
-		s.delete("from Holder");
+		for ( Object entity : s.createQuery( "from Holder" ).list() ) {
+			s.delete( entity );
+		}
 
 		txn.commit();
 		s.close();
@@ -2678,8 +2680,8 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Fee fee = new Fee();
-		s.save( fee, "key" );
-		fee.setFi("blah");
+		s.save( fee );
+		fee.setFi( "blah" );
 		s.getTransaction().commit();
 		s.close();
 
@@ -2687,7 +2689,6 @@ public class FooBarTest extends LegacyTestCase {
 		s.beginTransaction();
 		fee = (Fee) s.load( Fee.class, fee.getKey() );
 		assertTrue( "blah".equals( fee.getFi() ) );
-		assertTrue( "key".equals( fee.getKey() ) );
 		s.delete(fee);
 		s.getTransaction().commit();
 		s.close();
@@ -2717,14 +2718,14 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		foo = new Foo();
-		s.save(foo, "assignedid");
+		s.save(foo);
 		foo.setString("dirty");
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
-		s.load(foo2, "assignedid");
+		s.load(foo2, foo.getKey());
 		// There is an interbase bug that causes null integers to return as 0, also numeric precision is <= 15
 		assertTrue( "create-update", foo.equalsFoo(foo2) );
 		//System.out.println( s.print(foo2) );
@@ -3474,7 +3475,12 @@ public class FooBarTest extends LegacyTestCase {
 		assertTrue( iter.last() );
 		assertTrue( iter.get(0)==f4 );
 		assertTrue( iter.previous() );
-		assertTrue( s.delete("from Foo")==4 );
+		int i = 0;
+		for ( Object entity : s.createQuery( "from Foo" ).list() ) {
+			i++;
+			s.delete( entity );
+		}
+		assertEquals( 4, i );
 		s.flush();
 		assertTrue( s.createQuery( "from java.lang.Object" ).list().size()==0 );
 		txn.commit();
@@ -3695,7 +3701,7 @@ public class FooBarTest extends LegacyTestCase {
 		s = openSession();
 		s.beginTransaction();
 		s.saveOrUpdate(fee2);
-		s.update( fee1, fee1.getKey() );
+		s.update( fee1 );
 		s.getTransaction().commit();
 		s.close();
 
@@ -3799,7 +3805,7 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
 		Foo foo = new Foo();
-		foo.setComponent( new FooComponent("foo", 69, null, new FooComponent("bar", 96, null, null) ) );
+//		foo.setComponent( new FooComponent("foo", 69, null, new FooComponent("bar", 96, null, null) ) );
 		s.save(foo);
 		foo.getComponent().setName( "IFA" );
 		txn.commit();
@@ -4233,13 +4239,14 @@ public class FooBarTest extends LegacyTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Vetoer v = new Vetoer();
-		s.save(v); Serializable id = s.save(v);
+		s.save(v);
+		s.save(v);
 		s.getTransaction().commit();
 		s.close();
 		s = openSession();
 		s.beginTransaction();
-		s.update( v, id );
-		s.update( v, id );
+		s.update( v );
+		s.update( v );
 		s.delete( v );
 		s.delete( v );
 		s.getTransaction().commit();
@@ -4423,9 +4430,9 @@ public class FooBarTest extends LegacyTestCase {
 			err=true;
 		}
 		assertTrue(err);
-		Fo fo = Fo.newFo();
-		id = new FumTest().fumKey("abc"); //yuck!!
-		s.save(fo, id);
+		id = FumTest.fumKey( "abc" ); //yuck!!
+		Fo fo = Fo.newFo( (FumCompositeID) id );
+		s.save(fo);
 		s.flush();
 		s.delete(fo);
 		err=false;

@@ -14,7 +14,9 @@ public class Top {
 	public Top(int c) {
 		count=c;
 	}
-	public Top() {}
+
+	public Top() {
+	}
 	
 	public void init() {
 		name="Someone With Along Name";

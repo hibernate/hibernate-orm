@@ -5,7 +5,7 @@
 <hibernate-mapping default-lazy="false">
 
     <class name="org.hibernate.test.legacy.Vetoer">
-        <id type="string" column="id_" length="32">
+        <id name="id" type="string" column="id_" length="32">
             <generator class="uuid.hex"/>
         </id>
         <property name="name"/>

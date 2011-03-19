@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.entitymode.multi;
+
 import java.sql.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -30,9 +31,10 @@ import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
+
 import org.hibernate.EntityMode;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 
 import org.junit.Test;
 

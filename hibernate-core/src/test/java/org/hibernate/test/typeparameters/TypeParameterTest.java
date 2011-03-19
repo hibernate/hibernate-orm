@@ -28,8 +28,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.jdbc.Work;
 
 import org.junit.Test;

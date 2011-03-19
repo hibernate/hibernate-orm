@@ -49,7 +49,6 @@ import org.hibernate.event.def.DefaultPreLoadEventListener;
 import org.hibernate.event.def.DefaultRefreshEventListener;
 import org.hibernate.event.def.DefaultReplicateEventListener;
 import org.hibernate.event.def.DefaultSaveEventListener;
-import org.hibernate.event.def.DefaultSaveOrUpdateCopyEventListener;
 import org.hibernate.event.def.DefaultSaveOrUpdateEventListener;
 import org.hibernate.event.def.DefaultUpdateEventListener;
 import org.hibernate.internal.util.Cloneable;
@@ -100,7 +99,6 @@ public class EventListeners extends Cloneable implements Serializable {
 
 	private SaveOrUpdateEventListener[] saveEventListeners = { new DefaultSaveEventListener() };
 	private SaveOrUpdateEventListener[] updateEventListeners = { new DefaultUpdateEventListener() };
-	private MergeEventListener[] saveOrUpdateCopyEventListeners = { new DefaultSaveOrUpdateCopyEventListener() };//saveOrUpdateCopy() is deprecated!
 
 	private static Map eventInterfaceFromType;
 
@@ -344,14 +342,6 @@ public class EventListeners extends Cloneable implements Serializable {
 
 	public void setPersistOnFlushEventListeners(PersistEventListener[] createEventListener) {
 		this.persistOnFlushEventListeners = createEventListener;
-	}
-
-	public MergeEventListener[] getSaveOrUpdateCopyEventListeners() {
-		return saveOrUpdateCopyEventListeners;
-	}
-
-	public void setSaveOrUpdateCopyEventListeners(MergeEventListener[] saveOrUpdateCopyEventListener) {
-		this.saveOrUpdateCopyEventListeners = saveOrUpdateCopyEventListener;
 	}
 
 	public SaveOrUpdateEventListener[] getSaveEventListeners() {

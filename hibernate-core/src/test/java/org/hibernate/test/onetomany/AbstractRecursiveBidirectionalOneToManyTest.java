@@ -57,8 +57,8 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseCo
 	}
 
 	@Override
-	public org.hibernate.classic.Session openSession() {
-		org.hibernate.classic.Session s = super.openSession();
+	public Session openSession() {
+		Session s = super.openSession();
 		s.setCacheMode( getSessionCacheMode() );
 		return s;
 	}

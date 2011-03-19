@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.readonly;
 import org.hibernate.CacheMode;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -45,8 +46,8 @@ public abstract class AbstractReadOnlyTest extends BaseCoreFunctionalTestCase {
 		return null;
 	}
 
-	public org.hibernate.classic.Session openSession() {
-		org.hibernate.classic.Session s = super.openSession();
+	public Session openSession() {
+		Session s = super.openSession();
 		s.setCacheMode( getSessionCacheMode() );
 		return s;
 	}

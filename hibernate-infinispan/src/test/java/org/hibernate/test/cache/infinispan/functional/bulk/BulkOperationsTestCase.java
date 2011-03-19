@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.FlushMode;
+import org.hibernate.Session;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.classic.Session;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;

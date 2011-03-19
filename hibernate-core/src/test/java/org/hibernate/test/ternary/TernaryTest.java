@@ -128,7 +128,9 @@ public class TernaryTest extends BaseCoreFunctionalTestCase {
 			emp.setManagerBySite( new HashMap() );
 			s.delete( emp );
 		}
-		((org.hibernate.classic.Session)s).delete("from Site");
+		for ( Object entity : s.createQuery( "from Site" ).list() ) {
+			s.delete( entity );
+		}
 		t.commit();
 		s.close();
 	}

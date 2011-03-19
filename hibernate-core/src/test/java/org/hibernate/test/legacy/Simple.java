@@ -1,8 +1,35 @@
-//$Id: Simple.java 4599 2004-09-26 05:18:27Z oneovthafew $
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2004-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 
+/**
+ * @author Gavin King
+ */
 public class Simple implements Serializable {
+	private Long id;
 	private String name;
 	private String address;
 	private int count;
@@ -11,6 +38,10 @@ public class Simple implements Serializable {
 	private Simple other;
 
 	private Long parent;
+
+	public Simple(Long id) {
+		this.id = id;
+	}
 
 	public Simple(int c) {
 		count=c;
@@ -24,6 +55,15 @@ public class Simple implements Serializable {
 		date=new java.sql.Date(666);
 		number=new Float(55.8);
 	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	/**
 	 * Gets the name
 	 * @return Returns a String

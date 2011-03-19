@@ -1,5 +1,6 @@
 //$Id: SQLLoaderTest.java 11383 2007-04-02 15:34:02Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -7,8 +8,9 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -25,7 +27,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-
 
 public class SQLLoaderTest extends LegacyTestCase {
 	static int nextInt = 1;
@@ -48,10 +49,10 @@ public class SQLLoaderTest extends LegacyTestCase {
 	public void testTS() throws Exception {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
-		Simple sim = new Simple();
+		Simple sim = new Simple( Long.valueOf(1) );
 		sim.setDate( new Date() );
-		session.save( sim, new Long(1) );
-		Query q = session.createSQLQuery("select {sim.*} from Simple {sim} where {sim}.date_ = ?", "sim", Simple.class);
+		session.save( sim );
+		Query q = session.createSQLQuery( "select {sim.*} from Simple {sim} where {sim}.date_ = ?" ).addEntity( "sim", Simple.class );
 		q.setTimestamp( 0, sim.getDate() );
 		assertTrue ( q.list().size()==1 );
 		session.delete(sim);
@@ -62,18 +63,26 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLStar() throws HibernateException, SQLException {
 		Session session = openSession();
-		session.delete("from Assignable");
-		session.delete("from Category");
-		session.delete("from Simple");
-		session.delete("from A");
+		for ( Object entity : session.createQuery( "from Assignable" ).list() ) {
+			session.delete( entity );
+		}
+		for ( Object entity : session.createQuery( "from Category" ).list() ) {
+			session.delete( entity );
+		}
+		for ( Object entity : session.createQuery( "from Simple" ).list() ) {
+			session.delete( entity );
+		}
+		for ( Object entity : session.createQuery( "from A" ).list() ) {
+			session.delete( entity );
+		}
 
 		Category s = new Category();
 		s.setName(String.valueOf(nextLong++));
 		session.save(s);
 
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(nextLong++) );
 		simple.init();
-		session.save(simple, new Long(nextLong++));
+		session.save( simple );
 
 		A a = new A();
 		session.save(a);
@@ -82,9 +91,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save(b);
 		session.flush();
 
-		session.createSQLQuery("select {category.*} from category {category}", "category", Category.class).list();
-		session.createSQLQuery("select {simple.*} from Simple {simple}", "simple", Simple.class).list();
-		session.createSQLQuery("select {a.*} from TA {a}", "a", A.class).list();
+		session.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
+		session.createSQLQuery( "select {simple.*} from Simple {simple}" ).addEntity( "simple", Simple.class ).list();
+		session.createSQLQuery( "select {a.*} from TA {a}" ).addEntity( "a", A.class ).list();
 
 		session.connection().commit();
 		session.close();
@@ -92,51 +101,62 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	@Test
 	public void testFindBySQLProperties() throws HibernateException, SQLException {
-			Session session = openSession();
-			session.delete("from Category");
+		Session session = openSession();
+		for ( Object entity : session.createQuery( "from Category" ).list() ) {
+			session.delete( entity );
+		}
 
-			Category s = new Category();
-			s.setName(String.valueOf(nextLong++));
-			session.save(s);
+		Category s = new Category();
+		s.setName(String.valueOf(nextLong++));
+		session.save(s);
 
-			s = new Category();
-			s.setName("WannaBeFound");
-			session.flush();
+		s = new Category();
+		s.setName("WannaBeFound");
+		session.flush();
 
-			Query query = session.createSQLQuery("select {category.*} from category {category} where {category}.name = :name", "category", Category.class);
+		Query query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name = :name" )
+				.addEntity( "category", Category.class );
 
-			query.setProperties(s);
-			//query.setParameter("name", s.getName());
+		query.setProperties(s);
+		//query.setParameter("name", s.getName());
 
-			query.list();
+		query.list();
 
-			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in (:names)", "category", Category.class);
-			String[] str = new String[] { "WannaBeFound", "NotThere" };
-			query.setParameterList("names", str);
-			query.uniqueResult();
+		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
+				.addEntity( "category", Category.class );
+		String[] str = new String[] { "WannaBeFound", "NotThere" };
+		query.setParameterList("names", str);
+		query.uniqueResult();
 
-			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in :names", "category", Category.class);
-			query.setParameterList("names", str);
-			query.uniqueResult();
+		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in :names" )
+				.addEntity( "category", Category.class );
+		query.setParameterList("names", str);
+		query.uniqueResult();
 
-			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in (:names)", "category", Category.class);
-			str = new String[] { "WannaBeFound" };
-			query.setParameterList("names", str);
-			query.uniqueResult();
+		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
+				.addEntity( "category", Category.class );
+		str = new String[] { "WannaBeFound" };
+		query.setParameterList("names", str);
+		query.uniqueResult();
 
-			query = session.createSQLQuery("select {category.*} from category {category} where {category}.name in :names", "category", Category.class);
-			query.setParameterList("names", str);			
-			query.uniqueResult();
+		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in :names" )
+				.addEntity( "category", Category.class );
+		query.setParameterList("names", str);
+		query.uniqueResult();
 
-			session.connection().commit();
-			session.close();
+		session.connection().commit();
+		session.close();
 	}
 
 	@Test
 	public void testFindBySQLAssociatedObjects() throws HibernateException, SQLException {
 		Session s = openSession();
-		s.delete("from Assignable");
-		s.delete("from Category");
+		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
+			s.delete( entity );
+		}
+		for ( Object entity : s.createQuery( "from Category" ).list() ) {
+			s.delete( entity );
+		}
 
 		Category c = new Category();
 		c.setName("NAME");
@@ -152,7 +172,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.close();
 
 		s = openSession();
-		List list = s.createSQLQuery("select {category.*} from category {category}", "category", Category.class).list();
+		List list = s.createSQLQuery( "select {category.*} from category {category}" ).addEntity( "category", Category.class ).list();
 		list.get(0);
 		s.connection().commit();
 		s.close();
@@ -181,8 +201,12 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@SkipForDialect( MySQLDialect.class )
 	public void testPropertyResultSQL() throws HibernateException, SQLException {
 		Session s = openSession();
-		s.delete("from Assignable");
-		s.delete("from Category");
+		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
+			s.delete( entity );
+		}
+		for ( Object entity : s.createQuery( "from Category" ).list() ) {
+			s.delete( entity );
+		}
 
 		Category c = new Category();
 		c.setName("NAME");
@@ -214,8 +238,13 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLMultipleObject() throws HibernateException, SQLException {
 		Session s = openSession();
-		s.delete("from Assignable");
-		s.delete("from Category");
+		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
+			s.delete( entity );
+		}
+		for ( Object entity : s.createQuery( "from Category" ).list() ) {
+			s.delete( entity );
+		}
+
 		s.flush();
 		s.connection().commit();
 		s.close();
@@ -251,7 +280,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 		if ( getDialect() instanceof MySQLDialect ) return;
 
 		s = openSession();
-		List list = s.createSQLQuery("select {category.*}, {assignable.*} from category {category}, \"assign-able\" {assignable}", new String[] { "category", "assignable" }, new Class[] { Category.class, Assignable.class }).list();
+		String sql = "select {category.*}, {assignable.*} from category {category}, \"assign-able\" {assignable}";
+
+		List list = s.createSQLQuery( sql ).addEntity( "category", Category.class ).addEntity( "assignable", Assignable.class ).list();
 
 		assertTrue(list.size() == 6); // crossproduct of 2 categories x 3 assignables
 		assertTrue(list.get(0) instanceof Object[]);
@@ -262,8 +293,12 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLParameters() throws HibernateException, SQLException {
 		Session s = openSession();
-		s.delete("from Assignable");
-		s.delete("from Category");
+		for ( Object entity : s.createQuery( "from Assignable" ).list() ) {
+			s.delete( entity );
+		}
+		for ( Object entity : s.createQuery( "from Category" ).list() ) {
+			s.delete( entity );
+		}
 		s.flush();
 		s.connection().commit();
 		s.close();
@@ -307,17 +342,20 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.close();
 
 		s = openSession();
-		Query basicParam = s.createSQLQuery("select {category.*} from category {category} where {category}.name = 'Best'", "category", Category.class);
+		Query basicParam = s.createSQLQuery( "select {category.*} from category {category} where {category}.name = 'Best'" )
+				.addEntity( "category", Category.class );
 		List list = basicParam.list();
 		assertEquals(1, list.size());
 
-		Query unnamedParam = s.createSQLQuery("select {category.*} from category {category} where {category}.name = ? or {category}.name = ?", "category", Category.class);
+		Query unnamedParam = s.createSQLQuery( "select {category.*} from category {category} where {category}.name = ? or {category}.name = ?" )
+				.addEntity( "category", Category.class );
 		unnamedParam.setString(0, "Good");
 		unnamedParam.setString(1, "Best");
 		list = unnamedParam.list();
 		assertEquals(2, list.size());
 
-		Query namedParam = s.createSQLQuery("select {category.*} from category {category} where ({category}.name=:firstCat or {category}.name=:secondCat)", "category", Category.class);
+		Query namedParam = s.createSQLQuery( "select {category.*} from category {category} where ({category}.name=:firstCat or {category}.name=:secondCat)" )
+				.addEntity( "category", Category.class);
 		namedParam.setString("firstCat", "Better");
 		namedParam.setString("secondCat", "Best");
 		list = namedParam.list();
@@ -331,7 +369,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@SkipForDialect( { HSQLDialect.class, PostgreSQLDialect.class } )
 	public void testEscapedJDBC() throws HibernateException, SQLException {
 		Session session = openSession();
-		session.delete("from A");
+		for ( Object entity : session.createQuery( "from A" ).list() ) {
+			session.delete( entity );
+		}
 		A savedA = new A();
 		savedA.setName("Max");
 		session.save(savedA);
@@ -349,9 +389,12 @@ public class SQLLoaderTest extends LegacyTestCase {
 		if( getDialect() instanceof TimesTenDialect) {
             // TimesTen does not permit general expressions (like UPPER) in the second part of a LIKE expression,
             // so we execute a similar test 
-            query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like 'MAX'", "a", A.class);
-        } else {
-            query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like {fn ucase('max')}", "a", A.class);
+            query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like 'MAX'" )
+					.addEntity( "a", A.class );
+        }
+		else {
+            query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA where {fn ucase(name)} like {fn ucase('max')}" )
+					.addEntity( "a", A.class );
         }
 		List list = query.list();
 
@@ -364,7 +407,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testDoubleAliasing() throws HibernateException, SQLException {
 		Session session = openSession();
-		session.delete("from A");
+		for ( Object entity : session.createQuery( "from A" ).list() ) {
+			session.delete( entity );
+		}
 		A savedA = new A();
 		savedA.setName("Max");
 		session.save(savedA);
@@ -378,10 +423,17 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		session = openSession();
 
-		Query query = session.createSQLQuery("select a.identifier_column as {a1.id}, a.clazz_discriminata as {a1.class}, a.count_ as {a1.count}, a.name as {a1.name} " +
-											", b.identifier_column as {a2.id}, b.clazz_discriminata as {a2.class}, b.count_ as {a2.count}, b.name as {a2.name} " +
-											" from TA a, TA b" +
-											" where a.identifier_column = b.identifier_column", new String[] {"a1", "a2" }, new Class[] {A.class, A.class});
+		String sql = "select a.identifier_column as {a1.id}, " +
+				"    a.clazz_discriminata as {a1.class}, " +
+				"    a.count_ as {a1.count}, " +
+				"    a.name as {a1.name}, " +
+				"    b.identifier_column as {a2.id}, " +
+				"    b.clazz_discriminata as {a2.class}, " +
+				"    b.count_ as {a2.count}, " +
+				"    b.name as {a2.name} " +
+				"from TA a, TA b " +
+				"where a.identifier_column = b.identifier_column";
+		Query query = session.createSQLQuery( sql ).addEntity( "a1", A.class ).addEntity( "a2", A.class );
 		List list = query.list();
 
 		assertNotNull(list);
@@ -403,7 +455,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	   session.clear();
 
-	   Query query = session.createSQLQuery("select {sing.*} from Single {sing}", "sing", Single.class);
+	   SQLQuery query = session.createSQLQuery( "select {sing.*} from Single {sing}" ).addEntity( "sing", Single.class );
 
 	   List list = query.list();
 
@@ -411,7 +463,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	   session.clear();
 
-	   query = session.createSQLQuery("select {sing.*} from Single {sing} where sing.id = ?", "sing", Single.class);
+	   query = session.createSQLQuery( "select {sing.*} from Single {sing} where sing.id = ?" ).addEntity( "sing", Single.class );
 	   query.setString(0, "my id");
 	   list = query.list();
 
@@ -419,7 +471,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	   session.clear();
 
-	   query = session.createSQLQuery("select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?", "sing", Single.class);
+	   query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
+			   .addEntity( "sing", Single.class );
 	   query.setString(0, "my id");
 	   list = query.list();
 
@@ -427,7 +480,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 	   session.clear();
 
-	   query = session.createSQLQuery("select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?", "sing", Single.class);
+	   query = session.createSQLQuery( "select s.id as {sing.id}, s.string_ as {sing.string}, s.prop as {sing.prop} from Single s where s.id = ?" )
+			   .addEntity( "sing", Single.class );
 	   query.setString(0, "my id");
 	   list = query.list();
 
@@ -474,8 +528,9 @@ public class SQLLoaderTest extends LegacyTestCase {
         Session session = openSession();
 	    
 	    Componentizable c = setupComponentData( session );
-        
-	    Query q = session.createSQLQuery(sql, "comp", Componentizable.class);
+
+		SQLQuery q = session.createSQLQuery( sql )
+				.addEntity( "comp", Componentizable.class );
 	    List list = q.list();
 	    
 	    assertEquals(list.size(),1);
@@ -521,7 +576,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save(s);
 		session.flush();
 
-		Query query = session.createSQLQuery("select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s", "category", Category.class);
+		Query query = session.createSQLQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
+				.addEntity( "category", Category.class );
 		List list = query.list();
 
 		assertNotNull(list);
@@ -546,7 +602,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		session = openSession();
 
-		Query query = session.createSQLQuery("select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s", "category", Category.class);
+		Query query = session.createSQLQuery( "select s.category_key_col as {category.id}, s.name as {category.name}, s.\"assign-able-id\" as {category.assignable} from {category} s" )
+				.addEntity( "category", Category.class );
 		List list = query.list();
 
 		assertNotNull(list);
@@ -562,7 +619,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLDiscriminatedSameSession() throws Exception {
 		Session session = openSession();
-		session.delete("from A");
+		for ( Object entity : session.createQuery( "from A" ).list() ) {
+			session.delete( entity );
+		}
 		A savedA = new A();
 		session.save(savedA);
 
@@ -570,7 +629,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 		session.save(savedB);
 		session.flush();
 
-		Query query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, name as {a.name}, count_ as {a.count} from TA {a}", "a", A.class);
+		Query query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, name as {a.name}, count_ as {a.count} from TA {a}" )
+				.addEntity( "a", A.class );
 		List list = query.list();
 
 		assertNotNull(list);
@@ -602,7 +662,9 @@ public class SQLLoaderTest extends LegacyTestCase {
 	@Test
 	public void testFindBySQLDiscriminatedDiffSession() throws Exception {
 		Session session = openSession();
-		session.delete("from A");
+		for ( Object entity : session.createQuery( "from A" ).list() ) {
+			session.delete( entity );
+		}
 		A savedA = new A();
 		session.save(savedA);
 
@@ -615,7 +677,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		session = openSession();
 
-		Query query = session.createSQLQuery("select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA", "a", A.class);
+		Query query = session.createSQLQuery( "select identifier_column as {a.id}, clazz_discriminata as {a.class}, count_ as {a.count}, name as {a.name} from TA" )
+				.addEntity( "a", A.class );
 		List list = query.list();
 
 		assertNotNull(list);
@@ -641,7 +704,8 @@ public class SQLLoaderTest extends LegacyTestCase {
 
         s = openSession();
         // having a composite id with one property named id works since the map used by sqlloader to map names to properties handles it.
-        Query query = s.createSQLQuery("select system as {c.system}, id as {c.id}, name as {c.name}, foo as {c.composite.foo}, bar as {c.composite.bar} from CompositeIdId where system=? and id=?", "c", CompositeIdId.class);
+		String sql = "select system as {c.system}, id as {c.id}, name as {c.name}, foo as {c.composite.foo}, bar as {c.composite.bar} from CompositeIdId where system=? and id=?";
+		SQLQuery query = s.createSQLQuery( sql ).addEntity( "c", CompositeIdId.class );
         query.setString(0, "c64");
         query.setString(1, "games");
 

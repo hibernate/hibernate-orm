@@ -238,11 +238,6 @@ public interface ClassMetadata {
 	public boolean implementsLifecycle(EntityMode entityMode);
 
 	/**
-	 * Does the class implement the <tt>Validatable</tt> interface?
-	 */
-	public boolean implementsValidatable(EntityMode entityMode);
-
-	/**
 	 * Get the version number (or timestamp) from the object's version property
 	 * (or return null if not versioned)
 	 */

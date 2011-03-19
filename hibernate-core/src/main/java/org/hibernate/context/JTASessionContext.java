@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,23 +20,24 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.context;
 
-import java.util.Hashtable;
-import java.util.Map;
 import javax.transaction.Synchronization;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+import java.util.Hashtable;
+import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link CurrentSessionContext} which scopes the notion
@@ -62,7 +63,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class JTASessionContext implements CurrentSessionContext {
-
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JTASessionContext.class.getName());
 
 	protected final SessionFactoryImplementor factory;
@@ -72,9 +72,7 @@ public class JTASessionContext implements CurrentSessionContext {
 		this.factory = factory;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Session currentSession() throws HibernateException {
 		final JtaPlatform jtaPlatform = factory.getServiceRegistry().getService( JtaPlatform.class );
 		final TransactionManager transactionManager = jtaPlatform.retrieveTransactionManager();

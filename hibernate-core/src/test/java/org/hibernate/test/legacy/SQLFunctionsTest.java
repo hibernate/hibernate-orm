@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
-import static org.hibernate.testing.TestLogger.LOG;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InterbaseDialect;
@@ -54,11 +54,13 @@ import org.hibernate.dialect.function.SQLFunction;
 
 import org.junit.Test;
 
+import static org.hibernate.testing.TestLogger.LOG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
+@SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = LoggerFactory.getLogger(SQLFunctionsTest.class);
 
@@ -80,12 +82,12 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		if ( getDialect() instanceof MySQLDialect ) assertTrue( iter.hasNext() && iter.next()==null );
 
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple Dialect Function Test");
 		simple.setAddress("Simple Address");
-		simple.setPay(new Float(45.8));
+		simple.setPay( Float.valueOf(45.8f) );
 		simple.setCount(2);
-		s.save(simple, new Long(10) );
+		s.save( simple );
 
 		// Test to make sure allocating an specified object operates correctly.
 		assertTrue(
@@ -105,15 +107,15 @@ public class SQLFunctionsTest extends LegacyTestCase {
 			List rset = s.createQuery( "select s.name, sysdate(), trunc(s.pay), round(s.pay) from Simple s" ).list();
 			assertNotNull("Name string should have been returned",(((Object[])rset.get(0))[0]));
 			assertNotNull("Todays Date should have been returned",(((Object[])rset.get(0))[1]));
-			assertEquals("trunc(45.8) result was incorrect ", new Float(45), ( (Object[]) rset.get(0) )[2] );
-			assertEquals("round(45.8) result was incorrect ", new Float(46), ( (Object[]) rset.get(0) )[3] );
+			assertEquals("trunc(45.8) result was incorrect ", Float.valueOf(45), ( (Object[]) rset.get(0) )[2] );
+			assertEquals("round(45.8) result was incorrect ", Float.valueOf(46), ( (Object[]) rset.get(0) )[3] );
 
 			simple.setPay(new Float(-45.8));
 			s.update(simple);
 
 			// Test type conversions while using nested functions (Float to Int).
 			rset = s.createQuery( "select abs(round(s.pay)) from Simple s" ).list();
-			assertEquals("abs(round(-45.8)) result was incorrect ", new Float(46), rset.get(0));
+			assertEquals("abs(round(-45.8)) result was incorrect ", Float.valueOf( 46 ), rset.get(0));
 
 			// Test a larger depth 3 function example - Not a useful combo other than for testing
 			assertTrue(
@@ -147,9 +149,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testSetProperties() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save(simple, new Long(10) );
+		s.save( simple );
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");
 		q.setProperties(simple);
 		assertTrue( q.list().get(0)==simple );
@@ -187,9 +189,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testSetPropertiesMap() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save(simple, new Long(10) );
+		s.save( simple );
 		Map parameters = new HashMap();
 		parameters.put("name", simple.getName());
 		parameters.put("count", new Integer(simple.getCount()));
@@ -252,21 +254,21 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testNothinToUpdate() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, new Long(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, new Long(10) );
+		s.update( simple );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, new Long(10) );
+		s.update( simple );
 		s.delete(simple);
 		t.commit();
 		s.close();
@@ -276,9 +278,11 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testCachedQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
-		simple.setName("Simple 1");
-		s.save( simple, new Long(10) );
+		Simple simple = new Simple( Long.valueOf(10) );
+		simple.setName( "Simple 1" );
+		Long id = (Long) s.save( simple );
+		assertEquals( Long.valueOf( 10 ), id );
+		assertEquals( Long.valueOf( 10 ), simple.getId() );
 		t.commit();
 		s.close();
 
@@ -317,7 +321,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, new Long(10) );
+		s.update( simple );
 		s.delete(simple);
 		t.commit();
 		s.close();
@@ -337,9 +341,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testCachedQueryRegion() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, new Long(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -370,7 +374,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, new Long(10) );
+		s.update( simple );
 		s.delete(simple);
 		t.commit();
 		s.close();
@@ -391,9 +395,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save(simple, new Long(10) );
+		s.save( simple );
 
 		if ( getDialect() instanceof DB2Dialect) {
 			s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
@@ -428,11 +432,11 @@ public class SQLFunctionsTest extends LegacyTestCase {
 			);
 		}
 
-		Simple other = new Simple();
+		Simple other = new Simple( Long.valueOf(20) );
 		other.setName("Simple 2");
 		other.setCount(12);
 		simple.setOther(other);
-		s.save( other, new Long(20) );
+		s.save( other );
 		//s.find("from Simple s where s.name ## 'cat|rat|bag'");
 		assertTrue(
 				s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size()==1
@@ -452,9 +456,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 				).list()
 						.size()==1
 		);
-		Simple min = new Simple();
+		Simple min = new Simple( Long.valueOf(30) );
 		min.setCount(-1);
-		s.save(min, new Long(30) );
+		s.save( min );
 		if ( ! (getDialect() instanceof MySQLDialect) && ! (getDialect() instanceof HSQLDialect) ) { //My SQL has no subqueries
 			assertTrue(
 					s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
@@ -480,7 +484,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		Iterator iter = s.createQuery( "select sum(s.count) from Simple s group by s.count having sum(s.count) > 10" )
 				.iterate();
 		assertTrue( iter.hasNext() );
-		assertEquals( new Long(12), iter.next() );
+		assertEquals( Long.valueOf(12), iter.next() );
 		assertTrue( !iter.hasNext() );
 		if ( ! (getDialect() instanceof MySQLDialect) ) {
 			iter = s.createQuery( "select s.count from Simple s group by s.count having s.count = 12" ).iterate();
@@ -532,7 +536,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		HashSet set = new HashSet();
 		set.add("Simple 1"); set.add("foo");
 		q.setParameterList( "name_list", set );
-		q.setParameter("count", new Integer(-1) );
+		q.setParameter("count", Integer.valueOf( -1 ) );
 		assertTrue( q.list().size()==1 );
 
 		ScrollableResults sr = s.createQuery("from Simple s").scroll();
@@ -613,9 +617,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, new Long(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -644,9 +648,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	public void testCachedQueryOnInsert() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, new Long(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -668,9 +672,9 @@ public class SQLFunctionsTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		Simple simple2 = new Simple();
+		Simple simple2 = new Simple( Long.valueOf(12) );
 		simple2.setCount(133);
-		s.save( simple2, new Long(12) );
+		s.save( simple2 );
 		t.commit();
 		s.close();
 

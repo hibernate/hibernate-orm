@@ -72,11 +72,6 @@ public interface EventSource extends SessionImplementor, Session {
 	 */
 	public void refresh(Object object, Map refreshedAlready) throws HibernateException;
 	/**
-	 * Cascade copy an entity instance
-	 */
-	public void saveOrUpdateCopy(String entityName, Object object, Map copiedAlready) throws HibernateException;
-	
-	/**
 	 * Cascade delete an entity instance
 	 */
 	public void delete(String entityName, Object child, boolean isCascadeDeleteEnabled, Set transientEntities);

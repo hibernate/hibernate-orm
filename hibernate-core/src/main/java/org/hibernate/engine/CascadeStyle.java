@@ -133,7 +133,7 @@ public abstract class CascadeStyle implements Serializable {
 	 */
 	public static final CascadeStyle UPDATE = new CascadeStyle() {
 		public boolean doCascade(CascadingAction action) {
-			return action==CascadingAction.SAVE_UPDATE || action==CascadingAction.SAVE_UPDATE_COPY;
+			return action==CascadingAction.SAVE_UPDATE;
 		}
 		public String toString() {
 			return "STYLE_SAVE_UPDATE";

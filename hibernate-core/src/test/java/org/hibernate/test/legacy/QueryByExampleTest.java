@@ -25,8 +25,8 @@ package org.hibernate.test.legacy;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 
@@ -131,7 +131,9 @@ public class QueryByExampleTest extends LegacyTestCase {
     private void deleteData() throws Exception {
     	Session s = openSession();
         Transaction t = s.beginTransaction();
-        s.delete("from Componentizable");
+		for ( Object entity : s.createQuery( "from Componentizable" ).list() ) {
+			s.delete( entity );
+		}
         t.commit();
         s.close();
     }

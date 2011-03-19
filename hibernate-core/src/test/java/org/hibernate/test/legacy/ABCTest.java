@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+
 import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 
 import org.junit.Test;
 
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@SuppressWarnings( {"UnnecessaryBoxing"})
 public class ABCTest extends LegacyTestCase {
 	public String[] getMappings() {
 		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };
@@ -43,28 +45,30 @@ public class ABCTest extends LegacyTestCase {
 	public void testFormulaAssociation() throws Throwable {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		D d = new D();
-		Long did = new Long(12);
-		s.save(d, did);
+		Long did = Long.valueOf(12);
+		D d = new D( did );
+		s.save(d);
 		A a = new A();
 		a.setName("a");
-		s.save(a, did);
+		s.save( a );
+		d.setReverse( a );
+		d.inverse = a;
 		t.commit();
 		s.close();
 		
 		s = openSession();
 		t = s.beginTransaction();
 		d = (D) s.get(D.class, did);
-		assertTrue(d.getReverse().getId().equals(did));
+		assertNotNull( d.getReverse() );
 		s.clear();
-		sessionFactory().evict(D.class);
-		sessionFactory().evict(A.class);
+		sessionFactory().getCache().evictEntityRegion( D.class );
+		sessionFactory().getCache().evictEntityRegion(A.class);
 		d = (D) s.get(D.class, did);
-		assertTrue(d.inverse.getId().equals(did));
+		assertNotNull( d.inverse );
 		assertTrue(d.inverse.getName().equals("a"));
 		s.clear();
-		sessionFactory().evict(D.class);
-		sessionFactory().evict(A.class);
+		sessionFactory().getCache().evictEntityRegion( D.class );
+		sessionFactory().getCache().evictEntityRegion( A.class );
 		assertTrue( s.createQuery( "from D d join d.reverse r join d.inverse i where i = r" ).list().size()==1 );
 		t.commit();
 		s.close();
@@ -105,7 +109,7 @@ public class ABCTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 
-		sessionFactory().evict(A.class);
+		sessionFactory().getCache().evictEntityRegion( A.class );
 		
 		s = openSession();
 		t = s.beginTransaction();
@@ -120,7 +124,7 @@ public class ABCTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 		
-		sessionFactory().evict(A.class);
+		sessionFactory().getCache().evictEntityRegion( A.class );
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -163,12 +167,12 @@ public class ABCTest extends LegacyTestCase {
 	public void testGetSave() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		assertNull( s.get( D.class, new Long(1) ) );
+		assertNull( s.get( D.class, Long.valueOf(1) ) );
 		D d = new D();
-		d.setId( new Long(1) );
+		d.setId( Long.valueOf(1) );
 		s.save(d);
 		s.flush();
-		assertNotNull( s.get( D.class, new Long(1) ) );
+		assertNotNull( s.get( D.class, Long.valueOf(1) ) );
 		s.delete(d);
 		s.flush();
 		t.commit();

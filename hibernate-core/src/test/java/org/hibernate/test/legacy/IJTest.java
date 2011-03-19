@@ -1,9 +1,10 @@
 //$Id: IJTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 import org.hibernate.dialect.HSQLDialect;
 
 import org.junit.Test;

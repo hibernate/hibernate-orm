@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Master implements Serializable, Named {
+	private Long id;
 	private Master otherMaster;
 	private Set details = new HashSet();
 	private Set moreDetails = new HashSet();
@@ -19,10 +20,22 @@ public class Master implements Serializable, Named {
 	private BigDecimal bigDecimal = new BigDecimal("1234.123");
 	private int x;
 	private Collection allDetails;
-	
+
+	public Master() {
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	public int getX() {
 		return x;
 	}
+
 	public void setX(int x) {
 		this.x = x;
 	}

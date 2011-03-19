@@ -25,7 +25,7 @@ package org.hibernate.test.legacy;
 import java.io.Serializable;
 
 import org.hibernate.LockMode;
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 
 import org.junit.Test;
 

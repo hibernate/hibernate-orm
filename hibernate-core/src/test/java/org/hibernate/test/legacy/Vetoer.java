@@ -6,13 +6,37 @@ import org.hibernate.Session;
 import org.hibernate.classic.Lifecycle;
 
 public class Vetoer implements Lifecycle {
+	private String id;
+	private String name;
+	private String[] strings;
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String[] getStrings() {
+		return strings;
+	}
+
+	public void setStrings(String[] strings) {
+		this.strings = strings;
+	}
 
 	boolean onSaveCalled;
 	boolean onUpdateCalled;
 	boolean onDeleteCalled;
-
-	private String name;
-	private String[] strings;
 
 	public boolean onSave(Session s) throws CallbackException {
 		boolean result = !onSaveCalled;
@@ -33,23 +57,6 @@ public class Vetoer implements Lifecycle {
 	}
 
 	public void onLoad(Session s, Serializable id) {}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String[] getStrings() {
-		return strings;
-	}
-
-	public void setStrings(String[] strings) {
-		this.strings = strings;
-	}
-
 }
 
 

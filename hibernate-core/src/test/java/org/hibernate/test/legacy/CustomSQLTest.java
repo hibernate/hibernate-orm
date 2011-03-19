@@ -1,11 +1,12 @@
 //$Id: CustomSQLTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.classic.Session;
+import org.hibernate.Session;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 
 import org.junit.Test;

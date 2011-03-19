@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.hql.ast.HqlSqlWalker;

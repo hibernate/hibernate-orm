@@ -36,6 +36,7 @@ import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatelessSession;
 import org.hibernate.TypeHelper;
@@ -78,23 +79,23 @@ public class SessionFactoryStub implements SessionFactory {
 		SessionFactoryObjectFactory.addInstance( uuid, name, this, service.getProperties() );
 	}
 
-	public org.hibernate.classic.Session openSession(Connection connection, Interceptor interceptor) {
+	public Session openSession(Connection connection, Interceptor interceptor) {
 		return getImpl().openSession(connection, interceptor);
 	}
 
-	public org.hibernate.classic.Session openSession(Interceptor interceptor) throws HibernateException {
+	public Session openSession(Interceptor interceptor) throws HibernateException {
 		return getImpl().openSession(interceptor);
 	}
 
-	public org.hibernate.classic.Session openSession() throws HibernateException {
+	public Session openSession() throws HibernateException {
 		return getImpl().openSession();
 	}
 
-	public org.hibernate.classic.Session openSession(Connection conn) {
+	public Session openSession(Connection conn) {
 		return getImpl().openSession(conn);
 	}
 
-	public org.hibernate.classic.Session getCurrentSession() {
+	public Session getCurrentSession() {
 		return getImpl().getCurrentSession();
 	}
 

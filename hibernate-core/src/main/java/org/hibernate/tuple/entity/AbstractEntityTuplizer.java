@@ -633,10 +633,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return false;
 	}
 
-	public boolean isValidatableImplementor() {
-		return false;
-	}
-
 	protected final EntityMetamodel getEntityMetamodel() {
 		return entityMetamodel;
 	}

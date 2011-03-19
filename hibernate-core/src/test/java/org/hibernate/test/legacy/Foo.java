@@ -78,6 +78,10 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	public Foo() {
 	}
 
+	public Foo(String key) {
+		this.key = key;
+	}
+
 	public Foo(int x) {
 		this.x=x;
 	}

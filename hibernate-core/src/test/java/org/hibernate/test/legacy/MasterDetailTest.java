@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -34,8 +35,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Example;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
@@ -136,7 +137,7 @@ public class MasterDetailTest extends LegacyTestCase {
 		newCat.getSubcategories().add(newSubCat);
 
 		s = openSession();
-		Category copiedCat = (Category) s.saveOrUpdateCopy(cat);
+		Category copiedCat = (Category) s.merge( cat );
 		s.flush();
 		s.connection().commit();
 		s.close();
@@ -155,12 +156,6 @@ public class MasterDetailTest extends LegacyTestCase {
 		cat.setName("new new foo");
 
 		s = openSession();
-		newSubCat = (Category) s.saveOrUpdateCopy( newSubCat, new Long( newSubCat.getId() ) );
-		assertTrue( newSubCat.getName().equals("new sub") );
-		assertTrue( newSubCat.getSubcategories().size()==1 );
-		cat = (Category) newSubCat.getSubcategories().get(0);
-		assertTrue( cat.getName().equals("new new foo") );
-		newSubCat.getSubcategories().remove(cat);
 		s.delete(cat);
 		s.delete(subCatBaz);
 		s.delete(catWA);
@@ -197,7 +192,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		//list = s.find("from Up down where down.class = Down");
 		assertTrue( list.size()==1 );
 		assertTrue( list.get(0) instanceof Down );
-		s.delete("from Up up");
+		for ( Object entity : s.createQuery( "from Up" ).list() ) {
+			s.delete( entity );
+		}
 		t.commit();
 		s.close();
 
@@ -298,7 +295,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete("from Single");
+		for ( Object entity : s.createQuery( "from Single" ).list() ) {
+			s.delete( entity );
+		}
 		t.commit();
 		s.close();
 	}
@@ -569,7 +568,7 @@ public class MasterDetailTest extends LegacyTestCase {
 	public void testUpdateLazyCollections() throws Exception {
 		Session s = openSession();
 		Master m = new Master();
-		Serializable mid = s.save(m);
+		s.save( m );
 		Detail d1 = new Detail();
 		Detail d2 = new Detail();
 		d2.setX(14);
@@ -584,12 +583,12 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.close();
 
 		s = openSession();
-		m = (Master) s.load(Master.class, mid);
+		m = (Master) s.load( Master.class, m.getId() );
 		s.connection().commit();
 		s.close();
 		m.setName("New Name");
 		s = openSession();
-		s.update(m, mid);
+		s.update( m );
 		Iterator iter = m.getDetails().iterator();
 		int i=0;
 		while ( iter.hasNext() ) {
@@ -1021,7 +1020,9 @@ public class MasterDetailTest extends LegacyTestCase {
 		s.update(z);
 		s.flush();
 		s.delete(z);
-		s.delete("from W");
+		for ( Object entity : s.createQuery( "from W" ).list() ) {
+			s.delete( entity );
+		}
 		s.flush();
 		s.connection().commit();
 		s.close();

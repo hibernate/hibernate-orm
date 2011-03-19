@@ -7,12 +7,18 @@ public class D {
 	private float amount;
 	private A reverse;
 	public A inverse;
-	
+
 	public D() {
 		// try to induce an infinite loop in the lazy-loading machinery
 		setAmount(100.0f);
 		getAmount();
 	}	
+
+	public D(Long id) {
+		this();
+		this.id = id;
+	}
+
 	/**
 	 * Returns the amount.
 	 * @return float

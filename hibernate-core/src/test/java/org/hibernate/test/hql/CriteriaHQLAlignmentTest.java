@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.hql.QueryTranslator;

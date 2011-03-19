@@ -1,5 +1,6 @@
 //$Id: FumTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,11 +26,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -296,13 +296,13 @@ public class FumTest extends LegacyTestCase {
 	}
 
 
-	public FumCompositeID fumKey(String str) {
+	public static FumCompositeID fumKey(String str) {
 		return fumKey(str,false);
 	}
 
-	private FumCompositeID fumKey(String str, boolean aCompositeQueryTest) {
+	private static FumCompositeID fumKey(String str, boolean aCompositeQueryTest) {
 		FumCompositeID id = new FumCompositeID();
-		if ( Dialect.getDialect() instanceof MckoiDialect ) {
+		if ( getDialect() instanceof MckoiDialect ) {
 			GregorianCalendar now = new GregorianCalendar();
 			GregorianCalendar cal = new GregorianCalendar(
 				now.get(java.util.Calendar.YEAR),
@@ -581,13 +581,13 @@ public class FumTest extends LegacyTestCase {
 	public void testCompositeIDs() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
-		Fo fo = Fo.newFo();
+		Fo fo = Fo.newFo( fumKey("an instance of fo") );
 		Properties props = new Properties();
 		props.setProperty("foo", "bar");
 		props.setProperty("bar", "foo");
 		fo.setSerial(props);
 		fo.setBuf( "abcdefghij1`23%$*^*$*\n\t".getBytes() );
-		s.save( fo, fumKey("an instance of fo") );
+		s.save( fo );
 		s.flush();
 		props.setProperty("x", "y");
 		s.getTransaction().commit();
@@ -737,13 +737,13 @@ public class FumTest extends LegacyTestCase {
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setAddress("123 Main St. Anytown USA");
 		simple.setCount(1);
 		simple.setDate( new Date() );
 		simple.setName("My UnflushedSessionSerialization Simple");
-		simple.setPay( new Float(5000) );
-		s.save( simple, new Long(10) );
+		simple.setPay( Float.valueOf(5000) );
+		s.save( simple );
 
 		// Now, try to serialize session without flushing...
 		s.getTransaction().commit();
@@ -753,9 +753,9 @@ public class FumTest extends LegacyTestCase {
 		s.beginTransaction();
 
 		simple = (Simple) s.load( Simple.class, new Long(10) );
-		Simple other = new Simple();
+		Simple other = new Simple( Long.valueOf(11) );
 		other.init();
-		s.save( other, new Long(11) );
+		s.save( other );
 
 		simple.setOther(other);
 		s.flush();
@@ -770,7 +770,7 @@ public class FumTest extends LegacyTestCase {
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
-		simple = (Simple) s.get( Simple.class, new Long(10) );
+		simple = (Simple) s.get( Simple.class, Long.valueOf(10) );
 		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
 		assertTrue("Not same child instances", check.getOther().getName().equals( other.getName() ) );
 
@@ -793,7 +793,7 @@ public class FumTest extends LegacyTestCase {
 		s.setFlushMode(FlushMode.MANUAL);
 		s.beginTransaction();
 
-		simple = (Simple) s.get( Simple.class, new Long(10) );
+		simple = (Simple) s.get( Simple.class, Long.valueOf( 10 ) );
 		assertTrue("Not same parent instances", check.getName().equals( simple.getName() ) );
 		assertTrue("Not same child instances", check.getOther().getName().equals( other.getName() ) );
 

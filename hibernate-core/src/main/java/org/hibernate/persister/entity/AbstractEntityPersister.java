@@ -3794,10 +3794,6 @@ public abstract class AbstractEntityPersister
 		return getTuplizer( entityMode ).isLifecycleImplementor();
 	}
 
-	public boolean implementsValidatable(EntityMode entityMode) {
-		return getTuplizer( entityMode ).isValidatableImplementor();
-	}
-
 	public Class getConcreteProxyClass(EntityMode entityMode) {
 		return getTuplizer( entityMode ).getConcreteProxyClass();
 	}

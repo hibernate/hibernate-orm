@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +30,8 @@ import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.dialect.HSQLDialect;
 
 import org.junit.Test;
@@ -218,7 +219,9 @@ public class ABCProxyTest extends LegacyTestCase {
 			(c1b.getCount()==23432) &&
 			c1b.getName().equals("c1")
 		);
-		System.out.println( s.delete("from A") );
+		for ( Object a : s.createQuery( "from A" ).list() ) {
+			s.delete( a );
+		}
 		t.commit();
 		s.close();
 
@@ -228,7 +231,9 @@ public class ABCProxyTest extends LegacyTestCase {
 		s.save( new A() );
 		assertTrue( s.createQuery( "from B" ).list().size()==1 );
 		assertTrue( s.createQuery( "from A" ).list().size()==2 );
-		s.delete("from A");
+		for ( Object a : s.createQuery( "from A" ).list() ) {
+			s.delete( a );
+		}
 		t.commit();
 		s.close();
 	}
@@ -279,7 +284,9 @@ public class ABCProxyTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		List l = s.find( "from E e, A a where e.reverse = a.forward and a = ?", a, Hibernate.entity(A.class) );
+		List l = s.createQuery( "from E e, A a where e.reverse = a.forward and a = ?" )
+				.setEntity( 0, a )
+				.list();
 		assertTrue( l.size()==1 );
 		l = s.createQuery( "from E e join fetch e.reverse" ).list();
 		assertTrue( l.size()==2 );

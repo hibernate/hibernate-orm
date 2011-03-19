@@ -231,14 +231,6 @@ public interface EntityTuplizer extends Tuplizer {
 	public boolean isLifecycleImplementor();
 
 	/**
-	 * Does the {@link #getMappedClass() class} managed by this tuplizer implement
-	 * the {@link org.hibernate.classic.Validatable} interface.
-	 *
-	 * @return True if the Validatable interface is implemented; false otherwise.
-	 */
-	public boolean isValidatableImplementor();
-
-	/**
 	 * Returns the java class to which generated proxies will be typed.
 	 * <p/>
 	 * todo : look at fully encapsulating {@link org.hibernate.engine.PersistenceContext#narrowProxy} here,

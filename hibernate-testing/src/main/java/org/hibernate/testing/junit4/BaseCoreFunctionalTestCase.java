@@ -76,9 +76,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	private ServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
-	private org.hibernate.classic.Session session;
+	private Session session;
 
-	protected Dialect getDialect() {
+	protected static Dialect getDialect() {
 		return DIALECT;
 	}
 
@@ -94,12 +94,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return sessionFactory;
 	}
 
-	protected org.hibernate.classic.Session openSession() throws HibernateException {
+	protected Session openSession() throws HibernateException {
 		session = sessionFactory().openSession();
 		return session;
 	}
 
-	protected org.hibernate.classic.Session openSession(Interceptor interceptor) throws HibernateException {
+	protected Session openSession(Interceptor interceptor) throws HibernateException {
 		session = sessionFactory().openSession(interceptor);
 		return session;
 	}
@@ -231,7 +231,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected String getCacheConcurrencyStrategy() {
-//		return "nonstrict-read-write";
 		return null;
 	}
 
@@ -279,8 +278,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	@OnFailure
 	@OnExpectedFailure
 	public void onFailure() {
-//		cleanupSession();
-
 		if ( rebuildSessionFactoryOnError() ) {
 			rebuildSessionFactory();
 		}
@@ -303,7 +300,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@Before
 	public final void beforeTest() throws Exception {
-		System.out.println( " IN @Before CALLBACK!" );
 		prepareTest();
 	}
 
@@ -312,7 +308,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
-		System.out.println( " IN @After CALLBACK!" );
 		cleanupTest();
 
 		cleanupSession();

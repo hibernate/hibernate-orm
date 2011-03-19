@@ -4,17 +4,32 @@ import java.io.Serializable;
 
 public final class Fo {
 	
+	public static Fo newFo(FumCompositeID id) {
+		Fo fo = newFo();
+		fo.id = id;
+		return fo;
+	}
+
 	public static Fo newFo() {
 		return new Fo();
 	}
 	
 	private Fo() {}
-	
+
+	private FumCompositeID id;
 	private byte[] buf;
 	private Serializable serial;
 	private long version;
 	private int x;
-	
+
+	public FumCompositeID getId() {
+		return id;
+	}
+
+	public void setId(FumCompositeID id) {
+		this.id = id;
+	}
+
 	public int getX() {
 		return x;
 	}

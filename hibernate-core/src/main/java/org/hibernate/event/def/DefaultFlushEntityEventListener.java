@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.event.def;
 
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -32,7 +34,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.action.internal.DelayedPostInsertIdentifier;
 import org.hibernate.action.internal.EntityUpdateAction;
-import org.hibernate.classic.Validatable;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Nullability;
@@ -42,12 +44,10 @@ import org.hibernate.engine.Versioning;
 import org.hibernate.event.EventSource;
 import org.hibernate.event.FlushEntityEvent;
 import org.hibernate.event.FlushEntityEventListener;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * An event that occurs for each entity instance at flush time
@@ -264,17 +264,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
             } else LOG.trace("Updating entity: " + MessageHelper.infoString(persister, entry.getId(), session.getFactory()));
 		}
 
-		final boolean intercepted;
-		if ( !entry.isBeingReplicated() ) {
-			// give the Interceptor a chance to process property values, if the properties
-			// were modified by the Interceptor, we need to set them back to the object
-			intercepted = handleInterception( event );
-		}
-		else {
-			intercepted = false;
-		}
-
-		validate( entity, persister, status, entityMode );
+		final boolean intercepted = !entry.isBeingReplicated() && handleInterception( event );
 
 		// increment the version number (if necessary)
 		final Object nextVersion = getNextVersion(event);
@@ -313,13 +303,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			);
 
 		return intercepted;
-	}
-
-	protected void validate(Object entity, EntityPersister persister, Status status, EntityMode entityMode) {
-		// validate() instances of Validatable
-		if ( status == Status.MANAGED && persister.implementsValidatable( entityMode ) ) {
-			( (Validatable) entity ).validate();
-		}
 	}
 
 	protected boolean handleInterception(FlushEntityEvent event) {

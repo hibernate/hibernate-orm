@@ -159,7 +159,7 @@ import org.jboss.logging.Logger;
 public final class SessionImpl
 		extends AbstractSessionImpl
 		implements EventSource,
-				   org.hibernate.classic.Session,
+				   org.hibernate.Session,
 				   TransactionContext,
 				   LobCreationContext {
 
@@ -697,20 +697,12 @@ public final class SessionImpl
 
 	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void save(Object obj, Serializable id) throws HibernateException {
-		save(null, obj, id);
-	}
-
 	public Serializable save(Object obj) throws HibernateException {
 		return save( null, obj );
 	}
 
 	public Serializable save(String entityName, Object object) throws HibernateException {
 		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
-	}
-
-	public void save(String entityName, Object object, Serializable id) throws HibernateException {
-		fireSave( new SaveOrUpdateEvent( entityName, object, id, this ) );
 	}
 
 	private Serializable fireSave(SaveOrUpdateEvent event) {
@@ -730,16 +722,8 @@ public final class SessionImpl
 		update(null, obj);
 	}
 
-	public void update(Object obj, Serializable id) throws HibernateException {
-		update( null, obj, id );
-	}
-
 	public void update(String entityName, Object object) throws HibernateException {
 		fireUpdate( new SaveOrUpdateEvent( entityName, object, this ) );
-	}
-
-	public void update(String entityName, Object object, Serializable id) throws HibernateException {
-		fireUpdate( new SaveOrUpdateEvent( entityName, object, id, this ) );
 	}
 
 	private void fireUpdate(SaveOrUpdateEvent event) {
@@ -884,52 +868,6 @@ public final class SessionImpl
 		for ( int i = 0; i < mergeEventListener.length; i++ ) {
 			mergeEventListener[i].onMerge(event, copiedAlready);
 		}
-	}
-
-
-	// saveOrUpdateCopy() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	public Object saveOrUpdateCopy(String entityName, Object object)
-			throws HibernateException {
-		return fireSaveOrUpdateCopy( new MergeEvent( entityName, object, this ) );
-	}
-
-	public Object saveOrUpdateCopy(Object object) throws HibernateException {
-		return saveOrUpdateCopy( null, object );
-	}
-
-	public Object saveOrUpdateCopy(String entityName, Object object, Serializable id)
-			throws HibernateException {
-		return fireSaveOrUpdateCopy( new MergeEvent( entityName, object, id, this ) );
-	}
-
-	public Object saveOrUpdateCopy(Object object, Serializable id)
-			throws HibernateException {
-		return saveOrUpdateCopy( null, object, id );
-	}
-
-	public void saveOrUpdateCopy(String entityName, Object object, Map copiedAlready)
-			throws HibernateException {
-		fireSaveOrUpdateCopy( copiedAlready, new MergeEvent( entityName, object, this ) );
-	}
-
-	private void fireSaveOrUpdateCopy(Map copiedAlready, MergeEvent event) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		MergeEventListener[] saveOrUpdateCopyEventListener = listeners.getSaveOrUpdateCopyEventListeners();
-		for ( int i = 0; i < saveOrUpdateCopyEventListener.length; i++ ) {
-			saveOrUpdateCopyEventListener[i].onMerge(event, copiedAlready);
-		}
-	}
-
-	private Object fireSaveOrUpdateCopy(MergeEvent event) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		MergeEventListener[] saveOrUpdateCopyEventListener = listeners.getSaveOrUpdateCopyEventListeners();
-		for ( int i = 0; i < saveOrUpdateCopyEventListener.length; i++ ) {
-			saveOrUpdateCopyEventListener[i].onMerge(event);
-		}
-		return event.getResult();
 	}
 
 
@@ -1239,22 +1177,6 @@ public final class SessionImpl
 		flush();
 	}
 
-
-	/**
-	 * Retrieve a list of persistent objects using a hibernate query
-	 */
-	public List find(String query) throws HibernateException {
-		return list( query, new QueryParameters() );
-	}
-
-	public List find(String query, Object value, Type type) throws HibernateException {
-		return list( query, new QueryParameters(type, value) );
-	}
-
-	public List find(String query, Object[] values, Type[] types) throws HibernateException {
-		return list( query, new QueryParameters(types, values) );
-	}
-
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1317,18 +1239,6 @@ public final class SessionImpl
         return result;
     }
 
-	public Iterator iterate(String query) throws HibernateException {
-		return iterate( query, new QueryParameters() );
-	}
-
-	public Iterator iterate(String query, Object value, Type type) throws HibernateException {
-		return iterate( query, new QueryParameters(type, value) );
-	}
-
-	public Iterator iterate(String query, Object[] values, Type[] types) throws HibernateException {
-		return iterate( query, new QueryParameters(types, values) );
-	}
-
 	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1357,35 +1267,6 @@ public final class SessionImpl
 		finally {
 			dontFlushFromFind--;
 		}
-	}
-
-	public int delete(String query) throws HibernateException {
-		return delete( query, ArrayHelper.EMPTY_OBJECT_ARRAY, ArrayHelper.EMPTY_TYPE_ARRAY );
-	}
-
-	public int delete(String query, Object value, Type type) throws HibernateException {
-		return delete( query, new Object[]{value}, new Type[]{type} );
-	}
-
-	public int delete(String query, Object[] values, Type[] types) throws HibernateException {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		if ( query == null ) {
-			throw new IllegalArgumentException("attempt to doAfterTransactionCompletion delete-by-query with null query");
-		}
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("delete: " + query);
-            if (values.length != 0) LOG.trace("Parameters: " + StringHelper.toString(values));
-		}
-
-		List list = find( query, values, types );
-		int deletionCount = list.size();
-		for ( int i = 0; i < deletionCount; i++ ) {
-			delete( list.get( i ) );
-		}
-
-		return deletionCount;
 	}
 
 	public Query createFilter(Object collection, String queryString) {
@@ -1532,23 +1413,6 @@ public final class SessionImpl
 
 	private Serializable getProxyIdentifier(Object proxy) {
 		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
-	}
-
-	public Collection filter(Object collection, String filter) throws HibernateException {
-		return listFilter( collection, filter, new QueryParameters( new Type[1], new Object[1] ) );
-	}
-
-	public Collection filter(Object collection, String filter, Object value, Type type) throws HibernateException {
-		return listFilter( collection, filter, new QueryParameters( new Type[]{null, type}, new Object[]{null, value} ) );
-	}
-
-	public Collection filter(Object collection, String filter, Object[] values, Type[] types)
-	throws HibernateException {
-		Object[] vals = new Object[values.length + 1];
-		Type[] typs = new Type[types.length + 1];
-		System.arraycopy( values, 0, vals, 1, values.length );
-		System.arraycopy( types, 0, typs, 1, types.length );
-		return listFilter( collection, filter, new QueryParameters( typs, vals ) );
 	}
 
 	private FilterQueryPlan getFilterQueryPlan(
@@ -1764,30 +1628,6 @@ public final class SessionImpl
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return super.createSQLQuery( sql );
-	}
-
-	public Query createSQLQuery(String sql, String returnAlias, Class returnClass) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		return new SQLQueryImpl(
-				sql,
-		        new String[] { returnAlias },
-		        new Class[] { returnClass },
-		        this,
-		        factory.getQueryPlanCache().getSQLParameterMetadata( sql )
-		);
-	}
-
-	public Query createSQLQuery(String sql, String returnAliases[], Class returnClasses[]) {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		return new SQLQueryImpl(
-				sql,
-		        returnAliases,
-		        returnClasses,
-		        this,
-		        factory.getQueryPlanCache().getSQLParameterMetadata( sql )
-		);
 	}
 
 	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)

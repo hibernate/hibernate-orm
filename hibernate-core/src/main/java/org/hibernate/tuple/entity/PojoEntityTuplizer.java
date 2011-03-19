@@ -29,19 +29,21 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
+import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.classic.Validatable;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -53,7 +55,6 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.type.CompositeType;
-import org.jboss.logging.Logger;
 
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
@@ -68,7 +69,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	private final Class mappedClass;
 	private final Class proxyInterface;
 	private final boolean lifecycleImplementor;
-	private final boolean validatableImplementor;
 	private final Set lazyPropertyNames = new HashSet();
 	private final ReflectionOptimizer optimizer;
 
@@ -77,7 +77,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		this.mappedClass = mappedEntity.getMappedClass();
 		this.proxyInterface = mappedEntity.getProxyInterface();
 		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedClass );
-		this.validatableImplementor = Validatable.class.isAssignableFrom( mappedClass );
 
 		Iterator iter = mappedEntity.getPropertyClosureIterator();
 		while ( iter.hasNext() ) {
@@ -280,14 +279,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 	@Override
     public boolean isLifecycleImplementor() {
 		return lifecycleImplementor;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-    public boolean isValidatableImplementor() {
-		return validatableImplementor;
 	}
 
 	/**

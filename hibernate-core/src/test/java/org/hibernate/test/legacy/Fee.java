@@ -15,7 +15,7 @@ public class Fee implements Serializable {
 	
 	public Fee() {
 	}
-	
+
 	public Fee getFee() {
 		return fee;
 	}

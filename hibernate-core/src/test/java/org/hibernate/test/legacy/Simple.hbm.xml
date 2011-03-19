@@ -5,7 +5,7 @@
 <hibernate-mapping default-lazy="false">
 
     <class name="org.hibernate.test.legacy.Simple">
-        <id type="long" column="id_">
+        <id name="id" type="long" column="id_">
             <generator class="assigned"/>
         </id>
         <property name="name"/>

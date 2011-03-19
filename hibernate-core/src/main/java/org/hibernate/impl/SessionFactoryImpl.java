@@ -55,6 +55,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
@@ -145,7 +146,7 @@ import org.jboss.logging.Logger;
  * safe, but also highly concurrent. Synchronization must be used extremely sparingly.
  *
  * @see org.hibernate.service.jdbc.connections.spi.ConnectionProvider
- * @see org.hibernate.classic.Session
+ * @see org.hibernate.Session
  * @see org.hibernate.hql.QueryTranslator
  * @see org.hibernate.persister.entity.EntityPersister
  * @see org.hibernate.persister.collection.CollectionPersister
@@ -625,12 +626,11 @@ public final class SessionFactoryImpl
 			);
 	}
 
-	public org.hibernate.classic.Session openSession(Connection connection, Interceptor sessionLocalInterceptor) {
+	public Session openSession(Connection connection, Interceptor sessionLocalInterceptor) {
 		return openSession(connection, false, Long.MIN_VALUE, sessionLocalInterceptor);
 	}
 
-	public org.hibernate.classic.Session openSession(Interceptor sessionLocalInterceptor)
-	throws HibernateException {
+	public Session openSession(Interceptor sessionLocalInterceptor) throws HibernateException {
 		// note that this timestamp is not correct if the connection provider
 		// returns an older JDBC connection that was associated with a
 		// transaction that was already begun before openSession() was called
@@ -639,15 +639,15 @@ public final class SessionFactoryImpl
 		return openSession( null, true, timestamp, sessionLocalInterceptor );
 	}
 
-	public org.hibernate.classic.Session openSession(Connection connection) {
+	public Session openSession(Connection connection) {
 		return openSession(connection, interceptor); //prevents this session from adding things to cache
 	}
 
-	public org.hibernate.classic.Session openSession() throws HibernateException {
+	public Session openSession() throws HibernateException {
 		return openSession(interceptor);
 	}
 
-	public org.hibernate.classic.Session openTemporarySession() throws HibernateException {
+	public Session openTemporarySession() throws HibernateException {
 		return new SessionImpl(
 				null,
 		        this,
@@ -661,7 +661,7 @@ public final class SessionFactoryImpl
 			);
 	}
 
-	public org.hibernate.classic.Session openSession(
+	public Session openSession(
 			final Connection connection,
 	        final boolean flushBeforeCompletionEnabled,
 	        final boolean autoCloseSessionEnabled,
@@ -679,7 +679,7 @@ public final class SessionFactoryImpl
 			);
 	}
 
-	public org.hibernate.classic.Session getCurrentSession() throws HibernateException {
+	public Session getCurrentSession() throws HibernateException {
 		if ( currentSessionContext == null ) {
 			throw new HibernateException( "No CurrentSessionContext configured!" );
 		}

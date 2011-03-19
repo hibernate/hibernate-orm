@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -40,8 +41,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.ReplicationMode;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -63,6 +64,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
+@SuppressWarnings( {"UnnecessaryBoxing"})
 public class ParentChildTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {
@@ -183,13 +185,15 @@ public class ParentChildTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		foo.setFloat( new Float(1.2f) );
+		foo.setKey( "xyzid" );
+		foo.setFloat( new Float( 1.2f ) );
+		foo2.setKey( (String) id ); //intentionally id, not id2!
 		foo2.setFloat( new Float(1.3f) );
-		foo2.getDependent().setKey(null);
+		foo2.getDependent().setKey( null );
 		foo2.getComponent().getSubcomponent().getFee().setKey(null);
-		assertFalse( foo2.getKey().equals(id) );
-		s.save(foo, "xyzid");
-		s.update(foo2, id); //intentionally id, not id2!
+		assertFalse( foo2.getKey().equals( id ) );
+		s.save( foo );
+		s.update( foo2 );
 		assertEquals( foo2.getKey(), id );
 		assertTrue( foo2.getInt()==1234567 );
 		assertEquals( foo.getKey(), "xyzid" );
@@ -537,14 +541,16 @@ public class ParentChildTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Simple s1 = new Simple();
+		Simple s1 = new Simple( Long.valueOf(1) );
 		s1.setName("s");
 		s1.setCount(0);
-		Simple s2 = new Simple();
+		Simple s2 = new Simple( Long.valueOf(2) );
 		s2.setCount(2);
-		Simple s3 = new Simple();
+		Simple s3 = new Simple( Long.valueOf(3) );
 		s3.setCount(3);
-		s.save( s1, new Long(1) ); s.save( s2, new Long(2) ); s.save( s3, new Long(3) );
+		s.save( s1 );
+		s.save( s2 );
+		s.save( s3 );
 		Container c = new Container();
 		Contained cd = new Contained();
 		List bag = new ArrayList();
@@ -563,10 +569,10 @@ public class ParentChildTest extends LegacyTestCase {
 		s.save(c);
 		Container cx = new Container();
 		s.save(cx);
-		Simple sx = new Simple();
+		Simple sx = new Simple( Long.valueOf(5) );
 		sx.setCount(5);
 		sx.setName("s");
-		s.save( sx, new Long(5) );
+		s.save( sx );
 		assertTrue(
 				s.createQuery( "select c from ContainerX c, Simple s where c.oneToMany[2] = s" ).list()
 						.size() == 1
@@ -716,8 +722,8 @@ public class ParentChildTest extends LegacyTestCase {
 		Container c = new Container();
 		c.setManyToMany( new ArrayList() );
 		c.setBag( new ArrayList() );
-		Simple s1 = new Simple();
-		Simple s2 = new Simple();
+		Simple s1 = new Simple( Long.valueOf(12) );
+		Simple s2 = new Simple( Long.valueOf(-1) );
 		s1.setCount(123); s2.setCount(654);
 		Contained c1 = new Contained();
 		c1.setBag( new ArrayList() );
@@ -725,8 +731,9 @@ public class ParentChildTest extends LegacyTestCase {
 		c.getBag().add(c1);
 		c.getManyToMany().add(s1);
 		c.getManyToMany().add(s2);
-		Serializable cid = s.save(c); //s.save(c1);
-		s.save(s1, new Long(12) ); s.save(s2, new Long(-1) );
+		Serializable cid = s.save(c);
+		s.save( s1 );
+		s.save( s2 );
 		t.commit();
 		s.close();
 
@@ -762,9 +769,12 @@ public class ParentChildTest extends LegacyTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Container c = new Container();
-		Simple x = new Simple(); x.setCount(123);
-		Simple y = new Simple(); y.setCount(456);
-		s.save( x, new Long(1) ); s.save( y, new Long(0) );
+		Simple x = new Simple( Long.valueOf(1) );
+		x.setCount(123);
+		Simple y = new Simple( Long.valueOf(0) );
+		y.setCount(456);
+		s.save( x );
+		s.save( y );
 		List o2m = new ArrayList();
 		o2m.add(x); o2m.add(null); o2m.add(y);
 		List m2m = new ArrayList();
@@ -1080,14 +1090,18 @@ public class ParentChildTest extends LegacyTestCase {
 	public void testLocking() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		Simple s1 = new Simple(); s1.setCount(1);
-		Simple s2 = new Simple(); s2.setCount(2);
-		Simple s3 = new Simple(); s3.setCount(3);
-		Simple s4 = new Simple(); s4.setCount(4);
-		s.save(s1, new Long(1) );
-		s.save(s2, new Long(2) );
-		s.save(s3, new Long(3) );
-		s.save(s4, new Long(4) );
+		Simple s1 = new Simple( Long.valueOf(1) );
+		s1.setCount(1);
+		Simple s2 = new Simple( Long.valueOf(2) );
+		s2.setCount(2);
+		Simple s3 = new Simple( Long.valueOf(3) );
+		s3.setCount(3);
+		Simple s4 = new Simple( Long.valueOf(4) );
+		s4.setCount(4);
+		s.save( s1 );
+		s.save( s2 );
+		s.save( s3 );
+		s.save( s4 );
 		assertTrue( s.getCurrentLockMode(s1)==LockMode.WRITE );
 		tx.commit();
 		s.close();
@@ -1196,20 +1210,20 @@ public class ParentChildTest extends LegacyTestCase {
 		// Next, lets create that entity "under the covers"
 		Session anotherSession = sessionFactory().openSession();
 		anotherSession.beginTransaction();
-		Simple myNewSimple = new Simple();
+		Simple myNewSimple = new Simple( Long.valueOf(-1) );
 		myNewSimple.setName("My under the radar Simple entity");
 		myNewSimple.setAddress("SessionCacheTest.testLoadAfterNonExists");
 		myNewSimple.setCount(1);
 		myNewSimple.setDate( new Date() );
-		myNewSimple.setPay( new Float(100000000) );
-		anotherSession.save( myNewSimple, new Long(-1) );
+		myNewSimple.setPay( Float.valueOf( 100000000 ) );
+		anotherSession.save( myNewSimple );
 		anotherSession.getTransaction().commit();
 		anotherSession.close();
 
 		// Now, lets make sure the original session can see the created row...
 		session.clear();
 		try {
-			Simple dummy = (Simple) session.get( Simple.class, new Long(-1) );
+			Simple dummy = (Simple) session.get( Simple.class, Long.valueOf(-1) );
 			assertNotNull("Unable to locate entity Simple with id = -1", dummy);
 			session.delete( dummy );
 		}

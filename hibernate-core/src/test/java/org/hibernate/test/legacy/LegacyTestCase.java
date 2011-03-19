@@ -24,10 +24,10 @@
 package org.hibernate.test.legacy;
 
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.DefaultNamingStrategy;
 import org.hibernate.cfg.Environment;
-import org.hibernate.classic.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.classic.ClassicQueryTranslatorFactory;
 import org.hibernate.internal.util.StringHelper;

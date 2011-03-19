@@ -1,5 +1,6 @@
 //$Id: MultiTableTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,8 +12,8 @@ import java.util.Set;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
 
@@ -167,7 +168,7 @@ public class MultiTableTest extends LegacyTestCase {
 		s.close();
 		s = openSession();
 		t = s.beginTransaction();
-		s.update(m, id);
+		s.update( m );
 		s.flush();
 		m.setAddress("foo bar");
 		s.flush();
@@ -246,11 +247,11 @@ public class MultiTableTest extends LegacyTestCase {
 		multi.setExtraProp( multi.getExtraProp() + "2" );
 		//multi.setCount( multi.getCount() + 1 );
 		multi.setName("new name");
-		s.update(multi, mid);
+		s.update( multi );
 		simp.setName("new name");
-		s.update(simp, sid);
+		s.update( simp );
 		sm.setAmount(456.7f);
-		s.update(sm, smid);
+		s.update( sm );
 		t.commit();
 		s.close();
 
@@ -351,7 +352,7 @@ public class MultiTableTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update(multi, mid);
+		s.update(multi);
 		s.delete(multi);
 		assertEquals( 2, doDelete( s, "from Top" ) );
 		t.commit();
@@ -384,11 +385,11 @@ public class MultiTableTest extends LegacyTestCase {
 		multi.setExtraProp( multi.getExtraProp() + "2" );
 		//multi.setCount( multi.getCount() + 1 );
 		multi.setName("new name");
-		s.update( multi, multiId );
+		s.update( multi );
 		simp.setName("new name");
-		s.update( simp, simpId );
+		s.update( simp );
 		sm.setAmount(456.7f);
-		s.update( sm, smId );
+		s.update( sm );
 		t.commit();
 		s.close();
 
@@ -469,7 +470,7 @@ public class MultiTableTest extends LegacyTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( multi, multiId );
+		s.update( multi );
 		s.delete(multi);
 		assertEquals( 2, doDelete( s, "from Top" ) );
 		t.commit();

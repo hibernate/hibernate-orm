@@ -6,7 +6,14 @@ public class A {
 	private Long id;
 	private String name;
 	private E forward;
-	
+
+	public A() {
+	}
+
+	public A(Long id) {
+		this.id = id;
+	}
+
 	/**
 	 * Returns the id.
 	 * @return Long

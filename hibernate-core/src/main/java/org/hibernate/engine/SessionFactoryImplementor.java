@@ -32,6 +32,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.QueryCache;
 import org.hibernate.cache.Region;
@@ -211,7 +212,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	/**
 	 * Get a nontransactional "current" session for Hibernate EntityManager
 	 */
-	public org.hibernate.classic.Session openTemporarySession() throws HibernateException;
+	public Session openTemporarySession() throws HibernateException;
 
 	/**
 	 * Open a session conforming to the given parameters.  Used mainly by
@@ -226,7 +227,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return An appropriate session.
 	 * @throws HibernateException
 	 */
-	public org.hibernate.classic.Session openSession(
+	public Session openSession(
 			final Connection connection,
 			final boolean flushBeforeCompletionEnabled,
 			final boolean autoCloseSessionEnabled,

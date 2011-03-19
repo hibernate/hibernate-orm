@@ -38,8 +38,8 @@ import java.util.Map;
 import org.hibernate.LockMode;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.jdbc.Work;
@@ -81,12 +81,12 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf( 10 ) );
 		simple.setName("Simple Dialect Function Test");
 		simple.setAddress("Simple Address");
 		simple.setPay(new Float(45.8));
 		simple.setCount(2);
-		s.save(simple, Long.valueOf( 10 ) );
+		s.save( simple );
 
 		// Test to make sure allocating an specified object operates correctly.
 		assertTrue(
@@ -140,9 +140,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testSetProperties() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf( 10 ) );
 		simple.setName("Simple 1");
-		s.save(simple, Long.valueOf( 10 ) );
+		s.save( simple );
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");
 		q.setProperties(simple);
 		assertTrue( q.list().get(0)==simple );
@@ -207,21 +207,21 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testNothinToUpdate() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, Long.valueOf(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, Long.valueOf(10) );
+		s.update( simple );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, Long.valueOf(10) );
+		s.update( simple );
 		s.delete(simple);
 		t.commit();
 		s.close();
@@ -231,9 +231,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testCachedQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, Long.valueOf(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -272,7 +272,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, Long.valueOf(10) );
+		s.update( simple );
 		s.delete(simple);
 		t.commit();
 		s.close();
@@ -292,9 +292,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testCachedQueryRegion() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, Long.valueOf(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -325,7 +325,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.update( simple, Long.valueOf(10) );
+		s.update( simple );
 		s.delete(simple);
 		t.commit();
 		s.close();
@@ -346,9 +346,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save(simple, Long.valueOf(10) );
+		s.save(simple );
 
 		s.createQuery( "from Simple s where repeat('foo', 3) = 'foofoofoo'" ).list();
 		s.createQuery( "from Simple s where repeat(s.name, 3) = 'foofoofoo'" ).list();
@@ -371,11 +371,11 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				s.createQuery( "from Simple s where lower( concat(s.name, ' foo') ) ='simple 1 foo'" ).list().size()==1
 		);
 
-		Simple other = new Simple();
+		Simple other = new Simple( Long.valueOf(20) );
 		other.setName( "Simple 2" );
 		other.setCount( 12 );
 		simple.setOther( other );
-		s.save( other, Long.valueOf(20) );
+		s.save( other );
 		//s.find("from Simple s where s.name ## 'cat|rat|bag'");
 		assertTrue(
 				s.createQuery( "from Simple s where upper( s.other.name ) ='SIMPLE 2'" ).list().size()==1
@@ -395,9 +395,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 				).list()
 						.size()==1
 		);
-		Simple min = new Simple();
+		Simple min = new Simple( Long.valueOf(30) );
 		min.setCount( -1 );
-		s.save(min, Long.valueOf(30) );
+		s.save(min );
 
 		assertTrue(
 				s.createQuery( "from Simple s where s.count > ( select min(sim.count) from Simple sim )" )
@@ -481,16 +481,15 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		sr.get(0);
 		sr.close();
 
-		s.delete(other);
-		s.delete(simple);
-		s.delete(min);
+		s.delete( other );
+		s.delete( simple );
+		s.delete( min );
 		t.commit();
 		s.close();
 
 	}
 
 	public void testBlobClob() throws Exception {
-
 		Session s = openSession();
 		s.beginTransaction();
 		Blobber b = new Blobber();
@@ -554,9 +553,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, Long.valueOf(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -586,9 +585,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	public void testCachedQueryOnInsert() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		Simple simple = new Simple();
+		Simple simple = new Simple( Long.valueOf(10) );
 		simple.setName("Simple 1");
-		s.save( simple, Long.valueOf(10) );
+		s.save( simple );
 		t.commit();
 		s.close();
 
@@ -610,9 +609,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		Simple simple2 = new Simple();
+		Simple simple2 = new Simple( Long.valueOf(12) );
 		simple2.setCount(133);
-		s.save( simple2, Long.valueOf(12) );
+		s.save( simple2 );
 		t.commit();
 		s.close();
 
@@ -692,11 +691,11 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
         s.beginTransaction();
 
-        TestInterSystemsFunctionsClass object = new TestInterSystemsFunctionsClass();
+        TestInterSystemsFunctionsClass object = new TestInterSystemsFunctionsClass( Long.valueOf( 10 ) );
         object.setDateText("1977-07-03");
         object.setDate1( testvalue );
         object.setDate3( testvalue3 );
-        s.save( object, Long.valueOf( 10 ) );
+        s.save( object );
         s.getTransaction().commit();
         s.close();
 
@@ -764,8 +763,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
         s.getTransaction().commit();
         s.close();
-
-
     }
 
 }

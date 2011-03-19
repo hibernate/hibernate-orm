@@ -1,13 +1,16 @@
 package org.hibernate.test.instrument.cases;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
+
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
+
 import org.hibernate.test.instrument.domain.Document;
 import org.hibernate.test.instrument.domain.Folder;
 import org.hibernate.test.instrument.domain.Owner;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
 
 /**
  * @author Rob.Hasselbaum

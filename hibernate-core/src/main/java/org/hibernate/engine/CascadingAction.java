@@ -305,33 +305,6 @@ public abstract class CascadingAction {
 	};
 
 	/**
-	 * @see org.hibernate.classic.Session#saveOrUpdateCopy(Object)
-	 */
-	public static final CascadingAction SAVE_UPDATE_COPY = new CascadingAction() {
-		// for deprecated saveOrUpdateCopy()
-		@Override
-        public void cascade(EventSource session, Object child, String entityName, Object anything, boolean isCascadeDeleteEnabled)
-		throws HibernateException {
-            LOG.trace("Cascading to save or update copy: " + entityName);
-			session.saveOrUpdateCopy( entityName, child, (Map) anything );
-		}
-		@Override
-        public Iterator getCascadableChildrenIterator(EventSource session, CollectionType collectionType, Object collection) {
-			// saves / updates don't cascade to uninitialized collections
-			return getLoadedElementsIterator(session, collectionType, collection);
-		}
-		@Override
-        public boolean deleteOrphans() {
-			// orphans should not be deleted during copy??
-			return false;
-		}
-		@Override
-        public String toString() {
-			return "ACTION_SAVE_UPDATE_COPY";
-		}
-	};
-
-	/**
 	 * @see org.hibernate.Session#persist(Object)
 	 */
 	public static final CascadingAction PERSIST = new CascadingAction() {

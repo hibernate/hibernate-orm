@@ -7,7 +7,7 @@
 
 	<class name="org.hibernate.test.legacy.Master" table="`master`">
 		<meta attribute="foo">foo</meta>
-		<id column="master_key_column" type="long">
+		<id name="id" column="master_key_column" type="long">
 			<generator class="native"/>
 		</id>
 		<version name="version" access="field"/>

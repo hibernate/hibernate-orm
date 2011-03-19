@@ -22,16 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
+import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.classic.Validatable;
 import org.hibernate.engine.Cascade;
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.engine.EntityEntry;
@@ -44,12 +48,10 @@ import org.hibernate.engine.Versioning;
 import org.hibernate.event.EventSource;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * A convenience bas class for listeners responding to save events.
@@ -211,12 +213,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		return false;
 	}
 
-	protected void validate(Object entity, EntityPersister persister, EventSource source) {
-		if ( persister.implementsValidatable( source.getEntityMode() ) ) {
-			( ( Validatable ) entity ).validate();
-		}
-	}
-
 	/**
 	 * Performs all the actual work needed to save an entity (well to get the save moved to
 	 * the execution queue).
@@ -241,8 +237,6 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 			Object anything,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
-
-		validate( entity, persister, source );
 
 		Serializable id = key == null ? null : key.getIdentifier();
 

@@ -36,10 +36,14 @@
 			<generator class="assigned"/>
 		</id>
 		<property name="amount"/>
+        <!-- these definitions both relied on the ability to save A with alternate assigned id
 		<many-to-one name="reverse" insert="false" update="false" outer-join="true">
 			<formula>(id)</formula>
 		</many-to-one>
 		<many-to-one name="inverse" access="field" insert="false" update="false" formula = "(id)" outer-join="true"/>
+		-->
+        <many-to-one name="reverse" column="rev_a_id" outer-join="true"/>
+        <many-to-one name="inverse" access="field" column="inv_a_id" outer-join="true"/>
 		<!--many-to-one name="reverse" formula = "(select a.id from TA a where a.id = id)"/-->
 	</class>
 	

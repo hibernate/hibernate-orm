@@ -26,18 +26,19 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
-import org.hibernate.classic.Validatable;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
-import org.jboss.logging.Logger;
 
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
@@ -98,7 +99,7 @@ public final class TypeFactory implements Serializable {
 			return custom( clazz, parameters );
 		}
 
-		if ( Lifecycle.class.isAssignableFrom( clazz ) || Validatable.class.isAssignableFrom( clazz ) ) {
+		if ( Lifecycle.class.isAssignableFrom( clazz ) ) {
 			// not really a many-to-one association *necessarily*
 			return manyToOne( clazz.getName() );
 		}

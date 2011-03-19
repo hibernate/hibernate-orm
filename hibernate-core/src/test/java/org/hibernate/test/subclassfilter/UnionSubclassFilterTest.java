@@ -28,8 +28,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.classic.Session;
 
 import org.junit.Test;
 
@@ -98,7 +98,9 @@ public class UnionSubclassFilterTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		s.delete( "from Person" );
+		for ( Object entity : s.createQuery( "from Person" ).list() ) {
+			s.delete( entity );
+		}
 		t.commit();
 		s.close();
 

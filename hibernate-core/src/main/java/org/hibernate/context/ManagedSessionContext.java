@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,14 +20,15 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.context;
+
 import java.util.HashMap;
 import java.util.Map;
+
 import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
 import org.hibernate.engine.SessionFactoryImplementor;
 
 /**
@@ -56,16 +57,14 @@ import org.hibernate.engine.SessionFactoryImplementor;
  */
 public class ManagedSessionContext implements CurrentSessionContext {
 
-	private static final ThreadLocal context = new ThreadLocal();
+	private static final ThreadLocal<Map<SessionFactory,Session>> context = new ThreadLocal<Map<SessionFactory,Session>>();
 	private final SessionFactoryImplementor factory;
 
 	public ManagedSessionContext(SessionFactoryImplementor factory) {
 		this.factory = factory;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Session currentSession() {
 		Session current = existingSession( factory );
 		if ( current == null ) {
@@ -93,7 +92,7 @@ public class ManagedSessionContext implements CurrentSessionContext {
 	 * @return Any previously bound session (should be null in most cases).
 	 */
 	public static Session bind(Session session) {
-		return ( Session ) sessionMap( true ).put( session.getSessionFactory(), session );
+		return sessionMap( true ).put( session.getSessionFactory(), session );
 	}
 
 	/**
@@ -105,9 +104,9 @@ public class ManagedSessionContext implements CurrentSessionContext {
 	 */
 	public static Session unbind(SessionFactory factory) {
 		Session existing = null;
-		Map sessionMap = sessionMap();
+		Map<SessionFactory,Session> sessionMap = sessionMap();
 		if ( sessionMap != null ) {
-			existing = ( Session ) sessionMap.remove( factory );
+			existing = sessionMap.remove( factory );
 			doCleanup();
 		}
 		return existing;
@@ -123,21 +122,21 @@ public class ManagedSessionContext implements CurrentSessionContext {
 		}
 	}
 
-	protected static Map sessionMap() {
+	protected static Map<SessionFactory,Session> sessionMap() {
 		return sessionMap( false );
 	}
 
-	private static synchronized Map sessionMap(boolean createMap) {
-		Map sessionMap = ( Map ) context.get();
+	private static synchronized Map<SessionFactory,Session> sessionMap(boolean createMap) {
+		Map<SessionFactory,Session> sessionMap = context.get();
 		if ( sessionMap == null && createMap ) {
-			sessionMap = new HashMap();
+			sessionMap = new HashMap<SessionFactory,Session>();
 			context.set( sessionMap );
 		}
 		return sessionMap;
 	}
 
 	private static synchronized void doCleanup() {
-		Map sessionMap = sessionMap( false );
+		Map<SessionFactory,Session> sessionMap = sessionMap( false );
 		if ( sessionMap != null ) {
 			if ( sessionMap.isEmpty() ) {
 				context.set( null );

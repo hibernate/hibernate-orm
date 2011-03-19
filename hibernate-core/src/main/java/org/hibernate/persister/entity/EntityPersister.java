@@ -614,10 +614,6 @@ public interface EntityPersister extends OptimisticCacheSource {
 	public boolean implementsLifecycle(EntityMode entityMode);
 
 	/**
-	 * Does the class implement the <tt>Validatable</tt> interface.
-	 */
-	public boolean implementsValidatable(EntityMode entityMode);
-	/**
 	 * Get the proxy interface that instances of <em>this</em> concrete class will be
 	 * cast to (optional operation).
 	 */

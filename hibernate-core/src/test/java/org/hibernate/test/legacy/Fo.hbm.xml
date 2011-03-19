@@ -5,7 +5,7 @@
 <hibernate-mapping default-lazy="false">
 
 	<class name="org.hibernate.test.legacy.Fo" table="foes">
-		<composite-id class="org.hibernate.test.legacy.FumCompositeID">
+		<composite-id name="id" class="org.hibernate.test.legacy.FumCompositeID">
 			<key-property name="string">
 				<column name="string_" length="20"/>
 			</key-property>

@@ -33,8 +33,11 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.Upload;
 
 /**
- * Responsible for locating and injecting authentication information into the JBoss Nexus repository config for upload
- * which it does, based on set up in
+ * Acts as the main authentication coordinator for the upload.  It will delegate to all {@link AuthenticationProvider}
+ * instances registered with the {@link AuthenticationProviderRegistry} looking for any that provide
+ * {@link Authentication} against the given {@link RemoteRepository} defined for each upload task.
+ * <p/>
+ * IMPL NOTE : This will need to change drastically whenever Gradle moves to its {@code Publication} scheme for uploads.
  *
  * @author Steve Ebersole
  */

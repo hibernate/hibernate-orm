@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,42 +20,44 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.stat;
+package org.hibernate.stat.internal;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.Region;
+import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**
  * Second level cache statistics of a specific region
  *
- * @author Gavin King
+ * @author Alex Snaps
  */
-public class SecondLevelCacheStatisticsImpl extends CategorizedStatistics implements SecondLevelCacheStatistics {
+public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatistics implements SecondLevelCacheStatistics {
+	private final transient Region region;
+	private AtomicLong hitCount = new AtomicLong();
+	private AtomicLong missCount = new AtomicLong();
+	private AtomicLong putCount = new AtomicLong();
 
-	private transient Region region;
-	long hitCount;
-	long missCount;
-	long putCount;
-
-	SecondLevelCacheStatisticsImpl(Region region) {
-		super(region.getName());
+	ConcurrentSecondLevelCacheStatisticsImpl(Region region) {
+		super( region.getName() );
 		this.region = region;
 	}
 
 	public long getHitCount() {
-		return hitCount;
+		return hitCount.get();
 	}
 
 	public long getMissCount() {
-		return missCount;
+		return missCount.get();
 	}
 
 	public long getPutCount() {
-		return putCount;
+		return putCount.get();
 	}
 
 	public long getElementCountInMemory() {
@@ -81,18 +83,30 @@ public class SecondLevelCacheStatisticsImpl extends CategorizedStatistics implem
 	}
 
 	public String toString() {
-		StringBuilder builder = new StringBuilder()
+		StringBuilder buf = new StringBuilder()
 				.append("SecondLevelCacheStatistics")
 				.append("[hitCount=").append(this.hitCount)
 				.append(",missCount=").append(this.missCount)
 				.append(",putCount=").append(this.putCount);
 		//not sure if this would ever be null but wanted to be careful
 		if (region != null) {
-			builder.append(",elementCountInMemory=").append(this.getElementCountInMemory())
+			buf.append(",elementCountInMemory=").append(this.getElementCountInMemory())
 					.append(",elementCountOnDisk=").append(this.getElementCountOnDisk())
 					.append(",sizeInMemory=").append(this.getSizeInMemory());
 		}
-		builder.append(']');
-		return builder.toString();
+		buf.append(']');
+		return buf.toString();
+	}
+
+	void incrementHitCount() {
+		hitCount.getAndIncrement();
+	}
+
+	void incrementMissCount() {
+		missCount.getAndIncrement();
+	}
+
+	void incrementPutCount() {
+		putCount.getAndIncrement();
 	}
 }

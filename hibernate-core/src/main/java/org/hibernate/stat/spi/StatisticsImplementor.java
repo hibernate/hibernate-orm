@@ -21,8 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.stat;
+package org.hibernate.stat.spi;
 
+import org.hibernate.stat.Statistics;
 
 /**
  * Statistics SPI for the Hibernate core.  This is essentially the "statistic collector" API, its the contract
@@ -30,7 +31,7 @@ package org.hibernate.stat;
  * 
  * @author Emmanuel Bernard
  */
-public interface StatisticsImplementor {
+public interface StatisticsImplementor extends Statistics {
 	/**
 	 * Callback about a session being opened.
 	 */

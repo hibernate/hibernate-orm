@@ -23,8 +23,6 @@
  */
 package org.hibernate.engine.jdbc.spi;
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.jdbc.internal.proxy.ConnectionProxyHandler;
-import org.hibernate.stat.StatisticsImplementor;
 
 import java.sql.Connection;
 

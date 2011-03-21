@@ -12,7 +12,8 @@ import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.StatisticsImpl;
+import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -54,7 +55,7 @@ public class StatisticsService implements StatisticsServiceMBean {
 
 	SessionFactory sf;
 	String sfJNDIName;
-	Statistics stats = new StatisticsImpl();
+	Statistics stats = new ConcurrentStatisticsImpl();
 
 	/**
 	 * @see StatisticsServiceMBean#setSessionFactoryJNDIName(java.lang.String)
@@ -93,7 +94,7 @@ public class StatisticsService implements StatisticsServiceMBean {
 	public void setSessionFactory(SessionFactory sf) {
 		this.sf = sf;
 		if (sf == null) {
-			stats = new StatisticsImpl();
+			stats = new ConcurrentStatisticsImpl();
 		}
 		else {
 			stats = sf.getStatistics();

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,52 +20,53 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.stat;
+package org.hibernate.stat.internal;
 
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.hibernate.stat.EntityStatistics;
 
 /**
  * Entity related statistics
  *
- * @author Gavin King
+ * @author Alex Snaps
  */
-public class EntityStatisticsImpl extends CategorizedStatistics implements EntityStatistics {
+public class ConcurrentEntityStatisticsImpl extends CategorizedStatistics implements EntityStatistics {
 
-	EntityStatisticsImpl(String name) {
+	ConcurrentEntityStatisticsImpl(String name) {
 		super(name);
 	}
 
-	long loadCount;
-	long updateCount;
-	long insertCount;
-	long deleteCount;
-	long fetchCount;
-	long optimisticFailureCount;
+	private	AtomicLong loadCount			  =	new	AtomicLong();
+	private	AtomicLong updateCount			  =	new	AtomicLong();
+	private	AtomicLong insertCount			  =	new	AtomicLong();
+	private	AtomicLong deleteCount			  =	new	AtomicLong();
+	private	AtomicLong fetchCount			  =	new	AtomicLong();
+	private	AtomicLong optimisticFailureCount =	new	AtomicLong();
 
 	public long getDeleteCount() {
-		return deleteCount;
+		return deleteCount.get();
 	}
 
 	public long getInsertCount() {
-		return insertCount;
+		return insertCount.get();
 	}
 
 	public long getLoadCount() {
-		return loadCount;
+		return loadCount.get();
 	}
 
 	public long getUpdateCount() {
-		return updateCount;
+		return updateCount.get();
 	}
 
 	public long getFetchCount() {
-		return fetchCount;
+		return fetchCount.get();
 	}
 
 	public long getOptimisticFailureCount() {
-		return optimisticFailureCount;
+		return optimisticFailureCount.get();
 	}
 
 	public String toString() {
@@ -81,4 +82,27 @@ public class EntityStatisticsImpl extends CategorizedStatistics implements Entit
 				.toString();
 	}
 
+	void incrementLoadCount() {
+		loadCount.getAndIncrement();
+	}
+
+	void incrementFetchCount() {
+		fetchCount.getAndIncrement();
+	}
+
+	void incrementUpdateCount() {
+		updateCount.getAndIncrement();
+	}
+
+	void incrementInsertCount() {
+		insertCount.getAndIncrement();
+	}
+
+	void incrementDeleteCount() {
+		deleteCount.getAndIncrement();
+	}
+
+	void incrementOptimisticFailureCount() {
+		optimisticFailureCount.getAndIncrement();
+	}
 }

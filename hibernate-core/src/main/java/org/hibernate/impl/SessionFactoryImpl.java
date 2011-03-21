@@ -116,9 +116,9 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.stat.ConcurrentStatisticsImpl;
+import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.StatisticsImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -205,9 +205,7 @@ public final class SessionFactoryImpl
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.buildingSessionFactory();
 
-		this.statistics = new ConcurrentStatisticsImpl( this );
-		getStatistics().setStatisticsEnabled( settings.isStatisticsEnabled() );
-        LOG.debugf("Statistics initialized [enabled=%s]", settings.isStatisticsEnabled());
+		this.statistics = buildStatistics( settings, serviceRegistry );
 
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
@@ -472,6 +470,13 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	private Statistics buildStatistics(Settings settings, ServiceRegistry serviceRegistry) {
+		Statistics statistics = new ConcurrentStatisticsImpl( this );
+		getStatistics().setStatisticsEnabled( settings.isStatisticsEnabled() );
+		LOG.debugf("Statistics initialized [enabled=%s]", settings.isStatisticsEnabled());
+		return statistics;
 	}
 
 	public TransactionEnvironment getTransactionEnvironment() {

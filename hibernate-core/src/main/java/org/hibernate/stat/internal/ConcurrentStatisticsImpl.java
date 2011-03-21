@@ -21,28 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.stat;
+package org.hibernate.stat.internal;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.jboss.logging.Logger;
+import org.hibernate.service.spi.Service;
+import org.hibernate.stat.CollectionStatistics;
+import org.hibernate.stat.EntityStatistics;
+import org.hibernate.stat.QueryStatistics;
+import org.hibernate.stat.SecondLevelCacheStatistics;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * Implementation of {@link Statistics}, as well as {@link StatisticsImplementor}, based on the
- * {@link java.util.concurrent} package introduced in Java 5.
+ * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
  *
  * @author Alex Snaps
  */
 @SuppressWarnings({ "unchecked" })
-public class ConcurrentStatisticsImpl implements Statistics, StatisticsImplementor {
+public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
-                                                                       ConcurrentStatisticsImpl.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ConcurrentStatisticsImpl.class.getName());
 
 	private SessionFactoryImplementor sessionFactory;
 

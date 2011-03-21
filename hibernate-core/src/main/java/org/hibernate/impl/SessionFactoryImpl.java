@@ -192,7 +192,6 @@ public final class SessionFactoryImpl
 	private final transient Map<String,QueryCache> queryCaches;
 	private final transient ConcurrentMap<String,Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
 	private final transient Statistics statistics;
-	private final transient EventListeners eventListeners;
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
@@ -210,7 +209,6 @@ public final class SessionFactoryImpl
 	        Mapping mapping,
 			ServiceRegistry serviceRegistry,
 	        Settings settings,
-	        EventListeners listeners,
 			SessionFactoryObserver observer) throws HibernateException {
         LOG.buildingSessionFactory();
 
@@ -227,7 +225,6 @@ public final class SessionFactoryImpl
 		);
 		this.settings = settings;
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
-        this.eventListeners = listeners;
 		if ( observer != null ) {
 			this.observer.addObserver( observer );
 		}
@@ -1027,7 +1024,6 @@ public final class SessionFactoryImpl
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
-		eventListeners.destroyListeners();
 	}
 
 	private class CacheImpl implements Cache {
@@ -1310,10 +1306,6 @@ public final class SessionFactoryImpl
 				return null;
 			}
 		}
-	}
-
-	public EventListeners getEventListeners() {
-		return eventListeners;
 	}
 
 	@Override

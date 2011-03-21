@@ -27,9 +27,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.event.EventType;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.def.DefaultLoadEventListener;
+import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.service.internal.ServiceRegistryImpl;
 
 import org.junit.Test;
 
@@ -51,12 +54,14 @@ public class EagerKeyManyToOneTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		LoadEventListener[] baseListeners = cfg.getEventListeners().getLoadEventListeners();
-		int baseLength = baseListeners.length;
-		LoadEventListener[] expandedListeners = new LoadEventListener[ baseLength + 1 ];
-		expandedListeners[ 0 ] = new CustomLoadListener();
-		System.arraycopy( baseListeners, 0, expandedListeners, 1, baseLength );
-		cfg.getEventListeners().setLoadEventListeners( expandedListeners );
+	}
+
+	@Override
+	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
+		super.applyServices( serviceRegistry );
+
+		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		eventListenerRegistry.prependListeners( EventType.LOAD, new CustomLoadListener() );
 	}
 
 	@Test

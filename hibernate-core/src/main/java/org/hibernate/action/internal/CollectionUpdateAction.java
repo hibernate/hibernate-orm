@@ -30,12 +30,16 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostCollectionUpdateEvent;
 import org.hibernate.event.PostCollectionUpdateEventListener;
+import org.hibernate.event.PreCollectionRemoveEvent;
+import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.service.event.spi.EventListenerGroup;
 
 public final class CollectionUpdateAction extends CollectionAction {
 
@@ -99,29 +103,32 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 	
 	private void preUpdate() {
-		PreCollectionUpdateEventListener[] preListeners = getSession().getListeners()
-				.getPreCollectionUpdateEventListeners();
-		if (preListeners.length > 0) {
-			PreCollectionUpdateEvent preEvent = new PreCollectionUpdateEvent(
-					getPersister(), getCollection(), ( EventSource ) getSession() );
-			for ( PreCollectionUpdateEventListener preListener : preListeners ) {
-				preListener.onPreUpdateCollection( preEvent );
-			}
+		EventListenerGroup<PreCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_UPDATE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PreCollectionUpdateEvent event = new PreCollectionUpdateEvent(
+				getPersister(),
+				getCollection(),
+				eventSource()
+		);
+		for ( PreCollectionUpdateEventListener listener : listenerGroup.listeners() ) {
+			listener.onPreUpdateCollection( event );
 		}
 	}
 
 	private void postUpdate() {
-		PostCollectionUpdateEventListener[] postListeners = getSession().getListeners()
-				.getPostCollectionUpdateEventListeners();
-		if (postListeners.length > 0) {
-			PostCollectionUpdateEvent postEvent = new PostCollectionUpdateEvent(
-					getPersister(),
-					getCollection(),
-					( EventSource ) getSession()
-			);
-			for ( PostCollectionUpdateEventListener postListener : postListeners ) {
-				postListener.onPostUpdateCollection( postEvent );
-			}
+		EventListenerGroup<PostCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_UPDATE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostCollectionUpdateEvent event = new PostCollectionUpdateEvent(
+				getPersister(),
+				getCollection(),
+				eventSource()
+		);
+		for ( PostCollectionUpdateEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostUpdateCollection( event );
 		}
 	}
 }

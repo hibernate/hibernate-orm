@@ -22,17 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.event.EventListeners;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 /**
  * This class has no hard dependency on Bean Validation APIs
@@ -40,14 +43,13 @@ import org.hibernate.mapping.PersistentClass;
  * @author Emmanuel Bernard
  */
 public class BeanValidationActivator {
-
 	private static final String BV_DISCOVERY_CLASS = "javax.validation.Validation";
 	private static final String TYPE_SAFE_ACTIVATOR_CLASS = "org.hibernate.cfg.beanvalidation.TypeSafeActivator";
 	private static final String TYPE_SAFE_DDL_METHOD = "applyDDL";
 	private static final String TYPE_SAFE_ACTIVATOR_METHOD = "activateBeanValidation";
 	private static final String MODE_PROPERTY = "javax.persistence.validation.mode";
 
-	public static void activateBeanValidation(EventListeners eventListeners, Properties properties) {
+	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Properties properties) {
 		Set<ValidationMode> modes = ValidationMode.getModes( properties.get( MODE_PROPERTY ) );
 
 		try {
@@ -76,8 +78,8 @@ public class BeanValidationActivator {
 		try {
 			Class<?> activator = ReflectHelper.classForName( TYPE_SAFE_ACTIVATOR_CLASS, BeanValidationActivator.class );
 			Method activateBeanValidation =
-					activator.getMethod( TYPE_SAFE_ACTIVATOR_METHOD, EventListeners.class, Properties.class );
-			activateBeanValidation.invoke( null, eventListeners, properties );
+					activator.getMethod( TYPE_SAFE_ACTIVATOR_METHOD, EventListenerRegistry.class, Properties.class );
+			activateBeanValidation.invoke( null, listenerRegistry, properties );
 		}
 		catch ( NoSuchMethodException e ) {
 			throw new HibernateException( "Unable to get the default Bean Validation factory", e);

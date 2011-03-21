@@ -36,12 +36,13 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.engine.Versioning;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostUpdateEvent;
 import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.event.PreUpdateEvent;
 import org.hibernate.event.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.event.spi.EventListenerGroup;
 import org.hibernate.type.TypeHelper;
 
 public final class EntityUpdateAction extends EntityAction {
@@ -181,67 +182,67 @@ public final class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void postUpdate() {
-		PostUpdateEventListener[] postListeners = getSession().getListeners()
-				.getPostUpdateEventListeners();
-		if (postListeners.length>0) {
-			PostUpdateEvent postEvent = new PostUpdateEvent( 
-					getInstance(), 
-					getId(), 
-					state, 
-					previousState,
-					dirtyFields,
-					getPersister(),
-					(EventSource) getSession() 
-				);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostUpdate(postEvent);
-			}
-		}
-	}
-
-	private void postCommitUpdate() {
-		PostUpdateEventListener[] postListeners = getSession().getListeners()
-				.getPostCommitUpdateEventListeners();
-		if (postListeners.length>0) {
-			PostUpdateEvent postEvent = new PostUpdateEvent( 
-					getInstance(), 
-					getId(), 
-					state, 
-					previousState,
-					dirtyFields,
-					getPersister(),
-					(EventSource) getSession()
-				);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostUpdate(postEvent);
-			}
-		}
-	}
-
 	private boolean preUpdate() {
-		PreUpdateEventListener[] preListeners = getSession().getListeners()
-				.getPreUpdateEventListeners();
 		boolean veto = false;
-		if (preListeners.length>0) {
-			PreUpdateEvent preEvent = new PreUpdateEvent( 
-					getInstance(), 
-					getId(), 
-					state, 
-					previousState, 
-					getPersister(),
-					(EventSource)getSession()
-				);
-			for ( int i = 0; i < preListeners.length; i++ ) {
-				veto = preListeners[i].onPreUpdate(preEvent) || veto;
-			}
+		EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
+		if ( listenerGroup.isEmpty() ) {
+			return veto;
+		}
+		final PreUpdateEvent event = new PreUpdateEvent(
+				getInstance(),
+				getId(),
+				state,
+				previousState,
+				getPersister(),
+				eventSource()
+		);
+		for ( PreUpdateEventListener listener : listenerGroup.listeners() ) {
+			veto |= listener.onPreUpdate( event );
 		}
 		return veto;
 	}
 
+	private void postUpdate() {
+		EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostUpdateEvent event = new PostUpdateEvent(
+				getInstance(),
+				getId(),
+				state,
+				previousState,
+				dirtyFields,
+				getPersister(),
+				eventSource()
+		);
+		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostUpdate( event );
+		}
+	}
+
+	private void postCommitUpdate() {
+		EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostUpdateEvent event = new PostUpdateEvent(
+				getInstance(),
+				getId(),
+				state,
+				previousState,
+				dirtyFields,
+				getPersister(),
+				eventSource()
+		);
+		for ( PostUpdateEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostUpdate( event );
+		}
+	}
+
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		return getSession().getListeners().getPostCommitUpdateEventListeners().length>0;
+		return ! listenerGroup( EventType.POST_COMMIT_UPDATE ).isEmpty();
 	}
 
 	@Override

@@ -30,9 +30,13 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -184,6 +188,18 @@ public abstract class EntityAction
 			this.persister = session.getFactory().getEntityPersister( entityName );
 			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
 		}
+	}
+
+	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
+		return getSession()
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( eventType );
+	}
+
+	protected EventSource eventSource() {
+		return (EventSource) getSession();
 	}
 }
 

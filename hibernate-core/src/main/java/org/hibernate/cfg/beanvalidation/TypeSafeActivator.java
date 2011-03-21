@@ -23,15 +23,6 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.StringTokenizer;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.validation.constraints.Digits;
@@ -42,14 +33,23 @@ import javax.validation.constraints.Size;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
 import javax.validation.metadata.PropertyDescriptor;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
-import org.hibernate.event.EventListeners;
-import org.hibernate.event.PreDeleteEventListener;
-import org.hibernate.event.PreInsertEventListener;
-import org.hibernate.event.PreUpdateEventListener;
+import org.hibernate.event.EventType;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -57,7 +57,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SingleTableSubclass;
-import org.jboss.logging.Logger;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 /**
  * @author Emmanuel Bernard
@@ -69,40 +69,21 @@ class TypeSafeActivator {
 
 	private static final String FACTORY_PROPERTY = "javax.persistence.validation.factory";
 
-	public static void activateBeanValidation(EventListeners eventListeners, Properties properties) {
+	@SuppressWarnings( {"UnusedDeclaration"})
+	public static void activateBeanValidation(EventListenerRegistry listenerRegistry, Properties properties) {
 		ValidatorFactory factory = getValidatorFactory( properties );
-		BeanValidationEventListener beanValidationEventListener = new BeanValidationEventListener(
+		BeanValidationEventListener listener = new BeanValidationEventListener(
 				factory, properties
 		);
 
-		{
-			PreInsertEventListener[] listeners = eventListeners.getPreInsertEventListeners();
-			int length = listeners.length + 1;
-			PreInsertEventListener[] newListeners = new PreInsertEventListener[length];
-			System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-			newListeners[length - 1] = beanValidationEventListener;
-			eventListeners.setPreInsertEventListeners( newListeners );
-		}
+		listenerRegistry.addDuplicationStrategy( DuplicationStrategyImpl.INSTANCE );
 
-		{
-			PreUpdateEventListener[] listeners = eventListeners.getPreUpdateEventListeners();
-			int length = listeners.length + 1;
-			PreUpdateEventListener[] newListeners = new PreUpdateEventListener[length];
-			System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-			newListeners[length - 1] = beanValidationEventListener;
-			eventListeners.setPreUpdateEventListeners( newListeners );
-		}
-
-		{
-			PreDeleteEventListener[] listeners = eventListeners.getPreDeleteEventListeners();
-			int length = listeners.length + 1;
-			PreDeleteEventListener[] newListeners = new PreDeleteEventListener[length];
-			System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-			newListeners[length - 1] = beanValidationEventListener;
-			eventListeners.setPreDeleteEventListeners( newListeners );
-		}
+		listenerRegistry.appendListeners( EventType.PRE_INSERT, listener );
+		listenerRegistry.appendListeners( EventType.PRE_UPDATE, listener );
+		listenerRegistry.appendListeners( EventType.PRE_DELETE, listener );
 	}
 
+	@SuppressWarnings( {"UnusedDeclaration"})
 	public static void applyDDL(Collection<PersistentClass> persistentClasses, Properties properties) {
 		ValidatorFactory factory = getValidatorFactory( properties );
 		Class<?>[] groupsArray = new GroupsPerOperation( properties ).get( GroupsPerOperation.Operation.DDL );

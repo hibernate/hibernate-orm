@@ -33,11 +33,13 @@ import org.hibernate.engine.EntityEntry;
 import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostDeleteEvent;
 import org.hibernate.event.PostDeleteEventListener;
 import org.hibernate.event.PreDeleteEvent;
 import org.hibernate.event.PreDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.event.spi.EventListenerGroup;
 
 public final class EntityDeleteAction extends EntityAction {
 	private final Object version;
@@ -116,49 +118,47 @@ public final class EntityDeleteAction extends EntityAction {
 	}
 
 	private boolean preDelete() {
-		PreDeleteEventListener[] preListeners = getSession().getListeners().getPreDeleteEventListeners();
 		boolean veto = false;
-		if (preListeners.length>0) {
-			PreDeleteEvent preEvent = new PreDeleteEvent( getInstance(), getId(), state, getPersister() ,(EventSource) getSession() );
-			for ( PreDeleteEventListener preListener : preListeners ) {
-				veto = preListener.onPreDelete( preEvent ) || veto;
-			}
+		EventListenerGroup<PreDeleteEventListener> listenerGroup = listenerGroup( EventType.PRE_DELETE );
+		if ( listenerGroup.isEmpty() ) {
+			return veto;
+		}
+		final PreDeleteEvent event = new PreDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
+		for ( PreDeleteEventListener listener : listenerGroup.listeners() ) {
+			veto |= listener.onPreDelete( event );
 		}
 		return veto;
 	}
 
 	private void postDelete() {
-		PostDeleteEventListener[] postListeners = getSession().getListeners()
-				.getPostDeleteEventListeners();
-		if (postListeners.length>0) {
-			PostDeleteEvent postEvent = new PostDeleteEvent(
-					getInstance(),
-					getId(),
-					state,
-					getPersister(),
-					(EventSource) getSession() 
-			);
-			for ( PostDeleteEventListener postListener : postListeners ) {
-				postListener.onPostDelete( postEvent );
-			}
+		EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_DELETE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostDeleteEvent event = new PostDeleteEvent(
+				getInstance(),
+				getId(),
+				state,
+				getPersister(),
+				eventSource()
+		);
+		for ( PostDeleteEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostDelete( event );
 		}
 	}
 
 	private void postCommitDelete() {
-		PostDeleteEventListener[] postListeners = getSession().getListeners()
-				.getPostCommitDeleteEventListeners();
-		if (postListeners.length>0) {
-			PostDeleteEvent postEvent = new PostDeleteEvent(
-					getInstance(),
-					getId(),
-					state,
-					getPersister(),
-					(EventSource) getSession()
-			);
-			for ( PostDeleteEventListener postListener : postListeners ) {
-				postListener.onPostDelete( postEvent );
-			}
+		EventListenerGroup<PostDeleteEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_DELETE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
 		}
+		final PostDeleteEvent event = new PostDeleteEvent(
+				getInstance(),
+				getId(),
+				state,
+				getPersister(),
+				eventSource()
+		);
 	}
 
 	@Override
@@ -176,6 +176,6 @@ public final class EntityDeleteAction extends EntityAction {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		return getSession().getListeners().getPostCommitDeleteEventListeners().length > 0;
+		return ! listenerGroup( EventType.POST_COMMIT_DELETE ).isEmpty();
 	}
 }

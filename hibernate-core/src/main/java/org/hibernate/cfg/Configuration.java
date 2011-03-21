@@ -93,6 +93,7 @@ import org.hibernate.event.AutoFlushEventListener;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.DirtyCheckEventListener;
 import org.hibernate.event.EventListeners;
+import org.hibernate.event.EventType;
 import org.hibernate.event.EvictEventListener;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEventListener;
@@ -159,8 +160,15 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
+<<<<<<< HEAD
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
+=======
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.spi.ServiceRegistry;
+>>>>>>> HHH-5913 - Implement set of event listeners as a service
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
@@ -261,8 +269,6 @@ public class Configuration implements Serializable {
 	protected NamingStrategy namingStrategy;
 	private SessionFactoryObserver sessionFactoryObserver;
 
-	private EventListeners eventListeners;
-
 	protected final SettingsFactory settingsFactory;
 
 	private transient Mapping mapping = buildMapping();
@@ -330,7 +336,6 @@ public class Configuration implements Serializable {
 		interceptor = EmptyInterceptor.INSTANCE;
 		properties = Environment.getProperties();
 		entityResolver = XMLHelper.DEFAULT_DTD_RESOLVER;
-		eventListeners = new EventListeners();
 
 		sqlFunctions = new HashMap<String, SQLFunction>();
 
@@ -1813,9 +1818,10 @@ public class Configuration implements Serializable {
 		secondPassCompile();
         if (!metadataSourceQueue.isEmpty()) LOG.incompleteMappingMetadataCacheProcessing();
 
-		enableLegacyHibernateValidator();
-		enableBeanValidation();
-		enableHibernateSearch();
+// todo : processing listeners for validator and search (and envers) requires HHH-5562
+		enableLegacyHibernateValidator( serviceRegistry );
+		enableBeanValidation( serviceRegistry );
+//		enableHibernateSearch();
 
 		validate();
 		Environment.verifyProperties( properties );
@@ -1829,7 +1835,6 @@ public class Configuration implements Serializable {
 				mapping,
 				serviceRegistry,
 				settings,
-				getInitializedEventListeners(),
 				sessionFactoryObserver
 			);
 	}
@@ -1866,81 +1871,41 @@ public class Configuration implements Serializable {
 
 	private static final String LEGACY_VALIDATOR_EVENT_LISTENER = "org.hibernate.validator.event.ValidateEventListener";
 
-	private void enableLegacyHibernateValidator() {
-		//add validator events if the jar is available
-		boolean enableValidatorListeners = !"false".equalsIgnoreCase(
-				getProperty(
-						"hibernate.validator.autoregister_listeners"
-				)
-		);
+	private void enableLegacyHibernateValidator(ServiceRegistry serviceRegistry) {
+		boolean loadLegacyValidator = ConfigurationHelper.getBoolean( "hibernate.validator.autoregister_listeners", properties, false );
+
 		Class validateEventListenerClass = null;
 		try {
-			validateEventListenerClass = ReflectHelper.classForName( LEGACY_VALIDATOR_EVENT_LISTENER, Configuration.class );
+			validateEventListenerClass = serviceRegistry.getService( ClassLoaderService.class ).classForName( LEGACY_VALIDATOR_EVENT_LISTENER );
 		}
-		catch ( ClassNotFoundException e ) {
-			//validator is not present
-            LOG.debugf("Legacy Validator not present in classpath, ignoring event listener registration");
+		catch ( Exception ignored) {
 		}
-		if ( enableValidatorListeners && validateEventListenerClass != null ) {
-			//TODO so much duplication
-			Object validateEventListener;
-			try {
-				validateEventListener = validateEventListenerClass.newInstance();
-			}
-			catch ( Exception e ) {
-				throw new AnnotationException( "Unable to load Validator event listener", e );
-			}
-			{
-				boolean present = false;
-				PreInsertEventListener[] listeners = getEventListeners().getPreInsertEventListeners();
-				if ( listeners != null ) {
-					for ( Object eventListener : listeners ) {
-						//not isAssignableFrom since the user could subclass
-						present = present || validateEventListenerClass == eventListener.getClass();
-					}
-					if ( !present ) {
-						int length = listeners.length + 1;
-						PreInsertEventListener[] newListeners = new PreInsertEventListener[length];
-						System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-						newListeners[length - 1] = ( PreInsertEventListener ) validateEventListener;
-						getEventListeners().setPreInsertEventListeners( newListeners );
-					}
-				}
-				else {
-					getEventListeners().setPreInsertEventListeners(
-							new PreInsertEventListener[] { ( PreInsertEventListener ) validateEventListener }
-					);
-				}
-			}
 
-			//update event listener
-			{
-				boolean present = false;
-				PreUpdateEventListener[] listeners = getEventListeners().getPreUpdateEventListeners();
-				if ( listeners != null ) {
-					for ( Object eventListener : listeners ) {
-						//not isAssignableFrom since the user could subclass
-						present = present || validateEventListenerClass == eventListener.getClass();
-					}
-					if ( !present ) {
-						int length = listeners.length + 1;
-						PreUpdateEventListener[] newListeners = new PreUpdateEventListener[length];
-						System.arraycopy( listeners, 0, newListeners, 0, length - 1 );
-						newListeners[length - 1] = ( PreUpdateEventListener ) validateEventListener;
-						getEventListeners().setPreUpdateEventListeners( newListeners );
-					}
-				}
-				else {
-					getEventListeners().setPreUpdateEventListeners(
-							new PreUpdateEventListener[] { ( PreUpdateEventListener ) validateEventListener }
-					);
-				}
-			}
+		if ( ! loadLegacyValidator || validateEventListenerClass == null) {
+			LOG.debugf( "Skipping legacy validator loading" );
+			return;
 		}
+
+		final Object validateEventListener;
+		try {
+			validateEventListener = validateEventListenerClass.newInstance();
+		}
+		catch ( Exception e ) {
+			throw new AnnotationException( "Unable to load Validator event listener", e );
+		}
+
+		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		// todo : duplication strategy
+
+		listenerRegistry.appendListeners( EventType.PRE_INSERT, (PreInsertEventListener) validateEventListener );
+		listenerRegistry.appendListeners( EventType.PRE_UPDATE, (PreUpdateEventListener) validateEventListener );
 	}
 
-	private void enableBeanValidation() {
-		BeanValidationActivator.activateBeanValidation( getEventListeners(), getProperties() );
+	private void enableBeanValidation(ServiceRegistry serviceRegistry) {
+		BeanValidationActivator.activateBeanValidation(
+				serviceRegistry.getService( EventListenerRegistry.class ),
+				getProperties()
+		);
 	}
 
 	private static final String SEARCH_EVENT_LISTENER_REGISTERER_CLASS = "org.hibernate.cfg.search.HibernateSearchEventListenerRegister";
@@ -1949,53 +1914,47 @@ public class Configuration implements Serializable {
 	 * Tries to automatically register Hibernate Search event listeners by locating the
 	 * appropriate bootstrap class and calling the <code>enableHibernateSearch</code> method.
 	 */
-	private void enableHibernateSearch() {
-		// load the bootstrap class
-		Class searchStartupClass;
-		try {
-			searchStartupClass = ReflectHelper.classForName( SEARCH_STARTUP_CLASS, getClass() );
-		}
-		catch ( ClassNotFoundException e ) {
-			// TODO remove this together with SearchConfiguration after 3.1.0 release of Search
-			// try loading deprecated HibernateSearchEventListenerRegister
-			try {
-				searchStartupClass = ReflectHelper.classForName( SEARCH_EVENT_LISTENER_REGISTERER_CLASS, getClass() );
-			}
-			catch ( ClassNotFoundException cnfe ) {
-                LOG.debugf("Search not present in classpath, ignoring event listener registration.");
-				return;
-			}
-		}
-
-		// call the method for registering the listeners
-		try {
-			Object searchStartupInstance = searchStartupClass.newInstance();
-			Method enableSearchMethod = searchStartupClass.getDeclaredMethod(
-					SEARCH_STARTUP_METHOD,
-					EventListeners.class,
-					Properties.class
-			);
-			enableSearchMethod.invoke( searchStartupInstance, getEventListeners(), getProperties() );
-		}
-		catch ( InstantiationException e ) {
-            LOG.debugf("Unable to instantiate %s, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
-		}
-		catch ( IllegalAccessException e ) {
-            LOG.debugf("Unable to instantiate %s, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
-		}
-		catch ( NoSuchMethodException e ) {
-            LOG.debugf("Method %s() not found in %s", SEARCH_STARTUP_METHOD, SEARCH_STARTUP_CLASS);
-		}
-		catch ( InvocationTargetException e ) {
-            LOG.debugf("Unable to execute %s, ignoring event listener registration.", SEARCH_STARTUP_METHOD);
-		}
-	}
-
-	private EventListeners getInitializedEventListeners() {
-		EventListeners result = (EventListeners) eventListeners.shallowCopy();
-		result.initializeListeners( this );
-		return result;
-	}
+//	private void enableHibernateSearch() {
+//		// load the bootstrap class
+//		Class searchStartupClass;
+//		try {
+//			searchStartupClass = ReflectHelper.classForName( SEARCH_STARTUP_CLASS, getClass() );
+//		}
+//		catch ( ClassNotFoundException e ) {
+//			// TODO remove this together with SearchConfiguration after 3.1.0 release of Search
+//			// try loading deprecated HibernateSearchEventListenerRegister
+//			try {
+//				searchStartupClass = ReflectHelper.classForName( SEARCH_EVENT_LISTENER_REGISTERER_CLASS, getClass() );
+//			}
+//			catch ( ClassNotFoundException cnfe ) {
+//                LOG.debugf("Search not present in classpath, ignoring event listener registration.");
+//				return;
+//			}
+//		}
+//
+//		// call the method for registering the listeners
+//		try {
+//			Object searchStartupInstance = searchStartupClass.newInstance();
+//			Method enableSearchMethod = searchStartupClass.getDeclaredMethod(
+//					SEARCH_STARTUP_METHOD,
+//					EventListeners.class,
+//					Properties.class
+//			);
+//			enableSearchMethod.invoke( searchStartupInstance, getEventListeners(), getProperties() );
+//		}
+//		catch ( InstantiationException e ) {
+//            LOG.debugf("Unable to instantiate %s, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
+//		}
+//		catch ( IllegalAccessException e ) {
+//            LOG.debugf("Unable to instantiate %s, ignoring event listener registration.", SEARCH_STARTUP_CLASS);
+//		}
+//		catch ( NoSuchMethodException e ) {
+//            LOG.debugf("Method %s() not found in %s", SEARCH_STARTUP_METHOD, SEARCH_STARTUP_CLASS);
+//		}
+//		catch ( InvocationTargetException e ) {
+//            LOG.debugf("Unable to execute %s, ignoring event listener registration.", SEARCH_STARTUP_METHOD);
+//		}
+//	}
 
 	/**
 	 * Rterieve the configured {@link Interceptor}.
@@ -2308,12 +2267,6 @@ public class Configuration implements Serializable {
 				final String region = ( regionNode == null ) ? role : regionNode.getValue();
 				setCollectionCacheConcurrencyStrategy( role, subelement.attributeValue( "usage" ), region );
 			}
-			else if ( "listener".equals( subelementName ) ) {
-				parseListener( subelement );
-			}
-			else if ( "event".equals( subelementName ) ) {
-				parseEvent( subelement );
-			}
 		}
 	}
 
@@ -2379,356 +2332,6 @@ public class Configuration implements Serializable {
 					);
 			}
 		}
-	}
-
-	private void parseEvent(Element element) {
-		String type = element.attributeValue( "type" );
-		List listeners = element.elements();
-		String[] listenerClasses = new String[ listeners.size() ];
-		for ( int i = 0; i < listeners.size() ; i++ ) {
-			listenerClasses[i] = ( (Element) listeners.get( i ) ).attributeValue( "class" );
-		}
-        LOG.debugf("Event listeners: %s=%s", type, StringHelper.toString(listenerClasses));
-		setListeners( type, listenerClasses );
-	}
-
-	private void parseListener(Element element) {
-		String type = element.attributeValue( "type" );
-		if ( type == null ) {
-			throw new MappingException( "No type specified for listener" );
-		}
-		String impl = element.attributeValue( "class" );
-        LOG.debugf("Event listener: %s=%s", type, impl);
-		setListeners( type, new String[]{impl} );
-	}
-
-	public void setListener(String type, String listener) {
-		String[] listeners = null;
-		if ( listener != null ) {
-			listeners = (String[]) Array.newInstance( String.class, 1 );
-			listeners[0] = listener;
-		}
-		setListeners( type, listeners );
-	}
-
-	public void setListeners(String type, String[] listenerClasses) {
-		Object[] listeners = null;
-		if ( listenerClasses != null ) {
-			listeners = (Object[]) Array.newInstance( eventListeners.getListenerClassFor(type), listenerClasses.length );
-			for ( int i = 0; i < listeners.length ; i++ ) {
-				try {
-					listeners[i] = ReflectHelper.classForName( listenerClasses[i] ).newInstance();
-				}
-				catch (Exception e) {
-					throw new MappingException(
-							"Unable to instantiate specified event (" + type + ") listener class: " + listenerClasses[i],
-							e
-						);
-				}
-			}
-		}
-		setListeners( type, listeners );
-	}
-
-	public void setListener(String type, Object listener) {
-		Object[] listeners = null;
-		if ( listener != null ) {
-			listeners = (Object[]) Array.newInstance( eventListeners.getListenerClassFor(type), 1 );
-			listeners[0] = listener;
-		}
-		setListeners( type, listeners );
-	}
-
-	public void setListeners(String type, Object[] listeners) {
-		if ( "auto-flush".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setAutoFlushEventListeners( new AutoFlushEventListener[]{} );
-			}
-			else {
-				eventListeners.setAutoFlushEventListeners( (AutoFlushEventListener[]) listeners );
-			}
-		}
-		else if ( "merge".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setMergeEventListeners( new MergeEventListener[]{} );
-			}
-			else {
-				eventListeners.setMergeEventListeners( (MergeEventListener[]) listeners );
-			}
-		}
-		else if ( "create".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPersistEventListeners( new PersistEventListener[]{} );
-			}
-			else {
-				eventListeners.setPersistEventListeners( (PersistEventListener[]) listeners );
-			}
-		}
-		else if ( "create-onflush".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPersistOnFlushEventListeners( new PersistEventListener[]{} );
-			}
-			else {
-				eventListeners.setPersistOnFlushEventListeners( (PersistEventListener[]) listeners );
-			}
-		}
-		else if ( "delete".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setDeleteEventListeners( new DeleteEventListener[]{} );
-			}
-			else {
-				eventListeners.setDeleteEventListeners( (DeleteEventListener[]) listeners );
-			}
-		}
-		else if ( "dirty-check".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setDirtyCheckEventListeners( new DirtyCheckEventListener[]{} );
-			}
-			else {
-				eventListeners.setDirtyCheckEventListeners( (DirtyCheckEventListener[]) listeners );
-			}
-		}
-		else if ( "evict".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setEvictEventListeners( new EvictEventListener[]{} );
-			}
-			else {
-				eventListeners.setEvictEventListeners( (EvictEventListener[]) listeners );
-			}
-		}
-		else if ( "flush".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setFlushEventListeners( new FlushEventListener[]{} );
-			}
-			else {
-				eventListeners.setFlushEventListeners( (FlushEventListener[]) listeners );
-			}
-		}
-		else if ( "flush-entity".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setFlushEntityEventListeners( new FlushEntityEventListener[]{} );
-			}
-			else {
-				eventListeners.setFlushEntityEventListeners( (FlushEntityEventListener[]) listeners );
-			}
-		}
-		else if ( "load".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setLoadEventListeners( new LoadEventListener[]{} );
-			}
-			else {
-				eventListeners.setLoadEventListeners( (LoadEventListener[]) listeners );
-			}
-		}
-		else if ( "load-collection".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setInitializeCollectionEventListeners(
-						new InitializeCollectionEventListener[]{}
-					);
-			}
-			else {
-				eventListeners.setInitializeCollectionEventListeners(
-						(InitializeCollectionEventListener[]) listeners
-					);
-			}
-		}
-		else if ( "lock".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setLockEventListeners( new LockEventListener[]{} );
-			}
-			else {
-				eventListeners.setLockEventListeners( (LockEventListener[]) listeners );
-			}
-		}
-		else if ( "refresh".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setRefreshEventListeners( new RefreshEventListener[]{} );
-			}
-			else {
-				eventListeners.setRefreshEventListeners( (RefreshEventListener[]) listeners );
-			}
-		}
-		else if ( "replicate".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setReplicateEventListeners( new ReplicateEventListener[]{} );
-			}
-			else {
-				eventListeners.setReplicateEventListeners( (ReplicateEventListener[]) listeners );
-			}
-		}
-		else if ( "save-update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setSaveOrUpdateEventListeners( new SaveOrUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setSaveOrUpdateEventListeners( (SaveOrUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "save".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setSaveEventListeners( new SaveOrUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setSaveEventListeners( (SaveOrUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setUpdateEventListeners( new SaveOrUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setUpdateEventListeners( (SaveOrUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-load".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreLoadEventListeners( new PreLoadEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreLoadEventListeners( (PreLoadEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreUpdateEventListeners( new PreUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreUpdateEventListeners( (PreUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-delete".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreDeleteEventListeners( new PreDeleteEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreDeleteEventListeners( (PreDeleteEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-insert".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreInsertEventListeners( new PreInsertEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreInsertEventListeners( (PreInsertEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-collection-recreate".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreCollectionRecreateEventListeners( new PreCollectionRecreateEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreCollectionRecreateEventListeners( (PreCollectionRecreateEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-collection-remove".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreCollectionRemoveEventListeners( new PreCollectionRemoveEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreCollectionRemoveEventListeners( ( PreCollectionRemoveEventListener[]) listeners );
-			}
-		}
-		else if ( "pre-collection-update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPreCollectionUpdateEventListeners( new PreCollectionUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setPreCollectionUpdateEventListeners( ( PreCollectionUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "post-load".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostLoadEventListeners( new PostLoadEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostLoadEventListeners( (PostLoadEventListener[]) listeners );
-			}
-		}
-		else if ( "post-update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostUpdateEventListeners( new PostUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostUpdateEventListeners( (PostUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "post-delete".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostDeleteEventListeners( new PostDeleteEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostDeleteEventListeners( (PostDeleteEventListener[]) listeners );
-			}
-		}
-		else if ( "post-insert".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostInsertEventListeners( new PostInsertEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostInsertEventListeners( (PostInsertEventListener[]) listeners );
-			}
-		}
-		else if ( "post-commit-update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostCommitUpdateEventListeners(
-						new PostUpdateEventListener[]{}
-					);
-			}
-			else {
-				eventListeners.setPostCommitUpdateEventListeners( (PostUpdateEventListener[]) listeners );
-			}
-		}
-		else if ( "post-commit-delete".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostCommitDeleteEventListeners(
-						new PostDeleteEventListener[]{}
-					);
-			}
-			else {
-				eventListeners.setPostCommitDeleteEventListeners( (PostDeleteEventListener[]) listeners );
-			}
-		}
-		else if ( "post-commit-insert".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostCommitInsertEventListeners(
-						new PostInsertEventListener[]{}
-				);
-			}
-			else {
-				eventListeners.setPostCommitInsertEventListeners( (PostInsertEventListener[]) listeners );
-			}
-		}
-		else if ( "post-collection-recreate".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostCollectionRecreateEventListeners( new PostCollectionRecreateEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostCollectionRecreateEventListeners( (PostCollectionRecreateEventListener[]) listeners );
-			}
-		}
-		else if ( "post-collection-remove".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostCollectionRemoveEventListeners( new PostCollectionRemoveEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostCollectionRemoveEventListeners( ( PostCollectionRemoveEventListener[]) listeners );
-			}
-		}
-		else if ( "post-collection-update".equals( type ) ) {
-			if ( listeners == null ) {
-				eventListeners.setPostCollectionUpdateEventListeners( new PostCollectionUpdateEventListener[]{} );
-			}
-			else {
-				eventListeners.setPostCollectionUpdateEventListeners( ( PostCollectionUpdateEventListener[]) listeners );
-			}
-		}
-		else {
-			throw new MappingException("Unrecognized listener type [" + type + "]");
-		}
-	}
-
-	public EventListeners getEventListeners() {
-		return eventListeners;
 	}
 
 	RootClass getRootClassMapping(String clazz) throws MappingException {

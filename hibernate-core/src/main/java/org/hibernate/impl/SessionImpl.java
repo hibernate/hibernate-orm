@@ -101,8 +101,8 @@ import org.hibernate.event.DeleteEvent;
 import org.hibernate.event.DeleteEventListener;
 import org.hibernate.event.DirtyCheckEvent;
 import org.hibernate.event.DirtyCheckEventListener;
-import org.hibernate.event.EventListeners;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.EvictEvent;
 import org.hibernate.event.EvictEventListener;
 import org.hibernate.event.FlushEvent;
@@ -138,6 +138,8 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.SerializationException;
@@ -170,7 +172,6 @@ public final class SessionImpl
 	private transient ActionQueue actionQueue;
 	private transient StatefulPersistenceContext persistenceContext;
 	private transient TransactionCoordinatorImpl transactionCoordinator;
-	private transient EventListeners listeners;
 	private transient Interceptor interceptor;
 	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
 
@@ -202,7 +203,6 @@ public final class SessionImpl
 		this.timestamp = parent.timestamp;
 		this.transactionCoordinator = parent.transactionCoordinator;
 		this.interceptor = parent.interceptor;
-		this.listeners = parent.listeners;
 		this.actionQueue = new ActionQueue( this );
 		this.entityMode = entityMode;
 		this.persistenceContext = new StatefulPersistenceContext( this );
@@ -246,7 +246,6 @@ public final class SessionImpl
 		this.timestamp = timestamp;
 		this.entityMode = entityMode;
 		this.interceptor = interceptor;
-		this.listeners = factory.getEventListeners();
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
 		this.flushBeforeCompletionEnabled = flushBeforeCompletionEnabled;
@@ -684,10 +683,17 @@ public final class SessionImpl
 	private void fireSaveOrUpdate(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		SaveOrUpdateEventListener[] saveOrUpdateEventListener = listeners.getSaveOrUpdateEventListeners();
-		for ( int i = 0; i < saveOrUpdateEventListener.length; i++ ) {
-			saveOrUpdateEventListener[i].onSaveOrUpdate(event);
+		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE_UPDATE ) ) {
+			listener.onSaveOrUpdate( event );
 		}
+	}
+
+	private <T> Iterable<T> listeners(EventType<T> type) {
+		return eventListenerGroup( type ).listeners();
+	}
+
+	private <T> EventListenerGroup<T> eventListenerGroup(EventType<T> type) {
+		return factory.getServiceRegistry().getService( EventListenerRegistry.class ).getEventListenerGroup( type );
 	}
 
 
@@ -704,9 +710,8 @@ public final class SessionImpl
 	private Serializable fireSave(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		SaveOrUpdateEventListener[] saveEventListener = listeners.getSaveEventListeners();
-		for ( int i = 0; i < saveEventListener.length; i++ ) {
-			saveEventListener[i].onSaveOrUpdate(event);
+		for ( SaveOrUpdateEventListener listener : listeners( EventType.SAVE ) ) {
+			listener.onSaveOrUpdate( event );
 		}
 		return event.getResultId();
 	}
@@ -725,9 +730,8 @@ public final class SessionImpl
 	private void fireUpdate(SaveOrUpdateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		SaveOrUpdateEventListener[] updateEventListener = listeners.getUpdateEventListeners();
-		for ( int i = 0; i < updateEventListener.length; i++ ) {
-			updateEventListener[i].onSaveOrUpdate(event);
+		for ( SaveOrUpdateEventListener listener : listeners( EventType.UPDATE ) ) {
+			listener.onSaveOrUpdate( event );
 		}
 	}
 
@@ -754,12 +758,11 @@ public final class SessionImpl
 		fireLock( new LockEvent( object, options, this ) );
 	}
 
-	private void fireLock(LockEvent lockEvent) {
+	private void fireLock(LockEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		LockEventListener[] lockEventListener = listeners.getLockEventListeners();
-		for ( int i = 0; i < lockEventListener.length; i++ ) {
-			lockEventListener[i].onLock( lockEvent );
+		for ( LockEventListener listener : listeners( EventType.LOCK ) ) {
+			listener.onLock( event );
 		}
 	}
 
@@ -782,18 +785,16 @@ public final class SessionImpl
 	private void firePersist(Map copiedAlready, PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		PersistEventListener[] persistEventListener = listeners.getPersistEventListeners();
-		for ( int i = 0; i < persistEventListener.length; i++ ) {
-			persistEventListener[i].onPersist(event, copiedAlready);
+		for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
+			listener.onPersist( event, copiedAlready );
 		}
 	}
 
 	private void firePersist(PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		PersistEventListener[] createEventListener = listeners.getPersistEventListeners();
-		for ( int i = 0; i < createEventListener.length; i++ ) {
-			createEventListener[i].onPersist(event);
+		for ( PersistEventListener listener : listeners( EventType.PERSIST ) ) {
+			listener.onPersist( event );
 		}
 	}
 
@@ -817,18 +818,16 @@ public final class SessionImpl
 	private void firePersistOnFlush(Map copiedAlready, PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		PersistEventListener[] persistEventListener = listeners.getPersistOnFlushEventListeners();
-		for ( int i = 0; i < persistEventListener.length; i++ ) {
-			persistEventListener[i].onPersist(event, copiedAlready);
+		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
+			listener.onPersist( event, copiedAlready );
 		}
 	}
 
 	private void firePersistOnFlush(PersistEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		PersistEventListener[] createEventListener = listeners.getPersistOnFlushEventListeners();
-		for ( int i = 0; i < createEventListener.length; i++ ) {
-			createEventListener[i].onPersist(event);
+		for ( PersistEventListener listener : listeners( EventType.PERSIST_ONFLUSH ) ) {
+			listener.onPersist( event );
 		}
 	}
 
@@ -850,9 +849,8 @@ public final class SessionImpl
 	private Object fireMerge(MergeEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		MergeEventListener[] mergeEventListener = listeners.getMergeEventListeners();
-		for ( int i = 0; i < mergeEventListener.length; i++ ) {
-			mergeEventListener[i].onMerge(event);
+		for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
+			listener.onMerge( event );
 		}
 		return event.getResult();
 	}
@@ -860,9 +858,8 @@ public final class SessionImpl
 	private void fireMerge(Map copiedAlready, MergeEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		MergeEventListener[] mergeEventListener = listeners.getMergeEventListeners();
-		for ( int i = 0; i < mergeEventListener.length; i++ ) {
-			mergeEventListener[i].onMerge(event, copiedAlready);
+		for ( MergeEventListener listener : listeners( EventType.MERGE ) ) {
+			listener.onMerge( event, copiedAlready );
 		}
 	}
 
@@ -893,18 +890,16 @@ public final class SessionImpl
 	private void fireDelete(DeleteEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		DeleteEventListener[] deleteEventListener = listeners.getDeleteEventListeners();
-		for ( int i = 0; i < deleteEventListener.length; i++ ) {
-			deleteEventListener[i].onDelete( event );
+		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
+			listener.onDelete( event );
 		}
 	}
 
 	private void fireDelete(DeleteEvent event, Set transientEntities) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		DeleteEventListener[] deleteEventListener = listeners.getDeleteEventListeners();
-		for ( int i = 0; i < deleteEventListener.length; i++ ) {
-			deleteEventListener[i].onDelete( event, transientEntities );
+		for ( DeleteEventListener listener : listeners( EventType.DELETE ) ) {
+			listener.onDelete( event, transientEntities );
 		}
 	}
 
@@ -1027,9 +1022,8 @@ public final class SessionImpl
 	private void fireLoad(LoadEvent event, LoadType loadType) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		LoadEventListener[] loadEventListener = listeners.getLoadEventListeners();
-		for ( int i = 0; i < loadEventListener.length; i++ ) {
-			loadEventListener[i].onLoad(event, loadType);
+		for ( LoadEventListener listener : listeners( EventType.LOAD ) ) {
+			listener.onLoad( event, loadType );
 		}
 	}
 
@@ -1052,21 +1046,19 @@ public final class SessionImpl
 		fireRefresh( refreshedAlready, new RefreshEvent( object, this ) );
 	}
 
-	private void fireRefresh(RefreshEvent refreshEvent) {
+	private void fireRefresh(RefreshEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		RefreshEventListener[] refreshEventListener = listeners.getRefreshEventListeners();
-		for ( int i = 0; i < refreshEventListener.length; i++ ) {
-			refreshEventListener[i].onRefresh( refreshEvent );
+		for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
+			listener.onRefresh( event );
 		}
 	}
 
-	private void fireRefresh(Map refreshedAlready, RefreshEvent refreshEvent) {
+	private void fireRefresh(Map refreshedAlready, RefreshEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		RefreshEventListener[] refreshEventListener = listeners.getRefreshEventListeners();
-		for ( int i = 0; i < refreshEventListener.length; i++ ) {
-			refreshEventListener[i].onRefresh( refreshEvent, refreshedAlready );
+		for ( RefreshEventListener listener : listeners( EventType.REFRESH ) ) {
+			listener.onRefresh( event, refreshedAlready );
 		}
 	}
 
@@ -1085,9 +1077,8 @@ public final class SessionImpl
 	private void fireReplicate(ReplicateEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		ReplicateEventListener[] replicateEventListener = listeners.getReplicateEventListeners();
-		for ( int i = 0; i < replicateEventListener.length; i++ ) {
-			replicateEventListener[i].onReplicate(event);
+		for ( ReplicateEventListener listener : listeners( EventType.REPLICATE ) ) {
+			listener.onReplicate( event );
 		}
 	}
 
@@ -1102,12 +1093,11 @@ public final class SessionImpl
 		fireEvict( new EvictEvent( object, this ) );
 	}
 
-	private void fireEvict(EvictEvent evictEvent) {
+	private void fireEvict(EvictEvent event) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		EvictEventListener[] evictEventListener = listeners.getEvictEventListeners();
-		for ( int i = 0; i < evictEventListener.length; i++ ) {
-			evictEventListener[i].onEvict( evictEvent );
+		for ( EvictEventListener listener : listeners( EventType.EVICT ) ) {
+			listener.onEvict( event );
 		}
 	}
 
@@ -1121,10 +1111,9 @@ public final class SessionImpl
 			// do not auto-flush while outside a transaction
 			return false;
 		}
-		AutoFlushEvent event = new AutoFlushEvent(querySpaces, this);
-		AutoFlushEventListener[] autoFlushEventListener = listeners.getAutoFlushEventListeners();
-		for ( int i = 0; i < autoFlushEventListener.length; i++ ) {
-			autoFlushEventListener[i].onAutoFlush(event);
+		AutoFlushEvent event = new AutoFlushEvent( querySpaces, this );
+		for ( AutoFlushEventListener listener : listeners( EventType.AUTO_FLUSH ) ) {
+			listener.onAutoFlush( event );
 		}
 		return event.isFlushRequired();
 	}
@@ -1137,10 +1126,9 @@ public final class SessionImpl
             LOG.debugf("Session dirty (scheduled updates and insertions)");
 			return true;
 		}
-        DirtyCheckEvent event = new DirtyCheckEvent(this);
-        DirtyCheckEventListener[] dirtyCheckEventListener = listeners.getDirtyCheckEventListeners();
-        for (int i = 0; i < dirtyCheckEventListener.length; i++) {
-            dirtyCheckEventListener[i].onDirtyCheck(event);
+        DirtyCheckEvent event = new DirtyCheckEvent( this );
+		for ( DirtyCheckEventListener listener : listeners( EventType.DIRTY_CHECK ) ) {
+			listener.onDirtyCheck( event );
 		}
         return event.isDirty();
 	}
@@ -1151,9 +1139,8 @@ public final class SessionImpl
 		if ( persistenceContext.getCascadeLevel() > 0 ) {
 			throw new HibernateException("Flush during cascade is dangerous");
 		}
-		FlushEventListener[] flushEventListener = listeners.getFlushEventListeners();
-		for ( int i = 0; i < flushEventListener.length; i++ ) {
-			flushEventListener[i].onFlush( new FlushEvent(this) );
+		for ( FlushEventListener listener : listeners( EventType.FLUSH ) ) {
+			listener.onFlush( new FlushEvent( this ) );
 		}
 	}
 
@@ -1680,9 +1667,9 @@ public final class SessionImpl
 	throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
-		InitializeCollectionEventListener[] listener = listeners.getInitializeCollectionEventListeners();
-		for ( int i = 0; i < listener.length; i++ ) {
-			listener[i].onInitializeCollection( new InitializeCollectionEvent(collection, this) );
+		InitializeCollectionEvent event = new InitializeCollectionEvent( collection, this );
+		for ( InitializeCollectionEventListener listener : listeners( EventType.INIT_COLLECTION ) ) {
+			listener.onInitializeCollection( event );
 		}
 	}
 
@@ -1760,10 +1747,6 @@ public final class SessionImpl
 			buf.append("<closed>");
 		}
 		return buf.append(')').toString();
-	}
-
-	public EventListeners getListeners() {
-		return listeners;
 	}
 
 	public ActionQueue getActionQueue() {
@@ -1976,7 +1959,6 @@ public final class SessionImpl
 		interceptor = ( Interceptor ) ois.readObject();
 
 		factory = SessionFactoryImpl.deserialize( ois );
-		listeners = factory.getEventListeners();
 
 		if ( isRootSession ) {
 			transactionCoordinator = TransactionCoordinatorImpl.deserialize( ois, this );

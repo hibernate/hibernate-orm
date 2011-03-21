@@ -22,17 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cache.entry;
+
 import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PreLoadEvent;
 import org.hibernate.event.PreLoadEventListener;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.TypeHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
+import org.hibernate.type.TypeHelper;
 
 /**
  * A cached instance of a persistent class
@@ -121,17 +126,21 @@ public final class CacheEntry implements Serializable {
 		//persister.setIdentifier(result, id); //before calling interceptor, for consistency with normal load
 
 		//TODO: reuse the PreLoadEvent
-		PreLoadEvent preLoadEvent = new PreLoadEvent( session )
-				.setEntity(result)
-				.setState(assembledProps)
-				.setId(id)
-				.setPersister(persister);
-		
-		PreLoadEventListener[] listeners = session.getListeners().getPreLoadEventListeners();
-		for ( PreLoadEventListener listener : listeners ) {
+		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
+				.setEntity( result )
+				.setState( assembledProps )
+				.setId( id )
+				.setPersister( persister );
+
+		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.PRE_LOAD );
+		for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
 			listener.onPreLoad( preLoadEvent );
 		}
-		
+
 		persister.setPropertyValues( 
 				result, 
 				assembledProps, 

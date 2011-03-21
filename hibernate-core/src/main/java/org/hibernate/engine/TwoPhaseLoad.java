@@ -35,6 +35,7 @@ import org.hibernate.LockMode;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CacheEntry;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.PostLoadEventListener;
 import org.hibernate.event.PreLoadEvent;
@@ -43,6 +44,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 
@@ -55,7 +58,9 @@ import org.hibernate.type.TypeHelper;
  */
 public final class TwoPhaseLoad {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, TwoPhaseLoad.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(
+			HibernateLogger.class, TwoPhaseLoad.class.getName()
+	);
 
 	private TwoPhaseLoad() {}
 
@@ -127,8 +132,10 @@ public final class TwoPhaseLoad {
 		Serializable id = entityEntry.getId();
 		Object[] hydratedState = entityEntry.getLoadedState();
 
-        if (LOG.isDebugEnabled()) LOG.debugf("Resolving associations for %s",
-                                             MessageHelper.infoString(persister, id, session.getFactory()));
+        if (LOG.isDebugEnabled()) LOG.debugf(
+				"Resolving associations for %s",
+				MessageHelper.infoString( persister, id, session.getFactory() )
+		);
 
 		Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < hydratedState.length; i++ ) {
@@ -140,10 +147,15 @@ public final class TwoPhaseLoad {
 
 		//Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
-			preLoadEvent.setEntity(entity).setState(hydratedState).setId(id).setPersister(persister);
-			PreLoadEventListener[] listeners = session.getListeners().getPreLoadEventListeners();
-			for ( int i = 0; i < listeners.length; i++ ) {
-				listeners[i].onPreLoad(preLoadEvent);
+			preLoadEvent.setEntity( entity ).setState( hydratedState ).setId( id ).setPersister( persister );
+
+			final EventListenerGroup<PreLoadEventListener> listenerGroup = session
+					.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.PRE_LOAD );
+			for ( PreLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPreLoad( preLoadEvent );
 			}
 		}
 
@@ -152,8 +164,10 @@ public final class TwoPhaseLoad {
 		final SessionFactoryImplementor factory = session.getFactory();
 		if ( persister.hasCache() && session.getCacheMode().isPutEnabled() ) {
 
-            if (LOG.isDebugEnabled()) LOG.debugf("Adding entity to second-level cache: %s",
-                                                 MessageHelper.infoString(persister, id, session.getFactory()));
+            if (LOG.isDebugEnabled()) LOG.debugf(
+					"Adding entity to second-level cache: %s",
+					MessageHelper.infoString( persister, id, session.getFactory() )
+			);
 
 			Object version = Versioning.getVersion(hydratedState, persister);
 			CacheEntry entry = new CacheEntry(
@@ -233,15 +247,24 @@ public final class TwoPhaseLoad {
 			);
 
 		if ( session.isEventSource() ) {
-			postLoadEvent.setEntity(entity).setId(id).setPersister(persister);
-			PostLoadEventListener[] listeners = session.getListeners().getPostLoadEventListeners();
-			for ( int i = 0; i < listeners.length; i++ ) {
-				listeners[i].onPostLoad(postLoadEvent);
+			postLoadEvent.setEntity( entity ).setId( id ).setPersister( persister );
+
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = session
+					.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.POST_LOAD );
+			for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+				listener.onPostLoad( postLoadEvent );
 			}
 		}
 
-        if (LOG.isDebugEnabled()) LOG.debugf("Done materializing entity %s",
-                                             MessageHelper.infoString(persister, id, session.getFactory()));
+        if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"Done materializing entity %s",
+					MessageHelper.infoString( persister, id, session.getFactory() )
+			);
+		}
 
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().loadEntity( persister.getEntityName() );

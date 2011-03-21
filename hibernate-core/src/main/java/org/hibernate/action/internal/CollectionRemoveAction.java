@@ -29,12 +29,13 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostCollectionRemoveEvent;
 import org.hibernate.event.PostCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionRemoveEvent;
 import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.service.event.spi.EventListenerGroup;
 
 public final class CollectionRemoveAction extends CollectionAction {
 
@@ -128,26 +129,34 @@ public final class CollectionRemoveAction extends CollectionAction {
 	}
 
 	private void preRemove() {
-		PreCollectionRemoveEventListener[] preListeners = getSession().getListeners()
-				.getPreCollectionRemoveEventListeners();
-		if (preListeners.length>0) {
-			PreCollectionRemoveEvent preEvent = new PreCollectionRemoveEvent(
-					getPersister(), getCollection(), ( EventSource ) getSession(), affectedOwner );
-			for ( PreCollectionRemoveEventListener preListener : preListeners ) {
-				preListener.onPreRemoveCollection( preEvent );
-			}
+		EventListenerGroup<PreCollectionRemoveEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_REMOVE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PreCollectionRemoveEvent event = new PreCollectionRemoveEvent(
+				getPersister(),
+				getCollection(),
+				eventSource(),
+				affectedOwner
+		);
+		for ( PreCollectionRemoveEventListener listener : listenerGroup.listeners() ) {
+			listener.onPreRemoveCollection( event );
 		}
 	}
 
 	private void postRemove() {
-		PostCollectionRemoveEventListener[] postListeners = getSession().getListeners()
-				.getPostCollectionRemoveEventListeners();
-		if (postListeners.length>0) {
-			PostCollectionRemoveEvent postEvent = new PostCollectionRemoveEvent(
-					getPersister(), getCollection(), ( EventSource ) getSession(), affectedOwner );
-			for ( PostCollectionRemoveEventListener postListener : postListeners ) {
-				postListener.onPostRemoveCollection( postEvent );
-			}
+		EventListenerGroup<PostCollectionRemoveEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_REMOVE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostCollectionRemoveEvent event = new PostCollectionRemoveEvent(
+				getPersister(),
+				getCollection(),
+				eventSource(),
+				affectedOwner
+		);
+		for ( PostCollectionRemoveEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostRemoveCollection( event );
 		}
 	}
 }

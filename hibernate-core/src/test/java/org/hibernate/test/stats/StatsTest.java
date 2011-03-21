@@ -101,10 +101,11 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
+		// open second SessionFactory
 		Collection coll = configuration().getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.JOIN);
 		coll.setLazy(false);
-		SessionFactory sf = configuration().buildSessionFactory( serviceRegistry() );
+		SessionFactory sf = configuration().buildSessionFactory();
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
@@ -123,10 +124,11 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 		sf.close();
 
+		// open third SessionFactory
 		coll = configuration().getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.SELECT);
 		coll.setLazy(false);
-		sf = configuration().buildSessionFactory( serviceRegistry() );
+		sf = configuration().buildSessionFactory();
 		stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);

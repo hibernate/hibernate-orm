@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,23 +22,26 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.ExcludeDefaultListeners;
 import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.ejb.EntityManagerLogger;
-import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

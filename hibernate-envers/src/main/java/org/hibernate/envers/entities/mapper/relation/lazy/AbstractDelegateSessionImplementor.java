@@ -220,10 +220,6 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
         return delegate.getDontFlushFromFind();
     }
 
-    public EventListeners getListeners() {
-        return delegate.getListeners();
-    }
-
     public PersistenceContext getPersistenceContext() {
         return delegate.getPersistenceContext();
     }

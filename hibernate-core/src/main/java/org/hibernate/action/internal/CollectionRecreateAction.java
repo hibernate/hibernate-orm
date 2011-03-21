@@ -29,20 +29,21 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostCollectionRecreateEvent;
 import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.event.PreCollectionRecreateEvent;
 import org.hibernate.event.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.service.event.spi.EventListenerGroup;
 
 public final class CollectionRecreateAction extends CollectionAction {
 
 	public CollectionRecreateAction(
-				final PersistentCollection collection, 
-				final CollectionPersister persister, 
-				final Serializable id, 
-				final SessionImplementor session) throws CacheException {
+			final PersistentCollection collection,
+			final CollectionPersister persister,
+			final Serializable id,
+			final SessionImplementor session) throws CacheException {
 		super( persister, collection, id, session );
 	}
 
@@ -71,26 +72,24 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void preRecreate() {
-		PreCollectionRecreateEventListener[] preListeners = getSession().getListeners()
-				.getPreCollectionRecreateEventListeners();
-		if (preListeners.length > 0) {
-			PreCollectionRecreateEvent preEvent = new PreCollectionRecreateEvent(
-					getPersister(), getCollection(), ( EventSource ) getSession() );
-			for ( PreCollectionRecreateEventListener preListener : preListeners ) {
-				preListener.onPreRecreateCollection( preEvent );
-			}
+		EventListenerGroup<PreCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_RECREATE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PreCollectionRecreateEvent event = new PreCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+		for ( PreCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
+			listener.onPreRecreateCollection( event );
 		}
 	}
 
 	private void postRecreate() {
-		PostCollectionRecreateEventListener[] postListeners = getSession().getListeners()
-				.getPostCollectionRecreateEventListeners();
-		if (postListeners.length > 0) {
-			PostCollectionRecreateEvent postEvent = new PostCollectionRecreateEvent(
-					getPersister(), getCollection(), ( EventSource ) getSession() );
-			for ( PostCollectionRecreateEventListener postListener : postListeners ) {
-				postListener.onPostRecreateCollection( postEvent );
-			}
+		EventListenerGroup<PostCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_RECREATE );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostCollectionRecreateEvent event = new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+		for ( PostCollectionRecreateEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostRecreateCollection( event );
 		}
 	}
 }

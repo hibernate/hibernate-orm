@@ -40,7 +40,9 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PersistEvent;
+import org.hibernate.event.PersistEventListener;
 import org.hibernate.id.Assigned;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -49,6 +51,7 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.VersionProperty;
@@ -66,8 +69,10 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
-                                                                       AbstractEntityTuplizer.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(
+			HibernateLogger.class,
+			AbstractEntityTuplizer.class.getName()
+	);
 
 	//TODO: currently keeps Getters and Setters (instead of PropertyAccessors) because of the way getGetter() and getSetter() are implemented currently; yuck!
 
@@ -370,11 +375,10 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 							subId = pcEntry.getId();
 						}
 						else {
-                            LOG.debugf("Performing implicit derived identity cascade");
+                            LOG.debugf( "Performing implicit derived identity cascade" );
 							final PersistEvent event = new PersistEvent( null, propertyValues[i], (EventSource) session );
-							for ( int x = 0; x < session.getListeners().getPersistEventListeners().length; x++ ) {
-								session.getListeners().getPersistEventListeners()[x].onPersist( event );
-
+							for ( PersistEventListener listener : persistEventListeners( session ) ) {
+								listener.onPersist( event );
 							}
 							pcEntry = session.getPersistenceContext().getEntry( propertyValues[i] );
 							if ( pcEntry == null || pcEntry.getId() == null ) {
@@ -423,6 +427,15 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			}
 			virtualIdComponent.setPropertyValues( entity, injectionValues, session.getEntityMode() );
 		}
+	}
+
+	private static Iterable<PersistEventListener> persistEventListeners(SessionImplementor session) {
+		return session
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.PERSIST )
+				.listeners();
 	}
 
 	/**

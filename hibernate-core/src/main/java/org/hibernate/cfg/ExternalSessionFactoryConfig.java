@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cfg;
 
@@ -30,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import org.hibernate.internal.util.StringHelper;
+
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
@@ -41,7 +40,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Steve Ebersole
  */
 public abstract class ExternalSessionFactoryConfig {
-
 	private String mapResources;
 	private String dialect;
 	private String defaultSchema;
@@ -66,8 +64,6 @@ public abstract class ExternalSessionFactoryConfig {
 
 	private Map additionalProperties;
 	private Set excludedPropertyNames = new HashSet();
-	private Map customListeners;
-
 
 	protected Set getExcludedPropertyNames() {
 		return excludedPropertyNames;
@@ -253,37 +249,6 @@ public abstract class ExternalSessionFactoryConfig {
 		this.queryCacheEnabled = queryCacheEnabled;
 	}
 
-	public final Map getCustomListeners() {
-		return customListeners;
-	}
-
-	public void setCustomListeners(Map customListeners) {
-		this.customListeners = customListeners;
-	}
-
-	public void setCustomListenersAsString(String customListenersString) {
-		// Note : expected in the syntax:
-		//      type=listenerClass
-		//          ({sep}type=listenerClass)*
-		// where {sep} is any whitespace or comma
-		if ( StringHelper.isNotEmpty( customListenersString ) ) {
-			String[] listenerEntries = ConfigurationHelper.toStringArray( customListenersString, " ,\n\t\r\f" );
-			for ( int i = 0; i < listenerEntries.length; i++ ) {
-				final int keyValueSepPosition = listenerEntries[i].indexOf( '=' );
-				final String type = listenerEntries[i].substring( 0, keyValueSepPosition );
-				final String listenerClass = listenerEntries[i].substring( keyValueSepPosition + 1 );
-				setCustomListener( type, listenerClass );
-			}
-		}
-	}
-
-	public void setCustomListener(String type, String listenerClass) {
-		if ( customListeners == null ) {
-			customListeners = new HashMap();
-		}
-		customListeners.put( type, listenerClass );
-	}
-
 	public final void addAdditionalProperty(String name, String value) {
 		if ( !getExcludedPropertyNames().contains( name ) ) {
 			if ( additionalProperties == null ) {
@@ -301,25 +266,6 @@ public abstract class ExternalSessionFactoryConfig {
 		String[] mappingFiles = ConfigurationHelper.toStringArray( mapResources, " ,\n\t\r\f" );
 		for ( int i = 0; i < mappingFiles.length; i++ ) {
 			cfg.addResource( mappingFiles[i] );
-		}
-
-		if ( customListeners != null && !customListeners.isEmpty() ) {
-			Iterator entries = customListeners.entrySet().iterator();
-			while ( entries.hasNext() ) {
-				final Map.Entry entry = ( Map.Entry ) entries.next();
-				final String type = ( String ) entry.getKey();
-				final Object value = entry.getValue();
-				if ( value != null ) {
-					if ( String.class.isAssignableFrom( value.getClass() ) ) {
-						// Its the listener class name
-						cfg.setListener( type, ( ( String ) value ) );
-					}
-					else {
-						// Its the listener instance (or better be)
-						cfg.setListener( type, value );
-					}
-				}
-			}
 		}
 
 		return cfg;

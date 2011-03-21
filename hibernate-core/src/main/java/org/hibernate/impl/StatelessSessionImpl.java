@@ -445,10 +445,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 		return EmptyInterceptor.INSTANCE;
 	}
 
-	public EventListeners getListeners() {
-		throw new UnsupportedOperationException();
-	}
-
 	public PersistenceContext getPersistenceContext() {
 		return temporaryPersistenceContext;
 	}

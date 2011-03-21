@@ -46,7 +46,9 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 		//no exception as the GoofyPersisterClassProvider is not set
 		SessionFactory sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 		sessionFactory.close();
+		ServiceRegistryBuilder.destroy( serviceRegistry );
 
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 		serviceRegistry.registerService( PersisterClassResolver.class, new GoofyPersisterClassProvider() );
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Gate.class );
@@ -61,10 +63,15 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 					( (GoofyException) e.getCause() ).getValue()
 			);
 		}
+		finally {
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
 
 		cfg = new Configuration();
 		cfg.addAnnotatedClass( Portal.class );
 		cfg.addAnnotatedClass( Window.class );
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+		serviceRegistry.registerService( PersisterClassResolver.class, new GoofyPersisterClassProvider() );
 		try {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			sessionFactory.close();
@@ -75,8 +82,7 @@ public class PersisterClassProviderTest extends BaseUnitTestCase {
 					GoofyPersisterClassProvider.NoopCollectionPersister.class,
 					( (GoofyException) e.getCause() ).getValue() );
 		}
-
-		if ( serviceRegistry != null ) {
+		finally {
 			ServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}

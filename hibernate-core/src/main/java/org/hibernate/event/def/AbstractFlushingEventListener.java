@@ -28,6 +28,9 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -45,6 +48,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.FlushEntityEvent;
 import org.hibernate.event.FlushEntityEventListener;
 import org.hibernate.event.FlushEvent;
@@ -52,7 +56,8 @@ import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.internal.util.collections.LazyIterator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.Printer;
-import org.jboss.logging.Logger;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 /**
  * A convenience base class for listeners whose functionality results in flushing.
@@ -61,8 +66,10 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractFlushingEventListener implements Serializable {
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
-                                                                       AbstractFlushingEventListener.class.getName());
+    private static final HibernateLogger LOG = Logger.getMessageLogger(
+			HibernateLogger.class,
+			AbstractFlushingEventListener.class.getName()
+	);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Pre-flushing section
@@ -105,16 +112,20 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		//some statistics
         if (LOG.isDebugEnabled()) {
-            LOG.debugf("Flushed: %s insertions, %s updates, %s deletions to %s objects",
-                       session.getActionQueue().numberOfInsertions(),
-                       session.getActionQueue().numberOfUpdates(),
-                       session.getActionQueue().numberOfDeletions(),
-                       persistenceContext.getEntityEntries().size());
-            LOG.debugf("Flushed: %s (re)creations, %s updates, %s removals to %s collections",
-                       session.getActionQueue().numberOfCollectionCreations(),
-                       session.getActionQueue().numberOfCollectionUpdates(),
-                       session.getActionQueue().numberOfCollectionRemovals(),
-                       persistenceContext.getCollectionEntries().size());
+            LOG.debugf(
+					"Flushed: %s insertions, %s updates, %s deletions to %s objects",
+					session.getActionQueue().numberOfInsertions(),
+					session.getActionQueue().numberOfUpdates(),
+					session.getActionQueue().numberOfDeletions(),
+					persistenceContext.getEntityEntries().size()
+			);
+            LOG.debugf(
+					"Flushed: %s (re)creations, %s updates, %s removals to %s collections",
+					session.getActionQueue().numberOfCollectionCreations(),
+					session.getActionQueue().numberOfCollectionUpdates(),
+					session.getActionQueue().numberOfCollectionRemovals(),
+					persistenceContext.getCollectionEntries().size()
+			);
 			new Printer( session.getFactory() ).toString(
 					persistenceContext.getEntitiesByKey().values().iterator(),
 					session.getEntityMode()
@@ -129,7 +140,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 */
 	private void prepareEntityFlushes(EventSource session) throws HibernateException {
 
-        LOG.debugf("Processing flush-time cascades");
+        LOG.debugf( "Processing flush-time cascades" );
 
 		final Map.Entry[] list = IdentityMap.concurrentEntries( session.getPersistenceContext().getEntityEntries() );
 		//safe from concurrent modification because of how entryList() is implemented on IdentityMap
@@ -172,7 +183,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 
-        LOG.debugf("Dirty checking collections");
+        LOG.debugf( "Dirty checking collections" );
 
 		final List list = IdentityMap.entries( session.getPersistenceContext().getCollectionEntries() );
 		final int size = list.size();
@@ -211,10 +222,14 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			Status status = entry.getStatus();
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
-				FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
-				FlushEntityEventListener[] listeners = source.getListeners().getFlushEntityEventListeners();
-				for ( int j = 0; j < listeners.length; j++ ) {
-					listeners[j].onFlushEntity(entityEvent);
+				final FlushEntityEvent entityEvent = new FlushEntityEvent( source, me.getKey(), entry );
+				final EventListenerGroup<FlushEntityEventListener> listenerGroup = source
+						.getFactory()
+						.getServiceRegistry()
+						.getService( EventListenerRegistry.class )
+						.getEventListenerGroup( EventType.FLUSH_ENTITY );
+				for ( FlushEntityEventListener listener : listenerGroup.listeners() ) {
+					listener.onFlushEntity( entityEvent );
 				}
 			}
 		}

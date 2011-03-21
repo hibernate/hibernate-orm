@@ -68,13 +68,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MappingNotFoundException;
-import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.ejb.connection.InjectedDataSourceConnectionProvider;
+import org.hibernate.ejb.event.JpaEventListenerRegistration;
 import org.hibernate.ejb.instrument.InterceptFieldClassFileTransformer;
 import org.hibernate.ejb.packaging.JarVisitorFactory;
 import org.hibernate.ejb.packaging.NamedInputStream;
@@ -88,7 +88,6 @@ import org.hibernate.ejb.util.NamingHelper;
 import org.hibernate.engine.FilterDefinition;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.event.EventListeners;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -107,7 +106,7 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  * Allow a fine tuned configuration of an EJB 3.0 EntityManagerFactory
  *
  * A Ejb3Configuration object is only guaranteed to create one EntityManagerFactory.
- * Multiple usage of #buildEntityManagerFactory() is not guaranteed.
+ * Multiple usage of {@link #buildEntityManagerFactory()} is not guaranteed.
  *
  * After #buildEntityManagerFactory() has been called, you no longer can change the configuration
  * state (no class adding, no property change etc)
@@ -122,8 +121,10 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  */
 public class Ejb3Configuration implements Serializable, Referenceable {
 
-    private static final EntityManagerLogger LOG = Logger.getMessageLogger(EntityManagerLogger.class,
-                                                                           Ejb3Configuration.class.getName());
+    private static final EntityManagerLogger LOG = Logger.getMessageLogger(
+			EntityManagerLogger.class,
+			Ejb3Configuration.class.getName()
+	);
 	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();
 	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
 	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";
@@ -142,7 +143,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	private Configuration cfg;
 	//made transient and not restored in deserialization on purpose, should no longer be called after restoration
-	private transient EventListenerConfigurator listenerConfigurator;
 	private PersistenceUnitTransactionType transactionType;
 	private boolean discardOnClose;
 	//made transient and not restored in deserialization on purpose, should no longer be called after restoration
@@ -153,7 +153,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	public Ejb3Configuration() {
 		cfg = new Configuration();
 		cfg.setEntityNotFoundDelegate( ejb3EntityNotFoundDelegate );
-		listenerConfigurator = new EventListenerConfigurator( this );
 	}
 
 	/**
@@ -882,6 +881,8 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		try {
 			configure( (Properties)null, null );
 			NamingHelper.bind(this);
+			// todo : temporary -> HHH-5562
+			new JpaEventListenerRegistration().apply( serviceRegistry, cfg.createMappings(), cfg.getProperties() );
 			return new EntityManagerFactoryImpl(
 					transactionType,
 					discardOnClose,
@@ -927,7 +928,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	public Reference getReference() throws NamingException {
-        LOG.debugf("Returning a Reference to the Ejb3Configuration");
+        LOG.debugf( "Returning a Reference to the Ejb3Configuration" );
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		ObjectOutput out = null;
 		byte[] serialized;
@@ -1060,10 +1061,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( jaccKeys.size() > 0 ) {
 			addSecurity( jaccKeys, preparedProperties, workingVars );
 		}
-
-		//initialize listeners
-		listenerConfigurator.setProperties( preparedProperties );
-		listenerConfigurator.configure();
 
 		//some spec compliance checking
 		//TODO centralize that?
@@ -1342,25 +1339,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-	/*
-		TODO: not needed any more?
-	public Settings buildSettings(ConnectionProvider connectionProvider) throws HibernateException {
-		Thread thread = null;
-		ClassLoader contextClassLoader = null;
-		if (overridenClassLoader != null) {
-			thread = Thread.currentThread();
-			contextClassLoader = thread.getContextClassLoader();
-			thread.setContextClassLoader( overridenClassLoader );
-		}
-		try {
-			return settingsFactory.buildSettings( cfg.getProperties(), connectionProvider );
-		}
-		finally {
-			if (thread != null) thread.setContextClassLoader( contextClassLoader );
-		}
-	}
-	*/
-
 	public Ejb3Configuration addProperties(Properties props) {
 		cfg.addProperties( props );
 		return this;
@@ -1491,14 +1469,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-	public EventListeners getEventListeners() {
-		return cfg.getEventListeners();
-	}
-
-	SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
-		return cfg.buildSessionFactory( serviceRegistry );
-	}
-
 	public Iterator getTableMappings() {
 		return cfg.getTableMappings();
 	}
@@ -1561,14 +1531,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	public Ejb3Configuration setSessionFactoryObserver(SessionFactoryObserver observer) {
 		cfg.setSessionFactoryObserver( observer );
 		return this;
-	}
-
-	public void setListeners(String type, String[] listenerClasses) {
-		cfg.setListeners( type, listenerClasses );
-	}
-
-	public void setListeners(String type, Object[] listeners) {
-		cfg.setListeners( type, listeners );
 	}
 
 	/**

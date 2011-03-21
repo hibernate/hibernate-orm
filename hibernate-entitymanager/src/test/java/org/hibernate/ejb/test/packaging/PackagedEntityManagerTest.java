@@ -56,8 +56,9 @@ import org.hibernate.ejb.test.pack.spacepar.Bug;
 import org.hibernate.ejb.test.pack.various.Airplane;
 import org.hibernate.ejb.test.pack.various.Seat;
 import org.hibernate.engine.SessionImplementor;
-import org.hibernate.event.EventListeners;
+import org.hibernate.event.EventType;
 import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.stat.Statistics;
 
 import org.junit.Test;
@@ -323,11 +324,13 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
 		EntityManager em = emf.createEntityManager();
-		EventListeners eventListeners = em.unwrap( SessionImplementor.class ).getListeners();
+		EventListenerRegistry listenerRegistry = em.unwrap( SessionImplementor.class ).getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class );
 		assertEquals(
 				"Explicit pre-insert event through hibernate.ejb.event.pre-insert does not work",
-				eventListeners.getPreInsertEventListeners().length,
-				eventListeners.getPreUpdateEventListeners().length + 1
+				listenerRegistry.getEventListenerGroup( EventType.PRE_INSERT ).count(),
+				listenerRegistry.getEventListenerGroup( EventType.PRE_UPDATE ).count() + 1
 		);
 
 		em.close();

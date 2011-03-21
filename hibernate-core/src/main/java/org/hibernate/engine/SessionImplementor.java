@@ -288,13 +288,6 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 
 	public int getDontFlushFromFind();
 
-	/**
-	 * Retrieves the configured event listeners from this event source.
-	 *
-	 * @return The configured event listeners.
-	 */
-	public EventListeners getListeners();
-
 	//TODO: temporary
 
 	/**

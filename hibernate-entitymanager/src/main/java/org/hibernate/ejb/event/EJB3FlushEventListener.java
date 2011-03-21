@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,19 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
+
 import org.hibernate.engine.CascadingAction;
 import org.hibernate.event.FlushEventListener;
 import org.hibernate.event.def.DefaultFlushEventListener;
 import org.hibernate.internal.util.collections.IdentityMap;
 
 /**
- * In EJB3, it is the create operation that is cascaded to unmanaged
- * ebtities at flush time (instead of the save-update operation in
- * Hibernate).
+ * In EJB3, it is the create operation that is cascaded to unmanaged entities at flush time (instead of the
+ * save-update operation in Hibernate).
  *
  * @author Gavin King
  */
-public class EJB3FlushEventListener extends DefaultFlushEventListener {
+public class EJB3FlushEventListener extends DefaultFlushEventListener implements HibernateEntityManagerEventListener {
 
 	public static final FlushEventListener INSTANCE = new EJB3FlushEventListener();
 

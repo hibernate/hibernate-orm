@@ -34,11 +34,14 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.Versioning;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.PostInsertEvent;
 import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PreInsertEvent;
 import org.hibernate.event.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 public final class EntityInsertAction extends EntityAction {
 
@@ -129,48 +132,49 @@ public final class EntityInsertAction extends EntityAction {
 	}
 
 	private void postInsert() {
-		PostInsertEventListener[] postListeners = getSession().getListeners()
-				.getPostInsertEventListeners();
-		if ( postListeners.length > 0 ) {
-			PostInsertEvent postEvent = new PostInsertEvent(
-					getInstance(),
-					getId(),
-					state,
-					getPersister(),
-					(EventSource) getSession()
-			);
-			for ( int i = 0; i < postListeners.length; i++ ) {
-				postListeners[i].onPostInsert(postEvent);
-			}
+		EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostInsertEvent event = new PostInsertEvent(
+				getInstance(),
+				getId(),
+				state,
+				getPersister(),
+				eventSource()
+		);
+		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostInsert( event );
 		}
 	}
 
 	private void postCommitInsert() {
-		PostInsertEventListener[] postListeners = getSession().getListeners()
-				.getPostCommitInsertEventListeners();
-		if ( postListeners.length > 0 ) {
-			PostInsertEvent postEvent = new PostInsertEvent(
-					getInstance(),
-					getId(),
-					state,
-					getPersister(),
-					(EventSource) getSession() 
-			);
-			for ( PostInsertEventListener postListener : postListeners ) {
-				postListener.onPostInsert( postEvent );
-			}
+		EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
+		if ( listenerGroup.isEmpty() ) {
+			return;
+		}
+		final PostInsertEvent event = new PostInsertEvent(
+				getInstance(),
+				getId(),
+				state,
+				getPersister(),
+				eventSource()
+		);
+		for ( PostInsertEventListener listener : listenerGroup.listeners() ) {
+			listener.onPostInsert( event );
 		}
 	}
 
 	private boolean preInsert() {
-		PreInsertEventListener[] preListeners = getSession().getListeners()
-				.getPreInsertEventListeners();
 		boolean veto = false;
-		if (preListeners.length>0) {
-			PreInsertEvent preEvent = new PreInsertEvent( getInstance(), getId(), state, getPersister(), (EventSource)getSession() );
-			for ( PreInsertEventListener preListener : preListeners ) {
-				veto = preListener.onPreInsert( preEvent ) || veto;
-			}
+
+		EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
+		if ( listenerGroup.isEmpty() ) {
+			return veto;
+		}
+		final PreInsertEvent event = new PreInsertEvent( getInstance(), getId(), state, getPersister(), eventSource() );
+		for ( PreInsertEventListener listener : listenerGroup.listeners() ) {
+			veto |= listener.onPreInsert( event );
 		}
 		return veto;
 	}
@@ -192,7 +196,7 @@ public final class EntityInsertAction extends EntityAction {
 
 	@Override
 	protected boolean hasPostCommitEventListeners() {
-		return getSession().getListeners().getPostCommitInsertEventListeners().length>0;
+		return ! listenerGroup( EventType.POST_COMMIT_INSERT ).isEmpty();
 	}
 	
 	private boolean isCachePutEnabled(EntityPersister persister, SessionImplementor session) {

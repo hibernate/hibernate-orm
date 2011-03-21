@@ -1,32 +1,37 @@
-//$Id: $
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007, Red Hat Middleware LLC or third-party contributors as
- * indicated by the @author tags or express copyright attribution statements
- * applied by the authors.
+ * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
- * All third-party contributions are distributed under license by Red Hat
- * Middleware LLC.  This copyrighted material is made available to anyone
- * wishing to use, modify, copy, or redistribute it subject to the terms
- * and conditions of the GNU Lesser General Public License, as published by
- * the Free Software Foundation.  This program is distributed in the hope
- * that it will be useful, but WITHOUT ANY WARRANTY; without even the
- * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
  *
- * See the GNU Lesser General Public License for more details.  You should
- * have received a copy of the GNU Lesser General Public License along with
- * this distribution; if not, write to: Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor Boston, MA  02110-1301  USA
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.event.collection;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.event.AbstractCollectionEvent;
+import org.hibernate.event.EventType;
 import org.hibernate.event.InitializeCollectionEvent;
-import org.hibernate.event.InitializeCollectionEventListener;
 import org.hibernate.event.PostCollectionRecreateEvent;
 import org.hibernate.event.PostCollectionRecreateEventListener;
 import org.hibernate.event.PostCollectionRemoveEvent;
@@ -40,13 +45,13 @@ import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEvent;
 import org.hibernate.event.PreCollectionUpdateEventListener;
 import org.hibernate.event.def.DefaultInitializeCollectionEventListener;
-import org.hibernate.impl.SessionFactoryImpl;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 /**
- * Author: Gail Badner
+ * @author Gail Badner
+ * @author Steve Ebersole
  */
 public class CollectionListeners {
-
 
 	public interface Listener extends Serializable {
 		void addEvent(AbstractCollectionEvent event, Listener listener);
@@ -160,28 +165,18 @@ public class CollectionListeners {
 		postCollectionRecreateListener = new PostCollectionRecreateListener( this );
 		postCollectionRemoveListener = new PostCollectionRemoveListener( this );
 		postCollectionUpdateListener = new PostCollectionUpdateListener( this );
-		SessionFactoryImpl impl = ( SessionFactoryImpl ) sf;
-		impl.getEventListeners().setInitializeCollectionEventListeners(
-				new InitializeCollectionEventListener[] { initializeCollectionListener }
-		);
-		impl.getEventListeners().setPreCollectionRecreateEventListeners(
-				new PreCollectionRecreateEventListener[] { preCollectionRecreateListener }
-		);
-		impl.getEventListeners().setPostCollectionRecreateEventListeners(
-				new PostCollectionRecreateEventListener[] { postCollectionRecreateListener }
-		);
-		impl.getEventListeners().setPreCollectionRemoveEventListeners(
-				new PreCollectionRemoveEventListener[] { preCollectionRemoveListener }
-		);
-		impl.getEventListeners().setPostCollectionRemoveEventListeners(
-				new PostCollectionRemoveEventListener[] { postCollectionRemoveListener }
-		);
-		impl.getEventListeners().setPreCollectionUpdateEventListeners(
-				new PreCollectionUpdateEventListener[] { preCollectionUpdateListener }
-		);
-		impl.getEventListeners().setPostCollectionUpdateEventListeners(
-				new PostCollectionUpdateEventListener[] { postCollectionUpdateListener }
-		);
+
+		EventListenerRegistry registry = ( (SessionFactoryImplementor) sf ).getServiceRegistry().getService( EventListenerRegistry.class );
+		registry.setListeners( EventType.INIT_COLLECTION, initializeCollectionListener );
+
+		registry.setListeners( EventType.PRE_COLLECTION_RECREATE, preCollectionRecreateListener );
+		registry.setListeners( EventType.POST_COLLECTION_RECREATE, postCollectionRecreateListener );
+
+		registry.setListeners( EventType.PRE_COLLECTION_REMOVE, preCollectionRemoveListener );
+		registry.setListeners( EventType.POST_COLLECTION_REMOVE, postCollectionRemoveListener );
+
+		registry.setListeners( EventType.PRE_COLLECTION_UPDATE, preCollectionUpdateListener );
+		registry.setListeners( EventType.POST_COLLECTION_UPDATE, postCollectionUpdateListener );
 	}
 
 	public void addEvent(AbstractCollectionEvent event, Listener listener) {

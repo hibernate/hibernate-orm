@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.ejb.event;
+
 import org.hibernate.EntityMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.EntityEntry;
@@ -53,8 +56,11 @@ public class EJB3FlushEntityEventListener extends DefaultFlushEntityEventListene
 
 	@Override
 	protected boolean invokeInterceptor(
-			SessionImplementor session, Object entity, EntityEntry entry, Object[] values, EntityPersister persister
-	) {
+			SessionImplementor session,
+			Object entity,
+			EntityEntry entry,
+			Object[] values,
+			EntityPersister persister) {
 		boolean isDirty = false;
 		if ( entry.getStatus() != Status.DELETED ) {
 			if ( callbackHandler.preUpdate( entity ) ) {
@@ -64,10 +70,8 @@ public class EJB3FlushEntityEventListener extends DefaultFlushEntityEventListene
 		return super.invokeInterceptor( session, entity, entry, values, persister ) || isDirty;
 	}
 
-	/**
-	 * copy the entity state into the state array and return true if the state has changed
-	 */
 	private boolean copyState(Object entity, Type[] types, Object[] state, SessionFactory sf) {
+		// copy the entity state into the state array and return true if the state has changed
 		ClassMetadata metadata = sf.getClassMetadata( entity.getClass() );
 		Object[] newState = metadata.getPropertyValues( entity, EntityMode.POJO );
 		int size = newState.length;

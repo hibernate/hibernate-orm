@@ -33,9 +33,13 @@ import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.access.SoftLock;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.service.event.spi.EventListenerGroup;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 
 /**
  * Any action relating to insert/update/delete of a collection
@@ -190,6 +194,18 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 			);
 			persister.getCacheAccessStrategy().unlockItem( ck, lock );
 		}
+	}
+
+	protected <T> EventListenerGroup<T> listenerGroup(EventType<T> eventType) {
+		return getSession()
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( eventType );
+	}
+
+	protected EventSource eventSource() {
+		return (EventSource) getSession();
 	}
 }
 

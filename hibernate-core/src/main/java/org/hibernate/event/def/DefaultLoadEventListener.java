@@ -46,6 +46,7 @@ import org.hibernate.engine.Status;
 import org.hibernate.engine.TwoPhaseLoad;
 import org.hibernate.engine.Versioning;
 import org.hibernate.event.EventSource;
+import org.hibernate.event.EventType;
 import org.hibernate.event.LoadEvent;
 import org.hibernate.event.LoadEventListener;
 import org.hibernate.event.PostLoadEvent;
@@ -54,6 +55,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.service.event.spi.EventListenerRegistry;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -643,13 +645,24 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		//PostLoad is needed for EJB3
 		//TODO: reuse the PostLoadEvent...
-		PostLoadEvent postLoadEvent = new PostLoadEvent(session).setEntity(result)
-				.setId(id).setPersister(persister);
-		PostLoadEventListener[] listeners = session.getListeners().getPostLoadEventListeners();
-		for ( int i = 0; i < listeners.length; i++ ) {
-			listeners[i].onPostLoad(postLoadEvent);
+		PostLoadEvent postLoadEvent = new PostLoadEvent( session )
+				.setEntity( result )
+				.setId( id )
+				.setPersister( persister );
+
+		for ( PostLoadEventListener listener : postLoadEventListeners( session ) ) {
+			listener.onPostLoad( postLoadEvent );
 		}
 
 		return result;
+	}
+
+	private Iterable<PostLoadEventListener> postLoadEventListeners(EventSource session) {
+		return session
+				.getFactory()
+				.getServiceRegistry()
+				.getService( EventListenerRegistry.class )
+				.getEventListenerGroup( EventType.POST_LOAD )
+				.listeners();
 	}
 }

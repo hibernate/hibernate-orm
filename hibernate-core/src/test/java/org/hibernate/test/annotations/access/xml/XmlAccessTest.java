@@ -1,11 +1,10 @@
-//$Id$
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -24,22 +23,24 @@
  */
 package org.hibernate.test.annotations.access.xml;
 
+import javax.persistence.AccessType;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.AccessType;
-import junit.framework.TestCase;
+
 import org.hibernate.EntityMode;
-import org.hibernate.cfg.AnnotationConfiguration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.PojoEntityTuplizer;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 
 /**
@@ -47,22 +48,8 @@ import org.hibernate.tuple.entity.PojoEntityTuplizer;
  *
  * @author Hardy Ferentschik
  */
-public class XmlAccessTest extends TestCase {
-
-	private ServiceRegistry serviceRegistry;
-
-	@Override
-    protected void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-	}
-
-	@Override
-    protected void tearDown() {
-		if ( serviceRegistry != null ) {
-			ServiceRegistryBuilder.destroy( serviceRegistry );
-		}
-	}
-
+public class XmlAccessTest extends BaseUnitTestCase {
+	@Test
 	public void testAccessOnBasicXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -80,6 +67,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
 
+	@Test
 	public void testAccessOnPersistenceUnitDefaultsXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -97,6 +85,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
 
+	@Test
 	public void testAccessOnEntityMappingsXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -114,6 +103,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
 
+	@Test
 	public void testAccessOnEntityXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -131,6 +121,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
 
+	@Test
 	public void testAccessOnMappedSuperClassXmlElement() throws Exception {
 		Class<?> classUnderTest = Waiter.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -142,6 +133,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
 	}
 
+	@Test
 	public void testAccessOnAssociationXmlElement() throws Exception {
 		Class<?> classUnderTest = RentalCar.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -153,6 +145,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
 
+	@Test
 	public void testAccessOnEmbeddedXmlElement() throws Exception {
 		Class<?> classUnderTest = Cook.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -164,6 +157,7 @@ public class XmlAccessTest extends TestCase {
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
 	}
 
+	@Test
 	public void testAccessOnElementCollectionXmlElement() throws Exception {
 		Class<?> classUnderTest = Boy.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -177,7 +171,7 @@ public class XmlAccessTest extends TestCase {
 	private SessionFactoryImplementor buildSessionFactory(List<Class<?>> classesUnderTest, List<String> configFiles) {
 		assert classesUnderTest != null;
 		assert configFiles != null;
-		AnnotationConfiguration cfg = new AnnotationConfiguration();
+		Configuration cfg = new Configuration();
 		for ( Class<?> clazz : classesUnderTest ) {
 			cfg.addAnnotatedClass( clazz );
 		}
@@ -185,7 +179,7 @@ public class XmlAccessTest extends TestCase {
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile );
 			cfg.addInputStream( is );
 		}
-		return ( SessionFactoryImplementor ) cfg.buildSessionFactory( serviceRegistry );
+		return ( SessionFactoryImplementor ) cfg.buildSessionFactory();
 	}
 
 	// uses the first getter of the tupelizer for the assertions
@@ -195,13 +189,13 @@ public class XmlAccessTest extends TestCase {
 				.getEntityMetamodel();
 		PojoEntityTuplizer tuplizer = ( PojoEntityTuplizer ) metaModel.getTuplizer( EntityMode.POJO );
 		if ( AccessType.FIELD.equals( accessType ) ) {
-			assertTrue(
+			Assert.assertTrue(
 					"Field access was expected.",
 					tuplizer.getGetter( 0 ) instanceof DirectPropertyAccessor.DirectGetter
 			);
 		}
 		else {
-			assertTrue(
+			Assert.assertTrue(
 					"Property access was expected.",
 					tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
 			);

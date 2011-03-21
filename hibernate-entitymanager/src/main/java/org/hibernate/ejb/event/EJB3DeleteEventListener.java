@@ -48,8 +48,9 @@ public class EJB3DeleteEventListener extends DefaultDeleteEventListener implemen
 	}
 
 	@Override
-	protected void invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
+	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
 		callbackHandler.preRemove( entity );
+		return super.invokeDeleteLifecycle( session, entity, persister );
 	}
 
 	@Override

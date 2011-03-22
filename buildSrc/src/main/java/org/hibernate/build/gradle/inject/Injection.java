@@ -21,25 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.build.gradle.upload;
+package org.hibernate.build.gradle.inject;
 
-import org.apache.maven.artifact.ant.Authentication;
-import org.apache.maven.artifact.ant.RemoteRepository;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Contract for providers of {@link Authentication} details for authenticating against remote repositories.
- *
  * @author Steve Ebersole
  */
-public interface AuthenticationProvider {
-	/**
-	 * The contract method.  Given a repository, determine the {@link Authentication} according to this provider's
-	 * contract.  Return {@literal null} to indicate no {@link Authentication} applied for this repository by this
-	 * provider.
-	 *
-	 * @param remoteRepository The repository to check for authentication details.
-	 *
-	 * @return The authentication details, or {@literal null} to indicate none.
-	 */
-	public Authentication determineAuthentication(RemoteRepository remoteRepository);
+public class Injection {
+	private final String expression;
+	private List<TargetMember> targetMembers = new ArrayList<TargetMember>();
+
+	public Injection(String expression) {
+		this.expression = expression;
+	}
+
+	public String getExpression() {
+		return expression;
+	}
+
+	public void into(String className, String member) {
+		into( new TargetMember( className, member ) );
+	}
+
+	public void into(TargetMember targetMember) {
+		targetMembers.add( targetMember );
+	}
+
+	public Iterable<TargetMember> getTargetMembers() {
+		return targetMembers;
+	}
+
 }

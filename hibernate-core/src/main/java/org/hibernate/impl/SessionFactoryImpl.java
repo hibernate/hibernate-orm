@@ -474,7 +474,7 @@ public final class SessionFactoryImpl
 
 	private Statistics buildStatistics(Settings settings, ServiceRegistry serviceRegistry) {
 		Statistics statistics = new ConcurrentStatisticsImpl( this );
-		getStatistics().setStatisticsEnabled( settings.isStatisticsEnabled() );
+		statistics.setStatisticsEnabled( settings.isStatisticsEnabled() );
 		LOG.debugf("Statistics initialized [enabled=%s]", settings.isStatisticsEnabled());
 		return statistics;
 	}

@@ -10,12 +10,21 @@ repositories {
 
 
 dependencies {
+    // common
     compile gradleApi()
     compile localGroovy()
+    compile 'org.slf4j:slf4j-api:1.6.0'
     compile 'org.apache.ant:ant:1.7.0'
     compile 'org.apache.maven:maven-ant-tasks:2.1.0'
+
+    // needed?
     compile 'org.apache.maven.wagon:wagon-http:1.0-beta-6'
+
+    // upload-auth plugin
     compile 'dom4j:dom4j:1.6.1@jar'
+
+    // injection plugin
+    compile 'javassist:javassist:3.12.0.GA'
 
     groovy localGroovy()
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.build.gradle.inject;
 
 /**
- * Information about the Hibernate version.
- *
  * @author Steve Ebersole
  */
-public class Version {
-	public static String getVersionString() {
-		return "[WORKING]";
+public class InjectionException extends RuntimeException {
+	public InjectionException(String message) {
+		super( message );
 	}
 
-
-	public static void main(String[] args) {
-		System.out.println( "Hibernate version " + getVersionString() );
+	public InjectionException(String message, Throwable cause) {
+		super( message, cause );
 	}
 }

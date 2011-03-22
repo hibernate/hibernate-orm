@@ -21,33 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.build.gradle.upload;
-
-import java.util.LinkedList;
+package org.hibernate.build.gradle.inject;
 
 /**
- * A registry of {@link AuthenticationProvider} instances.
- *
  * @author Steve Ebersole
  */
-public class AuthenticationProviderRegistry {
-	private final LinkedList<AuthenticationProvider> authenticationProviders = buildStandardAuthenticationProviders();
+public class TargetMember {
+	private final String className;
+	private final String memberName;
 
-	private static LinkedList<AuthenticationProvider> buildStandardAuthenticationProviders() {
-		LinkedList<AuthenticationProvider> providers = new LinkedList<AuthenticationProvider>();
-		providers.add( new StandardMavenAuthenticationProvider() );
-		return providers;
+	public TargetMember(String className, String memberName) {
+		this.className = className;
+		this.memberName = memberName;
 	}
 
-	public void appendAuthenticationProvider(AuthenticationProvider provider) {
-		authenticationProviders.addLast( provider );
+	public String getClassName() {
+		return className;
 	}
 
-	public void prependAuthenticationProvider(AuthenticationProvider provider) {
-		authenticationProviders.addFirst( provider );
+	public String getMemberName() {
+		return memberName;
 	}
 
-	public Iterable<AuthenticationProvider> providers() {
-		return authenticationProviders;
+	public String getQualifiedName() {
+		return getClassName() + "#" + getMemberName();
 	}
+
 }

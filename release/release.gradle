@@ -144,10 +144,12 @@ releaseCopySpec = copySpec {
         }
 
         // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
-        // asked on gradle mailing list...
+        // due to http://issues.gradle.org/browse/GRADLE-1450
         [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->
             final String shortName = feature.substring( 'hibernate-'.length() );
-            into('lib/optional/' + shortName) {
+// WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
+//            into('lib/optional/' + shortName) {
+            owner.into('lib/optional/' + shortName) {
                 from (
                         ( parent.project( feature ).configurations.archives.allArtifactFiles.filter{ file -> !file.name.endsWith('-sources.jar') }
                                 + parent.project( feature ).configurations.runtime )

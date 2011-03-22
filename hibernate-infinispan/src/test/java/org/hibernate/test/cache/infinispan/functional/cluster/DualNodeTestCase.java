@@ -135,7 +135,7 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
    /**
     * Apply any node-specific configurations to our first node.
     * 
-    * @param the
+    * @param cfg
     *           Configuration to update.
     */
    protected void configureFirstNode(Configuration cfg) {
@@ -145,7 +145,7 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
    /**
     * Apply any node-specific configurations to our second node.
     * 
-    * @param the
+    * @param cfg
     *           Configuration to update.
     */
    protected void configureSecondNode(Configuration cfg) {
@@ -186,7 +186,12 @@ public abstract class DualNodeTestCase extends FunctionalTestCase {
          this.delegate = DualNodeTestCase.this;
       }
 
-      /**
+       @Override
+       public Class[] getAnnotatedClasses() {
+           return this.delegate.getAnnotatedClasses();
+       }
+
+       /**
        * This is the important one -- we extend the delegate's work by adding second-node specific
        * settings
        */

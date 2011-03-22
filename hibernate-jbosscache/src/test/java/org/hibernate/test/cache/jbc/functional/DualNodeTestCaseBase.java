@@ -68,7 +68,7 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
    /**
     * Apply any node-specific configurations to our first node.
     * 
-    * @param the Configuration to update.
+    * @param cfg Configuration to update.
     */
    protected void configureFirstNode(Configuration cfg)
    {
@@ -78,7 +78,7 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
    /**
     * Apply any node-specific configurations to our second node.
     * 
-    * @param the Configuration to update.
+    * @param cfg Configuration to update.
     */
    protected void configureSecondNode(Configuration cfg)
    {
@@ -166,7 +166,10 @@ public abstract class DualNodeTestCaseBase extends CacheTestCaseBase
    public class SecondNodeSettings implements ExecutionEnvironment.Settings {
       
       private DualNodeTestCaseBase delegate;
-      
+      public Class[] getAnnotatedClasses() {
+           return this.delegate.getAnnotatedClasses();
+      }
+
       public SecondNodeSettings() {
           this.delegate = DualNodeTestCaseBase.this;
       }

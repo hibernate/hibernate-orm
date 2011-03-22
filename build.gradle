@@ -10,6 +10,17 @@ allprojects {
     }
 }
 
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenRepo name: 'jboss-nexus', urls: "https://repository.jboss.org/nexus/content/groups/public/"
+        mavenRepo name: "jboss-snapshots", urls: "http://snapshots.jboss.org/maven2/"
+    }
+    dependencies {
+        classpath 'org.hibernate.build.gradle:gradle-upload-auth-plugin:1.0.0'
+    }
+}
+
 ideaProject {
     javaVersion = "1.6"
     withXml { provider ->
@@ -86,11 +97,11 @@ subprojects { subProject ->
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
-    
+
     if ( ! subProject.name.startsWith( 'release' ) ) {
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
-        apply plugin: org.hibernate.build.gradle.upload.UploadAuthenticationManager
+        apply plugin: 'uploadAuth'
 
         configurations {
             provided {

@@ -137,10 +137,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		}
 	}
 
-	static {
-		Version.touch();
-	}
-
 	private String persistenceUnitName;
 	private String cfgXmlResource;
 

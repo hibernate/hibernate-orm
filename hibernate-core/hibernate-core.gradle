@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'antlr'
+apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
 
 dependencies {
 	compile( libraries.commons_collections )

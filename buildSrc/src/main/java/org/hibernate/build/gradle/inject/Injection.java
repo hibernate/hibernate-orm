@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.build.gradle.inject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Information about the Hibernate version.
- *
  * @author Steve Ebersole
  */
-public class Version {
-	public static String getVersionString() {
-		return "[WORKING]";
+public class Injection {
+	private final String expression;
+	private List<TargetMember> targetMembers = new ArrayList<TargetMember>();
+
+	public Injection(String expression) {
+		this.expression = expression;
 	}
 
-
-	public static void main(String[] args) {
-		System.out.println( "Hibernate version " + getVersionString() );
+	public String getExpression() {
+		return expression;
 	}
+
+	public void into(String className, String member) {
+		into( new TargetMember( className, member ) );
+	}
+
+	public void into(TargetMember targetMember) {
+		targetMembers.add( targetMember );
+	}
+
+	public Iterable<TargetMember> getTargetMembers() {
+		return targetMembers;
+	}
+
 }

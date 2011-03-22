@@ -22,16 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.configuration.metadata;
-import java.util.Iterator;
+import java.util.*;
 import javax.persistence.JoinColumn;
 import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.hibernate.envers.tools.StringTools;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Index;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * @author Adam Warski (adam at warski dot org)
+ * @author Lukasz Antoniak (lukasz.antoniak at gmail dot com)
  */
 public class MetadataTools {
     public static Element addNativelyGeneratedId(Element parent, String name, String type) {
@@ -226,6 +229,98 @@ public class MetadataTools {
 				insert.setText(Boolean.toString(insertable));
             }
         }
+    }
+
+    /**
+     * Returns column name of the given element or <code>null</code>.
+     * @param element Element descriptor.
+     * @return Column name if the corresponding element is a <code>property</code> or <code>column</code> tag.
+     */
+    public static String getElementColumnName(Element element) {
+        String columnName = null;
+        if ("property".equals(element.getName())) {
+            // Column name equals property name if 'column' attribute is not specified.
+            columnName = element.attribute("column") != null ? element.attribute("column").getValue()
+                                                             : element.attribute("name").getValue();
+        } else if ("column".equals(element.getName())) {
+            columnName = element.attribute("name").getValue();
+        }
+        return columnName;
+    }
+
+    /**
+     * Adds database index information to <code>column</code> or <code>property</code> elements.
+     * If <code>element</code> (second argument) tag has a different name or corresponding index is not defined,
+     * no action is taken.
+     * @param pc Persistent class mapping.
+     * @param element Element descriptor to which index attribute shall be added.
+     * @param indexNamePrefix Index name prefix.
+     * @param indexNameSuffix Index name suffix.
+     */
+    public static void addIndexToColumn(PersistentClass pc, Element element, String indexNamePrefix,
+                                        String indexNameSuffix) {
+        String columnName = getElementColumnName(element);
+        if (columnName != null) {
+            Set<String> indexNames = getIndexNameForColumn(pc, columnName);
+            if (indexNames != null) {
+                element.addAttribute("index", collectionToString(indexNames, ", ", indexNamePrefix, indexNameSuffix));
+            }
+        }
+    }
+
+    /**
+     * Generates a string representation of collections' items.
+     * @param collection Collection of items.
+     * @param separator Desired separator.
+     * @param itemPrefix String that shall be concatenated before each item.
+     * @param itemSuffix String that shall be concatenated after each item.
+     * @return String representation of collections' items.
+     */
+    private static String collectionToString(Collection collection, String separator, String itemPrefix,
+                                             String itemSuffix) {
+        if (collection == null || collection.isEmpty()) {
+            return "";
+        }
+        StringBuilder ret = new StringBuilder();
+        for (Object item : collection) {
+            ret.append(itemPrefix).append(item).append(itemSuffix).append(separator);
+        }
+        return ret.substring(0, ret.length() - separator.length());
+    }
+
+    /**
+     * Returns set of database index names associated with a given column name.
+     * @param pc Persistent class mapping.
+     * @param columnName Name of the column.
+     *        It should be part of the table mapped by persistent class passed as first argument.
+     * @return Database index names or <code>null</code>.
+     */
+    @SuppressWarnings({"unchecked"})
+    public static Set<String> getIndexNameForColumn(PersistentClass pc, String columnName) {
+        Iterator<Column> columnIterator = pc.getTable().getColumnIterator();
+        while (columnIterator.hasNext()) {
+            Column column = columnIterator.next();
+            if (columnName.equals(column.getName())) {
+                return getIndexNameForColumn(pc, column);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @see #getIndexNameForColumn(PersistentClass, String)
+     */
+    @SuppressWarnings({"unchecked"})
+    public static Set<String> getIndexNameForColumn(PersistentClass pc, Column column) {
+        Set<String> ret = new LinkedHashSet<String>();
+        Iterator<Index> indexIterator = pc.getTable().getIndexIterator();
+        while (indexIterator.hasNext()) {
+            Index index = indexIterator.next();
+            if (index.containsColumn(column)) {
+                ret.add(index.getName());
+            }
+        }
+        return ret.isEmpty() ? null : ret;
     }
 
     /**

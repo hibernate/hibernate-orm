@@ -49,6 +49,9 @@ public class AuditEntitiesConfiguration {
 
     private final String revisionInfoEntityName;
 
+    private final String columnIndexPrefix;
+    private final String columnIndexSuffix;
+
     private final Map<String, String> customAuditTablesNames;
 
     private final String revisionEndFieldName;
@@ -110,6 +113,15 @@ public class AuditEntitiesConfiguration {
 
         revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
         revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
+
+        columnIndexPrefix = getProperty(properties,
+                "org.hibernate.envers.column_index_prefix",
+                "org.hibernate.envers.columnIndexPrefix",
+                "");
+        columnIndexSuffix = getProperty(properties,
+                "org.hibernate.envers.column_index_suffix",
+                "org.hibernate.envers.columnIndexSuffix",
+                "_AUD");
     }
 
     public String getOriginalIdPropName() {
@@ -179,5 +191,21 @@ public class AuditEntitiesConfiguration {
 
     public String getRevisionEndFieldName() {
         return revisionEndFieldName;
+    }
+
+    /**
+     * Returns database column's index prefix. <code>""</code> by default.
+     * @return Column's index prefix.
+     */
+    public String getColumnIndexPrefix() {
+        return columnIndexPrefix;
+    }
+
+    /**
+     * Returns database column's index suffix. <code>"_AUD"</code> by default.
+     * @return Column's index suffix.
+     */
+    public String getColumnIndexSuffix() {
+        return columnIndexSuffix;
     }
 }

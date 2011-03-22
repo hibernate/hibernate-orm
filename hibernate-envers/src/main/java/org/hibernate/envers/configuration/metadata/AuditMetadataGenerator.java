@@ -64,6 +64,7 @@ import org.jboss.logging.Logger;
  * @author Tomasz Bech
  * @author Stephanie Pau at Markit Group Plc
  * @author Hern&aacute;n Chanfreau
+ * @author Lukasz Antoniak (lukasz.antoniak at gmail dot com)
  */
 public final class AuditMetadataGenerator {
 
@@ -461,10 +462,30 @@ public final class AuditMetadataGenerator {
         createJoins(pc, class_mapping, auditingData);
         addJoins(pc, propertyMapper, auditingData, pc.getEntityName(), xmlMappingData, true);
 
+        // Copy database indexes
+        addIndexes(pc, class_mapping);
+
         // Storing the generated configuration
         EntityConfiguration entityCfg = new EntityConfiguration(auditEntityName,pc.getClassName(), idMapper,
                 propertyMapper, parentEntityName);
         entitiesConfigurations.put(pc.getEntityName(), entityCfg);
+    }
+
+    /**
+     * Adds database index information to all <code>property</code> and <code>column</code> tags (if corresponding
+     * index is defined in original entity's mapping).
+     * @param pc Persistence class mapping descriptor.
+     * @param node Root element of class mapping.
+     */
+    @SuppressWarnings({"unchecked"})
+    private void addIndexes(PersistentClass pc, Element node) {
+        Iterator<Element> elementIterator = node.elementIterator();
+        while (elementIterator.hasNext()) {
+            Element element = elementIterator.next();
+            MetadataTools.addIndexToColumn(pc, element, verEntCfg.getColumnIndexPrefix(),
+                                           verEntCfg.getColumnIndexSuffix());
+            addIndexes(pc, element);
+        }
     }
 
     @SuppressWarnings({"unchecked"})

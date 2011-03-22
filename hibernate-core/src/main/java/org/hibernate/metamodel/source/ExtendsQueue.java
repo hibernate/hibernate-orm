@@ -28,12 +28,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.HibernateLogger;
 import org.hibernate.MappingException;
 import org.hibernate.cfg.ExtendsQueueEntry;
 import org.hibernate.metamodel.source.hbm.HbmHelper;
+import org.jboss.logging.Logger;
 
 /**
  * TODO : javadoc
@@ -41,7 +40,8 @@ import org.hibernate.metamodel.source.hbm.HbmHelper;
  * @author Steve Ebersole
  */
 public class ExtendsQueue implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( ExtendsQueue.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ExtendsQueue.class.getName());
 
 	private final Metadata metadata;
 	private Set<ExtendsQueueEntry> extendsQueue = new HashSet<ExtendsQueueEntry>();
@@ -55,7 +55,7 @@ public class ExtendsQueue implements Serializable {
 	}
 
 	public int processExtendsQueue() {
-		log.debug( "processing extends queue" );
+		LOG.debug( "processing extends queue" );
 		int added = 0;
 		ExtendsQueueEntry extendsQueueEntry = findPossibleExtends();
 		while ( extendsQueueEntry != null ) {

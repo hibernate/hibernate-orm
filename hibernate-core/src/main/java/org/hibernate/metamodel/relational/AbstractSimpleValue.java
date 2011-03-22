@@ -23,10 +23,9 @@
  */
 package org.hibernate.metamodel.relational;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.hibernate.HibernateLogger;
 import org.hibernate.metamodel.ValidationException;
+import org.jboss.logging.Logger;
 
 /**
  * Basic support for {@link SimpleValue} implementations.
@@ -34,7 +33,8 @@ import org.hibernate.metamodel.ValidationException;
  * @author Steve Ebersole
  */
 public abstract class AbstractSimpleValue implements SimpleValue {
-	private static final Logger log = LoggerFactory.getLogger( AbstractSimpleValue.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, AbstractSimpleValue.class.getName());
 
 	private final TableSpecification table;
 	private final int position;
@@ -61,9 +61,9 @@ public abstract class AbstractSimpleValue implements SimpleValue {
 
 	@Override
 	public void setDatatype(Datatype datatype) {
-		log.debug( "setting datatype for column {} : {}", toLoggableString(), datatype );
+		LOG.debugf( "setting datatype for column %s : %s", toLoggableString(), datatype );
 		if ( this.datatype != null && ! this.datatype.equals( datatype ) ) {
-			log.debug( "overriding previous datatype : {}", this.datatype );
+			LOG.debugf( "overriding previous datatype : %s", this.datatype );
 		}
 		this.datatype = datatype;
 	}

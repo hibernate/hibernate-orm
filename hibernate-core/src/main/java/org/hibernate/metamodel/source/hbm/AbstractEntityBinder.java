@@ -32,8 +32,6 @@ import java.util.StringTokenizer;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
@@ -71,7 +69,6 @@ import org.hibernate.metamodel.source.util.DomHelper;
 * @author Steve Ebersole
 */
 abstract class AbstractEntityBinder {
-	private static final Logger log = LoggerFactory.getLogger( AbstractEntityBinder.class );
 
 	protected final HibernateMappingBinder hibernateMappingBinder;
 	protected final Map<String, MetaAttribute> entityMetas;

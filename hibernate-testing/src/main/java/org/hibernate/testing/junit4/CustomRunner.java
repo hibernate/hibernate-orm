@@ -23,29 +23,26 @@
  */
 package org.hibernate.testing.junit4;
 
+import static org.hibernate.testing.TestLogger.LOG;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-
-import org.junit.Ignore;
-import org.junit.runner.manipulation.NoTestsRemainException;
-import org.junit.runners.BlockJUnit4ClassRunner;
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
-
 import org.hibernate.testing.DialectCheck;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
+import org.junit.Ignore;
+import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.Statement;
 
 /**
  * The Hibernate-specific {@link org.junit.runner.Runner} implementation which layers {@link ExtendedFrameworkMethod}
@@ -55,7 +52,6 @@ import org.hibernate.testing.SkipForDialect;
  * @author Steve Ebersole
  */
 public class CustomRunner extends BlockJUnit4ClassRunner {
-	private static final Logger log = LoggerFactory.getLogger( CustomRunner.class );
 
 	private TestClassMetadata testClassMetadata;
 
@@ -144,7 +140,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 
 			testCount++;
-			log.trace( "adding test " + Helper.extractTestName( frameworkMethod ) + " [#" + testCount + "]" );
+			LOG.trace( "adding test " + Helper.extractTestName( frameworkMethod ) + " [#" + testCount + "]" );
 			result.add( new ExtendedFrameworkMethod( frameworkMethod, virtualIgnore, failureExpected ) );
 		}
 		return result;

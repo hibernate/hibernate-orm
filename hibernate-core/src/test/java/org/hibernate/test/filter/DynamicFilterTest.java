@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.filter;
+
 import static org.hibernate.testing.TestLogger.LOG;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -30,9 +31,6 @@ import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
@@ -67,7 +65,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
-	private Logger log = LoggerFactory.getLogger( DynamicFilterTest.class );
 
 	@Override
 	public String[] getMappings() {
@@ -218,7 +215,7 @@ public class DynamicFilterTest extends BaseCoreFunctionalTestCase {
 		session.close();
 		testData.release();
 	}
-	
+
 	@Test
 	public void testFiltersWithCustomerReadAndWrite() {
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

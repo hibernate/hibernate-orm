@@ -23,8 +23,8 @@
  */
 package org.hibernate.metamodel.binding;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hibernate.HibernateLogger;
+import org.jboss.logging.Logger;
 
 /**
  * TODO : javadoc
@@ -32,7 +32,8 @@ import org.slf4j.LoggerFactory;
  * @author Steve Ebersole
  */
 public class EntityIdentifier {
-	private static final Logger log = LoggerFactory.getLogger( EntityIdentifier.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, EntityIdentifier.class.getName());
 
 	private final EntityBinding entityBinding;
 	private AttributeBinding attributeBinding;
@@ -53,7 +54,7 @@ public class EntityIdentifier {
 	public void setValueBinding(AttributeBinding attributeBinding) {
 		if ( this.attributeBinding != null ) {
 			// todo : error?  or just log?  for now just log
-			log.warn( "setting entity-identifier value binding where one already existed : {}.", entityBinding.getEntity().getName() );
+			LOG.entityIdentifierValueBindingExists( entityBinding.getEntity().getName() );
 		}
 		this.attributeBinding = attributeBinding;
 	}

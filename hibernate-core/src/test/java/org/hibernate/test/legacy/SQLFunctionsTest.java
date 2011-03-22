@@ -31,9 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -62,7 +59,6 @@ import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
 public class SQLFunctionsTest extends LegacyTestCase {
-	private static final Logger log = LoggerFactory.getLogger(SQLFunctionsTest.class);
 
 	@Override
 	public String[] getMappings() {

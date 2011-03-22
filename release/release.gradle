@@ -12,7 +12,7 @@ ideaModule {
 
 javadocBuildDir = dir( buildDirName + "/documentation/javadocs" )
 
-def List subProjectsToSkipForJavadoc = ['release'];
+def List subProjectsToSkipForJavadoc = ['release','documentation'];
 
 def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
 
@@ -104,9 +104,8 @@ aggregateJavadocs.doLast {
 // release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 releaseBuildDir = dir( buildDirName )
+task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,aggregateJavadocs] )
 
-//task prepareReleaseBundles( dependsOn: [buildDocs, aggregateJavadocs, uberJar] )
-task prepareReleaseBundles( dependsOn: [aggregateJavadocs] )
 
 releaseCopySpec = copySpec {
     into( "hibernate-release-$project.version" ) {
@@ -157,9 +156,11 @@ releaseCopySpec = copySpec {
             }
         }
 
-//        into('documentation/manual') {
-//            from new File( project.buildDir, 'docbook/publish' )
-//        }
+	into('documentation') {
+          from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
+       }
+
+
 
         into('documentation/javadocs') {
             from javadocBuildDir.dir

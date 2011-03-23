@@ -30,8 +30,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.dom4j.Element;
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -43,6 +45,7 @@ import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.tuple.EntityModeToTuplizerMapping;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.component.ComponentMetamodel;
@@ -97,6 +100,14 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return tuplizerMapping;
 	}
 
+	public int getColumnSpan(Mapping mapping) throws MappingException {
+		int span = 0;
+		for ( int i = 0; i < propertySpan; i++ ) {
+			span += propertyTypes[i].getColumnSpan( mapping );
+		}
+		return span;
+	}
+
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		//Not called at runtime so doesn't matter if its slow :)
 		int[] sqlTypes = new int[getColumnSpan( mapping )];
@@ -110,13 +121,32 @@ public class ComponentType extends AbstractType implements CompositeType {
 		return sqlTypes;
 	}
 
-	public int getColumnSpan(Mapping mapping) throws MappingException {
-		int span = 0;
-		for ( int i = 0; i < propertySpan; i++ ) {
-			span += propertyTypes[i].getColumnSpan( mapping );
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		//Not called at runtime so doesn't matter if its slow :)
+		final Size[] sizes = new Size[ getColumnSpan( mapping ) ];
+		int soFar = 0;
+		for ( Type propertyType : propertyTypes ) {
+			final Size[] propertySizes = propertyType.dictatedSizes( mapping );
+			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
+			soFar += propertySizes.length;
 		}
-		return span;
+		return sizes;
 	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		//Not called at runtime so doesn't matter if its slow :)
+		final Size[] sizes = new Size[ getColumnSpan( mapping ) ];
+		int soFar = 0;
+		for ( Type propertyType : propertyTypes ) {
+			final Size[] propertySizes = propertyType.defaultSizes( mapping );
+			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
+			soFar += propertySizes.length;
+		}
+		return sizes;
+	}
+
 
 	@Override
     public final boolean isComponentType() {

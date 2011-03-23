@@ -22,19 +22,24 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import org.dom4j.Node;
+import org.jboss.logging.Logger;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
+import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.jboss.logging.Logger;
+import org.hibernate.metamodel.relational.Size;
 
 /**
  * Superclass of single-column nullable types.
@@ -45,9 +50,38 @@ import org.jboss.logging.Logger;
  */
 @Deprecated
 public abstract class NullableType extends AbstractType implements StringRepresentableType, XmlRepresentableType {
-
-
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, NullableType.class.getName());
+
+	private final Size dictatedSize = new Size();
+
+	/**
+	 * A convenience form of {@link #sqlTypes(org.hibernate.engine.Mapping)}, returning
+	 * just a single type value since these are explicitly dealing with single column
+	 * mappings.
+	 *
+	 * @return The {@link java.sql.Types} mapping value.
+	 */
+	public abstract int sqlType();
+
+	/**
+	 * A convenience form of {@link #dictatedSizes}, returning just a single size since we are explicitly dealing with
+	 * single column mappings here.
+	 *
+	 * @return The {@link java.sql.Types} mapping value.
+	 */
+	public Size dictatedSize() {
+		return dictatedSize;
+	}
+
+	/**
+	 * A convenience form of {@link #defaultSizes}, returning just a single size since we are explicitly dealing with
+	 * single column mappings here.
+	 *
+	 * @return The {@link java.sql.Types} mapping value.
+	 */
+	public Size defaultSize() {
+		return LEGACY_DEFAULT_SIZE;
+	}
 
 	/**
 	 * Get a column value from a result set, without worrying about the
@@ -77,15 +111,6 @@ public abstract class NullableType extends AbstractType implements StringReprese
 	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
 	 */
 	public abstract void set(PreparedStatement st, Object value, int index) throws HibernateException, SQLException;
-
-	/**
-	 * A convenience form of {@link #sqlTypes(org.hibernate.engine.Mapping)}, returning
-	 * just a single type value since these are explicitly dealing with single column
-	 * mappings.
-	 *
-	 * @return The {@link java.sql.Types} mapping value.
-	 */
-	public abstract int sqlType();
 
 	/**
 	 * A null-safe version of {@link #toString(Object)}.  Specifically we are
@@ -198,6 +223,16 @@ public abstract class NullableType extends AbstractType implements StringReprese
 
 	public final int[] sqlTypes(Mapping session) {
 		return new int[] { sqlType() };
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return new Size[] { dictatedSize() };
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return new Size[] { defaultSize() };
 	}
 
 	@Override

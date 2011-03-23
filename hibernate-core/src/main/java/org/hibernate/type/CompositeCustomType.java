@@ -39,6 +39,7 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
 
@@ -197,7 +198,7 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		Object owner)
 		throws HibernateException, SQLException {
 
-		return userType.nullSafeGet(rs, new String[] {columnName}, session, owner);
+		return userType.nullSafeGet( rs, new String[] {columnName}, session, owner );
 	}
 
 	public Object nullSafeGet(
@@ -230,7 +231,6 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 		throws HibernateException, SQLException {
 
 		userType.nullSafeSet(st, value, index, session);
-
 	}
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
@@ -242,6 +242,32 @@ public class CompositeCustomType extends AbstractType implements CompositeType, 
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		//Not called at runtime so doesn't matter if its slow :)
+		final Size[] sizes = new Size[ getColumnSpan( mapping ) ];
+		int soFar = 0;
+		for ( Type propertyType : userType.getPropertyTypes() ) {
+			final Size[] propertySizes = propertyType.dictatedSizes( mapping );
+			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
+			soFar += propertySizes.length;
+		}
+		return sizes;
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		//Not called at runtime so doesn't matter if its slow :)
+		final Size[] sizes = new Size[ getColumnSpan( mapping ) ];
+		int soFar = 0;
+		for ( Type propertyType : userType.getPropertyTypes() ) {
+			final Size[] propertySizes = propertyType.defaultSizes( mapping );
+			System.arraycopy( propertySizes, 0, sizes, soFar, propertySizes.length );
+			soFar += propertySizes.length;
+		}
+		return sizes;
 	}
 	
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {

@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.type.Type;
@@ -181,6 +182,14 @@ public final class ArrayHelper {
 
 	public static int[] join(int[] x, int[] y) {
 		int[] result = new int[ x.length + y.length ];
+		System.arraycopy( x, 0, result, 0, x.length );
+		System.arraycopy( y, 0, result, x.length, y.length );
+		return result;
+	}
+
+	@SuppressWarnings( {"unchecked"})
+	public static <T> T[] join(T[] x, T[] y) {
+		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
 		System.arraycopy( x, 0, result, 0, x.length );
 		System.arraycopy( y, 0, result, x.length, y.length );
 		return result;
@@ -362,6 +371,8 @@ public final class ArrayHelper {
 		}
         return true;
 	}
+
+
 }
 
 

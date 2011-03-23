@@ -37,6 +37,7 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -50,6 +51,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  */
 public abstract class AbstractStandardBasicType<T>
 		implements BasicType, StringRepresentableType<T>, XmlRepresentableType<T> {
+
+	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
+	private final Size dictatedSize = new Size();
 
 	private final SqlTypeDescriptor sqlTypeDescriptor;
 	private final JavaTypeDescriptor<T> javaTypeDescriptor;
@@ -109,6 +113,14 @@ public abstract class AbstractStandardBasicType<T>
 		return false;
 	}
 
+	protected static Size getDefaultSize() {
+		return DEFAULT_SIZE;
+	}
+
+	protected Size getDictatedSize() {
+		return dictatedSize;
+	}
+
 
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -124,12 +136,22 @@ public abstract class AbstractStandardBasicType<T>
 		return javaTypeDescriptor.getJavaTypeClass();
 	}
 
+	public final int getColumnSpan(Mapping mapping) throws MappingException {
+		return sqlTypes( mapping ).length;
+	}
+
 	public final int[] sqlTypes(Mapping mapping) throws MappingException {
 		return new int[] { sqlTypeDescriptor.getSqlType() };
 	}
 
-	public final int getColumnSpan(Mapping mapping) throws MappingException {
-		return sqlTypes( mapping ).length;
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return new Size[] { getDictatedSize() };
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return new Size[] { getDefaultSize() };
 	}
 
 	public final boolean isAssociationType() {

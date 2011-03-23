@@ -22,18 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+
 import org.dom4j.Node;
+
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.metamodel.relational.Size;
 
 /**
  * Defines a mapping between a Java type and one or more JDBC {@linkplain java.sql.Types types}, as well
@@ -103,7 +107,20 @@ public interface Type extends Serializable {
 	public boolean isComponentType();
 
 	/**
+	 * How many columns are used to persist this type.  Always the same as {@code sqlTypes(mapping).length}
+	 *
+	 * @param mapping The mapping object :/
+	 *
+	 * @return The number of columns
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 */
+	public int getColumnSpan(Mapping mapping) throws MappingException;
+
+	/**
 	 * Return the JDBC types codes (per {@link java.sql.Types}) for the columns mapped by this type.
+	 * <p/>
+	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
 	 *
 	 * @param mapping The mapping object :/
 	 *
@@ -114,15 +131,34 @@ public interface Type extends Serializable {
 	public int[] sqlTypes(Mapping mapping) throws MappingException;
 
 	/**
-	 * How many columns are used to persist this type.  Always the same as {@code sqlTypes(mapping).length}
+	 * Return the column sizes dictated by this type.  For example, the mapping for a {@code char}/{@link Character} would
+	 * have a dictated length limit of 1; for a string-based {@link java.util.UUID} would have a size limit of 36; etc.
+	 * <p/>
+	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
 	 *
 	 * @param mapping The mapping object :/
+	 * @todo Would be much much better to have this aware of Dialect once the service/metamodel split is done
 	 *
-	 * @return The number of columns
+	 * @return The dictated sizes.
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	public int getColumnSpan(Mapping mapping) throws MappingException;
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException;
+
+	/**
+	 * Defines the column sizes to use according to this type if the user did not explicitly say (and if no
+	 * {@link #dictatedSizes} were given).
+	 * <p/>
+	 * NOTE: The number of elements in this array matches the return from {@link #getColumnSpan}.
+	 *
+	 * @param mapping The mapping object :/
+	 * @todo Would be much much better to have this aware of Dialect once the service/metamodel split is done
+	 *
+	 * @return The default sizes.
+	 *
+	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
+	 */
+	public Size[] defaultSizes(Mapping mapping) throws MappingException;
 
 	/**
 	 * The class returned by {@link #nullSafeGet} methods. This is used to  establish the class of an array of

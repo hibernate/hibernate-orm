@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.metamodel.relational.Size;
 
 /**
  * @author Emmanuel Bernard
@@ -41,6 +42,16 @@ public abstract class AbstractLobType extends AbstractType implements Serializab
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
 			throws HibernateException {
 		return checkable[0] ? ! isEqual( old, current, session.getEntityMode() ) : false;
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return new Size[] { LEGACY_DICTATED_SIZE };
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return new Size[] { LEGACY_DEFAULT_SIZE };
 	}
 
 	@Override

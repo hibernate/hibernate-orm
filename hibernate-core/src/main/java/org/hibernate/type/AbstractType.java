@@ -33,6 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.metamodel.relational.Size;
 
 /**
  * Abstract superclass of the built in Type hierarchy.
@@ -40,6 +41,8 @@ import org.hibernate.internal.util.compare.EqualsHelper;
  * @author Gavin King
  */
 public abstract class AbstractType implements Type {
+	protected static final Size LEGACY_DICTATED_SIZE = new Size();
+	protected static final Size LEGACY_DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 
 	public boolean isAssociationType() {
 		return false;

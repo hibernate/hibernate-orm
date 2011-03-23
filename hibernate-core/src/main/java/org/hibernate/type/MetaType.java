@@ -35,6 +35,7 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.metamodel.relational.Size;
 
 /**
  * @author Gavin King
@@ -63,6 +64,16 @@ public class MetaType extends AbstractType {
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return baseType.sqlTypes(mapping);
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return baseType.dictatedSizes( mapping );
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return baseType.defaultSizes( mapping );
 	}
 
 	public int getColumnSpan(Mapping mapping) throws MappingException {

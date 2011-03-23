@@ -32,6 +32,7 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -90,6 +91,18 @@ public class OneToOneType extends EntityType {
 
 	public int[] sqlTypes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
+	}
+
+	private static final Size[] SIZES = new Size[0];
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return SIZES;
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return SIZES;
 	}
 
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {

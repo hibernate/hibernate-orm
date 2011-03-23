@@ -38,8 +38,10 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
+import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -54,6 +56,8 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 	private final UserType userType;
 	private final String name;
 	private final int[] types;
+	private final Size[] dictatedSizes;
+	private final Size[] defaultSizes;
 	private final boolean customLogging;
 	private final String[] registrationKeys;
 
@@ -65,6 +69,12 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 		this.types = userType.sqlTypes();
+		this.dictatedSizes = Sized.class.isInstance( userType )
+				? ( (Sized) userType ).dictatedSizes()
+				: new Size[ types.length ];
+		this.defaultSizes = Sized.class.isInstance( userType )
+				? ( (Sized) userType ).defaultSizes()
+				: new Size[ types.length ];
 		this.customLogging = LoggableUserType.class.isInstance( userType );
 		this.registrationKeys = registrationKeys;
 	}
@@ -79,6 +89,16 @@ public class CustomType extends AbstractType implements IdentifierType, Discrimi
 
 	public int[] sqlTypes(Mapping pi) {
 		return types;
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return dictatedSizes;
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return defaultSizes;
 	}
 
 	public int getColumnSpan(Mapping session) {

@@ -34,6 +34,7 @@ import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.ForeignKeys;
 import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -108,6 +109,16 @@ public class ManyToOneType extends EntityType {
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return getIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return getIdentifierOrUniqueKeyType( mapping ).dictatedSizes( mapping );
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return getIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
 	}
 
 	public void nullSafeSet(

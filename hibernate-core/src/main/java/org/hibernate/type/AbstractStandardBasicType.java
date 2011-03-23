@@ -87,7 +87,7 @@ public abstract class AbstractStandardBasicType<T>
 		return javaTypeDescriptor.getMutabilityPlan();
 	}
 
-	protected T getReplacement(T original, T target) {
+	protected T getReplacement(T original, T target, SessionImplementor session) {
 		if ( !isMutable() ) {
 			return original;
 		}
@@ -375,7 +375,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	public final Object replace(Object original, Object target, SessionImplementor session, Object owner, Map copyCache) {
-		return getReplacement( (T) original, (T) target );
+		return getReplacement( (T) original, (T) target, session );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -387,7 +387,7 @@ public abstract class AbstractStandardBasicType<T>
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT == foreignKeyDirection
-				? getReplacement( (T) original, (T) target )
+				? getReplacement( (T) original, (T) target, session )
 				: target;
 	}
 }

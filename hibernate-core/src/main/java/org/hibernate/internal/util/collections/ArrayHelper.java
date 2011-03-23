@@ -258,6 +258,7 @@ public final class ArrayHelper {
 	public static final Class[] EMPTY_CLASS_ARRAY = {};
 	public static final Object[] EMPTY_OBJECT_ARRAY = {};
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
+	public static final byte[] EMPTY_BYTE_ARRAY = {};
 	
 	public static int[] getBatchSizes(int maxBatchSize) {
 		int batchSize = maxBatchSize;

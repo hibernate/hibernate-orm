@@ -57,8 +57,8 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBoundedClobLocatorAccess() throws Throwable {
-		String original = buildRecursively( CLOB_SIZE, 'x' );
-		String changed = buildRecursively( CLOB_SIZE, 'y' );
+		String original = buildString( CLOB_SIZE, 'x' );
+		String changed = buildString( CLOB_SIZE, 'y' );
 		String empty = "";
 
 		Session s = openSession();
@@ -143,7 +143,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 		// unsupported; most databases would not allow such a construct anyway.
 		// Thus here we are only testing materialization...
 
-		String original = buildRecursively( CLOB_SIZE, 'x' );
+		String original = buildString( CLOB_SIZE, 'x' );
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -171,12 +171,11 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	private String extractData(Clob clob) throws Throwable {
+	public static String extractData(Clob clob) throws Exception {
 		return DataHelper.extractString( clob.getCharacterStream() );
 	}
 
-
-	private String buildRecursively(int size, char baseChar) {
+	public static String buildString(int size, char baseChar) {
 		StringBuffer buff = new StringBuffer();
 		for( int i = 0; i < size; i++ ) {
 			buff.append( baseChar );

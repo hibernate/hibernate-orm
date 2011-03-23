@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -31,6 +32,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.SQLException;
+
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -173,7 +175,7 @@ public class ClobProxy implements InvocationHandler {
 			}
 		}
 		catch ( IOException ioe ) {
-			throw new SQLException( "could not reset reader" );
+			throw new SQLException( "could not reset reader", ioe );
 		}
 		needsReset = true;
 	}

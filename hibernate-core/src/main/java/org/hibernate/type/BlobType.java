@@ -23,6 +23,8 @@
  */
 package org.hibernate.type;
 import java.sql.Blob;
+
+import org.hibernate.engine.SessionImplementor;
 import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
 
 /**
@@ -51,8 +53,8 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	}
 
 	@Override
-	protected Blob getReplacement(Blob original, Blob target) {
-		return target;
+	protected Blob getReplacement(Blob original, Blob target, SessionImplementor session) {
+		return session.getFactory().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
 
 }

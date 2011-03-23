@@ -38,6 +38,7 @@ import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
@@ -55,7 +56,7 @@ import org.hibernate.type.Type;
  * @see org.hibernate.impl.SessionImpl the actual implementation
  * @author Gavin King
  */
-public interface SessionImplementor extends Serializable {
+public interface SessionImplementor extends Serializable, LobCreationContext {
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.

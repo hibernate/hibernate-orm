@@ -2054,25 +2054,6 @@ public final class SessionImpl
 	/**
 	 * {@inheritDoc}
 	 */
-	public Object execute(LobCreationContext.Callback callback) {
-		Connection connection = transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnection();
-		try {
-			return callback.executeOnConnection( connection );
-		}
-		catch ( SQLException e ) {
-			throw getFactory().getSQLExceptionHelper().convert(
-					e,
-					"Error creating contextual LOB : " + e.getMessage()
-			);
-		}
-		finally {
-			transactionCoordinator.getJdbcCoordinator().getLogicalConnection().afterStatementExecution();
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public TypeHelper getTypeHelper() {
 		return getSessionFactory().getTypeHelper();
 	}

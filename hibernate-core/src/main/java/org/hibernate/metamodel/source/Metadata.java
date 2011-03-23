@@ -29,10 +29,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.hibernate.DuplicateMappingException;
+import org.hibernate.HibernateLogger;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -46,6 +44,7 @@ import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.relational.Database;
 import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
+import org.jboss.logging.Logger;
 
 /**
  * TODO : javadoc
@@ -53,7 +52,8 @@ import org.hibernate.metamodel.source.hbm.HibernateXmlBinder;
  * @author Steve Ebersole
  */
 public class Metadata implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger( Metadata.class );
+
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, Metadata.class.getName());
 
 	private final HibernateXmlBinder hibernateXmlBinder = new HibernateXmlBinder( this );
 	private final ExtendsQueue extendsQueue = new ExtendsQueue( this );
@@ -151,10 +151,10 @@ public class Metadata implements Serializable {
 		if ( imports == null ) {
 			imports = new HashMap<String, String>();
 		}
-		log.trace( "Import: " + importName + " -> " + entityName );
+		LOG.tracef( "Import: %s -> %s", importName, entityName );
 		String old = imports.put( importName, entityName );
 		if ( old != null ) {
-			log.debug( "import name [{}] overrode previous [{}]", importName, old  );
+			LOG.debugf( "import name [%s] overrode previous [%s]", importName, old  );
 		}
 	}
 

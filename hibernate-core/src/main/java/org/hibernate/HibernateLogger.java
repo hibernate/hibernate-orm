@@ -1854,4 +1854,8 @@ public interface HibernateLogger extends BasicLogger {
     @Message( value = "Encountered legacy TransactionManagerLookup specified; convert to newer %s contract specified via %s setting", id = 428 )
     void legacyTransactionManagerStrategy( String name,
                                            String jtaPlatform );
+
+    @LogMessage( level = WARN )
+    @Message( value = "Setting entity-identifier value binding where one already existed : %s.", id = 429 )
+	void entityIdentifierValueBindingExists(String name);
 }

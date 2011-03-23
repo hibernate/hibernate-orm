@@ -367,6 +367,26 @@ public abstract class Dialect {
 	}
 
 	/**
+	 * The legacy behavior of Hibernate.  LOBs are not processed by merge
+	 */
+	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
+		@Override
+		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+			return target;
+		}
+
+		@Override
+		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+			return target;
+		}
+
+		@Override
+		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+			return target;
+		}
+	};
+
+	/**
 	 * Merge strategy based on transferring contents based on streams.
 	 */
 	protected static final LobMergeStrategy STREAM_XFER_LOB_MERGE_STRATEGY = new LobMergeStrategy() {

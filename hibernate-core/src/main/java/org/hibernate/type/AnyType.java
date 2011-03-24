@@ -42,6 +42,7 @@ import org.hibernate.engine.Mapping;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.HibernateProxyHelper;
 
@@ -169,6 +170,22 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return ArrayHelper.join(
 				metaType.sqlTypes( mapping ),
 				identifierType.sqlTypes( mapping )
+		);
+	}
+
+	@Override
+	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
+		return ArrayHelper.join(
+				metaType.dictatedSizes( mapping ),
+				identifierType.dictatedSizes( mapping )
+		);
+	}
+
+	@Override
+	public Size[] defaultSizes(Mapping mapping) throws MappingException {
+		return ArrayHelper.join(
+				metaType.defaultSizes( mapping ),
+				identifierType.defaultSizes( mapping )
 		);
 	}
 

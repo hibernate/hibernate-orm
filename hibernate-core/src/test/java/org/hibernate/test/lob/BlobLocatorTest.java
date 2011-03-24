@@ -56,8 +56,8 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testBoundedBlobLocatorAccess() throws Throwable {
-		byte[] original = buildRecursively( BLOB_SIZE, true );
-		byte[] changed = buildRecursively( BLOB_SIZE, false );
+		byte[] original = buildByteArray( BLOB_SIZE, true );
+		byte[] changed = buildByteArray( BLOB_SIZE, false );
 		byte[] empty = new byte[] {};
 
 		Session s = openSession();
@@ -142,7 +142,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// unsupported; most databases would not allow such a construct anyway.
 		// Thus here we are only testing materialization...
 
-		byte[] original = buildRecursively( BLOB_SIZE, true );
+		byte[] original = buildByteArray( BLOB_SIZE, true );
 
 		Session s = openSession();
 		s.beginTransaction();
@@ -170,12 +170,12 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	private byte[] extractData(Blob blob) throws Throwable {
+	public static byte[] extractData(Blob blob) throws Exception {
 		return blob.getBytes( 1, ( int ) blob.length() );
 	}
 
 
-	private byte[] buildRecursively(long size, boolean on) {
+	public static byte[] buildByteArray(long size, boolean on) {
 		byte[] data = new byte[(int)size];
 		data[0] = mask( on );
 		for ( int i = 0; i < size; i++ ) {
@@ -185,11 +185,11 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		return data;
 	}
 
-	private byte mask(boolean on) {
+	private static byte mask(boolean on) {
 		return on ? ( byte ) 1 : ( byte ) 0;
 	}
 
-	private static void assertEquals(byte[] val1, byte[] val2) {
+	public static void assertEquals(byte[] val1, byte[] val2) {
 		if ( !ArrayHelper.isEquals( val1, val2 ) ) {
 			throw new AssertionFailedError( "byte arrays did not match" );
 		}

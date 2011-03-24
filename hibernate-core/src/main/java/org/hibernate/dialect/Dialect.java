@@ -23,7 +23,12 @@
  */
 package org.hibernate.dialect;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
 import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -50,6 +55,8 @@ import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.exception.SQLExceptionConverter;
 import org.hibernate.exception.SQLStateConverter;
 import org.hibernate.exception.ViolatedConstraintNameExtracter;
@@ -58,6 +65,8 @@ import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.sql.ANSICaseFragment;
@@ -356,6 +365,143 @@ public abstract class Dialect {
 		}
 		return descriptor;
 	}
+
+	/**
+	 * The legacy behavior of Hibernate.  LOBs are not processed by merge
+	 */
+	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
+		@Override
+		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+			return target;
+		}
+
+		@Override
+		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+			return target;
+		}
+
+		@Override
+		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+			return target;
+		}
+	};
+
+	/**
+	 * Merge strategy based on transferring contents based on streams.
+	 */
+	protected static final LobMergeStrategy STREAM_XFER_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
+		@Override
+		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+			if ( original != target ) {
+				try {
+					OutputStream connectedStream = target.setBinaryStream( 1L );  // the BLOB just read during the load phase of merge
+					InputStream detachedStream = original.getBinaryStream();      // the BLOB from the detached state
+					StreamCopier.copy( detachedStream, connectedStream );
+					return target;
+				}
+				catch (SQLException e ) {
+					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge BLOB data" );
+				}
+			}
+			else {
+				return NEW_LOCATOR_LOB_MERGE_STRATEGY.mergeBlob( original, target, session );
+			}
+		}
+
+		@Override
+		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+			if ( original != target ) {
+				try {
+					OutputStream connectedStream = target.setAsciiStream( 1L );  // the CLOB just read during the load phase of merge
+					InputStream detachedStream = original.getAsciiStream();      // the CLOB from the detached state
+					StreamCopier.copy( detachedStream, connectedStream );
+					return target;
+				}
+				catch (SQLException e ) {
+					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge CLOB data" );
+				}
+			}
+			else {
+				return NEW_LOCATOR_LOB_MERGE_STRATEGY.mergeClob( original, target, session );
+			}
+		}
+
+		@Override
+		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+			if ( original != target ) {
+				try {
+					OutputStream connectedStream = target.setAsciiStream( 1L );  // the NCLOB just read during the load phase of merge
+					InputStream detachedStream = original.getAsciiStream();      // the NCLOB from the detached state
+					StreamCopier.copy( detachedStream, connectedStream );
+					return target;
+				}
+				catch (SQLException e ) {
+					throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge NCLOB data" );
+				}
+			}
+			else {
+				return NEW_LOCATOR_LOB_MERGE_STRATEGY.mergeNClob( original, target, session );
+			}
+		}
+	};
+
+	/**
+	 * Merge strategy based on creating a new LOB locator.
+	 */
+	protected static final LobMergeStrategy NEW_LOCATOR_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
+		@Override
+		public Blob mergeBlob(Blob original, Blob target, SessionImplementor session) {
+			if ( original == null && target == null ) {
+				return null;
+			}
+			try {
+				LobCreator lobCreator = session.getFactory().getJdbcServices().getLobCreator( session );
+				return original == null 
+						? lobCreator.createBlob( ArrayHelper.EMPTY_BYTE_ARRAY )
+						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
+			}
+			catch (SQLException e) {
+				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge BLOB data" );
+			}
+		}
+
+		@Override
+		public Clob mergeClob(Clob original, Clob target, SessionImplementor session) {
+			if ( original == null && target == null ) {
+				return null;
+			}
+			try {
+				LobCreator lobCreator = session.getFactory().getJdbcServices().getLobCreator( session );
+				return original == null
+						? lobCreator.createClob( "" )
+						: lobCreator.createClob( original.getCharacterStream(), original.length() );
+			}
+			catch (SQLException e) {
+				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge CLOB data" );
+			}
+		}
+
+		@Override
+		public NClob mergeNClob(NClob original, NClob target, SessionImplementor session) {
+			if ( original == null && target == null ) {
+				return null;
+			}
+			try {
+				LobCreator lobCreator = session.getFactory().getJdbcServices().getLobCreator( session );
+				return original == null
+						? lobCreator.createNClob( "" )
+						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
+			}
+			catch (SQLException e) {
+				throw session.getFactory().getSQLExceptionHelper().convert( e, "unable to merge NCLOB data" );
+			}
+		}
+	};
+
+	public LobMergeStrategy getLobMergeStrategy() {
+		return NEW_LOCATOR_LOB_MERGE_STRATEGY;
+	}
+
 
 	// hibernate type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1907,6 +2053,7 @@ public abstract class Dialect {
 	 * @since 3.2
 	 */
 	public boolean supportsLobValueChangePropogation() {
+		// todo : pretty sure this is the same as the java.sql.DatabaseMetaData.locatorsUpdateCopy method added in JDBC 4, see HHH-6046
 		return true;
 	}
 

@@ -25,6 +25,8 @@
 package org.hibernate.impl;
 
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -37,11 +39,14 @@ import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.query.HQLQueryPlan;
 import org.hibernate.engine.query.NativeSQLQueryPlan;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
+import org.hibernate.jdbc.WorkExecutor;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 
 /**
  * Functionality common to stateless and stateful sessions
@@ -64,6 +69,26 @@ public abstract class AbstractSessionImpl implements Serializable, SessionImplem
 	@Override
 	public TransactionEnvironment getTransactionEnvironment() {
 		return factory.getTransactionEnvironment();
+	}
+
+	@Override
+	public <T> T execute(final LobCreationContext.Callback<T> callback) {
+		return getTransactionCoordinator().getJdbcCoordinator().coordinateWork(
+				new WorkExecutorVisitable<T>() {
+					@Override
+					public T accept(WorkExecutor<T> workExecutor, Connection connection) throws SQLException {
+						try {
+							return callback.executeOnConnection( connection );
+						}
+						catch ( SQLException e ) {
+							throw getFactory().getSQLExceptionHelper().convert(
+									e,
+									"Error creating contextual LOB : " + e.getMessage()
+							);
+						}
+					}
+				}
+		);
 	}
 
 	public boolean isClosed() {

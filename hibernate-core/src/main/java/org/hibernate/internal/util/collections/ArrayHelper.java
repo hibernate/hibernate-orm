@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.type.Type;
@@ -186,6 +187,14 @@ public final class ArrayHelper {
 		return result;
 	}
 
+	@SuppressWarnings( {"unchecked"})
+	public static <T> T[] join(T[] x, T[] y) {
+		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + y.length );
+		System.arraycopy( x, 0, result, 0, x.length );
+		System.arraycopy( y, 0, result, x.length, y.length );
+		return result;
+	}
+
 	public static final boolean[] TRUE = { true };
 	public static final boolean[] FALSE = { false };
 
@@ -249,6 +258,7 @@ public final class ArrayHelper {
 	public static final Class[] EMPTY_CLASS_ARRAY = {};
 	public static final Object[] EMPTY_OBJECT_ARRAY = {};
 	public static final Type[] EMPTY_TYPE_ARRAY = {};
+	public static final byte[] EMPTY_BYTE_ARRAY = {};
 	
 	public static int[] getBatchSizes(int maxBatchSize) {
 		int batchSize = maxBatchSize;
@@ -362,6 +372,8 @@ public final class ArrayHelper {
 		}
         return true;
 	}
+
+
 }
 
 

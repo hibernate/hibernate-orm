@@ -30,6 +30,7 @@ import org.hibernate.metamodel.domain.SingularAttribute;
 import org.hibernate.metamodel.relational.Column;
 import org.hibernate.metamodel.relational.Datatype;
 import org.hibernate.metamodel.relational.Schema;
+import org.hibernate.metamodel.relational.Size;
 import org.hibernate.metamodel.relational.Table;
 
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 
 		Column idColumn = table.createColumn( "id" );
 		idColumn.setDatatype( BIGINT );
-		idColumn.setSize( Column.Size.precision( 18, 0 ) );
+		idColumn.setSize( Size.precision( 18, 0 ) );
 		table.getPrimaryKey().addColumn( idColumn );
 		table.getPrimaryKey().setName( "my_table_pk" );
 		attributeBinding.setValue( idColumn );

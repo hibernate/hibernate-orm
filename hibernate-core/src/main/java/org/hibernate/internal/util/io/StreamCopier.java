@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,37 +21,45 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
-import java.sql.Clob;
+package org.hibernate.internal.util.io;
 
-import org.hibernate.engine.SessionImplementor;
-import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.hibernate.HibernateException;
 
 /**
- * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Clob}
+ * Utilities for copying I/O streams.
  *
- * @author Gavin King
  * @author Steve Ebersole
  */
-public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> {
-	public static final ClobType INSTANCE = new ClobType();
+public class StreamCopier {
+	public static final int BUFFER_SIZE = 1024 * 4;
+	public static final byte[] BUFFER = new byte[ BUFFER_SIZE ];
 
-	public ClobType() {
-		super( org.hibernate.type.descriptor.sql.ClobTypeDescriptor.DEFAULT, ClobTypeDescriptor.INSTANCE );
+	public static long copy(InputStream from, OutputStream into) {
+		try {
+			long totalRead = 0;
+			while ( true ) {
+				synchronized ( BUFFER ) {
+					int amountRead = from.read( BUFFER );
+					if ( amountRead == -1 ) {
+						break;
+					}
+					into.write( BUFFER, 0, amountRead );
+					totalRead += amountRead;
+					if ( amountRead < BUFFER_SIZE ) {
+						// should mean there is no more data in the stream, no need for next read
+						break;
+					}
+				}
+			}
+			return totalRead;
+		}
+		catch (IOException e ) {
+			throw new HibernateException( "Unable to copy stream content", e );
+		}
 	}
-
-	public String getName() {
-		return "clob";
-	}
-
-	@Override
-	protected boolean registerUnderJavaType() {
-		return true;
-	}
-
-	@Override
-	protected Clob getReplacement(Clob original, Clob target, SessionImplementor session) {
-		return session.getFactory().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
-	}
-
 }
+

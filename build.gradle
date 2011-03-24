@@ -97,8 +97,7 @@ subprojects { subProject ->
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
-
-    if ( ! subProject.name.startsWith( 'release' ) ) {
+    if ( ! subProject.name.startsWith( 'release' )  && ! subProject.name.startsWith( 'documentation' ) ) {
         apply plugin: 'java'
         apply plugin: 'maven' // for install task as well as deploy dependencies
         apply plugin: 'uploadAuth'

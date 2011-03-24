@@ -1,0 +1,51 @@
+buildscript {
+  repositories {
+      mavenCentral()
+      mavenRepo name: "jboss", urls: "http://repository.jboss.org/nexus/content/groups/public/"
+      mavenRepo urls: "file://" + System.getProperty('user.home') + "/.m2/repository/"
+  }
+  dependencies {
+      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.1.0'
+  }
+}
+apply plugin: "jdocbook"
+dependencies {
+	jdocbookStyles "org.hibernate:hibernate-jdocbook-style:2.0.1"
+}
+defaultTasks 'buildDocs'
+jdocbook {
+	format('html_single') {
+		finalName = "index.html"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
+	}
+	format('html') {
+		finalName = "index.html"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
+	}
+	format {
+		name = "pdf"
+		finalName = "hibernate_reference.pdf"
+		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/pdf.xsl"
+	}
+	
+	devguide {
+		masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
+		formats.pdf.enable = false
+	}
+	envers {
+		masterSourceDocumentName = 'Hibernate_Envers_-_Easy_Entity_Auditing.xml'
+		formats.pdf.finalName = "hibernate_envers_reference.pdf"
+	}
+	jbosscache2 {
+		masterSourceDocumentName = 'Hibernate_JBC_Reference.xml'
+		formats.pdf.finalName = "hibernate_jbc_reference.pdf"
+	}
+	manual {
+		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
+		translation = ['de-DE','es-ES','fr-FR','ja-JP','pt-BR','zh-CN']
+	}
+	quickstart {
+		masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
+		formats.pdf.enable = false
+	}
+}

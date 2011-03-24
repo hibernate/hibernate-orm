@@ -44,6 +44,7 @@ import org.hibernate.engine.PersistenceContext;
 import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
@@ -69,6 +70,11 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
     }
 
     // Delegate methods
+
+	@Override
+	public <T> T execute(Callback<T> callback) {
+		return delegate.execute( callback );
+	}
 
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return delegate.getLoadQueryInfluencers();

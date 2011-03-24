@@ -46,7 +46,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.jboss.logging.Logger;
 
@@ -96,10 +96,10 @@ public class SchemaUpdate {
 		formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
-	private static ServiceRegistryImpl createServiceRegistry(Properties properties) {
+	private static BasicServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new ServiceRegistryImpl( properties );
+		return new BasicServiceRegistryImpl( properties );
 	}
 
 	public static void main(String[] args) {
@@ -144,7 +144,7 @@ public class SchemaUpdate {
 				cfg.setProperties( props );
 			}
 
-			ServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			BasicServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
 				new SchemaUpdate( serviceRegistry.getService( JdbcServices.class ), cfg ).execute( script, doUpdate );
 			}

@@ -22,30 +22,28 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.internal;
+
 import java.util.Map;
+
+import org.hibernate.service.internal.ServiceRegistryImplementor;
 import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
  * Standard initiator for the standard {@link DialectFactory} service
  *
  * @author Steve Ebersole
  */
-public class DialectFactoryInitiator implements ServiceInitiator<DialectFactory> {
+public class DialectFactoryInitiator implements BasicServiceInitiator<DialectFactory> {
 	public static final DialectFactoryInitiator INSTANCE = new DialectFactoryInitiator();
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<DialectFactory> getServiceInitiated() {
 		return DialectFactory.class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public DialectFactory initiateService(Map configVales, ServiceRegistry registry) {
+	@Override
+	public DialectFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		return new DialectFactoryImpl();
 	}
 }

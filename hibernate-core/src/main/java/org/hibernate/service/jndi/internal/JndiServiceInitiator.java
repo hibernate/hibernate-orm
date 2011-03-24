@@ -22,17 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jndi.internal;
+
 import java.util.Map;
+
+import org.hibernate.service.internal.ServiceRegistryImplementor;
 import org.hibernate.service.jndi.spi.JndiService;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
  * Standard initiator for the standard {@link JndiService} service
  *
  * @author Steve Ebersole
  */
-public class JndiServiceInitiator implements ServiceInitiator<JndiService> {
+public class JndiServiceInitiator implements BasicServiceInitiator<JndiService> {
 	public static final JndiServiceInitiator INSTANCE = new JndiServiceInitiator();
 
 	@Override
@@ -41,7 +43,7 @@ public class JndiServiceInitiator implements ServiceInitiator<JndiService> {
 	}
 
 	@Override
-	public JndiService initiateService(Map configurationValues, ServiceRegistry registry) {
+	public JndiService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		return new JndiServiceImpl( configurationValues );
 	}
 }

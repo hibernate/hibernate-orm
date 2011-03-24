@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,29 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
-import java.util.Map;
+package org.hibernate.service.internal;
 
 /**
- * Responsible for initiating services.
- *
  * @author Steve Ebersole
  */
-public interface ServiceInitiator<T extends Service> {
-	/**
-	 * Obtains the service role initiated by this initiator.  Should be uniqie withion a registry
-	 *
-	 * @return The service role.
-	 */
-	public Class<T> getServiceInitiated();
+final class ServiceBinding<R> {
+	private final R proxy;
+	private R target;
 
-	/**
-	 * Initiates the managed service.
-	 *
-	 * @param configurationValues The configuration values in effect
-	 * @param registry The service registry.  Can be used to locate services needed to fulfill initiation.
-	 *
-	 * @return The initiated service.
-	 */
-	public T initiateService(Map configurationValues, ServiceRegistry registry);
+	ServiceBinding(R proxy) {
+		this.proxy = proxy;
+	}
+
+	public R getProxy() {
+		return proxy;
+	}
+
+	public R getTarget() {
+		return target;
+	}
+
+	public void setTarget(R target) {
+		this.target = target;
+	}
 }

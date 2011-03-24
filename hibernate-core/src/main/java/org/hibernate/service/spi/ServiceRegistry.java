@@ -24,36 +24,39 @@
 package org.hibernate.service.spi;
 
 /**
- * The registry of services used by Hibernate
+ * The registry of {@link Service services}.
  *
  * @author Steve Ebersole
  */
 public interface ServiceRegistry {
 	/**
-	 * Retrieve a service by role.  If service is not found, but a {@link ServiceInitiator} is registered for
+	 * Retrieve this registry's parent registry.
+	 * 
+	 * @return The parent registry.  May be null.
+	 */
+	public ServiceRegistry getParentServiceRegistry();
+
+	/**
+	 * Retrieve a service by role.  If service is not found, but a {@link BasicServiceInitiator} is registered for
 	 * this service role, the service will be initialized and returned.
-	 *
+	 * <p/>
+	 * NOTE: We cannot return {@code <R extends Service<T>>} here because the service might come from the parent...
+	 * 
 	 * @param serviceRole The service role
-	 * @param <T> The type of the service
+	 * @param <R> The service role type
 	 *
 	 * @return The requested service.
 	 *
 	 * @throws UnknownServiceException Indicates the service was not known.
 	 */
-	public <T extends Service> T getService(Class<T> serviceRole);
+	public <R extends Service> R getService(Class<R> serviceRole);
 
 	/**
 	 * Register a service into the registry.
 	 *
 	 * @param serviceRole The service role.
 	 * @param service The service to register
+	 * @param <R> The service role type
 	 */
-	public <T extends Service> void registerService(Class<T> serviceRole, T service);
-
-	/**
-	 * Register a service initiator.
-	 *
-	 * @param initiator The initiator of a service
-	 */
-	public void registerServiceInitiator(ServiceInitiator initiator);
+	public <R extends Service> void registerService(Class<R> serviceRole, R service);
 }

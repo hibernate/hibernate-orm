@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,29 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.jdbc.dialect.internal;
+package org.hibernate.service.internal;
 
-import java.util.Map;
-
-import org.hibernate.service.internal.ServiceRegistryImplementor;
-import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.service.spi.Service;
+import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
 
 /**
- * Standard initiator for the standard {@link DialectResolver} service
- *
  * @author Steve Ebersole
  */
-public class DialectResolverInitiator implements BasicServiceInitiator<DialectResolver> {
-	public static final DialectResolverInitiator INSTANCE = new DialectResolverInitiator();
-
-	@Override
-	public Class<DialectResolver> getServiceInitiated() {
-		return DialectResolver.class;
-	}
-
-	@Override
-	public DialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return new StandardDialectResolver();
-	}
+public interface ServiceRegistryImplementor extends ServiceRegistry, ServiceProxyTargetSource {
+	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
 }

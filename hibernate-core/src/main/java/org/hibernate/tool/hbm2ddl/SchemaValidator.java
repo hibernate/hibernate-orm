@@ -37,7 +37,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.jboss.logging.Logger;
 
@@ -76,10 +76,10 @@ public class SchemaValidator {
 		);
 	}
 
-	private static ServiceRegistryImpl createServiceRegistry(Properties properties) {
+	private static BasicServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new ServiceRegistryImpl( properties );
+		return new BasicServiceRegistryImpl( properties );
 	}
 
 	public static void main(String[] args) {
@@ -115,7 +115,7 @@ public class SchemaValidator {
 				cfg.setProperties( props );
 			}
 
-			ServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			BasicServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
 				new SchemaValidator( serviceRegistry.getService( JdbcServices.class ), cfg ).validate();
 			}

@@ -33,7 +33,7 @@ import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.StandardServiceInitiators;
 
 import org.junit.After;
@@ -54,11 +54,11 @@ import org.hibernate.test.common.TransactionEnvironmentImpl;
  * @author Steve Ebersole
  */
 public class TestExpectedUsage extends BaseUnitTestCase {
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 
 	@Before
 	public void setUp() throws Exception {
-		serviceRegistry = new ServiceRegistryImpl(
+		serviceRegistry = new BasicServiceRegistryImpl(
 				StandardServiceInitiators.LIST,
 				ConnectionProviderBuilder.getConnectionProviderProperties()
 		);

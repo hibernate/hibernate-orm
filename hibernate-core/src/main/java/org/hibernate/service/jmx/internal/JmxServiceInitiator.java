@@ -22,18 +22,20 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jmx.internal;
+
 import java.util.Map;
+
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.internal.ServiceRegistryImplementor;
 import org.hibernate.service.jmx.spi.JmxService;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
  * Standard initiator for the standard {@link JmxService} service
  *
  * @author Steve Ebersole
  */
-public class JmxServiceInitiator implements ServiceInitiator<JmxService> {
+public class JmxServiceInitiator implements BasicServiceInitiator<JmxService> {
 	public static final String JMX_ENABLED = "hibernate.jmx.enabled";
 	public static final JmxServiceInitiator INSTANCE = new JmxServiceInitiator();
 
@@ -43,9 +45,9 @@ public class JmxServiceInitiator implements ServiceInitiator<JmxService> {
 	}
 
 	@Override
-	public JmxService initiateService(Map configValues, ServiceRegistry registry) {
-		return ConfigurationHelper.getBoolean( JMX_ENABLED, configValues, false )
-				? new JmxServiceImpl( configValues )
+	public JmxService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		return ConfigurationHelper.getBoolean( JMX_ENABLED, configurationValues, false )
+				? new JmxServiceImpl( configurationValues )
 				: DisabledJmxServiceImpl.INSTANCE;
 	}
 }

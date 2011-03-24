@@ -43,12 +43,20 @@ public interface PersisterClassResolver extends Service {
 	/**
 	 * Returns the entity persister class for a given entityName or null
 	 * if the entity persister class should be the default.
+	 *
+	 * @param metadata The entity metadata
+	 *
+	 * @return The entity persister class to use
 	 */
 	Class<? extends EntityPersister> getEntityPersisterClass(PersistentClass metadata);
 
 	/**
 	 * Returns the collection persister class for a given collection role or null
 	 * if the collection persister class should be the default.
+	 *
+	 * @param metadata The collection metadata
+	 *
+	 * @return The collection persister class to use
 	 */
 	Class<? extends CollectionPersister> getCollectionPersisterClass(Collection metadata);
 }

@@ -31,15 +31,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.internal.ServiceRegistryImplementor;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
-import org.jboss.logging.Logger;
+import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -47,12 +49,11 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionProvider> {
+public class ConnectionProviderInitiator implements BasicServiceInitiator<ConnectionProvider> {
 	public static final ConnectionProviderInitiator INSTANCE = new ConnectionProviderInitiator();
 
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class,
                                                                        ConnectionProviderInitiator.class.getName());
-
 	public static final String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
 	public static final String C3P0_PROVIDER_CLASS_NAME =
 			"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider";
@@ -92,17 +93,13 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<ConnectionProvider> getServiceInitiated() {
 		return ConnectionProvider.class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public ConnectionProvider initiateService(Map configurationValues, ServiceRegistry registry) {
+	@Override
+	public ConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 
 		ConnectionProvider connectionProvider = null;
@@ -233,10 +230,14 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 	}
 
 	/**
-	 * Transform JDBC connection properties.
+	 * Build the connection properties capable of being passed to the {@link java.sql.DriverManager#getConnection}
+	 * forms taking {@link Properties} argument.  We seek out all keys in the passed map which start with
+	 * {@code hibernate.connection.}, using them to create a new {@link Properties} instance.  The keys in this
+	 * new {@link Properties} have the {@code hibernate.connection.} prefix trimmed.
 	 *
-	 * Passed in the form <tt>hibernate.connection.*</tt> to the
-	 * format accepted by <tt>DriverManager</tt> by trimming the leading "<tt>hibernate.connection</tt>".
+	 * @param properties The map from which to build the connection specific properties.
+	 *
+	 * @return The connection properties.
 	 */
 	public static Properties getConnectionProperties(Map<?,?> properties) {
 		Properties result = new Properties();
@@ -253,8 +254,10 @@ public class ConnectionProviderInitiator implements ServiceInitiator<ConnectionP
 					}
 				}
 				else {
-					final String passThruKey = key.substring( Environment.CONNECTION_PREFIX.length() + 1 );
-					result.setProperty( passThruKey, value );
+					result.setProperty(
+							key.substring( Environment.CONNECTION_PREFIX.length() + 1 ),
+							value
+					);
 				}
 			}
 		}

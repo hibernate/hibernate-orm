@@ -32,7 +32,7 @@ import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
 import org.hibernate.cache.infinispan.util.FlagAdapter;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 
@@ -44,7 +44,7 @@ import org.hibernate.test.cache.infinispan.util.CacheTestUtil;
 public class NodeEnvironment {
 	private final Configuration configuration;
 
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 	private InfinispanRegionFactory regionFactory;
 
 	private Map<String,EntityRegionImpl> entityRegionMap;
@@ -58,7 +58,7 @@ public class NodeEnvironment {
 		return configuration;
 	}
 
-	public ServiceRegistryImpl getServiceRegistry() {
+	public BasicServiceRegistryImpl getServiceRegistry() {
 		return serviceRegistry;
 	}
 
@@ -108,7 +108,7 @@ public class NodeEnvironment {
 	}
 
 	public void prepare() throws Exception {
-		serviceRegistry = new ServiceRegistryImpl( configuration.getProperties() );
+		serviceRegistry = new BasicServiceRegistryImpl( configuration.getProperties() );
 		regionFactory = CacheTestUtil.startRegionFactory( serviceRegistry, configuration );
 	}
 

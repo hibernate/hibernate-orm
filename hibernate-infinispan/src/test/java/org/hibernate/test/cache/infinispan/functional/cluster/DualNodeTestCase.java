@@ -30,7 +30,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 
 import org.junit.After;
@@ -142,7 +142,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 
 	public class SecondNodeEnvironment {
 		private Configuration configuration;
-		private ServiceRegistryImpl serviceRegistry;
+		private BasicServiceRegistryImpl serviceRegistry;
 		private SessionFactoryImplementor sessionFactory;
 
 		public SecondNodeEnvironment() {
@@ -163,7 +163,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 			return configuration;
 		}
 
-		public ServiceRegistryImpl getServiceRegistry() {
+		public BasicServiceRegistryImpl getServiceRegistry() {
 			return serviceRegistry;
 		}
 

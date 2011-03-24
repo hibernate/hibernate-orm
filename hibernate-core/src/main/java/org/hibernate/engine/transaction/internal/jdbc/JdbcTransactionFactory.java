@@ -24,7 +24,6 @@
 package org.hibernate.engine.transaction.internal.jdbc;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.engine.transaction.spi.JoinStatus;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 

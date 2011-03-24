@@ -50,7 +50,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
@@ -73,7 +73,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public static final Dialect DIALECT = Dialect.getDialect();
 
 	private Configuration configuration;
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
 	private Session session;
@@ -86,7 +86,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return configuration;
 	}
 
-	protected ServiceRegistryImpl serviceRegistry() {
+	protected BasicServiceRegistryImpl serviceRegistry() {
 		return serviceRegistry;
 	}
 
@@ -241,17 +241,17 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 	}
 
-	protected ServiceRegistryImpl buildServiceRegistry(Configuration configuration) {
+	protected BasicServiceRegistryImpl buildServiceRegistry(Configuration configuration) {
 		Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( properties );
+		BasicServiceRegistryImpl serviceRegistry = new BasicServiceRegistryImpl( properties );
 		applyServices( serviceRegistry );
 		return serviceRegistry;
 	}
 
-	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
+	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 	}
 
 	protected void afterSessionFactoryBuilt() {

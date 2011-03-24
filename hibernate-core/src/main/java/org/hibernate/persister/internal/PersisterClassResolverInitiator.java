@@ -23,18 +23,18 @@
  */
 package org.hibernate.persister.internal;
 
+import java.util.Map;
+
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceException;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
-
-import java.util.Map;
 
 /**
  * @author Steve Ebersole
  */
-public class PersisterClassResolverInitiator implements ServiceInitiator<PersisterClassResolver> {
+public class PersisterClassResolverInitiator implements BasicServiceInitiator<PersisterClassResolver> {
 	public static final PersisterClassResolverInitiator INSTANCE = new PersisterClassResolverInitiator();
 	public static final String IMPL_NAME = "hibernate.persister.resolver";
 
@@ -45,7 +45,7 @@ public class PersisterClassResolverInitiator implements ServiceInitiator<Persist
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public PersisterClassResolver initiateService(Map configurationValues, ServiceRegistry registry) {
+	public PersisterClassResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new StandardPersisterClassResolver();

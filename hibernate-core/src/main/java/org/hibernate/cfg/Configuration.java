@@ -159,7 +159,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
@@ -1848,7 +1848,7 @@ public class Configuration implements Serializable {
 	public SessionFactory buildSessionFactory() throws HibernateException {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		final ServiceRegistry serviceRegistry =  new ServiceRegistryImpl( properties );
+		final ServiceRegistry serviceRegistry =  new BasicServiceRegistryImpl( properties );
 		setSessionFactoryObserver(
 				new SessionFactoryObserver() {
 					@Override
@@ -1857,7 +1857,7 @@ public class Configuration implements Serializable {
 
 					@Override
 					public void sessionFactoryClosed(SessionFactory factory) {
-						( (ServiceRegistryImpl ) serviceRegistry ).destroy();
+						( (BasicServiceRegistryImpl) serviceRegistry ).destroy();
 					}
 				}
 		);

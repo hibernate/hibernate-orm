@@ -21,29 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.jdbc.dialect.internal;
+package org.hibernate.service.spi;
 
 import java.util.Map;
 
 import org.hibernate.service.internal.ServiceRegistryImplementor;
-import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
- * Standard initiator for the standard {@link DialectResolver} service
+ * Responsible for initiating services.
  *
  * @author Steve Ebersole
  */
-public class DialectResolverInitiator implements BasicServiceInitiator<DialectResolver> {
-	public static final DialectResolverInitiator INSTANCE = new DialectResolverInitiator();
+public interface BasicServiceInitiator<R extends Service> {
+	/**
+	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
+	 *
+	 * @return The service role.
+	 */
+	public Class<R> getServiceInitiated();
 
-	@Override
-	public Class<DialectResolver> getServiceInitiated() {
-		return DialectResolver.class;
-	}
-
-	@Override
-	public DialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		return new StandardDialectResolver();
-	}
+	/**
+	 * Initiates the managed service.
+	 *
+	 * @param configurationValues The configuration values in effect
+	 * @param registry The service registry.  Can be used to locate services needed to fulfill initiation.
+	 *
+	 * @return The initiated service.
+	 */
+	public R initiateService(Map configurationValues, ServiceRegistryImplementor registry);
 }

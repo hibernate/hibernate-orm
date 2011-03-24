@@ -25,7 +25,7 @@ package org.hibernate.testing;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceRegistry;
 
 import java.util.Map;
@@ -35,19 +35,19 @@ import java.util.Properties;
  * @author Steve Ebersole
  */
 public class ServiceRegistryBuilder {
-	public static ServiceRegistryImpl buildServiceRegistry() {
+	public static BasicServiceRegistryImpl buildServiceRegistry() {
 		return buildServiceRegistry( Environment.getProperties() );
 	}
 
-	public static ServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
+	public static BasicServiceRegistryImpl buildServiceRegistry(Map serviceRegistryConfig) {
 		Properties properties = new Properties();
 		properties.putAll( serviceRegistryConfig );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new ServiceRegistryImpl( properties );
+		return new BasicServiceRegistryImpl( properties );
 	}
 
 	public static void destroy(ServiceRegistry serviceRegistry) {
-		( (ServiceRegistryImpl) serviceRegistry ).destroy();
+		( (BasicServiceRegistryImpl) serviceRegistry ).destroy();
 	}
 }

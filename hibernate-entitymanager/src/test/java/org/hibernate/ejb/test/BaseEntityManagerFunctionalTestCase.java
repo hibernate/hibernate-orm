@@ -40,7 +40,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
@@ -62,7 +62,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	private static final Dialect dialect = Dialect.getDialect();
 
 	private Ejb3Configuration ejb3Configuration;
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 	private EntityManagerFactory entityManagerFactory;
 
 	private EntityManager em;
@@ -76,7 +76,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		return entityManagerFactory;
 	}
 
-	protected ServiceRegistryImpl serviceRegistry() {
+	protected BasicServiceRegistryImpl serviceRegistry() {
 		return serviceRegistry;
 	}
 
@@ -196,16 +196,16 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	protected void afterConfigurationBuilt(Ejb3Configuration ejb3Configuration) {
 	}
 
-	protected ServiceRegistryImpl buildServiceRegistry(Configuration configuration) {
+	protected BasicServiceRegistryImpl buildServiceRegistry(Configuration configuration) {
 		Properties properties = new Properties();
 		properties.putAll( configuration.getProperties() );
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new ServiceRegistryImpl( properties );
+		return new BasicServiceRegistryImpl( properties );
 	}
 
 	@SuppressWarnings( {"UnusedParameters"})
-	protected void applyServices(ServiceRegistryImpl serviceRegistry) {
+	protected void applyServices(BasicServiceRegistryImpl serviceRegistry) {
 	}
 
 	protected void afterEntityManagerFactoryBuilt() {

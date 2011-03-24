@@ -36,11 +36,11 @@ public interface ServiceProxyTargetSource extends ServiceRegistry {
 	 * Retrieve a service by role.  Unlike {@link ServiceRegistry#getService}, this version will never return a proxy.
 	 *
 	 * @param serviceRole The service role
-	 * @param <T> The type of the service
+	 * @param <R> The service role type
 	 *
 	 * @return The requested service.
 	 *
 	 * @throws org.hibernate.service.spi.UnknownServiceException Indicates the service was not known.
 	 */
-	public <T extends Service> T getServiceInternal(Class<T> serviceRole);
+	public <R extends Service> R getServiceInternal(Class<R> serviceRole);
 }

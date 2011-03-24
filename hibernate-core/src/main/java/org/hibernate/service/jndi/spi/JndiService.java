@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jndi.spi;
+
 import org.hibernate.service.spi.Service;
 
 /**

@@ -37,7 +37,7 @@ import org.hibernate.engine.transaction.internal.jta.JtaTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.service.internal.ServiceProxy;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 
 import org.junit.After;
@@ -62,7 +62,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class BasicDrivingTest extends BaseUnitTestCase {
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 
 	@Before
 	@SuppressWarnings( {"unchecked"})
@@ -71,7 +71,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, JtaTransactionFactory.class.getName() );
 		TestingJtaBootstrap.prepare( configValues );
-		serviceRegistry = new ServiceRegistryImpl( configValues );
+		serviceRegistry = new BasicServiceRegistryImpl( configValues );
 	}
 
 	@After

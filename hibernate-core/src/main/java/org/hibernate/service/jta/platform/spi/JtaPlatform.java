@@ -22,11 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jta.platform.spi;
+
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
+
 import org.hibernate.service.spi.Service;
 
 /**

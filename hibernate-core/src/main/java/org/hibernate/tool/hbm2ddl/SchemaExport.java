@@ -55,7 +55,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.jboss.logging.Logger;
 
@@ -429,10 +429,10 @@ public class SchemaExport {
 
 	}
 
-	private static ServiceRegistryImpl createServiceRegistry(Properties properties) {
+	private static BasicServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
-		return new ServiceRegistryImpl( properties );
+		return new BasicServiceRegistryImpl( properties );
 	}
 
 	public static void main(String[] args) {
@@ -515,7 +515,7 @@ public class SchemaExport {
 				cfg.setProperty( Environment.HBM2DDL_IMPORT_FILES, importFile );
 			}
 
-			ServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			BasicServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
 				SchemaExport se = new SchemaExport( serviceRegistry.getService( JdbcServices.class ), cfg )
 						.setHaltOnError( halt )

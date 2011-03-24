@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jmx.spi;
+
 import javax.management.ObjectName;
+
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Service;
 
@@ -33,7 +35,7 @@ import org.hibernate.service.spi.Service;
  */
 public interface JmxService extends Service {
 	/**
-	 * Handles regsitration of a manageable service.
+	 * Handles registration of a manageable service.
 	 *
 	 * @param service The manageable service
 	 * @param serviceRole The service's role.

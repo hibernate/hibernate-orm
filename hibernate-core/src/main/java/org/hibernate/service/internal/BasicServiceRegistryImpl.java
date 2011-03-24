@@ -27,37 +27,39 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.service.jmx.spi.JmxService;
+import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceException;
-import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.StandardServiceInitiators;
 import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.UnknownServiceException;
-import org.jboss.logging.Logger;
 
 /**
- * Delegate responsible for initializing services
+ * Standard Hibernate implementation of the service registry.
  *
  * @author Steve Ebersole
  */
-public class ServiceInitializer {
+public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl {
+    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicServiceRegistryImpl.class.getName());
 
-    private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, ServiceInitializer.class.getName());
-
-	private final ServiceRegistryImpl servicesRegistry;
-	private final Map<Class,ServiceInitiator> serviceInitiatorMap;
+	private final Map<Class,BasicServiceInitiator> serviceInitiatorMap;
 	private final Map configurationValues;
 
-	public ServiceInitializer(
-			ServiceRegistryImpl servicesRegistry,
-			List<ServiceInitiator> serviceInitiators,
-			Map configurationValues) {
-		this.servicesRegistry = servicesRegistry;
+	public BasicServiceRegistryImpl(Map configurationValues) {
+		this( StandardServiceInitiators.LIST, configurationValues );
+	}
+
+	public BasicServiceRegistryImpl(List<BasicServiceInitiator> serviceInitiators, Map configurationValues) {
+		super();
 		this.serviceInitiatorMap = toMap( serviceInitiators );
 		this.configurationValues = configurationValues;
 	}
@@ -72,34 +74,32 @@ public class ServiceInitializer {
 	 *
 	 * @return The map of initiators keyed by the service rle they initiate.
 	 */
-	private static Map<Class, ServiceInitiator> toMap(List<ServiceInitiator> serviceInitiators) {
-		final Map<Class, ServiceInitiator> result = new HashMap<Class, ServiceInitiator>();
-		for ( ServiceInitiator initiator : serviceInitiators ) {
+	private static Map<Class, BasicServiceInitiator> toMap(List<BasicServiceInitiator> serviceInitiators) {
+		final Map<Class, BasicServiceInitiator> result = new HashMap<Class, BasicServiceInitiator>();
+		for ( BasicServiceInitiator initiator : serviceInitiators ) {
 			result.put( initiator.getServiceInitiated(), initiator );
 		}
 		return result;
 	}
 
-	void registerServiceInitiator(ServiceInitiator serviceInitiator) {
-		final Object previous = serviceInitiatorMap.put( serviceInitiator.getServiceInitiated(), serviceInitiator );
-		final boolean overwritten = previous != null;
-        if (overwritten) LOG.debugf("Over-wrote existing service initiator [role=%s]",
-                                    serviceInitiator.getServiceInitiated().getName());
+	@SuppressWarnings( {"unchecked"})
+	public void registerServiceInitiator(BasicServiceInitiator initiator) {
+		ServiceBinding serviceBinding = locateServiceBinding( initiator.getServiceInitiated(), false );
+		if ( serviceBinding != null ) {
+			serviceBinding.setTarget( null );
+		}
+		final Object previous = serviceInitiatorMap.put( initiator.getServiceInitiated(), initiator );
+		if ( previous != null ) {
+			LOG.debugf( "Over-wrote existing service initiator [role=%s]", initiator.getServiceInitiated().getName() );
+		}
 	}
 
-	/**
-	 * The main function of this delegate.  Used to initialize the service of a given role.
-	 *
-	 * @param serviceRole The service role
-	 * @param <T> The type of service role
-	 *
-	 * @return The intiialized instance of the service
-	 */
-	public <T extends Service> T initializeService(Class<T> serviceRole) {
+	@Override
+	protected <R extends Service> R initializeService(Class<R> serviceRole) {
         LOG.trace("Initializing service [role=" + serviceRole.getName() + "]");
 
 		// PHASE 1 : create service
-		T service = createService( serviceRole );
+		R service = createService( serviceRole );
 		if ( service == null ) {
 			return null;
 		}
@@ -115,15 +115,15 @@ public class ServiceInitializer {
 
 	@SuppressWarnings({ "unchecked" })
 	private <T extends Service> T createService(Class<T> serviceRole) {
-		ServiceInitiator<T> initiator = serviceInitiatorMap.get( serviceRole );
+		BasicServiceInitiator<T> initiator = serviceInitiatorMap.get( serviceRole );
 		if ( initiator == null ) {
 			throw new UnknownServiceException( serviceRole );
 		}
 		try {
-			T service = initiator.initiateService( configurationValues, servicesRegistry );
+			T service = initiator.initiateService( configurationValues, this );
 			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
 			//		from recursive calls through #configureService
-			servicesRegistry.registerService( serviceRole, service );
+			registerService( serviceRole, service );
 			return service;
 		}
 		catch ( ServiceException e ) {
@@ -142,7 +142,7 @@ public class ServiceInitializer {
 		}
 
 		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
-			( (ServiceRegistryAwareService) service ).injectServices( servicesRegistry );
+			( (ServiceRegistryAwareService) service ).injectServices( this );
 		}
 	}
 
@@ -177,7 +177,7 @@ public class ServiceInitializer {
 
 		// todo : because of the use of proxies, this is no longer returning null here...
 
-		final Service dependantService = servicesRegistry.getService( dependentServiceRole );
+		final Service dependantService = getService( dependentServiceRole );
 		if ( dependantService == null ) {
 			if ( injectService.required() ) {
 				throw new ServiceDependencyException(
@@ -202,7 +202,7 @@ public class ServiceInitializer {
 		}
 
 		if ( Manageable.class.isInstance( service ) ) {
-			servicesRegistry.getService( JmxService.class ).registerService( (Manageable) service, serviceRole );
+			getService( JmxService.class ).registerService( (Manageable) service, serviceRole );
 		}
 	}
 }

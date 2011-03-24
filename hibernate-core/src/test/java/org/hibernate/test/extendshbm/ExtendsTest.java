@@ -3,7 +3,7 @@ package org.hibernate.test.extendshbm;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.junit.After;
 import org.junit.Before;
@@ -20,7 +20,7 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  */
 public class ExtendsTest extends BaseUnitTestCase {
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 
 	@Before
 	public void setUp() {

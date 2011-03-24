@@ -43,10 +43,10 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class StandardServiceInitiators {
-	public static List<ServiceInitiator> LIST = buildStandardServiceInitiatorList();
+	public static List<BasicServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
-	private static List<ServiceInitiator> buildStandardServiceInitiatorList() {
-		final List<ServiceInitiator> serviceInitiators = new ArrayList<ServiceInitiator>();
+	private static List<BasicServiceInitiator> buildStandardServiceInitiatorList() {
+		final List<BasicServiceInitiator> serviceInitiators = new ArrayList<BasicServiceInitiator>();
 
 		serviceInitiators.add( ClassLoaderServiceInitiator.INSTANCE );
 		serviceInitiators.add( JndiServiceInitiator.INSTANCE );

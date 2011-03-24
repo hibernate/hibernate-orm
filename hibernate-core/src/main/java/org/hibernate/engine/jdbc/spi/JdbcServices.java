@@ -22,14 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.spi;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.ResultSetWrapperProxy;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Service;
 
@@ -69,12 +68,11 @@ public interface JdbcServices extends Service {
 	public SqlExceptionHelper getSqlExceptionHelper();
 
 	/**
-	 * Obtain infomration about supported behavior reported by the JDBC driver.
+	 * Obtain information about supported behavior reported by the JDBC driver.
 	 * <p/>
-	 * Yuck, yuck, yuck!  Much prefer this to be part of a "basic settings" type object.  See discussion
-	 * on {@link org.hibernate.cfg.internal.JdbcServicesBuilder}
+	 * Yuck, yuck, yuck!  Much prefer this to be part of a "basic settings" type object.
 	 * 
-	 * @return
+	 * @return The extracted database metadata, oddly enough :)
 	 */
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport();
 

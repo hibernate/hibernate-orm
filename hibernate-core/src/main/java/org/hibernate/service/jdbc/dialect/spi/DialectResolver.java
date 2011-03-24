@@ -22,7 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.jdbc.dialect.spi;
+
 import java.sql.DatabaseMetaData;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.spi.Service;
@@ -47,5 +49,4 @@ public interface DialectResolver extends Service {
 	 * we should stop resolution attempts.
 	 */
 	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException;
-
 }

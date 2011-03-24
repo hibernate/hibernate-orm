@@ -36,7 +36,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.Service;
 
 /**
- * Contract for creating persister instances (both {@link EntityPersister} and {@link } varieties).
+ * Contract for creating persister instances (both {@link EntityPersister} and {@link CollectionPersister} varieties).
  *
  * @author Steve Ebersole
  */

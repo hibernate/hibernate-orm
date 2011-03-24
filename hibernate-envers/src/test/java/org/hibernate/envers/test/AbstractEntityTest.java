@@ -34,7 +34,6 @@ import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.AuditReader;
@@ -46,7 +45,7 @@ import org.hibernate.event.PostInsertEventListener;
 import org.hibernate.event.PostUpdateEventListener;
 import org.hibernate.event.PreCollectionRemoveEventListener;
 import org.hibernate.event.PreCollectionUpdateEventListener;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 
@@ -58,7 +57,7 @@ public abstract class AbstractEntityTest {
     private EntityManager entityManager;
     private AuditReader auditReader;
     private Ejb3Configuration cfg;
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
     private boolean audited;
 
     public abstract void configure(Ejb3Configuration cfg);
@@ -118,7 +117,7 @@ public abstract class AbstractEntityTest {
 
 		cfg.configure( cfg.getHibernateConfiguration().getProperties() );
 
-		serviceRegistry = new ServiceRegistryImpl( cfg.getProperties() );
+		serviceRegistry = new BasicServiceRegistryImpl( cfg.getProperties() );
 
         emf = cfg.buildEntityManagerFactory( serviceRegistry );
 

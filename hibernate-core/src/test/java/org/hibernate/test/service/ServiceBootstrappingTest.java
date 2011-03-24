@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
@@ -46,7 +46,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	@Test
 	public void testBasicBuild() {
-		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( ConnectionProviderBuilder.getConnectionProviderProperties() );
+		BasicServiceRegistryImpl serviceRegistry = new BasicServiceRegistryImpl( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
@@ -61,7 +61,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 		props.put( Environment.SHOW_SQL, "true" );
 
-		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( props );
+		BasicServiceRegistryImpl serviceRegistry = new BasicServiceRegistryImpl( props );
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );
@@ -75,7 +75,7 @@ public class ServiceBootstrappingTest extends BaseUnitTestCase {
 	public void testBuildWithServiceOverride() {
 		Properties props = ConnectionProviderBuilder.getConnectionProviderProperties();
 
-		ServiceRegistryImpl serviceRegistry = new ServiceRegistryImpl( props );
+		BasicServiceRegistryImpl serviceRegistry = new BasicServiceRegistryImpl( props );
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		assertTrue( jdbcServices.getDialect() instanceof H2Dialect );

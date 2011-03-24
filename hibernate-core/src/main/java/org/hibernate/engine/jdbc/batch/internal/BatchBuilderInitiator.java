@@ -23,20 +23,22 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import java.util.Map;
+
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceException;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
-
-import java.util.Map;
 
 /**
+ * Initiator for the {@link BatchBuilder} service
+ *
  * @author Steve Ebersole
  */
-public class BatchBuilderInitiator implements ServiceInitiator<BatchBuilder> {
+public class BatchBuilderInitiator implements BasicServiceInitiator<BatchBuilder> {
 	public static final BatchBuilderInitiator INSTANCE = new BatchBuilderInitiator();
 	public static final String BUILDER = "hibernate.jdbc.batch.builder";
 
@@ -46,7 +48,7 @@ public class BatchBuilderInitiator implements ServiceInitiator<BatchBuilder> {
 	}
 
 	@Override
-	public BatchBuilder initiateService(Map configurationValues, ServiceRegistry registry) {
+	public BatchBuilder initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object builder = configurationValues.get( BUILDER );
 		if ( builder == null ) {
 			return new BatchBuilderImpl(

@@ -10,7 +10,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.ExternalSessionFactoryConfig;
 import org.hibernate.internal.util.jndi.JndiHelper;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.jboss.logging.Logger;
@@ -61,7 +61,7 @@ public class HibernateService extends ExternalSessionFactoryConfig implements Hi
 	SessionFactory buildSessionFactory() throws HibernateException {
         LOG.startingServiceAtJndiName(boundName);
         LOG.serviceProperties(properties);
-        return buildConfiguration().buildSessionFactory(new ServiceRegistryImpl(properties));
+        return buildConfiguration().buildSessionFactory(new BasicServiceRegistryImpl(properties));
 	}
 
 	@Override

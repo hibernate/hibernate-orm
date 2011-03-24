@@ -23,7 +23,6 @@
  */
 package org.hibernate.service.spi;
 
-
 /**
  * Allows services to be injected with the {@link ServiceRegistry} during configuration phase.
  *

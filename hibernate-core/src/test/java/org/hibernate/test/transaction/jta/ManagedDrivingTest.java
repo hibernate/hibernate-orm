@@ -38,8 +38,8 @@ import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.internal.ServiceProxy;
-import org.hibernate.service.internal.ServiceRegistryImpl;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.StandardServiceInitiators;
 
@@ -64,7 +64,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class ManagedDrivingTest extends BaseUnitTestCase {
-	private ServiceRegistryImpl serviceRegistry;
+	private BasicServiceRegistryImpl serviceRegistry;
 
 	@Before
 	@SuppressWarnings( {"unchecked"})
@@ -74,7 +74,7 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 //		configValues.putAll( ConnectionProviderBuilder.getConnectionProviderProperties() );
 		configValues.put( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 
-		serviceRegistry = new ServiceRegistryImpl( StandardServiceInitiators.LIST, configValues );
+		serviceRegistry = new BasicServiceRegistryImpl( StandardServiceInitiators.LIST, configValues );
 	}
 
 	@After

@@ -23,18 +23,18 @@
  */
 package org.hibernate.persister.internal;
 
+import java.util.Map;
+
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceException;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
-
-import java.util.Map;
 
 /**
  * @author Steve Ebersole
  */
-public class PersisterFactoryInitiator implements ServiceInitiator<PersisterFactory> {
+public class PersisterFactoryInitiator implements BasicServiceInitiator<PersisterFactory> {
 	public static final PersisterFactoryInitiator INSTANCE = new PersisterFactoryInitiator();
 
 	public static final String IMPL_NAME = "hibernate.persister.factory";
@@ -46,7 +46,7 @@ public class PersisterFactoryInitiator implements ServiceInitiator<PersisterFact
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public PersisterFactory initiateService(Map configurationValues, ServiceRegistry registry) {
+	public PersisterFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object customImpl = configurationValues.get( IMPL_NAME );
 		if ( customImpl == null ) {
 			return new PersisterFactoryImpl();

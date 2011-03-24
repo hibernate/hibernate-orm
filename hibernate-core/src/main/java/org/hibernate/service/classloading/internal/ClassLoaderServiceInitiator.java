@@ -22,18 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.service.classloading.internal;
-import java.util.Map;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.spi.ServiceInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
 
+import java.util.Map;
+
+import org.hibernate.service.classloading.spi.ClassLoaderService;
+import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
- * Standard initiator for the stanndard {@link ClassLoaderService} service.
+ * Standard initiator for the standard {@link ClassLoaderService} service.
  *
  * @author Steve Ebersole
  */
-public class ClassLoaderServiceInitiator implements ServiceInitiator<ClassLoaderService> {
+public class ClassLoaderServiceInitiator implements BasicServiceInitiator<ClassLoaderService> {
 	public static final ClassLoaderServiceInitiator INSTANCE = new ClassLoaderServiceInitiator();
 
 	@Override
@@ -42,7 +43,7 @@ public class ClassLoaderServiceInitiator implements ServiceInitiator<ClassLoader
 	}
 
 	@Override
-	public ClassLoaderService initiateService(Map configurationValues, ServiceRegistry registry) {
+	public ClassLoaderService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		return new ClassLoaderServiceImpl( configurationValues );
 	}
 }

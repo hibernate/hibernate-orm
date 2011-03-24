@@ -99,7 +99,7 @@ import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.JACCConfiguration;
-import org.hibernate.service.internal.ServiceRegistryImpl;
+import org.hibernate.service.internal.BasicServiceRegistryImpl;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.spi.ServiceRegistry;
 
@@ -868,7 +868,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory() {
-		return buildEntityManagerFactory( new ServiceRegistryImpl( cfg.getProperties() ) );
+		return buildEntityManagerFactory( new BasicServiceRegistryImpl( cfg.getProperties() ) );
 	}
 
 	public EntityManagerFactory buildEntityManagerFactory(ServiceRegistry serviceRegistry) {

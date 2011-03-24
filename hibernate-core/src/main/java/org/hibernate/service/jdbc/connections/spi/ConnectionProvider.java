@@ -45,7 +45,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @return The obtained JDBC connection
 	 *
 	 * @throws SQLException Indicates a problem opening a connection
-	 * @throws HibernateException Inidcates a problem otherwise obtaining a connnection.
+	 * @throws HibernateException Indicates a problem otherwise obtaining a connection.
 	 */
 	public Connection getConnection() throws SQLException;
 
@@ -55,13 +55,13 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @param conn The JDBC connection to release
 	 *
 	 * @throws SQLException Indicates a problem closing the connection
-	 * @throws HibernateException Inidcates a problem otherwise releasing a connnection.
+	 * @throws HibernateException Indicates a problem otherwise releasing a connection.
 	 */
 	public void closeConnection(Connection conn) throws SQLException;
 
 	/**
 	 * Does this connection provider support aggressive release of JDBC
-	 * connections and re-acquistion of those connections (if need be) later?
+	 * connections and re-acquisition of those connections (if need be) later?
 	 * <p/>
 	 * This is used in conjunction with {@link org.hibernate.cfg.Environment#RELEASE_CONNECTIONS}
 	 * to aggressively release JDBC connections.  However, the configured ConnectionProvider
@@ -72,6 +72,8 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * Note that JTA semantic depends on the fact that the underlying connection provider does
 	 * support aggressive release.
+	 *
+	 * @return {@code true} if aggressive releasing is supported; {@code false} otherwise.
 	 */
 	public boolean supportsAggressiveRelease();
 }

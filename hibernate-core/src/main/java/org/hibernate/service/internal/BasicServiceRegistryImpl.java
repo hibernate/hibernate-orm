@@ -23,7 +23,6 @@
  */
 package org.hibernate.service.internal;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 
@@ -56,10 +54,15 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implem
 		this( StandardServiceInitiators.LIST, configurationValues );
 	}
 
+	@SuppressWarnings( {"unchecked"})
 	public BasicServiceRegistryImpl(List<BasicServiceInitiator> serviceInitiators, Map configurationValues) {
 		super();
 		this.serviceInitiatorMap = toMap( serviceInitiators );
 		this.configurationValues = configurationValues;
+		for ( BasicServiceInitiator initiator : serviceInitiatorMap.values() ) {
+			// create the bindings up front to help identify to which registry services belong
+			createServiceBinding( initiator.getServiceInitiated() );
+		}
 	}
 
 	/**
@@ -86,6 +89,9 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implem
 		ServiceBinding serviceBinding = locateServiceBinding( initiator.getServiceInitiated(), false );
 		if ( serviceBinding != null ) {
 			serviceBinding.setTarget( null );
+		}
+		else {
+			createServiceBinding( initiator.getServiceInitiated() );
 		}
 		final Object previous = serviceInitiatorMap.put( initiator.getServiceInitiated(), initiator );
 		if ( previous != null ) {

@@ -104,10 +104,15 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 	protected <R extends Service> ServiceBinding<R> locateOrCreateServiceBinding(Class<R> serviceRole, boolean checkParent) {
 		ServiceBinding<R> serviceBinding = locateServiceBinding( serviceRole, checkParent );
 		if ( serviceBinding == null ) {
-			R proxy = serviceProxyFactory.makeProxy( serviceRole );
-			serviceBinding = new ServiceBinding<R>( proxy );
-			serviceBindingMap.put( serviceRole, serviceBinding );
+			createServiceBinding( serviceRole );
 		}
+		return serviceBinding;
+	}
+
+	protected <R extends Service> ServiceBinding<R> createServiceBinding(Class<R> serviceRole) {
+		R proxy = serviceProxyFactory.makeProxy( serviceRole );
+		ServiceBinding<R> serviceBinding = new ServiceBinding<R>( proxy );
+		serviceBindingMap.put( serviceRole, serviceBinding );
 		return serviceBinding;
 	}
 

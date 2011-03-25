@@ -27,7 +27,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Provides persister classes based on the entity or collection role.

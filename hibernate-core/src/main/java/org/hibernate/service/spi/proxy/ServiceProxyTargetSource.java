@@ -23,8 +23,8 @@
  */
 package org.hibernate.service.spi.proxy;
 
-import org.hibernate.service.spi.Service;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Additional contract for service proxies.  This allows the proxies access to their actual service instances.
@@ -40,7 +40,7 @@ public interface ServiceProxyTargetSource extends ServiceRegistry {
 	 *
 	 * @return The requested service.
 	 *
-	 * @throws org.hibernate.service.spi.UnknownServiceException Indicates the service was not known.
+	 * @throws org.hibernate.service.UnknownServiceException Indicates the service was not known.
 	 */
 	public <R extends Service> R getServiceInternal(Class<R> serviceRole);
 }

@@ -113,9 +113,11 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -174,7 +176,7 @@ public final class SessionFactoryImpl
 	private final transient Map fetchProfiles;
 	private final transient Map imports;
 	private final transient Interceptor interceptor;
-	private final transient ServiceRegistry serviceRegistry;
+	private final transient ServiceRegistryImplementor serviceRegistry;
 	private final transient Settings settings;
 	private final transient Properties properties;
 	private transient SchemaExport schemaExport;
@@ -187,7 +189,7 @@ public final class SessionFactoryImpl
 	private final transient CurrentSessionContext currentSessionContext;
 	private final transient EntityNotFoundDelegate entityNotFoundDelegate;
 	private final transient SQLFunctionRegistry sqlFunctionRegistry;
-	private final transient SessionFactoryObserver observer;
+	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 	private final transient HashMap entityNameResolvers = new HashMap();
 	private final transient QueryPlanCache queryPlanCache;
 	private final transient Cache cacheAccess = new CacheImpl();
@@ -210,16 +212,16 @@ public final class SessionFactoryImpl
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
 		this.interceptor = cfg.getInterceptor();
-		this.serviceRegistry = serviceRegistry;
+		this.serviceRegistry = serviceRegistry.getService( SessionFactoryServiceRegistryFactory.class ).buildServiceRegistry(
+				this,
+				cfg
+		);
 		this.settings = settings;
 		this.sqlFunctionRegistry = new SQLFunctionRegistry( getDialect(), cfg.getSqlFunctions() );
         this.eventListeners = listeners;
-		this.observer = observer != null ? observer : new SessionFactoryObserver() {
-			public void sessionFactoryCreated(SessionFactory factory) {
-			}
-			public void sessionFactoryClosed(SessionFactory factory) {
-			}
-		};
+		if ( observer != null ) {
+			this.observer.addObserver( observer );
+		}
 
 		this.typeResolver = cfg.getTypeResolver().scope( this );
 		this.typeHelper = new TypeLocatorImpl( typeResolver );
@@ -470,6 +472,11 @@ public final class SessionFactoryImpl
 
 		this.transactionEnvironment = new TransactionEnvironmentImpl( this );
 		this.observer.sessionFactoryCreated( this );
+	}
+
+	@Override
+	public void addObserver(SessionFactoryObserver observer) {
+		this.observer.addObserver( observer );
 	}
 
 	private Statistics buildStatistics(Settings settings, ServiceRegistry serviceRegistry) {
@@ -964,6 +971,7 @@ public final class SessionFactoryImpl
 		SessionFactoryObjectFactory.removeInstance(uuid, name, properties);
 
 		observer.sessionFactoryClosed( this );
+		serviceRegistry.destroy();
 		eventListeners.destroyListeners();
 	}
 

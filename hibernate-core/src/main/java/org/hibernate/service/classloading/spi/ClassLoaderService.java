@@ -27,7 +27,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * A service for interacting with class loaders

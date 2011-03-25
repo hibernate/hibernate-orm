@@ -24,9 +24,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.service.spi.UnknownUnwrapTypeException;
 
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 

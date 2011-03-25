@@ -33,7 +33,7 @@ import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.UnknownUnwrapTypeException;
+import org.hibernate.service.UnknownUnwrapTypeException;
 import org.jboss.logging.Logger;
 import org.logicalcobwebs.proxool.ProxoolException;
 import org.logicalcobwebs.proxool.ProxoolFacade;

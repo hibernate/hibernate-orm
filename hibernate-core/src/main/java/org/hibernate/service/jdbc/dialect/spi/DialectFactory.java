@@ -28,7 +28,7 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * A factory for generating Dialect instances.

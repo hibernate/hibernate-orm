@@ -26,7 +26,7 @@ package org.hibernate.engine.jdbc.internal;
 import java.util.Map;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**

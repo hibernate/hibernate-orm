@@ -9,7 +9,8 @@ import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 
 /**

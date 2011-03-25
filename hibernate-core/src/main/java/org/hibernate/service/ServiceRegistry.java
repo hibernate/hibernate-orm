@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
+package org.hibernate.service;
 
 /**
  * The registry of {@link Service services}.
@@ -37,7 +37,7 @@ public interface ServiceRegistry {
 	public ServiceRegistry getParentServiceRegistry();
 
 	/**
-	 * Retrieve a service by role.  If service is not found, but a {@link BasicServiceInitiator} is registered for
+	 * Retrieve a service by role.  If service is not found, but a {@link org.hibernate.service.spi.BasicServiceInitiator} is registered for
 	 * this service role, the service will be initialized and returned.
 	 * <p/>
 	 * NOTE: We cannot return {@code <R extends Service<T>>} here because the service might come from the parent...

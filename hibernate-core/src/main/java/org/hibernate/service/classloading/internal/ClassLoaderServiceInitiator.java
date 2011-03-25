@@ -26,7 +26,7 @@ package org.hibernate.service.classloading.internal;
 import java.util.Map;
 
 import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**

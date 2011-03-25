@@ -29,7 +29,7 @@ import javax.persistence.Id;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 
 import org.junit.Test;
 

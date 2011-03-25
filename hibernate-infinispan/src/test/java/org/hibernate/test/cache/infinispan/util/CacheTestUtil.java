@@ -33,9 +33,8 @@ import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.jta.platform.internal.JtaPlatformInitiator;
-import org.hibernate.service.spi.ServiceRegistry;
 
 /**
  * Utilities for cache testing.

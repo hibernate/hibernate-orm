@@ -21,32 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
+package org.hibernate.impl;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.hibernate.service.Service;
+import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
 
 /**
- * Responsible for initiating services.
- *
  * @author Steve Ebersole
  */
-public interface BasicServiceInitiator<R extends Service> {
-	/**
-	 * Obtains the service role initiated by this initiator.  Should be unique within a registry
-	 *
-	 * @return The service role.
-	 */
-	public Class<R> getServiceInitiated();
+public class SessionFactoryObserverChain implements SessionFactoryObserver {
+	private List<SessionFactoryObserver> observers;
 
-	/**
-	 * Initiates the managed service.
-	 *
-	 * @param configurationValues The configuration values in effect
-	 * @param registry The service registry.  Can be used to locate services needed to fulfill initiation.
-	 *
-	 * @return The initiated service.
-	 */
-	public R initiateService(Map configurationValues, ServiceRegistryImplementor registry);
+	public void addObserver(SessionFactoryObserver observer) {
+		if ( observers == null ) {
+			observers = new ArrayList<SessionFactoryObserver>();
+		}
+		observers.add( observer );
+	}
+
+	@Override
+	public void sessionFactoryCreated(SessionFactory factory) {
+		if ( observers == null ) {
+			return;
+		}
+
+		for ( SessionFactoryObserver observer : observers ) {
+			observer.sessionFactoryCreated( factory );
+		}
+	}
+
+	@Override
+	public void sessionFactoryClosed(SessionFactory factory) {
+		if ( observers == null ) {
+			return;
+		}
+
+		for ( SessionFactoryObserver observer : observers ) {
+			observer.sessionFactoryClosed( factory );
+		}
+	}
 }

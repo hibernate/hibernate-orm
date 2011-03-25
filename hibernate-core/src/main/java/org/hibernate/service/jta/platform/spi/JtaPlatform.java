@@ -29,7 +29,7 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Defines how we interact with various JTA services on the given platform/environment.

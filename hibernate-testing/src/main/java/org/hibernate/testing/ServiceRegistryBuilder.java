@@ -25,8 +25,8 @@ package org.hibernate.testing;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.ServiceRegistry;
 
 import java.util.Map;
 import java.util.Properties;

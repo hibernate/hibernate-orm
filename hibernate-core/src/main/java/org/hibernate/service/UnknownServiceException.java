@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.internal;
+package org.hibernate.service;
+import org.hibernate.HibernateException;
 
 /**
+ * Indicates that an unkown service was requested from the registry.
+ *
  * @author Steve Ebersole
  */
-final class ServiceBinding<R> {
-	private final R proxy;
-	private R target;
+public class UnknownServiceException extends HibernateException {
+	public final Class serviceRole;
 
-	ServiceBinding(R proxy) {
-		this.proxy = proxy;
+	public UnknownServiceException(Class serviceRole) {
+		super( "Unknown service requested [" + serviceRole.getName() + "]" );
+		this.serviceRole = serviceRole;
 	}
 
-	public R getProxy() {
-		return proxy;
-	}
-
-	public R getTarget() {
-		return target;
-	}
-
-	public void setTarget(R target) {
-		this.target = target;
+	public Class getServiceRole() {
+		return serviceRole;
 	}
 }

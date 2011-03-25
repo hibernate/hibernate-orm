@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,23 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
-import org.hibernate.HibernateException;
+package org.hibernate.service.internal;
+
+import java.util.Map;
+
+import org.hibernate.service.spi.BasicServiceInitiator;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 
 /**
- * Indicates that an unkown service was requested from the registry.
- *
  * @author Steve Ebersole
  */
-public class UnknownServiceException extends HibernateException {
-	public final Class serviceRole;
+public class SessionFactoryServiceRegistryFactoryInitiator implements BasicServiceInitiator<SessionFactoryServiceRegistryFactory> {
+	public static final SessionFactoryServiceRegistryFactoryInitiator INSTANCE = new SessionFactoryServiceRegistryFactoryInitiator();
 
-	public UnknownServiceException(Class serviceRole) {
-		super( "Unknown service requested [" + serviceRole.getName() + "]" );
-		this.serviceRole = serviceRole;
+	@Override
+	public Class<SessionFactoryServiceRegistryFactory> getServiceInitiated() {
+		return SessionFactoryServiceRegistryFactory.class;
 	}
 
-	public Class getServiceRole() {
-		return serviceRole;
+	@Override
+	public SessionFactoryServiceRegistryFactoryImpl initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		return new SessionFactoryServiceRegistryFactoryImpl( registry );
 	}
 }

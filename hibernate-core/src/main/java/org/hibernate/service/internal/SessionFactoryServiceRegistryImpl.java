@@ -21,20 +21,42 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
+package org.hibernate.service.internal;
 
-import org.hibernate.HibernateException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.service.Service;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
-public class UnknownUnwrapTypeException extends HibernateException {
-	public UnknownUnwrapTypeException(Class unwrapType) {
-		super( "Cannot unwrap to requested type [" + unwrapType.getName() + "]" );
+public class SessionFactoryServiceRegistryImpl
+		extends AbstractServiceRegistryImpl
+		implements SessionFactoryServiceRegistry {
+
+	private final SessionFactoryImplementor sessionFactory;
+	private Configuration configuration;
+
+	// for now we need to hold on to the Configuration... :(
+
+	public SessionFactoryServiceRegistryImpl(
+			ServiceRegistryImplementor parent,
+			SessionFactoryImplementor sessionFactory,
+			Configuration configuration) {
+		super( parent );
+		this.sessionFactory = sessionFactory;
+		this.configuration = configuration;
 	}
 
-	public UnknownUnwrapTypeException(Class unwrapType, Throwable root) {
-		this( unwrapType );
-		super.initCause( root );
+	@Override
+	protected <T extends Service> T createService(Class<T> serviceRole) {
+		return null; // todo : implement method body
+	}
+
+	@Override
+	protected <T extends Service> void configureService(T service) {
+		// todo : implement method body
 	}
 }

@@ -21,32 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.jdbc.dialect.spi;
+package org.hibernate.service;
 
-import java.sql.DatabaseMetaData;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.service.Service;
+import java.io.Serializable;
 
 /**
- * Contract for determining the {@link Dialect} to use based on a JDBC {@link java.sql.Connection}.
+ * Marker interface for services.
+ * <p/>
+ * NOTE : All services must be {@link Serializable}!
  *
- * @author Tomoto Shimizu Washio
  * @author Steve Ebersole
  */
-public interface DialectResolver extends Service {
-	/**
-	 * Determine the {@link Dialect} to use based on the given JDBC {@link DatabaseMetaData}.  Implementations are
-	 * expected to return the {@link Dialect} instance to use, or null if the {@link DatabaseMetaData} does not match
-	 * the criteria handled by this impl.
-	 * 
-	 * @param metaData The JDBC metadata.
-	 *
-	 * @return The dialect to use, or null.
-	 *
-	 * @throws JDBCConnectionException Indicates a 'non transient connection problem', which indicates that
-	 * we should stop resolution attempts.
-	 */
-	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException;
+public interface Service extends Serializable {
 }

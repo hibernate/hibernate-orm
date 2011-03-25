@@ -28,12 +28,12 @@ import java.util.Map;
 import javax.sql.DataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jndi.spi.JndiService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.service.spi.UnknownUnwrapTypeException;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.

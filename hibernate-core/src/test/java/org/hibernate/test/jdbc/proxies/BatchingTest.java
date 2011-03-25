@@ -41,8 +41,8 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
+import org.hibernate.service.StandardServiceInitiators;
 import org.hibernate.service.internal.BasicServiceRegistryImpl;
-import org.hibernate.service.spi.StandardServiceInitiators;
 
 import org.junit.After;
 import org.junit.Before;

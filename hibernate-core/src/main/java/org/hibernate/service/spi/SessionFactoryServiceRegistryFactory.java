@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,32 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.jdbc.dialect.spi;
+package org.hibernate.service.spi;
 
-import java.sql.DatabaseMetaData;
-
-import org.hibernate.dialect.Dialect;
-import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.service.Service;
+import org.hibernate.service.internal.SessionFactoryServiceRegistryImpl;
 
 /**
- * Contract for determining the {@link Dialect} to use based on a JDBC {@link java.sql.Connection}.
+ * Contract for builder of {@link SessionFactoryServiceRegistry} instances.  Defined as a service to
+ * "sit inside" the {@link org.hibernate.service.BasicServiceRegistry}.
  *
- * @author Tomoto Shimizu Washio
  * @author Steve Ebersole
  */
-public interface DialectResolver extends Service {
+public interface SessionFactoryServiceRegistryFactory extends Service {
 	/**
-	 * Determine the {@link Dialect} to use based on the given JDBC {@link DatabaseMetaData}.  Implementations are
-	 * expected to return the {@link Dialect} instance to use, or null if the {@link DatabaseMetaData} does not match
-	 * the criteria handled by this impl.
-	 * 
-	 * @param metaData The JDBC metadata.
+	 * Create the registry.
 	 *
-	 * @return The dialect to use, or null.
+	 * @todo : fully expect this signature to change!
 	 *
-	 * @throws JDBCConnectionException Indicates a 'non transient connection problem', which indicates that
-	 * we should stop resolution attempts.
+	 * @param sessionFactory The (in flux) session factory.  Generally this is useful for grabbing a reference for later
+	 * 		use.  However, care should be taken when invoking on the session factory until after it has been fully
+	 * 		initialized.
+	 * @param configuration The configuration object.
+	 *
+	 * @return The registry
 	 */
-	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException;
+	public SessionFactoryServiceRegistryImpl buildServiceRegistry(
+			SessionFactoryImplementor sessionFactory,
+			Configuration configuration);
 }

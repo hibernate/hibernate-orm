@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.spi.proxy;
 
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Contract for creating proxy instances for {@link Service} instances.

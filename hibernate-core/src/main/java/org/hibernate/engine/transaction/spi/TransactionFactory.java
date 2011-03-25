@@ -24,7 +24,7 @@
 package org.hibernate.engine.transaction.spi;
 
 import org.hibernate.ConnectionReleaseMode;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Contract for transaction creation, as well as providing metadata and contextual information about that creation.

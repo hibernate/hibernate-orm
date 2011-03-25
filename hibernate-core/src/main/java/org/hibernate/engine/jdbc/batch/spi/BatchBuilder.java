@@ -25,7 +25,7 @@ package org.hibernate.engine.jdbc.batch.spi;
 
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.service.spi.Manageable;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * A builder for {@link Batch} instances

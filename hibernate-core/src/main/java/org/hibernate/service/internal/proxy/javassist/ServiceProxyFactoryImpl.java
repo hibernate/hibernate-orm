@@ -30,7 +30,7 @@ import javassist.util.proxy.ProxyObject;
 
 import org.hibernate.service.internal.ServiceProxy;
 import org.hibernate.service.internal.ServiceProxyGenerationException;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 import org.hibernate.service.spi.proxy.ServiceProxyFactory;
 import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
 

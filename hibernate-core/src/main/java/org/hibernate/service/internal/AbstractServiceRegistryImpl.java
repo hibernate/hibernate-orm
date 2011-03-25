@@ -23,6 +23,7 @@
  */
 package org.hibernate.service.internal;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -33,11 +34,16 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.internal.proxy.javassist.ServiceProxyFactoryFactoryImpl;
-import org.hibernate.service.spi.Service;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.jmx.spi.JmxService;
+import org.hibernate.service.spi.InjectService;
+import org.hibernate.service.spi.Manageable;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.service.spi.UnknownServiceException;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.proxy.ServiceProxyFactory;
 
 /**
@@ -116,7 +122,86 @@ public abstract class AbstractServiceRegistryImpl implements ServiceRegistryImpl
 		serviceList.add( service );
 	}
 
-	protected abstract <R extends Service> R initializeService(Class<R> serviceRole);
+	private <R extends Service> R initializeService(Class<R> serviceRole) {
+        LOG.trace("Initializing service [role=" + serviceRole.getName() + "]");
+
+		// PHASE 1 : create service
+		R service = createService( serviceRole );
+		if ( service == null ) {
+			return null;
+		}
+
+		// PHASE 2 : configure service (***potentially recursive***)
+		configureService( service );
+
+		// PHASE 3 : Start service
+		startService( service, serviceRole );
+
+		return service;
+	}
+
+	protected abstract <T extends Service> T createService(Class<T> serviceRole);
+	protected abstract <T extends Service> void configureService(T service);
+
+	protected <T extends Service> void applyInjections(T service) {
+		try {
+			for ( Method method : service.getClass().getMethods() ) {
+				InjectService injectService = method.getAnnotation( InjectService.class );
+				if ( injectService == null ) {
+					continue;
+				}
+
+				applyInjection( service, method, injectService );
+			}
+		}
+		catch (NullPointerException e) {
+            LOG.error("NPE injecting service deps : " + service.getClass().getName());
+		}
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private <T extends Service> void applyInjection(T service, Method injectionMethod, InjectService injectService) {
+		if ( injectionMethod.getParameterTypes() == null || injectionMethod.getParameterTypes().length != 1 ) {
+			throw new ServiceDependencyException(
+					"Encountered @InjectService on method with unexpected number of parameters"
+			);
+		}
+
+		Class dependentServiceRole = injectService.serviceRole();
+		if ( dependentServiceRole == null || dependentServiceRole.equals( Void.class ) ) {
+			dependentServiceRole = injectionMethod.getParameterTypes()[0];
+		}
+
+		// todo : because of the use of proxies, this is no longer returning null here...
+
+		final Service dependantService = getService( dependentServiceRole );
+		if ( dependantService == null ) {
+			if ( injectService.required() ) {
+				throw new ServiceDependencyException(
+						"Dependency [" + dependentServiceRole + "] declared by service [" + service + "] not found"
+				);
+			}
+		}
+		else {
+			try {
+				injectionMethod.invoke( service, dependantService );
+			}
+			catch ( Exception e ) {
+				throw new ServiceDependencyException( "Cannot inject dependency service", e );
+			}
+		}
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	protected <T extends Service> void startService(T service, Class serviceRole) {
+		if ( Startable.class.isInstance( service ) ) {
+			( (Startable) service ).start();
+		}
+
+		if ( Manageable.class.isInstance( service ) ) {
+			getService( JmxService.class ).registerService( (Manageable) service, serviceRole );
+		}
+	}
 
 	@Override
 	@SuppressWarnings( {"unchecked"})

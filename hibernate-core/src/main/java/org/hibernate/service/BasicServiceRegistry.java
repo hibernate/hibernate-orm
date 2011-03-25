@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,16 +21,13 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
+package org.hibernate.service;
 
-import java.io.Serializable;
+import org.hibernate.service.spi.BasicServiceInitiator;
 
 /**
- * Marker interface for services.
- * <p/>
- * NOTE : All services must be {@link Serializable}!
- *
  * @author Steve Ebersole
  */
-public interface Service extends Serializable {
+public interface BasicServiceRegistry extends ServiceRegistry {
+	public void registerServiceInitiator(BasicServiceInitiator initiator);
 }

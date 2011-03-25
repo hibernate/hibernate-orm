@@ -23,13 +23,29 @@
  */
 package org.hibernate.service.internal;
 
-import org.hibernate.service.spi.Service;
-import org.hibernate.service.spi.ServiceRegistry;
-import org.hibernate.service.spi.proxy.ServiceProxyTargetSource;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.service.Service;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 
 /**
+ * Acts as a {@link Service} in the {@link BasicServiceRegistryImpl} whose function is as a factory for
+ * {@link SessionFactoryServiceRegistryImpl} implementations.
+ *
  * @author Steve Ebersole
  */
-public interface ServiceRegistryImplementor extends ServiceRegistry, ServiceProxyTargetSource {
-	public <R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
+public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryServiceRegistryFactory {
+	private final ServiceRegistryImplementor theBasicServiceRegistry;
+
+	public SessionFactoryServiceRegistryFactoryImpl(ServiceRegistryImplementor theBasicServiceRegistry) {
+		this.theBasicServiceRegistry = theBasicServiceRegistry;
+	}
+
+	@Override
+	public SessionFactoryServiceRegistryImpl buildServiceRegistry(
+			SessionFactoryImplementor sessionFactory,
+			Configuration configuration) {
+		return new SessionFactoryServiceRegistryImpl( theBasicServiceRegistry, sessionFactory, configuration );
+	}
 }

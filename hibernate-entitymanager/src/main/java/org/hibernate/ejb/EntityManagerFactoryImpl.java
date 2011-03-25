@@ -46,7 +46,7 @@ import org.hibernate.ejb.util.PersistenceUtilHelper;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.service.spi.ServiceRegistry;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Actual Hiberate implementation of {@link javax.persistence.EntityManagerFactory}.

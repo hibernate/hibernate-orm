@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.internal;
 
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Marker interface for a service proxy which allows mixed-in ability to unproxy.

@@ -25,7 +25,7 @@ package org.hibernate.service.jdbc.dialect.internal;
 
 import java.util.Map;
 
-import org.hibernate.service.internal.ServiceRegistryImplementor;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.BasicServiceInitiator;
 

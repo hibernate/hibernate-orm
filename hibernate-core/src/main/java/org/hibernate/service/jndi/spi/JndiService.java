@@ -23,7 +23,7 @@
  */
 package org.hibernate.service.jndi.spi;
 
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 
 /**
  * Service providing simplified access to JNDI related features needed by Hibernate.

@@ -23,8 +23,10 @@
  */
 package org.hibernate.service.spi;
 
+import org.hibernate.service.ServiceRegistry;
+
 /**
- * Allows services to be injected with the {@link ServiceRegistry} during configuration phase.
+ * Allows services to be injected with the {@link org.hibernate.service.ServiceRegistry} during configuration phase.
  *
  * @author Steve Ebersole
  */

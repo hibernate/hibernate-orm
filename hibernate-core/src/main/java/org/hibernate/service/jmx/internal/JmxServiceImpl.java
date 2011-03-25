@@ -33,9 +33,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.Service;
 import org.hibernate.service.jmx.spi.JmxService;
 import org.hibernate.service.spi.Manageable;
-import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.Stoppable;
 import org.jboss.logging.Logger;
 

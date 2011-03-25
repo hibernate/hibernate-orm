@@ -25,7 +25,7 @@ package org.hibernate.service.jdbc.connections.internal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.UnknownUnwrapTypeException;
+import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
  * An implementation of the {@link ConnectionProvider} interface that simply throws an exception when a connection

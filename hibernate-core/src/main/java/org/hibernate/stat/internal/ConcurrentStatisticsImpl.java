@@ -33,7 +33,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.cache.Region;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.service.spi.Service;
+import org.hibernate.service.Service;
 import org.hibernate.stat.CollectionStatistics;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;

@@ -33,7 +33,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.spi.UnknownUnwrapTypeException;
+import org.hibernate.service.UnknownUnwrapTypeException;
 import org.jboss.logging.Logger;
 import com.mchange.v2.c3p0.DataSources;
 

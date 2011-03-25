@@ -31,24 +31,22 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateLogger;
-import org.hibernate.service.jmx.spi.JmxService;
+import org.hibernate.service.BasicServiceRegistry;
+import org.hibernate.service.Service;
+import org.hibernate.service.StandardServiceInitiators;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
-import org.hibernate.service.spi.Manageable;
-import org.hibernate.service.spi.Service;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
-import org.hibernate.service.spi.StandardServiceInitiators;
-import org.hibernate.service.spi.Startable;
-import org.hibernate.service.spi.UnknownServiceException;
 
 /**
  * Standard Hibernate implementation of the service registry.
  *
  * @author Steve Ebersole
  */
-public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl {
+public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implements BasicServiceRegistry {
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, BasicServiceRegistryImpl.class.getName());
 
 	private final Map<Class,BasicServiceInitiator> serviceInitiatorMap;
@@ -82,6 +80,7 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl {
 		return result;
 	}
 
+	@Override
 	@SuppressWarnings( {"unchecked"})
 	public void registerServiceInitiator(BasicServiceInitiator initiator) {
 		ServiceBinding serviceBinding = locateServiceBinding( initiator.getServiceInitiated(), false );
@@ -95,26 +94,8 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl {
 	}
 
 	@Override
-	protected <R extends Service> R initializeService(Class<R> serviceRole) {
-        LOG.trace("Initializing service [role=" + serviceRole.getName() + "]");
-
-		// PHASE 1 : create service
-		R service = createService( serviceRole );
-		if ( service == null ) {
-			return null;
-		}
-
-		// PHASE 2 : configure service (***potentially recursive***)
-		configureService( service );
-
-		// PHASE 3 : Start service
-		startService( service, serviceRole );
-
-		return service;
-	}
-
 	@SuppressWarnings({ "unchecked" })
-	private <T extends Service> T createService(Class<T> serviceRole) {
+	protected <T extends Service> T createService(Class<T> serviceRole) {
 		BasicServiceInitiator<T> initiator = serviceInitiatorMap.get( serviceRole );
 		if ( initiator == null ) {
 			throw new UnknownServiceException( serviceRole );
@@ -134,7 +115,8 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl {
 		}
 	}
 
-	private <T extends Service> void configureService(T service) {
+	@Override
+	protected <T extends Service> void configureService(T service) {
 		applyInjections( service );
 
 		if ( Configurable.class.isInstance( service ) ) {
@@ -143,66 +125,6 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl {
 
 		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
 			( (ServiceRegistryAwareService) service ).injectServices( this );
-		}
-	}
-
-	private <T extends Service> void applyInjections(T service) {
-		try {
-			for ( Method method : service.getClass().getMethods() ) {
-				InjectService injectService = method.getAnnotation( InjectService.class );
-				if ( injectService == null ) {
-					continue;
-				}
-
-				applyInjection( service, method, injectService );
-			}
-		}
-		catch (NullPointerException e) {
-            LOG.error("NPE injecting service deps : " + service.getClass().getName());
-		}
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private <T extends Service> void applyInjection(T service, Method injectionMethod, InjectService injectService) {
-		if ( injectionMethod.getParameterTypes() == null || injectionMethod.getParameterTypes().length != 1 ) {
-			throw new ServiceDependencyException(
-					"Encountered @InjectService on method with unexpected number of parameters"
-			);
-		}
-
-		Class dependentServiceRole = injectService.serviceRole();
-		if ( dependentServiceRole == null || dependentServiceRole.equals( Void.class ) ) {
-			dependentServiceRole = injectionMethod.getParameterTypes()[0];
-		}
-
-		// todo : because of the use of proxies, this is no longer returning null here...
-
-		final Service dependantService = getService( dependentServiceRole );
-		if ( dependantService == null ) {
-			if ( injectService.required() ) {
-				throw new ServiceDependencyException(
-						"Dependency [" + dependentServiceRole + "] declared by service [" + service + "] not found"
-				);
-			}
-		}
-		else {
-			try {
-				injectionMethod.invoke( service, dependantService );
-			}
-			catch ( Exception e ) {
-				throw new ServiceDependencyException( "Cannot inject dependency service", e );
-			}
-		}
-	}
-
-	@SuppressWarnings({ "unchecked" })
-	private <T extends Service> void startService(T service, Class serviceRole) {
-		if ( Startable.class.isInstance( service ) ) {
-			( (Startable) service ).start();
-		}
-
-		if ( Manageable.class.isInstance( service ) ) {
-			getService( JmxService.class ).registerService( (Manageable) service, serviceRole );
 		}
 	}
 }

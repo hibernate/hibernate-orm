@@ -25,8 +25,8 @@ package org.hibernate.service.jmx.spi;
 
 import javax.management.ObjectName;
 
+import org.hibernate.service.Service;
 import org.hibernate.service.spi.Manageable;
-import org.hibernate.service.spi.Service;
 
 /**
  * Service providing simplified access to JMX related features needed by Hibernate.

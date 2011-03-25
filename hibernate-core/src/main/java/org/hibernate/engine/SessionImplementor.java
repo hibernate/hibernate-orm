@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
 
@@ -39,6 +38,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
@@ -47,16 +47,21 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
-
 /**
- * Defines the internal contract between the <tt>Session</tt> and other parts of
- * Hibernate such as implementors of <tt>Type</tt> or <tt>EntityPersister</tt>.
+ * Defines the internal contract between {@link org.hibernate.Session} / {@link org.hibernate.StatelessSession} and
+ * other parts of Hibernate such as {@link Type}, {@link EntityPersister} and
+ * {@link org.hibernate.persister.collection.CollectionPersister} implementors
  *
- * @see org.hibernate.Session the interface to the application
- * @see org.hibernate.impl.SessionImpl the actual implementation
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public interface SessionImplementor extends Serializable, LobCreationContext {
+	/**
+	 * Provides access to JDBC connections
+	 *
+	 * @return The contract for accessing JDBC connections.
+	 */
+	public JdbcConnectionAccess getJdbcConnectionAccess();
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.

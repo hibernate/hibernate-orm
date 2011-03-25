@@ -22,21 +22,28 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
+
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateLogger;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
@@ -45,41 +52,39 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.spi.InjectService;
-import org.jboss.logging.Logger;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
  *
  * @author Steve Ebersole
  */
-public class JdbcServicesImpl implements JdbcServices, Configurable {
-
+public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareService, Configurable {
     private static final HibernateLogger LOG = Logger.getMessageLogger(HibernateLogger.class, JdbcServicesImpl.class.getName());
 
-	private ConnectionProvider connectionProvider;
-
-	@InjectService
-	public void setConnectionProvider(ConnectionProvider connectionProvider) {
-		this.connectionProvider = connectionProvider;
-	}
-
-	private DialectFactory dialectFactory;
-
-	@InjectService
-	public void setDialectFactory(DialectFactory dialectFactory) {
-		this.dialectFactory = dialectFactory;
-	}
+	private ServiceRegistryImplementor serviceRegistry;
 
 	private Dialect dialect;
+	private ConnectionProvider connectionProvider;
 	private SqlStatementLogger sqlStatementLogger;
 	private SqlExceptionHelper sqlExceptionHelper;
 	private ExtractedDatabaseMetaData extractedMetaDataSupport;
 	private LobCreatorBuilder lobCreatorBuilder;
 
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
+
+	@Override
 	public void configure(Map configValues) {
+		final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( configValues );
+		final DialectFactory dialectFactory = serviceRegistry.getService( DialectFactory.class );
+
 		Dialect dialect = null;
 		LobCreatorBuilder lobCreatorBuilder = null;
 
@@ -105,9 +110,9 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 		boolean useJdbcMetadata = ConfigurationHelper.getBoolean( "hibernate.temp.use_jdbc_metadata_defaults", configValues, true );
 		if ( useJdbcMetadata ) {
 			try {
-				Connection conn = connectionProvider.getConnection();
+				Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
-					DatabaseMetaData meta = conn.getMetaData();
+					DatabaseMetaData meta = connection.getMetaData();
                     LOG.database(meta.getDatabaseProductName(),
                                  meta.getDatabaseProductVersion(),
                                  meta.getDatabaseMajorVersion(),
@@ -128,25 +133,25 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 					lobLocatorUpdateCopy = meta.locatorsUpdateCopy();
 					typeInfoSet.addAll( TypeInfoExtracter.extractTypeInfo( meta ) );
 
-					dialect = dialectFactory.buildDialect( configValues, conn );
+					dialect = dialectFactory.buildDialect( configValues, connection );
 
-					catalogName = conn.getCatalog();
+					catalogName = connection.getCatalog();
 					SchemaNameResolver schemaNameResolver = determineExplicitSchemaNameResolver( configValues );
 					if ( schemaNameResolver == null ) {
 // todo : add dialect method
 //						schemaNameResolver = dialect.getSchemaNameResolver();
 					}
 					if ( schemaNameResolver != null ) {
-						schemaName = schemaNameResolver.resolveSchemaName( conn );
+						schemaName = schemaNameResolver.resolveSchemaName( connection );
 					}
-					lobCreatorBuilder = new LobCreatorBuilder( configValues, conn );
+					lobCreatorBuilder = new LobCreatorBuilder( configValues, connection );
 				}
 				catch ( SQLException sqle ) {
                     LOG.unableToObtainConnectionMetadata(sqle.getMessage());
 				}
 				finally {
-					if ( conn != null ) {
-						connectionProvider.closeConnection( conn );
+					if ( connection != null ) {
+						jdbcConnectionAccess.releaseConnection( connection );
 					}
 				}
 			}
@@ -190,6 +195,57 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 		);
 	}
 
+	private JdbcConnectionAccess buildJdbcConnectionAccess(Map configValues) {
+		final MultiTenancyStrategy multiTenancyStrategy = MultiTenancyStrategy.determineMultiTenancyStrategy( configValues );
+
+		if ( MultiTenancyStrategy.NONE == multiTenancyStrategy ) {
+			connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
+			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
+		}
+		else {
+			connectionProvider = null;
+			final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService( MultiTenantConnectionProvider.class );
+			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
+		}
+	}
+
+	private static class ConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
+		private final ConnectionProvider connectionProvider;
+
+		public ConnectionProviderJdbcConnectionAccess(ConnectionProvider connectionProvider) {
+			this.connectionProvider = connectionProvider;
+		}
+
+		@Override
+		public Connection obtainConnection() throws SQLException {
+			return connectionProvider.getConnection();
+		}
+
+		@Override
+		public void releaseConnection(Connection connection) throws SQLException {
+			connection.close();
+		}
+	}
+
+	private static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
+		private final MultiTenantConnectionProvider connectionProvider;
+
+		public MultiTenantConnectionProviderJdbcConnectionAccess(MultiTenantConnectionProvider connectionProvider) {
+			this.connectionProvider = connectionProvider;
+		}
+
+		@Override
+		public Connection obtainConnection() throws SQLException {
+			return connectionProvider.getAnyConnection();
+		}
+
+		@Override
+		public void releaseConnection(Connection connection) throws SQLException {
+			connection.close();
+		}
+	}
+
+
 	// todo : add to Environment
 	public static final String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
 
@@ -220,9 +276,7 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 
 	private Set<String> parseKeywords(String extraKeywordsString) {
 		Set<String> keywordSet = new HashSet<String>();
-		for ( String keyword : extraKeywordsString.split( "," ) ) {
-			keywordSet.add( keyword );
-		}
+		keywordSet.addAll( Arrays.asList( extraKeywordsString.split( "," ) ) );
 		return keywordSet;
 	}
 
@@ -278,81 +332,93 @@ public class JdbcServicesImpl implements JdbcServices, Configurable {
 			this.typeInfoSet = typeInfoSet;
 		}
 
+		@Override
 		public boolean supportsScrollableResults() {
 			return supportsScrollableResults;
 		}
 
+		@Override
 		public boolean supportsGetGeneratedKeys() {
 			return supportsGetGeneratedKeys;
 		}
 
+		@Override
 		public boolean supportsBatchUpdates() {
 			return supportsBatchUpdates;
 		}
 
+		@Override
 		public boolean supportsDataDefinitionInTransaction() {
 			return supportsDataDefinitionInTransaction;
 		}
 
+		@Override
 		public boolean doesDataDefinitionCauseTransactionCommit() {
 			return doesDataDefinitionCauseTransactionCommit;
 		}
 
+		@Override
 		public Set<String> getExtraKeywords() {
 			return extraKeywords;
 		}
 
+		@Override
 		public SQLStateType getSqlStateType() {
 			return sqlStateType;
 		}
 
+		@Override
 		public boolean doesLobLocatorUpdateCopy() {
 			return lobLocatorUpdateCopy;
 		}
 
+		@Override
 		public String getConnectionSchemaName() {
 			return connectionSchemaName;
 		}
 
+		@Override
 		public String getConnectionCatalogName() {
 			return connectionCatalogName;
 		}
 
+		@Override
 		public LinkedHashSet<TypeInfo> getTypeInfoSet() {
 			return typeInfoSet;
 		}
 	}
 
+	@Override
 	public ConnectionProvider getConnectionProvider() {
 		return connectionProvider;
 	}
 
+	@Override
 	public SqlStatementLogger getSqlStatementLogger() {
 		return sqlStatementLogger;
 	}
 
+	@Override
 	public SqlExceptionHelper getSqlExceptionHelper() {
 		return sqlExceptionHelper;
 	}
 
+	@Override
 	public Dialect getDialect() {
 		return dialect;
 	}
 
+	@Override
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		return extractedMetaDataSupport;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
 		return lobCreatorBuilder.buildLobCreator( lobCreationContext );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public ResultSetWrapper getResultSetWrapper() {
 		return ResultSetWrapperImpl.INSTANCE;
 	}

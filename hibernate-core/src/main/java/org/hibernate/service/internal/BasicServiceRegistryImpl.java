@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -125,12 +125,12 @@ public class BasicServiceRegistryImpl extends AbstractServiceRegistryImpl implem
 	protected <T extends Service> void configureService(T service) {
 		applyInjections( service );
 
-		if ( Configurable.class.isInstance( service ) ) {
-			( (Configurable) service ).configure( configurationValues );
-		}
-
 		if ( ServiceRegistryAwareService.class.isInstance( service ) ) {
 			( (ServiceRegistryAwareService) service ).injectServices( this );
+		}
+
+		if ( Configurable.class.isInstance( service ) ) {
+			( (Configurable) service ).configure( configurationValues );
 		}
 	}
 }

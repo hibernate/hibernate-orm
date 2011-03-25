@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.spi;
+package org.hibernate.engine.jdbc.spi;
+
+import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
- * Allows services to be injected with the {@link org.hibernate.service.ServiceRegistry} during configuration phase.
+ * Provides centralized access to JDBC connections.  Centralized to hide the complexity of accounting for contextual
+ * (multi-tenant) versus non-contextual access.
  *
  * @author Steve Ebersole
  */
-public interface ServiceRegistryAwareService {
-	/**
-	 * Callback to inject the registry.
-	 *
-	 * @param serviceRegistry The registry
-	 */
-	public void injectServices(ServiceRegistryImplementor serviceRegistry);
+public interface JdbcConnectionAccess extends Serializable {
+	public Connection obtainConnection() throws SQLException;
+	public void releaseConnection(Connection connection) throws SQLException;
 }

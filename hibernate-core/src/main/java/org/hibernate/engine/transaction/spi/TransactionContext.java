@@ -24,6 +24,7 @@
 package org.hibernate.engine.transaction.spi;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 
 import java.io.Serializable;
 
@@ -110,4 +111,6 @@ public interface TransactionContext extends Serializable {
 	public void beforeTransactionCompletion(TransactionImplementor hibernateTransaction);
 
 	public void afterTransactionCompletion(TransactionImplementor hibernateTransaction, boolean successful);
+
+	public JdbcConnectionAccess getJdbcConnectionAccess();
 }

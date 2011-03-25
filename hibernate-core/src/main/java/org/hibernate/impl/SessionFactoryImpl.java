@@ -53,6 +53,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
@@ -212,6 +213,7 @@ public final class SessionFactoryImpl
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
 		this.interceptor = cfg.getInterceptor();
+
 		this.serviceRegistry = serviceRegistry.getService( SessionFactoryServiceRegistryFactory.class ).buildServiceRegistry(
 				this,
 				cfg
@@ -1260,10 +1262,11 @@ public final class SessionFactoryImpl
 	}
 
 	@Override
-	public ServiceRegistry getServiceRegistry() {
+	public ServiceRegistryImplementor getServiceRegistry() {
 		return serviceRegistry;
 	}
 
+	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return entityNotFoundDelegate;
 	}

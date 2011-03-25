@@ -32,7 +32,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  */
-interface ConnectionHelper {
+public interface ConnectionHelper {
 	/**
 	 * Prepare the helper for use.
 	 *

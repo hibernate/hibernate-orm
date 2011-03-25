@@ -32,6 +32,24 @@ import java.io.Serializable;
  */
 public interface SharedSessionContract extends Serializable {
 	/**
+	 * Obtain the tenant identifier associated with this session.
+	 *
+	 * @return The tenant identifier associated with this session, or {@code null}
+	 */
+	public String getTenantIdentifier();
+
+	/**
+	 * Should be set only once for the session.  Would rather this be supplied to opening the session, as
+	 * being discussed for HHH-2860
+	 *
+	 * @param identifier The tenant identifier.
+	 *
+	 * @deprecated HHH-2860
+	 */
+	@Deprecated
+	public void setTenantIdentifier(String identifier);
+
+	/**
 	 * Begin a unit of work and return the associated {@link Transaction} object.  If a new underlying transaction is
 	 * required, begin the transaction.  Otherwise continue the new work in the context of the existing underlying
 	 * transaction.

@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -100,6 +101,10 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 
 	@Override
 	public ConnectionProvider initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		if ( MultiTenancyStrategy.determineMultiTenancyStrategy( configurationValues ) != MultiTenancyStrategy.NONE ) {
+			// nothing to do, but given the separate hierarchies have to handle this here.
+		}
+
 		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 
 		ConnectionProvider connectionProvider = null;

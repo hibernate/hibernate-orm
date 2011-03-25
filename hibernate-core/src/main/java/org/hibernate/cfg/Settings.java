@@ -26,6 +26,7 @@ package org.hibernate.cfg;
 import java.util.Map;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cache.QueryCacheFactory;
 import org.hibernate.cache.RegionFactory;
 import org.hibernate.hql.QueryTranslatorFactory;
@@ -81,6 +82,7 @@ public final class Settings {
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
 //	private BytecodeProvider bytecodeProvider;
 	private String importFiles;
+	private MultiTenancyStrategy multiTenancyStrategy;
 
 	private JtaPlatform jtaPlatform;
 
@@ -437,5 +439,13 @@ public final class Settings {
 
 	void setJtaPlatform(JtaPlatform jtaPlatform) {
 		this.jtaPlatform = jtaPlatform;
+	}
+
+	public MultiTenancyStrategy getMultiTenancyStrategy() {
+		return multiTenancyStrategy;
+	}
+
+	void setMultiTenancyStrategy(MultiTenancyStrategy multiTenancyStrategy) {
+		this.multiTenancyStrategy = multiTenancyStrategy;
 	}
 }

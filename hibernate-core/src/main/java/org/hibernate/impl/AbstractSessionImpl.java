@@ -30,11 +30,13 @@ import java.sql.SQLException;
 import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.QueryParameters;
@@ -48,6 +50,8 @@ import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
 
 /**
  * Functionality common to stateless and stateful sessions
@@ -57,6 +61,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 public abstract class AbstractSessionImpl implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext {
 
 	protected transient SessionFactoryImpl factory;
+	private String tenantIdentifier;
 	private boolean closed = false;
 
 	protected AbstractSessionImpl(SessionFactoryImpl factory) {
@@ -203,4 +208,77 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		return scrollCustomQuery( getNativeSQLQueryPlan( spec ).getCustomQuery(), queryParameters );
 	}
 
+	@Override
+	public String getTenantIdentifier() {
+		return tenantIdentifier;
+	}
+
+	@Override
+	public void setTenantIdentifier(String identifier) {
+		if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+			throw new HibernateException( "SessionFactory was not configured for multi-tenancy" );
+		}
+		this.tenantIdentifier = identifier;
+	}
+
+	private transient JdbcConnectionAccess jdbcConnectionAccess;
+
+	@Override
+	public JdbcConnectionAccess getJdbcConnectionAccess() {
+		if ( jdbcConnectionAccess == null ) {
+			if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
+				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
+						factory.getServiceRegistry().getService( ConnectionProvider.class )
+				);
+			}
+			else {
+				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
+						factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class )
+				);
+			}
+		}
+		return jdbcConnectionAccess;
+	}
+
+	private static class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+		private final ConnectionProvider connectionProvider;
+
+		private NonContextualJdbcConnectionAccess(ConnectionProvider connectionProvider) {
+			this.connectionProvider = connectionProvider;
+		}
+
+		@Override
+		public Connection obtainConnection() throws SQLException {
+			return connectionProvider.getConnection();
+		}
+
+		@Override
+		public void releaseConnection(Connection connection) throws SQLException {
+			connectionProvider.closeConnection( connection );
+		}
+	}
+
+	private class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+		private final MultiTenantConnectionProvider connectionProvider;
+
+		private ContextualJdbcConnectionAccess(MultiTenantConnectionProvider connectionProvider) {
+			this.connectionProvider = connectionProvider;
+		}
+
+		@Override
+		public Connection obtainConnection() throws SQLException {
+			if ( tenantIdentifier == null ) {
+				throw new HibernateException( "Tenant identifier required!" );
+			}
+			return connectionProvider.getConnection( tenantIdentifier );
+		}
+
+		@Override
+		public void releaseConnection(Connection connection) throws SQLException {
+			if ( tenantIdentifier == null ) {
+				throw new HibernateException( "Tenant identifier required!" );
+			}
+			connectionProvider.releaseConnection( tenantIdentifier, connection );
+		}
+	}
 }

@@ -91,7 +91,9 @@ public class BatchingTest extends BaseUnitTestCase implements BatchKey {
 
 	@Test
 	public void testNonBatchingUsage() throws Exception {
-		final TransactionContext transactionContext = new TransactionContextImpl( new TransactionEnvironmentImpl( serviceRegistry ) );
+		final TransactionContext transactionContext = new TransactionContextImpl(
+				new TransactionEnvironmentImpl( serviceRegistry )
+		);
 
 		TransactionCoordinatorImpl transactionCoordinator = new TransactionCoordinatorImpl( null, transactionContext );
 		JournalingTransactionObserver observer = new JournalingTransactionObserver();

@@ -551,6 +551,11 @@ public final class Environment {
 	 */
 	public static final String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
+	/**
+	 * Strategy for multi-tenancy.
+	 * @see org.hibernate.MultiTenancyStrategy
+	 */
+	public static final String MULTI_TENANT = "hibernate.multiTenancy";
 
 	private static final BytecodeProvider BYTECODE_PROVIDER_INSTANCE;
 	private static final boolean ENABLE_BINARY_STREAMS;

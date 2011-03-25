@@ -24,18 +24,30 @@
 package org.hibernate.test.common;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Steve Ebersole
  */
 public class TransactionContextImpl implements TransactionContext {
 	private final TransactionEnvironment transactionEnvironment;
+	private final JdbcConnectionAccess jdbcConnectionAccess;
+
+	public TransactionContextImpl(TransactionEnvironment transactionEnvironment, JdbcConnectionAccess jdbcConnectionAccess) {
+		this.transactionEnvironment = transactionEnvironment;
+		this.jdbcConnectionAccess = jdbcConnectionAccess;
+	}
+
+	public TransactionContextImpl(TransactionEnvironment transactionEnvironment, ServiceRegistry serviceRegistry) {
+		this( transactionEnvironment, new JdbcConnectionAccessImpl( serviceRegistry ) );
+	}
 
 	public TransactionContextImpl(TransactionEnvironment transactionEnvironment) {
-		this.transactionEnvironment = transactionEnvironment;
+		this( transactionEnvironment, new JdbcConnectionAccessImpl( transactionEnvironment.getJdbcServices().getConnectionProvider() ) );
 	}
 
 	@Override
@@ -46,6 +58,11 @@ public class TransactionContextImpl implements TransactionContext {
 	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return transactionEnvironment.getTransactionFactory().getDefaultReleaseMode();
+	}
+
+	@Override
+	public JdbcConnectionAccess getJdbcConnectionAccess() {
+		return jdbcConnectionAccess;
 	}
 
 	@Override

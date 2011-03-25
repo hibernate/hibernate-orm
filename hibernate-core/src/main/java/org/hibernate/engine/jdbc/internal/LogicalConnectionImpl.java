@@ -37,6 +37,7 @@ import org.hibernate.HibernateLogger;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.internal.proxy.ProxyBuilder;
 import org.hibernate.engine.jdbc.spi.ConnectionObserver;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcResourceRegistry;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.LogicalConnectionImplementor;
@@ -61,6 +62,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
 	private final transient ConnectionReleaseMode connectionReleaseMode;
 	private final transient JdbcServices jdbcServices;
+	private final transient JdbcConnectionAccess jdbcConnectionAccess;
 	private final transient JdbcResourceRegistry jdbcResourceRegistry;
 	private final transient List<ConnectionObserver> observers;
 
@@ -73,10 +75,12 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	public LogicalConnectionImpl(
 			Connection userSuppliedConnection,
 			ConnectionReleaseMode connectionReleaseMode,
-			JdbcServices jdbcServices) {
+			JdbcServices jdbcServices,
+			JdbcConnectionAccess jdbcConnectionAccess) {
 		this(
 				connectionReleaseMode,
 				jdbcServices,
+				jdbcConnectionAccess,
 				(userSuppliedConnection != null),
 				false,
 				new ArrayList<ConnectionObserver>()
@@ -87,6 +91,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	private LogicalConnectionImpl(
 			ConnectionReleaseMode connectionReleaseMode,
 			JdbcServices jdbcServices,
+			JdbcConnectionAccess jdbcConnectionAccess,
 			boolean isUserSuppliedConnection,
 			boolean isClosed,
 			List<ConnectionObserver> observers) {
@@ -94,6 +99,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 				jdbcServices, isUserSuppliedConnection, connectionReleaseMode
 		);
 		this.jdbcServices = jdbcServices;
+		this.jdbcConnectionAccess = jdbcConnectionAccess;
 		this.jdbcResourceRegistry = new JdbcResourceRegistryImpl( getJdbcServices().getSqlExceptionHelper() );
 		this.observers = observers;
 
@@ -286,7 +292,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	private void obtainConnection() throws JDBCException {
         LOG.debugf("Obtaining JDBC connection");
 		try {
-			physicalConnection = getJdbcServices().getConnectionProvider().getConnection();
+			physicalConnection = jdbcConnectionAccess.obtainConnection();
 			for ( ConnectionObserver observer : observers ) {
 				observer.physicalConnectionObtained( physicalConnection );
 			}
@@ -304,13 +310,19 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	 */
 	private void releaseConnection() throws JDBCException {
         LOG.debugf("Releasing JDBC connection");
-		if ( physicalConnection == null ) return;
-		try {
-            if (!physicalConnection.isClosed()) getJdbcServices().getSqlExceptionHelper().logAndClearWarnings(physicalConnection);
-            if (!isUserSuppliedConnection) getJdbcServices().getConnectionProvider().closeConnection(physicalConnection);
+		if ( physicalConnection == null ) {
+			return;
 		}
-		catch (SQLException sqle) {
-			throw getJdbcServices().getSqlExceptionHelper().convert( sqle, "Could not close connection" );
+		try {
+            if ( ! physicalConnection.isClosed() ) {
+				getJdbcServices().getSqlExceptionHelper().logAndClearWarnings( physicalConnection );
+			}
+            if ( ! isUserSuppliedConnection ) {
+				jdbcConnectionAccess.releaseConnection( physicalConnection );
+			}
+		}
+		catch (SQLException e) {
+			throw getJdbcServices().getSqlExceptionHelper().convert( e, "Could not close connection" );
 		}
 		finally {
 			physicalConnection = null;
@@ -424,6 +436,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		return new LogicalConnectionImpl(
 				transactionContext.getConnectionReleaseMode(),
 				transactionContext.getTransactionEnvironment().getJdbcServices(),
+				transactionContext.getJdbcConnectionAccess(),
 				isUserSuppliedConnection,
 				isClosed,
 				observers

@@ -38,6 +38,7 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -75,10 +76,10 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 			SessionFactoryImplementor.class
 	};
 
-	private ServiceRegistry serviceRegistry;
+	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
-	public void injectServices(ServiceRegistry serviceRegistry) {
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 

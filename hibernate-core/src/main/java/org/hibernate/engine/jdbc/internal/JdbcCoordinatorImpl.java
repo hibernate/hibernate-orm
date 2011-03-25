@@ -71,7 +71,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.logicalConnection = new LogicalConnectionImpl(
 				userSuppliedConnection,
 				transactionCoordinator.getTransactionContext().getConnectionReleaseMode(),
-				transactionCoordinator.getTransactionContext().getTransactionEnvironment().getJdbcServices()
+				transactionCoordinator.getTransactionContext().getTransactionEnvironment().getJdbcServices(),
+				transactionCoordinator.getTransactionContext().getJdbcConnectionAccess()
 		);
 	}
 

@@ -38,6 +38,7 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.test.common.BasicTestingJdbcServiceImpl;
+import org.hibernate.test.common.JdbcConnectionAccessImpl;
 import org.hibernate.test.common.JournalingConnectionObserver;
 
 import static org.junit.Assert.assertEquals;
@@ -112,7 +113,12 @@ public class AggressiveReleaseTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicRelease() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_STATEMENT,
+				services ,
+				new JdbcConnectionAccessImpl( services.getConnectionProvider() )
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		JournalingConnectionObserver observer = new JournalingConnectionObserver();
 		logicalConnection.addObserver( observer );
@@ -142,7 +148,12 @@ public class AggressiveReleaseTest extends BaseUnitTestCase {
 
 	@Test
 	public void testReleaseCircumventedByHeldResources() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_STATEMENT,
+				services,
+				new JdbcConnectionAccessImpl( services.getConnectionProvider() )
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		JournalingConnectionObserver observer = new JournalingConnectionObserver();
 		logicalConnection.addObserver( observer );
@@ -196,7 +207,12 @@ public class AggressiveReleaseTest extends BaseUnitTestCase {
 
 	@Test
 	public void testReleaseCircumventedManually() {
-		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl( null, ConnectionReleaseMode.AFTER_STATEMENT, services );
+		LogicalConnectionImpl logicalConnection = new LogicalConnectionImpl(
+				null,
+				ConnectionReleaseMode.AFTER_STATEMENT,
+				services,
+				new JdbcConnectionAccessImpl( services.getConnectionProvider() ) 
+		);
 		Connection proxiedConnection = ProxyBuilder.buildConnection( logicalConnection );
 		JournalingConnectionObserver observer = new JournalingConnectionObserver();
 		logicalConnection.addObserver( observer );

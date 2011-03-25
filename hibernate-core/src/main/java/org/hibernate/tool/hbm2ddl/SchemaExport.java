@@ -157,6 +157,17 @@ public class SchemaExport {
 		);
 	}
 
+	public SchemaExport(
+			ConnectionHelper connectionHelper,
+			String[] dropSql,
+			String[] createSql) {
+		this.connectionHelper = connectionHelper;
+		this.dropSQL = dropSql;
+		this.createSQL = createSql;
+		this.importFiles = "";
+		this.formatter = FormatStyle.DDL.getFormatter();
+	}
+
 	/**
 	 * For generating a export script file, this is the file which will be written.
 	 *

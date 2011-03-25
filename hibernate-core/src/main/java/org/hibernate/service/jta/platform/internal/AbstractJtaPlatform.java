@@ -29,6 +29,7 @@ import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
@@ -44,10 +45,10 @@ public abstract class AbstractJtaPlatform
 		implements JtaPlatform, Configurable, ServiceRegistryAwareService, TransactionManagerAccess {
 	private boolean cacheTransactionManager;
 	private boolean cacheUserTransaction;
-	private ServiceRegistry serviceRegistry;
+	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
-	public void injectServices(ServiceRegistry serviceRegistry) {
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
 	}
 

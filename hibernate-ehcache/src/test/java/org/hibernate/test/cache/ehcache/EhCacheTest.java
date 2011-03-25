@@ -48,7 +48,7 @@ import static org.junit.Assert.fail;
 public class EhCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String getBaseForMappings() {
-		return "org/hibernate/test/cache/ehcache";
+		return "org/hibernate/test/cache/ehcache/";
 	}
 
 	@Override

@@ -45,6 +45,7 @@ import org.hibernate.engine.QueryParameters;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.engine.SessionImplementor;
 import org.hibernate.engine.jdbc.LobCreationContext;
+import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.EventListeners;
@@ -70,6 +71,12 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
     }
 
     // Delegate methods
+
+
+	@Override
+	public JdbcConnectionAccess getJdbcConnectionAccess() {
+		return delegate.getJdbcConnectionAccess();
+	}
 
 	@Override
 	public <T> T execute(Callback<T> callback) {

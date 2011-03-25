@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
+
 import java.io.Serializable;
 import java.sql.Connection;
 
@@ -89,8 +89,7 @@ import org.hibernate.stat.SessionStatistics;
  * @see SessionFactory
  * @author Gavin King
  */
-public interface Session extends Serializable {
-
+public interface Session extends SharedSessionContract {
 	/**
 	 * Retrieve the entity mode in effect for this session.
 	 *
@@ -653,101 +652,16 @@ public interface Session extends Serializable {
 	public LockMode getCurrentLockMode(Object object) throws HibernateException;
 
 	/**
-	 * Begin a unit of work and return the associated <tt>Transaction</tt> object.
-	 * If a new underlying transaction is required, begin the transaction. Otherwise
-	 * continue the new work in the context of the existing underlying transaction.
-	 * The class of the returned <tt>Transaction</tt> object is determined by the
-	 * property <tt>hibernate.transaction_factory</tt>.
-	 *
-	 * @return a Transaction instance
-	 * @throws HibernateException
-	 * @see Transaction
-	 */
-	public Transaction beginTransaction() throws HibernateException;
-
-	/**
-	 * Get the <tt>Transaction</tt> instance associated with this session.
-	 * The class of the returned <tt>Transaction</tt> object is determined by the
-	 * property <tt>hibernate.transaction_factory</tt>.
-	 *
-	 * @return a Transaction instance
-	 * @throws HibernateException
-	 * @see Transaction
-	 */
-	public Transaction getTransaction();
-
-	/**
-	 * Create a new <tt>Criteria</tt> instance, for the given entity class,
-	 * or a superclass of an entity class.
-	 *
-	 * @param persistentClass a class, which is persistent, or has persistent subclasses
-	 * @return Criteria
-	 */
-	public Criteria createCriteria(Class persistentClass);
-
-	/**
-	 * Create a new <tt>Criteria</tt> instance, for the given entity class,
-	 * or a superclass of an entity class, with the given alias.
-	 *
-	 * @param persistentClass a class, which is persistent, or has persistent subclasses
-	 * @return Criteria
-	 */
-	public Criteria createCriteria(Class persistentClass, String alias);
-
-	/**
-	 * Create a new <tt>Criteria</tt> instance, for the given entity name.
-	 *
-	 * @param entityName
-	 * @return Criteria
-	 */
-	public Criteria createCriteria(String entityName);
-
-	/**
-	 * Create a new <tt>Criteria</tt> instance, for the given entity name,
-	 * with the given alias.
-	 *
-	 * @param entityName
-	 * @return Criteria
-	 */
-	public Criteria createCriteria(String entityName, String alias);
-
-	/**
-	 * Create a new instance of <tt>Query</tt> for the given HQL query string.
-	 *
-	 * @param queryString a HQL query
-	 * @return Query
-	 * @throws HibernateException
-	 */
-	public Query createQuery(String queryString) throws HibernateException;
-
-	/**
-	 * Create a new instance of <tt>SQLQuery</tt> for the given SQL query string.
-	 *
-	 * @param queryString a SQL query
-	 * @return SQLQuery
-	 * @throws HibernateException
-	 */
-	public SQLQuery createSQLQuery(String queryString) throws HibernateException;
-
-	/**
-	 * Create a new instance of <tt>Query</tt> for the given collection and filter string.
+	 * Create a {@link Query} instance for the given collection and filter string.  Contains an implicit {@code FROM}
+	 * element named {@code this} which refers to the defined table for the collection elements, as well as an implicit
+	 * {@code WHERE} restriction for this particular collection instance's key value.
 	 *
 	 * @param collection a persistent collection
-	 * @param queryString a Hibernate query
-	 * @return Query
-	 * @throws HibernateException
-	 */
-	public Query createFilter(Object collection, String queryString) throws HibernateException;
-
-	/**
-	 * Obtain an instance of <tt>Query</tt> for a named query string defined in the
-	 * mapping file.
+	 * @param queryString a Hibernate query fragment.
 	 *
-	 * @param queryName the name of a query defined externally
-	 * @return Query
-	 * @throws HibernateException
+	 * @return The query instance for manipulation and execution
 	 */
-	public Query getNamedQuery(String queryName) throws HibernateException;
+	public Query createFilter(Object collection, String queryString);
 
 	/**
 	 * Completely clear the session. Evict all loaded instances and cancel all pending

@@ -34,6 +34,7 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
 import org.hibernate.engine.QueryParameters;
@@ -53,7 +54,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
  *
  * @author Gavin King
  */
-public abstract class AbstractSessionImpl implements Serializable, SessionImplementor, TransactionContext {
+public abstract class AbstractSessionImpl implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext {
 
 	protected transient SessionFactoryImpl factory;
 	private boolean closed = false;
@@ -80,7 +81,7 @@ public abstract class AbstractSessionImpl implements Serializable, SessionImplem
 						try {
 							return callback.executeOnConnection( connection );
 						}
-						catch ( SQLException e ) {
+						catch (SQLException e) {
 							throw getFactory().getSQLExceptionHelper().convert(
 									e,
 									"Error creating contextual LOB : " + e.getMessage()

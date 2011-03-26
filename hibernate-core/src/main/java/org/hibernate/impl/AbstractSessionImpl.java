@@ -36,6 +36,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.cache.CacheKey;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.NamedQueryDefinition;
 import org.hibernate.engine.NamedSQLQueryDefinition;
@@ -54,6 +55,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.type.Type;
 
 /**
  * Functionality common to stateless and stateful sessions
@@ -232,6 +234,11 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
 		return new EntityKey( id, persister, getEntityMode(), getTenantIdentifier() );
+	}
+
+	@Override
+	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
+		return new CacheKey( id, type, entityOrRoleName, getEntityMode(), getTenantIdentifier(), getFactory() );
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

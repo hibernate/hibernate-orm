@@ -30,6 +30,7 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
@@ -136,8 +137,9 @@ public final class EntityKey implements Serializable {
 	@Override
 	public boolean equals(Object other) {
 		EntityKey otherKey = (EntityKey) other;
-		return otherKey.rootEntityName.equals(this.rootEntityName) && 
-			identifierType.isEqual(otherKey.identifier, this.identifier, entityMode, factory);
+		return otherKey.rootEntityName.equals(this.rootEntityName) &&
+				identifierType.isEqual(otherKey.identifier, this.identifier, entityMode, factory) &&
+				EqualsHelper.equals( tenantId, otherKey.tenantId );
 	}
 
 	@Override
@@ -161,12 +163,12 @@ public final class EntityKey implements Serializable {
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
-		oos.writeUTF( rootEntityName );
-		oos.writeUTF( entityName );
+		oos.writeObject( rootEntityName );
+		oos.writeObject( entityName );
 		oos.writeObject( identifierType );
 		oos.writeBoolean( isBatchLoadable );
-		oos.writeUTF( entityMode.toString() );
-		oos.writeUTF( tenantId );
+		oos.writeObject( entityMode.toString() );
+		oos.writeObject( tenantId );
 	}
 
 	/**
@@ -186,13 +188,13 @@ public final class EntityKey implements Serializable {
 	        SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new EntityKey(
 				( Serializable ) ois.readObject(),
-		        ois.readUTF(),
-		        ois.readUTF(),
+		        (String) ois.readObject(),
+				(String) ois.readObject(),
 		        ( Type ) ois.readObject(),
 		        ois.readBoolean(),
 		        ( session == null ? null : session.getFactory() ),
-		        EntityMode.parse( ois.readUTF() ),
-				ois.readUTF()
+		        EntityMode.parse( (String) ois.readObject() ),
+				(String) ois.readObject()
 		);
 	}
 }

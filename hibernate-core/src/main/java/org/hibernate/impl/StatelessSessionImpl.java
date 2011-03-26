@@ -227,13 +227,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 //		}
 
 		if ( persister.hasCache() ) {
-			final CacheKey ck = new CacheKey(
-					id,
-			        persister.getIdentifierType(),
-			        persister.getRootEntityName(),
-			        this.getEntityMode(),
-			        this.getFactory()
-			);
+			final CacheKey ck = generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 			persister.getCacheAccessStrategy().evict( ck );
 		}
 

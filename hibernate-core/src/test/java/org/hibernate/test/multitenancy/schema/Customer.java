@@ -24,7 +24,6 @@
 package org.hibernate.test.multitenancy.schema;
 
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 /**
@@ -38,12 +37,12 @@ public class Customer {
 	public Customer() {
 	}
 
-	public Customer(String name) {
+	public Customer(Long id, String name) {
+		this.id = id;
 		this.name = name;
 	}
 
 	@Id
-	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

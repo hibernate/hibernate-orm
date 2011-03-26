@@ -807,11 +807,16 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "entity is not associated with the session: " + id );
 		}
 
-        if (LOG.isTraceEnabled()) LOG.trace("Initializing lazy properties of: " + MessageHelper.infoString(this, id, getFactory())
-                                            + ", field access: " + fieldName);
+        if ( LOG.isTraceEnabled() ) {
+			LOG.trace(
+					"Initializing lazy properties of: " +
+							MessageHelper.infoString( this, id, getFactory() ) +
+							", field access: " + fieldName
+			);
+		}
 
 		if ( hasCache() ) {
-			CacheKey cacheKey = new CacheKey(id, getIdentifierType(), getEntityName(), session.getEntityMode(), getFactory() );
+			CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
 			Object ce = getCacheAccessStrategy().get( cacheKey, session.getTimestamp() );
 			if (ce!=null) {
 				CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);
@@ -3574,13 +3579,7 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( hasCache() ) {
-			CacheKey ck = new CacheKey(
-					id,
-					getIdentifierType(),
-					getRootEntityName(),
-					session.getEntityMode(),
-					session.getFactory()
-				);
+			CacheKey ck = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
 			if ( getCacheAccessStrategy().get( ck, session.getTimestamp() ) != null ) {
 				return Boolean.FALSE;
 			}

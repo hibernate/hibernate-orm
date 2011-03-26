@@ -22,26 +22,29 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.cache.entry.CacheEntry;
 import org.hibernate.event.PostLoadEvent;
 import org.hibernate.event.PostLoadEventListener;
 import org.hibernate.event.PreLoadEvent;
 import org.hibernate.event.PreLoadEventListener;
-import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Functionality relating to Hibernate's two-phase loading process,
@@ -161,13 +164,7 @@ public final class TwoPhaseLoad {
 					session,
 					entity
 			);
-			CacheKey cacheKey = new CacheKey(
-					id,
-					persister.getIdentifierType(),
-					persister.getRootEntityName(),
-					session.getEntityMode(),
-					session.getFactory()
-			);
+			CacheKey cacheKey = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 
 			// explicit handling of caching for rows just inserted and then somehow forced to be read
 			// from the database *within the same transaction*.  usually this is done by

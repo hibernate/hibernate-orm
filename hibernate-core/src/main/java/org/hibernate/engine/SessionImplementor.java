@@ -36,6 +36,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
@@ -79,6 +80,17 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * @return The entity key
 	 */
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister);
+
+	/**
+	 * Hide the changing requirements of cache key creation.
+	 *
+	 * @param id The entity identifier or collection key.
+	 * @param type The type
+	 * @param entityOrRoleName The entity name or collection role.
+	 *
+	 * @return The cache key
+	 */
+	public CacheKey generateCacheKey(Serializable id, final Type type, final String entityOrRoleName);
 
 	/**
 	 * Retrieves the interceptor currently in use by this event source.

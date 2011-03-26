@@ -351,12 +351,10 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 		SoftLock lock = null;
 		final CacheKey ck;
 		if ( persister.hasCache() ) {
-			ck = new CacheKey(
+			ck = source.generateCacheKey(
 					event.getEntityId(),
 					persister.getIdentifierType(),
-					persister.getRootEntityName(),
-					source.getEntityMode(),
-					source.getFactory()
+					persister.getRootEntityName()
 			);
 			lock = persister.getCacheAccessStrategy().lockItem( ck, null );
 		}
@@ -535,12 +533,10 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 			final SessionFactoryImplementor factory = source.getFactory();
 
-			final CacheKey ck = new CacheKey(
+			final CacheKey ck = source.generateCacheKey(
 					event.getEntityId(),
 					persister.getIdentifierType(),
-					persister.getRootEntityName(),
-					source.getEntityMode(),
-					source.getFactory()
+					persister.getRootEntityName()
 			);
 			Object ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
 			if ( factory.getStatistics().isStatisticsEnabled() ) {

@@ -37,6 +37,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.engine.EntityKey;
 import org.hibernate.engine.LoadQueryInfluencers;
@@ -86,6 +87,11 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 	@Override
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
+	}
+
+	@Override
+	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
+		return delegate.generateCacheKey( id, type, entityOrRoleName );
 	}
 
 	@Override

@@ -42,6 +42,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.CacheMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
@@ -122,10 +125,10 @@ import org.hibernate.event.ReplicateEventListener;
 import org.hibernate.event.SaveOrUpdateEvent;
 import org.hibernate.event.SaveOrUpdateEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutor;
+import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
@@ -139,7 +142,6 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Concrete implementation of a Session.
@@ -155,10 +157,7 @@ import org.jboss.logging.Logger;
  */
 public final class SessionImpl
 		extends AbstractSessionImpl
-		implements EventSource,
-				   org.hibernate.Session,
-				   TransactionContext,
-				   LobCreationContext {
+		implements EventSource, org.hibernate.Session, TransactionContext, LobCreationContext {
 
 	// todo : need to find a clean way to handle the "event source" role
 	// a separate class responsible for generating/dispatching events just duplicates most of the Session methods...

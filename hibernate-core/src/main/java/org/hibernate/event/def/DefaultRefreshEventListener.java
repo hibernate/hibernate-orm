@@ -127,12 +127,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		if ( persister.hasCache() ) {
-			final CacheKey ck = new CacheKey(
+			final CacheKey ck = source.generateCacheKey(
 					id,
 					persister.getIdentifierType(),
-					persister.getRootEntityName(),
-					source.getEntityMode(),
-					source.getFactory()
+					persister.getRootEntityName()
 			);
 			persister.getCacheAccessStrategy().evict( ck );
 		}

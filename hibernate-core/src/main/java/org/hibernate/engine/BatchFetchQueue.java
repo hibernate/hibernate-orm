@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2--8-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,20 +20,21 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import org.hibernate.EntityMode;
 import org.hibernate.cache.CacheKey;
 import org.hibernate.collection.PersistentCollection;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.internal.util.MarkerObject;
 
 /**
  * Tracks entity and collection keys that are available for batch
@@ -198,7 +199,7 @@ public class BatchFetchQueue {
 					end = i;
 					//checkForEnd = false;
 				}
-				else if ( !isCached( ce.getLoadedKey(), collectionPersister, entityMode ) ) {
+				else if ( !isCached( ce.getLoadedKey(), collectionPersister ) ) {
 					keys[i++] = ce.getLoadedKey();
 					//count++;
 				}
@@ -248,7 +249,7 @@ public class BatchFetchQueue {
 					end = i;
 				}
 				else {
-					if ( !isCached( key, persister, entityMode ) ) {
+					if ( !isCached( key, persister ) ) {
 						ids[i++] = key.getIdentifier();
 					}
 				}
@@ -261,34 +262,24 @@ public class BatchFetchQueue {
 		return ids; //we ran out of ids to try
 	}
 
-	private boolean isCached(
-			EntityKey entityKey,
-			EntityPersister persister,
-			EntityMode entityMode) {
+	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		if ( persister.hasCache() ) {
-			CacheKey key = new CacheKey(
+			CacheKey key = context.getSession().generateCacheKey(
 					entityKey.getIdentifier(),
 					persister.getIdentifierType(),
-					entityKey.getEntityName(),
-					entityMode,
-					context.getSession().getFactory()
+					entityKey.getEntityName()
 			);
 			return persister.getCacheAccessStrategy().get( key, context.getSession().getTimestamp() ) != null;
 		}
 		return false;
 	}
 
-	private boolean isCached(
-			Serializable collectionKey,
-			CollectionPersister persister,
-			EntityMode entityMode) {
+	private boolean isCached(Serializable collectionKey, CollectionPersister persister) {
 		if ( persister.hasCache() ) {
-			CacheKey cacheKey = new CacheKey(
+			CacheKey cacheKey = context.getSession().generateCacheKey(
 					collectionKey,
 			        persister.getKeyType(),
-			        persister.getRole(),
-			        entityMode,
-			        context.getSession().getFactory()
+			        persister.getRole()
 			);
 			return persister.getCacheAccessStrategy().get( cacheKey, context.getSession().getTimestamp() ) != null;
 		}

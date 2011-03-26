@@ -110,13 +110,7 @@ public final class EntityInsertAction extends EntityAction {
 				);
 			
 			cacheEntry = persister.getCacheEntryStructure().structure(ce);
-			final CacheKey ck = new CacheKey( 
-					id, 
-					persister.getIdentifierType(), 
-					persister.getRootEntityName(), 
-					session.getEntityMode(), 
-					session.getFactory() 
-				);
+			final CacheKey ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 			boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
 			
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
@@ -185,13 +179,7 @@ public final class EntityInsertAction extends EntityAction {
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
 		EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
-			final CacheKey ck = new CacheKey( 
-					getId(), 
-					persister.getIdentifierType(), 
-					persister.getRootEntityName(), 
-					getSession().getEntityMode(), 
-					getSession().getFactory() 
-			);
+			final CacheKey ck = getSession().generateCacheKey( getId(), persister.getIdentifierType(), persister.getRootEntityName() );
 			boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
 			
 			if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {

@@ -23,6 +23,9 @@
  */
 package org.hibernate.impl;
 
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
@@ -41,9 +44,9 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.naming.NamingException;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.Cache;
 import org.hibernate.ConnectionReleaseMode;
@@ -53,7 +56,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
@@ -119,8 +121,8 @@ import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
-import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 import org.hibernate.stat.Statistics;
+import org.hibernate.stat.internal.ConcurrentStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -129,7 +131,6 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
-import org.jboss.logging.Logger;
 
 
 /**
@@ -1006,7 +1007,8 @@ public final class SessionFactoryImpl
 					identifier,
 					p.getIdentifierType(),
 					p.getRootEntityName(),
-					EntityMode.POJO,
+					EntityMode.POJO,			// we have to assume POJO
+					null, 						// and also assume non tenancy
 					SessionFactoryImpl.this
 			);
 		}
@@ -1051,7 +1053,8 @@ public final class SessionFactoryImpl
 					ownerIdentifier,
 					p.getKeyType(),
 					p.getRole(),
-					EntityMode.POJO,
+					EntityMode.POJO,			// we have to assume POJO
+					null,						// and also assume non tenancy
 					SessionFactoryImpl.this
 			);
 		}

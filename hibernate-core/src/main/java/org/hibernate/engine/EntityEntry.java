@@ -340,17 +340,17 @@ public final class EntityEntry implements Serializable {
 	 * @throws IOException If a stream error occurs
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException {
-		oos.writeUTF( entityName );
+		oos.writeObject( entityName );
 		oos.writeObject( id );
-		oos.writeUTF( entityMode.toString() );
-		oos.writeUTF( tenantId );
-		oos.writeUTF( status.toString() );
-		oos.writeUTF( ( previousStatus == null ? "" : previousStatus.toString() ) );
+		oos.writeObject( entityMode.toString() );
+		oos.writeObject( tenantId );
+		oos.writeObject( status.toString() );
+		oos.writeObject( (previousStatus == null ? "" : previousStatus.toString()) );
 		// todo : potentially look at optimizing these two arrays
 		oos.writeObject( loadedState );
 		oos.writeObject( deletedState );
 		oos.writeObject( version );
-		oos.writeUTF( lockMode.toString() );
+		oos.writeObject( lockMode.toString() );
 		oos.writeBoolean( existsInDatabase );
 		oos.writeBoolean( isBeingReplicated );
 		oos.writeBoolean( loadedWithLazyPropertiesUnfetched );
@@ -375,11 +375,11 @@ public final class EntityEntry implements Serializable {
 		String previousStatusString = null;
 		return new EntityEntry(
 				( session == null ? null : session.getFactory() ),
-		        ois.readUTF(),
+		        (String) ois.readObject(),
 				( Serializable ) ois.readObject(),
-	            EntityMode.parse( ois.readUTF() ),
-				ois.readUTF(),
-				Status.parse( ois.readUTF() ),
+	            EntityMode.parse( (String) ois.readObject() ),
+				(String) ois.readObject(),
+				Status.parse( (String) ois.readObject() ),
 				( ( previousStatusString = ( String ) ois.readObject() ).length() == 0 ?
 							null :
 							Status.parse( previousStatusString ) 
@@ -387,7 +387,7 @@ public final class EntityEntry implements Serializable {
 	            ( Object[] ) ois.readObject(),
 	            ( Object[] ) ois.readObject(),
 	            ois.readObject(),
-	            LockMode.parse( ois.readUTF() ),
+	            LockMode.parse( (String) ois.readObject() ),
 	            ois.readBoolean(),
 	            ois.readBoolean(),
 	            ois.readBoolean()

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,11 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.event.def;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateLogger;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -34,7 +36,6 @@ import org.hibernate.engine.Status;
 import org.hibernate.event.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners that respond to requests to perform a
@@ -79,13 +80,7 @@ public class AbstractLockUpgradeEventListener extends AbstractReassociateEventLi
 			final SoftLock lock;
 			final CacheKey ck;
 			if ( persister.hasCache() ) {
-				ck = new CacheKey(
-						entry.getId(),
-						persister.getIdentifierType(),
-						persister.getRootEntityName(),
-						source.getEntityMode(),
-						source.getFactory()
-				);
+				ck = source.generateCacheKey( entry.getId(), persister.getIdentifierType(), persister.getRootEntityName() );
 				lock = persister.getCacheAccessStrategy().lockItem( ck, entry.getVersion() );
 			}
 			else {

@@ -85,19 +85,14 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
-		// we need to obtain the lock before any actions are
-		// executed, since this may be an inverse="true"
-		// bidirectional association and it is one of the
-		// earlier entity actions which actually updates
-		// the database (this action is resposible for
-		// second-level cache invalidation only)
+		// we need to obtain the lock before any actions are executed, since this may be an inverse="true"
+		// bidirectional association and it is one of the earlier entity actions which actually updates
+		// the database (this action is responsible for second-level cache invalidation only)
 		if ( persister.hasCache() ) {
-			final CacheKey ck = new CacheKey(
+			final CacheKey ck = session.generateCacheKey(
 					key,
 					persister.getKeyType(),
-					persister.getRole(),
-					session.getEntityMode(),
-					session.getFactory()
+					persister.getRole()
 			);
 			final SoftLock lock = persister.getCacheAccessStrategy().lockItem( ck, null );
 			// the old behavior used key as opposed to getKey()
@@ -145,13 +140,11 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 	protected final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
-			CacheKey ck = new CacheKey( 
+			CacheKey ck = session.generateCacheKey(
 					key, 
 					persister.getKeyType(), 
-					persister.getRole(), 
-					session.getEntityMode(),
-					session.getFactory()
-				);
+					persister.getRole()
+			);
 			persister.getCacheAccessStrategy().remove( ck );
 		}
 	}
@@ -190,12 +183,10 @@ public abstract class CollectionAction implements Executable, Serializable, Comp
 
 		@Override
 		public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-			final CacheKey ck = new CacheKey(
+			final CacheKey ck = session.generateCacheKey(
 					key,
 					persister.getKeyType(),
-					persister.getRole(),
-					session.getEntityMode(),
-					session.getFactory()
+					persister.getRole()
 			);
 			persister.getCacheAccessStrategy().unlockItem( ck, lock );
 		}

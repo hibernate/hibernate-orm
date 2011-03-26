@@ -79,13 +79,7 @@ public final class EntityDeleteAction extends EntityAction {
 
 		final CacheKey ck;
 		if ( persister.hasCache() ) {
-			ck = new CacheKey( 
-					id, 
-					persister.getIdentifierType(), 
-					persister.getRootEntityName(), 
-					session.getEntityMode(), 
-					session.getFactory() 
-			);
+			ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 			lock = persister.getCacheAccessStrategy().lockItem( ck, version );
 		}
 		else {
@@ -170,12 +164,10 @@ public final class EntityDeleteAction extends EntityAction {
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
 		if ( getPersister().hasCache() ) {
-			final CacheKey ck = new CacheKey(
+			final CacheKey ck = getSession().generateCacheKey(
 					getId(),
 					getPersister().getIdentifierType(),
-					getPersister().getRootEntityName(),
-					getSession().getEntityMode(),
-					getSession().getFactory()
+					getPersister().getRootEntityName()
 			);
 			getPersister().getCacheAccessStrategy().unlockItem( ck, lock );
 		}

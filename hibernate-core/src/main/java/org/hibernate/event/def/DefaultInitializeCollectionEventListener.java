@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,13 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.event.def;
+
 import java.io.Serializable;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
 import org.hibernate.HibernateLogger;
 import org.hibernate.cache.CacheKey;
@@ -37,7 +40,6 @@ import org.hibernate.event.InitializeCollectionEvent;
 import org.hibernate.event.InitializeCollectionEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -115,22 +117,23 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
         final SessionFactoryImplementor factory = source.getFactory();
 
-        final CacheKey ck = new CacheKey(id, persister.getKeyType(), persister.getRole(), source.getEntityMode(),
-                                         source.getFactory());
+        final CacheKey ck = source.generateCacheKey( id, persister.getKeyType(), persister.getRole() );
         Object ce = persister.getCacheAccessStrategy().get(ck, source.getTimestamp());
 
-		if (factory.getStatistics().isStatisticsEnabled()) {
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
             if (ce == null) {
-                factory.getStatisticsImplementor().secondLevelCacheMiss(persister.getCacheAccessStrategy().getRegion().getName());
-            } else {
-                factory.getStatisticsImplementor().secondLevelCacheHit(persister.getCacheAccessStrategy().getRegion().getName()
-				);
+                factory.getStatisticsImplementor()
+						.secondLevelCacheMiss( persister.getCacheAccessStrategy().getRegion().getName() );
             }
-
-
+			else {
+                factory.getStatisticsImplementor()
+						.secondLevelCacheHit( persister.getCacheAccessStrategy().getRegion().getName() );
+            }
 		}
 
-        if (ce == null) return false;
+        if ( ce == null ) {
+			return false;
+		}
 
 		CollectionCacheEntry cacheEntry = (CollectionCacheEntry)persister.getCacheEntryStructure().destructure(ce, factory);
 
